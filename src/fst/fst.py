@@ -1550,8 +1550,9 @@ class FST:
         **CAN** replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
         source change.
 
-        **WARNING!** If passing an `FST` then this is not guaranteed to become the new node. If you wish to continue
-        using the node make sure to use the one returned from this function.
+        **WARNING!** If passing an `FST` then this is not guaranteed to become the new node (on purpose). If you wish to
+        continue using the `FST` node you just replaced then make sure to use the one returned from this function. The
+        `AST` node will also not be identical if coercion happened.
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
@@ -1744,9 +1745,9 @@ class FST:
         `put_slice()` can do.
 
         **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
-        specifically or as a fallback), so make sure to swap it out for the return value of this function if you will
-        keep using the variable you called this method on. It will be changed accordingly in the tree but any other
-        outside references to the node may become invalid.
+        `raw=True` or if it happened as a fallback from `raw='auto'`). If there is a possibility of this happening then
+        make sure to use the new `self` returned from this function, otherwise if no raw happens then `self` remains
+        unchanged and usable.
 
         **Parameters:**
         - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings. If putting
@@ -1927,9 +1928,9 @@ class FST:
         returns and is no longer valid, even on failure. `AST` is copied.
 
         **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
-        specifically or as a fallback), so make sure to swap it out for the return value of this function if you will
-        keep using the variable you called this method on. It will be changed accordingly in the tree but any other
-        outside references to the node may become invalid.
+        `raw=True` or if it happened as a fallback from `raw='auto'`). If there is a possibility of this happening then
+        make sure to use the new `self` returned from this function, otherwise if no raw happens then `self` remains
+        unchanged and usable.
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.

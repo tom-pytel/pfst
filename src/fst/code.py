@@ -484,7 +484,7 @@ def _code_as_expr(
                 raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}, could not coerce', rawable=True)
 
         if ast is not codea:
-            ast.f._unmake_fst_parents()
+            ast.f._unmake_fst_parents()  # WARNING! make sure ast is only child of parent and whole parent chain is only-children if coerced!!!
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 
@@ -636,9 +636,9 @@ def code_as_stmts(
         codea = code.a
 
         if codea.__class__ is Expression:  # coerce Expression to expr
-            code._unmake_fst_parents()
-
             codea = codea.body
+
+            code._unmake_fst_parents(True)
 
         if codea.__class__ in ASTS_LEAF_EXPR:  # coerce expr to Expr stmt
             codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
@@ -650,16 +650,12 @@ def code_as_stmts(
             return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
         if codea_cls is Module:
-            if all(a.__class__ in ASTS_LEAF_STMT for a in codea.body):
-                return code
-
-            raise NodeError(f'expecting zero or more stmts, got '
-                            f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
+            return code
 
         if codea_cls is Interactive:
-            code._unmake_fst_parents()
+            code._unmake_fst_parents(True)
 
-            return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
+            return fst.FST(Module(body=codea.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
         raise NodeError(f'expecting zero or more stmts, got {codea_cls.__name__}', rawable=True)
 

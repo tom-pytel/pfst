@@ -3488,7 +3488,6 @@ f'd{t"e{f=!s:0.1f<1}"=}'
             (('if _', '_comprehension_ifs'), [('ifs', 'x', 'Name')]),
             (('_ as _', '_aliases'), [('names', '_ as _', 'alias')]),
             (('_ as _', '_withitems'), [('items', '_ as _', 'withitem')]),
-            (('a', '_type_params'), [('type_params', 'x', 'TypeVar')]),
         ]
 
         if PYGE11:
@@ -3506,6 +3505,7 @@ f'd{t"e{f=!s:0.1f<1}"=}'
                 (('a: b', 'TypeVar'), [('bound', 'x', 'Name')]),
                 # (('**a', 'ParamSpec'), []),
                 # (('*a', 'TypeVarTuple'), []),
+                (('a', '_type_params'), [('type_params', 'x', 'TypeVar')]),
             ])
 
         if PYGE13:

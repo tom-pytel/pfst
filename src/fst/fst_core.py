@@ -647,20 +647,16 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool =
 
 
 def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
-    """Unmake parent tree down to `self`, meaning from the root down to all other nodes excluding `self` and its
-    children. The `self` node itself can also be unmade by passing `self_=True`, but its children will never be
-    unmade."""
+    """Unmake parent tree from `self` on up, unmaking `self` optionally as well if `self_=True`.
+
+    **WARNING!** Only meant for parent chains of only children because will **NOT** unmake any siblings along the way.
+    """
 
     if self_:
         self.a.f = self.a = None
 
-    if parent := self.parent:
-        self.pfield.set(parent.a, None)  # break link to self from above
-
-        while grandparent := parent.parent:
-            parent = grandparent
-
-        parent._unmake_fst_tree()  # parent is root, unmake whole tree without self
+    while self := self.parent:
+        self.a.f = self.a = None
 
 
 def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = True) -> AST:
