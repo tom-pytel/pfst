@@ -1,95 +1,130 @@
 #!/usr/bin/env python
 
 import os
+import sys
+import sysconfig
 import unittest
-from ast import parse as ast_parse
 
 from fst.astutil import *
 from fst import *
-# from fst.asttypes import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
-
-PYFNMS = sum((
-    [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
-    for top in ('src', 'tests')),
-    start=[]
-)
 
 
-def read(fnm):
-    with open(fnm) as f:
-        return f.read()
+_sanitize_filename_tbl = str.maketrans(' <>:;"\\|&?$*\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f/', '_' * 45)
+
+def _sanitize_filename(fnm: str) -> str:
+    return fnm.translate(_sanitize_filename_tbl)
 
 
-class TestFST(unittest.TestCase):
-    """These take a while to execute (relatively speaking for quick checking) so are annoying for now. TODO: Make
-    specific long / thorough test mode which will execute these and more bulk tests."""
+def _find_pys(path) -> list[str]:
+    fnms = []
 
-    # def test_copy_ast_bulk(self):
-    #     for fnm in PYFNMS:
-    #         with open(fnm) as f:
-    #             src = f.read()
+    if os.path.isdir(path):
+        for dir, _, fnms_ in os.walk(path):
+            fnms.extend(os.path.join(dir, fnm) for fnm in fnms_ if fnm.endswith('.py'))
 
-    #         for type_comments in (False, True):
-    #             ast = parse(src, type_comments=type_comments)
-    #             dst = copy_ast(ast)
+    return fnms
 
-    #             compare_asts(ast, dst, locs=True, type_comments=type_comments, raise_=True)
 
-    # def test_fromsrc_bulk(self):
-    #     for fnm in PYFNMS:
-    #         fst = FST.fromsrc(read(fnm))
+FNMS = []
 
-    #         for ast in walk(fst.a):
-    #             ast.f.loc
+FNMS.extend(_find_pys('src'))
+FNMS.extend(_find_pys('tests'))
+FNMS.extend(_find_pys(sys.prefix))
 
-    #         fst.verify(raise_=True)
+if stdlib := sysconfig.get_paths().get('stdlib'):
+    FNMS.extend(_find_pys(stdlib))
 
-    # def test_fromast_bulk(self):
-    #     for fnm in PYFNMS:
-    #         fst = FST.fromast(ast_parse(read(fnm)))
 
-    #         for ast in walk(fst.a):
-    #             ast.f.loc
+RUN_SLOW = os.getenv("RUN_SLOW") == "1"
 
-    #         fst.verify(raise_=True)
+def slow_test(func):
+    return unittest.skipUnless(RUN_SLOW, "slow test")(func)
 
-    # def test_walk_bulk(self):
-    #     for fnm in PYFNMS:
-    #         ast       = FST.fromsrc(read(fnm)).a
-    #         bln, bcol = 0, 0
 
-    #         for f in (gen := ast.f.walk()):
-    #             if isinstance(f.a, (JoinedStr, TemplateStr)):  # these are borked
-    #                 gen.send(False)
+class TestFSTBulk(unittest.TestCase):
+    """Dynamically generated, these take a while to execute, set environment variable "RUN_SLOW=1" to run."""
 
-    #                 continue
 
-    #             self.assertTrue(f.bln > bln or (f.bln == bln and f.bcol >= bcol))
+if RUN_SLOW:
+    for fnm in FNMS:
+        if '/test/tokenizedata/badsyntax' in fnm or '/test/tokenizedata/bad_coding' in fnm:
+            continue
 
-    #             lof = list(f.walk(self_=False, recurse=False))
-    #             lob = list(f.walk(self_=False, recurse=False, back=True))
+        def _test_func(self, fnm=fnm):
+            try:
+                with open(fnm) as f:
+                    src = f.read()
 
-    #             self.assertEqual(lof, lob[::-1])
+                fst_ = FST.fromsrc(src, 'exec', filename=fnm)
 
-    #             lf, c = [], None
-    #             while c := f.next_child(c): lf.append(c)
-    #             self.assertEqual(lf, lof)
+            except (UnicodeDecodeError, SyntaxError):  # we don't do special encodings yet and don't answer for aleady bad syntax in files
+                return
 
-    #             lb, c = [], None
-    #             while c := f.prev_child(c): lb.append(c)
-    #             self.assertEqual(lb, lob)
+            with self.subTest('fromast() == fromsrc()'):
+                fst2 = FST.fromast(fst_.a, 'exec', filename=fnm)
 
-    #             bln, bcol = f.bln, f.bcol
+                self.assertTrue(compare_asts(fst2.a, fst_.a))
 
-    # def test_copy_bulk(self):
-    #     for fnm in PYFNMS:
-    #         ast = FST.fromsrc(read(fnm)).a
+            with self.subTest('walk() == step_fwd()'):
+                g = fst_
 
-    #         for a in walk(ast):
-    #             if a.f.is_parsable():
-    #                 f = a.f.copy()
+                for f in fst_.walk(self_=False):
+                    self.assertIs(f, g := g.step_fwd())
 
-    #                 f.verify(raise_=True)
+            with self.subTest('walk(back=True) == step_back()'):
+                g = fst_
+
+                for f in fst_.walk(self_=False, back=True):
+                    self.assertIs(f, g := g.step_back())
+
+            with self.subTest('self.replace(self.copy())'):
+                g = fst_.copy()
+
+                for f in (gen := g.walk(self_=False)):
+                    # if f.is_stmtish or (n := f.pfield.name) == 'keywords' or (n == 'patterns' and f.is_MatchClass):
+                    if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                        continue
+
+                    f.replace(f.copy())
+
+                    if f.is_ftstr:
+                        gen.send(False)
+
+                g.verify()
+
+            with self.subTest('self.replace(self.copy().src)'):
+                g = fst_.copy()
+
+                for f in (gen := g.walk(self_=False)):
+                    # if f.is_stmtish or (n := f.pfield.name) == 'keywords' or (n == 'patterns' and f.is_MatchClass):
+                    if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                        continue
+
+                    f.replace(f.copy().src)
+
+                    if f.is_ftstr:
+                        gen.send(False)
+
+                g.verify()
+
+            with self.subTest('self.replace(self.a)'):
+                g = fst_.copy()
+
+                for f in (gen := g.walk(self_=False)):
+                    # if f.is_stmtish or (n := f.pfield.name) == 'keywords' or (n == 'patterns' and f.is_MatchClass):
+                    if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                        continue
+
+                    f.replace(f.a)
+
+                    if f.is_ftstr:
+                        gen.send(False)
+
+                g.verify()
+
+        func_name = f'test_bulk_file_{_sanitize_filename(fnm)}'
+
+        setattr(TestFSTBulk, func_name, _test_func)
 
 
 if __name__ == '__main__':

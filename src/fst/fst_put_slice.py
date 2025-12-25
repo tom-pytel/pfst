@@ -189,8 +189,8 @@ from .fst_put_one import _maybe_fix_With_items
 # * ! N =          (Assign, 'targets'):                    # expr*                 -> _Assign_targets            _parse__Assign_targets
 #                                                                                  .
 #                                                                                  .
-# *   S ,          (Global, 'names'):                      # identifier*,          -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
-# *   S ,          (Nonlocal, 'names'):                    # identifier*,          -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,          (Global, 'names'):                      # identifier*           -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,          (Nonlocal, 'names'):                    # identifier*           -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                                  .
 #                                                                                  .
 #   ! S ,          (ClassDef, 'keywords'):                 # keyword*              -> _keywords                  _parse__keywords  - keywords and Starred bases can mix
@@ -225,22 +225,16 @@ from .fst_put_one import _maybe_fix_With_items
 # *   N ao         (BoolOp, 'values'):                     # expr*                 -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                                  .
 #                                                                                  .
+#                  (FunctionsDef, 'args'):                 # arguments             -> arguments                  _parse_arguments / arguments_lambda
+#                  (AsyncFunctionDef, 'args'):             # arguments             -> arguments                  _parse_arguments / arguments_lambda
+#                                                                                  .
+#                  (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes_n_kws                   - 'bases+keywords'
+#                  (Call, '_args'):                        # expr*+keyword*        -> _arglikes_n_kws                   - 'args+keywords'
+#                  (MatchClass, '_patterns'):              # pattern*+???                                               - 'patterns+kwd_attrs=kwd_patterns'):
+#                                                                                  .
+#                                                                                  .
 #                  (JoinedStr, 'values'):                  # Constant|FormattedValue*   -> JoinedStr
 #                  (TemplateStr, 'values'):                # Constant|Interpolation*    -> TemplateStr
-
-
-# --- NOT CONTIGUOUS --------------------------------
-
-# (arguments, 'posonlyargs'):           # arg*  - problematic because of defaults
-# (arguments, 'args'):                  # arg*  - problematic because of defaults
-
-# (arguments, 'kwonlyargs'):            # arg*  - maybe do as two-element, but is new type of two-element where the second element can be None
-# (arguments, 'kw_defaults'):           # arg*
-
-# could do argmnents slice as arguments instance (lots of logic needed on put)?
-
-# (MatchClass, 'kwd_attrs'):            # identifier*  - maybe do as two-element
-# (MatchClass, 'kwd_patterns'):         # pattern*
 
 
 class slicestatic(NamedTuple):
