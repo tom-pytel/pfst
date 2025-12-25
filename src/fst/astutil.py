@@ -995,7 +995,6 @@ def set_ctx(asts: AST | list[AST], ctx_cls: type[expr_context]) -> None:
         be recursed.
     """
 
-    change = False
     stack = [asts] if isinstance(asts, AST) else asts
 
     while stack:

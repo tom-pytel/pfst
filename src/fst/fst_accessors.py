@@ -124,7 +124,7 @@ def body(self: 'fst.FST') -> None:
 def type_ignores(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.type_ignores
+    self.a.type_ignores  # noqa: B018
 
     return fstview(self, 'type_ignores')
 
@@ -142,7 +142,7 @@ def type_ignores(self: 'fst.FST') -> None:
 def argtypes(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.argtypes
+    self.a.argtypes  # noqa: B018
 
     return fstview(self, 'argtypes')
 
@@ -176,7 +176,7 @@ def returns(self: 'fst.FST') -> None:
 def decorator_list(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.decorator_list
+    self.a.decorator_list  # noqa: B018
 
     return fstview(self, 'decorator_list')
 
@@ -211,7 +211,7 @@ if PYGE12:
     def type_params(self: 'fst.FST') -> fstview:
         """@private"""
 
-        self.a.type_params
+        self.a.type_params  # noqa: B018
 
         return fstview(self, 'type_params')
 
@@ -231,7 +231,7 @@ else:  # safely access nonexistent empty field
         if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
             return fstview_dummy(self, 'type_params')
 
-        self.a.type_params  # AttributeError
+        self.a.type_params  # noqa: B018, AttributeError
 
     @type_params.setter
     def type_params(self: 'fst.FST', code: Code | None) -> None:
@@ -289,7 +289,7 @@ def type_comment(self: 'fst.FST') -> None:
 def bases(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.bases
+    self.a.bases  # noqa: B018
 
     return fstview(self, 'bases')
 
@@ -307,7 +307,7 @@ def bases(self: 'fst.FST') -> None:
 def keywords(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.keywords
+    self.a.keywords  # noqa: B018
 
     return fstview(self, 'keywords')
 
@@ -341,7 +341,7 @@ def value(self: 'fst.FST') -> None:
 def targets(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.targets
+    self.a.targets  # noqa: B018
 
     return fstview(self, 'targets')
 
@@ -480,7 +480,7 @@ def test(self: 'fst.FST') -> None:
 def items(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.items
+    self.a.items  # noqa: B018
 
     return fstview(self, 'items')
 
@@ -514,7 +514,7 @@ def subject(self: 'fst.FST') -> None:
 def cases(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.cases
+    self.a.cases  # noqa: B018
 
     return fstview(self, 'cases')
 
@@ -564,7 +564,7 @@ def cause(self: 'fst.FST') -> None:
 def handlers(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.handlers
+    self.a.handlers  # noqa: B018
 
     return fstview(self, 'handlers')
 
@@ -582,7 +582,7 @@ def handlers(self: 'fst.FST') -> None:
 def finalbody(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.finalbody
+    self.a.finalbody  # noqa: B018
 
     return fstview(self, 'finalbody')
 
@@ -616,7 +616,7 @@ def msg(self: 'fst.FST') -> None:
 def names(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.names
+    self.a.names  # noqa: B018
 
     return fstview(self, 'names')
 
@@ -666,7 +666,7 @@ def level(self: 'fst.FST') -> None:
 def values(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.values
+    self.a.values  # noqa: B018
 
     return fstview(self, 'values')
 
@@ -732,7 +732,7 @@ def operand(self: 'fst.FST') -> None:
 def keys(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.keys
+    self.a.keys  # noqa: B018
 
     return fstview(self, 'keys')
 
@@ -750,7 +750,7 @@ def keys(self: 'fst.FST') -> None:
 def elts(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.elts
+    self.a.elts  # noqa: B018
 
     return fstview(self, 'elts')
 
@@ -784,7 +784,7 @@ def elt(self: 'fst.FST') -> None:
 def generators(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.generators
+    self.a.generators  # noqa: B018
 
     return fstview(self, 'generators')
 
@@ -818,7 +818,7 @@ def key(self: 'fst.FST') -> None:
 def ops(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.ops
+    self.a.ops  # noqa: B018
 
     return fstview(self, 'ops')
 
@@ -836,7 +836,7 @@ def ops(self: 'fst.FST') -> None:
 def comparators(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.comparators
+    self.a.comparators  # noqa: B018
 
     return fstview(self, 'comparators')
 
@@ -1046,7 +1046,7 @@ def step(self: 'fst.FST') -> None:
 def ifs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.ifs
+    self.a.ifs  # noqa: B018
 
     return fstview(self, 'ifs')
 
@@ -1096,7 +1096,7 @@ def type(self: 'fst.FST') -> None:
 def posonlyargs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.posonlyargs
+    self.a.posonlyargs  # noqa: B018
 
     return fstview(self, 'posonlyargs')
 
@@ -1114,7 +1114,7 @@ def posonlyargs(self: 'fst.FST') -> None:
 def defaults(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.defaults
+    self.a.defaults  # noqa: B018
 
     return fstview(self, 'defaults')
 
@@ -1148,7 +1148,7 @@ def vararg(self: 'fst.FST') -> None:
 def kwonlyargs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.kwonlyargs
+    self.a.kwonlyargs  # noqa: B018
 
     return fstview(self, 'kwonlyargs')
 
@@ -1166,7 +1166,7 @@ def kwonlyargs(self: 'fst.FST') -> None:
 def kw_defaults(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.kw_defaults
+    self.a.kw_defaults  # noqa: B018
 
     return fstview(self, 'kw_defaults')
 
@@ -1296,7 +1296,7 @@ def guard(self: 'fst.FST') -> None:
 def patterns(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.patterns
+    self.a.patterns  # noqa: B018
 
     return fstview(self, 'patterns')
 
@@ -1346,7 +1346,7 @@ def cls(self: 'fst.FST') -> None:
 def kwd_attrs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.kwd_attrs
+    self.a.kwd_attrs  # noqa: B018
 
     return fstview(self, 'kwd_attrs')
 
@@ -1364,7 +1364,7 @@ def kwd_attrs(self: 'fst.FST') -> None:
 def kwd_patterns(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.kwd_patterns
+    self.a.kwd_patterns  # noqa: B018
 
     return fstview(self, 'kwd_patterns')
 

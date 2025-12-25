@@ -23,7 +23,6 @@ from .asttypes import (
     Call,
     ClassDef,
     Compare,
-    Del,
     Delete,
     Dict,
     DictComp,

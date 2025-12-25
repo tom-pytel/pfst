@@ -121,7 +121,7 @@ if PYGE12:
     def {field}(self: 'fst.FST') -> fstview:
         """@private"""
 
-        self.a.{field}
+        self.a.{field}  # noqa: B018
 
         return fstview(self, {field!r})
 
@@ -141,7 +141,7 @@ else:  # safely access nonexistent empty field
         if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
             return fstview_dummy(self, '{field}')
 
-        self.a.{field}  # AttributeError
+        self.a.{field}  # noqa: B018, AttributeError
 
     @{field}.setter
     def {field}(self: 'fst.FST', code: Code | None) -> None:
@@ -158,7 +158,7 @@ else:  # safely access nonexistent empty field
 def {field}(self: 'fst.FST') -> fstview:
     """@private"""
 
-    self.a.{field}
+    self.a.{field}  # noqa: B018
 
     return fstview(self, {field!r})
 
