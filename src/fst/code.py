@@ -61,7 +61,6 @@ from .astutil import (
     is_valid_identifier_alias,
     is_valid_target,
     reduce_ast,
-    set_ctx,
 )
 
 from .common import NodeError, shortstr
@@ -188,9 +187,9 @@ def _coerce_as__Assign_targets(
     ast_ = fst_.a
 
     if not is_valid_target(ast_):
-        raise NodeError(f'expecting Assign target, got {fst_.a.__class__.__name__}')
+        raise NodeError(f'expecting Assign target, got {ast_.__class__.__name__}')
 
-    set_ctx(ast_, Store)
+    fst_._set_ctx(Store)
 
     ast_ = _Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                            end_col_offset=ls[-1].lenbytes)

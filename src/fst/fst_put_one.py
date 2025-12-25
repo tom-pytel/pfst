@@ -133,7 +133,6 @@ from .astutil import (
     is_valid_MatchMapping_key,
     get_field,
     set_field,
-    set_ctx,
     precedence_require_parens,
 )
 
@@ -191,8 +190,8 @@ _Child      = AST | list[AST] | constant | None
 class onestatic(NamedTuple):
     getinfo:  Callable[[fst.FST, onestatic, int | None, str], oneinfo] | None
     restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
-    code_as:  Callable[[Code, dict], fst.FST]                                               = code_as_expr
-    ctx:      type[expr_context]                                                            = Load
+    code_as:  Callable[[Code, dict], fst.FST] = code_as_expr
+    ctx_cls:  type[expr_context] = Load
 
 
 class oneinfo(NamedTuple):
@@ -706,7 +705,7 @@ def _make_exprish_fst(
     static: onestatic,
     options: Mapping[str, Any],
     target: fst.FST | fstloc,
-    ctx: type[expr_context],
+    ctx_cls: type[expr_context],
     prefix: str = '',
     suffix: str = '',
     validated: int = 0,
@@ -860,7 +859,7 @@ def _make_exprish_fst(
 
     self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless (if target is fstloc, will not exclude anything in that case)
     put_fst._offset(0, 0, ln, dcol_offset)
-    set_ctx(put_ast, ctx)
+    put_fst._set_ctx(ctx_cls)
 
     # if put merged alphanumerics at start and / or end then insert spaces
 
@@ -947,7 +946,7 @@ def _put_one_exprish_optional(
     if not loc:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst = _make_exprish_fst(self, code, idx, field, static, options, loc, static.ctx, info.prefix, info.suffix,
+    put_fst = _make_exprish_fst(self, code, idx, field, static, options, loc, static.ctx_cls, info.prefix, info.suffix,
                                 max(1, validated))
     put_fst = fst.FST(put_fst.a, self, astfield(field, idx))
 
@@ -1806,9 +1805,9 @@ _onestatic_alias_required            = onestatic(_one_info_exprish_required, ali
 _onestatic_withitem_required         = onestatic(_one_info_exprish_required, withitem, code_as=code_as_withitem)
 _onestatic_pattern_required          = onestatic(_one_info_exprish_required, pattern, code_as=code_as_pattern)
 _onestatic_type_param_required       = onestatic(_one_info_exprish_required, type_param, code_as=code_as_type_param)
-_onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
-_onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
-_onestatic_target                    = onestatic(_one_info_exprish_required, is_valid_target, ctx=Store)  # (Name, Attribute, Subscript, Tuple, List)
+_onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx_cls=Store)
+_onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx_cls=Store)
+_onestatic_target                    = onestatic(_one_info_exprish_required, is_valid_target, ctx_cls=Store)  # (Name, Attribute, Subscript, Tuple, List)
 _onestatic_ctx                       = onestatic(None, expr_context)
 
 def _one_info_identifier_required(
@@ -2420,7 +2419,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
     (ClassDef, 'body'):                   (True,  None, None),  # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
-    (Delete, 'targets'):                  (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_del_target, ctx=Del)),  # expr*
+    (Delete, 'targets'):                  (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_del_target, ctx_cls=Del)),  # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target),  # expr*
     (Assign, 'value'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr  - python technically allows Starred for parse but is not compilable, should we allow it as well for consistency?
     (TypeAlias, 'name'):                  (False, _put_one_exprish_required, _onestatic_target_Name),  # expr
@@ -2558,7 +2557,7 @@ _PUT_ONE_HANDLERS = {
     (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier_alias)),  # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
     (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (withitem, 'context_expr'):           (False, _put_one_withitem_context_expr, _onestatic_expr_required),  # expr
-    (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)),  # expr?
+    (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx_cls=Store)),  # expr?
     (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required),  # pattern
     (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)),  # expr?
     (match_case, 'body'):                 (True,  None, None),  # stmt*

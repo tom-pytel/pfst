@@ -774,10 +774,10 @@ def _get_slice_Tuple_elts(
     locs = _locs_and_bounds_get(self, start, stop, body, body, is_par)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx_cls = ast.ctx.__class__
-    ret_ast = Tuple(elts=asts, ctx=ctx_cls())
+    ret_ast = Tuple(elts=asts, ctx=Load())
 
-    if ctx_cls is not Load:  # new Tuple root object must have ctx=Load
-        set_ctx(ret_ast, Load)
+    if ctx_cls is not Load:
+        set_ctx(asts[:], Load)  # we use set_ctx() instead of FST._set_ctx() because could be pure ASTs
 
     if is_par:
         prefix, suffix = '()'
@@ -823,10 +823,10 @@ def _get_slice_List_elts(
     locs = _locs_and_bounds_get(self, start, stop, body, body, 1)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx_cls = ast.ctx.__class__
-    ret_ast = List(elts=asts, ctx=ctx_cls())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
+    ret_ast = List(elts=asts, ctx=Load())
 
-    if ctx_cls is not Load:  # new List root object must have ctx=Load
-        set_ctx(ret_ast, Load)
+    if ctx_cls is not Load:
+        set_ctx(asts[:], Load)  # we use set_ctx() instead of FST._set_ctx() because could be pure ASTs
 
     return get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'elts', '[', ']', ',', 0, 0)
@@ -926,9 +926,9 @@ def _get_slice_Delete_targets(
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_Delete_targets(self, start, loc_first)
 
     asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
-    ret_ast = Tuple(elts=asts, ctx=Del())  # we initially set to Del so that set_ctx() won't skip it
+    ret_ast = Tuple(elts=asts, ctx=Load())
 
-    set_ctx(ret_ast, Load)  # new Tuple root object must have ctx=Load
+    set_ctx(asts[:], Load)  # we use set_ctx() instead of FST._set_ctx() because could be pure ASTs
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,

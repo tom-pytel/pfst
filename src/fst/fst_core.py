@@ -568,7 +568,10 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
     """Create tree of `FST` nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
     to walk and make trees for individually. If the `AST`s already have `FST` nodes then those are repurposed in
     `FST()`. In this case the nodes are not removed from whatever previous parent `AST` contained them, that is up to
-    the caller."""
+    the caller.
+
+    **WARNING!** `stack` is consumed.
+    """
 
     # THIS IS A HOT FUNCTION!
 
@@ -610,6 +613,8 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
 def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool = False) -> None:
     """Destroy a tree of `FST` child nodes by breaking links between AST and `FST` nodes. This mainly helps make sure
     destroyed `FST` nodes can't be reused in a way that might corrupt valid remaining trees.
+
+    **WARNING!** `stack` is consumed.
 
     **Parameters:**
     - `stack`: Can unmake multiple trees by passing in this. Mostly used for deleted elements in slice operations.
@@ -684,7 +689,7 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
         self._make_fst_tree()
 
     else:
-        for a in iter_child_nodes(ast):  # this is the price we pay for keeping the current FST when replacing its AST, worth it? Or would be better to use AST FST if present? Inconsistent, but would allow keep custom user attributes on FST
+        for a in iter_child_nodes(ast):  # this is the price we pay for keeping the current FST when replacing its AST, worth it? Or would be better to use AST FST node if present?
             a.f.parent = self
 
     if parent := self.parent:
@@ -695,28 +700,32 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
     return old_ast
 
 
-def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
-    """Set `ctx` field for `self` and applicable children. Differs from `astutil.set_ctx()` by creating `FST` nodes
-    directly. When the `astutil` one is used it is followed by something which creates the `FST` nodes for the new
-    `ctx` fields."""
+def _set_ctx(self: fst.FST, ctx_cls: type[expr_context], stack: list[AST] | None = None) -> None:
+    """Set `ctx` field for `self` and children if applicable, else noop. Creates `FST` nodes directly for the new `AST`
+    context nodes and unmakes the old ones (assumed they have `FST` nodes since this is an `FST` function).
 
-    stack = [self.a]
+    **WARNING!** `stack` is consumed.
+    """
+
+    if stack is None:
+        stack = [self.a]
 
     while stack:
         a = stack.pop()
         a_cls = a.__class__
 
         if ((is_seq := (a_cls in (Tuple, List)))
-            or (is_starred := (a_cls is Starred))
-            or a_cls in (Name, Subscript, Attribute)
-        ) and not isinstance(a.ctx, ctx):
-            a.ctx = child = ctx()
+            or (is_single := (a_cls in (Name, Subscript, Attribute)))
+            or a_cls is Starred
+        ) and (ctx := a.ctx).__class__ is not ctx_cls:
+            ctx.f.a = ctx.f = None  # unmake
+            a.ctx = child = ctx_cls()
 
             fst.FST(child, a.f, _astfieldctx)  # this just creates the FST and adds it to the child
 
             if is_seq:
                 stack.extend(a.elts)
-            elif is_starred:
+            elif not is_single:
                 stack.append(a.value)
 
 

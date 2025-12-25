@@ -168,7 +168,7 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
     if ast_cls not in ASTS_LEAF_EXPR or ast_cls in (Slice, FormattedValue, Interpolation):  # things that should not get pars
         return
 
-    self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
+    self._set_ctx(Load)  # noop if no ctx
 
     if is_walrus := (ast_cls is NamedExpr):
         pars = get_option_overridable('pars', 'pars_walrus', options)

@@ -82,7 +82,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import re_identifier, OPCLS2STR, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx
+from .astutil import re_identifier, OPCLS2STR, bistr, is_valid_target, is_valid_del_target, reduce_ast
 
 from .common import (
     PYLT11,
@@ -929,7 +929,7 @@ def _put_slice_asts(
     body: list[AST],
     fst_: fst.FST | None,
     asts: list[AST] | None,
-    ctx: type[expr_context] | None = None,
+    ctx_cls: type[expr_context] | None = None,
 ) -> None:
     """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them. The parent `fst_` is also
     unmade and if the `asts` come from the `fst_.a` then `asts` must be the actual field list from that `AST` so it can
@@ -953,8 +953,8 @@ def _put_slice_asts(
         FST = fst.FST
         new_fsts = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_asts)]
 
-        if new_fsts and ctx:
-            set_ctx([f.a for f in new_fsts], ctx)
+        if new_fsts and ctx_cls:
+            self._set_ctx(ctx_cls, [f.a for f in new_fsts])
 
         self._make_fst_tree(new_fsts)
 
@@ -1044,7 +1044,7 @@ def _put_slice_seq_and_asts(
     body: list[AST],
     fst_: fst.FST | None,
     fst_field: str,
-    ctx: type[expr_context] | None,
+    ctx_cls: type[expr_context] | None,
     bound_ln: int,
     bound_col: int,
     bound_end_ln: int,
@@ -1069,7 +1069,7 @@ def _put_slice_seq_and_asts(
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, field, None, sep, self_tail_sep)
 
-        _put_slice_asts(self, start, stop, field, body, fst_, fst_body, ctx)
+        _put_slice_asts(self, start, stop, field, body, fst_, fst_body, ctx_cls)
 
     put_slice_sep_end(self, end_params)
 

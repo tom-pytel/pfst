@@ -982,22 +982,17 @@ def copy_ast(ast: AST | None) -> AST | None:
     return ret
 
 
-def set_ctx(asts: AST | list[AST], ctx_cls: type[expr_context], *, doit: bool = True) -> bool:
-    """Set all `ctx` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
-    `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx` type.
+def set_ctx(asts: AST | list[AST], ctx_cls: type[expr_context]) -> None:
+    """Set all `ctx_cls` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
+    `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx_cls` type.
 
-    **WARNING!** This will not recurse into elements which have a `ctx` of the type being set.
+    **WARNING!** This will not recurse into elements which have a `ctx_cls` of the type being set.
 
     **Parameters:**
     - `asts`: Single `AST` (will be recursed) or list of `AST` nodes (will be consumed, each one will also be recursed)
         to process.
-    - `ctx`: The `exprt_context` `AST` type to set. Any container encountered which matches this `ctx` will not be
-        recursed.
-    - `doit`: Whether to actually carry out the assignments or just analyze and return whethere there are candidate
-        locations for assignment. `doit=False` used to query if any context-modifiable `ctx` present.
-
-    **Returns:**
-    - `bool`: Whether any modifications were made or can be made (if `doit=False`).
+    - `ctx_cls`: The `exprt_context` `AST` type to set. Any container encountered which matches this `ctx_cls` will not
+        be recursed.
     """
 
     change = False
@@ -1008,20 +1003,18 @@ def set_ctx(asts: AST | list[AST], ctx_cls: type[expr_context], *, doit: bool = 
             a_cls = a.__class__
 
             if ((is_seq := (a_cls in (Tuple, List)))
-                or (is_starred := (a_cls is Starred))
-                or a_cls in (Name, Subscript, Attribute)
+                or (is_single := (a_cls in (Name, Subscript, Attribute)))
+                or a_cls is Starred
             ) and a.ctx.__class__ is not ctx_cls:
-                change = True
+                if f := getattr(a, 'f', None):  # doesn't really belong here but a harmless insignificant solution to an insignificant problem, "unmake" FST node possible associated with old ctx node
+                    f.a = a.f = None
 
-                if doit:
-                    a.ctx = ctx_cls()
+                a.ctx = ctx_cls()
 
                 if is_seq:
                     stack.extend(a.elts)
-                elif is_starred:
+                elif not is_single:
                     stack.append(a.value)
-
-    return change
 
 
 def last_block_header_child(ast: AST) -> AST | None:
