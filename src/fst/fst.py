@@ -140,7 +140,7 @@ from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
 from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body
 from .reconcile import Reconcile
-from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
+from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
 from .fst_traverse import next_bound, prev_bound
 from .fst_options import check_options
@@ -150,19 +150,6 @@ __all__ = [
     'parse', 'unparse', 'dump', 'FST',
 ]
 
-
-try:
-    from IPython import get_ipython
-    _IPYTHON_COLOR = getattr(get_ipython(), 'colors', 'NoColor') != 'NoColor'  # pragma: no cover
-except Exception:  # pragma: no cover
-    _IPYTHON_COLOR = False
-
-_DEFAULT_COLOR = (
-    False if os.environ.get("NO_COLOR") else
-    True if os.environ.get("FORCE_COLOR") else
-    False if (os.environ.get("TERM") == "dumb" or sys.platform == "win32") else
-    None
-)
 
 _DEFAULT_FILENAME = '<fst>'
 _DEFAULT_PARSE_PARAMS = dict(filename=_DEFAULT_FILENAME, type_comments=False, feature_version=None)
@@ -230,7 +217,7 @@ def _swizzle_getput_params(
 
 def parse(
     source: builtins.str | bytes | AST,
-    filename: str = _DEFAULT_FILENAME,
+    filename: str = '<unknown>',
     mode: str = 'exec',
     *,
     type_comments: bool = False,
@@ -244,7 +231,8 @@ def parse(
     **Parameters:**
     - `source`: The python source to parse.
     - `filename`: `ast.parse()` parameter.
-    - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.parsex.Mode`.
+    - `mode`: Parse mode. Either one of the normal `ast` module parse modes `'exec'`, `'eval'` or `'single'`, or an
+        extended `fst` parse mode parameter which allows parsing things the `ast` module cannot, See `fst.parsex.Mode`.
     - `type_comments`: `ast.parse()` parameter.
     - `feature_version`: `ast.parse()` parameter.
 
@@ -1168,14 +1156,14 @@ class FST:
                     src_plus = '+' in src
                     src = 'stmt' if 's' in src else 'node' if 'n' in src else None
 
-        if color is None and out is print and (color := _DEFAULT_COLOR) is None:
+        if color is None and out is print and (color := DEFAULT_COLOR) is None:
             if not hasattr(sys.stdout, 'fileno'):
                 color = False  # pragma: no cover
             else:
                 try:
-                    color = os.isatty(sys.stdout.fileno()) or _IPYTHON_COLOR
+                    color = os.isatty(sys.stdout.fileno()) or IPYTHON_COLOR
                 except io.UnsupportedOperation:
-                    color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or _IPYTHON_COLOR)
+                    color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or IPYTHON_COLOR)
 
         if isinstance(out, TextIOBase):
             out = out.write

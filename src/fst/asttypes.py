@@ -329,6 +329,7 @@ __all__ = [
     'ASTS_LEAF_CMPOP_TWO_WORD',
     'ASTS_LEAF_CMPOP_ONE_WORD',
     'ASTS_LEAF_MAYBE_DOCSTR',
+    'ASTS_LEAF__SLICE',
 ]
 
 

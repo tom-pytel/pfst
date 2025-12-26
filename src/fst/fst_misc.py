@@ -5,7 +5,9 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+import os
 import re
+import sys
 from ast import iter_fields, walk
 from math import log10
 from pprint import pformat
@@ -132,6 +134,20 @@ __all__ = [
     'fixup_slice_indices',
     'fixup_field_body',
 ]
+
+
+try:
+    from IPython import get_ipython
+    IPYTHON_COLOR = getattr(get_ipython(), 'colors', 'NoColor') != 'NoColor'  # pragma: no cover
+except Exception:  # pragma: no cover
+    IPYTHON_COLOR = False
+
+DEFAULT_COLOR = (
+    False if os.environ.get("NO_COLOR") else
+    True if os.environ.get("FORCE_COLOR") else
+    False if (os.environ.get("TERM") == "dumb" or sys.platform == "win32") else
+    None
+)
 
 
 DUMP_COLOR = nspace(

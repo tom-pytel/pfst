@@ -44,7 +44,7 @@ _OPTIONS = _ThreadOptions()
 
 
 def check_options(options: Mapping[str, Any]) -> None:
-    """Make sure all options are actual options. Does not verify their actual values, just that there are no unknown
+    """Make sure all options are actual options. Does not validate their actual values, just that there are no unknown
     options."""
 
     for o in options:
