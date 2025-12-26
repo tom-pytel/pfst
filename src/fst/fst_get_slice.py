@@ -72,7 +72,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import re_identifier, bistr, set_ctx, copy_ast
+from .astutil import re_identifier, bistr, copy_ast
 from .common import NodeError, astfield, fstloc, next_frag, next_find, next_find_re
 
 from .fst_misc import (
@@ -776,7 +776,7 @@ def _get_slice_Tuple_elts(
     ret_ast = Tuple(elts=asts, ctx=Load())
 
     if ctx_cls is not Load:
-        set_ctx(asts[:], Load)  # we use set_ctx() instead of FST._set_ctx() because could be pure ASTs
+        self._set_ctx(Load, asts[:])
 
     if is_par:
         prefix, suffix = '()'
@@ -825,7 +825,7 @@ def _get_slice_List_elts(
     ret_ast = List(elts=asts, ctx=Load())
 
     if ctx_cls is not Load:
-        set_ctx(asts[:], Load)  # we use set_ctx() instead of FST._set_ctx() because could be pure ASTs
+        self._set_ctx(Load, asts[:])
 
     return get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'elts', '[', ']', ',', 0, 0)
@@ -927,7 +927,7 @@ def _get_slice_Delete_targets(
     asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
-    set_ctx(asts[:], Load)  # we use set_ctx() instead of FST._set_ctx() because could be pure ASTs
+    self._set_ctx(Load, asts[:])
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,

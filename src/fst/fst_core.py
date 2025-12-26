@@ -697,8 +697,9 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
 
 
 def _set_ctx(self: fst.FST, ctx_cls: type[expr_context], stack: list[AST] | None = None) -> None:
-    """Set `ctx` field for `self` and children if applicable, else noop. Creates `FST` nodes directly for the new `AST`
-    context nodes and unmakes the old ones (assumed they have `FST` nodes since this is an `FST` function).
+    """Set `ctx` field for `self` and children if applicable, else noop. Can be used on `FST` or pure `AST tree. For
+    each replaced ctx node, if it has an `FST` node then unmake it and create a new one for the replacement ctx node,
+    otherwise just the new `AST` and mark as non-singleton.
 
     **WARNING!** `stack` is consumed.
     """
@@ -714,10 +715,15 @@ def _set_ctx(self: fst.FST, ctx_cls: type[expr_context], stack: list[AST] | None
             or (is_single := (a_cls in (Name, Subscript, Attribute)))
             or a_cls is Starred
         ) and (ctx := a.ctx).__class__ is not ctx_cls:
-            ctx.f.a = ctx.f = None  # unmake
             a.ctx = child = ctx_cls()
 
-            fst.FST(child, a.f, _astfieldctx)  # this just creates the FST and adds it to the child
+            if not (f := getattr(ctx, 'f', None)):
+                child.f = None  # mark new ctx as not singleton so that _make_fst_tree() doesn't recreate the node
+
+            else:
+                f.a = ctx.f = None  # unmake
+
+                fst.FST(child, a.f, _astfieldctx)  # this just creates the FST and adds it to the child
 
             if is_seq:
                 stack.extend(a.elts)
