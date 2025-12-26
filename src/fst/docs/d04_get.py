@@ -32,11 +32,10 @@ This node is not a root node and can't be put to a tree.
 >>> g.is_root
 False
 
->>> try:
-...     f.body.append(g)
-... except Exception as exc:
-...     print('Exception:', exc)
-Exception: expecting root node
+>>> f.body.append(g)
+Traceback (most recent call last):
+...
+ValueError: expecting root node
 
 In order to get this node standalone you need to `copy()` it (`fst.fst.FST.copy()`).
 
@@ -103,11 +102,10 @@ if i:
     else:
         k = 0
 
->>> try:
-...     f.body[0].body[0].cut(norm=True)
-... except Exception as exc:
-...     print(repr(exc))
-ValueError('cannot cut all elements from If.body without norm_self=False')
+>>> f.body[0].body[0].cut(norm=True)
+Traceback (most recent call last):
+...
+ValueError: cannot cut all elements from If.body without norm_self=False
 
 Cutting out an optional body field like an `orelse`, `finalbody` or `handlers` (if there is a `finalbody`) will leave
 the tree in a valid state.
@@ -137,11 +135,10 @@ You can copy a root node but you cannot cut one.
 >>> f.copy()
 <If ROOT 0,0..1,9>
 
->>> try:
-...     f.cut()
-... except Exception as exc:
-...     print('Exception:', exc)
-Exception: cannot cut root node
+>>> f.cut()
+Traceback (most recent call last):
+...
+ValueError: cannot cut root node
 
 
 ## `get()` and `get_slice()`

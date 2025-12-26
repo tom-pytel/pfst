@@ -248,11 +248,10 @@ You can delete individual elements in this way.
 But not put individual elements, since there is not an `AST` which represents a `key:value` pair. If you want to replace
 a single element in this way you must use slice operations.
 
->>> try:
-...     f.put('{-2: y}', 1, '_all')
-... except Exception as exc:
-...     print(repr(exc))
-ValueError("cannot put as 'one' item to a Dict slice")
+>>> f.put('{-2: y}', 1, '_all')
+Traceback (most recent call last):
+...
+fst.NodeError: cannot put as 'one' item to a Dict slice
 
 >>> f.put_slice('{-2: y}', 1, 2, '_all')
 <Dict ROOT 0,0..0,13>
@@ -279,11 +278,10 @@ operations.
 You can only modify the `rest` element within the rules of the `MatchMapping` syntax, only one of those is permitted and
 only at the end of the pattern:
 
->>> try:
-...     f.put_slice('{**BAD}', 1, 2)
-... except Exception as exc:
-...     print(repr(exc))
-ValueError("put slice with 'rest' element to MatchMapping must be at end")
+>>> f.put_slice('{**BAD}', 1, 2)
+Traceback (most recent call last):
+...
+ValueError: put slice with 'rest' element to MatchMapping must be at end
 
 For a `Compare`, there is no problem with having to pair elements for slicing, but the rather indexing is changed to
 include the `left` element as the first element of the virtual field. This applies both to single element operations as

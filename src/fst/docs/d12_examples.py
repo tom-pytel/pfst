@@ -17,10 +17,10 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
-This is just a print helper function for this documentation specifically, you can ignore it.
+This is just a print helper function for this documentation, you can ignore it.
 
 >>> def pprint(src):  # helper
-...    print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
+...     print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
 
 
 ## `else if` chain to `elif`

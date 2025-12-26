@@ -298,11 +298,10 @@ a == x < b
 >>> print(FST('a < b').put_slice('x', 1, 1, op_side='right', op='==').src)
 a < x == b
 
->>> try:  # no extra op in source or `op` option
-...     print(FST('a < b').put_slice('x', 1, 1).src)
-... except Exception as exc:
-...     print(repr(exc))
-ValueError("insertion to Compare requires and 'op' extra operator to insert")
+>>> print(FST('a < b').put_slice('x', 1, 1).src)
+Traceback (most recent call last):
+...
+ValueError: insertion to Compare requires an 'op' extra operator to insert
 
 If replacing then this is optional.
 
@@ -449,11 +448,10 @@ allowed to delete all the children of that node even if it is not valid to do so
 
 >>> node = FST('a = b = val')
 
->>> try:
-...     node.put_slice(None, 'targets', norm=True)  # try to delete everything
-... except Exception as exc:
-...     print(exc)
-cannot delete all Assign.targets without norm_self=False
+>>> node.put_slice(None, 'targets', norm=True)  # try to delete everything
+Traceback (most recent call last):
+...
+ValueError: cannot delete all Assign.targets without norm_self=False
 
 >>> node.put_slice(None, 'targets', norm=False)
 <Assign ROOT 0,0..0,4>

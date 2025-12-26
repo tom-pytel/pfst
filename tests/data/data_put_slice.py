@@ -31027,7 +31027,7 @@ b
 c
 '''), (None,
 r'''x'''),
-r'''**ValueError("insertion to Compare requires and 'op' extra operator to insert")**'''),
+r'''**ValueError("insertion to Compare requires an 'op' extra operator to insert")**'''),
 
 ('', 3, 3, None, {'op': '=='}, (None, r'''
 a

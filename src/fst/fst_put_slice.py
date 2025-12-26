@@ -333,7 +333,7 @@ def _code_to_slice_key_and_other(
         return None
 
     if one:
-        raise ValueError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
+        raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice", rawable=True)
 
     fst_ = code_as(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
     ast_ = fst_.a
@@ -621,7 +621,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
 
     if not (op := options.get('op')):
         if is_ins:  # if is insert then a dangling operator MUST be added from a non-global `op` option which must be present, op_side_left will be either True or False in that case
-            raise ValueError("insertion to Compare requires and 'op' extra operator to insert")
+            raise ValueError("insertion to Compare requires an 'op' extra operator to insert")
 
         return fst_, None
 

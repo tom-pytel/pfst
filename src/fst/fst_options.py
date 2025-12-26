@@ -57,12 +57,9 @@ def check_options(options: Mapping[str, Any]) -> None:
 
 @staticmethod
 def get_options() -> dict[str, Any]:
-    """Get a dictionary of ALL options. These are the same `options` that can be passed to operations and this
+    """Get a dictionary of ALL global options. These are the same `options` that can be passed to operations and this
     function returns their global defaults which are used when those options are not passed to operations or if they
-    are passed with a value of `None`.
-
-    When these options are missing or `None` in a call to an operation, then the default option as specified here is
-    used.
+    are passed with a value of `None`
 
     **Parameters:**
     - `options`: Names / values of options to set temporarily, see `options()`.
@@ -232,12 +229,12 @@ def options(**options) -> Iterator[dict[str, Any]]:
             destination on put if not needed there (but not source).
         - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
             on put if not needed (removed from destination first if needed and present on both).
-    - `pars_walrus`: Whether to ADD parentheses to top level cut / copied `NamedExpr` nodes or not. If parentheses
+    - `pars_walrus`: Whether to **ADD** parentheses to top level cut / copied `NamedExpr` nodes or not. If parentheses
         were already copied due to `pars=True` then setting this to `False` will not remove them.
         - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
         - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
         - `None`: Parenthesize according to the `pars` option.
-    - `pars_arglike`: Whether to ADD parentheses to argument-like expressions (`*not a`, `*b or c`) when cut /
+    - `pars_arglike`: Whether to **ADD** parentheses to argument-like expressions (`*not a`, `*b or c`) when cut /
         copied either as single element or as part of a slice. If parentheses were already present then setting this
         to `False` will not remove them.
         - `True`: Parenthesize cut / copied argument-like expressions.
@@ -272,7 +269,7 @@ def options(**options) -> Iterator[dict[str, Any]]:
             operation and normalization of `self`.
         - `False`: No `Set` normalization regardless of `norm` or `norm_*` options, just leave or return an invalid
             `Set` object.
-    -`op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side
+    - `op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side
         operator is to be deleted or inserted before or after. This can take the values of `'left'` or `'right'` and
         specifies which side operator to delete for delete operations. For insert operations this specifies whether
         to insert before an operator `'left'` or operand `'right'`, roughly translating to which side operator is

@@ -8323,7 +8323,7 @@ if 1:
         self.assertEqual('{}', f._all[0:0].copy().src)
 
         self.assertRaises(ValueError, lambda: f._all[1])
-        self.assertRaises(ValueError, f._all.__setitem__, 1, 'x')
+        self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
 
         f._all[1] = None
 
@@ -8347,7 +8347,7 @@ if 1:
         self.assertEqual('{}', f._all[0:0].copy().src)
 
         self.assertRaises(ValueError, lambda: f._all[0])
-        self.assertRaises(ValueError, f._all.__setitem__, 1, 'x')
+        self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
 
         f._all[1] = None
 

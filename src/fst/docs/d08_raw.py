@@ -26,12 +26,10 @@ Raw node put operations can do things which are not normally possible with presc
 
 >>> f = FST('{a: b, c: d, e: f}')
 
->>> try:
-...     f.put('**g', 1, raw=False)
-... except Exception as exc:
-...     print(str(exc))
+>>> f.put('**g', 1, raw=False)
+Traceback (most recent call last):
 ...
-cannot put as 'one' item to a Dict slice
+fst.NodeError: cannot put as 'one' item to a Dict slice
 
 >>> f.put('**g', 1, raw=True)
 <Dict ROOT 0,0..0,17>
@@ -193,11 +191,10 @@ could get confusing with those operations also specifying an explicit end locati
 
 >>> f = FST('[1, 2, 3]')
 
->>> try:
-...     f.put_slice('4, 5', 0, 1, raw=True, to=f.elts[2])
-... except Exception as exc:
-...     print(exc)
-cannot put slice with 'to' option
+>>> f.put_slice('4, 5', 0, 1, raw=True, to=f.elts[2])
+Traceback (most recent call last):
+...
+ValueError: cannot put slice with 'to' option
 
 
 ## Parentheses
@@ -223,11 +220,10 @@ You can turn this behavior off for single element operations.
 
 But it can cause problems.
 
->>> try:
-...     f.elts[0].replace('z', raw=True, pars=False, to=f.elts[2])
-... except Exception as exc:
-...     print(str(exc))
-invalid syntax
+>>> f.elts[0].replace('z', raw=True, pars=False, to=f.elts[2])
+Traceback (most recent call last):
+...
+fst.ParseError: invalid syntax
 
 This failed because the source code winds up being `[z, )]`.
 
