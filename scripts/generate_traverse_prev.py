@@ -4,11 +4,14 @@ from fst.astutil import *
 from fst import *
 from fst.astutil import FIELDS, AST_FIELDS
 
+PRUNE_EMPTY_FUNCS = True
+
 _FIELD_CARDINALITY = {
     (kls, field): t if (t := typ[-1:]) in ('?*') else ''
     for kls, fields in FIELDS.items()
     for field, typ in (('END', ''),) + fields + ((None, ''),)
 }
+
 
 print(r'''
 from typing import Union
@@ -145,6 +148,10 @@ __all__ = ['PREV_FUNCS']
 
 
 _NextPrevRet = Union['fst.FST', None, tuple[str, int | None]]
+
+
+def _prev_None(ast: AST, idx: int | None) -> _NextPrevRet:
+      return None
 '''.strip())
 
 PREV_FUNCS = {}
@@ -770,6 +777,11 @@ def _prev_TypeVarTuple_default_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 '''.rstrip())
 
+    elif PRUNE_EMPTY_FUNCS and len(fields) == 1:  # if no fields then doesn't need its own functions
+        PREV_FUNCS[(cls_name, None)] = '_prev_None'
+
+        continue
+
     else:
         special = False
 
@@ -801,13 +813,19 @@ def _prev_TypeVarTuple_default_value(ast: AST, idx: int | None) -> _NextPrevRet:
                 break
 
         else:
+            if PRUNE_EMPTY_FUNCS and field is fields[-1] and not body:  # if last field and nothing in body then doesn't need its own function
+                PREV_FUNCS[(cls_name, field)] = '_prev_None'
+
+                continue
+
             body.append('    return None')
 
         print(f'\n\ndef {func_name}(ast: AST, idx: int | None) -> _NextPrevRet:\n' + '\n\n'.join(body))
 
 
-
 print('\n\nPREV_FUNCS = {')
+
 for key, val in PREV_FUNCS.items():
     print(f'    ({key[0]}, {key[1]!r}): {val},')
+
 print('}')

@@ -134,6 +134,10 @@ __all__ = ['PREV_FUNCS']
 _NextPrevRet = Union['fst.FST', None, tuple[str, int | None]]
 
 
+def _prev_None(ast: AST, idx: int | None) -> _NextPrevRet:
+      return None
+
+
 def _prev_Module_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.body:
         return a[-1].f
@@ -164,10 +168,6 @@ def _prev_Interactive_body(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_Expression_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.body.f
-
-
-def _prev_Expression_body(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_FunctionType_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -413,10 +413,6 @@ def _prev_Return_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev_Return_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Delete_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.targets:
         return a[-1].f
@@ -467,10 +463,6 @@ def _prev_TypeAlias_type_params(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.name.f
 
 
-def _prev_TypeAlias_name(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_AugAssign_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
@@ -481,10 +473,6 @@ def _prev_AugAssign_value(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_AugAssign_op(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
-
-
-def _prev_AugAssign_target(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_AnnAssign_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -500,10 +488,6 @@ def _prev_AnnAssign_value(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_AnnAssign_annotation(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
-
-
-def _prev_AnnAssign_target(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_For_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -537,10 +521,6 @@ def _prev_For_iter(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
 
 
-def _prev_For_target(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_AsyncFor_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.orelse:
         return a[-1].f
@@ -572,10 +552,6 @@ def _prev_AsyncFor_iter(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
 
 
-def _prev_AsyncFor_target(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_While_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.orelse:
         return a[-1].f
@@ -603,10 +579,6 @@ def _prev_While_body(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.test.f
 
 
-def _prev_While_test(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_If_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.orelse:
         return a[-1].f
@@ -632,10 +604,6 @@ def _prev_If_body(ast: AST, idx: int | None) -> _NextPrevRet:
         return  ast.body[idx].f
 
     return ast.test.f
-
-
-def _prev_If_test(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_With_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -706,10 +674,6 @@ def _prev_Match_cases(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.subject.f
 
 
-def _prev_Match_subject(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Raise_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.cause:
         return a.f
@@ -724,10 +688,6 @@ def _prev_Raise_cause(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.exc:
         return a.f
 
-    return None
-
-
-def _prev_Raise_exc(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -866,10 +826,6 @@ def _prev_Assert_msg(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.test.f
 
 
-def _prev_Assert_test(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Import_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.names:
         return a[-1].f
@@ -898,32 +854,8 @@ def _prev_ImportFrom_names(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev_Global_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Nonlocal_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Expr_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_Expr_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Pass_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Break_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Continue_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_BoolOp_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -940,20 +872,12 @@ def _prev_BoolOp_values(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.op.f
 
 
-def _prev_BoolOp_op(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_NamedExpr_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
 def _prev_NamedExpr_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
-
-
-def _prev_NamedExpr_target(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_BinOp_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -968,10 +892,6 @@ def _prev_BinOp_op(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.left.f
 
 
-def _prev_BinOp_left(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_UnaryOp_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.operand.f
 
@@ -980,20 +900,12 @@ def _prev_UnaryOp_operand(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.op.f
 
 
-def _prev_UnaryOp_op(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Lambda_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.body.f
 
 
 def _prev_Lambda_body(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.args.f
-
-
-def _prev_Lambda_args(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_IfExp_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1006,10 +918,6 @@ def _prev_IfExp_orelse(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_IfExp_test(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.body.f
-
-
-def _prev_IfExp_body(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_Dict_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1064,10 +972,6 @@ def _prev_ListComp_generators(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.elt.f
 
 
-def _prev_ListComp_elt(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_SetComp_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.generators:
         return a[-1].f
@@ -1080,10 +984,6 @@ def _prev_SetComp_generators(ast: AST, idx: int | None) -> _NextPrevRet:
         return  ast.generators[idx].f
 
     return ast.elt.f
-
-
-def _prev_SetComp_elt(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_DictComp_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1104,10 +1004,6 @@ def _prev_DictComp_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.key.f
 
 
-def _prev_DictComp_key(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_GeneratorExp_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.generators:
         return a[-1].f
@@ -1122,16 +1018,8 @@ def _prev_GeneratorExp_generators(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.elt.f
 
 
-def _prev_GeneratorExp_elt(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Await_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_Await_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_Yield_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1141,16 +1029,8 @@ def _prev_Yield_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev_Yield_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_YieldFrom_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_YieldFrom_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_Compare_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1295,10 +1175,6 @@ def _prev_FormattedValue_format_spec(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _prev_FormattedValue_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Interpolation_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.format_spec:
         return a.f
@@ -1308,10 +1184,6 @@ def _prev_Interpolation_END(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_Interpolation_format_spec(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_Interpolation_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_JoinedStr_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1342,20 +1214,12 @@ def _prev_TemplateStr_values(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev_Constant_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Attribute_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
 
 
 def _prev_Attribute_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_Attribute_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_Subscript_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1370,10 +1234,6 @@ def _prev_Subscript_slice(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _prev_Subscript_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Starred_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
 
@@ -1382,16 +1242,8 @@ def _prev_Starred_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _prev_Starred_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_Name_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
-
-
-def _prev_Name_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_List_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1460,138 +1312,6 @@ def _prev_Slice_upper(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev_Slice_lower(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Load_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Store_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Del_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_And_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Or_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Add_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Sub_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Mult_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_MatMult_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Div_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Mod_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Pow_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_LShift_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_RShift_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_BitOr_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_BitXor_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_BitAnd_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_FloorDiv_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Invert_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Not_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_UAdd_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_USub_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Eq_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_NotEq_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Lt_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_LtE_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Gt_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_GtE_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_Is_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_IsNot_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_In_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_NotIn_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_comprehension_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.ifs:
         return a[-1].f
@@ -1608,10 +1328,6 @@ def _prev_comprehension_ifs(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_comprehension_iter(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
-
-
-def _prev_comprehension_target(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_ExceptHandler_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1631,10 +1347,6 @@ def _prev_ExceptHandler_body(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.type:
         return a.f
 
-    return None
-
-
-def _prev_ExceptHandler_type(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -1780,20 +1492,8 @@ def _prev_arg_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev_arg_annotation(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_keyword_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_keyword_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_alias_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_withitem_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1805,10 +1505,6 @@ def _prev_withitem_END(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _prev_withitem_optional_vars(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.context_expr.f
-
-
-def _prev_withitem_context_expr(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_match_case_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1835,20 +1531,8 @@ def _prev_match_case_guard(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.pattern.f
 
 
-def _prev_match_case_pattern(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_MatchValue_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _prev_MatchValue_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_MatchSingleton_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _prev_MatchSequence_END(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1916,22 +1600,10 @@ def _prev_MatchClass_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.cls.f
 
 
-def _prev_MatchClass_cls(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _prev_MatchStar_END(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _prev_MatchAs_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.pattern:
         return a.f
 
-    return None
-
-
-def _prev_MatchAs_pattern(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -1946,10 +1618,6 @@ def _prev_MatchOr_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
     if (idx := idx - 1) >= 0:
         return  ast.patterns[idx].f
 
-    return None
-
-
-def _prev_TypeIgnore_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -2128,7 +1796,7 @@ PREV_FUNCS = {
     (Interactive, None):                  _prev_Interactive_END,
     (Interactive, 'body'):                _prev_Interactive_body,
     (Expression, None):                   _prev_Expression_END,
-    (Expression, 'body'):                 _prev_Expression_body,
+    (Expression, 'body'):                 _prev_None,
     (FunctionType, None):                 _prev_FunctionType_END,
     (FunctionType, 'returns'):            _prev_FunctionType_returns,
     (FunctionType, 'argtypes'):           _prev_FunctionType_argtypes,
@@ -2151,7 +1819,7 @@ PREV_FUNCS = {
     (ClassDef, 'type_params'):            _prev_ClassDef_type_params,
     (ClassDef, 'decorator_list'):         _prev_ClassDef_decorator_list,
     (Return, None):                       _prev_Return_END,
-    (Return, 'value'):                    _prev_Return_value,
+    (Return, 'value'):                    _prev_None,
     (Delete, None):                       _prev_Delete_END,
     (Delete, 'targets'):                  _prev_Delete_targets,
     (Assign, None):                       _prev_Assign_END,
@@ -2160,33 +1828,33 @@ PREV_FUNCS = {
     (TypeAlias, None):                    _prev_TypeAlias_END,
     (TypeAlias, 'value'):                 _prev_TypeAlias_value,
     (TypeAlias, 'type_params'):           _prev_TypeAlias_type_params,
-    (TypeAlias, 'name'):                  _prev_TypeAlias_name,
+    (TypeAlias, 'name'):                  _prev_None,
     (AugAssign, None):                    _prev_AugAssign_END,
     (AugAssign, 'value'):                 _prev_AugAssign_value,
     (AugAssign, 'op'):                    _prev_AugAssign_op,
-    (AugAssign, 'target'):                _prev_AugAssign_target,
+    (AugAssign, 'target'):                _prev_None,
     (AnnAssign, None):                    _prev_AnnAssign_END,
     (AnnAssign, 'value'):                 _prev_AnnAssign_value,
     (AnnAssign, 'annotation'):            _prev_AnnAssign_annotation,
-    (AnnAssign, 'target'):                _prev_AnnAssign_target,
+    (AnnAssign, 'target'):                _prev_None,
     (For, None):                          _prev_For_END,
     (For, 'orelse'):                      _prev_For_orelse,
     (For, 'body'):                        _prev_For_body,
     (For, 'iter'):                        _prev_For_iter,
-    (For, 'target'):                      _prev_For_target,
+    (For, 'target'):                      _prev_None,
     (AsyncFor, None):                     _prev_AsyncFor_END,
     (AsyncFor, 'orelse'):                 _prev_AsyncFor_orelse,
     (AsyncFor, 'body'):                   _prev_AsyncFor_body,
     (AsyncFor, 'iter'):                   _prev_AsyncFor_iter,
-    (AsyncFor, 'target'):                 _prev_AsyncFor_target,
+    (AsyncFor, 'target'):                 _prev_None,
     (While, None):                        _prev_While_END,
     (While, 'orelse'):                    _prev_While_orelse,
     (While, 'body'):                      _prev_While_body,
-    (While, 'test'):                      _prev_While_test,
+    (While, 'test'):                      _prev_None,
     (If, None):                           _prev_If_END,
     (If, 'orelse'):                       _prev_If_orelse,
     (If, 'body'):                         _prev_If_body,
-    (If, 'test'):                         _prev_If_test,
+    (If, 'test'):                         _prev_None,
     (With, None):                         _prev_With_END,
     (With, 'body'):                       _prev_With_body,
     (With, 'items'):                      _prev_With_items,
@@ -2195,10 +1863,10 @@ PREV_FUNCS = {
     (AsyncWith, 'items'):                 _prev_AsyncWith_items,
     (Match, None):                        _prev_Match_END,
     (Match, 'cases'):                     _prev_Match_cases,
-    (Match, 'subject'):                   _prev_Match_subject,
+    (Match, 'subject'):                   _prev_None,
     (Raise, None):                        _prev_Raise_END,
     (Raise, 'cause'):                     _prev_Raise_cause,
-    (Raise, 'exc'):                       _prev_Raise_exc,
+    (Raise, 'exc'):                       _prev_None,
     (Try, None):                          _prev_Try_END,
     (Try, 'finalbody'):                   _prev_Try_finalbody,
     (Try, 'orelse'):                      _prev_Try_orelse,
@@ -2211,38 +1879,38 @@ PREV_FUNCS = {
     (TryStar, 'body'):                    _prev_TryStar_body,
     (Assert, None):                       _prev_Assert_END,
     (Assert, 'msg'):                      _prev_Assert_msg,
-    (Assert, 'test'):                     _prev_Assert_test,
+    (Assert, 'test'):                     _prev_None,
     (Import, None):                       _prev_Import_END,
     (Import, 'names'):                    _prev_Import_names,
     (ImportFrom, None):                   _prev_ImportFrom_END,
     (ImportFrom, 'names'):                _prev_ImportFrom_names,
-    (Global, None):                       _prev_Global_END,
-    (Nonlocal, None):                     _prev_Nonlocal_END,
+    (Global, None):                       _prev_None,
+    (Nonlocal, None):                     _prev_None,
     (Expr, None):                         _prev_Expr_END,
-    (Expr, 'value'):                      _prev_Expr_value,
-    (Pass, None):                         _prev_Pass_END,
-    (Break, None):                        _prev_Break_END,
-    (Continue, None):                     _prev_Continue_END,
+    (Expr, 'value'):                      _prev_None,
+    (Pass, None):                         _prev_None,
+    (Break, None):                        _prev_None,
+    (Continue, None):                     _prev_None,
     (BoolOp, None):                       _prev_BoolOp_END,
     (BoolOp, 'values'):                   _prev_BoolOp_values,
-    (BoolOp, 'op'):                       _prev_BoolOp_op,
+    (BoolOp, 'op'):                       _prev_None,
     (NamedExpr, None):                    _prev_NamedExpr_END,
     (NamedExpr, 'value'):                 _prev_NamedExpr_value,
-    (NamedExpr, 'target'):                _prev_NamedExpr_target,
+    (NamedExpr, 'target'):                _prev_None,
     (BinOp, None):                        _prev_BinOp_END,
     (BinOp, 'right'):                     _prev_BinOp_right,
     (BinOp, 'op'):                        _prev_BinOp_op,
-    (BinOp, 'left'):                      _prev_BinOp_left,
+    (BinOp, 'left'):                      _prev_None,
     (UnaryOp, None):                      _prev_UnaryOp_END,
     (UnaryOp, 'operand'):                 _prev_UnaryOp_operand,
-    (UnaryOp, 'op'):                      _prev_UnaryOp_op,
+    (UnaryOp, 'op'):                      _prev_None,
     (Lambda, None):                       _prev_Lambda_END,
     (Lambda, 'body'):                     _prev_Lambda_body,
-    (Lambda, 'args'):                     _prev_Lambda_args,
+    (Lambda, 'args'):                     _prev_None,
     (IfExp, None):                        _prev_IfExp_END,
     (IfExp, 'orelse'):                    _prev_IfExp_orelse,
     (IfExp, 'test'):                      _prev_IfExp_test,
-    (IfExp, 'body'):                      _prev_IfExp_body,
+    (IfExp, 'body'):                      _prev_None,
     (Dict, None):                         _prev_Dict_END,
     (Dict, 'values'):                     _prev_Dict_values,
     (Dict, 'keys'):                       _prev_Dict_keys,
@@ -2250,23 +1918,23 @@ PREV_FUNCS = {
     (Set, 'elts'):                        _prev_Set_elts,
     (ListComp, None):                     _prev_ListComp_END,
     (ListComp, 'generators'):             _prev_ListComp_generators,
-    (ListComp, 'elt'):                    _prev_ListComp_elt,
+    (ListComp, 'elt'):                    _prev_None,
     (SetComp, None):                      _prev_SetComp_END,
     (SetComp, 'generators'):              _prev_SetComp_generators,
-    (SetComp, 'elt'):                     _prev_SetComp_elt,
+    (SetComp, 'elt'):                     _prev_None,
     (DictComp, None):                     _prev_DictComp_END,
     (DictComp, 'generators'):             _prev_DictComp_generators,
     (DictComp, 'value'):                  _prev_DictComp_value,
-    (DictComp, 'key'):                    _prev_DictComp_key,
+    (DictComp, 'key'):                    _prev_None,
     (GeneratorExp, None):                 _prev_GeneratorExp_END,
     (GeneratorExp, 'generators'):         _prev_GeneratorExp_generators,
-    (GeneratorExp, 'elt'):                _prev_GeneratorExp_elt,
+    (GeneratorExp, 'elt'):                _prev_None,
     (Await, None):                        _prev_Await_END,
-    (Await, 'value'):                     _prev_Await_value,
+    (Await, 'value'):                     _prev_None,
     (Yield, None):                        _prev_Yield_END,
-    (Yield, 'value'):                     _prev_Yield_value,
+    (Yield, 'value'):                     _prev_None,
     (YieldFrom, None):                    _prev_YieldFrom_END,
-    (YieldFrom, 'value'):                 _prev_YieldFrom_value,
+    (YieldFrom, 'value'):                 _prev_None,
     (Compare, None):                      _prev_Compare_END,
     (Compare, 'comparators'):             _prev_Compare_comparators,
     (Compare, 'ops'):                     _prev_Compare_ops,
@@ -2277,27 +1945,27 @@ PREV_FUNCS = {
     (Call, 'func'):                       _prev_Call_func,
     (FormattedValue, None):               _prev_FormattedValue_END,
     (FormattedValue, 'format_spec'):      _prev_FormattedValue_format_spec,
-    (FormattedValue, 'value'):            _prev_FormattedValue_value,
+    (FormattedValue, 'value'):            _prev_None,
     (Interpolation, None):                _prev_Interpolation_END,
     (Interpolation, 'format_spec'):       _prev_Interpolation_format_spec,
-    (Interpolation, 'value'):             _prev_Interpolation_value,
+    (Interpolation, 'value'):             _prev_None,
     (JoinedStr, None):                    _prev_JoinedStr_END,
     (JoinedStr, 'values'):                _prev_JoinedStr_values,
     (TemplateStr, None):                  _prev_TemplateStr_END,
     (TemplateStr, 'values'):              _prev_TemplateStr_values,
-    (Constant, None):                     _prev_Constant_END,
+    (Constant, None):                     _prev_None,
     (Attribute, None):                    _prev_Attribute_END,
     (Attribute, 'ctx'):                   _prev_Attribute_ctx,
-    (Attribute, 'value'):                 _prev_Attribute_value,
+    (Attribute, 'value'):                 _prev_None,
     (Subscript, None):                    _prev_Subscript_END,
     (Subscript, 'ctx'):                   _prev_Subscript_ctx,
     (Subscript, 'slice'):                 _prev_Subscript_slice,
-    (Subscript, 'value'):                 _prev_Subscript_value,
+    (Subscript, 'value'):                 _prev_None,
     (Starred, None):                      _prev_Starred_END,
     (Starred, 'ctx'):                     _prev_Starred_ctx,
-    (Starred, 'value'):                   _prev_Starred_value,
+    (Starred, 'value'):                   _prev_None,
     (Name, None):                         _prev_Name_END,
-    (Name, 'ctx'):                        _prev_Name_ctx,
+    (Name, 'ctx'):                        _prev_None,
     (List, None):                         _prev_List_END,
     (List, 'ctx'):                        _prev_List_ctx,
     (List, 'elts'):                       _prev_List_elts,
@@ -2307,46 +1975,46 @@ PREV_FUNCS = {
     (Slice, None):                        _prev_Slice_END,
     (Slice, 'step'):                      _prev_Slice_step,
     (Slice, 'upper'):                     _prev_Slice_upper,
-    (Slice, 'lower'):                     _prev_Slice_lower,
-    (Load, None):                         _prev_Load_END,
-    (Store, None):                        _prev_Store_END,
-    (Del, None):                          _prev_Del_END,
-    (And, None):                          _prev_And_END,
-    (Or, None):                           _prev_Or_END,
-    (Add, None):                          _prev_Add_END,
-    (Sub, None):                          _prev_Sub_END,
-    (Mult, None):                         _prev_Mult_END,
-    (MatMult, None):                      _prev_MatMult_END,
-    (Div, None):                          _prev_Div_END,
-    (Mod, None):                          _prev_Mod_END,
-    (Pow, None):                          _prev_Pow_END,
-    (LShift, None):                       _prev_LShift_END,
-    (RShift, None):                       _prev_RShift_END,
-    (BitOr, None):                        _prev_BitOr_END,
-    (BitXor, None):                       _prev_BitXor_END,
-    (BitAnd, None):                       _prev_BitAnd_END,
-    (FloorDiv, None):                     _prev_FloorDiv_END,
-    (Invert, None):                       _prev_Invert_END,
-    (Not, None):                          _prev_Not_END,
-    (UAdd, None):                         _prev_UAdd_END,
-    (USub, None):                         _prev_USub_END,
-    (Eq, None):                           _prev_Eq_END,
-    (NotEq, None):                        _prev_NotEq_END,
-    (Lt, None):                           _prev_Lt_END,
-    (LtE, None):                          _prev_LtE_END,
-    (Gt, None):                           _prev_Gt_END,
-    (GtE, None):                          _prev_GtE_END,
-    (Is, None):                           _prev_Is_END,
-    (IsNot, None):                        _prev_IsNot_END,
-    (In, None):                           _prev_In_END,
-    (NotIn, None):                        _prev_NotIn_END,
+    (Slice, 'lower'):                     _prev_None,
+    (Load, None):                         _prev_None,
+    (Store, None):                        _prev_None,
+    (Del, None):                          _prev_None,
+    (And, None):                          _prev_None,
+    (Or, None):                           _prev_None,
+    (Add, None):                          _prev_None,
+    (Sub, None):                          _prev_None,
+    (Mult, None):                         _prev_None,
+    (MatMult, None):                      _prev_None,
+    (Div, None):                          _prev_None,
+    (Mod, None):                          _prev_None,
+    (Pow, None):                          _prev_None,
+    (LShift, None):                       _prev_None,
+    (RShift, None):                       _prev_None,
+    (BitOr, None):                        _prev_None,
+    (BitXor, None):                       _prev_None,
+    (BitAnd, None):                       _prev_None,
+    (FloorDiv, None):                     _prev_None,
+    (Invert, None):                       _prev_None,
+    (Not, None):                          _prev_None,
+    (UAdd, None):                         _prev_None,
+    (USub, None):                         _prev_None,
+    (Eq, None):                           _prev_None,
+    (NotEq, None):                        _prev_None,
+    (Lt, None):                           _prev_None,
+    (LtE, None):                          _prev_None,
+    (Gt, None):                           _prev_None,
+    (GtE, None):                          _prev_None,
+    (Is, None):                           _prev_None,
+    (IsNot, None):                        _prev_None,
+    (In, None):                           _prev_None,
+    (NotIn, None):                        _prev_None,
     (comprehension, None):                _prev_comprehension_END,
     (comprehension, 'ifs'):               _prev_comprehension_ifs,
     (comprehension, 'iter'):              _prev_comprehension_iter,
-    (comprehension, 'target'):            _prev_comprehension_target,
+    (comprehension, 'target'):            _prev_None,
     (ExceptHandler, None):                _prev_ExceptHandler_END,
     (ExceptHandler, 'body'):              _prev_ExceptHandler_body,
-    (ExceptHandler, 'type'):              _prev_ExceptHandler_type,
+    (ExceptHandler, 'type'):              _prev_None,
     (arguments, None):                    _prev_arguments_END,
     (arguments, 'kwarg'):                 _prev_arguments_kwarg,
     (arguments, 'kw_defaults'):           _prev_arguments_kw_defaults,
@@ -2356,20 +2024,20 @@ PREV_FUNCS = {
     (arguments, 'args'):                  _prev_arguments_args,
     (arguments, 'posonlyargs'):           _prev_arguments_posonlyargs,
     (arg, None):                          _prev_arg_END,
-    (arg, 'annotation'):                  _prev_arg_annotation,
+    (arg, 'annotation'):                  _prev_None,
     (keyword, None):                      _prev_keyword_END,
-    (keyword, 'value'):                   _prev_keyword_value,
-    (alias, None):                        _prev_alias_END,
+    (keyword, 'value'):                   _prev_None,
+    (alias, None):                        _prev_None,
     (withitem, None):                     _prev_withitem_END,
     (withitem, 'optional_vars'):          _prev_withitem_optional_vars,
-    (withitem, 'context_expr'):           _prev_withitem_context_expr,
+    (withitem, 'context_expr'):           _prev_None,
     (match_case, None):                   _prev_match_case_END,
     (match_case, 'body'):                 _prev_match_case_body,
     (match_case, 'guard'):                _prev_match_case_guard,
-    (match_case, 'pattern'):              _prev_match_case_pattern,
+    (match_case, 'pattern'):              _prev_None,
     (MatchValue, None):                   _prev_MatchValue_END,
-    (MatchValue, 'value'):                _prev_MatchValue_value,
-    (MatchSingleton, None):               _prev_MatchSingleton_END,
+    (MatchValue, 'value'):                _prev_None,
+    (MatchSingleton, None):               _prev_None,
     (MatchSequence, None):                _prev_MatchSequence_END,
     (MatchSequence, 'patterns'):          _prev_MatchSequence_patterns,
     (MatchMapping, None):                 _prev_MatchMapping_END,
@@ -2378,13 +2046,13 @@ PREV_FUNCS = {
     (MatchClass, None):                   _prev_MatchClass_END,
     (MatchClass, 'kwd_patterns'):         _prev_MatchClass_kwd_patterns,
     (MatchClass, 'patterns'):             _prev_MatchClass_patterns,
-    (MatchClass, 'cls'):                  _prev_MatchClass_cls,
-    (MatchStar, None):                    _prev_MatchStar_END,
+    (MatchClass, 'cls'):                  _prev_None,
+    (MatchStar, None):                    _prev_None,
     (MatchAs, None):                      _prev_MatchAs_END,
-    (MatchAs, 'pattern'):                 _prev_MatchAs_pattern,
+    (MatchAs, 'pattern'):                 _prev_None,
     (MatchOr, None):                      _prev_MatchOr_END,
     (MatchOr, 'patterns'):                _prev_MatchOr_patterns,
-    (TypeIgnore, None):                   _prev_TypeIgnore_END,
+    (TypeIgnore, None):                   _prev_None,
     (TypeVar, None):                      _prev_TypeVar_END,
     (TypeVar, 'default_value'):           _prev_TypeVar_default_value,
     (TypeVar, 'bound'):                   _prev_TypeVar_bound,

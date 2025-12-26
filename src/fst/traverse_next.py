@@ -134,6 +134,10 @@ __all__ = ['NEXT_FUNCS']
 _NextPrevRet = Union['fst.FST', None, tuple[str, int | None]]
 
 
+def _next_None(ast: AST, idx: int | None) -> _NextPrevRet:
+      return None
+
+
 def _next_Module_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.body:
         return a[0].f
@@ -166,10 +170,6 @@ def _next_Expression_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.body.f
 
 
-def _next_Expression_body(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_FunctionType_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.argtypes:
         return a[0].f
@@ -182,10 +182,6 @@ def _next_FunctionType_argtypes(ast: AST, idx: int | None) -> _NextPrevRet:
         return a[idx].f
 
     return ast.returns.f
-
-
-def _next_FunctionType_returns(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_FunctionDef_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -387,10 +383,6 @@ def _next_Return_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_Return_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Delete_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.targets:
         return a[0].f
@@ -419,10 +411,6 @@ def _next_Assign_targets(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _next_Assign_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_TypeAlias_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.name.f
 
@@ -441,10 +429,6 @@ def _next_TypeAlias_type_params(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _next_TypeAlias_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_AugAssign_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.target.f
 
@@ -455,10 +439,6 @@ def _next_AugAssign_target(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _next_AugAssign_op(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _next_AugAssign_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_AnnAssign_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -473,10 +453,6 @@ def _next_AnnAssign_annotation(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.value:
         return a.f
 
-    return None
-
-
-def _next_AnnAssign_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -701,10 +677,6 @@ def _next_Raise_exc(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_Raise_cause(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Try_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.body:
         return a[0].f
@@ -840,10 +812,6 @@ def _next_Assert_test(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_Assert_msg(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Import_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.names:
         return a[0].f
@@ -872,32 +840,8 @@ def _next_ImportFrom_names(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_Global_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Nonlocal_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Expr_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _next_Expr_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Pass_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Break_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Continue_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_BoolOp_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -926,10 +870,6 @@ def _next_NamedExpr_target(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _next_NamedExpr_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_BinOp_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.left.f
 
@@ -942,10 +882,6 @@ def _next_BinOp_op(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.right.f
 
 
-def _next_BinOp_right(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_UnaryOp_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.op.f
 
@@ -954,20 +890,12 @@ def _next_UnaryOp_op(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.operand.f
 
 
-def _next_UnaryOp_operand(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Lambda_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.args.f
 
 
 def _next_Lambda_args(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.body.f
-
-
-def _next_Lambda_body(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_IfExp_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -980,10 +908,6 @@ def _next_IfExp_body(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _next_IfExp_test(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.orelse.f
-
-
-def _next_IfExp_orelse(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_Dict_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1104,10 +1028,6 @@ def _next_Await_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
-def _next_Await_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Yield_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.value:
         return a.f
@@ -1115,16 +1035,8 @@ def _next_Yield_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_Yield_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_YieldFrom_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _next_YieldFrom_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_Compare_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1261,10 +1173,6 @@ def _next_FormattedValue_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_FormattedValue_format_spec(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Interpolation_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
@@ -1273,10 +1181,6 @@ def _next_Interpolation_value(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.format_spec:
         return a.f
 
-    return None
-
-
-def _next_Interpolation_format_spec(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -1308,20 +1212,12 @@ def _next_TemplateStr_values(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_Constant_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Attribute_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
 
 def _next_Attribute_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
-
-
-def _next_Attribute_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_Subscript_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1336,10 +1232,6 @@ def _next_Subscript_slice(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
 
 
-def _next_Subscript_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Starred_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
 
@@ -1348,16 +1240,8 @@ def _next_Starred_value(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
 
 
-def _next_Starred_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Name_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
-
-
-def _next_Name_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_List_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1374,10 +1258,6 @@ def _next_List_elts(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.ctx.f
 
 
-def _next_List_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_Tuple_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.elts:
         return a[0].f
@@ -1390,10 +1270,6 @@ def _next_Tuple_elts(ast: AST, idx: int | None) -> _NextPrevRet:
         return a[idx].f
 
     return ast.ctx.f
-
-
-def _next_Tuple_ctx(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_Slice_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1423,138 +1299,6 @@ def _next_Slice_upper(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.step:
         return a.f
 
-    return None
-
-
-def _next_Slice_step(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Load_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Store_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Del_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_And_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Or_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Add_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Sub_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Mult_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_MatMult_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Div_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Mod_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Pow_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_LShift_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_RShift_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_BitOr_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_BitXor_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_BitAnd_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_FloorDiv_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Invert_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Not_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_UAdd_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_USub_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Eq_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_NotEq_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Lt_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_LtE_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Gt_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_GtE_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_Is_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_IsNot_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_In_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_NotIn_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -1737,20 +1481,8 @@ def _next_arg_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_arg_annotation(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_keyword_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _next_keyword_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_alias_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_withitem_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1761,10 +1493,6 @@ def _next_withitem_context_expr(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.optional_vars:
         return a.f
 
-    return None
-
-
-def _next_withitem_optional_vars(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -1798,14 +1526,6 @@ def _next_match_case_body(ast: AST, idx: int | None) -> _NextPrevRet:
 
 def _next_MatchValue_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return ast.value.f
-
-
-def _next_MatchValue_value(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
-def _next_MatchSingleton_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
 
 
 def _next_MatchSequence_START(ast: AST, idx: int | None) -> _NextPrevRet:
@@ -1874,18 +1594,10 @@ def _next_MatchClass_kwd_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _next_MatchStar_START(ast: AST, idx: int | None) -> _NextPrevRet:
-    return None
-
-
 def _next_MatchAs_START(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.pattern:
         return a.f
 
-    return None
-
-
-def _next_MatchAs_pattern(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -1900,10 +1612,6 @@ def _next_MatchOr_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
     if (idx := idx + 1) < len(a := ast.patterns):
         return a[idx].f
 
-    return None
-
-
-def _next_TypeIgnore_START(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
@@ -2082,10 +1790,10 @@ NEXT_FUNCS = {
     (Interactive, None):                  _next_Interactive_START,
     (Interactive, 'body'):                _next_Interactive_body,
     (Expression, None):                   _next_Expression_START,
-    (Expression, 'body'):                 _next_Expression_body,
+    (Expression, 'body'):                 _next_None,
     (FunctionType, None):                 _next_FunctionType_START,
     (FunctionType, 'argtypes'):           _next_FunctionType_argtypes,
-    (FunctionType, 'returns'):            _next_FunctionType_returns,
+    (FunctionType, 'returns'):            _next_None,
     (FunctionDef, None):                  _next_FunctionDef_START,
     (FunctionDef, 'decorator_list'):      _next_FunctionDef_decorator_list,
     (FunctionDef, 'type_params'):         _next_FunctionDef_type_params,
@@ -2105,24 +1813,24 @@ NEXT_FUNCS = {
     (ClassDef, 'keywords'):               _next_ClassDef_keywords,
     (ClassDef, 'body'):                   _next_ClassDef_body,
     (Return, None):                       _next_Return_START,
-    (Return, 'value'):                    _next_Return_value,
+    (Return, 'value'):                    _next_None,
     (Delete, None):                       _next_Delete_START,
     (Delete, 'targets'):                  _next_Delete_targets,
     (Assign, None):                       _next_Assign_START,
     (Assign, 'targets'):                  _next_Assign_targets,
-    (Assign, 'value'):                    _next_Assign_value,
+    (Assign, 'value'):                    _next_None,
     (TypeAlias, None):                    _next_TypeAlias_START,
     (TypeAlias, 'name'):                  _next_TypeAlias_name,
     (TypeAlias, 'type_params'):           _next_TypeAlias_type_params,
-    (TypeAlias, 'value'):                 _next_TypeAlias_value,
+    (TypeAlias, 'value'):                 _next_None,
     (AugAssign, None):                    _next_AugAssign_START,
     (AugAssign, 'target'):                _next_AugAssign_target,
     (AugAssign, 'op'):                    _next_AugAssign_op,
-    (AugAssign, 'value'):                 _next_AugAssign_value,
+    (AugAssign, 'value'):                 _next_None,
     (AnnAssign, None):                    _next_AnnAssign_START,
     (AnnAssign, 'target'):                _next_AnnAssign_target,
     (AnnAssign, 'annotation'):            _next_AnnAssign_annotation,
-    (AnnAssign, 'value'):                 _next_AnnAssign_value,
+    (AnnAssign, 'value'):                 _next_None,
     (For, None):                          _next_For_START,
     (For, 'target'):                      _next_For_target,
     (For, 'iter'):                        _next_For_iter,
@@ -2152,7 +1860,7 @@ NEXT_FUNCS = {
     (Match, 'cases'):                     _next_Match_cases,
     (Raise, None):                        _next_Raise_START,
     (Raise, 'exc'):                       _next_Raise_exc,
-    (Raise, 'cause'):                     _next_Raise_cause,
+    (Raise, 'cause'):                     _next_None,
     (Try, None):                          _next_Try_START,
     (Try, 'body'):                        _next_Try_body,
     (Try, 'handlers'):                    _next_Try_handlers,
@@ -2165,38 +1873,38 @@ NEXT_FUNCS = {
     (TryStar, 'finalbody'):               _next_TryStar_finalbody,
     (Assert, None):                       _next_Assert_START,
     (Assert, 'test'):                     _next_Assert_test,
-    (Assert, 'msg'):                      _next_Assert_msg,
+    (Assert, 'msg'):                      _next_None,
     (Import, None):                       _next_Import_START,
     (Import, 'names'):                    _next_Import_names,
     (ImportFrom, None):                   _next_ImportFrom_START,
     (ImportFrom, 'names'):                _next_ImportFrom_names,
-    (Global, None):                       _next_Global_START,
-    (Nonlocal, None):                     _next_Nonlocal_START,
+    (Global, None):                       _next_None,
+    (Nonlocal, None):                     _next_None,
     (Expr, None):                         _next_Expr_START,
-    (Expr, 'value'):                      _next_Expr_value,
-    (Pass, None):                         _next_Pass_START,
-    (Break, None):                        _next_Break_START,
-    (Continue, None):                     _next_Continue_START,
+    (Expr, 'value'):                      _next_None,
+    (Pass, None):                         _next_None,
+    (Break, None):                        _next_None,
+    (Continue, None):                     _next_None,
     (BoolOp, None):                       _next_BoolOp_START,
     (BoolOp, 'op'):                       _next_BoolOp_op,
     (BoolOp, 'values'):                   _next_BoolOp_values,
     (NamedExpr, None):                    _next_NamedExpr_START,
     (NamedExpr, 'target'):                _next_NamedExpr_target,
-    (NamedExpr, 'value'):                 _next_NamedExpr_value,
+    (NamedExpr, 'value'):                 _next_None,
     (BinOp, None):                        _next_BinOp_START,
     (BinOp, 'left'):                      _next_BinOp_left,
     (BinOp, 'op'):                        _next_BinOp_op,
-    (BinOp, 'right'):                     _next_BinOp_right,
+    (BinOp, 'right'):                     _next_None,
     (UnaryOp, None):                      _next_UnaryOp_START,
     (UnaryOp, 'op'):                      _next_UnaryOp_op,
-    (UnaryOp, 'operand'):                 _next_UnaryOp_operand,
+    (UnaryOp, 'operand'):                 _next_None,
     (Lambda, None):                       _next_Lambda_START,
     (Lambda, 'args'):                     _next_Lambda_args,
-    (Lambda, 'body'):                     _next_Lambda_body,
+    (Lambda, 'body'):                     _next_None,
     (IfExp, None):                        _next_IfExp_START,
     (IfExp, 'body'):                      _next_IfExp_body,
     (IfExp, 'test'):                      _next_IfExp_test,
-    (IfExp, 'orelse'):                    _next_IfExp_orelse,
+    (IfExp, 'orelse'):                    _next_None,
     (Dict, None):                         _next_Dict_START,
     (Dict, 'keys'):                       _next_Dict_keys,
     (Dict, 'values'):                     _next_Dict_values,
@@ -2216,11 +1924,11 @@ NEXT_FUNCS = {
     (GeneratorExp, 'elt'):                _next_GeneratorExp_elt,
     (GeneratorExp, 'generators'):         _next_GeneratorExp_generators,
     (Await, None):                        _next_Await_START,
-    (Await, 'value'):                     _next_Await_value,
+    (Await, 'value'):                     _next_None,
     (Yield, None):                        _next_Yield_START,
-    (Yield, 'value'):                     _next_Yield_value,
+    (Yield, 'value'):                     _next_None,
     (YieldFrom, None):                    _next_YieldFrom_START,
-    (YieldFrom, 'value'):                 _next_YieldFrom_value,
+    (YieldFrom, 'value'):                 _next_None,
     (Compare, None):                      _next_Compare_START,
     (Compare, 'left'):                    _next_Compare_left,
     (Compare, 'ops'):                     _next_Compare_ops,
@@ -2231,69 +1939,69 @@ NEXT_FUNCS = {
     (Call, 'keywords'):                   _next_Call_keywords,
     (FormattedValue, None):               _next_FormattedValue_START,
     (FormattedValue, 'value'):            _next_FormattedValue_value,
-    (FormattedValue, 'format_spec'):      _next_FormattedValue_format_spec,
+    (FormattedValue, 'format_spec'):      _next_None,
     (Interpolation, None):                _next_Interpolation_START,
     (Interpolation, 'value'):             _next_Interpolation_value,
-    (Interpolation, 'format_spec'):       _next_Interpolation_format_spec,
+    (Interpolation, 'format_spec'):       _next_None,
     (JoinedStr, None):                    _next_JoinedStr_START,
     (JoinedStr, 'values'):                _next_JoinedStr_values,
     (TemplateStr, None):                  _next_TemplateStr_START,
     (TemplateStr, 'values'):              _next_TemplateStr_values,
-    (Constant, None):                     _next_Constant_START,
+    (Constant, None):                     _next_None,
     (Attribute, None):                    _next_Attribute_START,
     (Attribute, 'value'):                 _next_Attribute_value,
-    (Attribute, 'ctx'):                   _next_Attribute_ctx,
+    (Attribute, 'ctx'):                   _next_None,
     (Subscript, None):                    _next_Subscript_START,
     (Subscript, 'value'):                 _next_Subscript_value,
     (Subscript, 'slice'):                 _next_Subscript_slice,
-    (Subscript, 'ctx'):                   _next_Subscript_ctx,
+    (Subscript, 'ctx'):                   _next_None,
     (Starred, None):                      _next_Starred_START,
     (Starred, 'value'):                   _next_Starred_value,
-    (Starred, 'ctx'):                     _next_Starred_ctx,
+    (Starred, 'ctx'):                     _next_None,
     (Name, None):                         _next_Name_START,
-    (Name, 'ctx'):                        _next_Name_ctx,
+    (Name, 'ctx'):                        _next_None,
     (List, None):                         _next_List_START,
     (List, 'elts'):                       _next_List_elts,
-    (List, 'ctx'):                        _next_List_ctx,
+    (List, 'ctx'):                        _next_None,
     (Tuple, None):                        _next_Tuple_START,
     (Tuple, 'elts'):                      _next_Tuple_elts,
-    (Tuple, 'ctx'):                       _next_Tuple_ctx,
+    (Tuple, 'ctx'):                       _next_None,
     (Slice, None):                        _next_Slice_START,
     (Slice, 'lower'):                     _next_Slice_lower,
     (Slice, 'upper'):                     _next_Slice_upper,
-    (Slice, 'step'):                      _next_Slice_step,
-    (Load, None):                         _next_Load_START,
-    (Store, None):                        _next_Store_START,
-    (Del, None):                          _next_Del_START,
-    (And, None):                          _next_And_START,
-    (Or, None):                           _next_Or_START,
-    (Add, None):                          _next_Add_START,
-    (Sub, None):                          _next_Sub_START,
-    (Mult, None):                         _next_Mult_START,
-    (MatMult, None):                      _next_MatMult_START,
-    (Div, None):                          _next_Div_START,
-    (Mod, None):                          _next_Mod_START,
-    (Pow, None):                          _next_Pow_START,
-    (LShift, None):                       _next_LShift_START,
-    (RShift, None):                       _next_RShift_START,
-    (BitOr, None):                        _next_BitOr_START,
-    (BitXor, None):                       _next_BitXor_START,
-    (BitAnd, None):                       _next_BitAnd_START,
-    (FloorDiv, None):                     _next_FloorDiv_START,
-    (Invert, None):                       _next_Invert_START,
-    (Not, None):                          _next_Not_START,
-    (UAdd, None):                         _next_UAdd_START,
-    (USub, None):                         _next_USub_START,
-    (Eq, None):                           _next_Eq_START,
-    (NotEq, None):                        _next_NotEq_START,
-    (Lt, None):                           _next_Lt_START,
-    (LtE, None):                          _next_LtE_START,
-    (Gt, None):                           _next_Gt_START,
-    (GtE, None):                          _next_GtE_START,
-    (Is, None):                           _next_Is_START,
-    (IsNot, None):                        _next_IsNot_START,
-    (In, None):                           _next_In_START,
-    (NotIn, None):                        _next_NotIn_START,
+    (Slice, 'step'):                      _next_None,
+    (Load, None):                         _next_None,
+    (Store, None):                        _next_None,
+    (Del, None):                          _next_None,
+    (And, None):                          _next_None,
+    (Or, None):                           _next_None,
+    (Add, None):                          _next_None,
+    (Sub, None):                          _next_None,
+    (Mult, None):                         _next_None,
+    (MatMult, None):                      _next_None,
+    (Div, None):                          _next_None,
+    (Mod, None):                          _next_None,
+    (Pow, None):                          _next_None,
+    (LShift, None):                       _next_None,
+    (RShift, None):                       _next_None,
+    (BitOr, None):                        _next_None,
+    (BitXor, None):                       _next_None,
+    (BitAnd, None):                       _next_None,
+    (FloorDiv, None):                     _next_None,
+    (Invert, None):                       _next_None,
+    (Not, None):                          _next_None,
+    (UAdd, None):                         _next_None,
+    (USub, None):                         _next_None,
+    (Eq, None):                           _next_None,
+    (NotEq, None):                        _next_None,
+    (Lt, None):                           _next_None,
+    (LtE, None):                          _next_None,
+    (Gt, None):                           _next_None,
+    (GtE, None):                          _next_None,
+    (Is, None):                           _next_None,
+    (IsNot, None):                        _next_None,
+    (In, None):                           _next_None,
+    (NotIn, None):                        _next_None,
     (comprehension, None):                _next_comprehension_START,
     (comprehension, 'target'):            _next_comprehension_target,
     (comprehension, 'iter'):              _next_comprehension_iter,
@@ -2310,20 +2018,20 @@ NEXT_FUNCS = {
     (arguments, 'kw_defaults'):           _next_arguments_kw_defaults,
     (arguments, 'kwarg'):                 _next_arguments_kwarg,
     (arg, None):                          _next_arg_START,
-    (arg, 'annotation'):                  _next_arg_annotation,
+    (arg, 'annotation'):                  _next_None,
     (keyword, None):                      _next_keyword_START,
-    (keyword, 'value'):                   _next_keyword_value,
-    (alias, None):                        _next_alias_START,
+    (keyword, 'value'):                   _next_None,
+    (alias, None):                        _next_None,
     (withitem, None):                     _next_withitem_START,
     (withitem, 'context_expr'):           _next_withitem_context_expr,
-    (withitem, 'optional_vars'):          _next_withitem_optional_vars,
+    (withitem, 'optional_vars'):          _next_None,
     (match_case, None):                   _next_match_case_START,
     (match_case, 'pattern'):              _next_match_case_pattern,
     (match_case, 'guard'):                _next_match_case_guard,
     (match_case, 'body'):                 _next_match_case_body,
     (MatchValue, None):                   _next_MatchValue_START,
-    (MatchValue, 'value'):                _next_MatchValue_value,
-    (MatchSingleton, None):               _next_MatchSingleton_START,
+    (MatchValue, 'value'):                _next_None,
+    (MatchSingleton, None):               _next_None,
     (MatchSequence, None):                _next_MatchSequence_START,
     (MatchSequence, 'patterns'):          _next_MatchSequence_patterns,
     (MatchMapping, None):                 _next_MatchMapping_START,
@@ -2333,12 +2041,12 @@ NEXT_FUNCS = {
     (MatchClass, 'cls'):                  _next_MatchClass_cls,
     (MatchClass, 'patterns'):             _next_MatchClass_patterns,
     (MatchClass, 'kwd_patterns'):         _next_MatchClass_kwd_patterns,
-    (MatchStar, None):                    _next_MatchStar_START,
+    (MatchStar, None):                    _next_None,
     (MatchAs, None):                      _next_MatchAs_START,
-    (MatchAs, 'pattern'):                 _next_MatchAs_pattern,
+    (MatchAs, 'pattern'):                 _next_None,
     (MatchOr, None):                      _next_MatchOr_START,
     (MatchOr, 'patterns'):                _next_MatchOr_patterns,
-    (TypeIgnore, None):                   _next_TypeIgnore_START,
+    (TypeIgnore, None):                   _next_None,
     (TypeVar, None):                      _next_TypeVar_START,
     (TypeVar, 'bound'):                   _next_TypeVar_bound,
     (TypeVar, 'default_value'):           _next_TypeVar_default_value,
