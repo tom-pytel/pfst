@@ -82,13 +82,17 @@ if RUN_SLOW:
 
                 for f in (gen := g.walk(self_=False)):
                     # if f.is_stmtish or (n := f.pfield.name) == 'keywords' or (n == 'patterns' and f.is_MatchClass):
-                    if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                    # if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                    if (f.pfield.name == 'patterns' and f.is_MatchClass) or (f.loc and f.bend_ln >= f.bln + 3):  # much more than 3 lines and we will be here forever
                         continue
-
-                    f.replace(f.copy())
 
                     if f.is_ftstr:
                         gen.send(False)
+
+                    try:
+                        f.replace(f.copy())
+                    except NotImplementedError:
+                        continue
 
                 g.verify()
 
@@ -97,13 +101,17 @@ if RUN_SLOW:
 
                 for f in (gen := g.walk(self_=False)):
                     # if f.is_stmtish or (n := f.pfield.name) == 'keywords' or (n == 'patterns' and f.is_MatchClass):
-                    if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                    # if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                    if (f.pfield.name == 'patterns' and f.is_MatchClass) or (f.loc and f.bend_ln >= f.bln + 3):  # much more than 3 lines and we will be here forever
                         continue
-
-                    f.replace(f.copy().src)
 
                     if f.is_ftstr:
                         gen.send(False)
+
+                    try:
+                        f.replace(f.copy().src)
+                    except NotImplementedError:
+                        continue
 
                 g.verify()
 
@@ -112,13 +120,17 @@ if RUN_SLOW:
 
                 for f in (gen := g.walk(self_=False)):
                     # if f.is_stmtish or (n := f.pfield.name) == 'keywords' or (n == 'patterns' and f.is_MatchClass):
-                    if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                    # if f.is_stmtish or (f.pfield.name == 'patterns' and f.is_MatchClass):
+                    if (f.pfield.name == 'patterns' and f.is_MatchClass) or (f.loc and f.bend_ln >= f.bln + 3):  # much more than 3 lines and we will be here forever
                         continue
-
-                    f.replace(f.a)
 
                     if f.is_ftstr:
                         gen.send(False)
+
+                    try:
+                        f.replace(f.a)
+                    except NotImplementedError:
+                        continue
 
                 g.verify()
 

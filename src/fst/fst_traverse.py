@@ -736,6 +736,7 @@ def walk(
 
     >>> for g in f.walk(self_=False, scope=True):
     ...     print(f'{g!r:<25}{g.src[:47]}')
+    <arguments 0,9..0,26>    func_arg=func_def
     <arg 0,9..0,17>          func_arg
     <FunctionDef 1,4..1,41>  def sub(sub_arg=sub_def) -> int: pass
     <Name 1,20..1,27>        sub_def
@@ -833,7 +834,7 @@ def walk(
         ast_cls = ast.__class__
 
         if (is_def := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
-            scope_args = ast.args  # will need these in the loop to exclude annotations and defailts
+            scope_args = ast.args  # will need these in the loop to exclude annotations and defaults
 
             if back:
                 stack = []
@@ -841,16 +842,7 @@ def walk(
                 if type_params := getattr(ast, 'type_params', None):
                     stack.extend(type_params)
 
-                stack.extend(scope_args.posonlyargs)
-                stack.extend(scope_args.args)
-
-                if vararg := scope_args.vararg:
-                    stack.append(vararg)
-
-                stack.extend(scope_args.kwonlyargs)
-
-                if kwarg := scope_args.kwarg:
-                    stack.append(scope_args.kwarg)
+                stack.append(scope_args)  # this is so that the arguments node is included in the scope walk, could skip it and just do the args themselves but arguments node might be useful for signaling args of scope
 
                 if is_def:
                     stack.extend(ast.body)
@@ -860,16 +852,7 @@ def walk(
             else:
                 stack = ast.body[::-1] if is_def else [ast.body]
 
-                if kwarg := scope_args.kwarg:
-                    stack.append(kwarg)
-
-                stack.extend(scope_args.kwonlyargs[::-1])
-
-                if vararg := scope_args.vararg:
-                    stack.append(vararg)
-
-                stack.extend(scope_args.args[::-1])
-                stack.extend(scope_args.posonlyargs[::-1])
+                stack.append(scope_args)
 
                 if type_params := getattr(ast, 'type_params', None):
                     stack.extend(type_params[::-1])
@@ -1064,14 +1047,14 @@ def walk(
                         subrecurse = recurse
 
                         while (sent := (yield f)) is not None:
-                            subrecurse = sent
+                            subrecurse = 1 if sent else False
 
                         if subrecurse:
-                            yield from f.walk(all, self_=False, back=back)
+                            yield from f.walk(all, self_=False, scope=subrecurse is True, back=back)  # if the user did send(True) (subrecurse=1) then we want to recurse uncondintionally (scope=False), otherwise subrecurse=True and continue walking with scope=True
 
-                        gen.send(False)
+                        gen.send(False)  # we processed this node here so don't recurse into it
 
-                    elif (  # all NamedExprs are in parent scope
+                    elif (  # all NamedExpr.targets are in parent scope
                         f.parent.a.__class__ is NamedExpr
                         and f.pfield.name == 'target'  # a.__class__ is Name
                     ):
@@ -1080,8 +1063,11 @@ def walk(
                         while (sent := (yield f)) is not None:
                             subrecurse = sent
 
-                        if not subrecurse:
-                            gen.send(False)
+                        if subrecurse and _check_all_param(f := a.ctx.f, all):  # truly pedantic, but maybe the user really really really wants that .ctx?
+                            while (yield f) is not None:  # eat all the user's send()s
+                                pass
+
+                        gen.send(False)  # we processed this node here so don't recurse into it
 
                 continue
 
@@ -1106,20 +1092,30 @@ def walk(
 
                 continue
 
-            elif ast is scope_args:  # exclude defaults and kw_defaults from walk, ast is arguments
+            elif ast is scope_args:  # exclude defaults and kw_defaults from walk, ast is top-level scope arguments
                 if back:
-                    scope.extend(ast.posonlyargs)
-                    scope.extend(ast.args)
-                    scope.append(ast.vararg)
-                    scope.extend(ast.kwonlyargs)
-                    scope.append(ast.kwarg)
+                    stack.extend(ast.posonlyargs)
+                    stack.extend(ast.args)
+
+                    if vararg := ast.vararg:
+                        stack.append(vararg)
+
+                    stack.extend(ast.kwonlyargs)
+
+                    if kwarg := ast.kwarg:
+                        stack.append(ast.kwarg)
 
                 else:
-                    scope.append(ast.kwarg)
-                    scope.extend(ast.kwonlyargs[::-1])
-                    scope.append(ast.vararg)
-                    scope.extend(ast.args[::-1])
-                    scope.extend(ast.posonlyargs[::-1])
+                    if kwarg := ast.kwarg:
+                        stack.append(ast.kwarg)
+
+                    stack.extend(ast.kwonlyargs[::-1])
+
+                    if vararg := ast.vararg:
+                        stack.append(vararg)
+
+                    stack.extend(ast.args[::-1])
+                    stack.extend(ast.posonlyargs[::-1])
 
                 continue
 
