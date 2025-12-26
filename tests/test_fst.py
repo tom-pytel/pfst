@@ -4251,10 +4251,7 @@ class cls(a, b=c):
                     try:
                         for i in reversed(deletions):
                             field, idx = astfields[i]
-
-                            copy_node = getattr(copy, field).copy()
-                            is_arguments = copy_node.is_arguments
-                            setattr(copy, field, copy_node)  # for coverage
+                            is_arguments = isinstance((n := getattr(copy, field)), FST) and n.is_arguments
 
                             if ast_cls not in (BoolOp, MatchOr):
                                 delattr(copy, field)  # for coverage
@@ -4264,7 +4261,7 @@ class cls(a, b=c):
                             if not is_arguments:  # because this doesn't go away when deleted
                                 del copy_astfields[i]
 
-                    except (ValueError, NotImplementedError):  # skip combinations that can't be deleted together
+                    except (ValueError, NotImplementedError, NodeError):  # skip combinations that can't be deleted together
                         continue
 
                     copy_src = copy.src

@@ -10,7 +10,6 @@ from typing import Any, Callable, Iterator
 from enum import IntEnum, auto
 
 from .asttypes import (
-    ASTS_LEAF_EXPR_OR_PATTERN,
     AST,
     Add,
     And,
@@ -154,9 +153,9 @@ __all__ = [
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'is_valid_target', 'is_valid_del_target',
-    'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable',
-    'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', # 'set_ctx',
-    'last_block_header_child', 'is_atom',
+    'reduce_ast', 'get_field', 'set_field', 'has_type_comments',
+    'WalkFail', 'walk2', 'compare_asts', 'copy_ast', # 'copy_attributes', 'set_ctx',
+    'last_block_header_child',
     'syntax_ordered_children',
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
@@ -695,31 +694,6 @@ def has_type_comments(ast: AST) -> bool:
     return False
 
 
-def is_parsable(ast: AST) -> bool:
-    """Really means if the AST is `unparse()`able and then re`parse()`able which will get it to this top level AST node
-    surrounded by the appropriate `ast.mod`"""
-
-    if not isinstance(ast, AST):
-        return False
-
-    if isinstance(ast, (
-        expr_context, FormattedValue,  # Starred is inconsistent as source but should always unparse to something parsable
-        ExceptHandler, Slice,
-        unaryop, boolop, operator, cmpop,
-        alias, arguments, comprehension, withitem, match_case, pattern, type_ignore,
-        arg, keyword,
-        TypeVar, ParamSpec, TypeVarTuple,  # py 3.12+
-        Interpolation,  # py 3.14+
-    )):
-        return False
-
-    if ast.__class__ is Tuple:  # tuple of slices used in indexing (like numpy)
-        if any(e.__class__ is Slice for e in ast.elts):
-            return False
-
-    return True
-
-
 class WalkFail(Exception):
     """Raised in `walk2()`, `compare_asts()` and `copy_attributes()` on compare failure."""
 
@@ -909,52 +883,6 @@ def compare_asts(
     return True
 
 
-def copy_attributes(
-    src: AST,
-    dst: AST,
-    *,
-    compare: bool = True,
-    type_comments: bool = False,
-    recurse: bool = True,
-    skip1: set | frozenset | None = None,
-    skip2: set | frozenset | None = None,
-    raise_: bool = True,
-) -> bool:
-    """Copy attributes from one tree to another using `walk2()` to walk them both simultaneously and this checking
-    structure equality in the process. By "attributes" we mean everything specified in `src._attributes`.
-
-    **Parameters:**
-    - `src`: Source `AST` tree to copy attributes from.
-    - `dst`: Destination `AST` tree to copy attributes to.
-    - `recurse`: Whether recurse into children or not. With this as `False` it just becomes a copy of attributes from one
-        `AST` node to another.
-    - `skip1`: List of nodes in the source tree to skip.
-    - `skip2`: List of nodes in the destination tree to skip.
-    - `raise_`: Whether to raise `WalkFail` on compare fail or just return `False`.
-
-    **Returns:**
-    - `bool`: Indicating if the two trees compare equal during the walk (if return on error allowed by `raise_`).
-    """
-
-    cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
-
-    try:
-        for ns, nd in walk2(src, dst, cb_primitive, recurse=recurse, skip1=skip1, skip2=skip2):
-            for attr in ns._attributes:
-                if (val := getattr(ns, attr, cb_primitive)) is not cb_primitive:
-                    setattr(nd, attr, val)
-                elif hasattr(nd, attr):
-                    delattr(nd, attr)
-
-    except WalkFail:
-        if raise_:
-            raise
-
-        return False
-
-    return True
-
-
 def copy_ast(ast: AST | None) -> AST | None:
     """Copy a whole tree."""
 
@@ -980,6 +908,52 @@ def copy_ast(ast: AST | None) -> AST | None:
             setattr(ret, attr, val)
 
     return ret
+
+
+# def copy_attributes(
+#     src: AST,
+#     dst: AST,
+#     *,
+#     compare: bool = True,
+#     type_comments: bool = False,
+#     recurse: bool = True,
+#     skip1: set | frozenset | None = None,
+#     skip2: set | frozenset | None = None,
+#     raise_: bool = True,
+# ) -> bool:
+#     """Copy attributes from one tree to another using `walk2()` to walk them both simultaneously and this checking
+#     structure equality in the process. By "attributes" we mean everything specified in `src._attributes`.
+
+#     **Parameters:**
+#     - `src`: Source `AST` tree to copy attributes from.
+#     - `dst`: Destination `AST` tree to copy attributes to.
+#     - `recurse`: Whether recurse into children or not. With this as `False` it just becomes a copy of attributes from one
+#         `AST` node to another.
+#     - `skip1`: List of nodes in the source tree to skip.
+#     - `skip2`: List of nodes in the destination tree to skip.
+#     - `raise_`: Whether to raise `WalkFail` on compare fail or just return `False`.
+
+#     **Returns:**
+#     - `bool`: Indicating if the two trees compare equal during the walk (if return on error allowed by `raise_`).
+#     """
+
+#     cb_primitive = _compare_primitive_type_comments_func[bool(type_comments)] if compare else lambda p1, p2, n, i: True
+
+#     try:
+#         for ns, nd in walk2(src, dst, cb_primitive, recurse=recurse, skip1=skip1, skip2=skip2):
+#             for attr in ns._attributes:
+#                 if (val := getattr(ns, attr, cb_primitive)) is not cb_primitive:
+#                     setattr(nd, attr, val)
+#                 elif hasattr(nd, attr):
+#                     delattr(nd, attr)
+
+#     except WalkFail:
+#         if raise_:
+#             raise
+
+#         return False
+
+#     return True
 
 
 # def set_ctx(asts: AST | list[AST], ctx_cls: type[expr_context]) -> None:
@@ -1038,54 +1012,6 @@ def last_block_header_child(ast: AST) -> AST | None:
                 return ret
 
     return None
-
-
-def is_atom(
-    ast: AST,
-    *,
-    unparse_pars_as_atom: bool | None = None,
-    tuple_as_atom: bool | None = True,
-    matchseq_as_atom: bool | None = True,
-) -> bool | None:
-    """Whether `ast` is enclosed in some kind of delimiters `'()'`, `'[]'`, `'{}'` when `unparse()`d or otherwise atomic
-    like `Name`, `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`. `Tuple`
-    and `MatchSequence` which can otherwise be ambiguous will normally return `True` as they `unparse()` with
-    delimiters, but can be overridden.
-
-    **Parameters:**
-    - `ast`: Self-explanatory.
-    - `unparse_pars_as_atom`: What to return for `NamedExpr`, `Yield` and `YieldFrom` node type as they `unparse()` with
-        enclosing parentheses. Default `None` as falsey value but also distinguishes from `False`.
-    - `tuple_as_atom`: What to return for `Tuple` as this always `unparse()`s with parentheses but these are not
-        strictly required for a `Tuple`.
-    - `matchseq_as_atom`: What to return for `MatchSequence` as this always `unparse()`s with brackets but these are not
-        strictly required for a `MatchSequence`.
-
-    **Returns:**
-    - `True` if is enclosed and no combination with another node can change its precedence, `False` otherwise. Returns
-        `unparse_pars_as_atom` value for `NamedExpr`, `Yield` and `YieldFrom`, `tuple_as_atom` value for `Tuple` and
-        `matchseq_as_atom` for `MatchSequence` as those all are special cases.
-    """
-
-    ast_cls = ast.__class__
-
-    if ast_cls in (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name, List,  # , Await
-                   MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs):
-        return True
-
-    if ast_cls is Tuple:
-        return tuple_as_atom
-
-    if ast_cls in (NamedExpr, Yield, YieldFrom):
-        return unparse_pars_as_atom
-
-    if ast_cls is MatchSequence:
-        return matchseq_as_atom
-
-    if ast_cls in ASTS_LEAF_EXPR_OR_PATTERN:  # one pattern left, MatchOr
-        return False
-
-    return True
 
 
 # ......................................................................................................................
