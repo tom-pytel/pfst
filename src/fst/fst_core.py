@@ -102,6 +102,8 @@ from .common import (
     prev_find,
 )
 
+from .parsex import _PARSE_MODE_FUNCS
+
 
 _HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
@@ -1232,14 +1234,12 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
     mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
     of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
-    able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
-    will return a string mode. This is a quick just a check, doesn't verify everything.
+    able to recreate it. Mostly it just returns the `AST` class name, but in cases where that won't parse to this `FST`
+    it will return a specific other parse mode. This is a quick just a check, doesn't verify everything.
 
     **Returns:**
-    - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
-        inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
-    - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
-    - `None`: If invalid or cannot be determined.
+    - `str`: Parse mode which will reparse source to this node.
+    - `None`: If cannot be parsed.
 
     **Examples:**
 
@@ -1253,10 +1253,14 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     '_ExceptHandlers'
     """
 
+    if not self.is_root:
+        raise ValueError('parse mode only makes sense for root nodes')
+
     ast = self.a
     ast_cls = ast.__class__
 
-    # check the cases that need source code
+    if not _PARSE_MODE_FUNCS.get(ast_cls):
+        return None
 
     if ast_cls is Tuple and (elts := ast.elts):
         if (e0 := elts[0]).__class__ is Starred:
@@ -1264,7 +1268,7 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
                 _, _, ln, col = e0.f.loc
                 _, _, end_ln, end_col = self.loc
 
-                if not next_find(self.root._lines, ln, col, end_ln, end_col, ',', True):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                if not next_find(self.root._lines, ln, col, end_ln, end_col, ',', True):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+), e.g. 'subscript[*THIS_IS_A_TUPLE]'
                     return 'expr_slice'
 
     return ast_cls.__name__  # otherwise regular parse by AST type is valid

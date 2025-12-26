@@ -37,11 +37,14 @@ from .asttypes import (
     Expr,
     Expression,
     FloorDiv,
+    FormattedValue,
+    FunctionType,
     GeneratorExp,
     Gt,
     GtE,
     Interactive,
     In,
+    Interpolation,
     Invert,
     Is,
     IsNot,
@@ -69,6 +72,7 @@ from .asttypes import (
     Store,
     Sub,
     Tuple,
+    TypeIgnore,
     UAdd,
     USub,
     alias,
@@ -1878,8 +1882,6 @@ def parse__Compare_dangling_right(src: str, parse_params: Mapping[str, Any] = {}
 
 # ......................................................................................................................
 
-_AST_TYPE_BY_NAME_OR_TYPE = {}  # {Module: Module, 'Module': Module, ...}  - filled out below
-
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
     'all':                    parse_all,
     'strict':                 parse_strict,
@@ -1947,6 +1949,10 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Load:                     lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
     Store:                    lambda src, parse_params = {}: Store(),
     Del:                      lambda src, parse_params = {}: Del(),
+    FunctionType:             None,  # explicitly prohibit from parse
+    FormattedValue:           None,
+    Interpolation:            None,
+    TypeIgnore:               None,
     _ExceptHandlers:          parse__ExceptHandlers,
     _match_cases:             parse__match_cases,
     _Assign_targets:          parse__Assign_targets,
@@ -1959,6 +1965,9 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     '_expr_arglikes':         parse__expr_arglikes,
 }  # automatically filled out with all AST types and their names derived from these
 
+_AST_TYPE_BY_NAME_OR_TYPE = {}  # {Module: Module, 'Module': Module, ...}  - filled out below
+
+
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \
     'Mode string modes do not match _PARSE_MODE_FUNCS table'
 
@@ -1967,7 +1976,7 @@ for ast_cls in FIELDS:  # fill out _PARSE_MODE_FUNCS with all supported AST type
 
     _AST_TYPE_BY_NAME_OR_TYPE[ast_cls] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_cls
 
-    if parse_func := _PARSE_MODE_FUNCS.get(ast_cls):
+    if (parse_func := _PARSE_MODE_FUNCS.get(ast_cls, ...)) is not ...:
         if ast_name not in _PARSE_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)
             _PARSE_MODE_FUNCS[ast_name] = parse_func
 

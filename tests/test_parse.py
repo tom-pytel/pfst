@@ -1104,6 +1104,17 @@ class TestParse(unittest.TestCase):
 
             self.assertEqual(old, new)
 
+    def test_parse_unsupported(self):
+        self.assertRaises(ParseError, px.parse, '', FunctionType)
+        self.assertRaises(ParseError, px.parse, '', FormattedValue)
+        self.assertRaises(ParseError, px.parse, '', Interpolation)
+        self.assertRaises(ParseError, px.parse, '', TypeIgnore)
+
+        self.assertRaises(ValueError, px.parse, '', 'FunctionType')
+        self.assertRaises(ValueError, px.parse, '', 'FormattedValue')
+        self.assertRaises(ValueError, px.parse, '', 'Interpolation')
+        self.assertRaises(ValueError, px.parse, '', 'TypeIgnore')
+
     def test_parse_coverage(self):
         # for test coverage
 

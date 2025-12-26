@@ -88,7 +88,7 @@ both valid even though they are uncompilable.
 
 If you will be playing with this module then the `FST.dump()` method will be your friend.
 
-If you will be looking through the code then I apologize in advance.
+If you will be looking through the code then apologies in advance.
 """
 
 import ast
