@@ -2485,7 +2485,9 @@ class FST:
         modifying = None
 
         try:
-            if self.pars(shared=None if shared is None else True).n:
+            shared_test = None if shared is None or (shared and self._is_solo_call_arg_genexp()) else True
+
+            if self.pars(shared=shared_test).n > 0:
                 modifying = self._modifying().enter()
 
                 self._unparenthesize_grouping(shared)

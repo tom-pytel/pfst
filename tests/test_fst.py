@@ -5737,6 +5737,18 @@ class cls:
         self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
         self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
 
+        self.assertEqual('call(i for i in j)', FST('call(((i for i in j)))').args[0].unpar().root.src)
+        self.assertEqual('call(i for i in j)', FST('call((i for i in j))').args[0].unpar().root.src)
+        self.assertEqual('call(i for i in j)', FST('call(i for i in j)').args[0].unpar().root.src)
+        self.assertEqual('call((i for i in j), k)', FST('call(((i for i in j)), k)').args[0].unpar().root.src)
+        self.assertEqual('call((i for i in j), k)', FST('call((i for i in j), k)').args[0].unpar().root.src)
+
+        self.assertEqual('call((i for i in j))', FST('call(((i for i in j)))').args[0].unpar(shared=False).root.src)
+        self.assertEqual('call((i for i in j))', FST('call((i for i in j))').args[0].unpar(shared=False).root.src)
+        self.assertEqual('call(i for i in j)', FST('call(i for i in j)').args[0].unpar(shared=False).root.src)
+        self.assertEqual('call((i for i in j), k)', FST('call(((i for i in j)), k)').args[0].unpar(shared=False).root.src)
+        self.assertEqual('call((i for i in j), k)', FST('call((i for i in j), k)').args[0].unpar(shared=False).root.src)
+
         f = parse('( # pre\ni\n# post\n)').f
         f.body[0].value.unpar(shared=False)
         self.assertEqual('i', f.src)
