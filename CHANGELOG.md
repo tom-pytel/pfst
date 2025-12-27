@@ -15,6 +15,7 @@
 
 ### Added
 
+- `copy()` can strip non-node source from root node copy using parameter `whole=False`
 - can control optional parenthesization of cut / put `Tuple` slices via `pars` option
 - `_body` virtual field for accessing block statement bodies leaving any possibly present docstr unchanged
 - dummy view for nonexistent list fields from higher python versions on lower ones

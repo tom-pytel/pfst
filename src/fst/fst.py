@@ -1483,11 +1483,14 @@ class FST:
 
         return copy_ast(self.a)
 
-    def copy(self, **options) -> FST:
+    def copy(self, whole: bool = True, **options) -> FST:
         """Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
         identical copy is made and no fixes / modifications are applied.
 
         **Parameters:**
+        - `whole`: This only applies when copying root nodes. If `True` then copies the entire tree and source without
+            any modifications (including leading and trailing source which is not part of the node). Otherwise will trim
+            away any source that falls outside of the node and only copy the node and its source.
         - `options`: See `options()`.
 
         **Returns:**
@@ -1497,12 +1500,36 @@ class FST:
 
         >>> FST('[0, 1, 2, 3]').elts[1].copy().src
         '1'
+
+        >>> f = FST('''
+        ... # pre
+        ... call()
+        ... # post
+        ... '''.strip())
+
+        >>> print(f.copy().src)
+        # pre
+        call()
+        # post
+
+        >>> print(f.copy(whole=False).src)
+        call()
         """
 
         check_options(options)
 
         if parent := self.parent:
             return parent._get_one((pf := self.pfield).idx, pf.name, False, options)
+
+        if (not whole
+            and (loc := (self.pars() if FST.get_option('pars', options) is True else self.bloc))
+            and loc != self.whole_loc
+        ):
+            ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=FST.get_option('docstr', options))
+
+            ret._maybe_fix_copy(options)
+
+            return ret
 
         return FST(copy_ast(self.a), self._lines[:], None, from_=self, lcopy=False)
 
@@ -4075,6 +4102,7 @@ class FST:
         _maybe_fix_arglike,
         _maybe_fix_arglikes,
         _maybe_fix_elif,
+        _maybe_fix_copy,
 
         _parenthesize_grouping,
         _unparenthesize_grouping,

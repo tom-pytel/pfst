@@ -13,7 +13,6 @@ from typing import Any, Mapping, Union
 from . import fst
 
 from .asttypes import (
-    ASTS_LEAF_EXPR,
     AST,
     And,
     AnnAssign,
@@ -51,7 +50,6 @@ from .asttypes import (
     Lambda,
     List,
     ListComp,
-    Load,
     Match,
     MatchAs,
     MatchClass,
@@ -107,7 +105,7 @@ from .asttypes import (
 
 from .astutil import constant, bistr, copy_ast
 from .common import FTSTRING_END_TOKENS, PYGE13, NodeError, pyver
-from .fst_misc import get_option_overridable, fixup_one_index
+from .fst_misc import fixup_one_index
 from .slice_stmtish import get_slice_stmtish
 
 
@@ -152,55 +150,6 @@ def _validate_get(self: fst.FST, idx: int | None, field: str, start_at: int = 0)
     return child, idx
 
 
-def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
-    """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
-    the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
-    fix after a cut or copy operation, not full check, for that use `verify()`.
-
-    **WARNING!** Only call on root node!
-    """
-
-    # assert self.is_root
-
-    ast = self.a
-    ast_cls = ast.__class__
-
-    if ast_cls not in ASTS_LEAF_EXPR or ast_cls in (Slice, FormattedValue, Interpolation):  # things that should not get pars
-        return
-
-    self._set_ctx(Load)  # noop if no ctx
-
-    if is_walrus := (ast_cls is NamedExpr):
-        pars = get_option_overridable('pars', 'pars_walrus', options)
-    else:
-        pars = fst.FST.get_option('pars', options)
-
-    if not pars:
-        return
-
-    need_pars = None
-
-    if is_tuple := (ast_cls is Tuple):
-        if is_par := self._is_delimited_seq():
-            need_pars = False
-        elif any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
-            need_pars = True
-
-        self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
-
-    elif is_walrus and not self.pars().n:
-        need_pars = True
-
-    if need_pars is None:
-        need_pars = not self._is_enclosed_or_line()
-
-    if need_pars:
-        if is_tuple:
-            self._delimit_node()
-        else:
-            self._parenthesize_grouping()
-
-
 # ......................................................................................................................
 
 def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
@@ -217,7 +166,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=False)
 
-    _maybe_fix_copy(ret, options)
+    ret._maybe_fix_copy(options)
 
     return ret
 

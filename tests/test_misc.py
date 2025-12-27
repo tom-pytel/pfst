@@ -916,8 +916,6 @@ d  # comment3''', f.src)
         f.verify()
 
     def test__maybe_fix_copy(self):
-        from fst.fst_get_one import _maybe_fix_copy
-
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
         fc = f.a.body[0].orelse[0].f.copy()
         self.assertEqual(fc.lines[0], 'if 2:')
@@ -926,7 +924,7 @@ d  # comment3''', f.src)
         f = FST.fromsrc('(1 +\n2)')
         fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual(fc.src, '1 +\n2')
-        _maybe_fix_copy(fc, dict(pars=True))
+        fc._maybe_fix_copy(dict(pars=True))
         self.assertEqual(fc.src, '(1 +\n2)')
         fc.verify(raise_=True)
 
@@ -941,24 +939,24 @@ d  # comment3''', f.src)
 
         f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
         self.assertEqual('i, j', f.src)
-        _maybe_fix_copy(fc, dict(pars=True))
+        fc._maybe_fix_copy(dict(pars=True))
         self.assertEqual('i, j', f.src)  # because doesn't NEED them
 
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
         self.assertEqual('w := x,', f.src)
-        _maybe_fix_copy(f, dict(pars=True))
+        f._maybe_fix_copy(dict(pars=True))
         self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('yield a1, a2')
         fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual('yield a1, a2', fc.src)
-        _maybe_fix_copy(fc, dict(pars=True))
+        fc._maybe_fix_copy(dict(pars=True))
         self.assertEqual('yield a1, a2', fc.src)
 
         f = FST.fromsrc('yield from a')
         fc = f.a.body[0].value.f.copy()
         self.assertEqual('yield from a', fc.src)
-        _maybe_fix_copy(fc, dict(pars=True))
+        fc._maybe_fix_copy(dict(pars=True))
         self.assertEqual('yield from a', fc.src)
 
         f = FST.fromsrc("""[
@@ -971,7 +969,7 @@ d  # comment3''', f.src)
 "Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
                "Raw value: {!r}".format""".strip(), fc.src)
-        _maybe_fix_copy(fc, dict(pars=True))
+        fc._maybe_fix_copy(dict(pars=True))
         self.assertEqual("""
 ("Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
@@ -985,7 +983,7 @@ d  # comment3''', f.src)
         self.assertEqual("""
 (is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
-        _maybe_fix_copy(fc, dict(pars=True))
+        fc._maybe_fix_copy(dict(pars=True))
         self.assertEqual("""
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
@@ -993,7 +991,7 @@ d  # comment3''', f.src)
         if PYGE12:
             fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
-            _maybe_fix_copy(fc, dict(pars=True))
+            fc._maybe_fix_copy(dict(pars=True))
             self.assertEqual('*tuple[int, ...],', fc.src)
 
         # don't parenthesize copied Slice even if it looks like it needs it

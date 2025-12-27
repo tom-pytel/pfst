@@ -5274,6 +5274,72 @@ def func():
 
         self.assertEqual(['True:', '  i'], ast.f.root._get_src(1, 4, 2, 3, True))
 
+    def test_get_put_docstr(self):
+        f = FST('''
+class cls:
+    """doc
+bad
+    string"""
+
+    def f():
+        """cod
+dog
+           ind
+        bell"""
+'''.strip())
+        self.assertEqual('doc\nbad\nstring', f.get_docstr())
+        self.assertEqual('cod\ndog\n   ind\nbell', f.body[1].get_docstr())
+
+        f.body[1].put_docstr(None)
+        f.put_docstr(None)
+
+        self.assertEqual('''
+class cls:
+
+    def f():
+'''.strip(), f.src)
+
+        f.body[0].put_docstr("Hello\nWorld\n  ...")
+        f.put_docstr('"""YAY!!!\n\'\'\'\\nHEY!!!\x00')
+
+        self.assertEqual('''
+class cls:
+    \'\'\'"""YAY!!!
+    \\'\\'\\'\\\\nHEY!!!\\x00\'\'\'
+
+
+    def f():
+        """Hello
+        World
+          ..."""
+'''.strip(), f.src)
+
+        f.put_docstr('"')
+
+        self.assertEqual('\'\'\'"\'\'\'', f.body[0].src)
+
+        f = FST('if 1: pass')
+        self.assertIsNone(f.get_docstr())
+
+        f.put_docstr('test')
+
+        self.assertEqual('class cls: pass', FST('class cls: pass').put_docstr(None).src)
+
+        f = FST('''
+class cls:
+    # pre-comment
+    """docstr"""  # line-comment
+    # post-comment
+'''.strip())
+        f.put_docstr('test', reinsert=True)
+        self.assertEqual('''
+class cls:
+    """test"""
+    # pre-comment
+    # line-comment
+    # post-comment
+'''.strip(), f.src)
+
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
         f.par()
@@ -6211,71 +6277,20 @@ def func():
         self.assertEqual('1|2', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=False).root.src)
         self.assertEqual('( # pre\n1|2\n# post\n)', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=True).root.src)
 
-    def test_get_put_docstr(self):
-        f = FST('''
-class cls:
-    """doc
-bad
-    string"""
+    def test_copy_not_whole(self):
+        self.assertEqual('i', FST('# 0\ni\n # 1').copy(whole=False).src)
+        self.assertEqual('i', FST('# 0\ni\n # 1', 'Expr').copy(whole=False).src)
+        self.assertEqual('# 0\ni\n # 1', FST('# 0\ni\n # 1', 'exec').copy(whole=False).src)
 
-    def f():
-        """cod
-dog
-           ind
-        bell"""
-'''.strip())
-        self.assertEqual('doc\nbad\nstring', f.get_docstr())
-        self.assertEqual('cod\ndog\n   ind\nbell', f.body[1].get_docstr())
+        self.assertEqual('i,', FST('# 0\ni,\n # 1').copy(whole=False).src)
 
-        f.body[1].put_docstr(None)
-        f.put_docstr(None)
+        self.assertEqual('# 0\n# 1\n# 2', FST('# 0\n# 1\n# 2', 'arguments').copy(whole=False).src)  # no loc
+        self.assertEqual('# 0\n# 1\n# 2', FST('# 0\n# 1\n# 2', 'Load').copy(whole=False).src)
+        self.assertEqual('# 0\n# 1\n# 2', FST('# 0\n# 1\n# 2', 'Store').copy(whole=False).src)
+        self.assertEqual('# 0\n# 1\n# 2', FST('# 0\n# 1\n# 2', 'Del').copy(whole=False).src)
 
-        self.assertEqual('''
-class cls:
-
-    def f():
-'''.strip(), f.src)
-
-        f.body[0].put_docstr("Hello\nWorld\n  ...")
-        f.put_docstr('"""YAY!!!\n\'\'\'\\nHEY!!!\x00')
-
-        self.assertEqual('''
-class cls:
-    \'\'\'"""YAY!!!
-    \\'\\'\\'\\\\nHEY!!!\\x00\'\'\'
-
-
-    def f():
-        """Hello
-        World
-          ..."""
-'''.strip(), f.src)
-
-        f.put_docstr('"')
-
-        self.assertEqual('\'\'\'"\'\'\'', f.body[0].src)
-
-        f = FST('if 1: pass')
-        self.assertIsNone(f.get_docstr())
-
-        f.put_docstr('test')
-
-        self.assertEqual('class cls: pass', FST('class cls: pass').put_docstr(None).src)
-
-        f = FST('''
-class cls:
-    # pre-comment
-    """docstr"""  # line-comment
-    # post-comment
-'''.strip())
-        f.put_docstr('test', reinsert=True)
-        self.assertEqual('''
-class cls:
-    """test"""
-    # pre-comment
-    # line-comment
-    # post-comment
-'''.strip(), f.src)
+        self.assertEqual('and', FST('# 0\nand\n# 2', 'And').copy(whole=False).src)  # have loc
+        self.assertEqual('or', FST('# 0\nor\n# 2', 'Or').copy(whole=False).src)
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
