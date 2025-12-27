@@ -1094,9 +1094,8 @@ x * (y * z)  # original pars normally left if needed, unless unpar() used
 ## Instrument expressions
 
 Suppose there is an external library that overloaded some operators and there are problems and you want to log all the
-operations (or do something else with them). This is close to the problem that needed solving when `fst` was conceived.
-The instrumentation is ugly but is meant to show that all these nested manipulations maintain the correct working
-source.
+operations (or do something else with them). This is the type of problem that `fst` was conceived to solve easily. The
+instrumentation is ugly but is meant to show that all these nested manipulations maintain the correct working source.
 
 Note that this instrumentation counts on the fact that the syntactic order of the children of these particular node
 types is actually the order they will be evaluated in. This is not always the case, e.g. with the `IfExp` node the
@@ -1139,10 +1138,10 @@ Function:
 ...             base = 0
 ...
 ...         nargs = len(fargs)
-...         fvars = ', '.join(f'_{i + base}' for i in range(nargs))
-...         fasss = ', '.join(f'_{i + base} := _' for i in range(nargs))
+...         ftmps = ', '.join(f'_{i + base}' for i in range(nargs))
+...         fsettmps = ', '.join(f'_{i + base} := _' for i in range(nargs))
 ...
-...         fnew = FST(f'({fasss}, log({f.src!r}, {fvars}), _)[{nargs + 1}]')
+...         fnew = FST(f'({fsettmps}, log({f.src!r}, {ftmps}), _)[{nargs + 1}]')
 ...         felts = fnew.value.elts
 ...
 ...         for i in range(nargs):
