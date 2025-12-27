@@ -2,6 +2,8 @@
 
 ### Fixed
 
+- update parent nodes' end locations correctly when a raw put to an elif completely removes it without replacing with anything
+- insert extra line at end when force-parenthesizing an expression at root that has a last line as a comment
 - diallow parenthesization of immediate string `Constant` children of f/t-strings
 - fixed delimit whole root node error when last line was a comment
 - fixed `MatchMapping` single-element operation indexing of `rest` if present

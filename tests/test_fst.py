@@ -5432,7 +5432,7 @@ class cls:
         f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.par(True, whole=True)
         self.assertEqual((1, 0, 1, 1), f.loc)
-        self.assertEqual(f.root.src, '(# pre\ni\n# post)')
+        self.assertEqual(f.root.src, '(# pre\ni\n# post\n)')
 
         f = parse('i').body[0].value.f.copy()
         f._put_src('\n# post', 0, 1, 0, 1, False)

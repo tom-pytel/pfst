@@ -1780,20 +1780,40 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
         `whole` for the opening par.
     """
 
+    lines = self.root._lines
     ast = self.a
+    loc = self.loc
 
-    ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
+    if whole and (whole := self.is_root):  # need to make sure last line doesn't end with a comment
+        ln, col, end_ln, end_col = self.whole_loc
+
+        if loc:
+            _, _, self_end_ln, search_col = loc
+        else:  # at root it is almost completely, but not entirely, implausible that someone would try to force par some empty arguments
+            self_end_ln = search_col = 0
+
+        is_last_line_comment = lines[end_ln].find('#', 0 if self_end_ln < end_ln else search_col) != -1
+
+    else:
+        ln, col, end_ln, end_col = loc
+        is_last_line_comment = False
 
     if is_star_child := ast.__class__ is Starred and star_child:
-        ln, col, _, _ = self.loc
+        ln, col, _, _ = loc  # we specifically want as much space around child as possible, not just location of child
         col += 1
         self = ast.value.f
 
-    self._put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
+    put_lines = ['', ')'] if is_last_line_comment else [')']
+
+    self._put_src(put_lines, end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
 
     if is_star_child:  # because of maybe `whole`, otherwise could just do it using _put_src(..., offset_excluded=is_star_child) above
+        if whole and is_last_line_comment:
+            end_ln += 1
+            end_col = 0
+
         ast.end_lineno = end_ln + 1
-        ast.end_col_offset = self.root._lines[end_ln].c2b(end_col) + 1
+        ast.end_col_offset = lines[end_ln].c2b(end_col) + 1
 
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
@@ -1868,15 +1888,15 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
 
     if not (whole and self.is_root):
         ln, col, end_ln, end_col = self.loc
-        last_line_comment = False
+        is_last_line_comment = False
 
     else:  # need to make sure last line doesn't end with a comment
         ln, col, end_ln, end_col = self.whole_loc
         _, _, self_end_ln, search_col = self.loc
 
-        last_line_comment = lines[end_ln].find('#', 0 if self_end_ln < end_ln else search_col) != -1
+        is_last_line_comment = lines[end_ln].find('#', 0 if self_end_ln < end_ln else search_col) != -1
 
-    if last_line_comment:
+    if is_last_line_comment:
         self._put_src(['', delims[1]], end_ln, end_col, end_ln, end_col, True, False, self)
 
         ast.end_lineno = end_ln + 2  # yes this can change
