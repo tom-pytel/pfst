@@ -79,10 +79,6 @@ the node tree anytime an operation is performed natively.
 get perfect parsing but also that it is limited to the syntax of the running Python version (many options exist for
 running any specific verison of Python).
 
-`fst` does use standard Python parsing to parse things that can not normally be parsed, like individual exception
-handlers or match cases by wrapping them in corresponding code then pulling out and adjusting the locations of the
-parsed `AST`s. See `fst.docs.d01_parse`.
-
 `fst` validates for parsability, not compilability. This means that for `fst`, `*a, *b = c` and `def f(a, a): pass` are
 both valid even though they are uncompilable.
 

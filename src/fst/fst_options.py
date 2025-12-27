@@ -174,22 +174,22 @@ def options(**options) -> Iterator[dict[str, Any]]:
 
     **Options:**
     - `raw`: When to do raw source operations. This may result in more nodes changed than just the targeted one(s).
-        - `False`: Do not do raw source operations.
+        - `False`: Do not do raw source operations. **DEFAULT**
         - `True`: Only do raw source operations.
         - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
     - `trivia`: What comments and empty lines to copy / delete / overwrite when doing operations on elements which may
-        have leading or trailing comments and / or empty lines. These are the values as interpreted when set globally.
-        If passed as a parameter to a function then if a non-tuple is passed then that becomes the leading trivia
-        parameter. If a tuple is passed then both the leading and trailing from the tuple are used, unless they are
-        `None` in which case the global value for that particular parameter is used.
+        have leading or trailing comments and / or empty lines. These are the values as interpreted **WHEN SET
+        GLOBALLY**. If passed as a parameter to a function then if a non-tuple is passed then that becomes the leading
+        trivia parameter. If a tuple is passed then both the leading and trailing from the tuple are used, unless they
+        are `None` in which case the global value for that particular parameter is used.
         - `False`: Same as `(False, 'line')`.
-        - `True`: Same as `('block', 'line')`.
+        - `True`: Same as `('block', 'line')`. **DEFAULT**
         - `'all'`: Same as `('all', 'line')`.
         - `'block'`: Same as `('block', 'line')`.
         - `(leading, trailing)`: Tuple specifying individual behavior for leading and trailing trivia. The text
             options can also have a suffix of the form `'+/-[#]'`, meaning plus or minus an optional integer which
-            adds behavior for leading or trailing empty lines, explained below. The values for each element of the
-            tuple can be:
+            indicates to include this number of leading / trailing empty lines in the trivia. The values for each
+            element of the tuple can be:
             - `False`: Don't copy / delete / overwrite any trivia.
             - `True`: Means `'block'` for leading trivia, `'line'` for trailing.
             - `'all[+/-[#]]'`: Copy / delete / overwrite all leading or trailing comments regardless of if they are
@@ -201,71 +201,73 @@ def options(**options) -> Iterator[dict[str, Any]]:
                 regardless of this parameter and so will be copied / deleted / overwritten along with the block.
             - `int`: A specific line number (starting at 0) indicating the first or last line that can be copied /
                 deleted / overwritten. If not interrupted by other code, will always return from / to this line
-                inclusive. For trailing trivia, if this number is the same line as the element starts then it will
-                include any comment present on the element line. If it is **BEFORE** that line then the line comment
-                will not be included.
-    - `coerce`: Whether to allow coercion between compatible `AST` / `FST` types on put. For example allow put a
+                inclusive. For trailing trivia, if this number is the last line of the element (where the line comment
+                resides) then it will include that tail line comment. If it is **BEFORE** that line then the line
+                comment will not be included.
+    - `coerce`: Whether to allow coercion between compatible `AST` / `FST` node types on put. For example allow put a
         non-slice `expr` as a slice to something that expects a slice of `expr`s or allowing use of `arg` where
         `arguments` is expected.
+        - `False`: Do not allow node type coercion, meant for strict type control.
+        - `True`: Allow coercion between similar types. **DEFAULT**
     - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
-        - `False`: Always put as a standalone `If` statement.
+        - `False`: Always put as a standalone `If` statement on put.
         - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
-            put it as an `elif`.
+            put it as an `elif`. **DEFAULT**
     - `pep8space`: Preceding and trailing empty lines for function and class definitions.
         - `False`: No empty lines.
-        - `True`: Two empty lines at module scope and one empty line in other scopes.
+        - `True`: Two empty lines at module scope and one empty line in other scopes. **DEFAULT**
         - `1`: One empty line in all scopes.
     - `docstr`: Which docstrings are indentable / dedentable.
         - `False`: None.
-        - `True`: All `Expr` string constants (as they serve no other coding purpose).
+        - `True`: All `Expr` string constants (as they serve no other coding purpose). **DEFAULT**
         - `'strict'`: Only string constants in expected docstring positions (functions, classes and top of module).
     - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual element
-        operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
-        keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
-        maybe removed according to this from the destination node if putting to a node instead of a pure location.
+        operations, slice operations ignore this for the most part as parentheses usually cannot be removed or may need
+        to be added to keep the slices usable. Raw puts generally do not have parentheses added or removed
+        automatically, except maybe removed according to this from the destination node if putting to a node instead of
+        a pure location.
         - `False`: Parentheses are not **MODIFIED**, doesn't mean remove all parentheses. Not copied with nodes or
             removed on put from source or destination. Using incorrectly can result in invalid trees.
         - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
             destination on put if not needed there (but not source).
         - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
-            on put if not needed (removed from destination first if needed and present on both).
+            on put if not needed (removed from destination first if needed and present on both). **DEFAULT**
     - `pars_walrus`: Whether to **ADD** parentheses to top level cut / copied `NamedExpr` nodes or not. If parentheses
         were already copied due to `pars=True` then setting this to `False` will not remove them.
-        - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
         - `None`: Parenthesize according to the `pars` option.
     - `pars_arglike`: Whether to **ADD** parentheses to argument-like expressions (`*not a`, `*b or c`) when cut /
         copied either as single element or as part of a slice. If parentheses were already present then setting this
         to `False` will not remove them.
-        - `True`: Parenthesize cut / copied argument-like expressions.
+        - `True`: Parenthesize cut / copied argument-like expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied argument-like expressions.
         - `None`: Parenthesize according to the `pars` option.
     - `norm`: Default normalize option for puts, gets and self target. Determines how `AST`s which would otherwise
         be invalid because of an operation are handled. Mostly how zero or sometimes one-length elements which
         normally cannot be zero or one length are left / put / returned, e.g. zero-length `Set`. This option can be
-        overridden individually for the three cases of `norm_self` (target), `norm_get` (return from a `get()`) and
-        `norm_put` (what is being put if it is invalid or an alternate representation).
+        overridden individually for the three cases of `norm_self` (target), `norm_get` (return from any get operation)
+        and `norm_put` (what is being put if it is an alternate representation).
         - `False`: Allow the `AST` to go to an unsupported length or state and become invalid. A `Set` will result
             in empty curlies which reparse to a `Dict`. A `MatchOr` can go to 1 or zero length. Other `AST` types
-            can also go to zero length. Useful for easier editing.
+            can also go to zero length. Useful for easier editing. **DEFAULT**
         - `True`: Do not allow the `AST` to go to an unsupported length or state. Can result in an exception being
-            thrown no alternative exists or an alternate representation being used or accepted, e.g. A `Set` which
-            results in zero length gets converted to `{*()}`.
+            thrown if no alternative exists. E.g. A `Set` which results in zero length gets converted to `{*()}`.
         - `str`: In some cases an alternate representation can be specified instead of just `True`, e.g. `'call'`
             for `Set` operations.
     - `norm_self`: Override for `norm` which only applies to a target `self` on which an operation is being carried
         out. If this is `None` then `norm` is used.
-    - `norm_get`: Override for `norm` which only applies to the return value from a `get()` operation. If this is
-        `None` then `norm` is used.
-    - `norm_put`: Override for `norm` which only applies to the value to put for a `put()` operation. If this is
-        `None` then `norm` is used.
+    - `norm_get`: Override for `norm` which only applies to the return value from any get operation. If this is `None`
+        then `norm` is used.
+    - `norm_put`: Override for `norm` which only applies to the value to put for any put operation. If this is `None`
+        then `norm` is used.
     - `set_norm`: The alternate representation for an empty `Set` normalization by `norm`. This can also be set to
         `False` to disable normalization for all operations on a `Set` (unless one of the `norm` options is set to
         one of these string modes).
         - `'star'`: Starred sequence `{*()}` returned, this or other starred sequences `{*[]}` and `{*{}}` accepted
-            to mean empty set on put operations.
+            to mean empty set on put operations. **DEFAULT**
         - `'call'`: `set()` call returned and recognized as empty.
-        - `'both'`: Both `'star'` and `'call'` recognized on put as empty, `'start'` used for return from get
+        - `'both'`: Both `'star'` and `'call'` recognized on put as empty, `'star'` used for return from get
             operation and normalization of `self`.
         - `False`: No `Set` normalization regardless of `norm` or `norm_*` options, just leave or return an invalid
             `Set` object.
@@ -278,7 +280,7 @@ def options(**options) -> Iterator[dict[str, Any]]:
         set incompatible with what the operation needs. When inserting into a `Compare` a non-global `op` option
         may be necessary to specify extra missing operator to add if a dangling operator is not passed in the source
         to insert.
-        - `'left'`: Delete preceding operator on left side of slice or insert before preceding operator.
+        - `'left'`: Delete preceding operator on left side of slice or insert before preceding operator. **DEFAULT**
         - `'right'`: Delete trailing operator on right side of slice or insert after preceding operator.
 
     **Note:** `pars` behavior:

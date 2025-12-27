@@ -33,11 +33,11 @@ what it knows about the tree to preserve formatting where it can.
 >>> f.mark()
 <If ROOT 0,0..3,7>
 
-Notice the `f.a`, all changes must happen in the `AST` tree.
+Notice all changes must happen in the `AST` tree, `f.a` is the `AST` tree.
 
->>> f.a.body[0].value.elts[0] = Name(id='pure_ast')
-
->>> f.a.body.append(Assign(targets=[Name(id='ast_assign')], value=Constant(value=3)))
+>>> a = f.a
+>>> a.body[0].value.elts[0] = Name(id='pure_ast')
+>>> a.body.append(Assign(targets=[Name(id='ast_assign')], value=Constant(value=3)))
 
 >>> f = f.reconcile()
 
@@ -55,13 +55,13 @@ You can reuse and mix nodes from the original tree.
 >>> f.mark()
 <If ROOT 0,0..4,16>
 
->>> f.a.body.append(f.a.body[0])
-
->>> f.a.body[0].value.elts.append(Constant(value='another_ast'))
+>>> a = f.a
+>>> a.body.append(a.body[0])
+>>> a.body[0].value.elts.append(Constant(value='another_ast'))
 
 We put the same `AST` node in two different places, this is allowed for `reconcile()`.
 
->>> f.a.body[0] is f.a.body[2]
+>>> a.body[0] is a.body[2]
 True
 
 >>> f = f.reconcile()
@@ -90,11 +90,10 @@ original tree that was marked.
 >>> f.mark()
 <If ROOT 0,0..7,7>
 
->>> f.a.body.append(FST('l="formatting"  # stays').a)
-
->>> f.a.body.append(FST('m  =  "formatting"  # disappears').a)
-
->>> f.a.body[-1].value = Constant(value="not formatted")
+>>> a = f.a
+>>> a.body.append(FST('l="formatting"  # stays').a)
+>>> a.body.append(FST('m  =  "formatting"  # disappears').a)
+>>> a.body[-1].value = Constant(value="not formatted")
 
 >>> f = f.reconcile()
 
@@ -114,7 +113,6 @@ if i:  # 1
 
 AST transformer example.
 
-```py
 >>> def pure_AST_operation(node: AST):
 ...    class Transform(ast.NodeTransformer):
 ...        def visit_arg(self, node):
@@ -130,9 +128,7 @@ AST transformer example.
 ...            return Name('X_SCALE' if node.value > 0.5 else 'Y_SCALE')
 ...
 ...    Transform().visit(node)
-```
 
-```py
 >>> f = FST('''
 ... def compute(x: float,  # x position
 ...             y: float,  # y position
@@ -144,16 +140,13 @@ AST transformer example.
 ...         + y * 0.4  # scale height
 ...     )
 ... '''.strip())
-```
 
-```py
 >>> f.mark()
 <FunctionDef ROOT 0,0..8,5>
 
 >>> pure_AST_operation(f.a)
 
 >>> f = f.reconcile()
-```
 
 ```py
 >>> pprint(f.src)
@@ -180,6 +173,6 @@ the operation at a higher level node. This does lose formatting as the `put()` i
 node, but at least it makes the operation possible.
 
 This method is not particularly fast when there are a lot of nested changes as it is possible that large chunks of the
-source wind up being put multiple times with minor deviations. But it does a better job at preserving formatting than
+source wind up being put multiple times with minor changes. But it does a better job at preserving formatting than
 walking bottom-up.
 """
