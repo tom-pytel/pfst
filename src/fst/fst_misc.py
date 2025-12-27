@@ -236,7 +236,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('pattern',               (MatchAs,)),
 ] for kls in classes}
 
-_re_stmt_tail          = re.compile(r'\s*(;(?:\s*#.*)?|#.*)')
+_re_dump_line_tail     = re.compile(r'\s*(#.*$|\\$|;(?:\s*(?:#.*$|\\$))?)')
 _re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_par_open_alnums    = re.compile(rf'[{pat_alnum}.][(][{pat_alnum}]')
@@ -245,7 +245,6 @@ _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 _re_line_end_ws_maybe_cont = re.compile(r'\s*\\?$')
-
 
 
 def _dump_lines(
@@ -273,20 +272,24 @@ def _dump_lines(
 
                 linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{lines[cln]}{c.end_src}{e}{eol}')
 
+        st.line_tails_dumped.update(range(src_ln, end_ln))
+
         st.src_ln = end_ln + 1
 
-    if not is_stmt:
-        if is_stmt is None:  # we just wanted to put trailing lines so we are done
-            return
+    if is_stmt is None:  # we just wanted to put trailing lines so we are done
+        return
 
+    if not is_stmt and (src_ln >= 0x7fffffffffffffff or end_ln in st.line_tails_dumped):  # not src+ or end line tail already dumped
         lines = fst_._get_src(ln, col, end_ln, end_col, True)
 
-    else:
+    else:  # src+ and fresh line to possibly dump tail
+        st.line_tails_dumped.add(end_ln)
+
         lines = fst_._get_src(ln, col, end_ln, 0x7fffffffffffffff, True)
 
         ec = end_col if end_ln != ln else end_col - col
 
-        if m := _re_stmt_tail.match(l := lines[-1], ec):
+        if m := _re_dump_line_tail.match(l := lines[-1], ec):
             lines[-1] = l[:m.end(1)]
         else:
             lines[-1] = l[:ec]
@@ -299,7 +302,7 @@ def _dump_lines(
     if not col:
         l = f'{c.end_loc}{c.clr_src}{l}{c.end_src}'
     elif l[:1].isspace():
-        l = f'{" " * (col - 1)}>{c.end_loc}{c.clr_src}{l}{c.end_src}'
+        l = f'{"-" * (col - 1)}>{c.end_loc}{c.clr_src}{l}{c.end_src}'
     else:
         l = f'{" " * col}{c.end_loc}{c.clr_src}{l}{c.end_src}'
 
@@ -1038,6 +1041,8 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
         st.src_ln = 0
     else:
         st.src_ln = self.ln or 0  # if self doesn't have a location then we put everything since its a low level node anyway
+
+    st.line_tails_dumped = set()
 
     _dump_node(self, st, '', '')
 

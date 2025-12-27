@@ -194,7 +194,7 @@ Compare - ROOT 0,0..3,6
 2:  not
    0] IsNot - 1,1..2,4
   .comparators[1]
-2:    > # not
+2: ---> # not
    0] Pass - 2,4..2,4
 
 
@@ -328,7 +328,7 @@ Compare - ROOT 0,0..7,0
 5:  ==
    0] Eq - 5,1..5,3
   .comparators[1]
-5:   > # line
+5: --> # line
    0] Pass - 5,3..5,3
 
 
@@ -379,5 +379,5 @@ Compare - ROOT 0,0..10,0
 5 :  in
    0] NotIn - 4,1..5,3
   .comparators[1]
-5 :    <*END*
+5 : --> \
    0] Pass - 5,3..5,3

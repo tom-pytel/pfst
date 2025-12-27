@@ -2542,7 +2542,7 @@ if 1:
             '  .targets[1]',
             '0: a',
             "    0] Name 'a' Store - 0,0..0,1",
-            '0:    > b <*END*',
+            '0: ---> b <*END*',
             "  .value Name 'b' Load - 0,4..0,7",
         ])
 
@@ -2773,6 +2773,71 @@ def f():
         f = FST('None')
         self.assertEqual('Constant None - ROOT 0,0..0,4', f.dump(color=False, out=str))
         self.assertEqual('\x1b[1;34mConstant\x1b[0m \x1b[1;36mNone\x1b[0m \x1b[90m- ROOT 0,0..0,4\x1b[0m', f.dump(color=True, out=str))
+
+        # line tails
+
+        self.assertEqual([
+            'Module - ROOT 0,0..0,16',
+            '  .body[3]',
+            '0: a ;',
+            '   0] Expr - 0,0..0,1',
+            "     .value Name 'a' Load - 0,0..0,1",
+            '0:     b ;',
+            '   1] Expr - 0,4..0,5',
+            "     .value Name 'b' Load - 0,4..0,5",
+            '0:         c  # end',
+            '   2] Expr - 0,8..0,9',
+            "     .value Name 'c' Load - 0,8..0,9",
+        ], FST('a ; b ; c  # end').dump('s', out=list))
+
+        self.assertEqual([
+            'Module - ROOT 0,0..0,16',
+            '  .body[3]',
+            '0: a ;',
+            '   0] Expr - 0,0..0,1',
+            "     .value Name 'a' Load - 0,0..0,1",
+            '0:     b ;',
+            '   1] Expr - 0,4..0,5',
+            "     .value Name 'b' Load - 0,4..0,5",
+            '0:         c  # end',
+            '   2] Expr - 0,8..0,9',
+            "     .value Name 'c' Load - 0,8..0,9",
+        ], FST('a ; b ; c  # end').dump('S', out=list))
+
+        self.assertEqual([
+            '0: if 1:',
+            'If - ROOT 0,0..0,17',
+            '  .test Constant 1 - 0,3..0,4',
+            '  .body[2]',
+            '0:       pass ;',
+            '   0] Pass - 0,6..0,10',
+            '0:              pass  # end',
+            '   1] Pass - 0,13..0,17',
+        ], FST('if 1: pass ; pass  # end').dump('s', out=list))
+
+        self.assertEqual([
+            '0: if 1:',
+            'If - ROOT 0,0..0,17',
+            '0:    1',
+            '  .test Constant 1 - 0,3..0,4',
+            '  .body[2]',
+            '0:       pass ;',
+            '   0] Pass - 0,6..0,10',
+            '0:              pass  # end',
+            '   1] Pass - 0,13..0,17',
+        ], FST('if 1: pass ; pass  # end').dump('n', out=list))
+
+        self.assertEqual([
+            '0: if 1:',
+            'If - ROOT 0,0..0,17',
+            '0:    1',
+            '  .test Constant 1 - 0,3..0,4',
+            '  .body[2]',
+            '0:       pass ;',
+            '   0] Pass - 0,6..0,10',
+            '0:              pass  # end',
+            '   1] Pass - 0,13..0,17',
+        ], FST('if 1: pass ; pass  # end').dump('N', out=list))
 
     def test_verify(self):
         ast = parse('i = 1')
