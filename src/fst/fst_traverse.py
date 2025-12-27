@@ -165,9 +165,9 @@ def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -211,9 +211,9 @@ def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -257,9 +257,9 @@ def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Containe
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -304,9 +304,9 @@ def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -349,9 +349,9 @@ def last_header_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Co
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -397,15 +397,15 @@ def next_child(
 ) -> fst.FST | None:
     """Get the next child in syntactic order, meant for simple iteration.
 
-    This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during
-    the walk as long as the replaced node and its parent is used for the following call.
+    This is a slower way to iterate vs. `walk()`, but will walk any modified future sibling nodes not yet walked as long
+    as the replaced node and its parent is used for the following call.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -429,7 +429,7 @@ def next_child(
     >>> f = FST('[this, is_, reparsed, each, step, and_, still, walks, ok]')
     >>> n = None
     >>> while n := f.next_child(n):
-    ...     if isinstance(n.a, Name):
+    ...     if n.is_Name:
     ...         n = n.replace(n.id[::-1])
     >>> f.src
     '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
@@ -458,15 +458,15 @@ def prev_child(
 ) -> fst.FST | None:
     """Get the previous child in syntactic order, meant for simple iteration.
 
-    This is a slower way to iterate vs. `walk()`, but will work correctly if ANYTHING in the tree is modified during the
-    walk as long as the replaced node and its parent is used for the following call.
+    This is a slower way to iterate vs. `walk()` but will walk any modified future sibling nodes not yet walked as long
+    as the replaced node and its parent is used for the following call.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -490,7 +490,7 @@ def prev_child(
     >>> f = FST('[this, is_, reparsed, each, step, and_, still, walks, ok]')
     >>> n = None
     >>> while n := f.prev_child(n):
-    ...     if isinstance(n.a, Name):
+    ...     if n.is_Name:
     ...         n = n.replace(n.id[::-1])
     >>> f.src
     '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
@@ -517,16 +517,16 @@ def prev_child(
 def step_fwd(
     self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False, recurse_self: bool = True
 ) -> fst.FST | None:
-    """Step forward in the tree in syntactic order, as if `walk()`ing forward, NOT the inverse of `step_back()`. Will
+    """Step forward in the tree in syntactic order, as if `walk()`ing forward, **NOT** the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
     thing.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -561,12 +561,42 @@ def step_fwd(
     >>> f = FST('[this, [is_, [reparsed, each], step, and_, still], walks, ok]')
     >>> n = f.elts[0]
     >>> while True:
-    ...     if isinstance(n.a, Name):
+    ...     if n.is_Name:
     ...         n = n.replace(n.id[::-1])
     ...     if not (n := n.step_fwd()):
     ...         break
     >>> f.src
     '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
+
+    Example from `walk()` but using this method all modified nodes are walked.
+
+    >>> f = FST('[pre_parent, [pre_self, [child], post_self], post_parent]')
+
+    >>> g = f
+
+    >>> while True:
+    ...     print(f'{g!r:<23}{g.src[:57]}')
+    ...
+    ...     if g.src == '[child]':
+    ...         _ = f.elts[0].replace('new_pre_parent')
+    ...         _ = f.elts[2].replace('new_post_parent')
+    ...         _ = f.elts[1].elts[0].replace('new_pre_self')
+    ...         _ = f.elts[1].elts[2].replace('new_post_self')
+    ...         _ = f.elts[1].elts[1].elts[0].replace('new_child')
+    ...
+    ...     if not (g := g.step_fwd()):
+    ...         break
+    <List ROOT 0,0..0,57>  [pre_parent, [pre_self, [child], post_self], post_parent]
+    <Name 0,1..0,11>       pre_parent
+    <List 0,13..0,43>      [pre_self, [child], post_self]
+    <Name 0,14..0,22>      pre_self
+    <List 0,24..0,31>      [child]
+    <Name 0,33..0,42>      new_child
+    <Name 0,45..0,58>      new_post_self
+    <Name 0,61..0,76>      new_post_parent
+
+    >>> print(f.src)
+    [new_pre_parent, [new_pre_self, [new_child], new_post_self], new_post_parent]
     """
 
     if recurse_self and (fst_ := self.first_child(all)):
@@ -582,16 +612,16 @@ def step_fwd(
 def step_back(
     self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False, recurse_self: bool = True
 ) -> fst.FST | None:
-    """Step backward in the tree in syntactic order, as if `walk()`ing backward, NOT the inverse of `step_fwd()`.
+    """Step backward in the tree in syntactic order, as if `walk()`ing backward, **NOT** the inverse of `step_fwd()`.
     Will walk up parents and down children to get the next node, returning `None` only when we are at the beginning
     of the whole thing.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -626,7 +656,7 @@ def step_back(
     >>> f = FST('[this, [is_, [reparsed, each], step, and_, still], walks, ok]')
     >>> n = f.elts[-1]
     >>> while True:
-    ...     if isinstance(n.a, Name):
+    ...     if n.is_Name:
     ...         n = n.replace(n.id[::-1])
     ...     if not (n := n.step_back()):
     ...         break
@@ -664,31 +694,31 @@ def walk(
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
     Node replacement and removal during the walk is supported with some caveats, the rules are:
-    - `raw` operations can change a lot of nodes and cause the walk to miss some you though would get walked, but they
+    - `raw` operations can change a lot of nodes and cause the walk to miss some you thought would get walked, but they
         will not cause the walk to break.
     - The current node can always be removed, replaced or inserted before (if list field). If replaced the new children
         will be walked next unless you explicitly `send(False)` to the generator.
     - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
     - Previously walked nodes can likewise be removed, replaced or inserted before.
-    - Replacing or removing a node in the current parent chain is allowed will cause the walk to continue at its
-        following siblings which were not removed.
+    - Replacing or removing a node in the current parent chain is allowed and will cause the walk to continue at its
+        following siblings which were not modified.
     - Sibling nodes of either this node or any parents which have not been walked yet can be removed, replaced or
         inserted before but the new nodes will not be walked (and neither will any removed nodes).
 
-    **Note:** About scopes, the `NamedExpr` (walrus) expression is treated specially in a Comprehension. The `target` of
-    the operation actually belongs to the first non-Comprehension enclosing scope. For this reason, when a walk recurses
-    into a Comprehension scope the walrus `target` nodes are still returned even though everything else belongs to the
-    Comprehension scope and is not returned (except for the first `comprehension.iter`, which also belongs to the
-    enclosing scope). This remains true for whatever level of nesting of Comprehensions is recursed into. One quirk, if
-    starting a scope walk on a Comprehension, any walrus `targets` **WILL** be returned, the first iterator though will
-    not. This is on purpose.
+    **Note:** About scopes, the `NamedExpr` (walrus) expression is treated specially in a Comprehension (capital 'C' to
+    differentiate from the node type `comprehension`). The `target` of the operation actually belongs to the first
+    non-Comprehension enclosing scope. For this reason, when a walk recurses into a Comprehension scope the walrus
+    `target` nodes are still returned even though everything else belongs to the Comprehension scope and is not returned
+    (except for the first `comprehension.iter`, which also belongs to the enclosing scope). This remains true for
+    whatever level of nesting of Comprehensions is recursed into. One quirk, if starting a scope walk on a
+    Comprehension, any walrus `targets` **WILL** be returned, the first iterator though will not. This is on purpose.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
         - `True`: All nodes will be returned.
-        - `False`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
+        - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have computed location).
+            arguments present). Operators are not returned (even though they have calculated location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
@@ -710,6 +740,21 @@ def walk(
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
 
     **Examples:**
+
+    Normal walk.
+
+    >>> f = FST('[pre, [child], post]')
+
+    >>> for g in (gen := f.walk()):
+    ...     print(f'{g!r:<23}{g.src[:47]}')
+    ...
+    ...     if g.is_List and g.elts[0].src == 'send_False':
+    ...         _ = gen.send(False)
+    <List ROOT 0,0..0,20>  [pre, [child], post]
+    <Name 0,1..0,4>        pre
+    <List 0,6..0,13>       [child]
+    <Name 0,7..0,12>       child
+    <Name 0,15..0,19>      post
 
     Reject recursion into a child.
 

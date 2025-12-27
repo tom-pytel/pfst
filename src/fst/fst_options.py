@@ -61,9 +61,6 @@ def get_options() -> dict[str, Any]:
     function returns their global defaults which are used when those options are not passed to operations or if they
     are passed with a value of `None`
 
-    **Parameters:**
-    - `options`: Names / values of options to set temporarily, see `options()`.
-
     **Returns:**
     - `{option: value, ...}`: Dictionary of all global default options.
 
@@ -97,11 +94,11 @@ def get_option(option: str, options: Mapping[str, Any] = {}) -> object:
     list of options used see `options()`.
 
     **Parameters:**
-    - `option`: Name of option to get, see `options()`.
+    - `option`: Name of option to get.
     - `options`: Dictionary which may or may not contain the requested option.
 
     **Returns:**
-    - `Any`: The `option` value from the passed `options` dict, if passed and not `None` there, else the global
+    - `object`: The `option` value from the passed `options` dict, if passed and not `None` there, else the global
         default value for `option`.
 
     **Examples:**
@@ -128,7 +125,7 @@ def set_options(**options) -> dict[str, Any]:
         defaults set here for those individual operations, see `options()`.
 
     **Returns:**
-    - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
+    - `old_options`: `dict` of previous values of changed parameters, reset with `set_options(**old_options)`.
 
     **Examples:**
 

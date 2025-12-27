@@ -759,8 +759,8 @@ def _set_end_pos(
 ) -> None:
     """Walk up parent chain setting end position as long as the node is the last child. If `old_end_lineno` and
     `old_end_col_offset` are provided then will only set end position as long as it matches this old position. This is
-    used in case a child has trailing trivia which should be included in the parent, like a semicolon, or changing the
-    size of a container after put."""
+    used (among other things) in case a child has trailing trivia which should be included in the parent, like a
+    semicolon, or changing the size of a container after put."""
 
     check_old_pos = old_end_lineno != -1
 

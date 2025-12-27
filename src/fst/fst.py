@@ -369,12 +369,12 @@ class FST:
 
     a:            AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
     parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
-    pfield:       astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
+    pfield:       astfield | None  ; """The `fst.common.astfield` location of this node in the parent, `None` in root node."""
     _cache:       dict
 
     # ROOT ONLY
     parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
-    indent:       builtins.str                ; """The default single level of block indentation string for this tree when not available from context, root node only."""
+    indent:       builtins.str                ; """The default single level block indentation string for this tree when not available from context, root node only."""
     _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
 
     # class attributes
@@ -404,10 +404,10 @@ class FST:
     @property
     def lines(self) -> list[builtins.str]:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
-        entire source is returned, which may extend beyond the location of the top level node (mostly for statements
+        entire source is returned, which may extend beyond the location of the top-level node (mostly for statements
         which may have leading / trailing comments or empty lines).
 
-        A string is always returned, even for nodes which can never have source like `Load`, etc...
+        A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc...
 
         **Note:** The lines list returned is always a copy so safe to modify.
         """
@@ -425,7 +425,7 @@ class FST:
         it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
         regardless of whether the actual top level node location includes it or not.
 
-        A list of strings is always returned, even for nodes which can never have source like `Load`, etc...
+        A string is always returned, even for nodes which can never have source like `Load`, etc...
         """
 
         if not self.parent:  # is_root
@@ -452,8 +452,11 @@ class FST:
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations (like `expr_context`). Other nodes which normally don't have locations like `arguments` or
-        most operators have this location calculated from their children or source. NOTE: Empty arguments do NOT have
-        a location even though the `AST` exists."""
+        most operators have this location calculated from their children or source.
+
+        **Note:** Empty `arguments` do **NOT** have a location even though the `AST` exists, while non-empty `arguments`
+        have a calculated location.
+        """
 
         try:
             return self._cache['loc']
@@ -497,17 +500,19 @@ class FST:
         ... @decorator
         ... def func():
         ...     pass  # comment
-        ... '''.strip(), 'exec')
+        ... '''.strip())
 
-        >>> f.body[0].bloc
+        >>> f.bloc
         fstloc(0, 0, 2, 19)
 
-        >>> f.body[0].loc
+        >>> f.loc
         fstloc(1, 0, 2, 8)
 
-        >>> f = FST('stmt  # comment', 'exec')
+        >>> f = FST('stmt  # comment')
 
-        >>> f.body[0].bloc  # non-block statement doesn't include comment
+        Non-block statement doesn't include line comment.
+
+        >>> f.bloc
         fstloc(0, 0, 0, 4)
         """
 
@@ -583,32 +588,36 @@ class FST:
 
     @property
     def lineno(self) -> int:  # 1 based
-        """AST-style Line number of the first line of this node (1 based), available for all nodes which have `loc`."""
+        """AST-style line number of the first line of this node (1 based), available for all nodes which have `loc`
+        (otherwise `None`)."""
 
         return (loc := self.loc) and loc[0] + 1
 
     @property
     def col_offset(self) -> int:  # byte index
-        """AST-style BYTE index of the start of this node (0 based), available for all nodes which have `loc`."""
+        """AST-style BYTE index of the start of this node (0 based), available for all nodes which have `loc`
+        (otherwise `None`)."""
 
         return (loc := self.loc) and self.root._lines[loc[0]].c2b(loc[1])
 
     @property
     def end_lineno(self) -> int:  # 1 based
-        """AST-style Line number of the LAST LINE of this node (1 based), available for all nodes which have `loc`."""
+        """AST-style line number of the LAST LINE of this node (1 based), available for all nodes which have `loc`
+        (otherwise `None`)."""
 
         return (loc := self.loc) and loc[2] + 1
 
     @property
     def end_col_offset(self) -> int:  # byte index
-        """AST-style BYTE index one past the end of this node (0 based), available for all nodes which have `loc`."""
+        """AST-style BYTE index one past the end of this node (0 based), available for all nodes which have `loc`
+        (otherwise `None`)."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
     @property
     def has_docstr(self) -> bool:
-        """Pure `bool` for whether this node has a docstring if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
-        `Module`. For quick use as starting index."""
+        """Indicates whether this node has a docstring. Can only be `True` for `FunctionDef`, `AsyncFunctionDef`,
+        `ClassDef` or `Module`. For quick use as start index."""
 
         return True if (
             (a := self.a).__class__ in ASTS_LEAF_MAYBE_DOCSTR
@@ -651,11 +660,10 @@ class FST:
         will be parsed / reparsed and it can take any of the values from `fst.parsex.Mode`.
 
         **Parameters:**
-        - `ast_or_src`: Source code, an `AST` node or `None`.
+        - `ast_or_src`: Source code or an `AST` node.
         - `mode`: See `fst.parsex.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
             type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'` to allow
-            parsing anything. And if `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`,
-            `'eval'` or `'single'`.
+            parsing anything.
 
         **Examples:**
 
@@ -707,8 +715,6 @@ class FST:
         >>> print(_.src)
         1:2:3
 
-
-
         The other forms of this function are meant for internal use, their parameters are below for reference just in
         case:
 
@@ -720,10 +726,10 @@ class FST:
         - `mode`: Is really `mode_or_lines_or_parent`. Parent node for this child node or lines for a root node creating
             a new tree. If `pfield` is `False` then this is a shortcut to create a full tree from an `AST` node or
             source provided in `ast_or_src`.
-        - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
-            and it is created with the `self.parent` set to `mode` node and `self.pfield` set to this. If `None` then it
-            means the creation of a full new `FST` tree and this is the root node with `mode` providing the source. If
-            `False` then this is a shortcut for `FST.fromsrc()` or `FST.fromast()`.
+        - `pfield`: `fst.common.astfield` indication position in parent of this node. If provided then creating a simple
+            child node and it is created with the `self.parent` set to `mode` node and `self.pfield` set to this. If
+            `None` then it means the creation of a full new `FST` tree and this is the root node with `mode` providing
+            the source. If `False` then this is a shortcut for `FST.fromsrc()` or `FST.fromast()`.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
@@ -735,7 +741,7 @@ class FST:
                 the parameteres passed to the respective `.fromsrc()` or `.fromast()` functions. Only valid when
                 `pfield` is `False`, meaning a shortcut use of `FST()`.
             - `lcopy`: Whether to copy lines of source on root node create or just use what is passed in, which in this
-                case must be a list of `bistr` and this node takes ownership of the list.
+                case must be a list of `fst.astutil.bistr` and this node takes ownership of the list.
         """
 
         if pfield is False:  # top level shortcut
@@ -902,7 +908,6 @@ class FST:
            0] Pass - 0,13..0,17
 
         >>> import ast
-
         >>> FST.fromsrc('a:b', ast.Slice).dump()
         Slice - ROOT 0,0..0,3
           .lower Name 'a' Load - 0,0..0,1
@@ -1053,14 +1058,14 @@ class FST:
             fields.
         - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
         - `indent`: Indentation per level as an integer (number of spaces) or a string.
-        - `list_indent`: Extra indentation for elements of lists as an integer or string (added to indent, normally 0).
-            If `True` then will be same as `indent`.
-        - `loc`: Whether to put location of node in source or not.
-        - `color`: `True` or `False` means whether to use ANSI color codes or not. If `None` then will only do so if
-            `out=print` and `sys.stdout.isatty()` and not overridden by environment variables.
-        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
-            `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
-            called for each line of output individually.
+        - `list_indent`: Extra indentation for elements of lists as an integer or string (added to indent). If `True`
+            then will be same as `indent`.
+        - `loc`: Whether to dump locations of nodes or not.
+        - `color`: `True` or `False` means whether to use ANSI color codes or not. If `None` then will autodetect, which
+            can be overridden with environment variables `FORCE_COLOR` and `NO_COLOR`.
+        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string. A
+            `TextIO` object here will use the `write` method for each line of output. Otherwise a
+            `Callable[[str], None]` which is called for each line of output individually.
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
 
         **Returns:**
@@ -1213,7 +1218,7 @@ class FST:
         **Parameters:**
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
             how this is set will determine whether the verification is checking if is parsable by python (`'exec'` or
-            `'strict'` for example), or if the node itself is just in a valid state (where `None` is good). See
+            `'strict'` for example), or if the node itself is just in a valid state (`None` specifies this). See
             `fst.parsex.Mode`.
         - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
             to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
@@ -1484,13 +1489,14 @@ class FST:
         return copy_ast(self.a)
 
     def copy(self, whole: bool = True, **options) -> FST:
-        """Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
-        identical copy is made and no fixes / modifications are applied.
+        r"""Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
+        identical copy is made and no fixes / modifications are applied unless `whole=False`.
 
         **Parameters:**
         - `whole`: This only applies when copying root nodes. If `True` then copies the entire tree and source without
             any modifications (including leading and trailing source which is not part of the node). Otherwise will trim
-            away any source that falls outside of the node and only copy the node and its source.
+            away any source that falls outside of the node and only copy the node and its source (including any
+            grouping parentheses as specified by the `pars` option).
         - `options`: See `options()`.
 
         **Returns:**
@@ -1503,17 +1509,30 @@ class FST:
 
         >>> f = FST('''
         ... # pre
-        ... call()
+        ... call()  # tail
         ... # post
-        ... '''.strip())
+        ... '''.strip(), 'stmt')
 
-        >>> print(f.copy().src)
-        # pre
-        call()
-        # post
+        >>> print('\n'.join(repr(l) for l in f.copy().lines))
+        '# pre'
+        'call()  # tail'
+        '# post'
 
-        >>> print(f.copy(whole=False).src)
-        call()
+        >>> print('\n'.join(repr(l) for l in f.copy(whole=False).lines))
+        'call()'
+
+        A module is always copied whole.
+
+        >>> f = FST('''
+        ... # pre
+        ... call()  # tail
+        ... # post
+        ... '''.strip(), 'Module')
+
+        >>> print('\n'.join(repr(l) for l in f.copy(whole=False).lines))
+        '# pre'
+        'call()  # tail'
+        '# post'
         """
 
         check_options(options)
@@ -1562,8 +1581,7 @@ class FST:
     def replace(self, code: Code | None, one: bool=True, **options) -> FST | None:  # -> replaced self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
-        **CAN** replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
-        source change.
+        **CAN** replace root node, in which case `self` remains the same but the top-level `AST` and source change.
 
         **WARNING!** If passing an `FST` then this is not guaranteed to become the new node (on purpose). If you wish to
         continue using the `FST` node you just replaced then make sure to use the one returned from this function. The
@@ -1681,8 +1699,9 @@ class FST:
 
         **Returns:**
         - `FST`: When getting an actual node (most situations).
-        - `str`: When getting am identifier, like from `Name.id`.
-        - `constant`: When getting a constant (`fst.astutil.constant`), like from `MatchSingleton.value`.
+        - `str`: When getting an identifier, like from `Name.id`.
+        - `constant`: When getting a constant (`fst.astutil.constant`), like from `Constant.value` or
+            `MatchSingleton.value`.
 
         **Examples:**
 
@@ -1875,8 +1894,8 @@ class FST:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**
-        - `start`: The start of the slice to get. You can use `'end'` here but you will just wind up getting an empty
-            slice.
+        - `start`: The start index of the slice to get. You can use `'end'` here but you will just wind up getting an
+            empty slice.
         - `stop`: The end index (exclusive) of the slice to get. This should be one past the last element to get (like
             python list indexing). If this is `'end'` then it indicates a slice operation to the end of the list (like
             python `a[start:]`).
@@ -1949,7 +1968,7 @@ class FST:
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.
-        - `start`: The start of the slice to put. `'end'` here allows extending at the end of the field.
+        - `start`: The start index of the slice to put. `'end'` here allows extending at the end of the field.
         - `stop`: The end index (exclusive) of the slice. This should be one past the last element to put (like python
             list indexing). If this is `'end'` then it indicates a slice operation to the end of the list (like python
             `a[start:]`).
@@ -2020,8 +2039,8 @@ class FST:
         end_col: int | Literal['end'],
         as_lines: bool = False
     ) -> builtins.str | list[builtins.str]:
-        r"""Get source at location, without dedenting or any other modification, returned as a string or individual
-        lines.
+        r"""Get source at location, without dedenting or any other modification, returned as a string or list of
+        individual lines.
 
         Can call on any node in tree to access source for the whole tree.
 
@@ -2097,7 +2116,7 @@ class FST:
           nodes of this node are offset differently from this `self` node and its parents.
 
           The `self` node and its parents will not have their start locations offset if the put is an insert at the
-          start (as the location is considered to be INSIDE these nodes), whereas child nodes will be moved.
+          start (as the location is considered to be **INSIDE** these nodes), whereas child nodes will be moved.
 
           The `self` node and its parents will have their end locations offset if the put ends at this location whereas
           child nodes will not.
@@ -2224,10 +2243,10 @@ class FST:
             return ln + len(put_lines) - 1, len(put_lines[-1])
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
-        """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
-        element of a tuple and not return the parentheses of the tuple. Likwise will not normally return the parentheses
-        of an enclosing `arguments` parent or class bases list (unless `shared=None`, but that is mostly for internal
-        use).
+        """Return the location of enclosing **GROUPING** parentheses if present. Will balance parentheses if `self` is
+        an element of a tuple and not return the parentheses of the tuple. Likwise will not normally return the
+        parentheses of an enclosing `arguments` parent or class bases list (unless `shared=None`, but that is mostly for
+        internal use).
 
         Only normally works on (and makes sense for) `expr` or `pattern` nodes, otherwise returns `self.bloc` and count
         of 0. Also handles special case of a single generator expression argument to a function sharing parameters with
@@ -2244,11 +2263,11 @@ class FST:
         - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
             shared with the call arguments enclosing parentheses with a count of 0. If `False` then does not return
             these and returns a count of -1, and thus the location is not a full valid `GeneratorExp` location. If
-            `None` then returns ANY directly enclosing parentheses, whether they belong to this node or not.
+            `None` then returns **ANY** directly enclosing parentheses, whether they belong to this node or not.
 
         **Returns:**
         - `fstloc | None`: Location of enclosing parentheses if present else `self.bloc` (which can be `None`). Negative
-            parentheses count (from shared parens solo call arg generator expression) can also be checked in the case of
+            parentheses count (from shared pars solo call arg generator expression) can also be checked in the case of
             `shared=False` via `fst.pars() > fst.bloc`. If only loc is returned, it will be an `fstloc` which will
             still have the count of parentheses in an attribute `.n`.
 
@@ -2333,10 +2352,10 @@ class FST:
         return locn
 
     def par(self, force: bool = False, *, whole: bool = True) -> FST:  # -> self
-        """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
-        nodes which are not `is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized
-        `Tuple` and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred`
-        then the parentheses are applied to the child.
+        """Parenthesize node if it **MAY** need it. Will not parenthesize atoms which are always enclosed like `List`,
+        or nodes which are not `is_parenthesizable()`, unless `force=True`. Will add intrinsic node-owned parentheses to
+        unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`, adjusting the node location. If dealing with
+        a `Starred` then the parentheses are applied to the child.
 
         **WARNING!** This function doesn't do any higher level syntactic validation. So if you parenthesize something
         that shouldn't be parenthesized, and you wind up poking an eye out, that's on you.
@@ -2516,14 +2535,30 @@ class FST:
         return self  # ret
 
     def get_docstr(self) -> builtins.str | None:
-        """Get the docstring value of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`.
-        The docstring is dedented and returned as a normal string, not a node. Keep in mind an empty docstring may exist
-        but will be a falsey value so make sure to check for `None`. If you want the actual docstring node then just
-        check for presence with `.has_docstr` and get `.body[0]`.
+        r"""Get the unformatted docstring value of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        `Module`. The docstring is dedented and returned as a normal string, not a node. Keep in mind an empty docstring
+        may exist but will be a falsey value so make sure to explicitly check for `None` return. If you want the actual
+        docstring node then just check for presence with `.has_docstr` and get `.body[0]`.
 
         **Returns:**
         - `str | None`: Actual dedented docstring value, not the node or syntactic string representation with quotes.
             `None` if there is no docstring or the node cannot have a docstring.
+
+        **Examples:**
+
+        >>> f = FST('''
+        ... def func():
+        ...     \'\'\'docstring indented
+        ...     in source with codes \\U0001F92a\'\'\'
+        ... '''.strip())
+
+        >>> print(f.src)
+        def func():
+            '''docstring indented
+            in source with codes \U0001F92a'''
+
+        >>> f.get_docstr()
+        'docstring indented\nin source with codes 🤪'
         """
 
         if not self.has_docstr:
@@ -2543,7 +2578,7 @@ class FST:
         return '\n'.join(lines)
 
     def put_docstr(self, text: builtins.str | None, reinsert: bool = False, **options) -> FST:
-        """Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        r'''Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
         be formatted with triple quotes and indented as needed.
 
@@ -2555,7 +2590,17 @@ class FST:
 
         **Returns:**
         - `self`
-        """
+
+        **Examples:**
+
+        >>> f = FST('def func(): pass')
+
+        >>> print(f.put_docstr('docstring indented\nin source with codes \U0001F92a').src)
+        def func():
+            """docstring indented
+            in source with codes 🤪"""
+            pass
+        '''
 
         # TODO: differentiate better header comments of Module and put after shebang and encoding but before others using specific line number once that functionality is concretized
 
@@ -2623,13 +2668,13 @@ class FST:
                 single `global` declaration can declare multiple names and the names themselves don't have their own
                 individual nodes, they are just strings in the `Global` node.
             - `'nonlocal'`: Similar to `global` but for `nonlocal` declarations. This is just the declarations, these
-                are not necessarily all the truly nonlocal symbols as there can be "free" variables which are not local
-                but not declared as such.
+                are not necessarily all the truly nonlocal symbols as there can be "free" variables which are nonlocal
+                but not explicitly declared as such.
             - `'local'`: This is a dictionary of symbols determined to be local to the scope. These are all `'store'`
                 symbols which do not appear in either `'global'` or `'nonlocal'` explicit declarations. There are no
                 `'load'` or `'del'` nodes in these lists even if they are local both because "local" symbols are defined
                 as such by a store operation and also because it is faster. If you need any respective `'load'` or
-                `'del'` nods then look them up in their respective category lists.
+                `'del'` nodes then look them up in their respective category dictionary.
             - `'free'`: This is a dictionary of symbols determined to be implicitly nonlocal to the scope. Basically all
                 nodes which are read but never written or deleted and are not explicitly `global` or `nonlocal`. Note
                 that this is slightly different from the python definition of a "free" variable as those can include
@@ -3265,9 +3310,9 @@ class FST:
 
     def repath(self) -> FST:
         """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
-        When nodes are deleted the corresponding `FST.a` and `AST.f` attributes are set to `None`. The `root`, `parent`
-        and `pfield` attributes are left so that things like this can work. Useful when a node has been deleted but you
-        want to know where it was and what may be there now.
+        When nodes are deleted the corresponding `FST.a` and `AST.f` attributes are set to `None`. The `parent` and
+        `pfield` attributes are left so that things like this can work. Useful when a node has been deleted but you want
+        to know where it was and what may be there now.
 
         **Returns:**
         - `FST`: Possibly `self` or the node which took our place at our relative position from `root`.
@@ -3283,12 +3328,12 @@ class FST:
         >>> f.put('x', 1, raw=True)  # raw forces reparse at List
         <List ROOT 0,0..0,12>
 
-        >>> print(g.a, g.root)
-        None <List ROOT 0,0..0,12>
+        >>> print(g.is_alive, g.a, g.root)
+        False None <List ROOT 0,0..0,12>
 
         >>> g = g.repath()
-        >>> print(type(g.a), g.root)
-        <class 'ast.Name'> <List ROOT 0,0..0,12>
+        >>> print(g.is_alive, type(g.a), g.root)
+        True <class 'ast.Name'> <List ROOT 0,0..0,12>
         """
 
         root = self.root
@@ -3308,11 +3353,11 @@ class FST:
         - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
         - `allow_exact`: Whether to allow return of exact location match with node or not. `True` means allow return of
             node which matches location exactly. `False` means location must be inside the node but cannot be touching
-            BOTH ends of the node. This basically determines whether you can get the exact node of the location or its
-            parent. A value of `'top'` specifies an exact match is allowed and return the highest level node with the
-            match, otherwise the lowest level exact match is returned. This only applies to nodes like `Expr` which will
-            have the same location as the contained `expr` or a `Module` which only contains a single statement without
-            any other junk like comments or empty lines surrounding it.
+            **BOTH** ends of the node. This basically determines whether you can get the exact node of the location or
+            its parent. A value of `'top'` specifies an exact match is allowed and return the highest level node with
+            the match, otherwise the lowest level exact match is returned. This only applies to nodes like `Expr` which
+            will have the same location as the contained `expr` or a `Module` which only contains a single statement
+            without any other junk like comments or empty lines surrounding it.
 
         **Returns:**
         - `FST | None`: Node which entirely contains location, either exactly or not, or `None` if no such node.
@@ -3589,7 +3634,9 @@ class FST:
         """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
 
         **Returns:**
-        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
+        - `True`: Is a parenthesized `Tuple` node.
+        - `False`: Is an unparenthesized `Tuple` node.
+        - `None`: Is not a `Tuple` node.
 
         **Examples:**
 
@@ -3610,9 +3657,9 @@ class FST:
         at all.
 
         **Returns:**
-        - `None`: If is not `MatchSequence` at all.
-        - `''`: If is undelimited `MatchSequence`.
-        - `'()'` or `'[]'`: Is delimited with these delimiters.
+        - `'()'` or `'[]'`: Is a `MatchSequence` delimited with these delimiters.
+        - `''`: Is an undelimited `MatchSequence`.
+        - `None`: Is not a `MatchSequence`.
 
         **Examples:**
 
@@ -3643,7 +3690,7 @@ class FST:
         return ''
 
     def is_empty_arguments(self) -> bool | None:
-        """Is this an empty `arguments` node or not an `arguments` at all?
+        """Is this an empty `arguments` node or not an `arguments` node at all?
 
         **Returns:**
         - `True`: Is an empty `arguments` node.
@@ -3675,8 +3722,9 @@ class FST:
         answer even for top-level `ExceptHandler` nodes cut out of their blocks.
 
         **Returns:**
-        - `True` if is `except*` `ExceptHandler`, `False` if is normal `ExceptHandler`, `None` if is not `ExceptHandler`
-        at all.
+        - `True`: Is an `except*` `ExceptHandler`.
+        - `False`: Is a normal `ExceptHandler`.
+        - `None`: Is not an `ExceptHandler`.
 
         **Examples:**
 
@@ -3711,7 +3759,9 @@ class FST:
         r"""Whether `self` is an `elif` or not, or not an `If` at all.
 
         **Returns:**
-        - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
+        - `True`: Is an `elif` `If`.
+        - `False`: Is a normal `If`.
+        - `None`: Is not an `If`.
 
         **Examples:**
 
