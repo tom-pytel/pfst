@@ -3228,6 +3228,13 @@ c, # c
         self.assertIsNone((f := FST('a\nb')).body[1].replace('', raw=True))
         f.verify()
 
+        # elifs are tricky
+
+        f = FST('if 1: pass\nelif 2: pass\nelif 3: pass\nelif 4: pass')
+        f.put_src('', *f.orelse[0].orelse[0].orelse[0].loc)
+        self.assertEqual('if 1: pass\nelif 2: pass\nelif 3: pass\n', f.src)
+        f.verify()
+
     def test_replace_raw_non_mod_stmt_root(self):
         f = FST('call(a, *b, **c)')
         f.args[0].replace('d', to=f.keywords[-1], raw=True)

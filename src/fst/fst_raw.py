@@ -44,7 +44,7 @@ def _reparse_raw_base(
     first_line_col_delta: int = 0,
 ) -> fst.FST:
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
-    Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
+    Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top-level
     statementish thing being reparsed."""
 
     copy_root = fst.FST(Pass(), copy_lines, None, lcopy=False)  # we don't need the ASTs here, just the lines
@@ -102,6 +102,9 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 
     if not (stmtish := self.parent_stmtish(True, False)):
         return False
+
+    if is_elif := stmtish.is_elif():
+        stmtish = stmtish.parent  # there must be a parent otherwise it cannot be an `elif`
 
     pln, pcol, pend_ln, pend_col = stmtish.bloc
 
@@ -216,6 +219,9 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 
         _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, True, None,
                           first_lineno, first_line_col_delta)
+
+        if is_elif:  # nuking a whole elif will parse but can do bad things to end positions
+            stmtish._set_end_pos((a := stmtish.a).end_lineno, a.end_col_offset)  # setting own position to what it currently is but will also propagate up the tree
 
         return True
 
