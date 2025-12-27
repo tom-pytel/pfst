@@ -24,7 +24,7 @@ from .astutil import re_alnumdot_alnum
 from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
 from .view import fstview
 from .parsex import parse, parse_expr_arglike
-from .fst import FST
+from .fst import FST, ASTS_LEAF_FTSTR
 from . import NodeError
 
 try:
@@ -1105,6 +1105,8 @@ class Fuzzy:
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+# not forever
+
 class Dump(Fuzzy):
     name = 'dump'
     forever = False
@@ -1224,6 +1226,40 @@ class SynOrder(Fuzzy):
             bln, bcol = f.bln, f.bcol
 
 
+class Par(Fuzzy):
+    name = 'par'
+    forever = False
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        f = None
+
+        try:
+            for f in (gen := fst.walk()):
+                if PYLT12:
+                    if f.is_ftstr:
+                        gen.send(False)
+
+                f.unpar(node=True).par(force=f.is_parenthesizable())
+
+                if self.verify:
+                    fst.verify()
+
+        except Exception:
+            if self.verbose:
+                print(fst.src)
+
+            print()
+            print(f'... {f}')
+
+            print(fst.get_src(*f.parent.pars()))
+
+            raise
+
+        else:
+            if self.verbose:
+                print(fst.src)
+
+
 class Reparse(Fuzzy):
     name = 'reparse'
     forever = False
@@ -1242,69 +1278,6 @@ class Reparse(Fuzzy):
             a = parse(f.src, f.a.__class__)
 
             compare_asts(a, f.a, locs=True, ctx=True, raise_=True)
-
-
-class ReputSrc(Fuzzy):
-    name = 'reput_src'
-    forever = True
-
-    def fuzz_one(self, fst, fnm) -> bool:
-        lines = fst._lines
-
-        # seed(rnd_seed := randint(0, 2**32-1))
-
-        try:
-            for count in range(self.batch or 200):
-                copy = fst.copy()
-                ln = randint(0, len(lines) - 1)
-                col = randint(0, len(lines[ln]))
-                end_ln = randint(ln, len(lines) - 1)
-                end_col = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                put_lines = fst._get_src(ln, col, end_ln, end_col, True)
-
-                if not (count % 10):
-                    # s = f'{count, ln, col, end_ln, end_col}'
-
-                    # sys.stdout.write('\x08' * 40 + s.ljust(40))
-                    sys.stdout.write('.')
-                    sys.stdout.flush()
-
-                try:
-                    if self.debug:
-                        ls = copy._lines
-                        old_lines = ls[max(0, ln - 5) : min(len(ls), end_ln + 6)]
-
-                    copy.put_src(put_lines, ln, col, end_ln, end_col)
-                    copy.verify()
-
-                    compare_asts(fst.a, copy.a, locs=True, raise_=True)
-
-                    assert copy.src == fst.src
-
-                except Exception:
-                    # print('\nRandom seed was:', rnd_seed)
-                    print()
-                    print(f'{count=}, loc={(ln, col, end_ln, end_col)}')
-                    print('...', 'put_lines', '.'*80)
-                    pp(put_lines)
-
-                    if self.debug:
-                        print()
-                        print('...', 'old_lines', '.'*80)
-                        pp(old_lines)
-
-                    if self.verbose:
-                        print()
-                        print('...', 'full_lines', '.'*80)
-                        pp(copy._lines)
-
-                    # print('.'*80)
-                    # print(copy.src)
-
-                    raise
-
-        finally:
-            print()
 
 
 class ReputOne(Fuzzy):
@@ -1480,6 +1453,123 @@ class ReputOne(Fuzzy):
                     pass
 
             raise
+
+
+class ReconcileSame(Fuzzy):
+    """Alternates nodes as AST and in-tree FST, sometimes ends with out-of-tree FST."""
+
+    name = 'reconcile_same'
+    forever = False
+
+    def walk_ast(self, ast: AST, fst: FST):
+        for f in fst.walk(all=True, self_=False, recurse=False):  # will have same nodes as ast
+            if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
+                continue
+
+            if random() < 0.1:
+                f.pfield.set(ast, copy_ast(a))
+
+            else:
+                f.pfield.set(ast, a)
+
+                if 1:#not isinstance(a, (JoinedStr, TemplateStr)):
+                    self.walk_fst(f)
+
+    def walk_fst(self, fst: FST):
+        ast = fst.a
+
+        for f in fst.walk(all=True, self_=False, recurse=False):
+            if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
+                continue
+
+            if random() < 0.1:
+                f.pfield.set(ast, copy_ast(a))
+
+            else:
+                f.pfield.set(ast, a := copy_ast(a))
+
+                if 1:#not isinstance(a, (JoinedStr, TemplateStr)):
+                    self.walk_ast(a, f)
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        try:
+            fst.mark()
+
+            self.walk_fst(fst)
+
+            with FST.options(docstr=False):
+                fst = fst.reconcile(cleanup=False)
+
+            fst.verify()
+
+        finally:
+            if self.verbose:
+                print(fst.src)
+
+
+# forever
+
+class ReputSrc(Fuzzy):
+    name = 'reput_src'
+    forever = True
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        lines = fst._lines
+
+        # seed(rnd_seed := randint(0, 2**32-1))
+
+        try:
+            for count in range(self.batch or 200):
+                copy = fst.copy()
+                ln = randint(0, len(lines) - 1)
+                col = randint(0, len(lines[ln]))
+                end_ln = randint(ln, len(lines) - 1)
+                end_col = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                put_lines = fst._get_src(ln, col, end_ln, end_col, True)
+
+                if not (count % 10):
+                    # s = f'{count, ln, col, end_ln, end_col}'
+
+                    # sys.stdout.write('\x08' * 40 + s.ljust(40))
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
+
+                try:
+                    if self.debug:
+                        ls = copy._lines
+                        old_lines = ls[max(0, ln - 5) : min(len(ls), end_ln + 6)]
+
+                    copy.put_src(put_lines, ln, col, end_ln, end_col)
+                    copy.verify()
+
+                    compare_asts(fst.a, copy.a, locs=True, raise_=True)
+
+                    assert copy.src == fst.src
+
+                except Exception:
+                    # print('\nRandom seed was:', rnd_seed)
+                    print()
+                    print(f'{count=}, loc={(ln, col, end_ln, end_col)}')
+                    print('...', 'put_lines', '.'*80)
+                    pp(put_lines)
+
+                    if self.debug:
+                        print()
+                        print('...', 'old_lines', '.'*80)
+                        pp(old_lines)
+
+                    if self.verbose:
+                        print()
+                        print('...', 'full_lines', '.'*80)
+                        pp(copy._lines)
+
+                    # print('.'*80)
+                    # print(copy.src)
+
+                    raise
+
+        finally:
+            print()
 
 
 class PutOne(Fuzzy):
@@ -1858,58 +1948,6 @@ class ReconcileRnd(Fuzzy):
 
         if self.verbose:
             print(fst.src)
-
-
-class ReconcileSame(Fuzzy):
-    """Alternates nodes as AST and in-tree FST, sometimes ends with out-of-tree FST."""
-
-    name = 'reconcile_same'
-    forever = False
-
-    def walk_ast(self, ast: AST, fst: FST):
-        for f in fst.walk(all=True, self_=False, recurse=False):  # will have same nodes as ast
-            if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
-                continue
-
-            if random() < 0.1:
-                f.pfield.set(ast, copy_ast(a))
-
-            else:
-                f.pfield.set(ast, a)
-
-                if 1:#not isinstance(a, (JoinedStr, TemplateStr)):
-                    self.walk_fst(f)
-
-    def walk_fst(self, fst: FST):
-        ast = fst.a
-
-        for f in fst.walk(all=True, self_=False, recurse=False):
-            if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
-                continue
-
-            if random() < 0.1:
-                f.pfield.set(ast, copy_ast(a))
-
-            else:
-                f.pfield.set(ast, a := copy_ast(a))
-
-                if 1:#not isinstance(a, (JoinedStr, TemplateStr)):
-                    self.walk_ast(a, f)
-
-    def fuzz_one(self, fst, fnm) -> bool:
-        try:
-            fst.mark()
-
-            self.walk_fst(fst)
-
-            with FST.options(docstr=False):
-                fst = fst.reconcile(cleanup=False)
-
-            fst.verify()
-
-        finally:
-            if self.verbose:
-                print(fst.src)
 
 
 class SliceStmtish(Fuzzy):

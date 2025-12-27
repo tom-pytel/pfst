@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- diallow parenthesization of immediate string `Constant` children of f/t-strings
 - fixed delimit whole root node error when last line was a comment
 - fixed `MatchMapping` single-element operation indexing of `rest` if present
 - fixed parse single-element undelimited `MatchSequence` to include trailing comma

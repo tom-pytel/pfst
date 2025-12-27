@@ -422,12 +422,9 @@ class _Modifying:
             raise RuntimeError(f'nested modification not allowed on {root}')
 
         if raw is False:
-            while not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
+            while (fst_ := fst_.parent) and not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
                 if a.__class__ is JoinedStr:
                     raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
-
-                if not (fst_ := fst_.parent):
-                    break
 
         _MODIFYING.add(root)
 

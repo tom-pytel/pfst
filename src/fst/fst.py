@@ -3565,14 +3565,21 @@ class FST:
         ):
             return False
 
-        while self := self.parent:
-            ast_cls = self.a.__class__
+        if parent := self.parent:
+            if ast_cls is Constant and parent.a.__class__ in ASTS_LEAF_FTSTR:
+                return False
 
-            if ast_cls not in ASTS_LEAF_EXPR:
-                if ast_cls in ASTS_LEAF_PATTERN:
-                    return False
+            while True:
+                ast_cls = parent.a.__class__
 
-                break
+                if ast_cls not in ASTS_LEAF_EXPR:
+                    if ast_cls in ASTS_LEAF_PATTERN:
+                        return False
+
+                    break
+
+                if not (parent := parent.parent):
+                    break
 
         return True
 
