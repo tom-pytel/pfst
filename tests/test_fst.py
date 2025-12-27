@@ -4418,7 +4418,7 @@ class cls(a, b=c):
         test(FST('class cls(a, *b, d=e, *c, f=g): pass'), ['a', '*b', 'd=e', '*c', 'f=g', 'pass'])
         test(FST('class cls(a=b, *c, d=e, *f, g=h, i=j, *k, *l): pass'), ['a=b', '*c', 'd=e', '*f', 'g=h', 'i=j', '*k', '*l', 'pass'])
 
-    def test_walk_vs_next_prev_all_combinations(self):
+    def test_walk_vs_next_prev_field_combinations(self):
         nodes = {
             Module:             'a',
             Interactive:        'a',
@@ -4646,6 +4646,114 @@ class cls(a, b=c):
 
             except Exception:
                 print(f'\nast_cls={ast_cls.__name__}, {src=}, {deletions=}, {copy_src=}')
+
+                raise
+
+    def test_walk_vs_next_prev_list_fields(self):
+        nodes = {
+            Module:             ('a\nb', ['a', 'b']),
+            Interactive:        ('a; b', ['a', 'b']),
+            FunctionDef:        ('def f(): a; b', ['a', 'b']),
+            AsyncFunctionDef:   ('async def f(): a; b', ['a', 'b']),
+            ClassDef:           ('class cls(a, b, c=c, d=d): e; f', ['a', 'b', 'c=c', 'd=d', 'e', 'f']),
+            Delete:             ('del a, b', ['a', 'b']),
+            Assign:             ('a = b = c', ['a', 'b', 'c']),
+            For:                ('for a in b: c; d', ['a', 'b', 'c', 'd']),
+            AsyncFor:           ('async for a in b: c; d', ['a', 'b', 'c', 'd']),
+            While:              ('while a: b; c', ['a', 'b', 'c']),
+            If:                 ('if a: b; c', ['a', 'b', 'c']),
+            With:               ('with a, b: c; d', ['a', 'b', 'c', 'd']),
+            AsyncWith:          ('async with a, b: c; d', ['a', 'b', 'c', 'd']),
+            Match:              ('match a:\n  case b: c\n  case d: e', ['a', 'case b: c', 'case d: e']),
+            Try:                ('try: a; b\nexcept c: c\nexcept d: d\nelse: e; f\nfinally: g; h', ['a', 'b', 'except c: c', 'except d: d', 'e', 'f', 'g', 'h']),
+            Import:             ('import a, b', ['a', 'b']),
+            ImportFrom:         ('from . import a, b', ['a', 'b']),
+            BoolOp:             ('a and b', ['a', 'b']),
+            Dict:               ('{a: b, c: d}', ['a', 'b', 'c', 'd']),
+            Set:                ('{a, b}', ['a', 'b']),
+            ListComp:           ('[a for b in b for c in c]', ['a', 'for b in b', 'for c in c']),
+            SetComp:            ('{a for b in b for c in c}', ['a', 'for b in b', 'for c in c']),
+            DictComp:           ('{a: b for c in c for d in d}', ['a', 'b', 'for c in c', 'for d in d']),
+            GeneratorExp:       ('(a for b in b for c in c)', ['a', 'for b in b', 'for c in c']),
+            Compare:            ('a < b > c', ['a', '<', 'b', '>', 'c']),
+            Call:               ('call(a, b, c=d, e=f)', ['call', 'a', 'b', 'c=d', 'e=f']),
+            List:               ('[a, b]', ['a', 'b']),
+            Tuple:              ('(a, b)', ['a', 'b']),
+            comprehension:      ('for a in b if c if d', ['a', 'b', 'c', 'd']),
+            arguments:          ('a=b, /, c=d, *e, f=g, h=i, **j', ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']),
+            MatchSequence:      ('[a, b]', ['a', 'b']),
+            MatchMapping:       ('{1: a, 2: b}', ['1', 'a', '2', 'b']),
+            MatchClass:         ('a(b, c, d=e, f=g)', ['a', 'b', 'c', 'e', 'g']),
+            MatchOr:            ('a | b', ['a', 'b']),
+            _ExceptHandlers:    ('except: a\nexcept: b', ['except: a', 'except: b']),
+            _match_cases:       ('case a: _\ncase b: _', ['case a: _', 'case b: _']),
+            _Assign_targets:    ('a = b =', ['a', 'b']),
+            _decorator_list:    ('@a\n@b', ['a', 'b']),
+            _comprehensions:    ('for a in a for b in b', ['for a in a', 'for b in b']),
+            _comprehension_ifs: ('if a if b', ['a', 'b']),
+            _aliases:           ('a as a, b as b', ['a as a', 'b as b']),
+            _withitems:         ('a as a, b as b', ['a as a', 'b as b']),
+        }
+
+        if PYGE11:
+            nodes.update({
+                TryStar: ('try: a; b\nexcept* c: c\nexcept* d: d\nelse: e; f\nfinally: g; h', ['a', 'b', 'except* c: c', 'except* d: d', 'e', 'f', 'g', 'h']),
+            })
+
+        if PYGE12:
+            nodes.update({
+                FunctionDef:      ('def f[a, *b, **c]() -> d: e', ['a', '*b', '**c', 'd', 'e']),
+                AsyncFunctionDef: ('async def f[a, *b, **c]() -> d: e', ['a', '*b', '**c', 'd', 'e']),
+                ClassDef:         ('class cls[a, *b, **c](d, e, f=f, g=g): h', ['a', '*b', '**c', 'd', 'e', 'f=f', 'g=g', 'h']),
+                TypeAlias:        ('type t[a, *b, **c] = d', ['t', 'a', '*b', '**c', 'd']),
+                JoinedStr:        ('f"a{b}c"', ['a', '{b}', 'c']),
+                _type_params:     ('a, b', ['a', 'b']),
+            })
+
+        if PYGE13:
+            nodes.update({
+            })
+
+        if PYGE14:
+            nodes.update({
+                TemplateStr: ('t"a{b}c"', ['a', '{b}', 'c']),
+            })
+
+
+        for ast_cls, (src, nodes_srcs) in nodes.items():
+            try:
+                # forward
+
+                fst_ = FST(src, ast_cls)
+
+                nodes_next = []
+
+                if f := fst_.first_child('loc'):
+                    nodes_next.append(f.src)
+
+                    while f := f.next('loc'):
+                        nodes_next.append(f.src)
+
+                self.assertEqual(nodes_next, nodes_srcs)
+                self.assertEqual(nodes_next, [f.src for f in fst_.walk('loc', self_=False, recurse=False)])
+
+                # backward
+
+                fst_ = FST(src, ast_cls)
+
+                nodes_prev = []
+
+                if f := fst_.last_child('loc'):
+                    nodes_prev.append(f.src)
+
+                    while f := f.prev('loc'):
+                        nodes_prev.append(f.src)
+
+                self.assertEqual(nodes_prev, nodes_srcs[::-1])
+                self.assertEqual(nodes_prev, [f.src for f in fst_.walk('loc', self_=False, recurse=False, back=True)])
+
+            except Exception:
+                print(f'\nast_cls={ast_cls.__name__}, {src=}, {nodes_srcs=}')
 
                 raise
 

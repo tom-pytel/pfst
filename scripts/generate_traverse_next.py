@@ -774,7 +774,9 @@ def _next_TypeVarTuple_default_value(ast: AST, idx: int | None) -> _NextPrevRet:
 
             body.append('    return None')
 
-        print(f'\n\ndef {func_name}(ast: AST, idx: int | None) -> _NextPrevRet:\n' + '\n\n'.join(body))
+        comment = '  # pragma: no cover' if ast_cls is FunctionType else ''
+
+        print(f'\n\ndef {func_name}(ast: AST, idx: int | None) -> _NextPrevRet:{comment}\n' + '\n\n'.join(body))
 
 
 print('\n\nNEXT_FUNCS = {')

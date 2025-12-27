@@ -5366,6 +5366,18 @@ class cls:
             self.assertEqual('i < i', f.put_slice(g, 1).src)
             f.verify()
 
+        # BoolOp
+
+        with FST.options(norm=True):
+            self.assertEqual('a', (g := (f := FST('a or b or c').get_slice(0, 2)).get_slice(0, 1)).src)
+            self.assertEqual('a or b or a', f.put_slice(g, 'end').src)
+            f.verify()
+
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('a or b or c').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            # f.verify()
+
         # aliases
 
         with FST.options(norm=True):
