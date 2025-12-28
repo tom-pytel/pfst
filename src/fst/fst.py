@@ -2563,16 +2563,16 @@ class FST:
         >>> f = FST('''
         ... def func():
         ...     \'\'\'docstring indented
-        ...     in source with codes \\U0001F92a\'\'\'
+        ...     in source with codes\\x3f\\x3f\\x3f\'\'\'
         ... '''.strip())
 
         >>> print(f.src)
         def func():
             '''docstring indented
-            in source with codes \U0001F92a'''
+            in source with codes\x3f\x3f\x3f'''
 
         >>> f.get_docstr()
-        'docstring indented\nin source with codes 🤪'
+        'docstring indented\nin source with codes???'
         """
 
         if not self.has_docstr:
@@ -2609,10 +2609,10 @@ class FST:
 
         >>> f = FST('def func(): pass')
 
-        >>> print(f.put_docstr('docstring indented\nin source with codes \U0001F92a').src)
+        >>> print(f.put_docstr('docstring indented\nin source with codes\x3f\x3f\x3f').src)
         def func():
             """docstring indented
-            in source with codes 🤪"""
+            in source with codes???"""
             pass
         '''
 

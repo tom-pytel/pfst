@@ -1271,7 +1271,8 @@ def code_as__expr_arglikes(
 
     **WARNING!** The `Tuple` that is returned is just being used as a container and may be an invalid python `Tuple` as
     it may be an empty `Tuple` `AST` with source having no parentheses or an unparenthesized `Tuple` with incorrect
-    start and stop locations (since its the whole source). Singleton `Tuple` may also not have trailing comma.
+    start and stop locations (since its the whole source). Singleton `Tuple` may also not have trailing comma. Meant for
+    internal use only!
     """
 
     if code.__class__ is Tuple:  # strip parentheses

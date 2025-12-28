@@ -288,7 +288,7 @@ __all__ = [
     '_decorator_list',
     '_comprehensions',
     '_comprehension_ifs',
-    # '_keywords',
+    # '_arglikes',
     '_aliases',
     '_withitems',
     '_type_params',
@@ -551,10 +551,27 @@ class _comprehension_ifs(_slice):
         self.end_col_offset = end_col_offset
 
 
-# class _keywords(_slice):
-#     """Slice of `ClassDef/Call.keywords`.
+# class _arglikes(_slice):
+#     """Slice of `Call.args+keywords` or `ClassDef.bases+keywords` as `expr_arglike` and `keyword`.
 
-#     This is a special slice because elements are `keyword`."""
+#     This is a special slice because elements can be mixed `expr` (arglike) and / or `keyword`."""
+
+#     _fields      = ('arglikes',)
+#     _field_types = {'arglikes': list[expr | keyword]}
+
+#     def __init__(
+#         self,
+#         arglikes: list[expr | keyword],
+#         lineno: int = 1,
+#         col_offset: int = 0,
+#         end_lineno: int = 1,
+#         end_col_offset: int = 0,
+#     ) -> None:
+#         self.arglikes = arglikes
+#         self.lineno = lineno
+#         self.col_offset = col_offset
+#         self.end_lineno = end_lineno
+#         self.end_col_offset = end_col_offset
 
 
 class _aliases(_slice):
