@@ -113,6 +113,8 @@ if i:  # 1
 
 AST transformer example.
 
+>>> import ast
+
 >>> def pure_AST_operation(node: AST):
 ...    class Transform(ast.NodeTransformer):
 ...        def visit_arg(self, node):
