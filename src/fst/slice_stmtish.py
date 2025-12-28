@@ -289,7 +289,7 @@ class SrcEdit:
 
                 elif fpost:  # HACK FIX! TODO: this is shaky, only here because '\\\n stmt' does not work at module level col 0 even though it works inside indented blocks, otherwise `del_loc` above would be sufficient unconditionally, tail cases are annoying
                     del_loc = fstloc(ln, 0, bound_end_ln, bound_end_col)
-                    put_lines = [ffirst._get_indent()]  # SHOULDN'T DO THIS HERE!!!
+                    put_lines = [ffirst._get_block_indent()]  # SHOULDN'T DO THIS HERE!!!
 
                 else:
                     assert frag.ln < bound_end_ln  # there MUST be a next line after a line continuation
@@ -649,7 +649,7 @@ class SrcEdit:
         put_body: list[AST],
         field: str,
         block_loc: fstloc,
-        opener_indent: str,
+        header_indent: str,
         block_indent: str,
         ffirst: fst.FST,
         flast: fst.FST,
@@ -689,10 +689,10 @@ class SrcEdit:
         - `put_body`: The list of `AST` nodes of `put_fst`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
-        - `opener_indent`: The indent string of the block header being put to (`if`, `with`, `class`, etc...), not the
+        - `header_indent`: The indent string of the block header being put to (`if`, `with`, `class`, etc...), not the
             statements in the block.
         - `block_indent`: The indent string to be applied to `put_fst` statements in the block, which is the total
-            indentation (including `opener_indent`) of the statements in the block.
+            indentation (including `header_indent`) of the statements in the block.
         - `block_loc`: A rough location encompassing the block part being edited outside of ASTS, used mostly if `fpre`
             / `fpost` not available. Always after `fpre` if present and before `fpost` if present. May include comments,
             line continuation backslashes and non-AST coding source like 'else:', but NO PARTS OF ASTS. May start before
@@ -723,7 +723,7 @@ class SrcEdit:
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
                        b[0].__class__ is If and tgt_fst.a.__class__ is If)
 
-            put_fst._indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr,
+            put_fst._indent_lns(header_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr,
                                 docstr_strict_exclude=docstr_strict_exclude)
 
             if fpre:  # with preceding statement, maybe trailing statement
@@ -805,9 +805,9 @@ class SrcEdit:
                     put_fst._put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
                 elif is_orelse:  # need to create these because they not there if body empty
-                    put_fst._put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                    put_fst._put_src([header_indent + 'else:', ''], 0, 0, 0, 0, False)
                 elif field == 'finalbody':
-                    put_fst._put_src([opener_indent + 'finally:', ''], 0, 0, 0, 0, False)
+                    put_fst._put_src([header_indent + 'finally:', ''], 0, 0, 0, 0, False)
 
                 ln, col, end_ln, end_col = block_loc
 
@@ -837,7 +837,7 @@ class SrcEdit:
         # replacement
 
         del_else_and_fin = False
-        indent = opener_indent if is_handler else block_indent
+        indent = header_indent if is_handler else block_indent
 
         if not fpre and not fpost and is_orelse and tgt_fst.a.__class__ is If:  # possible else <-> elif changes
             orelse = tgt_fst.a.orelse
@@ -848,7 +848,7 @@ class SrcEdit:
             if is_new_elif:
                 ln, col, end_ln, end_col = put_body[0].f.bloc
                 del_else_and_fin = True
-                indent = opener_indent
+                indent = header_indent
 
                 put_fst._put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
@@ -856,7 +856,7 @@ class SrcEdit:
                 indent = None
 
                 put_fst._indent_lns(block_indent, skip=0, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
-                put_fst._put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
+                put_fst._put_src([header_indent + 'else:', ''], 0, 0, 0, 0, False)
 
         if indent is not None:
             put_fst._indent_lns(indent, skip=0, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
@@ -945,7 +945,7 @@ def _elif_to_else_if(self: fst.FST, docstr: bool | Literal['strict'] = True) -> 
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
     an `if`."""
 
-    indent = self._get_indent()
+    indent = self._get_block_indent()
 
     self._indent_lns(skip=0, docstr=docstr)
 
@@ -971,7 +971,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
 
     **Parameters:**
     - `field`: Which block to normalize (`'body'`, `'orelse'`, `'handlers'`, `'finalbody'`).
-    - `indent`: The indentation to use for the relocated line if already known, saves a call to `_get_indent()`.
+    - `indent`: The indentation to use for the relocated line if already known, saves a call to `_get_block_indent()`.
     """
 
     if self.a.__class__ in ASTS_LEAF_MOD or not (block := getattr(self.a, field)) or not isinstance(block, list):
@@ -985,7 +985,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
         return
 
     if indent is None:
-        indent = b0._get_indent()
+        indent = b0._get_block_indent()
 
     ln, col = colon
 
@@ -1044,7 +1044,7 @@ def _get_slice_stmtish_old(
     flast = body[stop - 1].f
     fpre = body[start - 1].f if start else None
     fpost = body[stop].f if stop < len(body) else None
-    indent = ffirst._get_indent()
+    indent = ffirst._get_block_indent()
 
     block_loc = fstloc(*(fpre.bloc[2:] if fpre else prev_bound_step(ffirst)),
                        *(fpost.bloc[:2] if fpost else next_bound_step(flast)))
@@ -1166,19 +1166,19 @@ def _put_slice_stmtish_old(
     fpost = body[stop].f if stop < len_body else None
 
     if put_fst:
-        opener_indent = self._get_indent()
+        header_indent = self._get_block_indent()
 
         if not body:
-            block_indent = (opener_indent
+            block_indent = (header_indent
                             if isinstance(self.a, (mod, _ExceptHandlers, _match_cases)) else
-                            opener_indent + root.indent)
+                            header_indent + root.indent)
 
         elif not (b0 := body[0]).f.is_elif():
-            block_indent = b0.f._get_indent()
+            block_indent = b0.f._get_block_indent()
         elif (bb := b0.body) or (bb := b0.orelse):
-            block_indent = bb[0].f._get_indent()
+            block_indent = bb[0].f._get_block_indent()
         else:
-            block_indent = opener_indent + root.indent
+            block_indent = header_indent + root.indent
 
         if fpre or fpost:
             _normalize_block(self, field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
@@ -1332,7 +1332,7 @@ def _put_slice_stmtish_old(
         put_len = 0
 
     else:
-        put_loc = _src_edit.put_slice_stmt(self, put_fst, put_body, field, block_loc, opener_indent, block_indent,
+        put_loc = _src_edit.put_slice_stmt(self, put_fst, put_body, field, block_loc, header_indent, block_indent,
                                            ffirst, flast, fpre, fpost,
                                            docstr_strict_exclude = put_body[0] if put_body and start else None,
                                            **options)

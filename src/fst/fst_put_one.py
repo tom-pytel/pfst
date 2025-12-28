@@ -850,7 +850,7 @@ def _make_exprish_fst(
     if suffix:
         put_lines[-1] = bistr(put_lines[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
-    put_fst._indent_lns(self._get_indent(), docstr=False)
+    put_fst._indent_lns(self._get_block_indent(), docstr=False)
 
     dcol_offset = lines[ln].c2b(col) + merge_alnum_start
     offset_head = self._is_any_parent_format_spec_start_pos(end_ln, end_col)  # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value and thus would not have its start offset with head=False in put_src() below (which if this is not the case must be False)

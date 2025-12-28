@@ -1271,9 +1271,9 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     return ast_cls.__name__  # otherwise regular parse by AST type is valid
 
 
-def _get_indent(self: fst.FST) -> str:
-    r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
-    continuation or on same line as block header. If indentation is impossible to determine because is solo
+def _get_block_indent(self: fst.FST) -> str:
+    r"""Determine proper indentation of node at `stmt` (or other similar) block level at or above `self`. Even if it is
+    a continuation or on same line as block header. If indentation is impossible to determine because is solo
     statement on same line as parent block then the current tree default indentation is added to the parent block
     indentation and returned.
 
@@ -1282,28 +1282,28 @@ def _get_indent(self: fst.FST) -> str:
 
     **Examples:**
 
-    >>> FST('i = 1')._get_indent()
+    >>> FST('i = 1')._get_block_indent()
     ''
 
-    >>> FST('if 1:\n  i = 1').body[0]._get_indent()
+    >>> FST('if 1:\n  i = 1').body[0]._get_block_indent()
     '  '
 
-    >>> FST('if 1: i = 1').body[0]._get_indent()
+    >>> FST('if 1: i = 1').body[0]._get_block_indent()
     '    '
 
-    >>> FST('if 1: i = 1; j = 2').body[1]._get_indent()
+    >>> FST('if 1: i = 1; j = 2').body[1]._get_block_indent()
     '    '
 
-    >>> FST('if 1:\n  i = 1\n  j = 2').body[1]._get_indent()
+    >>> FST('if 1:\n  i = 1\n  j = 2').body[1]._get_block_indent()
     '  '
 
-    >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1]._get_indent()
+    >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1]._get_block_indent()
     '      '
 
-    >>> FST('if 1:\n\\\n  i = 1').body[0]._get_indent()
+    >>> FST('if 1:\n\\\n  i = 1').body[0]._get_block_indent()
     '  '
 
-    >>> FST('if 1:\n \\\n  i = 1').body[0]._get_indent()
+    >>> FST('if 1:\n \\\n  i = 1').body[0]._get_block_indent()
     ' '
     """
 
@@ -2078,7 +2078,7 @@ def _make_fst_and_dedent(
     """
 
     if not isinstance(indent, str):
-        indent = indent._get_indent()
+        indent = indent._get_block_indent()
 
     if suffix and isinstance(prefix, str):
         suffix = suffix.split('\n')

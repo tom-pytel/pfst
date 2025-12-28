@@ -676,7 +676,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     is_del = fst_ is None
     is_ins = start == stop  # will never be true if fst_ is None
     is_ins_ln = False
-    self_indent = self._get_indent()
+    self_indent = self._get_block_indent()
     elts_indent_cached = ...  # cached value, ... means not present
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 

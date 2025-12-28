@@ -666,7 +666,7 @@ def _maybe_fix_stmt_end(
     # TODO: this is the quick and easy way, the better way to preserve possible comment would be to remove semicolon and adjust start position of any trailing statements, but that involves checking line continuations and possibly dealing with normalizing a block statement which is all semicoloned statements
 
     semi_ln, semi_col = semi
-    semi_col = min(semi_col, len(self._get_indent()))  # try to preserve original space before semicolon, silly, yes
+    semi_col = min(semi_col, len(self._get_block_indent()))  # try to preserve original space before semicolon, silly, yes
 
     self._put_src(None, bound_ln, bound_col, semi_ln, semi_col, False)
 

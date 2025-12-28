@@ -90,6 +90,8 @@ from .common import NodeError, astfield, fstloc  # noqa: F401
 from .parsex import ParseError
 from .asttypes import *  # noqa: F403  - import standins for some AST classes which may not exist in ast module and our own _slice classes
 
+from . import asttypes
+
 __all__ = [
     'FST', 'NodeError', 'ParseError', 'castf', 'gastf',
     *[n for n in dict.fromkeys(dir(ast) + asttypes.__all__) if not n.startswith('_')],  # parse, unparse and dump exported here

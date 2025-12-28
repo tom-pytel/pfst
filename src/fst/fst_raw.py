@@ -171,7 +171,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         path = _PATH_BODYCASES
 
     else:
-        indent = stmtish._get_indent()
+        indent = stmtish._get_block_indent()
 
         if not pcol:  # not 'not indent' because could be semicolon
             copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]

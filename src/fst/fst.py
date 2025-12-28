@@ -832,23 +832,23 @@ class FST:
                 a_cls = a.__class__
 
                 if a_cls in (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler, match_case):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
-                    indent = a.body[0].f._get_indent()
+                    indent = a.body[0].f._get_block_indent()
 
                 elif a_cls in (For, AsyncFor, While, If):
-                    if (indent := a.body[0].f._get_indent()) == '?' and (orelse := a.orelse):
-                        if not (indent := orelse[0].f._get_indent()):  # because can be 'elif'
+                    if (indent := a.body[0].f._get_block_indent()) == '?' and (orelse := a.orelse):
+                        if not (indent := orelse[0].f._get_block_indent()):  # because can be 'elif'
                             indent = '?'
 
                 elif a_cls in ASTS_LEAF_TRY:
-                    if (indent := a.body[0].f._get_indent()) == '?':
-                        if not (orelse := a.orelse) or (indent := orelse[0].f._get_indent()) == '?':
-                            if not (finalbody := a.finalbody) or (indent := finalbody[0].f._get_indent()) == '?':
+                    if (indent := a.body[0].f._get_block_indent()) == '?':
+                        if not (orelse := a.orelse) or (indent := orelse[0].f._get_block_indent()) == '?':
+                            if not (finalbody := a.finalbody) or (indent := finalbody[0].f._get_block_indent()) == '?':
                                 for handler in a.handlers:
-                                    if (indent := handler.body[0].f._get_indent()) != '?':
+                                    if (indent := handler.body[0].f._get_block_indent()) != '?':
                                         break
 
                 elif a_cls is Match:
-                    indent = a.cases[0].f._get_indent()
+                    indent = a.cases[0].f._get_block_indent()
                 else:
                     continue
 
@@ -2256,6 +2256,115 @@ class FST:
         else:
             return ln + len(put_lines) - 1, len(put_lines[-1])
 
+    def get_docstr(self) -> builtins.str | None:
+        r"""Get the unformatted docstring value of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        `Module`. The docstring is dedented and returned as a normal string, not a node. Keep in mind an empty docstring
+        may exist but will be a falsey value so make sure to explicitly check for `None` return. If you want the actual
+        docstring node then just check for presence with `.has_docstr` and get `.body[0]`.
+
+        **Returns:**
+        - `str | None`: Actual dedented docstring value, not the node or syntactic string representation with quotes.
+            `None` if there is no docstring or the node cannot have a docstring.
+
+        **Examples:**
+
+        >>> f = FST('''
+        ... def func():
+        ...     \'\'\'docstring indented
+        ...     in source with codes\\x3f\\x3f\\x3f\'\'\'
+        ... '''.strip())
+
+        >>> print(f.src)
+        def func():
+            '''docstring indented
+            in source with codes\x3f\x3f\x3f'''
+
+        >>> f.get_docstr()
+        'docstring indented\nin source with codes???'
+        """
+
+        if not self.has_docstr:
+            return None
+
+        b0 = self.a.body[0]
+        dedent = b0.f._get_block_indent()
+        ldedent = len(dedent)
+        lines = b0.value.value.split('\n')
+
+        for i, l in enumerate(lines):
+            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:
+                lines[i] = l[ldedent:]
+            else:
+                lines[i] = l[lempty_start:]
+
+        return '\n'.join(lines)
+
+    def put_docstr(self, text: builtins.str | None, reinsert: bool = False, **options) -> FST:
+        r'''Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
+        be formatted with triple quotes and indented as needed.
+
+        **Parameters:**
+        - `text`: The string to set as a docstring or `None` to delete.
+        - `reinsert`: If `True` then remove old docstring `Expr` first (if present) before reinserting new one. This is
+            to allow repositioning the docstring before any comments.
+        - `options`: The options to use for a put if a put is done, see `options()`.
+
+        **Returns:**
+        - `self`
+
+        **Examples:**
+
+        >>> f = FST('def func(): pass')
+
+        >>> print(f.put_docstr('docstring indented\nin source with codes\x3f\x3f\x3f').src)
+        def func():
+            """docstring indented
+            in source with codes???"""
+            pass
+        '''
+
+        # TODO: differentiate better header comments of Module and put after shebang and encoding but before others using specific line number once that functionality is concretized
+
+        check_options(options)
+
+        if (a := self.a).__class__ not in ASTS_LEAF_MAYBE_DOCSTR:
+            return self
+
+        has_docstr = 1 if (
+            (b := a.body)
+            and (b0 := b[0]).__class__ is Expr
+            and (v := b0.value).__class__ is Constant
+            and isinstance(v := v.value, str)
+        ) else 0
+
+        if text is not None:
+            text = repr_str_multiline(text)
+        elif not has_docstr:
+            return self
+
+        if 'trivia' not in options:
+            options['trivia'] = (False, False)
+
+        if reinsert and has_docstr:  # if user wants to reinsert then delete old one first
+            self._put_slice(None, 0, 1, 'body', False, options)
+
+            has_docstr = False
+
+        self._put_slice(text, 0, has_docstr, 'body', False, options)
+
+        return self
+
+    # def get_line_comment(self, full: bool = False) -> builtins.str | None:
+    #     """Get line comment on the end line of this node, with the exceptiuon of statement block nodes where it gets the
+    #     comment on the end of the block header line (since the last comment belongs to the last child of the block).
+    #     """
+
+    #     raise NotImplementedError
+
+    # def put_line_comment(self, comment: builtins.str | None = None, full: bool = False) -> builtins.str | None:
+    #     raise NotImplementedError
+
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing **GROUPING** parentheses if present. Will balance parentheses if `self` is
         an element of a tuple and not return the parentheses of the tuple. Likwise will not normally return the
@@ -2547,105 +2656,6 @@ class FST:
                 modifying.success()
 
         return self  # ret
-
-    def get_docstr(self) -> builtins.str | None:
-        r"""Get the unformatted docstring value of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
-        `Module`. The docstring is dedented and returned as a normal string, not a node. Keep in mind an empty docstring
-        may exist but will be a falsey value so make sure to explicitly check for `None` return. If you want the actual
-        docstring node then just check for presence with `.has_docstr` and get `.body[0]`.
-
-        **Returns:**
-        - `str | None`: Actual dedented docstring value, not the node or syntactic string representation with quotes.
-            `None` if there is no docstring or the node cannot have a docstring.
-
-        **Examples:**
-
-        >>> f = FST('''
-        ... def func():
-        ...     \'\'\'docstring indented
-        ...     in source with codes\\x3f\\x3f\\x3f\'\'\'
-        ... '''.strip())
-
-        >>> print(f.src)
-        def func():
-            '''docstring indented
-            in source with codes\x3f\x3f\x3f'''
-
-        >>> f.get_docstr()
-        'docstring indented\nin source with codes???'
-        """
-
-        if not self.has_docstr:
-            return None
-
-        b0 = self.a.body[0]
-        dedent = b0.f._get_indent()
-        ldedent = len(dedent)
-        lines = b0.value.value.split('\n')
-
-        for i, l in enumerate(lines):
-            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:
-                lines[i] = l[ldedent:]
-            else:
-                lines[i] = l[lempty_start:]
-
-        return '\n'.join(lines)
-
-    def put_docstr(self, text: builtins.str | None, reinsert: bool = False, **options) -> FST:
-        r'''Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
-        `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
-        be formatted with triple quotes and indented as needed.
-
-        **Parameters:**
-        - `text`: The string to set as a docstring or `None` to delete.
-        - `reinsert`: If `True` then remove old docstring `Expr` first (if present) before reinserting new one. This is
-            to allow repositioning the docstring before any comments.
-        - `options`: The options to use for a put if a put is done, see `options()`.
-
-        **Returns:**
-        - `self`
-
-        **Examples:**
-
-        >>> f = FST('def func(): pass')
-
-        >>> print(f.put_docstr('docstring indented\nin source with codes\x3f\x3f\x3f').src)
-        def func():
-            """docstring indented
-            in source with codes???"""
-            pass
-        '''
-
-        # TODO: differentiate better header comments of Module and put after shebang and encoding but before others using specific line number once that functionality is concretized
-
-        check_options(options)
-
-        if (a := self.a).__class__ not in ASTS_LEAF_MAYBE_DOCSTR:
-            return self
-
-        has_docstr = 1 if (
-            (b := a.body)
-            and (b0 := b[0]).__class__ is Expr
-            and (v := b0.value).__class__ is Constant
-            and isinstance(v := v.value, str)
-        ) else 0
-
-        if text is not None:
-            text = repr_str_multiline(text)
-        elif not has_docstr:
-            return self
-
-        if 'trivia' not in options:
-            options['trivia'] = (False, False)
-
-        if reinsert and has_docstr:  # if user wants to reinsert then delete old one first
-            self._put_slice(None, 0, 1, 'body', False, options)
-
-            has_docstr = False
-
-        self._put_slice(text, 0, has_docstr, 'body', False, options)
-
-        return self
 
     # ------------------------------------------------------------------------------------------------------------------
     # Traverse
@@ -4131,7 +4141,7 @@ class FST:
         _is_enclosed_or_line,
         _is_enclosed_in_parents,
         _get_parse_mode,
-        _get_indent,
+        _get_block_indent,
         _get_indentable_lns,
 
         _modifying,
