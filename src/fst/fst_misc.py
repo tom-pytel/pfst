@@ -13,10 +13,13 @@ from math import log10
 from pprint import pformat
 from typing import Any, Literal, Mapping
 
+import fst as fst_package  # because of circular imports
+
 from . import fst
 
 from .asttypes import (
     ASTS_LEAF_EXPR,
+    ASTS_LEAF_STMTISH,
     ASTS_LEAF_BLOCK,
     AST,
     AnnAssign,
@@ -107,6 +110,7 @@ from .astutil import pat_alnum, constant, re_alnumdot_alnum, bistr, precedence_r
 
 from .common import (
     NodeError,
+    astfield,
     srcwpos,
     nspace,
     re_empty_line,
@@ -236,7 +240,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('pattern',               (MatchAs,)),
 ] for kls in classes}
 
-_re_dump_line_tail     = re.compile(r'\s*(#.*$|\\$|;(?:\s*(?:#.*$|\\$))?)')
+_re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)
 _re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_par_open_alnums    = re.compile(rf'[{pat_alnum}.][(][{pat_alnum}]')
@@ -244,7 +248,12 @@ _re_par_close_alnums   = re.compile(rf'[{pat_alnum}.][)][{pat_alnum}]')
 _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
+# _re_stmt_line_comment  = re.compile(r'(?:\s*;)?(\s*\#(.*))$')  # a line comment with optional leading whitespace and maybe a single inert semicolon before
+_re_stmt_line_comment  = re.compile(r'(\s*;)?(\s*\#(.*)$)?')  # a line comment with optional leading whitespace and maybe a single inert semicolon before, or indicate if there is a trailing semicolon
+
 _re_line_end_ws_maybe_cont = re.compile(r'\s*\\?$')
+
+_DUMP_SPECIAL_ASTFIELDS = (astfield('orelse', 0), astfield('finalbody', 0))
 
 
 def _dump_lines(
@@ -284,6 +293,9 @@ def _dump_lines(
 
     else:  # src+ and fresh line to possibly dump tail
         st.line_tails_dumped.add(end_ln)
+
+        if is_stmt and fst_.pfield in _DUMP_SPECIAL_ASTFIELDS:  # this is in case the statement is on same line as `else:` or `finally:`, and if not then guaranteed to be leading whitespace
+            col = 0
 
         lines = fst_._get_src(ln, col, end_ln, 0x7fffffffffffffff, True)
 
@@ -1979,3 +1991,128 @@ def _trim_delimiters(self: fst.FST) -> None:
     lines[ln] = bistr(lines[ln][col:])
 
     del lines[end_ln + 1:], lines[:ln]
+
+
+def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = False, full: bool = False) -> str | None:
+    """Get and / or put current line comment for this node.
+
+    The line comment is the single comment at the end of the last line of the location of this node, with the exception
+    of statement block nodes where the line comment lives on the last line of the header of the node (after the `:`,
+    since the comment on the last line of the location belongs to the last child).
+
+    **Parameters:**
+    - `comment`: The comment operation to perform after getting the current comment.
+        - `str`: Put new comment which may or may not need to have the initial `'#'` according to the `full` parameter.
+        - `None`: Delete current comment (if present).
+        - `False`: Do not modify current comment, just get it.
+    - `full`:
+        - `False`: The gotten comment text is returned stripped of the `'#'` and any leading and trailing whitespace. On
+            put the `comment` text is put to existing comment if is present and otherwise is prepended with `'  #'` and
+            a single leading whitespace after that if needed and put after the node.
+        - `True`: The entire gotten comment from the end of the node to the end of the line is returned with no
+            whitespace stripped, e.g. `'  # comment  '`. On put the `comment` **MUST** start with a `'#'` and possible
+            leading whitespace before that and is put verbatim with no stripping, replacing any existing comment from
+            the end of the node to the end of the line.
+
+    **Returns:**
+    - `str`: The current comment, before any replacement, with or without the leading whitespace and `'#'` as per the
+        `full` paramenter.
+    - `None`: There was no comment present.
+    """
+
+    ast = self.a
+    ast_cls = ast.__class__
+
+    # TODO: most expressionish nodes can have line comments (sliceable ones, and even not if the are separated onto multiple lines and enclosed in parent or grouping pars)
+
+    if ast_cls not in ASTS_LEAF_STMTISH:
+        raise NotImplementedError('get / put line comment for non-statementish node')
+
+    if is_block := (ast_cls in ASTS_LEAF_BLOCK):
+        end_ln, end_col, _, _ = self._loc_block_header_end()
+        end_col += 1
+    else:
+        _, _, end_ln, end_col = self.bloc
+
+    lines = self.root._lines
+    last_stmt_line = lines[end_ln]
+    m = _re_stmt_line_comment.match(last_stmt_line, end_col)  # will match anything even if empty
+
+    if (old_comment := m.group(2)) and not full:  # if full is False then old_comment will be either None or the full comment group as it should be
+        old_comment = m.group(3).strip()  # comment present and full=False, we need just the comment text
+
+    if comment is False:  # if only get operation then we are done
+        return old_comment
+
+    # put operation
+
+    if comment is not None:
+        if '\n' in comment:
+            raise ValueError('line comment cannot have newlines in it')
+
+        if full:
+            if not comment.lstrip().startswith('#'):
+                raise ValueError("full line comment must start with '#'")
+
+        elif not comment[:1].isspace():
+            comment = ' ' + comment
+
+    if old_comment is not None:  # if comment already present then any replacement is trivial
+        self._put_src(comment, end_ln, m.start(2 if comment is None or full else 3), end_ln, 0x7fffffffffffffff)
+        self._touchall(True, False, False)  # touch parents to clear bloc caches because comment on last child statement is included in parent bloc
+
+        return old_comment
+
+    if comment is None:  # if deleting comment that doesn't exist then this is even more trivial
+        return old_comment
+
+    # put comment where there was no comment before, may need to normalize block header or semicoloned statements
+
+    before_semi_end_col = end_col
+
+    if has_semi := m.group(1):  # if semicolon present then we start search after it
+        end_col = m.end(1)
+
+    if not full:
+        comment = '  #' + comment
+
+    if not (l := last_stmt_line[end_col:]) or l.isspace():  # no other statement or line continuation on last statement line so we can just add the comment
+        pass  # noop
+
+    elif is_block:
+        if fst_package.slice_stmtish._normalize_block(self):  # TODO: clean this up!
+            end_ln, end_col, _, _ = self._loc_block_header_end()  # any remaining junk on header tail (maybe line continuation) is harmless to remove
+            end_col += 1
+
+    # we are past any semicolon on this line, its either another statement or a line continuation ... which may lead to another statement or the semicolon which is not on this line, or not
+
+    elif (next_stmt := self.next()) and next_stmt.pfield.name == self.pfield.name:  # if there is a next sibiling and is part of same body then we need to process more, if not then safe to nuke rest of line
+        next_ln, next_col, _, _ = next_stmt.bloc
+
+        if ((frag := next_frag(lines, end_ln, end_col, next_ln, next_col + 1, True, None))  # search to 1 past start of next statement to be able to run into it it on logical line
+            and frag.src.startswith(';')  # a semicolon?
+        ):
+            if has_semi:  # if already had one then error
+                raise RuntimeError('should not get here, found two semicolons without a statement between them')  # pragma: no cover
+
+            frag = next_frag(lines, frag.ln, frag.col + 1, next_ln, next_col + 1, True, None)  # search again, it better not be another semicolon!
+
+        if frag and not frag.src.startswith('#'):  # if its not a comment then its the next statement
+            assert frag.ln == next_ln and frag.col == next_col
+
+            indent = self._get_block_indent()
+
+            if ((parent := self.parent)
+                and fst_package.slice_stmtish._normalize_block(parent, self.pfield.name, indent=indent)  # if have parent then normalize the block because could all be on header logical line separated with semicolons
+            ):
+                _, _, end_ln, before_semi_end_col = self.bloc  # locations have changed
+                next_ln, next_col, _, _ = next_stmt.bloc
+
+            self._put_src([comment, indent], end_ln, before_semi_end_col, next_ln, next_col, False)  # now, FINALLY, we write the comment along with a newline to split up the statements, don't need to touch explicitly because offset put_src touches
+
+            return old_comment
+
+    self._put_src(comment, end_ln, end_col, end_ln, 0x7fffffffffffffff)
+    self._touchall(True, False, False)
+
+    return old_comment

@@ -23,6 +23,113 @@ This is just a print helper function for this documentation, you can ignore it.
 ...     print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
 
 
+## Type annotations to type comments
+
+This doesn't do full validation and there could be extra functionality added for class attributes and updates if they
+are set in a constructor, but should be enough to show how something more complete would be done.
+
+```py
+>>> src = """
+... def func():
+...     normal = assign
+...
+...     x: int = 1
+...
+...     # y is such and such
+...     y: float = 2.0  # more about y
+...     # y was a good variable...
+...
+...     structure: tuple[
+...         tuple[int, int],  # extraneous comment
+...         dict[str, Any],   # could break stuff
+...     ] | None = None# blah
+...
+...     call(  # invalid but just for demonstration purposes
+...         some_arg,          # non-extraneous comment
+...         some_kw=kw_value,  # will not break stuff
+...     )[start : stop].attr: SomeClass = getthis()
+... """.strip()
+```
+
+Function:
+
+```py
+>>> def type_annotations_to_type_comments(src: str) -> str:
+...     fst_ = FST(src, 'exec')  # same as "fst.parse(src).f"
+...
+...     # walk the whole tree but only yield AnnAssign nodes
+...     for f in fst_.walk(AnnAssign):
+...         # if just an annotation then skip it, alternatively could
+...         # clean and store for later addition to __init__() assign in class
+...         if not f.value:
+...             continue
+...
+...         # '.src' keeps the original target expression exactly as written
+...         # '.copy()' dedents if multiple lines present
+...         target = f.target.copy().src
+...         value = f.value.copy().src
+...
+...         # we use ast_src() for the annotation to get a clean type string
+...         annotation = f.annotation.ast_src()
+...
+...         # preserve any existing end-of-line comment
+...         comment = ' # ' + comment if (comment := f.get_line_comment()) else ''
+...
+...         # reconstruct the line using the PEP 484 type comment style
+...         new_src = f'{target} = {value}  # type: {annotation}{comment}'
+...
+...         # replace the node, trivia=False preserves any leading comments
+...         f.replace(new_src, trivia=False)
+...
+...     return fst_.src  # same as fst.unparse(fst_.a)
+```
+
+Original.
+
+```py
+>>> pprint(src)
+def func():
+    normal = assign
+ 
+    x: int = 1
+ 
+    # y is such and such
+    y: float = 2.0  # more about y
+    # y was a good variable...
+ 
+    structure: tuple[
+        tuple[int, int],  # extraneous comment
+        dict[str, Any],   # could break stuff
+    ] | None = None# blah
+ 
+    call(  # invalid but just for demonstration purposes
+        some_arg,          # non-extraneous comment
+        some_kw=kw_value,  # will not break stuff
+    )[start : stop].attr: SomeClass = getthis()
+```
+
+Processed:
+
+```py
+>>> pprint(type_annotations_to_type_comments(src))
+def func():
+    normal = assign
+ 
+    x = 1  # type: int
+ 
+    # y is such and such
+    y = 2.0  # type: float # more about y
+    # y was a good variable...
+ 
+    structure = None  # type: tuple[tuple[int, int], dict[str, Any]] | None # blah
+ 
+    call(  # invalid but just for demonstration purposes
+        some_arg,          # non-extraneous comment
+        some_kw=kw_value,  # will not break stuff
+    )[start : stop].attr = getthis()  # type: SomeClass
+```
+
+
 ## `else if` chain to `elif`
 
 `fst` has `elif` <-> `else if` code built in as its needed for statement insertions and deletions from conditional
@@ -1099,7 +1206,7 @@ instrumentation is ugly but is meant to show that all these nested manipulations
 
 Note that this instrumentation counts on the fact that the syntactic order of the children of these particular node
 types is actually the order they will be evaluated in. This is not always the case, e.g. with the `IfExp` node the
-middle gets evaluated first `THEN_THIS if FIRST_THIS else OR_THIS`.
+middle gets evaluated first `THEN_THIS if FIRST_THIS else OR_THEN_THIS`.
 
 ```py
 >>> src = r"""

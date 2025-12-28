@@ -247,15 +247,15 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual('if 1: pass', fst.unparse(a))
         self.assertEqual('if 1:\n    pass', ast.unparse(a))
-        self.assertEqual('if 1:\n    pass', ast.unparse(a.f.copy_ast()))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.f.ast_copy()))
 
         self.assertEqual('if 1: pass', fst.unparse(a.body[0]))
         self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0]))
-        self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0].f.copy_ast()))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0].f.ast_copy()))
 
         self.assertEqual('pass', fst.unparse(a.body[0].body[0]))
         self.assertEqual('pass', ast.unparse(a.body[0].body[0]))
-        self.assertEqual('pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
+        self.assertEqual('pass', ast.unparse(a.body[0].body[0].f.ast_copy()))
 
         a.f._lines = None
 
@@ -265,15 +265,15 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual('if 1:\n  if 2: pass', fst.unparse(a))
         self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a))
-        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.f.copy_ast()))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.f.ast_copy()))
 
         self.assertEqual('if 1:\n  if 2: pass', fst.unparse(a.body[0]))
         self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0]))
-        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0].f.copy_ast()))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0].f.ast_copy()))
 
         self.assertEqual('if 2: pass', fst.unparse(a.body[0].body[0]))
         self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0]))
-        self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
+        self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0].f.ast_copy()))
 
     def test__sanitize_stmtish(self):
         f = FST('# pre\ni = j  # line\n# post', 'stmt')
@@ -2839,6 +2839,32 @@ def f():
             '0:              pass  # end',
             '   1] Pass - 0,13..0,17',
         ], FST('if 1: pass ; pass  # end').dump('N', out=list))
+
+        # statements on same line as `else:` or `finally:`
+
+        self.assertEqual([
+            '0: try:',
+            'Try - ROOT 0,0..3,10',
+            '  .body[1]',
+            '0:      a',
+            '   0] Expr - 0,5..0,6',
+            "     .value Name 'a' Load - 0,5..0,6",
+            '  .handlers[1]',
+            '1: except:',
+            '   0] ExceptHandler - 1,0..1,9',
+            '     .body[1]',
+            '1:         b',
+            '      0] Expr - 1,8..1,9',
+            "        .value Name 'b' Load - 1,8..1,9",
+            '  .orelse[1]',
+            '2: else: c',
+            '   0] Expr - 2,6..2,7',
+            "     .value Name 'c' Load - 2,6..2,7",
+            '  .finalbody[1]',
+            '3: finally: d',
+            '   0] Expr - 3,9..3,10',
+            "     .value Name 'd' Load - 3,9..3,10",
+        ], FST('try: a\nexcept: b\nelse: c\nfinally: d').dump('S', out=list))
 
     def test_verify(self):
         ast = parse('i = 1')
@@ -5513,6 +5539,102 @@ class cls:
     # line-comment
     # post-comment
 '''.strip(), f.src)
+
+    def test_get_put_line_comment(self):
+        f = FST('if a:# comment 0  \n  b\n  c # comment 1  \n  d ;\n  e ;  # comment 2  \n  f ; g\n  h \\\n\n  if i: j\n  if k: \\\n\n    l')
+
+        self.assertEqual('comment 0', f.get_line_comment(False))
+        self.assertEqual('# comment 0  ', f.get_line_comment(True))
+        self.assertIsNone(f.body[0].get_line_comment(False))
+        self.assertIsNone(f.body[0].get_line_comment(True))
+        self.assertEqual('comment 1', f.body[1].get_line_comment(False))
+        self.assertEqual(' # comment 1  ', f.body[1].get_line_comment(True))
+        self.assertIsNone(f.body[2].get_line_comment(False))
+        self.assertIsNone(f.body[2].get_line_comment(True))
+        self.assertEqual('comment 2', f.body[3].get_line_comment(False))
+        self.assertEqual('  # comment 2  ', f.body[3].get_line_comment(True))
+        self.assertIsNone(f.body[4].get_line_comment(False))
+        self.assertIsNone(f.body[4].get_line_comment(True))
+        self.assertIsNone(f.body[5].get_line_comment(False))
+        self.assertIsNone(f.body[5].get_line_comment(True))
+        self.assertIsNone(f.body[6].get_line_comment(False))
+        self.assertIsNone(f.body[6].get_line_comment(True))
+        self.assertIsNone(f.body[7].get_line_comment(False))
+        self.assertIsNone(f.body[7].get_line_comment(True))
+        self.assertIsNone(f.body[8].get_line_comment(False))
+        self.assertIsNone(f.body[8].get_line_comment(True))
+
+        g = f.copy()
+        g.body[8].put_line_comment('zzz', False)
+        g.body[7].put_line_comment('zzz', False)
+        g.body[6].put_line_comment('zzz', False)
+        g.body[5].put_line_comment('zzz', False)
+        g.body[4].put_line_comment('zzz', False)
+        g.body[3].put_line_comment('zzz', False)
+        g.body[2].put_line_comment('zzz', False)
+        g.body[1].put_line_comment('zzz', False)
+        g.body[0].put_line_comment('zzz', False)
+        g.put_line_comment('zzz', False)
+
+        self.assertEqual(g.src, r'''
+if a:# zzz
+  b  # zzz
+  c # zzz
+  d ;  # zzz
+  e ;  # zzz
+  f  # zzz
+  g  # zzz
+  h  # zzz
+
+  if i:  # zzz
+    j
+  if k:  # zzz
+
+    l
+        '''.strip())
+
+        g = f.copy()
+        g.body[8].put_line_comment('#zzz', True)
+        g.body[7].put_line_comment('#zzz', True)
+        g.body[6].put_line_comment('#zzz', True)
+        g.body[5].put_line_comment('#zzz', True)
+        g.body[4].put_line_comment('#zzz', True)
+        g.body[3].put_line_comment('#zzz', True)
+        g.body[2].put_line_comment('#zzz', True)
+        g.body[1].put_line_comment('#zzz', True)
+        g.body[0].put_line_comment('#zzz', True)
+        g.put_line_comment('#zzz', True)
+        self.assertEqual(g.src, r'''
+if a:#zzz
+  b#zzz
+  c#zzz
+  d ;#zzz
+  e ;#zzz
+  f#zzz
+  g#zzz
+  h#zzz
+
+  if i:#zzz
+    j
+  if k:#zzz
+
+    l
+        '''.strip())
+
+        # block statement header without a body
+
+        f = FST('if a: # comment\n  pass')
+        del f.body
+
+        self.assertEqual('comment', f.get_line_comment(False))
+        self.assertEqual(' # comment', f.get_line_comment(True))
+
+        self.assertEqual('comment', f.put_line_comment('blomment', False))
+        self.assertEqual('if a: # blomment', f.lines[0])
+        self.assertEqual('blomment', f.put_line_comment(' blomment  ', False))
+        self.assertEqual('if a: # blomment  ', f.lines[0])
+        self.assertEqual(' # blomment  ', f.put_line_comment('    # blomment    ',True))
+        self.assertEqual('if a:    # blomment    ', f.lines[0])
 
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()

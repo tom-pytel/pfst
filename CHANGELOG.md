@@ -18,8 +18,8 @@
 
 ### Added
 
-- `copy()` can strip non-node source from root node copy using parameter `whole=False`
-- can control optional parenthesization of cut / put `Tuple` slices via `pars` option
+- `ast_src()` to quickly get unparsed source with formatting stripped
+- `get_line_comment()` and `put_line_comment()` for easy get and set statement line comments
 - `_body` virtual field for accessing block statement bodies leaving any possibly present docstr unchanged
 - dummy view for nonexistent list fields from higher python versions on lower ones
 - new coercions on put: `arg` to `arguments`, `withitem` to `expr`
@@ -35,6 +35,8 @@
 ### Updated
 
 - recognize line comment after a trailining statement semicolon as belonging to the statement
+- `copy()` can strip non-node source from root node copy using parameter `whole=False`
+- can control optional parenthesization of cut / put `Tuple` slices via `pars` option
 - implemented trivia specification by absolute line numbers for statementishes so can enable for all
 - implemented `coerce` option for `MatchOr` and `MatchSequence`
 - removed `matchor_norm` option, didn't make sense
@@ -66,7 +68,7 @@
 
 ### Added
 
-- `FST.copy_ast()` to copy just the `AST` tree without any `FST` stuff
+- `FST.ast_copy()` to copy just the `AST` tree without any `FST` stuff
 - allow `FST.replace()` as a slice operation if applicable (`.replace()` one statement with multiple)
 - moved some other predicates from private to public code, e.g. `is_elif()`, etc...
 - predicates for checking `AST` type in `FST`, e.g. `is_Name`, `is_Call`, `is_FunctionDef`, etc...

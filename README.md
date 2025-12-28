@@ -34,7 +34,7 @@ if a:
     b = (c, u, v, d)
 ```
 
-`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute (with type-safe accessors provided) which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
+`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided) which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
 
 Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs no implicit normalization or stylistic rewriting.
 
@@ -63,55 +63,98 @@ From GitHub, after cloning for development:
 ```py
 >>> from fst import *
 
->>> def else_if_chain_to_elifs(src):
-...     fst = FST(src)
+>>> def type_annotations_to_type_comments(src: str) -> str:
+...     fst_ = FST(src, 'exec')  # same as "fst.parse(src).f"
 ...
-...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
-...         if (len(f.orelse) == 1
-...             and f.orelse[0].is_elif() is False  # False means normal `if`, not an `elif`
-...         ):
-...             f.orelse[0].replace(  # can modify while walking, reput `if` as `elif`
-...                 f.orelse[0].copy(trivia=('block', 'all')),  # get old `if`
-...                 trivia=(False, 'all'),  # trivia specifies how to handle comments
-...                 elif_=True,  # elif_=True is default, here to show usage
-...             )
+...     # walk the whole tree but only yield AnnAssign nodes
+...     for f in fst_.walk(AnnAssign):
+...         # if just an annotation then skip it, alternatively could
+...         # clean and store for later addition to __init__() assign in class
+...         if not f.value:
+...             continue
 ...
-...     return fst.src
+...         # '.src' keeps the original target expression exactly as written
+...         # '.copy()' dedents if multiple lines present
+...         target = f.target.copy().src
+...         value = f.value.copy().src
+...
+...         # we use ast_src() for the annotation to get a clean type string
+...         annotation = f.annotation.ast_src()
+...
+...         # preserve any existing end-of-line comment
+...         comment = ' # ' + comment if (comment := f.get_line_comment()) else ''
+...
+...         # reconstruct the line using the PEP 484 type comment style
+...         new_src = f'{target} = {value}  # type: {annotation}{comment}'
+...
+...         # replace the node, trivia=False preserves any leading comments
+...         f.replace(new_src, trivia=False)
+...
+...     return fst_.src  # same as fst.unparse(fst_.a)
 ```
 
 ```py
->>> print(else_if_chain_to_elifs("""
-... # pre-if-a
-... if a:  # if-a
-...     i = 1  # i
-... else:  # else-a
-...     # pre-if-b
-...     if b:  # if-b
-...         j = 2  # j
-...     else:  # else-b
-...         # pre-if-c
-...         if c:  # if-c
-...             k = 3  # k
-...         else:  # else-c
-...             l = 4  # l
-...         # post-else-c
-...     # post-else-b
-... # post-else-a
-... """.strip()))
-# pre-if-a
-if a:  # if-a
-    i = 1  # i
-# pre-if-b
-elif b:  # if-b
-    j = 2  # j
-# pre-if-c
-elif c:  # if-c
-    k = 3  # k
-else:  # else-c
-    l = 4  # l
-# post-else-c
-# post-else-b
-# post-else-a
+>>> src = """
+... def func():
+...     normal = assign
+...
+...     x: int = 1
+...
+...     # y is such and such
+...     y: float = 2.0  # more about y
+...     # y was a good variable...
+...
+...     structure: tuple[
+...         tuple[int, int],  # extraneous comment
+...         dict[str, Any],   # could break stuff
+...     ] | None = None# blah
+...
+...     call(  # invalid but just for demonstration purposes
+...         some_arg,          # non-extraneous comment
+...         some_kw=kw_value,  # will not break stuff
+...     )[start : stop].attr: SomeClass = getthis()
+... """.strip()
+```
+
+```py
+>>> print(src)
+def func():
+    normal = assign
+
+    x: int = 1
+
+    # y is such and such
+    y: float = 2.0  # more about y
+    # y was a good variable...
+
+    structure: tuple[
+        tuple[int, int],  # extraneous comment
+        dict[str, Any],   # could break stuff
+    ] | None = None# blah
+
+    call(  # invalid but just for demonstration purposes
+        some_arg,          # non-extraneous comment
+        some_kw=kw_value,  # will not break stuff
+    )[start : stop].attr: SomeClass = getthis()
+```
+
+```py
+>>> print(type_annotations_to_type_comments(src))
+def func():
+    normal = assign
+
+    x = 1  # type: int
+
+    # y is such and such
+    y = 2.0  # type: float # more about y
+    # y was a good variable...
+
+    structure = None  # type: tuple[tuple[int, int], dict[str, Any]] | None # blah
+
+    call(  # invalid but just for demonstration purposes
+        some_arg,          # non-extraneous comment
+        some_kw=kw_value,  # will not break stuff
+    )[start : stop].attr = getthis()  # type: SomeClass
 ```
 
 # Robust

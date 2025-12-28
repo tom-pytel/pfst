@@ -650,7 +650,7 @@ class FST:
                            f"you're accessing an FST {self}.f")
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Management
+    # Create / manage
 
     def __repr__(self) -> builtins.str:
         return f'<{self.a.__class__.__name__}{self._repr_tail()}>'
@@ -1479,7 +1479,36 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Edit
 
-    def copy_ast(self) -> AST:
+    def ast_src(self) -> str:
+        """Unparse the `AST` tree of self discarding all formatting. The unparse will correctly handle our own SPECIAL
+        SLICE nodes and does a few other minor tweaks like removing parentheses from top-level `Tuple` which contains
+        `Slice` nodes.
+
+        **Returns:**
+        - `str`: Unparsed source with all formatting lost.
+
+        **Examples:**
+        >>> f = FST('if a: b=c  # comment')
+
+        >>> print(f.src)
+        if a: b=c  # comment
+
+        >>> print(f.ast_src())
+        if a:
+            b = c
+
+        >>> f = FST('array[start : stop : step, other_start : other_stop]')
+
+        >>> print(ast.unparse(f.slice.a))  # invalid in any universe
+        (start:stop:step, other_start:other_stop)
+
+        >>> print(f.slice.ast_src())
+        start:stop:step, other_start:other_stop
+        """
+
+        return parsex.unparse(self.a)
+
+    def ast_copy(self) -> AST:
         """Copy the `AST` node tree of this `FST` node, not including any `FST` stuff. Use when you just want a copy of
         the `AST` tree from this point down.
 
@@ -1491,7 +1520,7 @@ class FST:
 
         **Examples:**
 
-        >>> a = FST('[0, 1, 2, 3]').copy_ast()
+        >>> a = FST('[0, 1, 2, 3]').ast_copy()
 
         >>> print(type(a))
         <class 'ast.List'>
@@ -2355,15 +2384,55 @@ class FST:
 
         return self
 
-    # def get_line_comment(self, full: bool = False) -> builtins.str | None:
-    #     """Get line comment on the end line of this node, with the exceptiuon of statement block nodes where it gets the
-    #     comment on the end of the block header line (since the last comment belongs to the last child of the block).
-    #     """
+    def get_line_comment(self, full: bool = False) -> builtins.str | None:
+        """Get current line comment for this node.
 
-    #     raise NotImplementedError
+        The line comment is the single comment at the end of the last line of the location of this node, with the
+        exception of statement block nodes where the line comment lives on the last line of the header of the node
+        (after the `:`, since the comment on the last line of the location belongs to the last child).
 
-    # def put_line_comment(self, comment: builtins.str | None = None, full: bool = False) -> builtins.str | None:
-    #     raise NotImplementedError
+        **Parameters:**
+        - `full`:
+            - `False`: The gotten comment text is returned stripped of the `'#'` and any leading and trailing
+                whitespace.
+            - `True`: The entire gotten comment from the end of the node to the end of the line is returned with no
+                whitespace stripped, e.g. `'  # comment  '`.
+
+        **Returns:**
+        - `str`: The current comment, with or without the leading whitespace and `'#'` as per the `full` paramenter.
+        - `None`: There is no comment present.
+        """
+
+        return self._getput_line_comment(False, full)
+
+    def put_line_comment(self, comment: builtins.str | None = None, full: bool = False) -> builtins.str | None:
+        """Put line comment for this node returning whatever comment was there before.
+
+        The line comment is the single comment at the end of the last line of the location of this node, with the
+        exception of statement block nodes where the line comment lives on the last line of the header of the node
+        (after the `:`, since the comment on the last line of the location belongs to the last child).
+
+        **Parameters:**
+        - `comment`: The comment operation to perform after getting the current comment.
+            - `str`: Put new comment which may or may not need to have the initial `'#'` according to the `full`
+                parameter.
+            - `None`: Delete current comment (if present).
+        - `full`:
+            - `False`: The gotten comment text is returned stripped of the `'#'` and any leading and trailing
+                whitespace. The put `comment` text is put to existing comment if is present and otherwise is prepended
+                with `'  #'` and a single leading whitespace after that if needed and put after the node.
+            - `True`: The entire gotten comment from the end of the node to the end of the line is returned with no
+                whitespace stripped, e.g. `'  # comment  '`. The put `comment` **MUST** start with a `'#'` and possible
+                leading whitespace before that and is put verbatim with no stripping, replacing any existing comment
+                from the end of the node to the end of the line.
+
+        **Returns:**
+        - `str`: The current comment, before any replacement, with or without the leading whitespace and `'#'` as per
+            the `full` paramenter.
+        - `None`: There was no comment present.
+        """
+
+        return self._getput_line_comment(comment, full)
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing **GROUPING** parentheses if present. Will balance parentheses if `self` is
@@ -4192,6 +4261,8 @@ class FST:
         _delimit_node,
         _undelimit_node,
         _trim_delimiters,
+
+        _getput_line_comment,
     )
 
     from .fst_locs import (

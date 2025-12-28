@@ -39,10 +39,10 @@ if a:
     b = (c, u, v, d)
 ```
 
-`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute (with type-safe accessors provided) which
-keep extra structure information, the original source, and provide the interface to format-preserving operations. Each
-operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so
-that the current source will always parse to the current tree.
+`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided)
+which keep extra structure information, the original source, and provide the interface to format-preserving operations.
+Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept
+synchronized so that the current source will always parse to the current tree.
 
 Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs
 no implicit normalization or stylistic rewriting.

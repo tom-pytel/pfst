@@ -330,19 +330,20 @@ def _loc_op(self: fst.FST) -> fstloc | None:
 
 
 def _loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
-    """Return position of the end of the block header line(s) for block node (just BEFORE the ':') and the end position
+    """Return position of the end of the block header line(s) for block node (just before the ':') and the end position
     of the last child, or None if `self` is not a block header node.
 
     **Returns:**
-    - `(colon ln, colon col, last child end_ln, last child end_col)`: Returns the position just BEFORE the ending colon
+    - `(colon ln, colon col, last child end_ln, last child end_col)`: Returns the position just before the ending colon
         `:` of the block header and the end line and end column of the last child in the header or the start line and
-        column of `self` if there is not last child (`Try`, `TryStar`). End position of child does NOT include any
+        column of `self` if there is not last child (`Try`, `TryStar`). End position of child does **NOT** include any
         possibly closing parenthesis.
     """
 
+    ast = self.a
     ln, col, end_ln, end_col = self.loc
 
-    if child := last_block_header_child(a := self.a):
+    if child := last_block_header_child(ast):
         if loc := (child := child.f).loc:  # because of empty function def arguments which won't have a .loc
             _, _, cend_ln, cend_col = loc
         elif child := child.prev():  # guaranteed to have loc if is there
@@ -352,7 +353,7 @@ def _loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
             cend_ln = ln
             cend_col = col
 
-    elif a.__class__ in ASTS_LEAF_BLOCK:
+    elif ast.__class__ in ASTS_LEAF_BLOCK:
         cend_ln = ln
         cend_col = col
 
