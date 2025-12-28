@@ -147,7 +147,7 @@ from .fst_options import check_options
 
 
 __all__ = [
-    'parse', 'unparse', 'dump', 'FST',
+    'FST', 'parse', 'unparse', 'dump', 'castf', 'gastf',
 ]
 
 
@@ -353,6 +353,20 @@ def dump(
         return ast_dump(node, annotate_fields, include_attributes, indent=indent)
     else:
         return ast_dump(node, annotate_fields, include_attributes, indent=indent, show_empty=show_empty)
+
+
+def castf(ast: AST) -> FST:
+    """Cast AST F, type-safe way to access `ast.f` when you know it exists. Intentionally fail with `AttributeError` if
+    `ast` does not have `.f`."""
+
+    return ast.f  # type: ignore
+
+
+def gastf(ast: AST) -> FST | None:
+    """Get AST F, type-safe way to get `ast.f` when it may or may not exist. Returns `None` if `ast` does not have an
+    `.f`."""
+
+    return getattr(ast, 'f', None)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

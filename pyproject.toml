@@ -53,6 +53,9 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"pfst" = ["py.typed"]
+
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }
 
