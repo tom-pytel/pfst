@@ -77,23 +77,22 @@ if 1:
 '''), r'''
 if 1:
     i
-    # post
     k
 ''', r'''
-Module - ROOT 0,0..3,5
+Module - ROOT 0,0..2,5
   .body[1]
-   0] If - 0,0..3,5
+   0] If - 0,0..2,5
      .test Constant 1 - 0,3..0,4
      .body[2]
       0] Expr - 1,4..1,5
         .value Name 'i' Load - 1,4..1,5
-      1] Expr - 3,4..3,5
-        .value Name 'k' Load - 3,4..3,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 ''', r'''
 # pre
-j
+j ; # post
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..1,10
   .body[1]
    0] Expr - 1,0..1,1
      .value Name 'j' Load - 1,0..1,1
@@ -2506,14 +2505,14 @@ Module - ROOT 0,0..0,1
 
 ('body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True), 'norm': False}, ('exec',
 r'''if 1: i ;  # post'''),
-r'''if 1: # post''', r'''
-Module - ROOT 0,0..0,12
+r'''if 1:''', r'''
+Module - ROOT 0,0..0,5
   .body[1]
    0] If - 0,0..0,5
      .test Constant 1 - 0,3..0,4
 ''',
-r'''i''', r'''
-Module - ROOT 0,0..0,1
+r'''i ;  # post''', r'''
+Module - ROOT 0,0..0,11
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
@@ -2524,15 +2523,15 @@ Module - ROOT 0,0..0,1
 if 1: i ;  # post
 '''), r'''
 
-if 1: # post
+if 1:
 ''', r'''
-Module - ROOT 0,0..1,12
+Module - ROOT 0,0..1,5
   .body[1]
    0] If - 1,0..1,5
      .test Constant 1 - 1,3..1,4
 ''',
-r'''i''', r'''
-Module - ROOT 0,0..0,1
+r'''i ;  # post''', r'''
+Module - ROOT 0,0..0,11
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
@@ -10041,19 +10040,17 @@ Module - ROOT 0,0..0,5
 ('', 1, 2, None, {}, (None, r'''
 a = 1;
 b = 2;  # line
-'''), r'''
-a = 1;
-# line
-''', r'''
-Module - ROOT 0,0..1,6
+'''),
+r'''a = 1;''', r'''
+Module - ROOT 0,0..0,6
   .body[1]
    0] Assign - 0,0..0,5
      .targets[1]
       0] Name 'a' Store - 0,0..0,1
      .value Constant 1 - 0,4..0,5
 ''',
-r'''b = 2''', r'''
-Module - ROOT 0,0..0,5
+r'''b = 2;  # line''', r'''
+Module - ROOT 0,0..0,14
   .body[1]
    0] Assign - 0,0..0,5
      .targets[1]
@@ -10068,7 +10065,6 @@ if 1:
 '''), r'''
 if 1:
     a = 1;
-    # line
 ''', r'''
 If - ROOT 0,0..1,10
   .test Constant 1 - 0,3..0,4
@@ -10078,8 +10074,8 @@ If - ROOT 0,0..1,10
       0] Name 'a' Store - 1,4..1,5
      .value Constant 1 - 1,8..1,9
 ''',
-r'''b = 2''', r'''
-Module - ROOT 0,0..0,5
+r'''b = 2;  # line''', r'''
+Module - ROOT 0,0..0,14
   .body[1]
    0] Assign - 0,0..0,5
      .targets[1]
@@ -10094,9 +10090,8 @@ if 1:
 '''), r'''
 if 1:
     a = 1;
-    # line
 ''', r'''
-Module - ROOT 0,0..2,10
+Module - ROOT 0,0..1,10
   .body[1]
    0] If - 0,0..1,10
      .test Constant 1 - 0,3..0,4
@@ -10106,8 +10101,8 @@ Module - ROOT 0,0..2,10
          0] Name 'a' Store - 1,4..1,5
         .value Constant 1 - 1,8..1,9
 ''',
-r'''b = 2''', r'''
-Module - ROOT 0,0..0,5
+r'''b = 2;  # line''', r'''
+Module - ROOT 0,0..0,14
   .body[1]
    0] Assign - 0,0..0,5
      .targets[1]
@@ -10117,10 +10112,10 @@ Module - ROOT 0,0..0,5
 
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''if 1: a = 1; b = 2;  # line'''),
-r'''if 1: a = 1; # line''', r'''
-Module - ROOT 0,0..0,19
+r'''if 1: a = 1''', r'''
+Module - ROOT 0,0..0,11
   .body[1]
-   0] If - 0,0..0,12
+   0] If - 0,0..0,11
      .test Constant 1 - 0,3..0,4
      .body[1]
       0] Assign - 0,6..0,11
@@ -10128,8 +10123,8 @@ Module - ROOT 0,0..0,19
          0] Name 'a' Store - 0,6..0,7
         .value Constant 1 - 0,10..0,11
 ''',
-r'''b = 2''', r'''
-Module - ROOT 0,0..0,5
+r'''b = 2;  # line''', r'''
+Module - ROOT 0,0..0,14
   .body[1]
    0] Assign - 0,0..0,5
      .targets[1]

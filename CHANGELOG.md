@@ -34,6 +34,7 @@
 
 ### Updated
 
+- recognize line comment after a trailining statement semicolon as belonging to the statement
 - implemented trivia specification by absolute line numbers for statementishes so can enable for all
 - implemented `coerce` option for `MatchOr` and `MatchSequence`
 - removed `matchor_norm` option, didn't make sense

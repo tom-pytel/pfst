@@ -1,6 +1,6 @@
 """Low level get and put statement-ish slices (including single which is treated as a slice of one).
 
-TODO: THIS NEEDS A REWRITE!"""
+TODO: REWRITE THIS TO HANDLE NEW TRIVIA HANDLING EXACLY!"""
 
 from __future__ import annotations
 
@@ -163,9 +163,16 @@ class SrcEdit:
         blkpost = True if (allpost := postcomms == 'all') else postcomms == 'block'
 
         if single_ln := bound_end_ln == bound_ln:
-            frag = next_frag(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
+            eff_bound_end_col = bound_end_col
         else:
-            frag = next_frag(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
+            eff_bound_end_col = 0x7fffffffffffffff
+
+        frag = next_frag(lines, bound_ln, bound_col, bound_ln, eff_bound_end_col, True)
+
+        if frag and frag.src.startswith(';'):  # recognize line comments after semicolon (since there can't be a statement after that)
+            if frag_comment := next_frag(lines, bound_ln, frag.col + 1, bound_ln, eff_bound_end_col, True):
+                if frag_comment.src.startswith('#'):
+                    frag = frag_comment
 
         if frag:
             if not frag.src.startswith('#'):

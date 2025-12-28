@@ -5154,11 +5154,9 @@ Module - ROOT 0,0..0,1
 
 ('', 0, 1, None, {}, ('exec',
 r'''i ;  # post'''), (None,
-r'''l'''), r'''
-l
-# post
-''', r'''
-Module - ROOT 0,0..1,6
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
@@ -5250,9 +5248,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-    # post
 ''', r'''
-Module - ROOT 0,0..2,10
+Module - ROOT 0,0..1,5
   .body[1]
    0] If - 0,0..1,5
      .test Constant 1 - 0,3..0,4
@@ -5695,11 +5692,9 @@ Module - ROOT 0,0..0,1
 # pre
 i ;  # post
 '''), (None,
-r'''l'''), r'''
-l
-# post
-''', r'''
-Module - ROOT 0,0..1,6
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
@@ -5762,9 +5757,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-# post
 ''', r'''
-Module - ROOT 0,0..2,6
+Module - ROOT 0,0..1,5
   .body[1]
    0] If - 0,0..1,5
      .test Constant 1 - 0,3..0,4
@@ -8009,20 +8003,18 @@ Module - ROOT 0,0..4,17
 ('', 1, 2, None, {}, ('exec',
 r'''i ; j ;  # post'''), (None,
 r'''def f(): pass'''), r'''
-i ;
+i
 
 
 def f(): pass
-# post
 ''', r'''
-i ;
+i
 
 
 def f():
     pass
-# post
 ''', r'''
-Module - ROOT 0,0..4,6
+Module - ROOT 0,0..3,13
   .body[2]
    0] Expr - 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
@@ -8066,29 +8058,25 @@ i \
  ; j ;  # post
 '''), (None,
 r'''def f(): pass'''), r'''
-i \
- ;
+i
 
 
 def f(): pass
-# post
 ''', r'''
-i \
- ;
+i
 
 
 def f():
     pass
-# post
 ''', r'''
-Module - ROOT 0,0..5,6
+Module - ROOT 0,0..3,13
   .body[2]
    0] Expr - 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
-   1] FunctionDef - 4,0..4,13
+   1] FunctionDef - 3,0..3,13
      .name 'f'
      .body[1]
-      0] Pass - 4,9..4,13
+      0] Pass - 3,9..3,13
 '''),
 
 ('', 1, 2, None, {}, ('exec', r'''
@@ -8129,19 +8117,17 @@ class cls:
 '''), (None,
 r'''def f(): pass'''), r'''
 class cls:
-    i ;
+    i
 
     def f(): pass
-# post
 ''', r'''
 class cls:
-    i ;
+    i
 
     def f():
         pass
-# post
 ''', r'''
-Module - ROOT 0,0..4,6
+Module - ROOT 0,0..3,17
   .body[1]
    0] ClassDef - 0,0..3,17
      .name 'cls'
@@ -8161,19 +8147,17 @@ class cls:
 '''), (None,
 r'''def f(): pass'''), r'''
 class cls:
-    i ;
+    i
 
     def f(): pass
- # post
 ''', r'''
 class cls:
-    i ;
+    i
 
     def f():
         pass
- # post
 ''', r'''
-Module - ROOT 0,0..4,7
+Module - ROOT 0,0..3,17
   .body[1]
    0] ClassDef - 0,0..3,17
      .name 'cls'
@@ -8193,31 +8177,27 @@ class cls:
 '''), (None,
 r'''def f(): pass'''), r'''
 class cls:
-    i \
- ;
+    i
 
     def f(): pass
-# post
 ''', r'''
 class cls:
-    i \
- ;
+    i
 
     def f():
         pass
-# post
 ''', r'''
-Module - ROOT 0,0..5,6
+Module - ROOT 0,0..3,17
   .body[1]
-   0] ClassDef - 0,0..4,17
+   0] ClassDef - 0,0..3,17
      .name 'cls'
      .body[2]
       0] Expr - 1,4..1,5
         .value Name 'i' Load - 1,4..1,5
-      1] FunctionDef - 4,4..4,17
+      1] FunctionDef - 3,4..3,17
         .name 'f'
         .body[1]
-         0] Pass - 4,13..4,17
+         0] Pass - 3,13..3,17
 '''),
 
 ('body[0]', 1, 2, None, {}, ('exec', r'''
