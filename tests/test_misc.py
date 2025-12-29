@@ -1523,6 +1523,59 @@ two  # fake comment start""", **b
         self.assertEqual((0, 15, 0, 18), _loc_block_header_end(parse('class cls((base)): pass').body[0].f))
         self.assertEqual((0, 11, 0, 13), _loc_block_header_end(parse('for a in (b): pass\nelse: pass').body[0].f))
 
+        # else and finally
+
+        f = FST('''
+try: pass  # :
+    # :
+except: pass  # :
+    # :
+else:  # :
+    pass  # :
+finally:  # :
+    pass  # :
+            '''[1:-1])
+        self.assertEqual((4, 0, 4, 5), f._loc_block_header_end('orelse'))
+        self.assertEqual((6, 0, 6, 8), f._loc_block_header_end('finalbody'))
+        del f.body[0]
+        self.assertEqual((3, 0, 3, 5), f._loc_block_header_end('orelse'))
+        self.assertEqual((5, 0, 5, 8), f._loc_block_header_end('finalbody'))
+        del f.handlers[0]
+        self.assertEqual((2, 0, 2, 5), f._loc_block_header_end('orelse'))
+        self.assertEqual((4, 0, 4, 8), f._loc_block_header_end('finalbody'))
+        del f.orelse[0]
+        self.assertIsNone(f._loc_block_header_end('orelse'))
+        self.assertEqual((1, 0, 1, 8), f._loc_block_header_end('finalbody'))
+        del f.finalbody[0]
+        self.assertIsNone(f._loc_block_header_end('orelse'))
+        self.assertIsNone(f._loc_block_header_end('finalbody'))
+
+        f = FST('''
+if 1:
+    try: pass  # :
+        # :
+    except: pass  # :
+        # :
+    else:  # :
+        pass  # :
+    finally:  # :
+        pass  # :
+            '''[1:-1])
+        self.assertEqual((5, 4, 5, 9), f.body[0]._loc_block_header_end('orelse'))
+        self.assertEqual((7, 4, 7, 12), f.body[0]._loc_block_header_end('finalbody'))
+        del f.body[0].body[0]
+        self.assertEqual((5, 4, 5, 9), f.body[0]._loc_block_header_end('orelse'))
+        self.assertEqual((7, 4, 7, 12), f.body[0]._loc_block_header_end('finalbody'))
+        del f.body[0].handlers[0]
+        self.assertEqual((3, 4, 3, 9), f.body[0]._loc_block_header_end('orelse'))
+        self.assertEqual((5, 4, 5, 12), f.body[0]._loc_block_header_end('finalbody'))
+        del f.body[0].orelse[0]
+        self.assertIsNone(f.body[0]._loc_block_header_end('orelse'))
+        self.assertEqual((2, 4, 2, 12), f.body[0]._loc_block_header_end('finalbody'))
+        del f.body[0].finalbody[0]
+        self.assertIsNone(f.body[0]._loc_block_header_end('orelse'))
+        self.assertIsNone(f.body[0]._loc_block_header_end('finalbody'))
+
     def test__loc_arguments_empty(self):
         self.assertEqual((0, 0, 0, 6), FST('# test', 'arguments')._loc_arguments_empty())
         self.assertEqual((0, 6, 0, 6), FST('lambda: None').args._loc_arguments_empty())

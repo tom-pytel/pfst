@@ -364,7 +364,8 @@ def prev_frag(
     - `lcont`: Whether to return line continuations found (backslash at end of line) if `True`, skip over them if
         `False`, or skip over them and restrict search to logical line `None`.
     - `state`: Can be used to cache walk but must only be used if the walk is sequentially backwards starting each time
-        at the start position of the previously returned match.
+        at the start position of the previously returned match, also the `comment` and `lcont` parameters must be the
+        same.
 
     @private
     """
@@ -515,7 +516,7 @@ def prev_find(
     - `comment`: The `comment` parameter to `prev_frag()`, can stop search on comments if `first` is `True`.
     - `lcont`: The `lcont` parameter to `prev_frag()`. Can stop search on line continuation if `first` is `True`.
     - `state`: The `state` parameter to `prev_frag()`. Be careful using this here and keep in mind its line caching
-        functionality if changing search parameters.
+        functionality if changing `comment` and `lcont` search parameters.
 
     **Returns:**
     - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.

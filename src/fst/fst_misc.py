@@ -2021,7 +2021,6 @@ def _normalize_block(
     if ast.__class__ not in ASTS_LEAF_BLOCK or not (body := getattr(ast, field)):  # body guaranteed to be list if there
         return False
 
-    root = self.root
     body0 = body[0].f
     body0_ln, body0_col, _, _ = body0.bloc
 
@@ -2030,7 +2029,7 @@ def _normalize_block(
     else:
         ln, col, _, _ = self.loc
 
-    if not (colon := prev_find(root._lines, ln, col, body0_ln, body0_col, ':', True, lcont=None)):  # only found if is on same logical line as first body child, comment left as False because that breaks logical line anyway
+    if not (colon := prev_find(self.root._lines, ln, col, body0_ln, body0_col, ':', True, lcont=None)):  # only found if is on same logical line as first body child, comment left as False because that breaks logical line anyway
         return False
 
     ln, col = colon

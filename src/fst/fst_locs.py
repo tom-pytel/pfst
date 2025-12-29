@@ -364,12 +364,10 @@ def _loc_op(self: fst.FST) -> fstloc | None:
 
 
 def _loc_block_header_end(
-    self: fst.FST  #, field: Literal['body', 'orelse', 'finalbody'] = 'body'
+    self: fst.FST, field: Literal['body', 'orelse', 'finalbody'] = 'body'
 ) -> tuple[int, int, int, int] | None:
     """Return the position of the end of the given block header if it exists as well as either the end of the last child
     in the header if `field='body'` or the start of the `else` or `finally` otherwise.
-
-    **Note:** `orelse` and `finalbody` not implemented yet because not needed yet.
 
     **Returns:**
     - `None`: If doesn't have the requested `field` or anything in it.
@@ -384,9 +382,10 @@ def _loc_block_header_end(
 
     # assert self.a.__class__ in ASTS_LEAF_BLOCK
 
+    ast = self.a
     ln, col, end_ln, end_col = self.loc
 
-    if child := last_block_header_child(self.a):
+    if child := last_block_header_child(ast):
         if loc := (child := child.f).loc:  # because of empty function def arguments which won't have a .loc
             _, _, ln, col = loc
         elif child := child.prev():
@@ -394,10 +393,29 @@ def _loc_block_header_end(
 
     colon_ln, colon_col = next_find(self.root._lines, ln, col, end_ln, end_col, ':')  # must be there
 
-    # if field != 'body':
-    #     raise NotImplementedError("this hasn't been needed yet")
+    if field == 'body':
+        return ln, col, colon_ln, colon_col + 1  # last child end location and block header end location just past the ':'
 
-    return ln, col, colon_ln, colon_col + 1  # block header end location just past the ':'
+    if not (body := getattr(ast, field, None)):
+        return None
+
+    body0 = body[0].f
+    body0_ln, body0_col, _, _ = body0.bloc
+
+    if prev := body0.prev('loc'):
+        _, _, ln, col = prev.bloc
+    else:
+        ln, col, _, _ = self.loc
+
+    lines = self.root._lines
+    state = []
+
+    colon_ln, colon_col = prev_find(lines, ln, col, body0_ln, body0_col, ':', True, state=state)  # must be there
+    ln, col, src = prev_frag(lines, ln, col, colon_ln, colon_col, state=state)  # must be there
+
+    assert src.startswith('else' if field == 'orelse' else 'finally')
+
+    return ln, col, colon_ln, colon_col + 1  # block header start and end location just past the ':'
 
 
 def _loc_arguments_empty(self: fst.FST) -> fstloc:
