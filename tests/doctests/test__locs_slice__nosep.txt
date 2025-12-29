@@ -1,5 +1,5 @@
 >>> from fst.common import fstloc
->>> from fst.slice_exprish import _locs_slice
+>>> from fst.slice_exprlike import _locs_slice
 
 >>> LINES = lambda src: src.split('\n')
 

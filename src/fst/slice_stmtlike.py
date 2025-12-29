@@ -1,4 +1,4 @@
-"""Low level get and put statement-ish slices (including single which is treated as a slice of one).
+"""Low level get and put statementlike slices (including single which is treated as a slice of one).
 
 TODO: REWRITE THIS TO HANDLE NEW TRIVIA HANDLING EXACLY!"""
 
@@ -58,7 +58,7 @@ from .common import (
     prev_find,  # noqa: F811
 )
 
-__all__ = ['get_slice_stmtish', 'put_slice_stmtish']
+__all__ = ['get_slice_stmtlike', 'put_slice_stmtlike']
 
 
 class SrcEdit:
@@ -659,8 +659,8 @@ class SrcEdit:
         docstr_strict_exclude: AST | None = None,
         **options,
     ) -> fstloc:  # put_loc
-        """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
-        frag. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
+        """Put to block of statement(like)s. Calculates put location and modifies `put_fst` as necessary to create
+        proper frag. The "like" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
         `match_case`s to a 'cases' field.
 
         If `ffirst` and `flast` are `None` it means that it is a pure insertion and no elements are being removed. In
@@ -683,7 +683,7 @@ class SrcEdit:
 
         **Parameters:**
         - `tgt_fst`: The destination `FST` container that is being put to.
-        - `put_fst`: The block which is being put. Must be a `Module` with a `body` of one or multiple statmentish
+        - `put_fst`: The block which is being put. Must be a `Module` with a `body` of one or multiple statmentlike
             nodes or a SPECIAL SLICE `_ExceptHandlers` or `_match_cases`. Not indented, indent and mutate this object to
             set what will be put at `put_loc`.
         - `put_body`: The list of `AST` nodes of `put_fst`.
@@ -980,7 +980,7 @@ def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
 
 # ......................................................................................................................
 
-def _get_slice_stmtish_old(
+def _get_slice_stmtlike_old(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -1054,7 +1054,7 @@ def _get_slice_stmtish_old(
     else:
         raise ValueError('cannot specify `one=True` if getting multiple statements')  # pragma: no cover  - doesn't currently happen
 
-    prefix = [''] * (del_prespace + 1) if del_prespace and not ld_neg else None  # if maybe requested leading space returned (ld_neg=False) and there was leading space deleted then add this many leading empty lines, this is a HACK because old stmtish slicing did not support this, need to redo
+    prefix = [''] * (del_prespace + 1) if del_prespace and not ld_neg else None  # if maybe requested leading space returned (ld_neg=False) and there was leading space deleted then add this many leading empty lines, this is a HACK because old stmtlike slicing did not support this, need to redo
     suffix = [''] * (del_postspace + 1) if del_postspace and not tr_neg else None  # same for trailing space
 
     fst_, _ = self._make_fst_and_dedent(indent, get_ast, copy_loc, prefix, suffix, put_loc, put_lines,
@@ -1070,7 +1070,7 @@ def _get_slice_stmtish_old(
     return fst_
 
 
-def _put_slice_stmtish_old(
+def _put_slice_stmtlike_old(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'],
@@ -1409,7 +1409,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
         root._touch()
 
 
-def get_slice_stmtish(
+def get_slice_stmtlike(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -1435,14 +1435,14 @@ def get_slice_stmtish(
         postspace = tr_space,
     )
 
-    fst_ = _get_slice_stmtish_old(self, start, stop, field, cut, one, options, ld_neg, tr_neg)
+    fst_ = _get_slice_stmtlike_old(self, start, stop, field, cut, one, options, ld_neg, tr_neg)
 
     _maybe_del_trailing_newline(self, old_last_line, not cut)
 
     return fst_
 
 
-def put_slice_stmtish(
+def put_slice_stmtlike(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'],
@@ -1467,6 +1467,6 @@ def put_slice_stmtish(
         postspace=tr_space,
     )
 
-    put_fst_end_nl = _put_slice_stmtish_old(self, code, start, stop, field, one, options)
+    put_fst_end_nl = _put_slice_stmtlike_old(self, code, start, stop, field, one, options)
 
     _maybe_del_trailing_newline(self, old_last_line, put_fst_end_nl)

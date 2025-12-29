@@ -1,6 +1,6 @@
 >>> from fst import *
 >>> from fst.common import fstloc, next_find
->>> from fst.slice_exprish import get_slice_nosep
+>>> from fst.slice_exprlike import get_slice_nosep
 
 
 >>> def test_cut_gens(fst_, start, stop, trivia=None, fmt=True):

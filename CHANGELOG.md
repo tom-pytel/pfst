@@ -37,7 +37,7 @@
 - recognize line comment after a trailining statement semicolon as belonging to the statement
 - `copy()` can strip non-node source from root node copy using parameter `whole=False`
 - can control optional parenthesization of cut / put `Tuple` slices via `pars` option
-- implemented trivia specification by absolute line numbers for statementishes so can enable for all
+- implemented trivia specification by absolute line numbers for statementlikes so can enable for all
 - implemented `coerce` option for `MatchOr` and `MatchSequence`
 - removed `matchor_norm` option, didn't make sense
 - pass through more specific `SyntaxError` information from our extended parsing
@@ -86,7 +86,7 @@
 - prescribed slicing for `SetComp.generators`
 - prescribed slicing for `DictComp.generators`
 - prescribed slicing for `GeneratorExp.generators`
-- option `norm_self` controls whether statementish bodies can be zeroed out or not
+- option `norm_self` controls whether statementlike bodies can be zeroed out or not
 
 ### Updated
 
@@ -112,7 +112,7 @@
 - fixed put star `*` to parenthesized single-element non-star `ImportFrom.names`
 - fixed get slice from start of unparenthesized tuple in f-string expression on py < 3.12
 - fixed get format_spec escape sequences from `rf'{...:\xFF}'` string
-- statement-ish operations at end of source no longer add trailing newline
+- statementlike operations at end of source no longer add trailing newline
 - multiline implicit strings with line continuations no longer considered unenclosed
 - get one from `Compare` returns copied node instead of original
 - never consider `bytes` as docstrings
@@ -133,7 +133,7 @@
 
 ### Updated
 
-- don't return trailing newline after comment in get statementish
+- don't return trailing newline after comment in get statementlike
 - `dump()` uses color when printing to a terminal and formats a little better
 - improve indent infer to check solo block statements, `ExceptHandler`s and `match_case`s
 - change `ExceptHandler`s and `match_case`s to use explicit slice type instead of `Module`
@@ -141,7 +141,7 @@
 - change `Compare` combined field indexing to not include `.left`, just `.ops` and `.comparators`
 - `dump()` indicates trailing whitespace after stmts, including with trailing `;`
 - recognize Devanagari and Hebrew for identifiers
-- adapt statement-ish operations to use new trivia parameters
+- adapt statementlike operations to use new trivia parameters
 - put slice source to `Call.args` and `ClassDef.bases` doesn't need trialing comma
 - `get_src()` and `put_src()` clip and validate coordinates
 - LOTS of code cleanups, refactor, clean up API
@@ -209,7 +209,7 @@
 - reduced precedence of `NamedExpr.value` from ATOM to TEST (don't add unnecessary parentheses)
 - added ParseError and cleaned up exception usage
 - optimized _parse_all() which recognizes and parses any type of node source
-- parse expressionish elements don't have to start at beginning of line
+- parse expressionlike elements don't have to start at beginning of line
 - allow put any kind of expression slice to tuple, including Slices
 - lots of code cleanups
 
@@ -218,7 +218,7 @@
 
 ### Fixed
 
-- statementish cut marks tree as modified
+- statementlike cut marks tree as modified
 - undelimited sequence operations joining alphanumerics
 - disallowed merge of `1.` float literal directly to left of alphanumeric
 - put to `ImportFrom.module` with dot following directly after 'from'
@@ -232,7 +232,7 @@
 
 ### Updated
 
-- redid expressionish slicing to use new trivia
+- redid expressionlike slicing to use new trivia
 - split out more tests into separate files
 - preserve comments on parenthesize tuple
 - lots of code cleanups

@@ -18,7 +18,7 @@ from .parsex import Mode, parse_ExceptHandler, parse_match_case
 from .code import Code, code_as_lines
 
 
-_STMTISH_FIELDS     = frozenset(('body', 'orelse', 'handlers', 'finalbody', 'cases'))
+_STMTLIKE_FIELDS    = frozenset(('body', 'orelse', 'handlers', 'finalbody', 'cases'))
 
 _PATH_BODY          = [astfield('body', 0)]
 _PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
@@ -45,7 +45,7 @@ def _reparse_raw_base(
 ) -> fst.FST:
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top-level
-    statementish thing being reparsed."""
+    statementlike thing being reparsed."""
 
     copy_root = fst.FST(Pass(), copy_lines, None, lcopy=False)  # we don't need the ASTs here, just the lines
 
@@ -96,39 +96,39 @@ def _reparse_raw_base(
     return copy
 
 
-def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
-    """Reparse only statementish or block header part of statementish containing changes. We reparse minimum statement
+def _reparse_raw_stmtlike(self: fst.FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> bool:
+    """Reparse only statementlike or block header part of statementlike containing changes. We reparse minimum statement
     level due to things like f/t-string debug strings."""
 
-    if not (stmtish := self.parent_stmtish(True, False)):
+    if not (stmtlike := self.parent_stmtlike(True, False)):
         return False
 
-    if is_elif := stmtish.is_elif():
-        stmtish = stmtish.parent  # there must be a parent otherwise it cannot be an `elif`
+    if is_elif := stmtlike.is_elif():
+        stmtlike = stmtlike.parent  # there must be a parent otherwise it cannot be an `elif`
 
-    pln, pcol, pend_ln, pend_col = stmtish.bloc
+    pln, pcol, pend_ln, pend_col = stmtlike.bloc
 
     root = self.root
     lines = root._lines
-    stmtisha = stmtish.a
+    stmtlikea = stmtlike.a
     first_lineno = 0  # this indicates not to apply the first column delta, will only be set if we need that action because we possibly erased multi-byte characters on the first line before the reparse node
     first_line_col_delta = lines[pln].c2b(pcol) - pcol
 
     if in_blkhead := (
-        stmtisha.__class__ in ASTS_LEAF_BLOCK
-        and (blkhead_end := stmtish._loc_block_header_end()[2:]) > (end_ln, end_col + 1)
+        stmtlikea.__class__ in ASTS_LEAF_BLOCK
+        and (blkhead_end := stmtlike._loc_block_header_end()[2:]) > (end_ln, end_col + 1)
     ):
         pend_ln, pend_col = blkhead_end
 
-    elif stmtish is root:  # reparse may include trailing comments which would not otherwise be included
+    elif stmtlike is root:  # reparse may include trailing comments which would not otherwise be included
         pend_ln = len(lines) - 1
         pend_col = len(lines[-1])
 
-    stmtish_cls = stmtisha.__class__
+    stmtlike_cls = stmtlikea.__class__
 
     if (  # special positional cases
-        (is_match_case := (stmtish_cls is match_case)) and not pcol          # can't reparse match_case at column 0 using the simple method below because needs indent / dedent (no line 0 check because that implies col 0)
-        or (is_ExceptHandler := (stmtish_cls is ExceptHandler)) and not pln  # can't reparse ExceptHandler at line 0 (implies column 0) because needs offsetting
+        (is_match_case := (stmtlike_cls is match_case)) and not pcol          # can't reparse match_case at column 0 using the simple method below because needs indent / dedent (no line 0 check because that implies col 0)
+        or (is_ExceptHandler := (stmtlike_cls is ExceptHandler)) and not pln  # can't reparse ExceptHandler at line 0 (implies column 0) because needs offsetting
     ):
         copy_lines = ([bistr('')] * pln +
                       lines[pln : pend_ln] +
@@ -145,20 +145,20 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         copya = (parse_match_case if is_match_case else parse_ExceptHandler)('\n'.join(copy_lines), root.parse_params)  # copy_lines are copy_root._lines since lcopy was False
 
         if not in_blkhead:  # if not just head then we just put the new source to offset everything maybe around us properly
-            root._put_src(new_lines, ln, col, end_ln, end_col, True, True, stmtish)  # will copy over entire AST so don't need to offset current children of stmtish
+            root._put_src(new_lines, ln, col, end_ln, end_col, True, True, stmtlike)  # will copy over entire AST so don't need to offset current children of stmtlike
 
         else:  # if just head then we didn't reparse body so just grab the old one
             root._put_src(new_lines, ln, col, end_ln, end_col, True)  # we offset everything because we will copy over the children
 
-            copya.body = stmtisha.body
-            stmtisha.body = []  # misc optimization so the body .f don't get unmade since we will be reusing them, TODO: optimize so we don't remake body tree as its already valid
+            copya.body = stmtlikea.body
+            stmtlikea.body = []  # misc optimization so the body .f don't get unmade since we will be reusing them, TODO: optimize so we don't remake body tree as its already valid
 
             if not is_match_case:  # match_case doesn't have AST location, we copy because of the replaced body which gives the whole thing a wrong position, the right position was there after the root._put_src() above
-                copya.end_lineno = stmtisha.end_lineno
-                copya.end_col_offset = stmtisha.end_col_offset
+                copya.end_lineno = stmtlikea.end_lineno
+                copya.end_col_offset = stmtlikea.end_col_offset
 
-        stmtish._set_ast(copya)
-        stmtish._touchall(True, True, False)
+        stmtlike._set_ast(copya)
+        stmtlike._touchall(True, True, False)
 
         return True
 
@@ -171,7 +171,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         path = _PATH_BODYCASES
 
     else:
-        indent = stmtish._get_block_indent()
+        indent = stmtlike._get_block_indent()
 
         if not pcol:  # not 'not indent' because could be semicolon
             copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
@@ -201,14 +201,14 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
             path = _PATH_BODY2HANDLERS if indent else _PATH_BODYHANDLERS
 
         elif not pcol:  # not 'not indent' because could be semicolon
-            if stmtish.is_elif():
+            if stmtlike.is_elif():
                 copy_lines[0] = bistr('if _: pass')
                 path = _PATH_BODYORELSE
             else:
                 path = _PATH_BODY
 
         else:
-            if stmtish.is_elif():
+            if stmtlike.is_elif():
                 copy_lines[1] = bistr(indent + 'if _: pass')
                 path = _PATH_BODY2ORELSE
             else:
@@ -217,17 +217,17 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     if not in_blkhead:  # non-block statement or modifications not limited to block header part
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
-        _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, True, None,
+        _reparse_raw_base(stmtlike, new_lines, ln, col, end_ln, end_col, copy_lines, path, True, None,
                           first_lineno, first_line_col_delta)
 
         if is_elif:  # nuking a whole elif will parse but can do bad things to end positions
-            stmtish._set_end_pos((a := stmtish.a).end_lineno, a.end_col_offset)  # setting own position to what it currently is but will also propagate up the tree
+            stmtlike._set_end_pos((a := stmtlike.a).end_lineno, a.end_col_offset)  # setting own position to what it currently is but will also propagate up the tree
 
         return True
 
     # modifications only to block header line(s) of block statement
 
-    if stmtish_cls is Match:
+    if stmtlike_cls is Match:
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
         copy_lines.append(bistr(indent + ' case _: pass'))
@@ -235,25 +235,25 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     else:
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
 
-        if stmtish_cls is Try:  # this is silly, someone is changing just the `try` header, but we cover it
+        if stmtlike_cls is Try:  # this is silly, someone is changing just the `try` header, but we cover it
             copy_lines.append(bistr(indent + 'except: pass'))
-        elif stmtish_cls is TryStar:  # ditto
+        elif stmtlike_cls is TryStar:  # ditto
             copy_lines.append(bistr(indent + 'except* Exception: pass'))
 
-    copy = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False, None,
+    copy = _reparse_raw_base(stmtlike, new_lines, ln, col, end_ln, end_col, copy_lines, path, False, None,
                              first_lineno, first_line_col_delta)
     copya = copy.a
 
     if not is_match_case:  # match_case doesn't have AST location
-        copya.end_lineno = stmtisha.end_lineno
-        copya.end_col_offset = stmtisha.end_col_offset
+        copya.end_lineno = stmtlikea.end_lineno
+        copya.end_col_offset = stmtlikea.end_col_offset
 
-    for field in _STMTISH_FIELDS:
-        if (body := getattr(stmtisha, field, None)) is not None:
+    for field in _STMTLIKE_FIELDS:
+        if (body := getattr(stmtlikea, field, None)) is not None:
             setattr(copya, field, body)
 
-    stmtish._set_ast(copya)  # TODO: optimize so we don't remake body trees where theyre already valid
-    stmtish._touchall(True, True, False)
+    stmtlike._set_ast(copya)  # TODO: optimize so we don't remake body trees where theyre already valid
+    stmtlike._touchall(True, True, False)
 
     return True
 
@@ -273,7 +273,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
 
     new_lines = code_as_lines(code)
 
-    if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
+    if not _reparse_raw_stmtlike(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
         root = self.root
 
         if ((mode := root.a.__class__) is not Slice

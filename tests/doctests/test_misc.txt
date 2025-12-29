@@ -246,9 +246,9 @@ Traceback (most recent call last):
   File "/home/tom/work/fst/pfst/src/fst/fst_put_slice.py", line 2881, in _put_slice
     handler(self, code, start, stop, field, one, options)
     ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/tom/work/fst/pfst/src/fst/slice_stmtish.py", line 1462, in put_slice_stmtish
-    put_fst_end_nl = _put_slice_stmtish_old(self, code, start, stop, field, one, options)
-  File "/home/tom/work/fst/pfst/src/fst/slice_stmtish.py", line 1128, in _put_slice_stmtish_old
+  File "/home/tom/work/fst/pfst/src/fst/slice_stmtlike.py", line 1462, in put_slice_stmtlike
+    put_fst_end_nl = _put_slice_stmtlike_old(self, code, start, stop, field, one, options)
+  File "/home/tom/work/fst/pfst/src/fst/slice_stmtlike.py", line 1128, in _put_slice_stmtlike_old
     raise ValueError('expecting a single element')
 ValueError: expecting a single element
 >>> f.body[1].replace('', one=False)

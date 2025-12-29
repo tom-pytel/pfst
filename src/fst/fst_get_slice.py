@@ -84,8 +84,8 @@ from .fst_misc import (
     fixup_slice_indices,
 )
 
-from .slice_stmtish import get_slice_stmtish
-from .slice_exprish import _locs_first_and_last, get_slice_sep, get_slice_nosep
+from .slice_stmtlike import get_slice_stmtlike
+from .slice_exprlike import _locs_first_and_last, get_slice_sep, get_slice_nosep
 
 
 _re_empty_line_start_maybe_cont_0 = re.compile(r'[ \t]*\\?')  # empty line start with maybe continuation
@@ -385,7 +385,7 @@ def _maybe_fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: 
             self._parenthesize_grouping(False)
 
     if is_first:  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our statement parent
-        if (parent := self.parent_stmtish()) and parent.a.__class__ is Expr:
+        if (parent := self.parent_stmtlike()) and parent.a.__class__ is Expr:
             ln, col, _, _ = self.loc
 
             if ln == parent.ln:  # if starts on same line as Expr then we may need to fix
@@ -1931,7 +1931,7 @@ def _get_slice__slice(
     return fst_
 
 
-def _get_slice_stmtish__body(
+def _get_slice_stmtlike__body(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -1939,58 +1939,59 @@ def _get_slice_stmtish__body(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Get a slice from a statementish virtual `_body` field which is just a `body` as if it didn't have a docstring."""
+    """Get a slice from a statementlike virtual `_body` field which is just a `body` as if it didn't have a docstring.
+    """
 
     if self.has_docstr:
         start, stop = fixup_slice_indices(len(self.a.body), start, stop, 1)
 
-    return get_slice_stmtish(self, start, stop, 'body', cut, options)
+    return get_slice_stmtlike(self, start, stop, 'body', cut, options)
 
 
 _GET_SLICE_HANDLERS = {
-    (Module, 'body'):                         get_slice_stmtish,  # stmt*
-    (Interactive, 'body'):                    get_slice_stmtish,  # stmt*
-    (FunctionDef, 'body'):                    get_slice_stmtish,  # stmt*
-    (AsyncFunctionDef, 'body'):               get_slice_stmtish,  # stmt*
-    (ClassDef, 'body'):                       get_slice_stmtish,  # stmt*
-    (For, 'body'):                            get_slice_stmtish,  # stmt*
-    (For, 'orelse'):                          get_slice_stmtish,  # stmt*
-    (AsyncFor, 'body'):                       get_slice_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                     get_slice_stmtish,  # stmt*
-    (While, 'body'):                          get_slice_stmtish,  # stmt*
-    (While, 'orelse'):                        get_slice_stmtish,  # stmt*
-    (If, 'body'):                             get_slice_stmtish,  # stmt*
-    (If, 'orelse'):                           get_slice_stmtish,  # stmt*
-    (With, 'body'):                           get_slice_stmtish,  # stmt*
-    (AsyncWith, 'body'):                      get_slice_stmtish,  # stmt*
-    (Try, 'body'):                            get_slice_stmtish,  # stmt*
-    (Try, 'orelse'):                          get_slice_stmtish,  # stmt*
-    (Try, 'finalbody'):                       get_slice_stmtish,  # stmt*
-    (TryStar, 'body'):                        get_slice_stmtish,  # stmt*
-    (TryStar, 'orelse'):                      get_slice_stmtish,  # stmt*
-    (TryStar, 'finalbody'):                   get_slice_stmtish,  # stmt*
-    (ExceptHandler, 'body'):                  get_slice_stmtish,  # stmt*
-    (match_case, 'body'):                     get_slice_stmtish,  # stmt*
+    (Module, 'body'):                         get_slice_stmtlike,  # stmt*
+    (Interactive, 'body'):                    get_slice_stmtlike,  # stmt*
+    (FunctionDef, 'body'):                    get_slice_stmtlike,  # stmt*
+    (AsyncFunctionDef, 'body'):               get_slice_stmtlike,  # stmt*
+    (ClassDef, 'body'):                       get_slice_stmtlike,  # stmt*
+    (For, 'body'):                            get_slice_stmtlike,  # stmt*
+    (For, 'orelse'):                          get_slice_stmtlike,  # stmt*
+    (AsyncFor, 'body'):                       get_slice_stmtlike,  # stmt*
+    (AsyncFor, 'orelse'):                     get_slice_stmtlike,  # stmt*
+    (While, 'body'):                          get_slice_stmtlike,  # stmt*
+    (While, 'orelse'):                        get_slice_stmtlike,  # stmt*
+    (If, 'body'):                             get_slice_stmtlike,  # stmt*
+    (If, 'orelse'):                           get_slice_stmtlike,  # stmt*
+    (With, 'body'):                           get_slice_stmtlike,  # stmt*
+    (AsyncWith, 'body'):                      get_slice_stmtlike,  # stmt*
+    (Try, 'body'):                            get_slice_stmtlike,  # stmt*
+    (Try, 'orelse'):                          get_slice_stmtlike,  # stmt*
+    (Try, 'finalbody'):                       get_slice_stmtlike,  # stmt*
+    (TryStar, 'body'):                        get_slice_stmtlike,  # stmt*
+    (TryStar, 'orelse'):                      get_slice_stmtlike,  # stmt*
+    (TryStar, 'finalbody'):                   get_slice_stmtlike,  # stmt*
+    (ExceptHandler, 'body'):                  get_slice_stmtlike,  # stmt*
+    (match_case, 'body'):                     get_slice_stmtlike,  # stmt*
 
-    (Match, 'cases'):                         get_slice_stmtish,  # match_case*
-    (Try, 'handlers'):                        get_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandler* ('except*')
+    (Match, 'cases'):                         get_slice_stmtlike,  # match_case*
+    (Try, 'handlers'):                        get_slice_stmtlike,  # excepthandler*
+    (TryStar, 'handlers'):                    get_slice_stmtlike,  # excepthandler* ('except*')
 
-    (Module, '_body'):                        _get_slice_stmtish__body,  # stmt*  - without docstr
-    (Interactive, '_body'):                   _get_slice_stmtish__body,  # stmt*
-    (FunctionDef, '_body'):                   _get_slice_stmtish__body,  # stmt*
-    (AsyncFunctionDef, '_body'):              _get_slice_stmtish__body,  # stmt*
-    (ClassDef, '_body'):                      _get_slice_stmtish__body,  # stmt*
-    (For, '_body'):                           _get_slice_stmtish__body,  # stmt*
-    (AsyncFor, '_body'):                      _get_slice_stmtish__body,  # stmt*
-    (While, '_body'):                         _get_slice_stmtish__body,  # stmt*
-    (If, '_body'):                            _get_slice_stmtish__body,  # stmt*
-    (With, '_body'):                          _get_slice_stmtish__body,  # stmt*
-    (AsyncWith, '_body'):                     _get_slice_stmtish__body,  # stmt*
-    (Try, '_body'):                           _get_slice_stmtish__body,  # stmt*
-    (TryStar, '_body'):                       _get_slice_stmtish__body,  # stmt*
-    (ExceptHandler, '_body'):                 _get_slice_stmtish__body,  # stmt*
-    (match_case, '_body'):                    _get_slice_stmtish__body,  # stmt*
+    (Module, '_body'):                        _get_slice_stmtlike__body,  # stmt*  - without docstr
+    (Interactive, '_body'):                   _get_slice_stmtlike__body,  # stmt*
+    (FunctionDef, '_body'):                   _get_slice_stmtlike__body,  # stmt*
+    (AsyncFunctionDef, '_body'):              _get_slice_stmtlike__body,  # stmt*
+    (ClassDef, '_body'):                      _get_slice_stmtlike__body,  # stmt*
+    (For, '_body'):                           _get_slice_stmtlike__body,  # stmt*
+    (AsyncFor, '_body'):                      _get_slice_stmtlike__body,  # stmt*
+    (While, '_body'):                         _get_slice_stmtlike__body,  # stmt*
+    (If, '_body'):                            _get_slice_stmtlike__body,  # stmt*
+    (With, '_body'):                          _get_slice_stmtlike__body,  # stmt*
+    (AsyncWith, '_body'):                     _get_slice_stmtlike__body,  # stmt*
+    (Try, '_body'):                           _get_slice_stmtlike__body,  # stmt*
+    (TryStar, '_body'):                       _get_slice_stmtlike__body,  # stmt*
+    (ExceptHandler, '_body'):                 _get_slice_stmtlike__body,  # stmt*
+    (match_case, '_body'):                    _get_slice_stmtlike__body,  # stmt*
 
     (Tuple, 'elts'):                          _get_slice_Tuple_elts,  # expr*
     (List, 'elts'):                           _get_slice_List_elts,  # expr*
@@ -2039,8 +2040,8 @@ _GET_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_ExceptHandlers, 'handlers'):            get_slice_stmtish,  # ExceptHandler*
-    (_match_cases, 'cases'):                  get_slice_stmtish,  # match_case*
+    (_ExceptHandlers, 'handlers'):            get_slice_stmtlike,  # ExceptHandler*
+    (_match_cases, 'cases'):                  get_slice_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):             _get_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _get_slice_decorator_list,  # expr*
     (_comprehensions, 'generators'):          _get_slice_generators,  # comprehensions*

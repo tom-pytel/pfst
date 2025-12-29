@@ -28,9 +28,9 @@ from .asttypes import (
     ASTS_LEAF_PATTERN,
     ASTS_LEAF_TYPE_PARAM,
     ASTS_LEAF_STMT_OR_MOD,
-    ASTS_LEAF_EXPRISH_ALL,
-    ASTS_LEAF_STMTISH,
-    ASTS_LEAF_STMTISH_OR_MOD,
+    ASTS_LEAF_EXPRLIKE_OP_OR_CTX,
+    ASTS_LEAF_STMTLIKE,
+    ASTS_LEAF_STMTLIKE_OR_MOD,
     ASTS_LEAF_BLOCK,
     ASTS_LEAF_BLOCK_OR_MOD,
     ASTS_LEAF_SCOPE,
@@ -820,7 +820,7 @@ class FST:
             if (indent := kwargs.get('indent')) is not None:
                 self.indent = indent
             elif (
-                (is_modish := (ast_or_src.__class__ in (Module, _ExceptHandlers, _match_cases)))
+                (is_modlike := (ast_or_src.__class__ in (Module, _ExceptHandlers, _match_cases)))
                 or ast_or_src.__class__ in ASTS_LEAF_BLOCK
             ):
                 self.indent = '?'
@@ -830,7 +830,7 @@ class FST:
         self._make_fst_tree()
 
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that, note that self.indent = '?' is used for checking
-            if is_modish:
+            if is_modlike:
                 asts = (getattr(ast_or_src, 'body', None) or
                         getattr(ast_or_src, 'handlers', None) or
                         getattr(ast_or_src, 'cases', None) or ())
@@ -2254,8 +2254,8 @@ class FST:
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
         if action == 'reparse':
-            allow_exact = self.a.__class__ in ASTS_LEAF_STMTISH
-            parent = root.find_contains_loc(ln, col, end_ln, end_col, allow_exact) or root  # we will get either the exact statement-ish node if the location matches otherwise a parent, always a parent if the node is not statement-ish
+            allow_exact = self.a.__class__ in ASTS_LEAF_STMTLIKE
+            parent = root.find_contains_loc(ln, col, end_ln, end_col, allow_exact) or root  # we will get either the exact statementlike node if the location matches otherwise a parent, always a parent if the node is not statementlike
 
             with parent._modifying(False, True):
                 return parent._reparse_raw(code, ln, col, end_ln, end_col)
@@ -3132,33 +3132,33 @@ class FST:
 
         return self
 
-    def parent_stmtish(self, self_: bool = False, mod: bool = True) -> FST | None:
+    def parent_stmtlike(self, self_: bool = False, mod: bool = True) -> FST | None:
         r"""The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
         `self_` is `True` then will check `self` first, otherwise only checks parents.
 
         **Returns:**
-        - `FST | None`: First `stmtish` or optionally `mod` parent if present, else `None`.
+        - `FST | None`: First `stmtlike` or optionally `mod` parent if present, else `None`.
 
         **Examples:**
 
         >>> (FST('try: pass\nexcept: pass', 'exec')
-        ...  .body[0].handlers[0].body[0].parent_stmtish())
+        ...  .body[0].handlers[0].body[0].parent_stmtlike())
         <ExceptHandler 1,0..1,12>
 
-        >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtish()
+        >>> FST('try: pass\nexcept: pass', 'exec').body[0].handlers[0].parent_stmtlike()
         <Try 0,0..1,12>
 
-        >>> FST('try: pass\nexcept: pass', 'exec').body[0].parent_stmtish()
+        >>> FST('try: pass\nexcept: pass', 'exec').body[0].parent_stmtlike()
         <Module ROOT 0,0..1,12>
 
-        >>> FST('match a:\n  case 1: pass').cases[0].body[0].parent_stmtish()
+        >>> FST('match a:\n  case 1: pass').cases[0].body[0].parent_stmtlike()
         <match_case 1,2..1,14>
 
-        >>> FST('match a:\n  case 1: pass').cases[0].pattern.parent_stmtish()
+        >>> FST('match a:\n  case 1: pass').cases[0].pattern.parent_stmtlike()
         <match_case 1,2..1,14>
         """
 
-        types = ASTS_LEAF_STMTISH_OR_MOD if mod else ASTS_LEAF_STMTISH
+        types = ASTS_LEAF_STMTLIKE_OR_MOD if mod else ASTS_LEAF_STMTLIKE
 
         if self_ and self.a.__class__ in types:
             return self
@@ -3299,7 +3299,7 @@ class FST:
         <keyword 0,14..0,17>
         """
 
-        types = ASTS_LEAF_EXPR if strict else ASTS_LEAF_EXPRISH_ALL  # ops because of maybe self_
+        types = ASTS_LEAF_EXPR if strict else ASTS_LEAF_EXPRLIKE_OP_OR_CTX  # ops and ctx because of maybe self_
 
         if self_ and self.a.__class__ not in types:
             return self
@@ -4031,16 +4031,16 @@ class FST:
         return self.a.__class__ in ASTS_LEAF_STMT_OR_MOD
 
     @property
-    def is_stmtish(self) -> bool:
+    def is_stmtlike(self) -> bool:
         """Is a `stmt`, `ExceptHandler` or `match_case` node."""
 
-        return self.a.__class__ in ASTS_LEAF_STMTISH
+        return self.a.__class__ in ASTS_LEAF_STMTLIKE
 
     @property
-    def is_stmtish_or_mod(self) -> bool:
+    def is_stmtlike_or_mod(self) -> bool:
         """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
 
-        return self.a.__class__ in ASTS_LEAF_STMTISH_OR_MOD
+        return self.a.__class__ in ASTS_LEAF_STMTLIKE_OR_MOD
 
     @property
     def is_block(self) -> bool:

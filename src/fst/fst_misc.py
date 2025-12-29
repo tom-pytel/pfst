@@ -17,7 +17,7 @@ from . import fst
 
 from .asttypes import (
     ASTS_LEAF_EXPR,
-    ASTS_LEAF_STMTISH,
+    ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_BLOCK,
     AST,
     AnnAssign,
@@ -2080,10 +2080,10 @@ def _getput_line_comment(
     ast = self.a
     ast_cls = ast.__class__
 
-    # TODO: most expressionish nodes can have line comments (sliceable ones, and even not if the are separated onto multiple lines and enclosed in parent or grouping pars)
+    # TODO: most expressionlike nodes can have line comments (sliceable ones, and even not if the are separated onto multiple lines and enclosed in parent or grouping pars)
 
-    if ast_cls not in ASTS_LEAF_STMTISH:
-        raise NotImplementedError('get / put line comment for non-statementish node')
+    if ast_cls not in ASTS_LEAF_STMTLIKE:
+        raise NotImplementedError('get / put line comment for non-statementlike node')
 
     if is_block := (ast_cls in ASTS_LEAF_BLOCK):
         if field is None:

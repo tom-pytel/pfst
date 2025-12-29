@@ -1664,7 +1664,7 @@ match a:
             self.assertRaises(ParseError, code_as_identifier_star, keyword)
             self.assertRaises(ParseError, code_as_identifier_alias, keyword)
 
-    def test_code_as_sanitize_exprish(self):
+    def test_code_as_sanitize_exprlike(self):
         CODE_ASES = [
             (code_as_expr, 'f(a)'),
             (code_as_expr_slice, 'b:c:d'),

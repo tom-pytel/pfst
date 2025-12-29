@@ -127,8 +127,8 @@ from .code import (
 )
 
 from .fst_misc import get_option_overridable, fixup_slice_indices
-from .slice_stmtish import put_slice_stmtish
-from .slice_exprish import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
+from .slice_stmtlike import put_slice_stmtlike
+from .slice_exprlike import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
 
 from .fst_get_slice import (
     _get_option_norm,
@@ -1099,7 +1099,7 @@ def _put_slice_Tuple_elts(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    """Tuple is used in many different ways in python, also for expressionish slices by us."""
+    """Tuple is used in many different ways in python, also for expressionlike slices by us."""
 
     ast = self.a
     body = ast.elts
@@ -2389,7 +2389,7 @@ def _put_slice__slice(
                             bound_ln, bound_col, bound_end_ln, bound_end_col, static.sep, static.self_tail_sep, options)
 
 
-def _put_slice_stmtish__body(
+def _put_slice_stmtlike__body(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'],
@@ -2398,58 +2398,58 @@ def _put_slice_stmtish__body(
     one: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Put a slice to a statementish virtual `_body` field which is just a `body` as if it didn't have a docstring."""
+    """Put a slice to a statementlike virtual `_body` field which is just a `body` as if it didn't have a docstring."""
 
     if self.has_docstr:
         start, stop = fixup_slice_indices(len(self.a.body), start, stop, 1)
 
-    return put_slice_stmtish(self, code, start, stop, 'body', one, options)
+    return put_slice_stmtlike(self, code, start, stop, 'body', one, options)
 
 
 _PUT_SLICE_HANDLERS = {
-    (Module, 'body'):                         put_slice_stmtish,  # stmt*
-    (Interactive, 'body'):                    put_slice_stmtish,  # stmt*
-    (FunctionDef, 'body'):                    put_slice_stmtish,  # stmt*
-    (AsyncFunctionDef, 'body'):               put_slice_stmtish,  # stmt*
-    (ClassDef, 'body'):                       put_slice_stmtish,  # stmt*
-    (For, 'body'):                            put_slice_stmtish,  # stmt*
-    (For, 'orelse'):                          put_slice_stmtish,  # stmt*
-    (AsyncFor, 'body'):                       put_slice_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                     put_slice_stmtish,  # stmt*
-    (While, 'body'):                          put_slice_stmtish,  # stmt*
-    (While, 'orelse'):                        put_slice_stmtish,  # stmt*
-    (If, 'body'):                             put_slice_stmtish,  # stmt*
-    (If, 'orelse'):                           put_slice_stmtish,  # stmt*
-    (With, 'body'):                           put_slice_stmtish,  # stmt*
-    (AsyncWith, 'body'):                      put_slice_stmtish,  # stmt*
-    (Try, 'body'):                            put_slice_stmtish,  # stmt*
-    (Try, 'orelse'):                          put_slice_stmtish,  # stmt*
-    (Try, 'finalbody'):                       put_slice_stmtish,  # stmt*
-    (TryStar, 'body'):                        put_slice_stmtish,  # stmt*
-    (TryStar, 'orelse'):                      put_slice_stmtish,  # stmt*
-    (TryStar, 'finalbody'):                   put_slice_stmtish,  # stmt*
-    (ExceptHandler, 'body'):                  put_slice_stmtish,  # stmt*
-    (match_case, 'body'):                     put_slice_stmtish,  # stmt*
+    (Module, 'body'):                         put_slice_stmtlike,  # stmt*
+    (Interactive, 'body'):                    put_slice_stmtlike,  # stmt*
+    (FunctionDef, 'body'):                    put_slice_stmtlike,  # stmt*
+    (AsyncFunctionDef, 'body'):               put_slice_stmtlike,  # stmt*
+    (ClassDef, 'body'):                       put_slice_stmtlike,  # stmt*
+    (For, 'body'):                            put_slice_stmtlike,  # stmt*
+    (For, 'orelse'):                          put_slice_stmtlike,  # stmt*
+    (AsyncFor, 'body'):                       put_slice_stmtlike,  # stmt*
+    (AsyncFor, 'orelse'):                     put_slice_stmtlike,  # stmt*
+    (While, 'body'):                          put_slice_stmtlike,  # stmt*
+    (While, 'orelse'):                        put_slice_stmtlike,  # stmt*
+    (If, 'body'):                             put_slice_stmtlike,  # stmt*
+    (If, 'orelse'):                           put_slice_stmtlike,  # stmt*
+    (With, 'body'):                           put_slice_stmtlike,  # stmt*
+    (AsyncWith, 'body'):                      put_slice_stmtlike,  # stmt*
+    (Try, 'body'):                            put_slice_stmtlike,  # stmt*
+    (Try, 'orelse'):                          put_slice_stmtlike,  # stmt*
+    (Try, 'finalbody'):                       put_slice_stmtlike,  # stmt*
+    (TryStar, 'body'):                        put_slice_stmtlike,  # stmt*
+    (TryStar, 'orelse'):                      put_slice_stmtlike,  # stmt*
+    (TryStar, 'finalbody'):                   put_slice_stmtlike,  # stmt*
+    (ExceptHandler, 'body'):                  put_slice_stmtlike,  # stmt*
+    (match_case, 'body'):                     put_slice_stmtlike,  # stmt*
 
-    (Match, 'cases'):                         put_slice_stmtish,  # match_case*
-    (Try, 'handlers'):                        put_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                    put_slice_stmtish,  # excepthandlerstar*
+    (Match, 'cases'):                         put_slice_stmtlike,  # match_case*
+    (Try, 'handlers'):                        put_slice_stmtlike,  # excepthandler*
+    (TryStar, 'handlers'):                    put_slice_stmtlike,  # excepthandlerstar*
 
-    (Module, '_body'):                        _put_slice_stmtish__body,  # stmt*  - without docstr
-    (Interactive, '_body'):                   _put_slice_stmtish__body,  # stmt*
-    (FunctionDef, '_body'):                   _put_slice_stmtish__body,  # stmt*
-    (AsyncFunctionDef, '_body'):              _put_slice_stmtish__body,  # stmt*
-    (ClassDef, '_body'):                      _put_slice_stmtish__body,  # stmt*
-    (For, '_body'):                           _put_slice_stmtish__body,  # stmt*
-    (AsyncFor, '_body'):                      _put_slice_stmtish__body,  # stmt*
-    (While, '_body'):                         _put_slice_stmtish__body,  # stmt*
-    (If, '_body'):                            _put_slice_stmtish__body,  # stmt*
-    (With, '_body'):                          _put_slice_stmtish__body,  # stmt*
-    (AsyncWith, '_body'):                     _put_slice_stmtish__body,  # stmt*
-    (Try, '_body'):                           _put_slice_stmtish__body,  # stmt*
-    (TryStar, '_body'):                       _put_slice_stmtish__body,  # stmt*
-    (ExceptHandler, '_body'):                 _put_slice_stmtish__body,  # stmt*
-    (match_case, '_body'):                    _put_slice_stmtish__body,  # stmt*
+    (Module, '_body'):                        _put_slice_stmtlike__body,  # stmt*  - without docstr
+    (Interactive, '_body'):                   _put_slice_stmtlike__body,  # stmt*
+    (FunctionDef, '_body'):                   _put_slice_stmtlike__body,  # stmt*
+    (AsyncFunctionDef, '_body'):              _put_slice_stmtlike__body,  # stmt*
+    (ClassDef, '_body'):                      _put_slice_stmtlike__body,  # stmt*
+    (For, '_body'):                           _put_slice_stmtlike__body,  # stmt*
+    (AsyncFor, '_body'):                      _put_slice_stmtlike__body,  # stmt*
+    (While, '_body'):                         _put_slice_stmtlike__body,  # stmt*
+    (If, '_body'):                            _put_slice_stmtlike__body,  # stmt*
+    (With, '_body'):                          _put_slice_stmtlike__body,  # stmt*
+    (AsyncWith, '_body'):                     _put_slice_stmtlike__body,  # stmt*
+    (Try, '_body'):                           _put_slice_stmtlike__body,  # stmt*
+    (TryStar, '_body'):                       _put_slice_stmtlike__body,  # stmt*
+    (ExceptHandler, '_body'):                 _put_slice_stmtlike__body,  # stmt*
+    (match_case, '_body'):                    _put_slice_stmtlike__body,  # stmt*
 
     (Tuple, 'elts'):                          _put_slice_Tuple_elts,  # expr*
     (List, 'elts'):                           _put_slice_List_elts,  # expr*
@@ -2498,8 +2498,8 @@ _PUT_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_ExceptHandlers, 'handlers'):            put_slice_stmtish,  # ExceptHandler*
-    (_match_cases, 'cases'):                  put_slice_stmtish,  # match_case*
+    (_ExceptHandlers, 'handlers'):            put_slice_stmtlike,  # ExceptHandler*
+    (_match_cases, 'cases'):                  put_slice_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):             _put_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _put_slice_decorator_list,  # expr*
     (_comprehensions, 'generators'):          _put_slice_generators,  # comprehensions*

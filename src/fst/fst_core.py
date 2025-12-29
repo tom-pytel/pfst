@@ -18,8 +18,8 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_EXPR_CONTEXT,
     ASTS_LEAF_EXPR_OR_PATTERN,
-    ASTS_LEAF_EXPRISH,
-    ASTS_LEAF_STMTISH,
+    ASTS_LEAF_EXPRLIKE,
+    ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_WITH,
     ASTS_LEAF_CMPOP_TWO_WORD,
@@ -302,7 +302,7 @@ class _Modifying:
                 self.field = field
                 self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-                while fst_.a.__class__ in ASTS_LEAF_EXPRISH:
+                while fst_.a.__class__ in ASTS_LEAF_EXPRLIKE:
                     parent = fst_.parent
                     pfield = fst_.pfield
 
@@ -1307,7 +1307,7 @@ def _get_block_indent(self: fst.FST) -> str:
     ' '
     """
 
-    while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTISH:
+    while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTLIKE:
         self = parent
 
     root = self.root
@@ -1383,7 +1383,7 @@ def _get_indentable_lns(
     lines = self.root._lines
     lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))  # start with all lines indentable and remove multiline strings which are not docstrings
 
-    while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTISH:
+    while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTLIKE:
         self = parent
 
     for f in (walking := self.walk()):  # find multiline strings and exclude their unindentable lines

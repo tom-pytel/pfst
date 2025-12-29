@@ -3586,10 +3586,10 @@ f'd{t"e{f=!s:0.1f<1}"=}'
                     self.assertIsNotNone(neltf.a)  # duh
                     self.assertIsNone(delt.f)  # UNMADE
 
-                    if delt.__class__ not in ASTS_LEAF_STMTISH:
-                        self.assertIs(neltf, deltf)  # FST not changed unless stmtish list (due to older code)
+                    if delt.__class__ not in ASTS_LEAF_STMTLIKE:
+                        self.assertIs(neltf, deltf)  # FST not changed unless stmtlike list (due to older code)
                     else:
-                        self.assertIsNot(neltf, deltf)  # FSTs of stmtish list fields get changed (currently)
+                        self.assertIsNot(neltf, deltf)  # FSTs of stmtlike list fields get changed (currently)
                         self.assertIsNone(deltf.a)  # UNMADE
 
                     if is_list:

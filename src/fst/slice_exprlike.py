@@ -1,4 +1,4 @@
-"""Low level get and put slice expression-ish slices."""
+"""Low level get and put slice expressionlike slices."""
 
 # TODO: High level. On first create it was assumed the simpler needs and interface of `get_slice_sep()` compared with
 # `put_slice_sep()` would make things easier for slice gets. It did, but since the work had do be done for
@@ -110,7 +110,7 @@ def _fixup_self_tail_sep_del(
 
 
 def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start: int, locfunc: _LocFunc) -> str | None:
-    """Get first exprish element indentation found for an element which starts its own line. The FULL indentation, not
+    """Get first exprlike element indentation found for an element which starts its own line. The FULL indentation, not
     the element indentation with respect to container indentation. We just return the indentation of one element instead
     of trying to figure out which indent is used most for both performance and were-just-not-gonna-deal-with-that-crap
     reasons.

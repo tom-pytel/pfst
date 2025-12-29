@@ -8,7 +8,7 @@ from random import seed, shuffle
 
 from fst import *
 
-from fst.asttypes import ASTS_LEAF_STMTISH
+from fst.asttypes import ASTS_LEAF_STMTLIKE
 from fst.astutil import compare_asts
 from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 from fst.fst_misc import new_empty_set_curlies
@@ -172,7 +172,7 @@ class TestFSTSlice(unittest.TestCase):
     b
 ]           '''.strip())
 
-    def test_cut_stmtish_special(self):
+    def test_cut_stmtlike_special(self):
         a = parse('''
 # prepre
 
@@ -483,7 +483,7 @@ match a:
 
         self.assertEqual(a.f.src, '''match a:''')
 
-    def test_cut_and_del_stmtish_special(self):  # TODO: legacy, do better when possible
+    def test_cut_and_del_stmtlike_special(self):  # TODO: legacy, do better when possible
         fst = parse('''
 match a:
     case 1:  # CASE
@@ -1284,13 +1284,13 @@ def func():
 '''     ):
 
             ast  = parse(src.strip())
-            asts = [a for a in walk(ast) if a.__class__ in ASTS_LEAF_STMTISH]
+            asts = [a for a in walk(ast) if a.__class__ in ASTS_LEAF_STMTLIKE]
 
             for a in asts[::-1]:
                 a.f.cut(norm=False)
 
             ast  = parse(src.strip())
-            asts = [a for a in walk(ast) if a.__class__ in ASTS_LEAF_STMTISH]
+            asts = [a for a in walk(ast) if a.__class__ in ASTS_LEAF_STMTLIKE]
 
             for a in asts[::-1]:
                 field, idx = a.f.pfield
@@ -5613,7 +5613,7 @@ def f() -> int: \\
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
     def test__elif_to_else_if(self):
-        from fst.slice_stmtish import _elif_to_else_if
+        from fst.slice_stmtlike import _elif_to_else_if
 
         a = parse('''
 if 1: pass

@@ -106,7 +106,7 @@ from .asttypes import (
 from .astutil import constant, bistr, copy_ast
 from .common import FTSTRING_END_TOKENS, PYGE13, NodeError, pyver
 from .fst_misc import fixup_one_index
-from .slice_stmtish import get_slice_stmtish
+from .slice_stmtlike import get_slice_stmtlike
 
 
 _GetOneRet = Union['fst.FST', None, str, constant]
@@ -193,7 +193,7 @@ def _get_one_arglikes(self: fst.FST, idx: int | None, field: str, cut: bool, opt
     return fst_
 
 
-def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+def _get_one_stmtlike(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     if field == '_body':
         field = 'body'
         start_at = self.has_docstr
@@ -202,7 +202,7 @@ def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 
     _, idx = _validate_get(self, idx, field, start_at)
 
-    return get_slice_stmtish(self, idx, idx + 1, field, cut, options, one=True)
+    return get_slice_stmtlike(self, idx, idx + 1, field, cut, options, one=True)
 
 
 def _get_one_Compare(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
@@ -424,27 +424,27 @@ def _get_one_JoinedStr_TemplateStr_values(
 
 
 _GET_ONE_HANDLERS = {
-    (Module, 'body'):                     _get_one_stmtish,  # stmt*
-    (Interactive, 'body'):                _get_one_stmtish,  # stmt*
+    (Module, 'body'):                     _get_one_stmtlike,  # stmt*
+    (Interactive, 'body'):                _get_one_stmtlike,  # stmt*
     (Expression, 'body'):                 _get_one_default,  # expr
     (FunctionDef, 'decorator_list'):      _get_one_default,  # expr*
     (FunctionDef, 'name'):                _get_one_identifier,  # identifier
     (FunctionDef, 'type_params'):         _get_one_default,  # type_param*
     (FunctionDef, 'args'):                _get_one_arguments,  # arguments
     (FunctionDef, 'returns'):             _get_one_default,  # expr?
-    (FunctionDef, 'body'):                _get_one_stmtish,  # stmt*
+    (FunctionDef, 'body'):                _get_one_stmtlike,  # stmt*
     (AsyncFunctionDef, 'decorator_list'): _get_one_default,  # expr*
     (AsyncFunctionDef, 'name'):           _get_one_identifier,  # identifier
     (AsyncFunctionDef, 'type_params'):    _get_one_default,  # type_param*
     (AsyncFunctionDef, 'args'):           _get_one_arguments,  # arguments
     (AsyncFunctionDef, 'returns'):        _get_one_default,  # expr?
-    (AsyncFunctionDef, 'body'):           _get_one_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):           _get_one_stmtlike,  # stmt*
     (ClassDef, 'decorator_list'):         _get_one_default,  # expr*
     (ClassDef, 'name'):                   _get_one_identifier,  # identifier
     (ClassDef, 'type_params'):            _get_one_default,  # type_param*
     (ClassDef, 'bases'):                  _get_one_arglike,  # expr*
     (ClassDef, 'keywords'):               _get_one_default,  # keyword*
-    (ClassDef, 'body'):                   _get_one_stmtish,  # stmt*
+    (ClassDef, 'body'):                   _get_one_stmtlike,  # stmt*
     (Return, 'value'):                    _get_one_default,  # expr?
     (Delete, 'targets'):                  _get_one_default,  # expr*
     (Assign, 'targets'):                  _get_one_default,  # expr*
@@ -461,34 +461,34 @@ _GET_ONE_HANDLERS = {
     (AnnAssign, 'simple'):                _get_one_constant,  # int
     (For, 'target'):                      _get_one_default,  # expr
     (For, 'iter'):                        _get_one_default,  # expr
-    (For, 'body'):                        _get_one_stmtish,  # stmt*
-    (For, 'orelse'):                      _get_one_stmtish,  # stmt*
+    (For, 'body'):                        _get_one_stmtlike,  # stmt*
+    (For, 'orelse'):                      _get_one_stmtlike,  # stmt*
     (AsyncFor, 'target'):                 _get_one_default,  # expr
     (AsyncFor, 'iter'):                   _get_one_default,  # expr
-    (AsyncFor, 'body'):                   _get_one_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                 _get_one_stmtish,  # stmt*
+    (AsyncFor, 'body'):                   _get_one_stmtlike,  # stmt*
+    (AsyncFor, 'orelse'):                 _get_one_stmtlike,  # stmt*
     (While, 'test'):                      _get_one_default,  # expr
-    (While, 'body'):                      _get_one_stmtish,  # stmt*
-    (While, 'orelse'):                    _get_one_stmtish,  # stmt*
+    (While, 'body'):                      _get_one_stmtlike,  # stmt*
+    (While, 'orelse'):                    _get_one_stmtlike,  # stmt*
     (If, 'test'):                         _get_one_default,  # expr
-    (If, 'body'):                         _get_one_stmtish,  # stmt*
-    (If, 'orelse'):                       _get_one_stmtish,  # stmt*
+    (If, 'body'):                         _get_one_stmtlike,  # stmt*
+    (If, 'orelse'):                       _get_one_stmtlike,  # stmt*
     (With, 'items'):                      _get_one_default,  # withitem*
-    (With, 'body'):                       _get_one_stmtish,  # stmt*
+    (With, 'body'):                       _get_one_stmtlike,  # stmt*
     (AsyncWith, 'items'):                 _get_one_default,  # withitem*
-    (AsyncWith, 'body'):                  _get_one_stmtish,  # stmt*
+    (AsyncWith, 'body'):                  _get_one_stmtlike,  # stmt*
     (Match, 'subject'):                   _get_one_default,  # expr
-    (Match, 'cases'):                     _get_one_stmtish,  # match_case*
+    (Match, 'cases'):                     _get_one_stmtlike,  # match_case*
     (Raise, 'exc'):                       _get_one_default,  # expr?
     (Raise, 'cause'):                     _get_one_default,  # expr?
-    (Try, 'body'):                        _get_one_stmtish,  # stmt*
-    (Try, 'handlers'):                    _get_one_stmtish,  # excepthandler*
-    (Try, 'orelse'):                      _get_one_stmtish,  # stmt*
-    (Try, 'finalbody'):                   _get_one_stmtish,  # stmt*
-    (TryStar, 'body'):                    _get_one_stmtish,  # stmt*
-    (TryStar, 'handlers'):                _get_one_stmtish,  # excepthandler*
-    (TryStar, 'orelse'):                  _get_one_stmtish,  # stmt*
-    (TryStar, 'finalbody'):               _get_one_stmtish,  # stmt*
+    (Try, 'body'):                        _get_one_stmtlike,  # stmt*
+    (Try, 'handlers'):                    _get_one_stmtlike,  # excepthandler*
+    (Try, 'orelse'):                      _get_one_stmtlike,  # stmt*
+    (Try, 'finalbody'):                   _get_one_stmtlike,  # stmt*
+    (TryStar, 'body'):                    _get_one_stmtlike,  # stmt*
+    (TryStar, 'handlers'):                _get_one_stmtlike,  # excepthandler*
+    (TryStar, 'orelse'):                  _get_one_stmtlike,  # stmt*
+    (TryStar, 'finalbody'):               _get_one_stmtlike,  # stmt*
     (Assert, 'test'):                     _get_one_default,  # expr
     (Assert, 'msg'):                      _get_one_default,  # expr?
     (Import, 'names'):                    _get_one_default,  # alias*
@@ -569,7 +569,7 @@ _GET_ONE_HANDLERS = {
     (comprehension, 'is_async'):          _get_one_constant,  # int
     (ExceptHandler, 'type'):              _get_one_default,  # expr?
     (ExceptHandler, 'name'):              _get_one_identifier,  # identifier?
-    (ExceptHandler, 'body'):              _get_one_stmtish,  # stmt*
+    (ExceptHandler, 'body'):              _get_one_stmtlike,  # stmt*
     (arguments, 'posonlyargs'):           _get_one_default,  # arg*
     (arguments, 'args'):                  _get_one_default,  # arg*
     (arguments, 'defaults'):              _get_one_default,  # expr*
@@ -587,7 +587,7 @@ _GET_ONE_HANDLERS = {
     (withitem, 'optional_vars'):          _get_one_default,  # expr?
     (match_case, 'pattern'):              _get_one_default,  # pattern
     (match_case, 'guard'):                _get_one_default,  # expr?
-    (match_case, 'body'):                 _get_one_stmtish,  # stmt*
+    (match_case, 'body'):                 _get_one_stmtlike,  # stmt*
     (MatchValue, 'value'):                _get_one_default,  # expr
     (MatchSingleton, 'value'):            _get_one_constant,  # constant
     (MatchSequence, 'patterns'):          _get_one_default,  # pattern*
@@ -611,24 +611,24 @@ _GET_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               _get_one_identifier,  # identifier
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
 
-    (Module, '_body'):                    _get_one_stmtish,  # stmt*  - without docstr
-    (Interactive, '_body'):               _get_one_stmtish,  # stmt*
-    (FunctionDef, '_body'):               _get_one_stmtish,  # stmt*
-    (AsyncFunctionDef, '_body'):          _get_one_stmtish,  # stmt*
-    (ClassDef, '_body'):                  _get_one_stmtish,  # stmt*
-    (For, '_body'):                       _get_one_stmtish,  # stmt*
-    (AsyncFor, '_body'):                  _get_one_stmtish,  # stmt*
-    (While, '_body'):                     _get_one_stmtish,  # stmt*
-    (If, '_body'):                        _get_one_stmtish,  # stmt*
-    (With, '_body'):                      _get_one_stmtish,  # stmt*
-    (AsyncWith, '_body'):                 _get_one_stmtish,  # stmt*
-    (Try, '_body'):                       _get_one_stmtish,  # stmt*
-    (TryStar, '_body'):                   _get_one_stmtish,  # stmt*
-    (ExceptHandler, '_body'):             _get_one_stmtish,  # stmt*
-    (match_case, '_body'):                _get_one_stmtish,  # stmt*
+    (Module, '_body'):                    _get_one_stmtlike,  # stmt*  - without docstr
+    (Interactive, '_body'):               _get_one_stmtlike,  # stmt*
+    (FunctionDef, '_body'):               _get_one_stmtlike,  # stmt*
+    (AsyncFunctionDef, '_body'):          _get_one_stmtlike,  # stmt*
+    (ClassDef, '_body'):                  _get_one_stmtlike,  # stmt*
+    (For, '_body'):                       _get_one_stmtlike,  # stmt*
+    (AsyncFor, '_body'):                  _get_one_stmtlike,  # stmt*
+    (While, '_body'):                     _get_one_stmtlike,  # stmt*
+    (If, '_body'):                        _get_one_stmtlike,  # stmt*
+    (With, '_body'):                      _get_one_stmtlike,  # stmt*
+    (AsyncWith, '_body'):                 _get_one_stmtlike,  # stmt*
+    (Try, '_body'):                       _get_one_stmtlike,  # stmt*
+    (TryStar, '_body'):                   _get_one_stmtlike,  # stmt*
+    (ExceptHandler, '_body'):             _get_one_stmtlike,  # stmt*
+    (match_case, '_body'):                _get_one_stmtlike,  # stmt*
 
-    (_ExceptHandlers, 'handlers'):        _get_one_stmtish,  # ExceptHandler*
-    (_match_cases, 'cases'):              _get_one_stmtish,  # match_case*
+    (_ExceptHandlers, 'handlers'):        _get_one_stmtlike,  # ExceptHandler*
+    (_match_cases, 'cases'):              _get_one_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
     (_decorator_list, 'decorator_list'):  _get_one_default,  # expr*
     (_comprehensions, 'generators'):      _get_one_default,  # comprehension*
@@ -668,7 +668,7 @@ def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Map
     if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
         raise NodeError(f'cannot get from {self.a.__class__.__name__}.{field}')
 
-    if handler is _get_one_stmtish:
+    if handler is _get_one_stmtlike:
         if cut:  # this one does its own cut (because of evil semicolons), so maybe need _modifying()
             with self._modifying(field):
                 return handler(self, idx, field, cut, options)

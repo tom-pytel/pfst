@@ -354,7 +354,7 @@ def add_lineconts(fst: FST) -> None:
     g = None
 
     for f in (gen := fst.walk('loc')):
-        if f.is_stmtish or f.is_mod:
+        if f.is_stmtlike or f.is_mod:
             continue
 
         if (isinstance(a := f.a, (JoinedStr, TemplateStr))
@@ -837,7 +837,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
                     break
 
-                if not isinstance(a, expr):  # ASTS_EXPRISH?
+                if not isinstance(a, expr):  # ASTS_EXPRLIKE?
                     break
 
             if not allowed or not isinstance(repla, allowed):
@@ -948,7 +948,7 @@ def can_replace_ast(
 
         #             break
 
-        #         if not isinstance(a, expr):  # ASTS_EXPRISH?
+        #         if not isinstance(a, expr):  # ASTS_EXPRLIKE?
         #             break
 
         #     if not allowed or not isinstance(repla, allowed):
@@ -1283,7 +1283,7 @@ class Reparse(Fuzzy):
 class ReputOne(Fuzzy):
     from fst.fst_put_one import (
         _PUT_ONE_HANDLERS,
-        _put_one_exprish_optional,
+        _put_one_exprlike_optional,
         _put_one_identifier_optional,
         _put_one_Dict_keys,
         _put_one_withitem_optional_vars,
@@ -1363,7 +1363,7 @@ class ReputOne(Fuzzy):
 
                 # NODES
 
-                delete = self.DELETE and handler in (ReputOne._put_one_exprish_optional, ReputOne._put_one_Dict_keys,
+                delete = self.DELETE and handler in (ReputOne._put_one_exprlike_optional, ReputOne._put_one_Dict_keys,
                                                      ReputOne._put_one_withitem_optional_vars)
                 if self.debug:
                     print(f'\n... ... {g=}, {idx=}, {field=}, {g.parent=}, {delete=}, {g.src=}')
@@ -1950,27 +1950,27 @@ class ReconcileRnd(Fuzzy):
             print(fst.src)
 
 
-class SliceStmtish(Fuzzy):
-    """Test moving around stmtishs, empty bodies, fstview, stmtish FST identity stability and unmarking deleted FSTs."""
+class SliceStmtlike(Fuzzy):
+    """Test moving around stmtlikes, empty bodies, fstview, stmtlike FST identity stability and unmarking deleted FSTs."""
 
-    name = 'slice_stmtish'
+    name = 'slice_stmtlike'
     forever = True
 
     @staticmethod
-    def do_move(stmtish: FST, stmtish_container: fstview, dst_container: fstview):
-        if random() < 0.5:  # single element stmtish to container
-            s = stmtish.cut()
+    def do_move(stmtlike: FST, stmtlike_container: fstview, dst_container: fstview):
+        if random() < 0.5:  # single element stmtlike to container
+            s = stmtlike.cut()
 
             if len(dst_container):
                 r = choice(dst_container).replace(s)
             else:
                 r = dst_container.append(s)[0]
 
-            assert s is stmtish
-            assert r is stmtish
+            assert s is stmtlike
+            assert r is stmtlike
 
-        else:  # slice stmtish to dst_container
-            len_stmtish = len(stmtish_container)
+        else:  # slice stmtlike to dst_container
+            len_stmtlike = len(stmtlike_container)
             len_dst = len(dst_container)
 
             if random() < 0.5 or not dst_container:
@@ -1979,12 +1979,12 @@ class SliceStmtish(Fuzzy):
                 to_start = randint(0, len_dst - 1)
                 to_stop = randint(to_start + 1, len_dst)
 
-            from_start = randint(0, len_stmtish - 1)
-            from_stop = randint(from_start + 1, len_stmtish)
-            from_start_ = from_start if from_start >= len_stmtish or randint(0, 1) else from_start - len_stmtish  # randomly change index to negative (referring to same location)
-            from_stop_ = from_stop if from_stop >= len_stmtish or randint(0, 1) else from_stop - len_stmtish
+            from_start = randint(0, len_stmtlike - 1)
+            from_stop = randint(from_start + 1, len_stmtlike)
+            from_start_ = from_start if from_start >= len_stmtlike or randint(0, 1) else from_start - len_stmtlike  # randomly change index to negative (referring to same location)
+            from_stop_ = from_stop if from_stop >= len_stmtlike or randint(0, 1) else from_stop - len_stmtlike
 
-            fs = stmtish_container[from_start_ : from_stop_]
+            fs = stmtlike_container[from_start_ : from_stop_]
 
             org_fsts = list(fs)
             cut = fs.cut()
@@ -2023,13 +2023,13 @@ class SliceStmtish(Fuzzy):
             # if not PYLT11:
             #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
-            stmtishs = []
+            stmtlikes = []
 
             for f in fst.walk():
                 if fstcat(f) in containers:
-                    stmtishs.append(f)
+                    stmtlikes.append(f)
 
-            if not stmtishs:
+            if not stmtlikes:
                 return
 
             if self.debug:
@@ -2046,19 +2046,19 @@ class SliceStmtish(Fuzzy):
                             sys.stdout.write('.'); sys.stdout.flush()
 
                         for _ in range(10):
-                            while stmtishs:
-                                if (stmtish := stmtishs[i := randint(0, len(stmtishs) - 1)]).a is None:  # if removed completely then forget about it
-                                    del stmtishs[i]
+                            while stmtlikes:
+                                if (stmtlike := stmtlikes[i := randint(0, len(stmtlikes) - 1)]).a is None:  # if removed completely then forget about it
+                                    del stmtlikes[i]
                                 else:
                                     break
 
                             else:
                                 raise RuntimeError('this should not happen')
 
-                            container = containers[cat := fstcat(stmtish)]
+                            container = containers[cat := fstcat(stmtlike)]
                             container = containers[cat] = getattr(container.base, container.field)  # remake the container because its size can be wrong
 
-                            if any(p is container.base for p in stmtish.parents()):
+                            if any(p is container.base for p in stmtlike.parents()):
                                 continue
 
                             break
@@ -2066,20 +2066,20 @@ class SliceStmtish(Fuzzy):
                         else:
                             continue
 
-                        stmtish_container = getattr(stmtish.parent, stmtish.pfield.name)
+                        stmtlike_container = getattr(stmtlike.parent, stmtlike.pfield.name)
 
                         # from source to temporary container
 
-                        self.do_move(stmtish, stmtish_container, container)
+                        self.do_move(stmtlike, stmtlike_container, container)
 
                         # refresh containers because of node operations
 
-                        stmtish_container = getattr(stmtish_container.base, stmtish_container.field)
+                        stmtlike_container = getattr(stmtlike_container.base, stmtlike_container.field)
                         container = getattr(container.base, container.field)
 
                         # from temporary container to source
 
-                        self.do_move(choice(container), container, stmtish_container)
+                        self.do_move(choice(container), container, stmtlike_container)
 
                         if self.verify:
                             fst.verify()
@@ -2104,10 +2104,10 @@ class SliceStmtish(Fuzzy):
                     print(fst.src)
 
 
-class SliceExprish(Fuzzy):
-    """Test moving around exprish slices, empty bodies, exprish FST identity stability and unmarking deleted FSTs."""
+class SliceExprlike(Fuzzy):
+    """Test moving around exprlike slices, empty bodies, exprlike FST identity stability and unmarking deleted FSTs."""
 
-    name = 'slice_exprish'
+    name = 'slice_exprlike'
     forever = True
 
     class Bucket(NamedTuple):
@@ -2151,8 +2151,8 @@ class SliceExprish(Fuzzy):
         src_stop = randint(src_start, src_len)
         dst_start = randint(0, dst_len)
         dst_stop = randint(dst_start, dst_len)
-        src_trivia = SliceExprish.rnd_trivia()
-        dst_trivia = SliceExprish.rnd_trivia()
+        src_trivia = SliceExprlike.rnd_trivia()
+        dst_trivia = SliceExprlike.rnd_trivia()
 
         while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
             if dst_stop != dst_start:  # first reduce size being overwritten if possible
@@ -2329,7 +2329,7 @@ class SliceExprish(Fuzzy):
                 'type_params': self.Bucket('type_params', None, 0, 0, False, FST('', '_type_params')),
             })
 
-        exprishs = []  # [('cat', FST), ...]
+        exprlikes = []  # [('cat', FST), ...]
 
         for f in (gen := fst.walk()):
             if PYLT12 and isinstance(f.a, JoinedStr):
@@ -2340,9 +2340,9 @@ class SliceExprish(Fuzzy):
             if cat := self.cat(f):
                 for c in cat:
                     if c in buckets:
-                        exprishs.append((c, f))
+                        exprlikes.append((c, f))
 
-        if not exprishs:
+        if not exprlikes:
             return
 
         try:
@@ -2355,11 +2355,11 @@ class SliceExprish(Fuzzy):
                         sys.stdout.write('.'); sys.stdout.flush()
 
                     for _ in range(10):
-                        while exprishs:
-                            cat, exprish = exprishs[i := randint(0, len(exprishs) - 1)]
+                        while exprlikes:
+                            cat, exprlike = exprlikes[i := randint(0, len(exprlikes) - 1)]
 
-                            if exprish.a is None:  # if removed completely then forget about it
-                                del exprishs[i]
+                            if exprlike.a is None:  # if removed completely then forget about it
+                                del exprlikes[i]
                             else:
                                 break
 
@@ -2368,8 +2368,8 @@ class SliceExprish(Fuzzy):
 
                         bucket = buckets[cat]
 
-                        # if exprish.root is bucket.fst:
-                        if exprish.root is not fst:
+                        # if exprlike.root is bucket.fst:
+                        if exprlike.root is not fst:
                             continue
 
                         break
@@ -2378,12 +2378,12 @@ class SliceExprish(Fuzzy):
                         continue
 
                     with FST.options(norm=False):
-                        self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
+                        self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprlike, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
 
                         if self.verify:
                             fst.verify()
 
-                        self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
+                        self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprlike, bucket.min_tmp, bucket.min_script, bucket.one)
 
                         if self.verify:
                             fst.verify()
@@ -2406,14 +2406,14 @@ class SliceExprish(Fuzzy):
             fst.verify()
 
         finally:
-            for _, f in exprishs:
+            for _, f in exprlikes:
                 try:
                     if f.is_alive:
                         f._unmake_fst_tree()
                 except Exception:
                     pass
 
-            del exprishs
+            del exprlikes
 
             for bucket in buckets.values():
                 try:

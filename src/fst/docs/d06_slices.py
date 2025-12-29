@@ -518,14 +518,14 @@ del a, (x, y), d
 
 "Trivia" refers to the parts of the source code which don't actually code for anything like comments and whitespace. The
 whole point of the `fst` module is to preserve this stuff while editing some parts of the code. Trivia can be gotten and
-put in all slice operations and single element operations on statement-ish nodes but not single operations on
-expression-ish elements (for now).
+put in all slice operations and single element operations on statementlike nodes but not single operations on
+expressionlike elements (for now).
 
-**Note:** Statement-ish refers to statement nodes, `match_case`, `ExceptHandler` and their special slice containers and
-`mod` nodes. Expression-ish is everything else.
+**Note:** Statementlike refers to statement nodes, `match_case`, `ExceptHandler` and their special slice containers and
+`mod` nodes. Expressionlike is most of everything else.
 
-When getting a slice or statement-ish node you can specify comments and empty lines to copy and / or cut as well as
-specifying those to be overwritten on a slice or statement-ish put. The option to specify this is `trivia` and it can
+When getting a slice or statementlike node you can specify comments and empty lines to copy and / or cut as well as
+specifying those to be overwritten on a slice or statementlike put. The option to specify this is `trivia` and it can
 specify just the leading trivia or both the leading and trailing.
 
 Leading trivia can specify a leading comment block, all leading comments and a maximum number of empty lines before that
@@ -671,7 +671,7 @@ If you want the space then use a plus `'+'` instead of the minus `'+'`.
 The plus instead of the minus only means return the empty space that was cut. In all cases the space is removed from the
 target.
 
-All of this applies to all statement-ish operations but also expression-ish slice operations as well.
+All of this applies to all statementlike operations but also expressionlike slice operations as well.
 
 >>> node = FST('''[
 ... pre_expr,
