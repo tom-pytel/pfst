@@ -39,8 +39,6 @@ __all__ = [
     'prev_bound',
     'next_bound_step',
     'prev_bound_step',
-    'next_bound_step_own_loc',
-    'prev_bound_step_own_loc',
 ]
 
 
@@ -81,6 +79,8 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
 # ----------------------------------------------------------------------------------------------------------------------
 # Internal "public"
 
+# TODO: make these private members or get rid of them?
+
 def next_bound(self: fst.FST) -> tuple[int, int]:
     """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
     self then return end of parent. If no parent then return end of source."""
@@ -101,8 +101,8 @@ def prev_bound(self: fst.FST) -> tuple[int, int]:
         return prev.bloc[2:]
     elif parent := self.parent:
         return parent.bloc[:2]
-    else:
-        return 0, 0
+
+    return 0, 0
 
 
 def next_bound_step(self: fst.FST) -> tuple[int, int]:
@@ -119,39 +119,6 @@ def prev_bound_step(self: fst.FST) -> tuple[int, int]:
 
     if prev := self.step_back('loc', False):
         return prev.bloc[2:]
-
-    return 0, 0
-
-
-def next_bound_step_own_loc(self: fst.FST) -> tuple[int, int]:
-    """Get a next bound for search before any following ASTs for this object using `step_fwd()`. This is safe to call
-    for nodes that live inside nodes without their own locations. Recurse into nodes with non-own locations (even though
-    those nodes are not returned) to find nodes with own location. This is only meant for internal use to safely call
-    from `.loc` location calculation."""
-
-    if next := self.step_fwd(True, False):
-        if next.has_own_loc:
-            return next.bloc[:2]
-
-        while (next := next.step_fwd(True)):
-            if next.has_own_loc:
-                return next.bloc[:2]
-
-    return len(ls := self.root._lines) - 1, len(ls[-1])
-
-
-def prev_bound_step_own_loc(self: fst.FST) -> tuple[int, int]:
-    """Get a prev bound for search after any previous ASTs for this object using `step_back()`. Recurse into nodes with
-    non-own locations (even though those nodes are not returned) to find nodes with own location. This is only meant for
-    internal use to safely call from `.loc` location calculation."""
-
-    if prev := self.step_back(True, False):
-        if prev.has_own_loc:
-            return prev.bloc[2:]
-
-        while (prev := prev.step_back(True)):
-            if prev.has_own_loc:
-                return prev.bloc[2:]
 
     return 0, 0
 

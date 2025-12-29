@@ -31,13 +31,46 @@ from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 
 from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re
 
-from .fst_traverse import next_bound, prev_bound, next_bound_step_own_loc, prev_bound_step_own_loc
+from .fst_traverse import next_bound, prev_bound
 
 
 _re_deco_start         = re.compile(r'[ \t]*@')
 
 _re_keyword_import     = re.compile(r'\bimport\b')  # we end with a '\b' because we need exactly this word and there may be other similar ones between `from` and `import`
 _re_keyword_with_start = re.compile(r'\bwith')  # we do not end with '\b' because the search using this may be checking source where the `with` is joined with a following `withitem` and there are no other words between `async` and `with`
+
+
+def _next_bound_step_own_loc(self: fst.FST) -> tuple[int, int]:
+    """Get a next bound for search before any following ASTs for this object using `step_fwd()`. This is safe to call
+    for nodes that live inside nodes without their own locations. Recurse into nodes with non-own locations (even though
+    those nodes are not returned) to find nodes with own location. This is only meant for internal use to safely call
+    from `.loc` location calculation."""
+
+    if next := self.step_fwd(True, False):
+        if next.has_own_loc:
+            return next.bloc[:2]
+
+        while (next := next.step_fwd(True)):
+            if next.has_own_loc:
+                return next.bloc[:2]
+
+    return len(ls := self.root._lines) - 1, len(ls[-1])
+
+
+def _prev_bound_step_own_loc(self: fst.FST) -> tuple[int, int]:
+    """Get a prev bound for search after any previous ASTs for this object using `step_back()`. Recurse into nodes with
+    non-own locations (even though those nodes are not returned) to find nodes with own location. This is only meant for
+    internal use to safely call from `.loc` location calculation."""
+
+    if prev := self.step_back(True, False):
+        if prev.has_own_loc:
+            return prev.bloc[2:]
+
+        while (prev := prev.step_back(True)):
+            if prev.has_own_loc:
+                return prev.bloc[2:]
+
+    return 0, 0
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -161,7 +194,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
     if ast.is_async:
         start_ln, start_col = prev_find(lines, ln, col, start_ln, start_col, 'async')  # must be there
 
-    rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound_step_own_loc(self))
+    rpars = next_delims(lines, last.end_ln, last.end_col, *_next_bound_step_own_loc(self))
 
     if (lrpars := len(rpars)) == 1:  # no pars, just use end of last
         end_ln, end_col = rpars[0]
@@ -195,12 +228,12 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     ce_ln, ce_col, ce_end_ln, ce_end_col = ce_loc = ce.loc
 
     if not (ov := ast.optional_vars):
-        rpars = next_delims(lines, ce_end_ln, ce_end_col, *next_bound_step_own_loc(self))
+        rpars = next_delims(lines, ce_end_ln, ce_end_col, *_next_bound_step_own_loc(self))
 
         if (lrpars := len(rpars)) == 1:
             return ce_loc
 
-        lpars = prev_delims(lines, *prev_bound_step_own_loc(self), ce_ln, ce_col)
+        lpars = prev_delims(lines, *_prev_bound_step_own_loc(self), ce_ln, ce_col)
         npars = min(lrpars, len(lpars)) - 1
 
         return fstloc(*lpars[npars], *rpars[npars])
@@ -214,7 +247,7 @@ def _loc_withitem(self: fst.FST) -> fstloc:
         col = ce_col
 
     else:
-        lpars = prev_delims(lines, *prev_bound_step_own_loc(self), ce_ln, ce_col)
+        lpars = prev_delims(lines, *_prev_bound_step_own_loc(self), ce_ln, ce_col)
         ln, col = lpars[min(lrpars, len(lpars)) - 1]
 
     lpars = prev_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
@@ -222,7 +255,7 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     if (llpars := len(lpars)) == 1:
         return fstloc(ln, col, ov_end_ln, ov_end_col)
 
-    rpars = next_delims(lines, ov_end_ln, ov_end_col, *next_bound_step_own_loc(self))
+    rpars = next_delims(lines, ov_end_ln, ov_end_col, *_next_bound_step_own_loc(self))
     end_ln, end_col = rpars[min(llpars, len(rpars)) - 1]
 
     return fstloc(ln, col, end_ln, end_col)
