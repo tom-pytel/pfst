@@ -2034,7 +2034,7 @@ def _put_src(
 def _sanitize(self: fst.FST) -> fst.FST:  # -> self
     """Remove any leading or trailing junk which is not part of the location or parenthesized location of the node."""
 
-    assert self.is_root
+    assert not self.parent  # self.is_root
 
     if not (loc := self.pars()) or loc == self.whole_loc:
         return self

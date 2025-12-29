@@ -13,6 +13,7 @@ from typing import Any, Mapping, Union
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_FTSTR_FMT_VALUE,
     AST,
     And,
     AnnAssign,
@@ -409,7 +410,7 @@ def _get_one_JoinedStr_TemplateStr_values(
         #     ret._dedent_lns(indent, skip=1, docstr=False)
 
     else:
-        assert child_cls in (FormattedValue, Interpolation)
+        assert child_cls in ASTS_LEAF_FTSTR_FMT_VALUE  # (FormattedValue, Interpolation)
 
         typ = 'f' if child_cls is FormattedValue else 't'
         prefix = typ + prefix[1:]

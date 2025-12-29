@@ -60,7 +60,7 @@ Or the individual location elements can be gotten directly.
 >>> f.args.end_col
 10
 
-If you noticed above, nodes which normally don't have locations in `AST` nodes have their locations computed and added
+If you noticed above, nodes which normally don't have locations in `AST` nodes have their locations calculated and added
 in `FST` nodes, like `arguments` or `operators`.
 
 >>> hasattr(f.a.args, 'lineno')
@@ -82,7 +82,7 @@ The only `AST` nodes which don't get locations like this are:
 3. `expr_context` nodes which don't have parsable source.
 
 Other nodes that normally don't have locations like `comprehension`, `withitem`, `match_case` and other operators all
-have locations computed for them by `FST`.
+have locations calculated for them by `FST`.
 
 >>> FST('[i for i in j]').generators[0].loc
 fstloc(0, 3, 0, 13)
@@ -166,7 +166,7 @@ which don't normally have them.
 >>> hasattr(f.a, 'lineno')
 False
 
-You can check if a location comes from an `AST` node or if is computed by `FST`.
+You can check if a location comes from an `AST` node or if is calculated by `FST`.
 
 >>> f.has_own_loc
 False

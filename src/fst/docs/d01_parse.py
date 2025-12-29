@@ -285,6 +285,7 @@ FunctionDef - ROOT 0,0..4,17
           .func Name 'print' Load - 2,8..2,13
           .args[1]
            0] Name 'a' Load - 2,14..2,15
+3:     else:
      .orelse[1]
 4:         print(-a)
       0] Expr - 4,8..4,17

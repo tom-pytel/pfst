@@ -2856,12 +2856,14 @@ def f():
             '1:         b',
             '      0] Expr - 1,8..1,9',
             "        .value Name 'b' Load - 1,8..1,9",
+            '2: else:',
             '  .orelse[1]',
-            '2: else: c',
+            '2:       c',
             '   0] Expr - 2,6..2,7',
             "     .value Name 'c' Load - 2,6..2,7",
+            '3: finally:',
             '  .finalbody[1]',
-            '3: finally: d',
+            '3:          d',
             '   0] Expr - 3,9..3,10',
             "     .value Name 'd' Load - 3,9..3,10",
         ], FST('try: a\nexcept: b\nelse: c\nfinally: d').dump('S', out=list))
@@ -5688,6 +5690,26 @@ finally:
 
         self.assertRaises(ValueError, f.get_line_comment, 'blah')
 
+        # for test coverage
+
+        self.assertRaises(NotImplementedError, FST('expr').get_line_comment)
+        self.assertRaises(ValueError, FST('stmt', 'stmt').put_line_comment, "can't\nhave\nnewline")
+        self.assertRaises(ValueError, FST('stmt', 'stmt').put_line_comment, 'full must start with #', full=True)
+        self.assertIsNone(FST('stmt', 'stmt').put_line_comment(None))
+
+        f = FST('a ; \\\n b')
+        f.put_src(';', 1, 0, 1, 0, None)
+        self.assertEqual('a ; \\\n; b', f.src)
+        self.assertRaises(RuntimeError, f.body[0].put_line_comment, 'blah')
+
+        f = FST('a \\\n; b')
+        f.body[0].put_line_comment('blah')
+        self.assertEqual('a  # blah\nb', f.src)
+
+        f = FST('if z: a \\\n; b')
+        f.body[0].put_line_comment('blah')
+        self.assertEqual('if z:\n    a  # blah\n    b', f.src)
+
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
         f.par()
@@ -5944,6 +5966,11 @@ finally:
         # very specific tricky case
 
         self.assertEqual('f(*(*a,))', (f := FST('f(*(*a,))')).put(FST('*(*a,)'), 0, 'args').root.src)
+        f.verify()
+
+        # lets force par some empty arguments at root
+
+        self.assertEqual('()', FST('', 'arguments').par(True).src)
 
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)

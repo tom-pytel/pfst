@@ -11,6 +11,7 @@ from . import fst
 from .asttypes import (
     ASTS_LEAF_MOD,
     ASTS_LEAF_BLOCK,
+    ASTS_LEAF_TRY,
     AsyncFor,
     AsyncFunctionDef,
     AsyncWith,
@@ -1188,7 +1189,7 @@ def _put_slice_stmtlike_old(
                 raise ValueError(f"cannot insert empty statement into empty '{field}' field")
 
             if ast_cls in (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
-                                 match_case):  # only one block possible, 'body' or 'cases'
+                           match_case):  # only one block possible, 'body' or 'cases'
                 block_loc = fstloc(*self.bloc[2:], *next_bound_step(self))  # end of bloc will be just past ':'
                 is_last_child = True
 
@@ -1218,7 +1219,7 @@ def _put_slice_stmtlike_old(
                         is_last_child = True
 
             else:  # isinstance(ast, (Try, TryStar))
-                assert ast_cls in (Try, TryStar)
+                assert ast_cls in ASTS_LEAF_TRY  # (Try, TryStar)
 
                 if field == 'finalbody':
                     is_last_child = True

@@ -108,7 +108,6 @@ from .astutil import pat_alnum, constant, re_alnumdot_alnum, bistr, precedence_r
 
 from .common import (
     NodeError,
-    astfield,
     srcwpos,
     nspace,
     re_empty_line,
@@ -246,12 +245,9 @@ _re_par_close_alnums   = re.compile(rf'[{pat_alnum}.][)][{pat_alnum}]')
 _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
-# _re_stmt_line_comment  = re.compile(r'(?:\s*;)?(\s*\#(.*))$')  # a line comment with optional leading whitespace and maybe a single inert semicolon before
 _re_stmt_line_comment  = re.compile(r'(\s*;)?(\s*\#(.*)$)?')  # a line comment with optional leading whitespace and maybe a single inert semicolon before, or indicate if there is a trailing semicolon
 
 _re_line_end_ws_maybe_cont = re.compile(r'\s*\\?$')
-
-_DUMP_SPECIAL_ASTFIELDS = (astfield('orelse', 0), astfield('finalbody', 0))
 
 
 def _dump_lines(
@@ -291,9 +287,6 @@ def _dump_lines(
 
     else:  # src+ and fresh line to possibly dump tail
         st.line_tails_dumped.add(end_ln)
-
-        if is_stmt and fst_.pfield in _DUMP_SPECIAL_ASTFIELDS:  # this is in case the statement is on same line as `else:` or `finally:`, and if not then guaranteed to be leading whitespace
-            col = 0
 
         lines = fst_._get_src(ln, col, end_ln, 0x7fffffffffffffff, True)
 
@@ -418,6 +411,11 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
+
+        if is_list and child and st.src and name in ('orelse', 'finalbody'):  # non-empty 'else' of 'finally' block with source output turned on?
+            ln, col, end_ln, end_col = self._loc_block_header_end(name)
+
+            _dump_lines(self, st, ln, col, end_ln, end_col, True)  # dump 'else:' or 'finally:'
 
         if not st.expand:
             if not st.full and child is None and ast_cls is not MatchSingleton:
@@ -1741,7 +1739,7 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
     **WARNING!** Only call on root node!
     """
 
-    # assert self.is_root
+    # assert not self.parent  # self.is_root
 
     ast = self.a
     ast_cls = ast.__class__
@@ -1973,7 +1971,7 @@ def _trim_delimiters(self: fst.FST) -> None:
     """Remove the delimiters of `self` and everything before and after them. `self` must be a container with single
     character delimiters like a parenthesized `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` or `MatchMapping`."""
 
-    # assert self.is_root
+    # assert not self.parent  # self.is_root
 
     lines = self._lines
     ast = self.a

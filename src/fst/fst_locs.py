@@ -1,6 +1,6 @@
-"""Functions which compute the locations of various node elements which don't have stored locations, or entire nodes
+"""Functions which calculate the locations of various node elements which don't have stored locations, or entire nodes
 themselves for those which don't normally have a location. The only thing all these functions have in common is that
-they compute locations, there is no standard return type or conditions, read the docstrings for use.
+they calculate locations, there is no standard return type or conditions, read the docstrings for use.
 
 This module contains functions which are imported as methods in the `FST` class (for now).
 """
