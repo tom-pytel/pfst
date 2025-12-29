@@ -13,7 +13,6 @@ from typing import Literal
 from . import fst
 
 from .asttypes import (
-    ASTS_LEAF_BLOCK,
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_CMPOP_TWO_WORD,
     AST,

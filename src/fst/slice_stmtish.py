@@ -35,7 +35,7 @@ from .astutil import copy_ast
 from .common import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as__ExceptHandlers, code_as__match_cases
 from .fst_misc import get_trivia_params, get_option_overridable, fixup_slice_indices
-from .fst_traverse import prev_bound, next_bound_step, prev_bound_step
+from .fst_traverse import next_bound_step, prev_bound_step
 
 # ----------------------------------------------------------------------------------------------------------------------
 # srcedit_old.py

@@ -5543,38 +5543,38 @@ class cls:
     def test_get_put_line_comment(self):
         f = FST('if a:# comment 0  \n  b\n  c # comment 1  \n  d ;\n  e ;  # comment 2  \n  f ; g\n  h \\\n\n  if i: j\n  if k: \\\n\n    l')
 
-        self.assertEqual('comment 0', f.get_line_comment(False))
-        self.assertEqual('# comment 0  ', f.get_line_comment(True))
-        self.assertIsNone(f.body[0].get_line_comment(False))
-        self.assertIsNone(f.body[0].get_line_comment(True))
-        self.assertEqual('comment 1', f.body[1].get_line_comment(False))
-        self.assertEqual(' # comment 1  ', f.body[1].get_line_comment(True))
-        self.assertIsNone(f.body[2].get_line_comment(False))
-        self.assertIsNone(f.body[2].get_line_comment(True))
-        self.assertEqual('comment 2', f.body[3].get_line_comment(False))
-        self.assertEqual('  # comment 2  ', f.body[3].get_line_comment(True))
-        self.assertIsNone(f.body[4].get_line_comment(False))
-        self.assertIsNone(f.body[4].get_line_comment(True))
-        self.assertIsNone(f.body[5].get_line_comment(False))
-        self.assertIsNone(f.body[5].get_line_comment(True))
-        self.assertIsNone(f.body[6].get_line_comment(False))
-        self.assertIsNone(f.body[6].get_line_comment(True))
-        self.assertIsNone(f.body[7].get_line_comment(False))
-        self.assertIsNone(f.body[7].get_line_comment(True))
-        self.assertIsNone(f.body[8].get_line_comment(False))
-        self.assertIsNone(f.body[8].get_line_comment(True))
+        self.assertEqual('comment 0', f.get_line_comment(full=False))
+        self.assertEqual('# comment 0  ', f.get_line_comment(full=True))
+        self.assertIsNone(f.body[0].get_line_comment(full=False))
+        self.assertIsNone(f.body[0].get_line_comment(full=True))
+        self.assertEqual('comment 1', f.body[1].get_line_comment(full=False))
+        self.assertEqual(' # comment 1  ', f.body[1].get_line_comment(full=True))
+        self.assertIsNone(f.body[2].get_line_comment(full=False))
+        self.assertIsNone(f.body[2].get_line_comment(full=True))
+        self.assertEqual('comment 2', f.body[3].get_line_comment(full=False))
+        self.assertEqual('  # comment 2  ', f.body[3].get_line_comment(full=True))
+        self.assertIsNone(f.body[4].get_line_comment(full=False))
+        self.assertIsNone(f.body[4].get_line_comment(full=True))
+        self.assertIsNone(f.body[5].get_line_comment(full=False))
+        self.assertIsNone(f.body[5].get_line_comment(full=True))
+        self.assertIsNone(f.body[6].get_line_comment(full=False))
+        self.assertIsNone(f.body[6].get_line_comment(full=True))
+        self.assertIsNone(f.body[7].get_line_comment(full=False))
+        self.assertIsNone(f.body[7].get_line_comment(full=True))
+        self.assertIsNone(f.body[8].get_line_comment(full=False))
+        self.assertIsNone(f.body[8].get_line_comment(full=True))
 
         g = f.copy()
-        g.body[8].put_line_comment('zzz', False)
-        g.body[7].put_line_comment('zzz', False)
-        g.body[6].put_line_comment('zzz', False)
-        g.body[5].put_line_comment('zzz', False)
-        g.body[4].put_line_comment('zzz', False)
-        g.body[3].put_line_comment('zzz', False)
-        g.body[2].put_line_comment('zzz', False)
-        g.body[1].put_line_comment('zzz', False)
-        g.body[0].put_line_comment('zzz', False)
-        g.put_line_comment('zzz', False)
+        g.body[8].put_line_comment('zzz', full=False)
+        g.body[7].put_line_comment('zzz', full=False)
+        g.body[6].put_line_comment('zzz', full=False)
+        g.body[5].put_line_comment('zzz', full=False)
+        g.body[4].put_line_comment('zzz', full=False)
+        g.body[3].put_line_comment('zzz', full=False)
+        g.body[2].put_line_comment('zzz', full=False)
+        g.body[1].put_line_comment('zzz', full=False)
+        g.body[0].put_line_comment('zzz', full=False)
+        g.put_line_comment('zzz', full=False)
 
         self.assertEqual(g.src, r'''
 if a:# zzz
@@ -5594,16 +5594,16 @@ if a:# zzz
         '''.strip())
 
         g = f.copy()
-        g.body[8].put_line_comment('#zzz', True)
-        g.body[7].put_line_comment('#zzz', True)
-        g.body[6].put_line_comment('#zzz', True)
-        g.body[5].put_line_comment('#zzz', True)
-        g.body[4].put_line_comment('#zzz', True)
-        g.body[3].put_line_comment('#zzz', True)
-        g.body[2].put_line_comment('#zzz', True)
-        g.body[1].put_line_comment('#zzz', True)
-        g.body[0].put_line_comment('#zzz', True)
-        g.put_line_comment('#zzz', True)
+        g.body[8].put_line_comment('#zzz', full=True)
+        g.body[7].put_line_comment('#zzz', full=True)
+        g.body[6].put_line_comment('#zzz', full=True)
+        g.body[5].put_line_comment('#zzz', full=True)
+        g.body[4].put_line_comment('#zzz', full=True)
+        g.body[3].put_line_comment('#zzz', full=True)
+        g.body[2].put_line_comment('#zzz', full=True)
+        g.body[1].put_line_comment('#zzz', full=True)
+        g.body[0].put_line_comment('#zzz', full=True)
+        g.put_line_comment('#zzz', full=True)
         self.assertEqual(g.src, r'''
 if a:#zzz
   b#zzz
@@ -5626,15 +5626,67 @@ if a:#zzz
         f = FST('if a: # comment\n  pass')
         del f.body
 
-        self.assertEqual('comment', f.get_line_comment(False))
-        self.assertEqual(' # comment', f.get_line_comment(True))
+        self.assertEqual('comment', f.get_line_comment(full=False))
+        self.assertEqual(' # comment', f.get_line_comment(full=True))
 
-        self.assertEqual('comment', f.put_line_comment('blomment', False))
+        self.assertEqual('comment', f.put_line_comment('blomment', full=False))
         self.assertEqual('if a: # blomment', f.lines[0])
-        self.assertEqual('blomment', f.put_line_comment(' blomment  ', False))
+        self.assertEqual('blomment', f.put_line_comment(' blomment  ', full=False))
         self.assertEqual('if a: # blomment  ', f.lines[0])
-        self.assertEqual(' # blomment  ', f.put_line_comment('    # blomment    ',True))
+        self.assertEqual(' # blomment  ', f.put_line_comment('    # blomment    ',full=True))
         self.assertEqual('if a:    # blomment    ', f.lines[0])
+
+        # orelse and finalbody
+
+        f = FST('''
+try: pass
+except: pass
+else: pass
+finally: pass
+            '''.strip())
+
+        self.assertIsNone(f.get_line_comment(field='orelse', full=False))
+        self.assertIsNone(f.get_line_comment(field='finalbody', full=True))
+
+        self.assertIsNone(f.put_line_comment('zzz', field='orelse', full=False))
+        self.assertIsNone(f.put_line_comment('zzz', field='finalbody', full=False))
+
+        self.assertEqual(f.src, r'''
+try: pass
+except: pass
+else:  # zzz
+    pass
+finally:  # zzz
+    pass
+        '''.strip())
+
+        self.assertEqual('  # zzz', f.put_line_comment('#zzz', field='orelse', full=True))
+        self.assertEqual('  # zzz', f.put_line_comment('#zzz', field='finalbody', full=True))
+
+        self.assertEqual(f.src, r'''
+try: pass
+except: pass
+else:#zzz
+    pass
+finally:#zzz
+    pass
+        '''.strip())
+
+        self.assertEqual('zzz', f.put_line_comment(None, field='orelse', full=False))
+        self.assertEqual('#zzz', f.put_line_comment(None, field='finalbody', full=True))
+
+        self.assertEqual(f.src, r'''
+try: pass
+except: pass
+else:
+    pass
+finally:
+    pass
+        '''.strip())
+
+        # validate field
+
+        self.assertRaises(ValueError, f.get_line_comment, 'blah')
 
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()

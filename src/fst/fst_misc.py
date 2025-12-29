@@ -2042,7 +2042,12 @@ def _normalize_block(
     return True
 
 
-def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = False, full: bool = False) -> str | None:
+def _getput_line_comment(
+    self: fst.FST,
+    comment: str | None | Literal[False] = False,
+    field: Literal['body', 'orelse', 'finalbody'] | None = None,
+    full: bool = False,
+) -> str | None:
     """Get and / or put current line comment for this node.
 
     The line comment is the single comment at the end of the last line of the location of this node, with the exception
@@ -2054,6 +2059,9 @@ def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = F
         - `str`: Put new comment which may or may not need to have the initial `'#'` according to the `full` parameter.
         - `None`: Delete current comment (if present).
         - `False`: Do not modify current comment, just get it.
+    - `field`: If `self` is a block statement then this can specify which field to operate on, only `'body'`, `'orelse'`
+        and `'finalbody'` make sense to use and an error will be raised if the field is not present or there is nothing
+        in it. `None` means use default `'body'` if block statement.
     - `full`:
         - `False`: The gotten comment text is returned stripped of the `'#'` and any leading and trailing whitespace. On
             put the `comment` text is put to existing comment if is present and otherwise is prepended with `'  #'` and
@@ -2078,7 +2086,11 @@ def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = F
         raise NotImplementedError('get / put line comment for non-statementish node')
 
     if is_block := (ast_cls in ASTS_LEAF_BLOCK):
-        _, _, end_ln, end_col = self._loc_block_header_end()
+        if field is None:
+            field = 'body'
+
+        _, _, end_ln, end_col = self._loc_block_header_end(field)
+
     else:
         _, _, end_ln, end_col = self.bloc
 
@@ -2128,8 +2140,8 @@ def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = F
         pass  # noop
 
     elif is_block:
-        if self._normalize_block():
-            _, _, end_ln, end_col = self._loc_block_header_end()  # any remaining junk on header tail (maybe line continuation) is harmless to remove
+        if self._normalize_block(field):
+            _, _, end_ln, end_col = self._loc_block_header_end(field)  # any remaining junk on header tail (maybe line continuation) is harmless to remove
 
     # we are past any semicolon on this line, its either another statement or a line continuation ... which may lead to another statement or the semicolon which is not on this line, or not
 

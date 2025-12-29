@@ -213,6 +213,15 @@ def _swizzle_getput_params(
     return start, stop, field
 
 
+def _validate_get_put_line_comment_field(self: FST, field: str) -> None:
+    if field in ('orelse', 'finalbody'):
+        if not getattr(self.a, field):
+            raise ValueError(f'field {field!r} is empty')
+
+    elif field not in (None, 'body'):
+        raise ValueError(f'invalid field {field!r}')
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 def parse(
@@ -2384,14 +2393,21 @@ class FST:
 
         return self
 
-    def get_line_comment(self, full: bool = False) -> builtins.str | None:
-        """Get current line comment for this node.
+    def get_line_comment(
+        self, field: Literal['body', 'orelse', 'finalbody'] | None = None, full: bool = False
+    ) -> builtins.str | None:
+        r"""Get current line comment for this node.
 
         The line comment is the single comment at the end of the last line of the location of this node, with the
         exception of statement block nodes where the line comment lives on the last line of the header of the node
         (after the `:`, since the comment on the last line of the location belongs to the last child).
 
+        **Note:** Currently this functionality is limited to statement nodes.
+
         **Parameters:**
+        - `field`: If `self` is a block statement then this can specify which field to operate on, only `'body'`,
+            `'orelse'` and `'finalbody'` make sense to use and an error will be raised if the field is not present or
+            there is nothing in it. `None` means use default `'body'` if block statement.
         - `full`:
             - `False`: The gotten comment text is returned stripped of the `'#'` and any leading and trailing
                 whitespace.
@@ -2401,22 +2417,51 @@ class FST:
         **Returns:**
         - `str`: The current comment, with or without the leading whitespace and `'#'` as per the `full` paramenter.
         - `None`: There is no comment present.
+
+        **Examples:**
+
+        >>> FST('statement  # comment  ', 'stmt').get_line_comment()
+        'comment'
+
+        >>> FST('statement  # comment  ', 'stmt').get_line_comment(full=True)
+        '  # comment  '
+
+        >>> FST('if a:  # ifc\n  pass  # bodyc').body[0].get_line_comment()
+        'bodyc'
+
+        >>> FST('if a:  # ifc\n  pass  # bodyc').get_line_comment()
+        'ifc'
+
+        >>> FST('if a: pass\nelse:  # elsec\n  pass').get_line_comment('orelse')
+        'elsec'
         """
 
-        return self._getput_line_comment(False, full)
+        _validate_get_put_line_comment_field(self, field)
 
-    def put_line_comment(self, comment: builtins.str | None = None, full: bool = False) -> builtins.str | None:
-        """Put line comment for this node returning whatever comment was there before.
+        return self._getput_line_comment(False, field, full)
+
+    def put_line_comment(
+        self,
+        comment: builtins.str | None = None,
+        field: Literal['body', 'orelse', 'finalbody'] | None = None,
+        full: bool = False
+    ) -> builtins.str | None:
+        r"""Put line comment for this node returning whatever comment was there before.
 
         The line comment is the single comment at the end of the last line of the location of this node, with the
         exception of statement block nodes where the line comment lives on the last line of the header of the node
         (after the `:`, since the comment on the last line of the location belongs to the last child).
+
+        **Note:** Currently this functionality is limited to statement nodes.
 
         **Parameters:**
         - `comment`: The comment operation to perform after getting the current comment.
             - `str`: Put new comment which may or may not need to have the initial `'#'` according to the `full`
                 parameter.
             - `None`: Delete current comment (if present).
+        - `field`: If `self` is a block statement then this can specify which field to operate on, only `'body'`,
+            `'orelse'` and `'finalbody'` make sense to use and an error will be raised if the field is not present or
+            there is nothing in it. `None` means use default `'body'` if block statement.
         - `full`:
             - `False`: The gotten comment text is returned stripped of the `'#'` and any leading and trailing
                 whitespace. The put `comment` text is put to existing comment if is present and otherwise is prepended
@@ -2427,12 +2472,44 @@ class FST:
                 from the end of the node to the end of the line.
 
         **Returns:**
-        - `str`: The current comment, before any replacement, with or without the leading whitespace and `'#'` as per
-            the `full` paramenter.
+        - `str`: The current comment, before replacement, with or without the leading whitespace and `'#'` as per the
+            `full` paramenter.
         - `None`: There was no comment present.
+
+        **Examples:**
+
+        >>> f = FST('statement  # comment  ', 'stmt')
+        >>> f.put_line_comment('new comment')
+        'comment'
+        >>> print(f.src)
+        statement  # new comment
+
+        >>> f = FST('if a:  # ifc\n  pass  # bodyc')
+        >>> f.body[0].put_line_comment('new body comment')
+        'bodyc'
+        >>> print(f.src)
+        if a:  # ifc
+          pass  # new body comment
+
+        >>> f = FST('if a:  # ifc\n  pass  # bodyc')
+        >>> f.put_line_comment('new if comment')
+        'ifc'
+        >>> print(f.src)
+        if a:  # new if comment
+          pass  # bodyc
+
+        >>> f = FST('if a: pass\nelse:  # elsec\n  pass')
+        >>> f.put_line_comment('new else comment', 'orelse')
+        'elsec'
+        >>> print(f.src)
+        if a: pass
+        else:  # new else comment
+          pass
         """
 
-        return self._getput_line_comment(comment, full)
+        _validate_get_put_line_comment_field(self, field)
+
+        return self._getput_line_comment(comment, field, full)
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing **GROUPING** parentheses if present. Will balance parentheses if `self` is
