@@ -1544,8 +1544,8 @@ class FST:
 
         **Caveat:** There is an actual difference between this and `self.copy().lines`. The copy operation may carry
         out some reformatting to make sure the node is presentable at root level (mostly adding parentheses), this
-        function does not do that. It will however convert an `elif` to an `if` according to the parameter. The copy
-        also does trivia, we do not here (yet).
+        function does not do that. It will however convert an `elif` to an `if` according to the `fix_elif` parameter.
+        The copy also does trivia, we do not here (yet).
 
         **Parameters:**
         - `whole`: If at root this determines whether to return the whole source or just the location of the node
@@ -1631,8 +1631,8 @@ class FST:
 
         **Caveat:** There is an actual difference between this and `self.copy().src`. The copy operation may carry out
         some reformatting to make sure the node is presentable at root level (mostly adding parentheses), this function
-        does not do that. It will however convert an `elif` to an `if` according to the parameter. The copy also does
-        trivia, we do not here (yet).
+        does not do that. It will however convert an `elif` to an `if` according to the `fix_elif` parameter. The copy
+        also does trivia, we do not here (yet).
 
         **Parameters:**
         - `whole`: If at root this determines whether to return the whole source or just the location of the node

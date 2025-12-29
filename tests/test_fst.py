@@ -2840,7 +2840,33 @@ def f():
             '   1] Pass - 0,13..0,17',
         ], FST('if 1: pass ; pass  # end').dump('N', out=list))
 
-        # statements on same line as `else:` or `finally:`
+        # `else` and `finally`
+
+        self.assertEqual([
+            '0: try:',
+            'Try - ROOT 0,0..5,3',
+            '  .body[1]',
+            '0:      a',
+            '   0] Expr - 0,5..0,6',
+            "     .value Name 'a' Load - 0,5..0,6",
+            '  .handlers[1]',
+            '1: except:',
+            '   0] ExceptHandler - 1,0..1,9',
+            '     .body[1]',
+            '1:         b',
+            '      0] Expr - 1,8..1,9',
+            "        .value Name 'b' Load - 1,8..1,9",
+            '2: else:',
+            '  .orelse[1]',
+            '3:   c',
+            '   0] Expr - 3,2..3,3',
+            "     .value Name 'c' Load - 3,2..3,3",
+            '4: finally:',
+            '  .finalbody[1]',
+            '5:   d',
+            '   0] Expr - 5,2..5,3',
+            "     .value Name 'd' Load - 5,2..5,3",
+        ], FST('try: a\nexcept: b\nelse:\n  c\nfinally:\n  d').dump('S', out=list))
 
         self.assertEqual([
             '0: try:',
@@ -2867,6 +2893,38 @@ def f():
             '   0] Expr - 3,9..3,10',
             "     .value Name 'd' Load - 3,9..3,10",
         ], FST('try: a\nexcept: b\nelse: c\nfinally: d').dump('S', out=list))
+
+        self.assertEqual([
+            '0: if 1:',
+            'If - ROOT 0,0..2,6',
+            '  .test Constant 1 - 0,3..0,4',
+            '  .body[1]',
+            '0:       pass',
+            '   0] Pass - 0,6..0,10',
+            '  .orelse[1]',
+            '1: elif 2:',
+            '   0] If - 1,0..2,6',
+            '     .test Constant 2 - 1,5..1,6',
+            '     .body[1]',
+            '2:   pass',
+            '      0] Pass - 2,2..2,6',
+        ], FST('if 1: pass\nelif 2:\n  pass').dump('S', out=list))
+
+        self.assertEqual([
+            '0: if 1:',
+            'If - ROOT 0,0..1,12',
+            '  .test Constant 1 - 0,3..0,4',
+            '  .body[1]',
+            '0:       pass',
+            '   0] Pass - 0,6..0,10',
+            '  .orelse[1]',
+            '1: elif 2:',
+            '   0] If - 1,0..1,12',
+            '     .test Constant 2 - 1,5..1,6',
+            '     .body[1]',
+            '1:         pass',
+            '      0] Pass - 1,8..1,12',
+        ], FST('if 1: pass\nelif 2: pass').dump('S', out=list))
 
     def test_verify(self):
         ast = parse('i = 1')

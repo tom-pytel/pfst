@@ -371,9 +371,10 @@ def _loc_block_header_end(
     **Returns:**
     - `None`: If doesn't have the requested `field` or anything in it.
     - `(last header child end_ln, last child header end_col, after colon ln, after colon col)`:
-        If `field='body'` returns the position of the end of the last child in the header (sans closing pars) and the
-        position of the `:` of the the block statement header (just past it). If there is no last child (like in a
-        `Try`, `TryStar` or maybe simple `FunctionDef`) then returns start of `self` for this loction.
+        If `field='body'` or `field='orelse'` and the node is an `elif` returns the position of the end of the last
+        child in the header (sans closing pars) and the position of the `:` of the the block statement header (just past
+        it). If there is no last child (like in a `Try`, `TryStar` or maybe simple `FunctionDef`) then returns start of
+        `self` for this loction.
     - `(start of block header ln, start of block header col, after colon ln, after  colon col)`:
         If `field='orelse'` or `'field='finalbody'` then returns location from start of the `else` or `finally` to just
         past the `:` of the block header.
@@ -399,6 +400,10 @@ def _loc_block_header_end(
         return None
 
     body0 = body[0].f
+
+    if body0.is_elif():  # if child is elif then it starts BEFORE the header colon we want, so we just get the block header end of its 'body'
+        return body0._loc_block_header_end('body')
+
     body0_ln, body0_col, _, _ = body0.bloc
 
     if prev := body0.prev('loc'):

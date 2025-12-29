@@ -412,7 +412,11 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
 
-        if is_list and child and st.src and name in ('orelse', 'finalbody'):  # non-empty 'else' of 'finally' block with source output turned on?
+        if (is_list and child and st.src
+            and (
+                name == 'finalbody'
+                or (name == 'orelse' and not child[0].f.is_elif())
+        )):  # non-empty 'else' (not 'elif') or 'finally' block with source output turned on?
             ln, col, end_ln, end_col = self._loc_block_header_end(name)
 
             _dump_lines(self, st, ln, col, end_ln, end_col, True)  # dump 'else:' or 'finally:'
