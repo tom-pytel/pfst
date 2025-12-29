@@ -258,853 +258,853 @@ __all__ = [
 
 @property
 def is_Module(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Module` node."""
 
     return self.a.__class__ is Module
 
 
 @property
 def is_Interactive(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Interactive` node."""
 
     return self.a.__class__ is Interactive
 
 
 @property
 def is_Expression(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Expression` node."""
 
     return self.a.__class__ is Expression
 
 
 @property
 def is_FunctionType(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `FunctionType` node."""
 
     return self.a.__class__ is FunctionType
 
 
 @property
 def is_FunctionDef(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `FunctionDef` node."""
 
     return self.a.__class__ is FunctionDef
 
 
 @property
 def is_AsyncFunctionDef(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `AsyncFunctionDef` node."""
 
     return self.a.__class__ is AsyncFunctionDef
 
 
 @property
 def is_ClassDef(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `ClassDef` node."""
 
     return self.a.__class__ is ClassDef
 
 
 @property
 def is_Return(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Return` node."""
 
     return self.a.__class__ is Return
 
 
 @property
 def is_Delete(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Delete` node."""
 
     return self.a.__class__ is Delete
 
 
 @property
 def is_Assign(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Assign` node."""
 
     return self.a.__class__ is Assign
 
 
 @property
 def is_TypeAlias(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `TypeAlias` node."""
 
     return self.a.__class__ is TypeAlias
 
 
 @property
 def is_AugAssign(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `AugAssign` node."""
 
     return self.a.__class__ is AugAssign
 
 
 @property
 def is_AnnAssign(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `AnnAssign` node."""
 
     return self.a.__class__ is AnnAssign
 
 
 @property
 def is_For(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `For` node."""
 
     return self.a.__class__ is For
 
 
 @property
 def is_AsyncFor(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `AsyncFor` node."""
 
     return self.a.__class__ is AsyncFor
 
 
 @property
 def is_While(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `While` node."""
 
     return self.a.__class__ is While
 
 
 @property
 def is_If(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `If` node."""
 
     return self.a.__class__ is If
 
 
 @property
 def is_With(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `With` node."""
 
     return self.a.__class__ is With
 
 
 @property
 def is_AsyncWith(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `AsyncWith` node."""
 
     return self.a.__class__ is AsyncWith
 
 
 @property
 def is_Match(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Match` node."""
 
     return self.a.__class__ is Match
 
 
 @property
 def is_Raise(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Raise` node."""
 
     return self.a.__class__ is Raise
 
 
 @property
 def is_Try(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Try` node."""
 
     return self.a.__class__ is Try
 
 
 @property
 def is_TryStar(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `TryStar` node."""
 
     return self.a.__class__ is TryStar
 
 
 @property
 def is_Assert(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Assert` node."""
 
     return self.a.__class__ is Assert
 
 
 @property
 def is_Import(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Import` node."""
 
     return self.a.__class__ is Import
 
 
 @property
 def is_ImportFrom(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `ImportFrom` node."""
 
     return self.a.__class__ is ImportFrom
 
 
 @property
 def is_Global(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Global` node."""
 
     return self.a.__class__ is Global
 
 
 @property
 def is_Nonlocal(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Nonlocal` node."""
 
     return self.a.__class__ is Nonlocal
 
 
 @property
 def is_Expr(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Expr` node."""
 
     return self.a.__class__ is Expr
 
 
 @property
 def is_Pass(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Pass` node."""
 
     return self.a.__class__ is Pass
 
 
 @property
 def is_Break(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Break` node."""
 
     return self.a.__class__ is Break
 
 
 @property
 def is_Continue(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Continue` node."""
 
     return self.a.__class__ is Continue
 
 
 @property
 def is_BoolOp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `BoolOp` node."""
 
     return self.a.__class__ is BoolOp
 
 
 @property
 def is_NamedExpr(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `NamedExpr` node."""
 
     return self.a.__class__ is NamedExpr
 
 
 @property
 def is_BinOp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `BinOp` node."""
 
     return self.a.__class__ is BinOp
 
 
 @property
 def is_UnaryOp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `UnaryOp` node."""
 
     return self.a.__class__ is UnaryOp
 
 
 @property
 def is_Lambda(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Lambda` node."""
 
     return self.a.__class__ is Lambda
 
 
 @property
 def is_IfExp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `IfExp` node."""
 
     return self.a.__class__ is IfExp
 
 
 @property
 def is_Dict(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Dict` node."""
 
     return self.a.__class__ is Dict
 
 
 @property
 def is_Set(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Set` node."""
 
     return self.a.__class__ is Set
 
 
 @property
 def is_ListComp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `ListComp` node."""
 
     return self.a.__class__ is ListComp
 
 
 @property
 def is_SetComp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `SetComp` node."""
 
     return self.a.__class__ is SetComp
 
 
 @property
 def is_DictComp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `DictComp` node."""
 
     return self.a.__class__ is DictComp
 
 
 @property
 def is_GeneratorExp(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `GeneratorExp` node."""
 
     return self.a.__class__ is GeneratorExp
 
 
 @property
 def is_Await(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Await` node."""
 
     return self.a.__class__ is Await
 
 
 @property
 def is_Yield(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Yield` node."""
 
     return self.a.__class__ is Yield
 
 
 @property
 def is_YieldFrom(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `YieldFrom` node."""
 
     return self.a.__class__ is YieldFrom
 
 
 @property
 def is_Compare(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Compare` node."""
 
     return self.a.__class__ is Compare
 
 
 @property
 def is_Call(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Call` node."""
 
     return self.a.__class__ is Call
 
 
 @property
 def is_FormattedValue(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `FormattedValue` node."""
 
     return self.a.__class__ is FormattedValue
 
 
 @property
 def is_Interpolation(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Interpolation` node."""
 
     return self.a.__class__ is Interpolation
 
 
 @property
 def is_JoinedStr(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `JoinedStr` node."""
 
     return self.a.__class__ is JoinedStr
 
 
 @property
 def is_TemplateStr(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `TemplateStr` node."""
 
     return self.a.__class__ is TemplateStr
 
 
 @property
 def is_Constant(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Constant` node."""
 
     return self.a.__class__ is Constant
 
 
 @property
 def is_Attribute(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Attribute` node."""
 
     return self.a.__class__ is Attribute
 
 
 @property
 def is_Subscript(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Subscript` node."""
 
     return self.a.__class__ is Subscript
 
 
 @property
 def is_Starred(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Starred` node."""
 
     return self.a.__class__ is Starred
 
 
 @property
 def is_Name(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Name` node."""
 
     return self.a.__class__ is Name
 
 
 @property
 def is_List(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `List` node."""
 
     return self.a.__class__ is List
 
 
 @property
 def is_Tuple(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Tuple` node."""
 
     return self.a.__class__ is Tuple
 
 
 @property
 def is_Slice(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Slice` node."""
 
     return self.a.__class__ is Slice
 
 
 @property
 def is_Load(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Load` node."""
 
     return self.a.__class__ is Load
 
 
 @property
 def is_Store(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Store` node."""
 
     return self.a.__class__ is Store
 
 
 @property
 def is_Del(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Del` node."""
 
     return self.a.__class__ is Del
 
 
 @property
 def is_And(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `And` node."""
 
     return self.a.__class__ is And
 
 
 @property
 def is_Or(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Or` node."""
 
     return self.a.__class__ is Or
 
 
 @property
 def is_Add(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Add` node."""
 
     return self.a.__class__ is Add
 
 
 @property
 def is_Sub(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Sub` node."""
 
     return self.a.__class__ is Sub
 
 
 @property
 def is_Mult(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Mult` node."""
 
     return self.a.__class__ is Mult
 
 
 @property
 def is_MatMult(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatMult` node."""
 
     return self.a.__class__ is MatMult
 
 
 @property
 def is_Div(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Div` node."""
 
     return self.a.__class__ is Div
 
 
 @property
 def is_Mod(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Mod` node."""
 
     return self.a.__class__ is Mod
 
 
 @property
 def is_Pow(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Pow` node."""
 
     return self.a.__class__ is Pow
 
 
 @property
 def is_LShift(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `LShift` node."""
 
     return self.a.__class__ is LShift
 
 
 @property
 def is_RShift(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `RShift` node."""
 
     return self.a.__class__ is RShift
 
 
 @property
 def is_BitOr(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `BitOr` node."""
 
     return self.a.__class__ is BitOr
 
 
 @property
 def is_BitXor(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `BitXor` node."""
 
     return self.a.__class__ is BitXor
 
 
 @property
 def is_BitAnd(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `BitAnd` node."""
 
     return self.a.__class__ is BitAnd
 
 
 @property
 def is_FloorDiv(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `FloorDiv` node."""
 
     return self.a.__class__ is FloorDiv
 
 
 @property
 def is_Invert(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Invert` node."""
 
     return self.a.__class__ is Invert
 
 
 @property
 def is_Not(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Not` node."""
 
     return self.a.__class__ is Not
 
 
 @property
 def is_UAdd(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `UAdd` node."""
 
     return self.a.__class__ is UAdd
 
 
 @property
 def is_USub(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `USub` node."""
 
     return self.a.__class__ is USub
 
 
 @property
 def is_Eq(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Eq` node."""
 
     return self.a.__class__ is Eq
 
 
 @property
 def is_NotEq(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `NotEq` node."""
 
     return self.a.__class__ is NotEq
 
 
 @property
 def is_Lt(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Lt` node."""
 
     return self.a.__class__ is Lt
 
 
 @property
 def is_LtE(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `LtE` node."""
 
     return self.a.__class__ is LtE
 
 
 @property
 def is_Gt(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Gt` node."""
 
     return self.a.__class__ is Gt
 
 
 @property
 def is_GtE(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `GtE` node."""
 
     return self.a.__class__ is GtE
 
 
 @property
 def is_Is(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `Is` node."""
 
     return self.a.__class__ is Is
 
 
 @property
 def is_IsNot(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `IsNot` node."""
 
     return self.a.__class__ is IsNot
 
 
 @property
 def is_In(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `In` node."""
 
     return self.a.__class__ is In
 
 
 @property
 def is_NotIn(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `NotIn` node."""
 
     return self.a.__class__ is NotIn
 
 
 @property
 def is_comprehension(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `comprehension` node."""
 
     return self.a.__class__ is comprehension
 
 
 @property
 def is_ExceptHandler(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `ExceptHandler` node."""
 
     return self.a.__class__ is ExceptHandler
 
 
 @property
 def is_arguments(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `arguments` node."""
 
     return self.a.__class__ is arguments
 
 
 @property
 def is_arg(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `arg` node."""
 
     return self.a.__class__ is arg
 
 
 @property
 def is_keyword(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `keyword` node."""
 
     return self.a.__class__ is keyword
 
 
 @property
 def is_alias(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `alias` node."""
 
     return self.a.__class__ is alias
 
 
 @property
 def is_withitem(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `withitem` node."""
 
     return self.a.__class__ is withitem
 
 
 @property
 def is_match_case(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `match_case` node."""
 
     return self.a.__class__ is match_case
 
 
 @property
 def is_MatchValue(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchValue` node."""
 
     return self.a.__class__ is MatchValue
 
 
 @property
 def is_MatchSingleton(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchSingleton` node."""
 
     return self.a.__class__ is MatchSingleton
 
 
 @property
 def is_MatchSequence(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchSequence` node."""
 
     return self.a.__class__ is MatchSequence
 
 
 @property
 def is_MatchMapping(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchMapping` node."""
 
     return self.a.__class__ is MatchMapping
 
 
 @property
 def is_MatchClass(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchClass` node."""
 
     return self.a.__class__ is MatchClass
 
 
 @property
 def is_MatchStar(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchStar` node."""
 
     return self.a.__class__ is MatchStar
 
 
 @property
 def is_MatchAs(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchAs` node."""
 
     return self.a.__class__ is MatchAs
 
 
 @property
 def is_MatchOr(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `MatchOr` node."""
 
     return self.a.__class__ is MatchOr
 
 
 @property
 def is_TypeIgnore(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `TypeIgnore` node."""
 
     return self.a.__class__ is TypeIgnore
 
 
 @property
 def is_TypeVar(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `TypeVar` node."""
 
     return self.a.__class__ is TypeVar
 
 
 @property
 def is_ParamSpec(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `ParamSpec` node."""
 
     return self.a.__class__ is ParamSpec
 
 
 @property
 def is_TypeVarTuple(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `TypeVarTuple` node."""
 
     return self.a.__class__ is TypeVarTuple
 
 
 @property
 def is__ExceptHandlers(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_ExceptHandlers` node."""
 
     return self.a.__class__ is _ExceptHandlers
 
 
 @property
 def is__match_cases(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_match_cases` node."""
 
     return self.a.__class__ is _match_cases
 
 
 @property
 def is__Assign_targets(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_Assign_targets` node."""
 
     return self.a.__class__ is _Assign_targets
 
 
 @property
 def is__decorator_list(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_decorator_list` node."""
 
     return self.a.__class__ is _decorator_list
 
 
 @property
 def is__comprehensions(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_comprehensions` node."""
 
     return self.a.__class__ is _comprehensions
 
 
 @property
 def is__comprehension_ifs(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_comprehension_ifs` node."""
 
     return self.a.__class__ is _comprehension_ifs
 
 
 @property
 def is__aliases(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_aliases` node."""
 
     return self.a.__class__ is _aliases
 
 
 @property
 def is__withitems(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_withitems` node."""
 
     return self.a.__class__ is _withitems
 
 
 @property
 def is__type_params(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `_type_params` node."""
 
     return self.a.__class__ is _type_params

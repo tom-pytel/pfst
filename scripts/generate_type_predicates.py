@@ -36,7 +36,7 @@ from .asttypes import (
         print(f'''\n
 @property
 def {func_name}(self: 'fst.FST') -> bool:
-    """@private"""
+    """Is a `{name}` node."""
 
     return self.a.__class__ is {name}
 '''.rstrip())

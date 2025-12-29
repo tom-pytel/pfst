@@ -16,7 +16,7 @@ def make_AST_field_accessors() -> None:
                 print(f'''
 @property
 def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     return self.a.{field}.f
 '''.strip())
@@ -24,7 +24,7 @@ def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
                 print(f'''
 @property
 def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     return self.a.{field}
 '''.strip())
@@ -47,7 +47,7 @@ def {field}(self: 'fst.FST') -> None:
 if PYGE13:
     @property
     def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-        """@private"""
+        """`FST` accessor for `AST` field `{field}`."""
 
         return child.f if (child := self.a.{field}) else None
 
@@ -62,7 +62,7 @@ if PYGE13:
 else:  # safely access nonexistent field
     @property
     def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-        """@private"""
+        """`FST` accessor for `AST` field `{field}`."""
 
         return None
 
@@ -80,7 +80,7 @@ else:  # safely access nonexistent field
                 print(f'''
 @property
 def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     return child.f if (child := self.a.{field}) else None
 '''.strip())
@@ -89,7 +89,7 @@ def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
                 print(f'''
 @property
 def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     return self.a.{field}
 '''.strip())
@@ -97,7 +97,7 @@ def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
                 print(f'''
 @property
 def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     return child.f if isinstance(child := self.a.{field}, AST) else child
 '''.strip())
@@ -119,7 +119,7 @@ def {field}(self: 'fst.FST') -> None:
 if PYGE12:
     @property
     def {field}(self: 'fst.FST') -> fstview:
-        """@private"""
+        """`FST` accessor for `AST` field `{field}`."""
 
         self.a.{field}  # noqa: B018
 
@@ -136,7 +136,7 @@ if PYGE12:
 else:  # safely access nonexistent empty field
     @property
     def {field}(self: 'fst.FST') -> list:
-        """@private"""
+        """`FST` accessor for `AST` field `{field}`."""
 
         if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
             return fstview_dummy(self, '{field}')
@@ -156,7 +156,7 @@ else:  # safely access nonexistent empty field
                 print(f'''
 @property
 def {field}(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     self.a.{field}  # noqa: B018
 
@@ -177,7 +177,7 @@ def {field}(self: 'fst.FST') -> None:
             print(f'''
 @property
 def {field}(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `{field}`."""
 
     if isinstance(child := self.a.{field}, list):
         return fstview(self, {field!r})

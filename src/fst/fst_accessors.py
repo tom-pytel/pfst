@@ -97,7 +97,7 @@ __all__ = [
 # Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Try, TryStar, Lambda, IfExp, ExceptHandler, match_case
 @property
 def body(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `body`."""
 
     if isinstance(child := self.a.body, list):
         return fstview(self, 'body')
@@ -122,7 +122,7 @@ def body(self: 'fst.FST') -> None:
 # Module
 @property
 def type_ignores(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `type_ignores`."""
 
     self.a.type_ignores  # noqa: B018
 
@@ -140,7 +140,7 @@ def type_ignores(self: 'fst.FST') -> None:
 # FunctionType
 @property
 def argtypes(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `argtypes`."""
 
     self.a.argtypes  # noqa: B018
 
@@ -158,7 +158,7 @@ def argtypes(self: 'fst.FST') -> None:
 # FunctionType, FunctionDef, AsyncFunctionDef
 @property
 def returns(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `returns`."""
 
     return child.f if (child := self.a.returns) else None
 
@@ -174,7 +174,7 @@ def returns(self: 'fst.FST') -> None:
 # FunctionDef, AsyncFunctionDef, ClassDef, _decorator_list
 @property
 def decorator_list(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `decorator_list`."""
 
     self.a.decorator_list  # noqa: B018
 
@@ -192,7 +192,7 @@ def decorator_list(self: 'fst.FST') -> None:
 # FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias, ExceptHandler, alias, MatchStar, MatchAs, TypeVar, ParamSpec, TypeVarTuple
 @property
 def name(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `name`."""
 
     return child.f if isinstance(child := self.a.name, AST) else child
 
@@ -209,7 +209,7 @@ def name(self: 'fst.FST') -> None:
 if PYGE12:
     @property
     def type_params(self: 'fst.FST') -> fstview:
-        """@private"""
+        """`FST` accessor for `AST` field `type_params`."""
 
         self.a.type_params  # noqa: B018
 
@@ -226,7 +226,7 @@ if PYGE12:
 else:  # safely access nonexistent empty field
     @property
     def type_params(self: 'fst.FST') -> list:
-        """@private"""
+        """`FST` accessor for `AST` field `type_params`."""
 
         if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
             return fstview_dummy(self, 'type_params')
@@ -246,7 +246,7 @@ else:  # safely access nonexistent empty field
 # FunctionDef, AsyncFunctionDef, Lambda, Call, arguments
 @property
 def args(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `args`."""
 
     if isinstance(child := self.a.args, list):
         return fstview(self, 'args')
@@ -271,7 +271,7 @@ def args(self: 'fst.FST') -> None:
 # FunctionDef, AsyncFunctionDef, Assign, For, AsyncFor, With, AsyncWith, arg
 @property
 def type_comment(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `type_comment`."""
 
     return self.a.type_comment
 
@@ -287,7 +287,7 @@ def type_comment(self: 'fst.FST') -> None:
 # ClassDef
 @property
 def bases(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `bases`."""
 
     self.a.bases  # noqa: B018
 
@@ -305,7 +305,7 @@ def bases(self: 'fst.FST') -> None:
 # ClassDef, Call
 @property
 def keywords(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `keywords`."""
 
     self.a.keywords  # noqa: B018
 
@@ -323,7 +323,7 @@ def keywords(self: 'fst.FST') -> None:
 # Return, Assign, TypeAlias, AugAssign, AnnAssign, Expr, NamedExpr, DictComp, Await, Yield, YieldFrom, FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue, MatchSingleton
 @property
 def value(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `value`."""
 
     return child.f if isinstance(child := self.a.value, AST) else child
 
@@ -339,7 +339,7 @@ def value(self: 'fst.FST') -> None:
 # Delete, Assign, _Assign_targets
 @property
 def targets(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `targets`."""
 
     self.a.targets  # noqa: B018
 
@@ -357,7 +357,7 @@ def targets(self: 'fst.FST') -> None:
 # AugAssign, AnnAssign, For, AsyncFor, NamedExpr, comprehension
 @property
 def target(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `target`."""
 
     return self.a.target.f
 
@@ -373,7 +373,7 @@ def target(self: 'fst.FST') -> None:
 # AugAssign, BoolOp, BinOp, UnaryOp
 @property
 def op(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `op`."""
 
     return self.a.op.f
 
@@ -389,7 +389,7 @@ def op(self: 'fst.FST') -> None:
 # AnnAssign, arg
 @property
 def annotation(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `annotation`."""
 
     return child.f if (child := self.a.annotation) else None
 
@@ -405,7 +405,7 @@ def annotation(self: 'fst.FST') -> None:
 # AnnAssign
 @property
 def simple(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `simple`."""
 
     return self.a.simple
 
@@ -421,7 +421,7 @@ def simple(self: 'fst.FST') -> None:
 # For, AsyncFor, comprehension
 @property
 def iter(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `iter`."""
 
     return self.a.iter.f
 
@@ -437,7 +437,7 @@ def iter(self: 'fst.FST') -> None:
 # For, AsyncFor, While, If, Try, TryStar, IfExp
 @property
 def orelse(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `orelse`."""
 
     if isinstance(child := self.a.orelse, list):
         return fstview(self, 'orelse')
@@ -462,7 +462,7 @@ def orelse(self: 'fst.FST') -> None:
 # While, If, Assert, IfExp
 @property
 def test(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `test`."""
 
     return self.a.test.f
 
@@ -478,7 +478,7 @@ def test(self: 'fst.FST') -> None:
 # With, AsyncWith, _withitems
 @property
 def items(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `items`."""
 
     self.a.items  # noqa: B018
 
@@ -496,7 +496,7 @@ def items(self: 'fst.FST') -> None:
 # Match
 @property
 def subject(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `subject`."""
 
     return self.a.subject.f
 
@@ -512,7 +512,7 @@ def subject(self: 'fst.FST') -> None:
 # Match, _match_cases
 @property
 def cases(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `cases`."""
 
     self.a.cases  # noqa: B018
 
@@ -530,7 +530,7 @@ def cases(self: 'fst.FST') -> None:
 # Raise
 @property
 def exc(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `exc`."""
 
     return child.f if (child := self.a.exc) else None
 
@@ -546,7 +546,7 @@ def exc(self: 'fst.FST') -> None:
 # Raise
 @property
 def cause(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `cause`."""
 
     return child.f if (child := self.a.cause) else None
 
@@ -562,7 +562,7 @@ def cause(self: 'fst.FST') -> None:
 # Try, TryStar, _ExceptHandlers
 @property
 def handlers(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `handlers`."""
 
     self.a.handlers  # noqa: B018
 
@@ -580,7 +580,7 @@ def handlers(self: 'fst.FST') -> None:
 # Try, TryStar
 @property
 def finalbody(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `finalbody`."""
 
     self.a.finalbody  # noqa: B018
 
@@ -598,7 +598,7 @@ def finalbody(self: 'fst.FST') -> None:
 # Assert
 @property
 def msg(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `msg`."""
 
     return child.f if (child := self.a.msg) else None
 
@@ -614,7 +614,7 @@ def msg(self: 'fst.FST') -> None:
 # Import, ImportFrom, Global, Nonlocal, _aliases
 @property
 def names(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `names`."""
 
     self.a.names  # noqa: B018
 
@@ -632,7 +632,7 @@ def names(self: 'fst.FST') -> None:
 # ImportFrom
 @property
 def module(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `module`."""
 
     return self.a.module
 
@@ -648,7 +648,7 @@ def module(self: 'fst.FST') -> None:
 # ImportFrom
 @property
 def level(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `level`."""
 
     return self.a.level
 
@@ -664,7 +664,7 @@ def level(self: 'fst.FST') -> None:
 # BoolOp, Dict, JoinedStr, TemplateStr
 @property
 def values(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `values`."""
 
     self.a.values  # noqa: B018
 
@@ -682,7 +682,7 @@ def values(self: 'fst.FST') -> None:
 # BinOp, Compare
 @property
 def left(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `left`."""
 
     return self.a.left.f
 
@@ -698,7 +698,7 @@ def left(self: 'fst.FST') -> None:
 # BinOp
 @property
 def right(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `right`."""
 
     return self.a.right.f
 
@@ -714,7 +714,7 @@ def right(self: 'fst.FST') -> None:
 # UnaryOp
 @property
 def operand(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `operand`."""
 
     return self.a.operand.f
 
@@ -730,7 +730,7 @@ def operand(self: 'fst.FST') -> None:
 # Dict, MatchMapping
 @property
 def keys(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `keys`."""
 
     self.a.keys  # noqa: B018
 
@@ -748,7 +748,7 @@ def keys(self: 'fst.FST') -> None:
 # Set, List, Tuple
 @property
 def elts(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `elts`."""
 
     self.a.elts  # noqa: B018
 
@@ -766,7 +766,7 @@ def elts(self: 'fst.FST') -> None:
 # ListComp, SetComp, GeneratorExp
 @property
 def elt(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `elt`."""
 
     return self.a.elt.f
 
@@ -782,7 +782,7 @@ def elt(self: 'fst.FST') -> None:
 # ListComp, SetComp, DictComp, GeneratorExp, _comprehensions
 @property
 def generators(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `generators`."""
 
     self.a.generators  # noqa: B018
 
@@ -800,7 +800,7 @@ def generators(self: 'fst.FST') -> None:
 # DictComp
 @property
 def key(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `key`."""
 
     return self.a.key.f
 
@@ -816,7 +816,7 @@ def key(self: 'fst.FST') -> None:
 # Compare
 @property
 def ops(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `ops`."""
 
     self.a.ops  # noqa: B018
 
@@ -834,7 +834,7 @@ def ops(self: 'fst.FST') -> None:
 # Compare
 @property
 def comparators(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `comparators`."""
 
     self.a.comparators  # noqa: B018
 
@@ -852,7 +852,7 @@ def comparators(self: 'fst.FST') -> None:
 # Call
 @property
 def func(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `func`."""
 
     return self.a.func.f
 
@@ -868,7 +868,7 @@ def func(self: 'fst.FST') -> None:
 # FormattedValue, Interpolation
 @property
 def conversion(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `conversion`."""
 
     return self.a.conversion
 
@@ -884,7 +884,7 @@ def conversion(self: 'fst.FST') -> None:
 # FormattedValue, Interpolation
 @property
 def format_spec(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `format_spec`."""
 
     return child.f if (child := self.a.format_spec) else None
 
@@ -900,7 +900,7 @@ def format_spec(self: 'fst.FST') -> None:
 # Interpolation
 @property
 def str(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `str`."""
 
     return self.a.str
 
@@ -916,7 +916,7 @@ def str(self: 'fst.FST') -> None:
 # Constant
 @property
 def kind(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `kind`."""
 
     return self.a.kind
 
@@ -932,7 +932,7 @@ def kind(self: 'fst.FST') -> None:
 # Attribute
 @property
 def attr(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `attr`."""
 
     return self.a.attr
 
@@ -948,7 +948,7 @@ def attr(self: 'fst.FST') -> None:
 # Attribute, Subscript, Starred, Name, List, Tuple
 @property
 def ctx(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `ctx`."""
 
     return self.a.ctx.f
 
@@ -964,7 +964,7 @@ def ctx(self: 'fst.FST') -> None:
 # Subscript
 @property
 def slice(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `slice`."""
 
     return self.a.slice.f
 
@@ -980,7 +980,7 @@ def slice(self: 'fst.FST') -> None:
 # Name
 @property
 def id(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `id`."""
 
     return self.a.id
 
@@ -996,7 +996,7 @@ def id(self: 'fst.FST') -> None:
 # Slice
 @property
 def lower(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `lower`."""
 
     return child.f if (child := self.a.lower) else None
 
@@ -1012,7 +1012,7 @@ def lower(self: 'fst.FST') -> None:
 # Slice
 @property
 def upper(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `upper`."""
 
     return child.f if (child := self.a.upper) else None
 
@@ -1028,7 +1028,7 @@ def upper(self: 'fst.FST') -> None:
 # Slice
 @property
 def step(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `step`."""
 
     return child.f if (child := self.a.step) else None
 
@@ -1044,7 +1044,7 @@ def step(self: 'fst.FST') -> None:
 # comprehension, _comprehension_ifs
 @property
 def ifs(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `ifs`."""
 
     self.a.ifs  # noqa: B018
 
@@ -1062,7 +1062,7 @@ def ifs(self: 'fst.FST') -> None:
 # comprehension
 @property
 def is_async(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `is_async`."""
 
     return self.a.is_async
 
@@ -1078,7 +1078,7 @@ def is_async(self: 'fst.FST') -> None:
 # ExceptHandler
 @property
 def type(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `type`."""
 
     return child.f if (child := self.a.type) else None
 
@@ -1094,7 +1094,7 @@ def type(self: 'fst.FST') -> None:
 # arguments
 @property
 def posonlyargs(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `posonlyargs`."""
 
     self.a.posonlyargs  # noqa: B018
 
@@ -1112,7 +1112,7 @@ def posonlyargs(self: 'fst.FST') -> None:
 # arguments
 @property
 def defaults(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `defaults`."""
 
     self.a.defaults  # noqa: B018
 
@@ -1130,7 +1130,7 @@ def defaults(self: 'fst.FST') -> None:
 # arguments
 @property
 def vararg(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `vararg`."""
 
     return child.f if (child := self.a.vararg) else None
 
@@ -1146,7 +1146,7 @@ def vararg(self: 'fst.FST') -> None:
 # arguments
 @property
 def kwonlyargs(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `kwonlyargs`."""
 
     self.a.kwonlyargs  # noqa: B018
 
@@ -1164,7 +1164,7 @@ def kwonlyargs(self: 'fst.FST') -> None:
 # arguments
 @property
 def kw_defaults(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `kw_defaults`."""
 
     self.a.kw_defaults  # noqa: B018
 
@@ -1182,7 +1182,7 @@ def kw_defaults(self: 'fst.FST') -> None:
 # arguments
 @property
 def kwarg(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `kwarg`."""
 
     return child.f if (child := self.a.kwarg) else None
 
@@ -1198,7 +1198,7 @@ def kwarg(self: 'fst.FST') -> None:
 # arg, keyword
 @property
 def arg(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `arg`."""
 
     return self.a.arg
 
@@ -1214,7 +1214,7 @@ def arg(self: 'fst.FST') -> None:
 # alias
 @property
 def asname(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `asname`."""
 
     return self.a.asname
 
@@ -1230,7 +1230,7 @@ def asname(self: 'fst.FST') -> None:
 # withitem
 @property
 def context_expr(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `context_expr`."""
 
     return self.a.context_expr.f
 
@@ -1246,7 +1246,7 @@ def context_expr(self: 'fst.FST') -> None:
 # withitem
 @property
 def optional_vars(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `optional_vars`."""
 
     return child.f if (child := self.a.optional_vars) else None
 
@@ -1262,7 +1262,7 @@ def optional_vars(self: 'fst.FST') -> None:
 # match_case, MatchAs
 @property
 def pattern(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `pattern`."""
 
     return child.f if (child := self.a.pattern) else None
 
@@ -1278,7 +1278,7 @@ def pattern(self: 'fst.FST') -> None:
 # match_case
 @property
 def guard(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `guard`."""
 
     return child.f if (child := self.a.guard) else None
 
@@ -1294,7 +1294,7 @@ def guard(self: 'fst.FST') -> None:
 # MatchSequence, MatchMapping, MatchClass, MatchOr
 @property
 def patterns(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `patterns`."""
 
     self.a.patterns  # noqa: B018
 
@@ -1312,7 +1312,7 @@ def patterns(self: 'fst.FST') -> None:
 # MatchMapping
 @property
 def rest(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `rest`."""
 
     return self.a.rest
 
@@ -1328,7 +1328,7 @@ def rest(self: 'fst.FST') -> None:
 # MatchClass
 @property
 def cls(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `cls`."""
 
     return self.a.cls.f
 
@@ -1344,7 +1344,7 @@ def cls(self: 'fst.FST') -> None:
 # MatchClass
 @property
 def kwd_attrs(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `kwd_attrs`."""
 
     self.a.kwd_attrs  # noqa: B018
 
@@ -1362,7 +1362,7 @@ def kwd_attrs(self: 'fst.FST') -> None:
 # MatchClass
 @property
 def kwd_patterns(self: 'fst.FST') -> fstview:
-    """@private"""
+    """`FST` accessor for `AST` field `kwd_patterns`."""
 
     self.a.kwd_patterns  # noqa: B018
 
@@ -1380,7 +1380,7 @@ def kwd_patterns(self: 'fst.FST') -> None:
 # TypeIgnore
 @property
 def tag(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `tag`."""
 
     return self.a.tag
 
@@ -1396,7 +1396,7 @@ def tag(self: 'fst.FST') -> None:
 # TypeVar
 @property
 def bound(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-    """@private"""
+    """`FST` accessor for `AST` field `bound`."""
 
     return child.f if (child := self.a.bound) else None
 
@@ -1413,7 +1413,7 @@ def bound(self: 'fst.FST') -> None:
 if PYGE13:
     @property
     def default_value(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-        """@private"""
+        """`FST` accessor for `AST` field `default_value`."""
 
         return child.f if (child := self.a.default_value) else None
 
@@ -1428,7 +1428,7 @@ if PYGE13:
 else:  # safely access nonexistent field
     @property
     def default_value(self: 'fst.FST') -> Union['fst.FST', None, constant]:
-        """@private"""
+        """`FST` accessor for `AST` field `default_value`."""
 
         return None
 

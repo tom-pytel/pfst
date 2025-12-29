@@ -15,6 +15,7 @@ from typing import Any, Callable, Generator, Literal, Mapping, TextIO
 from . import parsex
 from . import fst_traverse
 from . import fst_options
+from . import fst_type_predicates
 
 from .asttypes import (
     ASTS_LEAF_MOD,
@@ -147,7 +148,7 @@ from .fst_options import check_options
 
 
 __all__ = [
-    'FST', 'parse', 'unparse', 'dump', 'castf', 'gastf',
+    'parse', 'unparse', 'dump', 'castf', 'gastf', 'FST'
 ]
 
 
@@ -366,14 +367,52 @@ def dump(
 
 def castf(ast: AST) -> FST:
     """Cast AST F, type-safe way to access `ast.f` when you know it exists. Intentionally fail with `AttributeError` if
-    `ast` does not have `.f`."""
+    `ast` does not have `.f`.
+
+    **Example:**
+
+    >>> a = fst.parse('module')
+
+    >>> print(type(a))
+    <class 'ast.Module'>
+
+    >>> print(type(castf(a)))
+    <class 'fst.fst.FST'>
+
+    >>> castf(a) is a.f
+    True
+
+    >>> del a.f
+    >>> print(castf(a))
+    Traceback (most recent call last):
+    ...
+    AttributeError: 'Module' object has no attribute 'f'
+    """
 
     return ast.f  # type: ignore
 
 
 def gastf(ast: AST) -> FST | None:
     """Get AST F, type-safe way to get `ast.f` when it may or may not exist. Returns `None` if `ast` does not have an
-    `.f`."""
+    `.f`.
+
+    **Example:**
+
+    >>> a = fst.parse('module')
+
+    >>> print(type(a))
+    <class 'ast.Module'>
+
+    >>> print(type(gastf(a)))
+    <class 'fst.fst.FST'>
+
+    >>> gastf(a) is a.f
+    True
+
+    >>> del a.f
+    >>> print(gastf(a))
+    None
+    """
 
     return getattr(ast, 'f', None)
 
@@ -4145,130 +4184,128 @@ class FST:
 
         return self.a.__class__ in ASTS_LEAF__SLICE
 
-    from .fst_type_predicates import (
-        is_Module,
-        is_Interactive,
-        is_Expression,
-        is_FunctionType,
-        is_FunctionDef,
-        is_AsyncFunctionDef,
-        is_ClassDef,
-        is_Return,
-        is_Delete,
-        is_Assign,
-        is_TypeAlias,
-        is_AugAssign,
-        is_AnnAssign,
-        is_For,
-        is_AsyncFor,
-        is_While,
-        is_If,
-        is_With,
-        is_AsyncWith,
-        is_Match,
-        is_Raise,
-        is_Try,
-        is_TryStar,
-        is_Assert,
-        is_Import,
-        is_ImportFrom,
-        is_Global,
-        is_Nonlocal,
-        is_Expr,
-        is_Pass,
-        is_Break,
-        is_Continue,
-        is_BoolOp,
-        is_NamedExpr,
-        is_BinOp,
-        is_UnaryOp,
-        is_Lambda,
-        is_IfExp,
-        is_Dict,
-        is_Set,
-        is_ListComp,
-        is_SetComp,
-        is_DictComp,
-        is_GeneratorExp,
-        is_Await,
-        is_Yield,
-        is_YieldFrom,
-        is_Compare,
-        is_Call,
-        is_FormattedValue,
-        is_Interpolation,
-        is_JoinedStr,
-        is_TemplateStr,
-        is_Constant,
-        is_Attribute,
-        is_Subscript,
-        is_Starred,
-        is_Name,
-        is_List,
-        is_Tuple,
-        is_Slice,
-        is_Load,
-        is_Store,
-        is_Del,
-        is_And,
-        is_Or,
-        is_Add,
-        is_Sub,
-        is_Mult,
-        is_MatMult,
-        is_Div,
-        is_Mod,
-        is_Pow,
-        is_LShift,
-        is_RShift,
-        is_BitOr,
-        is_BitXor,
-        is_BitAnd,
-        is_FloorDiv,
-        is_Invert,
-        is_Not,
-        is_UAdd,
-        is_USub,
-        is_Eq,
-        is_NotEq,
-        is_Lt,
-        is_LtE,
-        is_Gt,
-        is_GtE,
-        is_Is,
-        is_IsNot,
-        is_In,
-        is_NotIn,
-        is_comprehension,
-        is_ExceptHandler,
-        is_arguments,
-        is_arg,
-        is_keyword,
-        is_alias,
-        is_withitem,
-        is_match_case,
-        is_MatchValue,
-        is_MatchSingleton,
-        is_MatchSequence,
-        is_MatchMapping,
-        is_MatchClass,
-        is_MatchStar,
-        is_MatchAs,
-        is_MatchOr,
-        is_TypeIgnore,
-        is_TypeVar,
-        is_ParamSpec,
-        is_TypeVarTuple,
-        is__ExceptHandlers,
-        is__match_cases,
-        is__Assign_targets,
-        is__decorator_list,
-        is__comprehensions,
-        is__comprehension_ifs,
-        is__aliases,
-        is__withitems,
-        is__type_params,
-    )
+    is_Module             = fst_type_predicates.is_Module  # we do assign instead of import so that pdoc gets the right order
+    is_Interactive        = fst_type_predicates.is_Interactive
+    is_Expression         = fst_type_predicates.is_Expression
+    is_FunctionType       = fst_type_predicates.is_FunctionType
+    is_FunctionDef        = fst_type_predicates.is_FunctionDef
+    is_AsyncFunctionDef   = fst_type_predicates.is_AsyncFunctionDef
+    is_ClassDef           = fst_type_predicates.is_ClassDef
+    is_Return             = fst_type_predicates.is_Return
+    is_Delete             = fst_type_predicates.is_Delete
+    is_Assign             = fst_type_predicates.is_Assign
+    is_TypeAlias          = fst_type_predicates.is_TypeAlias
+    is_AugAssign          = fst_type_predicates.is_AugAssign
+    is_AnnAssign          = fst_type_predicates.is_AnnAssign
+    is_For                = fst_type_predicates.is_For
+    is_AsyncFor           = fst_type_predicates.is_AsyncFor
+    is_While              = fst_type_predicates.is_While
+    is_If                 = fst_type_predicates.is_If
+    is_With               = fst_type_predicates.is_With
+    is_AsyncWith          = fst_type_predicates.is_AsyncWith
+    is_Match              = fst_type_predicates.is_Match
+    is_Raise              = fst_type_predicates.is_Raise
+    is_Try                = fst_type_predicates.is_Try
+    is_TryStar            = fst_type_predicates.is_TryStar
+    is_Assert             = fst_type_predicates.is_Assert
+    is_Import             = fst_type_predicates.is_Import
+    is_ImportFrom         = fst_type_predicates.is_ImportFrom
+    is_Global             = fst_type_predicates.is_Global
+    is_Nonlocal           = fst_type_predicates.is_Nonlocal
+    is_Expr               = fst_type_predicates.is_Expr
+    is_Pass               = fst_type_predicates.is_Pass
+    is_Break              = fst_type_predicates.is_Break
+    is_Continue           = fst_type_predicates.is_Continue
+    is_BoolOp             = fst_type_predicates.is_BoolOp
+    is_NamedExpr          = fst_type_predicates.is_NamedExpr
+    is_BinOp              = fst_type_predicates.is_BinOp
+    is_UnaryOp            = fst_type_predicates.is_UnaryOp
+    is_Lambda             = fst_type_predicates.is_Lambda
+    is_IfExp              = fst_type_predicates.is_IfExp
+    is_Dict               = fst_type_predicates.is_Dict
+    is_Set                = fst_type_predicates.is_Set
+    is_ListComp           = fst_type_predicates.is_ListComp
+    is_SetComp            = fst_type_predicates.is_SetComp
+    is_DictComp           = fst_type_predicates.is_DictComp
+    is_GeneratorExp       = fst_type_predicates.is_GeneratorExp
+    is_Await              = fst_type_predicates.is_Await
+    is_Yield              = fst_type_predicates.is_Yield
+    is_YieldFrom          = fst_type_predicates.is_YieldFrom
+    is_Compare            = fst_type_predicates.is_Compare
+    is_Call               = fst_type_predicates.is_Call
+    is_FormattedValue     = fst_type_predicates.is_FormattedValue
+    is_Interpolation      = fst_type_predicates.is_Interpolation
+    is_JoinedStr          = fst_type_predicates.is_JoinedStr
+    is_TemplateStr        = fst_type_predicates.is_TemplateStr
+    is_Constant           = fst_type_predicates.is_Constant
+    is_Attribute          = fst_type_predicates.is_Attribute
+    is_Subscript          = fst_type_predicates.is_Subscript
+    is_Starred            = fst_type_predicates.is_Starred
+    is_Name               = fst_type_predicates.is_Name
+    is_List               = fst_type_predicates.is_List
+    is_Tuple              = fst_type_predicates.is_Tuple
+    is_Slice              = fst_type_predicates.is_Slice
+    is_Load               = fst_type_predicates.is_Load
+    is_Store              = fst_type_predicates.is_Store
+    is_Del                = fst_type_predicates.is_Del
+    is_And                = fst_type_predicates.is_And
+    is_Or                 = fst_type_predicates.is_Or
+    is_Add                = fst_type_predicates.is_Add
+    is_Sub                = fst_type_predicates.is_Sub
+    is_Mult               = fst_type_predicates.is_Mult
+    is_MatMult            = fst_type_predicates.is_MatMult
+    is_Div                = fst_type_predicates.is_Div
+    is_Mod                = fst_type_predicates.is_Mod
+    is_Pow                = fst_type_predicates.is_Pow
+    is_LShift             = fst_type_predicates.is_LShift
+    is_RShift             = fst_type_predicates.is_RShift
+    is_BitOr              = fst_type_predicates.is_BitOr
+    is_BitXor             = fst_type_predicates.is_BitXor
+    is_BitAnd             = fst_type_predicates.is_BitAnd
+    is_FloorDiv           = fst_type_predicates.is_FloorDiv
+    is_Invert             = fst_type_predicates.is_Invert
+    is_Not                = fst_type_predicates.is_Not
+    is_UAdd               = fst_type_predicates.is_UAdd
+    is_USub               = fst_type_predicates.is_USub
+    is_Eq                 = fst_type_predicates.is_Eq
+    is_NotEq              = fst_type_predicates.is_NotEq
+    is_Lt                 = fst_type_predicates.is_Lt
+    is_LtE                = fst_type_predicates.is_LtE
+    is_Gt                 = fst_type_predicates.is_Gt
+    is_GtE                = fst_type_predicates.is_GtE
+    is_Is                 = fst_type_predicates.is_Is
+    is_IsNot              = fst_type_predicates.is_IsNot
+    is_In                 = fst_type_predicates.is_In
+    is_NotIn              = fst_type_predicates.is_NotIn
+    is_comprehension      = fst_type_predicates.is_comprehension
+    is_ExceptHandler      = fst_type_predicates.is_ExceptHandler
+    is_arguments          = fst_type_predicates.is_arguments
+    is_arg                = fst_type_predicates.is_arg
+    is_keyword            = fst_type_predicates.is_keyword
+    is_alias              = fst_type_predicates.is_alias
+    is_withitem           = fst_type_predicates.is_withitem
+    is_match_case         = fst_type_predicates.is_match_case
+    is_MatchValue         = fst_type_predicates.is_MatchValue
+    is_MatchSingleton     = fst_type_predicates.is_MatchSingleton
+    is_MatchSequence      = fst_type_predicates.is_MatchSequence
+    is_MatchMapping       = fst_type_predicates.is_MatchMapping
+    is_MatchClass         = fst_type_predicates.is_MatchClass
+    is_MatchStar          = fst_type_predicates.is_MatchStar
+    is_MatchAs            = fst_type_predicates.is_MatchAs
+    is_MatchOr            = fst_type_predicates.is_MatchOr
+    is_TypeIgnore         = fst_type_predicates.is_TypeIgnore
+    is_TypeVar            = fst_type_predicates.is_TypeVar
+    is_ParamSpec          = fst_type_predicates.is_ParamSpec
+    is_TypeVarTuple       = fst_type_predicates.is_TypeVarTuple
+    is__ExceptHandlers    = fst_type_predicates.is__ExceptHandlers
+    is__match_cases       = fst_type_predicates.is__match_cases
+    is__Assign_targets    = fst_type_predicates.is__Assign_targets
+    is__decorator_list    = fst_type_predicates.is__decorator_list
+    is__comprehensions    = fst_type_predicates.is__comprehensions
+    is__comprehension_ifs = fst_type_predicates.is__comprehension_ifs
+    is__aliases           = fst_type_predicates.is__aliases
+    is__withitems         = fst_type_predicates.is__withitems
+    is__type_params       = fst_type_predicates.is__type_params
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -4463,7 +4500,21 @@ class FST:
 
     @property
     def _all(self: FST) -> fstview:
-        """Virtual `_all` field view for `Dict`, `MatchMapping` and `Compare`."""
+        """Virtual `_all` field view for `Dict`, `MatchMapping` and `Compare`.
+
+        **Examples:**
+
+        >>> FST('{a: b, c: d, e: f}')._all[1:2].copy().src
+        '{c: d}'
+
+        >>> FST('{1: a, 2: b, **rest}', 'MatchMapping')._all[1:].copy().src
+        '{2: b, **rest}'
+
+        >>> FST('a < b == c > d')._all[1:3].copy().src
+        'b == c'
+
+        @public
+        """
 
         if view_cls := _VIRTUAL_FIELD_VIEW__ALL.get(self.a.__class__):
             return view_cls(self, '_all')
@@ -4480,8 +4531,33 @@ class FST:
 
     @property
     def _body(self: FST) -> fstview:
-        """Virtual `_body` field for statements. Special `fstview__body` for statements which may have a docstring and
-        normal `fstview` for the rest. @private"""
+        r"""Virtual `_body` field for statements. Special field view for statements which excludes a docstring if
+        present from the list and indexing.
+
+        **Examples:**
+
+        >>> f = FST('''
+        ... def func():
+        ...     \'\'\'docstring\'\'\'
+        ...     first_stmt()
+        ...     second_stmt()
+        ... '''.strip())
+
+        >>> f._body[0].src
+        'first_stmt()'
+
+        >>> list(f.src for f in reversed(f._body))
+        ['second_stmt()', 'first_stmt()']
+
+        >>> f._body[0] = 'replacement_stmt'
+        >>> print(f.src)
+        def func():
+            '''docstring'''
+            replacement_stmt
+            second_stmt()
+
+        @public
+        """
 
         ast_cls = self.a.__class__
 
