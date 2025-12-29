@@ -958,46 +958,6 @@ def _elif_to_else_if(self: fst.FST, docstr: bool | Literal['strict'] = True) -> 
     self._put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
 
-def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None = None) -> bool:
-    """Move statements on the same logical line as a block open to their own line, e.g:
-    ```
-    if a: call()
-    ```
-    Becomes:
-    ```
-    if a:
-        call()
-    ```
-
-    **Parameters:**
-    - `field`: Which block to normalize (`'body'`, `'orelse'`, `'finalbody'`). `'handlers'` or `'cases'` wouldn't make
-        sense.
-    - `indent`: The indentation to use for the relocated line if already known, saves a call to `_get_block_indent()`.
-
-    **Returns:**
-    - `bool`: Whether block was normalized or not.
-    """
-
-    if self.a.__class__ in ASTS_LEAF_MOD or not (block := getattr(self.a, field)) or not isinstance(block, list):
-        return False
-
-    b0 = block[0].f
-    b0_ln, b0_col, _, _ = b0.bloc
-    root = self.root
-
-    if not (colon := prev_find(root._lines, *prev_bound(b0), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # only found if is on same logical line as first body child
-        return False
-
-    if indent is None:
-        indent = b0._get_block_indent()
-
-    ln, col = colon
-
-    self._put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
-
-    return True
-
-
 def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
     """Whether can delete all elements of af a body list of children according to options or not."""
 
@@ -1187,7 +1147,7 @@ def _put_slice_stmtish_old(
             block_indent = header_indent + root.indent
 
         if fpre or fpost:
-            _normalize_block(self, field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
+            self._normalize_block(field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
 
     if len_slice:  # replacement
         ffirst = body[start].f

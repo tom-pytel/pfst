@@ -9,7 +9,7 @@ from ast import walk
 
 from . import fst
 
-from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod, _slice
+from .asttypes import ASTS_LEAF_BLOCK, AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod, _slice
 from .astutil import bistr
 
 from .common import NodeError, astfield
@@ -114,11 +114,11 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     first_lineno = 0  # this indicates not to apply the first column delta, will only be set if we need that action because we possibly erased multi-byte characters on the first line before the reparse node
     first_line_col_delta = lines[pln].c2b(pcol) - pcol
 
-    blkhead_end = stmtish._loc_block_header_end()
-
-    if in_blkhead := (blkhead_end and (end_ln, end_col) <= blkhead_end):  # block statement with modification limited to block header, yes comparing 2-tuple with 4-tuple
-        pend_ln, pend_col, _, _ = blkhead_end
-        pend_col += 1  # include the header ':'
+    if in_blkhead := (
+        stmtisha.__class__ in ASTS_LEAF_BLOCK
+        and (blkhead_end := stmtish._loc_block_header_end()[2:]) > (end_ln, end_col + 1)
+    ):
+        pend_ln, pend_col = blkhead_end
 
     elif stmtish is root:  # reparse may include trailing comments which would not otherwise be included
         pend_ln = len(lines) - 1

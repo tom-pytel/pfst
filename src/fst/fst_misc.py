@@ -13,8 +13,6 @@ from math import log10
 from pprint import pformat
 from typing import Any, Literal, Mapping
 
-import fst as fst_package  # because of circular imports
-
 from . import fst
 
 from .asttypes import (
@@ -370,9 +368,9 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
         if ast_cls in ASTS_LEAF_BLOCK:
             ln, col, _, _ = loc
-            end_ln, end_col, _, _ = self._loc_block_header_end()
+            _, _, end_ln, end_col = self._loc_block_header_end()
 
-            _dump_lines(self, st, ln, col, end_ln, end_col + 1, True)
+            _dump_lines(self, st, ln, col, end_ln, end_col, True)
 
         else:
             _dump_lines(self, st, *loc, True)
@@ -1993,6 +1991,58 @@ def _trim_delimiters(self: fst.FST) -> None:
     del lines[end_ln + 1:], lines[:ln]
 
 
+def _normalize_block(
+    self: fst.FST, field: Literal['body', 'orelse', 'finalbody'] = 'body', *, indent: str | None = None
+) -> bool:
+    """Move statements on the same logical line as a block open to their own line, e.g:
+    ```
+    if a: call()
+    ```
+    Becomes:
+    ```
+    if a:
+        call()
+    ```
+
+    For convenience can call on non-block or non-statement node or node which doesn't have this field, is a noop in this
+    case.
+
+    **Parameters:**
+    - `field`: Which block to normalize (`'body'`, `'orelse'`, `'finalbody'`). `'handlers'` or `'cases'` wouldn't make
+        sense.
+    - `indent`: The indentation to use for the relocated line if already known, saves a call to `_get_block_indent()`.
+
+    **Returns:**
+    - `bool`: Whether block was normalized or not.
+    """
+
+    ast = self.a
+
+    if ast.__class__ not in ASTS_LEAF_BLOCK or not (body := getattr(ast, field)):  # body guaranteed to be list if there
+        return False
+
+    root = self.root
+    body0 = body[0].f
+    body0_ln, body0_col, _, _ = body0.bloc
+
+    if prev := body0.prev('loc'):
+        _, _, ln, col = prev.bloc
+    else:
+        ln, col, _, _ = self.loc
+
+    if not (colon := prev_find(root._lines, ln, col, body0_ln, body0_col, ':', True, lcont=None)):  # only found if is on same logical line as first body child, comment left as False because that breaks logical line anyway
+        return False
+
+    ln, col = colon
+
+    if indent is None:
+        indent = body0._get_block_indent()
+
+    self._put_src(['', indent], ln, col + 1, body0_ln, body0_col, False)
+
+    return True
+
+
 def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = False, full: bool = False) -> str | None:
     """Get and / or put current line comment for this node.
 
@@ -2029,8 +2079,7 @@ def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = F
         raise NotImplementedError('get / put line comment for non-statementish node')
 
     if is_block := (ast_cls in ASTS_LEAF_BLOCK):
-        end_ln, end_col, _, _ = self._loc_block_header_end()
-        end_col += 1
+        _, _, end_ln, end_col = self._loc_block_header_end()
     else:
         _, _, end_ln, end_col = self.bloc
 
@@ -2080,9 +2129,8 @@ def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = F
         pass  # noop
 
     elif is_block:
-        if fst_package.slice_stmtish._normalize_block(self):  # TODO: clean this up!
-            end_ln, end_col, _, _ = self._loc_block_header_end()  # any remaining junk on header tail (maybe line continuation) is harmless to remove
-            end_col += 1
+        if self._normalize_block():
+            _, _, end_ln, end_col = self._loc_block_header_end()  # any remaining junk on header tail (maybe line continuation) is harmless to remove
 
     # we are past any semicolon on this line, its either another statement or a line continuation ... which may lead to another statement or the semicolon which is not on this line, or not
 
@@ -2102,9 +2150,7 @@ def _getput_line_comment(self: fst.FST, comment: str | None | Literal[False] = F
 
             indent = self._get_block_indent()
 
-            if ((parent := self.parent)
-                and fst_package.slice_stmtish._normalize_block(parent, self.pfield.name, indent=indent)  # if have parent then normalize the block because could all be on header logical line separated with semicolons
-            ):
+            if (parent := self.parent) and parent._normalize_block(self.pfield.name, indent=indent):  # if have parent then normalize the block because could all be on header logical line separated with semicolons
                 _, _, end_ln, before_semi_end_col = self.bloc  # locations have changed
                 next_ln, next_col, _, _ = next_stmt.bloc
 

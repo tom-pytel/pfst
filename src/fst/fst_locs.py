@@ -8,6 +8,7 @@ This module contains functions which are imported as methods in the `FST` class 
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from . import fst
 
@@ -362,40 +363,41 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     return None
 
 
-def _loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
-    """Return position of the end of the block header line(s) for block node (just before the ':') and the end position
-    of the last child, or None if `self` is not a block header node.
+def _loc_block_header_end(
+    self: fst.FST  #, field: Literal['body', 'orelse', 'finalbody'] = 'body'
+) -> tuple[int, int, int, int] | None:
+    """Return the position of the end of the given block header if it exists as well as either the end of the last child
+    in the header if `field='body'` or the start of the `else` or `finally` otherwise.
+
+    **Note:** `orelse` and `finalbody` not implemented yet because not needed yet.
 
     **Returns:**
-    - `(colon ln, colon col, last child end_ln, last child end_col)`: Returns the position just before the ending colon
-        `:` of the block header and the end line and end column of the last child in the header or the start line and
-        column of `self` if there is not last child (`Try`, `TryStar`). End position of child does **NOT** include any
-        possibly closing parenthesis.
+    - `None`: If doesn't have the requested `field` or anything in it.
+    - `(last header child end_ln, last child header end_col, after colon ln, after colon col)`:
+        If `field='body'` returns the position of the end of the last child in the header (sans closing pars) and the
+        position of the `:` of the the block statement header (just past it). If there is no last child (like in a
+        `Try`, `TryStar` or maybe simple `FunctionDef`) then returns start of `self` for this loction.
+    - `(start of block header ln, start of block header col, after colon ln, after  colon col)`:
+        If `field='orelse'` or `'field='finalbody'` then returns location from start of the `else` or `finally` to just
+        past the `:` of the block header.
     """
 
-    ast = self.a
+    # assert self.a.__class__ in ASTS_LEAF_BLOCK
+
     ln, col, end_ln, end_col = self.loc
 
-    if child := last_block_header_child(ast):
+    if child := last_block_header_child(self.a):
         if loc := (child := child.f).loc:  # because of empty function def arguments which won't have a .loc
-            _, _, cend_ln, cend_col = loc
-        elif child := child.prev():  # guaranteed to have loc if is there
-            _, _, cend_ln, cend_col = child.loc
+            _, _, ln, col = loc
+        elif child := child.prev():
+            _, _, ln, col = child.loc
 
-        else:
-            cend_ln = ln
-            cend_col = col
+    colon_ln, colon_col = next_find(self.root._lines, ln, col, end_ln, end_col, ':')  # must be there
 
-    elif ast.__class__ in ASTS_LEAF_BLOCK:
-        cend_ln = ln
-        cend_col = col
+    # if field != 'body':
+    #     raise NotImplementedError("this hasn't been needed yet")
 
-    else:
-        return None
-
-    ln, col = next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # must be there
-
-    return ln, col, cend_ln, cend_col
+    return ln, col, colon_ln, colon_col + 1  # block header end location just past the ':'
 
 
 def _loc_arguments_empty(self: fst.FST) -> fstloc:

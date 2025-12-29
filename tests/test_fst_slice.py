@@ -5590,12 +5590,10 @@ class cls:
                              FST('', '_ExceptHandlers').handlers.append(FST('except* Exception: pass')).base.root.src)
 
     def test__normalize_block(self):
-        from fst.slice_stmtish import _normalize_block
-
         a = parse('''
 if 1: i ; j ; l ; m
             '''.strip())
-        _normalize_block(a.body[0].f)
+        a.body[0].f._normalize_block()
         a.f.verify()
         self.assertEqual(a.f.src, 'if 1:\n    i ; j ; l ; m')
 
@@ -5605,13 +5603,13 @@ def f() -> int: \\
   ; \\
   j
             '''.strip())
-        _normalize_block(a.body[0].f)
+        a.body[0].f._normalize_block()
         a.f.verify()
         self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
 
         a = parse('''def f(a = """ a
 ...   # something """): i = 2''')
-        _normalize_block(a.body[0].f)
+        a.body[0].f._normalize_block()
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
     def test__elif_to_else_if(self):

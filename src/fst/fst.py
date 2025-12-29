@@ -4262,6 +4262,7 @@ class FST:
         _undelimit_node,
         _trim_delimiters,
 
+        _normalize_block,
         _getput_line_comment,
     )
 
