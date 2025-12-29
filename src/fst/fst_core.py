@@ -18,7 +18,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_EXPR_CONTEXT,
     ASTS_LEAF_EXPR_OR_PATTERN,
-    ASTS_LEAF_EXPRLIKE,
+    ASTS_LEAF_EXPR_CHAIN,
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_WITH,
@@ -302,7 +302,7 @@ class _Modifying:
                 self.field = field
                 self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-                while fst_.a.__class__ in ASTS_LEAF_EXPRLIKE:
+                while fst_.a.__class__ in ASTS_LEAF_EXPR_CHAIN:
                     parent = fst_.parent
                     pfield = fst_.pfield
 

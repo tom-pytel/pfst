@@ -29,7 +29,7 @@ from .asttypes import (
     ASTS_LEAF_PATTERN,
     ASTS_LEAF_TYPE_PARAM,
     ASTS_LEAF_STMT_OR_MOD,
-    ASTS_LEAF_EXPRLIKE_OP_OR_CTX,
+    ASTS_LEAF_EXPR_CHAIN,
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_STMTLIKE_OR_MOD,
     ASTS_LEAF_BLOCK,
@@ -194,6 +194,10 @@ _LOC_FUNCS = {  # quick lookup table for FST.loc
 
 _ASTS_LEAF_SCOPE_SYMBOLS = ASTS_LEAF_DEF | ASTS_LEAF_TYPE_PARAM | {Name, arg, AugAssign, Import, ImportFrom, Nonlocal,
                                                                    Global}  # used in scope_symbols() to optimize walk a tiny bit
+
+_ASTS_LEAF_EXPR_CHAIN_OP_OR_CTX = (ASTS_LEAF_EXPR_CHAIN | ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR
+                                   | ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP)
+
 
 
 def _swizzle_getput_params(
@@ -3338,7 +3342,7 @@ class FST:
         <keyword 0,14..0,17>
         """
 
-        types = ASTS_LEAF_EXPR if strict else ASTS_LEAF_EXPRLIKE_OP_OR_CTX  # ops and ctx because of maybe self_
+        types = ASTS_LEAF_EXPR if strict else _ASTS_LEAF_EXPR_CHAIN_OP_OR_CTX  # ops and ctx because of maybe self_
 
         if self_ and self.a.__class__ not in types:
             return self

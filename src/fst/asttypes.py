@@ -306,8 +306,7 @@ __all__ = [
     'ASTS_LEAF_STMT_OR_MOD',
     'ASTS_LEAF_EXPR_OR_PATTERN',
     'ASTS_LEAF_EXPR_STMT_OR_MOD',
-    'ASTS_LEAF_EXPRLIKE',
-    'ASTS_LEAF_EXPRLIKE_OP_OR_CTX',
+    'ASTS_LEAF_EXPR_CHAIN',
     'ASTS_LEAF_STMTLIKE',
     'ASTS_LEAF_STMTLIKE_OR_MOD',
     'ASTS_LEAF_BLOCK',
@@ -361,10 +360,7 @@ ASTS_LEAF_TYPE_PARAM         = frozenset([TypeVar, ParamSpec, TypeVarTuple])
 ASTS_LEAF_STMT_OR_MOD        = ASTS_LEAF_STMT | ASTS_LEAF_MOD
 ASTS_LEAF_EXPR_OR_PATTERN    = ASTS_LEAF_EXPR | ASTS_LEAF_PATTERN
 ASTS_LEAF_EXPR_STMT_OR_MOD   = ASTS_LEAF_EXPR | ASTS_LEAF_STMT | ASTS_LEAF_MOD
-
-ASTS_LEAF_EXPRLIKE           = ASTS_LEAF_EXPR | frozenset([comprehension, arguments, arg, keyword])  # can be in expression chain (have expressions above)
-ASTS_LEAF_EXPRLIKE_OP_OR_CTX = (ASTS_LEAF_EXPRLIKE | ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR
-                                | ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP)
+ASTS_LEAF_EXPR_CHAIN         = ASTS_LEAF_EXPR | frozenset([comprehension, arguments, arg, keyword])  # can be in expression chain (have expressions above)
 
 ASTS_LEAF_STMTLIKE           = ASTS_LEAF_STMT | frozenset([ExceptHandler, match_case])
 ASTS_LEAF_STMTLIKE_OR_MOD    = ASTS_LEAF_STMTLIKE | ASTS_LEAF_MOD
