@@ -340,11 +340,7 @@ def unparse(ast_obj: AST) -> str:
 
     if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST):
         try:
-            if f.is_root:
-                return f.src
-
-            return f.copy().src
-
+            return f.own_src()
         except Exception:
             pass
 
@@ -469,9 +465,10 @@ class FST:
 
     @property
     def lines(self) -> list[builtins.str]:
-        """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
-        entire source is returned, which may extend beyond the location of the top-level node (mostly for statements
-        which may have leading / trailing comments or empty lines).
+        """Whole lines of this node from the raw root source, without any dedentation, may also contain parts of
+        enclosing nodes. Will have indentation as it appears in the top level source if multiple lines. If gotten at
+        root then the entire source is returned, which may extend beyond the location of the top-level node (mostly for
+        statements which may have leading / trailing comments or empty lines).
 
         A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc...
 
@@ -483,13 +480,13 @@ class FST:
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
         else:
-            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop only really
+            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop, expr_context and empty arguments
 
     @property
     def src(self) -> builtins.str:
-        """Source code of this node clipped out of as a single string, without any dedentation. Will have indentation as
-        it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
-        regardless of whether the actual top level node location includes it or not.
+        """Source code of this node from the raw root source clipped out of as a single string, without any dedentation.
+        Will have indentation as it appears in the top level source if multiple lines. If gotten at root then the entire
+        source is returned, regardless of whether the actual top level node location includes it or not.
 
         A string is always returned, even for nodes which can never have source like `Load`, etc...
         """
@@ -499,7 +496,7 @@ class FST:
         elif loc := self.bloc:
             return self._get_src(*loc)
         else:
-            return OPCLS2STR.get(self.a.__class__, '')  # for boolop only really
+            return OPCLS2STR.get(self.a.__class__, '')  # for boolop, expr_context and empty arguments
 
     @property
     def has_own_loc(self) -> bool:
@@ -1530,6 +1527,158 @@ class FST:
 
     # ------------------------------------------------------------------------------------------------------------------
     # Edit
+
+    def own_lines(
+        self, whole: bool = True, fix_elif: bool = True, *, docstr: bool | Literal['strict'] | None = None
+    ) -> list[builtins.str]:
+        r"""Lines of this node copied out of the tree and dedented as if the node were copied out. Unlike the `.lines`
+        property these will not contain parts of other nodes.
+
+        This function is a faster way to get this if you just want the source over `self.copy().lines`. The parameters
+        for getting this are also cached (not the lines themselves), so it is not so expensive to call this repeatedly.
+
+        A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc...
+
+        **Note:** The lines list returned is always a copy so safe to modify. Also, the first line is always completely
+        dedented.
+
+        **Caveat:** There is an actual difference between this and `self.copy().lines`. The copy operation may carry
+        out some reformatting to make sure the node is presentable at root level (mostly adding parentheses), this
+        function does not do that. It will however convert an `elif` to an `if` according to the parameter. The copy
+        also does trivia, we do not here (yet).
+
+        **Parameters:**
+        - `whole`: If at root this determines whether to return the whole source or just the location of the node
+            (which may not be the whole source).
+        - `fix_elif`: Whether to convert an `elif` in the source to an `if` if this node is an `elif`. Only this node,
+            any children will continue to be valid `elif`s.
+        - `docstr`: How to treat multiline string docstring lines.
+            - `False`: Don't dedent any.
+            - `True`: Dedent all `Expr` multiline strings (as they serve no coding purpose).
+            - `'strict'`: Only dedent `Expr` multiline strings in standard docstring locations.
+            - `None`: Use the global default for the `docstr` option.
+
+        **Returns:**
+        - `list[str]`: List of lines belonging to this node dedented or list with one empty string if node does not have
+            location to get source from (unless at root and `whole=True`, in which case the whole source is returned).
+
+        **Examples:**
+
+        >>> f = FST('''
+        ... def func():
+        ...     return ('not_self', [
+        ...         'self1',
+        ...         'self2',
+        ...     ], 'other_not_self',
+        ...     'outside_lines')
+        ... '''.strip())
+
+        Notice the indentation comes with it as well as parts of other nodes.
+
+        >>> for l in f.body[0].value.elts[1].lines:  # the list node in the return value
+        ...     print(repr(l))
+        "    return ('not_self', ["
+        "        'self1',"
+        "        'self2',"
+        "    ], 'other_not_self',"
+
+        And here it is all cleaned up.
+
+        >>> for l in f.body[0].value.elts[1].own_lines():
+        ...     print(repr(l))
+        '['
+        "    'self1',"
+        "    'self2',"
+        ']'
+        """
+
+        if (is_root := not self.parent) and whole:
+            return self._lines[:]
+
+        if not (loc := self.loc):
+            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop, expr_context and empty arguments
+
+        if is_root:
+            return self._get_src(loc.ln, loc.col, loc.end_ln, loc.end_col, True)
+
+        if docstr is None:
+            docstr = FST.get_option('docstr')
+
+        key = 'ownlS' if docstr == 'strict' else 'ownlT' if docstr else 'ownlF'
+
+        if cached := self._cache.get(key):
+            dedent, lns = cached
+
+        else:
+            dedent = self._get_block_indent()
+            lns = tuple(self._get_indentable_lns(1, docstr=docstr))
+
+            self._cache[key] = (dedent, lns)
+
+        return self._dedented_lines(dedent, lns, fix_elif)
+
+    def own_src(
+        self, whole: bool = True, fix_elif: bool = True, *, docstr: bool | Literal['strict'] | None = None
+    ) -> builtins.str:
+        """Source of this node as a string copied out of the tree and dedented as if the node were copied out.
+
+        This function is a faster way to get this if you just want the source over `self.copy().src`. The parameters for
+        getting this are also cached (not the source itself), so it is not so expensive to call this repeatedly.
+
+        A string is always returned, even for nodes which can never have source like `Load`, etc...
+
+        **Note:** The first line is always completely dedented.
+
+        **Caveat:** There is an actual difference between this and `self.copy().src`. The copy operation may carry out
+        some reformatting to make sure the node is presentable at root level (mostly adding parentheses), this function
+        does not do that. It will however convert an `elif` to an `if` according to the parameter. The copy also does
+        trivia, we do not here (yet).
+
+        **Parameters:**
+        - `whole`: If at root this determines whether to return the whole source or just the location of the node
+            (which may not be the whole source).
+        - `fix_elif`: Whether to convert an `elif` in the source to an `if` if this node is an `elif`. Only this node,
+            any children will continue to be valid `elif`s.
+        - `docstr`: How to treat multiline string docstring lines.
+            - `False`: Don't dedent any.
+            - `True`: Dedent all `Expr` multiline strings (as they serve no coding purpose).
+            - `'strict'`: Only dedent `Expr` multiline strings in standard docstring locations.
+            - `None`: Use the global default for the `docstr` option.
+
+        **Returns:**
+        - `str`: The source of this node dedented as a string or empty string if node does not have location to get
+        source from (unless at root and `whole=True`, in which case the whole source is returned).
+
+        **Examples:**
+
+        >>> f = FST('''
+        ... def func():
+        ...     return ('not_self', [
+        ...         'self1',
+        ...         'self2',
+        ...     ], 'other_not_self',
+        ...     'outside_lines')
+        ... '''.strip())
+
+        Notice the indentation comes with it, but not parts of other nodes like for `.lines`. The first line for `.src`
+        is also completely dedented just like `.own_src()`.
+
+        >>> print(f.body[0].value.elts[1].src)  # the list node in the return value
+        [
+                'self1',
+                'self2',
+            ]
+
+        And here it is all cleaned up.
+
+        >>> print(f.body[0].value.elts[1].own_src())
+        [
+            'self1',
+            'self2',
+        ]
+        """
+
+        return '\n'.join(self.own_lines(whole, fix_elif, docstr=docstr))
 
     def ast_src(self) -> str:
         """Unparse the `AST` tree of self discarding all formatting. The unparse will correctly handle our own SPECIAL
@@ -4311,7 +4460,6 @@ class FST:
     is__withitems         = fst_type_predicates.is__withitems
     is__type_params       = fst_type_predicates.is__type_params
 
-
     # ------------------------------------------------------------------------------------------------------------------
     # Private
 
@@ -4339,6 +4487,7 @@ class FST:
         _indent_lns,
         _dedent_lns,
         _redent_lns,
+        _dedented_lines,
 
         _get_src,
         _put_src,

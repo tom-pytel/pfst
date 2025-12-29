@@ -1733,8 +1733,8 @@ def _dedent_lns(
     docstr: bool | Literal['strict'] = True,
     docstr_strict_exclude: AST | None = None,
 ) -> None:
-    """Dedent all indentable lines specified in `lns` by removing `dedent` prefix and adjust node locations
-    accordingly. If cannot dedent entire amount, will dedent as much as possible.
+    """Dedent all indentable lines specified in `lns` by removing `dedent` prefix and adjust node locations accordingly.
+    If cannot dedent entire amount, will dedent as much as possible.
 
     **WARNING!** This does not offset parent nodes.
 
@@ -1780,7 +1780,9 @@ def _dedent_lns(
             dont_offset.add(ln)
 
         else:
-            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:  # only full dedent non-empty lines which have dedent length leading space
+            if (l.startswith(dedent)
+                or (lempty_start := re_empty_line_start.match(l, 0, 0x7fffffffffffffff).end()) >= ldedent
+            ):  # only full dedent non-empty lines which have dedent length leading space
                 l = dedented(l, ldedent)
 
             else:  # inconsistent dedentation, need to do line-by-line offset
@@ -1890,7 +1892,9 @@ def _redent_lns(
             dont_offset.add(ln)
 
         else:
-            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:  # only full dedent non-empty lines which have dedent length leading space
+            if (l.startswith(dedent)
+                or (lempty_start := re_empty_line_start.match(l, 0, 0x7fffffffffffffff).end()) >= ldedent
+            ):  # only full dedent non-empty lines which have dedent length leading space
                 l = indented(l)
             elif (lindent_ := dredent + lempty_start) >= 0:
                 l = redented(l, lindent_, lempty_start)
@@ -1916,6 +1920,54 @@ def _redent_lns(
         self._offset_lns(lns - dont_offset if dont_offset else lns, dredent)
 
     _reparse_docstr_Constants(self, docstr)
+
+
+def _dedented_lines(self: fst.FST, dedent: str, lns: Iterable[int], fix_elif: bool = True) -> list[str]:
+    """Dedent all indentable lines specified in `lns` by removing `dedent` prefix and return the lines, but do **NOT**
+    modify node locations or the source stored in the tree. Basically get the source as if the node had been cut out and
+    dedented but without doing all the work.
+
+    If this function is called at root then we assume we want just the lines of the node itself and not anything else
+    in the top level source, so the whole source will not be returned unless the location of `self` encompasses the
+    whole source.
+
+    Unlike the other indentation functions, no validation or default parameter determination is done, all parameters
+    passed in must be valid.
+
+    **Parameters:**
+    - `dedent`: The indentation string to remove from the beginning of each indentable line (if possible).
+    - `lns`: An iterable of line numbers to apply dedentation to. Expect it to have been generated with `skip=1`.
+    - `fix_elif`: Whether to convert an `elif` in the source to an `if` if this node is an `elif`. Only this node, any
+        children will continue to be valid `elif`s.
+    """
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    lines = self._get_src(bound_ln, bound_col, bound_end_ln, bound_end_col, True)
+
+    if not dedent or not lns:
+        return lines
+
+    ldedent = len(dedent)
+    bound_end_ln -= bound_ln
+
+    for ln in lns:
+        ln -= bound_ln
+
+        if (0 <= ln <= bound_end_ln) and (l := lines[ln]):
+            if (l.startswith(dedent)
+                or (lempty_start := re_empty_line_start.match(l, 0, 0x7fffffffffffffff).end()) >= ldedent
+            ):  # only full dedent non-empty lines which have dedent length leading space
+                lines[ln] = l[ldedent:]
+            else:  # inconsistent dedentation
+                lines[ln] = l[lempty_start:]
+
+    if fix_elif and self.is_elif():
+        assert lines[0].startswith('elif')
+
+        lines[0] = lines[0][2:]  # it will always be right at the beginning
+
+    return lines
 
 
 def _get_src(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
