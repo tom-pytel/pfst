@@ -350,7 +350,7 @@ c := d
 
 ## `pars_arglike` option
 
-This option specifies whether to parenthesize "argument-like" expressions copied out of `Call.args`, `ClassDef.bases`
+This option specifies whether to parenthesize "argumentlike" expressions copied out of `Call.args`, `ClassDef.bases`
 or `Subscript.slice`. The behavior is identical to the `pars_walrus` option but for these otherwise
 invalid-if-not-parenthesized expressions instead of walruses.
 

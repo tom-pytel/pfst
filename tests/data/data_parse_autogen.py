@@ -1358,7 +1358,7 @@ Tuple - ROOT 0,0..0,4
 
 ('parse__expr_arglikes', 0, 0, 'ParseError', {}, ('_expr_arglikes',
 r'''i=1'''),
-r'''**ParseError('expecting only argumnent-like expression(s), got keyword')**'''),
+r'''**ParseError('expecting only argumnentlike expression(s), got keyword')**'''),
 
 ('parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
 r'''a:b'''),

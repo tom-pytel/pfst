@@ -1061,7 +1061,7 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
 
 
 def _is_expr_arglike(self: fst.FST) -> bool | None:
-    """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
+    """Is an argumentlike expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
     `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`.
 
     **Returns:**

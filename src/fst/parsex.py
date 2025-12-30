@@ -1657,7 +1657,7 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         raise SyntaxError('invalid expression(s) (arglike)') from None
 
     if value.keywords:
-        raise ParseError('expecting only argumnent-like expression(s), got keyword')
+        raise ParseError('expecting only argumnentlike expression(s), got keyword')
 
     ast = Tuple(elts=value.args, ctx=Load(), **_astloc_from_src(src, 2))
 

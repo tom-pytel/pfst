@@ -154,7 +154,7 @@ b := c
 >>> print(g.src)
 b := c
 
-Argument-like expressions which may not be valid outside their normal context (`Call.args`, `ClassDef.bases` or a
+Argumentlike expressions which may not be valid outside their normal context (`Call.args`, `ClassDef.bases` or a
 `Subscript.slice` `Tuple`) are normally parenthesized on get. This can be turned off via the `pars_arglike` option.
 
 >>> f = FST('call(*a or b)')
