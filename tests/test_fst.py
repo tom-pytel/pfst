@@ -3018,44 +3018,61 @@ if 1:
         str"""
         """non-doc
         str"""
+        """unaligned
+  str"""
         i = [
             1,
             2,
         ]
             '''.strip())
+
         self.assertEqual(f.body[0].own_src(docstr=True), '''
 def func():
     """doc
     str"""
     """non-doc
     str"""
+    """unaligned
+str"""
     i = [
         1,
         2,
     ]
             '''.strip())
+
         self.assertEqual(f.body[0].own_src(docstr='strict'), '''
 def func():
     """doc
     str"""
     """non-doc
         str"""
+    """unaligned
+  str"""
     i = [
         1,
         2,
     ]
             '''.strip())
+
         self.assertEqual(f.body[0].own_src(docstr=False), '''
 def func():
     """doc
         str"""
     """non-doc
         str"""
+    """unaligned
+  str"""
     i = [
         1,
         2,
     ]
             '''.strip())
+
+        # no location but not at root
+
+        self.assertEqual('', FST('def f(): pass').args.own_src())  # arguments
+        self.assertEqual('>>', FST('a >> b').op.own_src())  # operator
+        self.assertEqual('', FST('a').ctx.own_src())  # expr_context
 
     def test_walk(self):
         a = parse("""
@@ -5830,6 +5847,7 @@ finally:
         self.assertRaises(NotImplementedError, FST('expr').get_line_comment)
         self.assertRaises(ValueError, FST('stmt', 'stmt').put_line_comment, "can't\nhave\nnewline")
         self.assertRaises(ValueError, FST('stmt', 'stmt').put_line_comment, 'full must start with #', full=True)
+        self.assertRaises(ValueError, FST('if 1: pass').put_line_comment, 'yay', 'orelse')
         self.assertIsNone(FST('stmt', 'stmt').put_line_comment(None))
 
         f = FST('a ; \\\n b')
@@ -9510,6 +9528,8 @@ match a:
         from fst.common import shortstr
         self.assertEqual('123', shortstr('123'))
         self.assertEqual('12312312312312312312312 .. [90 chars] .. 23123123123123123123123', shortstr('123' * 30))
+
+        self.assertFalse(FST('f"a{b}"').values[0].is_parenthesizable())
 
 
 if __name__ == '__main__':
