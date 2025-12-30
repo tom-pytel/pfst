@@ -64,10 +64,9 @@ Function:
 ...         if not f.value:
 ...             continue
 ...
-...         # '.src' keeps the original target expression exactly as written
-...         # '.copy()' dedents if multiple lines present
-...         target = f.target.copy().src
-...         value = f.value.copy().src
+...         # '.own_src()' gives us the original source exactly as written dedented
+...         target = f.target.own_src()
+...         value = f.value.own_src()
 ...
 ...         # we use ast_src() for the annotation to get a clean type string
 ...         annotation = f.annotation.ast_src()
@@ -136,6 +135,9 @@ def func():
 bodies so its fairly easy to leverage to change these kinds of chains. The inverse of this operation can be done just
 by changing the `f.is_elif()` check to `is True` and the `elif_` parameter to `elif_=False` in the `replace()`, though
 you may need to tweak the `trivia` parameters for best results.
+
+Yes the comments on the replaced `else` headers disappear. Could preserve them explicitly by using `get_line_comment()`
+and then inserting them above the `if` manually using `put_src()`. Eventually should make this automatic.
 
 ```py
 >>> src = r"""
@@ -799,7 +801,7 @@ Function:
 ...                     fcur = fcur.body[-1].replace(fifstmt)
 ...
 ...             # the ffor is the last one processed above (the innermost)
-...             fcur.body[-1].replace(f'{var}.append({fcomp.elt.copy().src})')
+...             fcur.body[-1].replace(f'{var}.append({fcomp.elt.own_src()})')
 ...
 ...             f.replace(
 ...                 ftop,

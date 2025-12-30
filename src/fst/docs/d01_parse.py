@@ -231,8 +231,12 @@ Slice - ROOT 0,0..0,5
 
 A note on the `.src` attribute, it gives the full valid source only if accessed at the root node. If accessed at any
 node below, it will return the **INDENTED** source for the location of the node, except for the first line which will be
-completely unindented. If you want full correctly unindented source for nodes which are not root, you should `copy()`
-that node and get the source of that (`fst.fst.FST.copy()`). E.g.
+completely unindented. You can also wind up with unparsable source if you get for example a string `Constant` from the
+`values` field of a `JoinedStr`.
+
+If you want unindented source for nodes which are not root, you should use `own_src()`. Or `copy()` that node and get
+the source of that (`fst.fst.FST.copy()`), which does even more format fixing. The difference between the `own_src()`
+and the `copy().src` is that the former executes much faster (and you don't get a copied node).
 
 >>> f = FST('''
 ... def f(a):
@@ -257,6 +261,12 @@ if a:
         print(a)
     else:
         print(-a)
+
+>>> print(f.body[0].own_src())
+if a:
+    print(a)
+else:
+    print(-a)
 
 >>> print(f.body[0].copy().src)
 if a:

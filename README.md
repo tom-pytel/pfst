@@ -73,10 +73,9 @@ From GitHub, after cloning for development:
 ...         if not f.value:
 ...             continue
 ...
-...         # '.src' keeps the original target expression exactly as written
-...         # '.copy()' dedents if multiple lines present
-...         target = f.target.copy().src
-...         value = f.value.copy().src
+...         # '.own_src()' gives us the original source exactly as written dedented
+...         target = f.target.own_src()
+...         value = f.value.own_src()
 ...
 ...         # we use ast_src() for the annotation to get a clean type string
 ...         annotation = f.annotation.ast_src()
