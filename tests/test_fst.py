@@ -384,15 +384,15 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual('if 1: pass', fst.unparse(a))
         self.assertEqual('if 1:\n    pass', ast.unparse(a))
-        self.assertEqual('if 1:\n    pass', ast.unparse(a.f.ast_copy()))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.f.copy_ast()))
 
         self.assertEqual('if 1: pass', fst.unparse(a.body[0]))
         self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0]))
-        self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0].f.ast_copy()))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0].f.copy_ast()))
 
         self.assertEqual('pass', fst.unparse(a.body[0].body[0]))
         self.assertEqual('pass', ast.unparse(a.body[0].body[0]))
-        self.assertEqual('pass', ast.unparse(a.body[0].body[0].f.ast_copy()))
+        self.assertEqual('pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
 
         a.f._lines = None
 
@@ -402,15 +402,15 @@ class TestFST(unittest.TestCase):
 
         self.assertEqual('if 1:\n  if 2: pass', fst.unparse(a))
         self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a))
-        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.f.ast_copy()))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.f.copy_ast()))
 
         self.assertEqual('if 1:\n  if 2: pass', fst.unparse(a.body[0]))
         self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0]))
-        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0].f.ast_copy()))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0].f.copy_ast()))
 
         self.assertEqual('if 2: pass', fst.unparse(a.body[0].body[0]))
         self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0]))
-        self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0].f.ast_copy()))
+        self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
 
     def test__sanitize_stmtlike(self):
         f = FST('# pre\ni = j  # line\n# post', 'stmt')

@@ -1755,7 +1755,7 @@ class FST:
 
         return parsex.unparse(self.a)
 
-    def ast_copy(self) -> AST:
+    def copy_ast(self) -> AST:
         """Copy the `AST` node tree of this `FST` node, not including any `FST` stuff. Use when you just want a copy of
         the `AST` tree from this point down.
 
@@ -1767,7 +1767,7 @@ class FST:
 
         **Examples:**
 
-        >>> a = FST('[0, 1, 2, 3]').ast_copy()
+        >>> a = FST('[0, 1, 2, 3]').copy_ast()
 
         >>> print(type(a))
         <class 'ast.List'>

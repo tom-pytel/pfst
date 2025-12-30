@@ -68,7 +68,7 @@
 
 ### Added
 
-- `FST.ast_copy()` to copy just the `AST` tree without any `FST` stuff
+- `FST.copy_ast()` to copy just the `AST` tree without any `FST` stuff
 - allow `FST.replace()` as a slice operation if applicable (`.replace()` one statement with multiple)
 - moved some other predicates from private to public code, e.g. `is_elif()`, etc...
 - predicates for checking `AST` type in `FST`, e.g. `is_Name`, `is_Call`, `is_FunctionDef`, etc...
