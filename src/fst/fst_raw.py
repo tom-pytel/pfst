@@ -91,7 +91,7 @@ def _reparse_raw_base(
 
     if set_ast:
         self._set_ast(copy.a, True)
-        self._touchall(True, True, False)
+        # self._touchall(True, False, False)  # self already _touch()ed in _set_ast()
 
     return copy
 
@@ -253,7 +253,7 @@ def _reparse_raw_stmtlike(self: fst.FST, new_lines: list[str], ln: int, col: int
             setattr(copya, field, body)
 
     stmtlike._set_ast(copya)  # TODO: optimize so we don't remake body trees where theyre already valid
-    stmtlike._touchall(True, True, False)
+    # stmtlike._touchall(True, False, False)  # self already _touch()ed in _set_ast()
 
     return True
 

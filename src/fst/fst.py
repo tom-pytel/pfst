@@ -810,6 +810,8 @@ class FST:
                 `pfield` is `False`, meaning a shortcut use of `FST()`.
             - `lcopy`: Whether to copy lines of source on root node create or just use what is passed in, which in this
                 case must be a list of `fst.astutil.bistr` and this node takes ownership of the list.
+            - `mktree`: Whether to do `_make_fst_tree()` on `self` or not. Turning this off can be used to create a root
+                node for a specific existing `FST` tree. Useful for optimizing some operations.
         """
 
         if pfield is False:  # top level shortcut
@@ -872,7 +874,8 @@ class FST:
             else:
                 self.indent = _DEFAULT_INDENT
 
-        self._make_fst_tree()
+        if getattr(kwargs, 'mktree', True):
+            self._make_fst_tree()
 
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that, note that self.indent = '?' is used for checking
             if is_modlike:
@@ -1784,8 +1787,9 @@ class FST:
         **Parameters:**
         - `whole`: This only applies when copying root nodes. If `True` then copies the entire tree and source without
             any modifications (including leading and trailing source which is not part of the node). Otherwise will trim
-            away any source that falls outside of the node and only copy the node and its source (including any
-            grouping parentheses as specified by the `pars` option).
+            away any source that falls outside of the node for non-statementlike nodes and only copy the node and its
+            source (including any grouping parentheses as specified by the `pars` option). For statementlikes will
+            follow trivia rules as well.
         - `options`: See `options()`.
 
         **Returns:**
@@ -1793,14 +1797,14 @@ class FST:
 
         **Examples:**
 
-        >>> FST('[0, 1, 2, 3]').elts[1].copy().src
-        '1'
+        >>> FST('[a(), b(), c(), d()]').elts[1].copy().src
+        'b()'
 
         >>> f = FST('''
         ... # pre
         ... call()  # tail
         ... # post
-        ... '''.strip(), 'stmt')
+        ... '''.strip(), 'expr')
 
         >>> print('\n'.join(repr(l) for l in f.copy().lines))
         '# pre'
@@ -1829,17 +1833,37 @@ class FST:
         if parent := self.parent:
             return parent._get_one((pf := self.pfield).idx, pf.name, False, options)
 
+        lines = self._lines
+        ast = self.a
+
         if (not whole
             and (loc := (self.pars() if FST.get_option('pars', options) is True else self.bloc))
             and loc != self.whole_loc
         ):
-            ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=FST.get_option('docstr', options))
+            if ast.__class__ not in ASTS_LEAF_STMTLIKE:
+                ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=FST.get_option('docstr', options))
 
-            ret._maybe_fix_copy(options)
+                ret._maybe_fix_copy(options)
+
+                return ret
+
+            # we do all this so that we can apply trivia rules at root, otherwise we could have just done the above for everything
+
+            tmpf = FST(Module(body=[], type_ignores=[]), lines, None, from_=self, lcopy=False)
+
+            tmpf._set_field([ast], 'body', True, False)  # yeah, hacky
+
+            try:
+                ret = tmpf._get_one(0, 'body', False, options)
+
+            finally:
+                self._unmake_fst_parents()  # the tmpf, can still use as `from_` below since the unmake just breaks .f/.a links
+
+                FST(ast, lines, None, from_=tmpf, lcopy=False, mktree=False)  # recreate self as root node
 
             return ret
 
-        return FST(copy_ast(self.a), self._lines[:], None, from_=self, lcopy=False)
+        return FST(copy_ast(ast), lines[:], None, from_=self, lcopy=False)
 
     def cut(self, **options) -> FST:
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
@@ -4519,6 +4543,7 @@ class FST:
         _unmake_fst_tree,
         _unmake_fst_parents,
         _set_ast,
+        _set_field,
         _set_ctx,
         _set_start_pos,
         _set_end_pos,

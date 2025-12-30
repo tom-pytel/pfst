@@ -35,7 +35,7 @@
 ### Updated
 
 - recognize line comment after a trailining statement semicolon as belonging to the statement
-- `copy()` can strip non-node source from root node copy using parameter `whole=False`
+- `copy()` can strip non-node source from root node copy using parameter `whole=False` (which can handle trivia ops at root)
 - can control optional parenthesization of cut / put `Tuple` slices via `pars` option
 - implemented trivia specification by absolute line numbers for statementlikes so can enable for all
 - implemented `coerce` option for `MatchOr` and `MatchSequence`

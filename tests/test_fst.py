@@ -101,6 +101,143 @@ PRECEDENCE_SRC_EXPRS = [
 ]
 
 
+INDIVIDUAL_NODES = [
+    ('', 'Module'),
+    ('a', 'Interactive'),
+    ('v', 'Expression'),
+    ('def f(): pass', 'FunctionDef'),
+    ('async def f(): pass', 'AsyncFunctionDef'),
+    ('class cls: pass', 'ClassDef'),
+    ('return', 'Return'),
+    ('del a', 'Delete'),
+    ('a = b', 'Assign'),
+    ('a += b', 'AugAssign'),
+    ('a: b', 'AnnAssign'),
+    ('for _ in _: pass', 'For'),
+    ('async for _ in _: pass', 'AsyncFor'),
+    ('while _: pass', 'While'),
+    ('if _: pass', 'If'),
+    ('with _: pass', 'With'),
+    ('async with _: pass', 'AsyncWith'),
+    ('match _:\n  case _: pass', 'Match'),
+    ('raise', 'Raise'),
+    ('try: pass\nexcept: pass', 'Try'),
+    ('assert v', 'Assert'),
+    ('import m', 'Import'),
+    ('from . import a', 'ImportFrom'),
+    ('global n', 'Global'),
+    ('nonlocal n', 'Nonlocal'),
+    ('a', 'Expr'),
+    ('pass', 'Pass'),
+    ('break', 'Break'),
+    ('continue', 'Continue'),
+    ('a or b', 'BoolOp'),
+    ('a := b', 'NamedExpr'),
+    ('a + b', 'BinOp'),
+    ('-a', 'UnaryOp'),
+    ('lambda: None', 'Lambda'),
+    ('a if b else c', 'IfExp'),
+    ('{a: b}', 'Dict'),
+    ('{a}', 'Set'),
+    ('[_ for _ in _]', 'ListComp'),
+    ('{_ for _ in _}', 'SetComp'),
+    ('{_: _ for _ in _}', 'DictComp'),
+    ('(_ for _ in _)', 'GeneratorExp'),
+    ('await _', 'Await'),
+    ('yield _', 'Yield'),
+    ('yield from _', 'YieldFrom'),
+    ('a < b', 'Compare'),
+    ('f()', 'Call'),
+    # ('zzz', 'FormattedValue'),
+    # ('zzz', 'Interpolation'),
+    ('f"{1}"', 'JoinedStr'),
+    ('1', 'Constant'),
+    ('a.b', 'Attribute'),
+    ('a[b]', 'Subscript'),
+    ('*s', 'Starred'),
+    ('n', 'Name'),
+    ('[a]', 'List'),
+    ('(a,)', 'Tuple'),
+    ('a:b:c', 'Slice'),
+    ('', 'Load'),
+    ('', 'Store'),
+    ('', 'Del'),
+    ('and', 'And'),
+    ('or', 'Or'),
+    ('+', 'Add'),
+    ('-', 'Sub'),
+    ('*', 'Mult'),
+    ('@', 'MatMult'),
+    ('/', 'Div'),
+    ('%', 'Mod'),
+    ('**', 'Pow'),
+    ('<<', 'LShift'),
+    ('>>', 'RShift'),
+    ('|', 'BitOr'),
+    ('^', 'BitXor'),
+    ('&', 'BitAnd'),
+    ('//', 'FloorDiv'),
+    ('~', 'Invert'),
+    ('not', 'Not'),
+    ('+', 'UAdd'),
+    ('-', 'USub'),
+    ('==', 'Eq'),
+    ('!=', 'NotEq'),
+    ('<', 'Lt'),
+    ('<=', 'LtE'),
+    ('>', 'Gt'),
+    ('>=', 'GtE'),
+    ('is', 'Is'),
+    ('is not', 'IsNot'),
+    ('in', 'In'),
+    ('not in', 'NotIn'),
+    ('for _ in _', 'comprehension'),
+    ('except: pass', 'ExceptHandler'),
+    ('a', 'arguments'),
+    ('a', 'arg'),
+    ('k=v', 'keyword'),
+    ('a', 'alias'),
+    ('w', 'withitem'),
+    ('case _: pass', 'match_case'),
+    ('1', 'MatchValue'),
+    ('None', 'MatchSingleton'),
+    ('[p]', 'MatchSequence'),
+    ('{1: p}', 'MatchMapping'),
+    ('cls()', 'MatchClass'),
+    ('*s', 'MatchStar'),
+    ('p', 'MatchAs'),
+    ('a | b', 'MatchOr'),
+    ('', '_ExceptHandlers'),
+    ('', '_match_cases'),
+    ('', '_Assign_targets'),
+    ('', '_decorator_list'),
+    ('', '_comprehensions'),
+    ('', '_comprehension_ifs'),
+    ('', '_aliases'),
+    ('', '_withitems'),
+]
+
+if PYGE11:
+    INDIVIDUAL_NODES.extend([
+        ('try: pass\nexcept* Exception: pass', 'TryStar'),
+        ('except* Exception: pass', 'ExceptHandler'),
+    ])
+
+if PYGE12:
+    INDIVIDUAL_NODES.extend([
+        ('type t[T] = ...', 'TypeAlias'),
+        ('T', 'TypeVar'),
+        ('**V', 'ParamSpec'),
+        ('*U', 'TypeVarTuple'),
+        ('', '_type_params'),
+    ])
+
+if PYGE14:
+    INDIVIDUAL_NODES.extend([
+        ('t"{1}"', 'TemplateStr'),
+    ])
+
+
 def read(fnm):
     with open(fnm) as f:
         return f.read()
@@ -6817,9 +6954,8 @@ finally:
         self.assertEqual('1|2', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=False).root.src)
         self.assertEqual('( # pre\n1|2\n# post\n)', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=True).root.src)
 
-    def test_copy_not_whole(self):
+    def test_copy_unwhole_at_root(self):
         self.assertEqual('i', FST('# 0\ni\n # 1').copy(whole=False).src)
-        self.assertEqual('i', FST('# 0\ni\n # 1', 'Expr').copy(whole=False).src)
         self.assertEqual('# 0\ni\n # 1', FST('# 0\ni\n # 1', 'exec').copy(whole=False).src)
 
         self.assertEqual('i,', FST('# 0\ni,\n # 1').copy(whole=False).src)
@@ -6831,6 +6967,22 @@ finally:
 
         self.assertEqual('and', FST('# 0\nand\n# 2', 'And').copy(whole=False).src)  # have loc
         self.assertEqual('or', FST('# 0\nor\n# 2', 'Or').copy(whole=False).src)
+
+        # statementlike
+
+        self.assertEqual('i', FST('# 0\ni\n # 1', 'Expr').copy(whole=False, trivia=(False, False)).src)
+        self.assertEqual('# 0\ni', FST('# 0\ni\n # 1', 'Expr').copy(whole=False).src)
+        self.assertEqual('# 0\ni\n # 1', FST('# 0\ni\n # 1', 'Expr').copy(whole=False, trivia=('all', 'all')).src)
+
+        f = FST('# pre\nexcept a: pass\n# post', 'ExceptHandler')
+        self.assertEqual('except a: pass', f.copy(whole=False, trivia=(False, False)).src)
+        self.assertEqual('# pre\nexcept a: pass', f.copy(whole=False).src)
+        self.assertEqual('# pre\nexcept a: pass\n# post', f.copy(whole=False, trivia=('all', 'all')).src)
+
+        f = FST('# pre\ncase _: pass\n# post', 'match_case')
+        self.assertEqual('case _: pass', f.copy(whole=False, trivia=(False, False)).src)
+        self.assertEqual('# pre\ncase _: pass', f.copy(whole=False).src)
+        self.assertEqual('# pre\ncase _: pass\n# post', f.copy(whole=False, trivia=('all', 'all')).src)
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
@@ -9259,143 +9411,7 @@ match a:
             self.assertTrue(FST('t"{a}"').values[0].is_Interpolation)
 
     def test_generated_predicates(self):
-        srcs_and_modes = [
-            ('', 'Module'),
-            ('a', 'Interactive'),
-            ('v', 'Expression'),
-            ('def f(): pass', 'FunctionDef'),
-            ('async def f(): pass', 'AsyncFunctionDef'),
-            ('class cls: pass', 'ClassDef'),
-            ('return', 'Return'),
-            ('del a', 'Delete'),
-            ('a = b', 'Assign'),
-            ('a += b', 'AugAssign'),
-            ('a: b', 'AnnAssign'),
-            ('for _ in _: pass', 'For'),
-            ('async for _ in _: pass', 'AsyncFor'),
-            ('while _: pass', 'While'),
-            ('if _: pass', 'If'),
-            ('with _: pass', 'With'),
-            ('async with _: pass', 'AsyncWith'),
-            ('match _:\n  case _: pass', 'Match'),
-            ('raise', 'Raise'),
-            ('try: pass\nexcept: pass', 'Try'),
-            ('assert v', 'Assert'),
-            ('import m', 'Import'),
-            ('from . import a', 'ImportFrom'),
-            ('global n', 'Global'),
-            ('nonlocal n', 'Nonlocal'),
-            ('a', 'Expr'),
-            ('pass', 'Pass'),
-            ('break', 'Break'),
-            ('continue', 'Continue'),
-            ('a or b', 'BoolOp'),
-            ('a := b', 'NamedExpr'),
-            ('a + b', 'BinOp'),
-            ('-a', 'UnaryOp'),
-            ('lambda: None', 'Lambda'),
-            ('a if b else c', 'IfExp'),
-            ('{a: b}', 'Dict'),
-            ('{a}', 'Set'),
-            ('[_ for _ in _]', 'ListComp'),
-            ('{_ for _ in _}', 'SetComp'),
-            ('{_: _ for _ in _}', 'DictComp'),
-            ('(_ for _ in _)', 'GeneratorExp'),
-            ('await _', 'Await'),
-            ('yield _', 'Yield'),
-            ('yield from _', 'YieldFrom'),
-            ('a < b', 'Compare'),
-            ('f()', 'Call'),
-            # ('zzz', 'FormattedValue'),
-            # ('zzz', 'Interpolation'),
-            ('f"{1}"', 'JoinedStr'),
-            ('1', 'Constant'),
-            ('a.b', 'Attribute'),
-            ('a[b]', 'Subscript'),
-            ('*s', 'Starred'),
-            ('n', 'Name'),
-            ('[a]', 'List'),
-            ('(a,)', 'Tuple'),
-            ('a:b:c', 'Slice'),
-            ('', 'Load'),
-            ('', 'Store'),
-            ('', 'Del'),
-            ('and', 'And'),
-            ('or', 'Or'),
-            ('+', 'Add'),
-            ('-', 'Sub'),
-            ('*', 'Mult'),
-            ('@', 'MatMult'),
-            ('/', 'Div'),
-            ('%', 'Mod'),
-            ('**', 'Pow'),
-            ('<<', 'LShift'),
-            ('>>', 'RShift'),
-            ('|', 'BitOr'),
-            ('^', 'BitXor'),
-            ('&', 'BitAnd'),
-            ('//', 'FloorDiv'),
-            ('~', 'Invert'),
-            ('not', 'Not'),
-            ('+', 'UAdd'),
-            ('-', 'USub'),
-            ('==', 'Eq'),
-            ('!=', 'NotEq'),
-            ('<', 'Lt'),
-            ('<=', 'LtE'),
-            ('>', 'Gt'),
-            ('>=', 'GtE'),
-            ('is', 'Is'),
-            ('is not', 'IsNot'),
-            ('in', 'In'),
-            ('not in', 'NotIn'),
-            ('for _ in _', 'comprehension'),
-            ('except: pass', 'ExceptHandler'),
-            ('a', 'arguments'),
-            ('a', 'arg'),
-            ('k=v', 'keyword'),
-            ('a', 'alias'),
-            ('w', 'withitem'),
-            ('case _: pass', 'match_case'),
-            ('1', 'MatchValue'),
-            ('None', 'MatchSingleton'),
-            ('[p]', 'MatchSequence'),
-            ('{1: p}', 'MatchMapping'),
-            ('cls()', 'MatchClass'),
-            ('*s', 'MatchStar'),
-            ('p', 'MatchAs'),
-            ('a | b', 'MatchOr'),
-            ('', '_ExceptHandlers'),
-            ('', '_match_cases'),
-            ('', '_Assign_targets'),
-            ('', '_decorator_list'),
-            ('', '_comprehensions'),
-            ('', '_comprehension_ifs'),
-            ('', '_aliases'),
-            ('', '_withitems'),
-        ]
-
-        if PYGE11:
-            srcs_and_modes.extend([
-                ('try: pass\nexcept* Exception: pass', 'TryStar'),
-                ('except* Exception: pass', 'ExceptHandler'),
-            ])
-
-        if PYGE12:
-            srcs_and_modes.extend([
-                ('type t[T] = ...', 'TypeAlias'),
-                ('T', 'TypeVar'),
-                ('**V', 'ParamSpec'),
-                ('*U', 'TypeVarTuple'),
-                ('', '_type_params'),
-            ])
-
-        if PYGE14:
-            srcs_and_modes.extend([
-                ('t"{1}"', 'TemplateStr'),
-            ])
-
-        for src, mode in srcs_and_modes:
+        for src, mode in INDIVIDUAL_NODES:
             f = FST(src, mode)
 
             self.assertTrue(getattr(f, f'is_{mode}'))
@@ -9403,7 +9419,7 @@ match a:
             if (base := f.a.__class__.__bases__[0]) is not AST:
                 self.assertTrue(getattr(f, f'is_{base.__name__}'))
 
-            for _, not_mode in srcs_and_modes:
+            for _, not_mode in INDIVIDUAL_NODES:
                 if not_mode is not mode:
                     self.assertFalse(getattr(f, f'is_{not_mode}'))
 

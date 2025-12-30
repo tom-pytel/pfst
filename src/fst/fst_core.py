@@ -657,23 +657,31 @@ def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
         self.a.f = self.a = None
 
 
-def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = True) -> AST:
-    """Set `.a` AST node for this `FST` node and `_make_fst_tree` for `self`, also set ast node in parent AST node.
-    Optionally `_unmake_fst_tree()` for with old `.a` node first. Returns old `.a` node.
+def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = True) -> fst.FST:  # -> self
+    """Set `.a` AST node for this `FST` node and `_make_fst_tree` for `self` if needed (not `valid_fst`), also set ast
+    node in parent AST node. Optionally `_unmake_fst_tree()` for old `.a` node according to `unmake`. Returns old `.a`
+    node.
+
+    It is the caller's responsibility to remove the `ast` passed in from any other `FST` tree it may have belonged to
+    (specifically their parent `AST`), though can be root of its own.
+
+    **WARNING!** If passing `valid_fst=True` the caller is responsible for flushing any location caches of that tree if
+    locations change.
 
     **Parameters:**
     - `valid_fst`: Indicates that the `AST` node is a part of a valid `FST` tree already so that less processing needs
-        to be done to integrate it into `self`. Specifically we just set `.root` for all `ast` child nodes and the `ast`
-        node's own parent.
-    - `unmake`: Whether to unmake the FST tree being replaced or not. Should really always unmake.
-    """
+        to be done to integrate it into `self`. We just set `.parent` for all `ast` children `.f` nodes to `self` (don't
+        need to set `pfield` because that already references the `ast` correctly).
+    - `unmake`: Whether to unmake the `FST` tree being replaced or not. Should really always unmake.
 
-    old_ast = self.a
+    **Returns:**
+    - `self`
+    """
 
     if unmake:
         self._unmake_fst_tree()
 
-        if f := getattr(ast, 'f', None):
+        if f := getattr(ast, 'f', None):  # the ast node will be getting self as the FST node so break the link from its previous FST node if any
             f.a = None
 
     self.a = ast
@@ -691,7 +699,74 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
 
     self._touch()
 
-    return old_ast
+    return self
+
+
+def _set_field(
+    self: fst.FST, ast_or_list: AST | list[AST] | None, field: str, valid_fst: bool = False, unmake: bool = True
+) -> fst.FST:  # -> self
+    """Set the given field of this node's `.a` (not the `.a` itself) to the given `ast_or_list` node or list of `AST`
+    nodes and `_make_fst_tree` for the new node(s) if needed (not `valid_fst`). Optionally `_unmake_fst_tree()` for old
+    field `AST` node or list of nodes. Returns `self` for chaining.
+
+    It is the caller's responsibility to remove the `ast_or_list` or list of `AST`s passed in from any other `FST` tree they may
+    have belonged to (specifically their parent `AST`), though can be root(s) of their own. Also for setting the proper
+    location for `self.a` as well as parents obviously.
+
+    **Note:** This does not preserve the current `FST` of a single-element field if setting that.
+
+    **Note:** If changing a list field, the actual list object itself is replaced.
+
+    **WARNING!** If passing `valid_fst=True` the caller is responsible for flushing any location caches of that tree if
+    locations change.
+
+    **WARNING!** Needless to say, if replacing a field, it must always be an `AST` or list of `AST`s, no primitives. It
+    may contain `None` in place of optional `AST`s.
+
+    **Parameters:**
+    - `field`: The field we are replacing.
+    - `valid_fst`: Indicates that the `AST` node or list of `AST` nodes is a part of a valid `FST` tree already so that
+        less processing needs to be done to integrate it into `self`. We just set `ast_or_list` parent and pfield nodes
+        accordingly.
+    - `unmake`: Whether to unmake the `FST` tree being replaced or not. Should really always unmake.
+
+    **Returns:**
+    - `self`
+    """
+
+    ast = self.a
+    body = getattr(ast, field)  # AttributeError on purpose
+
+    if isinstance(body, list):
+        if unmake:
+            self._unmake_fst_tree(body)
+
+        if valid_fst:
+            for i, a in enumerate(ast_or_list):
+                fst.FST(a, self, astfield(field, i))
+
+        else:
+            stack = []
+
+            for i, a in enumerate(ast_or_list):
+                stack.append(fst.FST(a, self, astfield(field, i)))
+
+            self._make_fst_tree(stack)
+
+    else:
+        if unmake:
+            self._unmake_fst_tree([body])
+
+        f = fst.FST(ast_or_list, self, astfield(field, None))
+
+        if not valid_fst:
+            f._make_fst_tree()
+
+    setattr(ast, field, ast_or_list)
+
+    self._touch()
+
+    return self
 
 
 def _set_ctx(self: fst.FST, ctx_cls: type[expr_context], stack: list[AST] | None = None) -> None:
