@@ -6984,6 +6984,30 @@ finally:
         self.assertEqual('# pre\ncase _: pass', f.copy(whole=False).src)
         self.assertEqual('# pre\ncase _: pass\n# post', f.copy(whole=False, trivia=('all', 'all')).src)
 
+        # all
+
+        try:
+            for src, mode in INDIVIDUAL_NODES:
+                if mode in ('alias', '_Assign_targets'):  # can't add comments to these
+                    continue
+
+                commented_src = f'# pre\n{src}  # line\n# post'
+
+                f = FST(commented_src, mode)
+                copy_src = f.copy(whole=False, pars_walrus=False).src
+
+                if f.is_stmtlike:
+                    self.assertEqual(copy_src, f'# pre\n{src}  # line')
+                elif f.is_mod or f.is_expr_context or f.is__slice:
+                    self.assertEqual(copy_src, commented_src)
+                else:
+                    self.assertEqual(copy_src, src)
+
+        except Exception:
+            print(f'\n{mode=}, {src=}')
+
+            raise
+
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy().src, '@decorator\nclass cls:\n  pass')
