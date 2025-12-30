@@ -80,6 +80,8 @@ _SLICE_COMAPTIBILITY = {
     (List, 'elts'):                       'expr*',
     (Tuple, 'elts'):                      'expr*',
 
+    # TODO: add use of these for better preservation when moving formatted code
+
     # (FunctionDef, 'decorator_list'):      'expr*',
     # (AsyncFunctionDef, 'decorator_list'): 'expr*',
     # (ClassDef, 'decorator_list'):         'expr*',

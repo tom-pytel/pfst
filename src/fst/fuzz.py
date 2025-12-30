@@ -1676,8 +1676,12 @@ class PutOne(Fuzzy):
                         code = repl.copy()
                     case 'ast':
                         code = copy_ast(repl.a)
-                    case 'src':
-                        code = repl.copy().src  # dedent, fix 'elif'
+
+                    case 'src':  # dedent, fix 'elif'
+                        if repl.pfield.name == 'format_spec' or (repl.parent.is_ftstr and repl.is_Constant):  # these need to be actually copied
+                            code = repl.copy().src
+                        else:
+                            code = repl.own_src()
 
                 try:
                     if self.debug:

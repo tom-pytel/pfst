@@ -2980,6 +2980,83 @@ def f():
         self.assertIsNone(f.verify(raise_=False))
         self.assertRaises(SyntaxError, f.verify)
 
+    def test_own_src(self):
+        # whole
+
+        f = FST('''
+# pre
+var # line
+# post
+            '''.strip())
+        self.assertEqual(f.own_src(), '''
+# pre
+var # line
+# post
+            '''.strip())
+        self.assertEqual(f.own_src(whole=False), '''
+var
+            '''.strip())
+
+        # fix_elif
+
+        f = FST('''
+if 1: pass
+elif 2:
+    pass
+            '''.strip())
+        self.assertEqual(f.orelse[0].own_src(), '''
+if 2:
+    pass
+            '''.strip())
+
+        # docstr
+
+        f = FST('''
+if 1:
+    def func():
+        """doc
+        str"""
+        """non-doc
+        str"""
+        i = [
+            1,
+            2,
+        ]
+            '''.strip())
+        self.assertEqual(f.body[0].own_src(docstr=True), '''
+def func():
+    """doc
+    str"""
+    """non-doc
+    str"""
+    i = [
+        1,
+        2,
+    ]
+            '''.strip())
+        self.assertEqual(f.body[0].own_src(docstr='strict'), '''
+def func():
+    """doc
+    str"""
+    """non-doc
+        str"""
+    i = [
+        1,
+        2,
+    ]
+            '''.strip())
+        self.assertEqual(f.body[0].own_src(docstr=False), '''
+def func():
+    """doc
+        str"""
+    """non-doc
+        str"""
+    i = [
+        1,
+        2,
+    ]
+            '''.strip())
+
     def test_walk(self):
         a = parse("""
 def f(a, b=1, *c, d=2, **e): pass

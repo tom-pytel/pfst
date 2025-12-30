@@ -194,8 +194,8 @@ DUMP_NO_COLOR = nspace(
     },
 )
 
-Trivia      = bool | str | int | tuple[bool | str | int,        bool | str | int       ]         # actual value trivia option should take, if not a tuple then the trailing trivia defaults to 'line'
-TriviaParam = bool | str | int | tuple[bool | str | int | None, bool | str | int | None] | None  # trivia parameter as passed to functions with None indicating to use global value
+_Trivia = tuple[bool | str | int, bool | str | int]  # actual value trivia that is used, regardless of what is passed or set as global option
+Trivia  = bool | str | int | tuple[bool | str | int | None, bool | str | int | None] | None  # human interface trivia parameter as passed to functions with None indicating to use global value
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     # list fields of multiple children
@@ -822,9 +822,7 @@ def trailing_trivia(
     return (text_pos, None if space_pos == text_pos else space_pos, True)
 
 
-def get_trivia_params(trivia: TriviaParam = None, neg: bool = False) -> tuple[
-    Literal['none', 'all', 'block'], bool | int, bool, Literal['none', 'all', 'block', 'line'], bool | int, bool
-]:
+def get_trivia_params(trivia: Trivia = None, neg: bool = False) -> _Trivia:
     """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
 
     This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
@@ -2130,48 +2128,49 @@ def _getput_line_comment(
 
     # put comment where there was no comment before, may need to normalize block header or semicoloned statements
 
-    before_semi_end_col = end_col
+    with self._modifying():  # this isn't strictly needed at the time of writing, future-proofing
+        before_semi_end_col = end_col
 
-    if has_semi := m.group(1):  # if semicolon present then we start search after it
-        end_col = m.end(1)
+        if has_semi := m.group(1):  # if semicolon present then we start search after it
+            end_col = m.end(1)
 
-    if not full:
-        comment = '  #' + comment
+        if not full:
+            comment = '  #' + comment
 
-    if not (l := last_stmt_line[end_col:]) or l.isspace():  # no other statement or line continuation on last statement line so we can just add the comment
-        pass  # noop
+        if not (l := last_stmt_line[end_col:]) or l.isspace():  # no other statement or line continuation on last statement line so we can just add the comment
+            pass  # noop
 
-    elif is_block:
-        if self._normalize_block(field):
-            _, _, end_ln, end_col = self._loc_block_header_end(field)  # any remaining junk on header tail (maybe line continuation) is harmless to remove
+        elif is_block:
+            if self._normalize_block(field):
+                _, _, end_ln, end_col = self._loc_block_header_end(field)  # any remaining junk on header tail (maybe line continuation) is harmless to remove
 
-    # we are past any semicolon on this line, its either another statement or a line continuation ... which may lead to another statement or the semicolon which is not on this line, or not
+        # we are past any semicolon on this line, its either another statement or a line continuation ... which may lead to another statement or the semicolon which is not on this line, or not
 
-    elif (next_stmt := self.next()) and next_stmt.pfield.name == self.pfield.name:  # if there is a next sibiling and is part of same body then we need to process more, if not then safe to nuke rest of line
-        next_ln, next_col, _, _ = next_stmt.bloc
+        elif (next_stmt := self.next()) and next_stmt.pfield.name == self.pfield.name:  # if there is a next sibiling and is part of same body then we need to process more, if not then safe to nuke rest of line
+            next_ln, next_col, _, _ = next_stmt.bloc
 
-        if ((frag := next_frag(lines, end_ln, end_col, next_ln, next_col + 1, True, None))  # search to 1 past start of next statement to be able to run into it it on logical line
-            and frag.src.startswith(';')  # a semicolon?
-        ):
-            if has_semi:  # if already had one then error
-                raise RuntimeError('should not get here, found two semicolons without a statement between them')  # pragma: no cover
+            if ((frag := next_frag(lines, end_ln, end_col, next_ln, next_col + 1, True, None))  # search to 1 past start of next statement to be able to run into it it on logical line
+                and frag.src.startswith(';')  # a semicolon?
+            ):
+                if has_semi:  # if already had one then error
+                    raise RuntimeError('should not get here, found two semicolons without a statement between them')  # pragma: no cover
 
-            frag = next_frag(lines, frag.ln, frag.col + 1, next_ln, next_col + 1, True, None)  # search again, it better not be another semicolon!
+                frag = next_frag(lines, frag.ln, frag.col + 1, next_ln, next_col + 1, True, None)  # search again, it better not be another semicolon!
 
-        if frag and not frag.src.startswith('#'):  # if its not a comment then its the next statement
-            assert frag.ln == next_ln and frag.col == next_col
+            if frag and not frag.src.startswith('#'):  # if its not a comment then its the next statement
+                assert frag.ln == next_ln and frag.col == next_col
 
-            indent = self._get_block_indent()
+                indent = self._get_block_indent()
 
-            if (parent := self.parent) and parent._normalize_block(self.pfield.name, indent=indent):  # if have parent then normalize the block because could all be on header logical line separated with semicolons
-                _, _, end_ln, before_semi_end_col = self.bloc  # locations have changed
-                next_ln, next_col, _, _ = next_stmt.bloc
+                if (parent := self.parent) and parent._normalize_block(self.pfield.name, indent=indent):  # if have parent then normalize the block because could all be on header logical line separated with semicolons
+                    _, _, end_ln, before_semi_end_col = self.bloc  # locations have changed
+                    next_ln, next_col, _, _ = next_stmt.bloc
 
-            self._put_src([comment, indent], end_ln, before_semi_end_col, next_ln, next_col, False)  # now, FINALLY, we write the comment along with a newline to split up the statements, don't need to touch explicitly because offset put_src touches
+                self._put_src([comment, indent], end_ln, before_semi_end_col, next_ln, next_col, False)  # now, FINALLY, we write the comment along with a newline to split up the statements, don't need to touch explicitly because offseting _put_src touches
 
-            return old_comment
+                return old_comment
 
-    self._put_src(comment, end_ln, end_col, end_ln, 0x7fffffffffffffff)
-    self._touchall(True, False, False)
+        self._put_src(comment, end_ln, end_col, end_ln, 0x7fffffffffffffff)
+        self._touchall(True, False, False)
 
-    return old_comment
+        return old_comment

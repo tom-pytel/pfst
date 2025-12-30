@@ -25,7 +25,7 @@ from .common import (
 )
 
 from .fst_core import _ParamsOffset
-from .fst_misc import TriviaParam, leading_trivia, trailing_trivia, get_trivia_params
+from .fst_misc import Trivia, leading_trivia, trailing_trivia, get_trivia_params
 
 __all__ = [
     'get_slice_sep', 'put_slice_sep_begin', 'put_slice_sep_end',
@@ -209,7 +209,7 @@ def _locs_slice(
     bound_col: int,
     bound_end_ln: int,
     bound_end_col: int,
-    trivia: TriviaParam,
+    trivia: Trivia,
     sep: str = ',',
     neg: bool = False,
 ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:

@@ -2089,6 +2089,21 @@ c, # c
         self.assertRaises(ValueError, FST('"a"').put, 'z', 'kind')
         self.assertRaises(ValueError, FST('async for a in b').put, -1, 'is_async')
 
+        # non-expr replace fields in debug f-str, tests modifying of non-expr (expr chanin)
+
+        if PYGE12:
+            (f := FST('f"{[i for i in old]=}"')).values[1].value.generators[0].iter.replace('new')
+            self.assertEqual('[i for i in new]=', f.values[0].value)
+            f.verify()
+
+            (f := FST('f"{(lambda a=old: None)=}"')).values[1].value.args.defaults[0].replace('new')
+            self.assertEqual('(lambda a=new: None)=', f.values[0].value)
+            f.verify()
+
+            (f := FST('f"{call(a=old)=}"')).values[1].value.keywords[0].value.replace('new')
+            self.assertEqual('call(a=new)=', f.values[0].value)
+            f.verify()
+
     def test_put_one_pattern(self):
 
         # pattern BinOp and UnaryOp

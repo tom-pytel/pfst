@@ -465,14 +465,16 @@ class FST:
 
     @property
     def lines(self) -> list[builtins.str]:
-        """Whole lines of this node from the raw root source, without any dedentation, may also contain parts of
+        """Whole lines of this node from the **RAW SOURCE**, without any dedentation, may also contain parts of
         enclosing nodes. Will have indentation as it appears in the top level source if multiple lines. If gotten at
         root then the entire source is returned, which may extend beyond the location of the top-level node (mostly for
         statements which may have leading / trailing comments or empty lines).
 
-        A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc...
+        A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc... The
+        lines list returned is always a copy so safe to modify.
 
-        **Note:** The lines list returned is always a copy so safe to modify.
+        **WARNING!** You get just the text that is there so you will get unparsable source if you get for example a
+        string `Constant` from the `values` field of a `JoinedStr`, or a 'format_spec'.
         """
 
         if not self.parent:  # is_root
@@ -484,11 +486,14 @@ class FST:
 
     @property
     def src(self) -> builtins.str:
-        """Source code of this node from the raw root source clipped out of as a single string, without any dedentation.
+        """Source code of this node from the **RAW SOURCE** clipped out of as a single string, without any dedentation.
         Will have indentation as it appears in the top level source if multiple lines. If gotten at root then the entire
         source is returned, regardless of whether the actual top level node location includes it or not.
 
         A string is always returned, even for nodes which can never have source like `Load`, etc...
+
+        **WARNING!** You get just the text that is there so you will get unparsable source if you get for example a
+        string `Constant` from the `values` field of a `JoinedStr`, or a 'format_spec'.
         """
 
         if not self.parent:  # is_root
@@ -1529,7 +1534,7 @@ class FST:
     # Edit
 
     def own_lines(
-        self, whole: bool = True, fix_elif: bool = True, *, docstr: bool | Literal['strict'] | None = None
+        self, whole: bool = True, *, docstr: bool | Literal['strict'] | None = None
     ) -> list[builtins.str]:
         r"""Lines of this node copied out of the tree and dedented as if the node were copied out. Unlike the `.lines`
         property these will not contain parts of other nodes.
@@ -1537,21 +1542,21 @@ class FST:
         This function is a faster way to get this if you just want the source over `self.copy().lines`. The parameters
         for getting this are also cached (not the lines themselves), so it is not so expensive to call this repeatedly.
 
-        A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc...
-
-        **Note:** The lines list returned is always a copy so safe to modify. Also, the first line is always completely
-        dedented.
+        A valid list of strings is always returned, even for nodes which can never have source like `Load`, etc... The
+        lines list returned is always a copy so safe to modify.
 
         **Caveat:** There is an actual difference between this and `self.copy().lines`. The copy operation may carry
         out some reformatting to make sure the node is presentable at root level (mostly adding parentheses), this
-        function does not do that. It will however convert an `elif` to an `if` according to the `fix_elif` parameter.
-        The copy also does trivia, we do not here (yet).
+        function does not do that. It will however convert an `elif` to an `if`. The copy also does trivia, we do not
+        here (yet).
+
+        **WARNING!** With the exception of the `elif` fix, you get just the text that is there so you will get
+        unparsable source if you get for example a string `Constant` from the `values` field of a `JoinedStr`, or a
+        'format_spec'.
 
         **Parameters:**
         - `whole`: If at root this determines whether to return the whole source or just the location of the node
             (which may not be the whole source).
-        - `fix_elif`: Whether to convert an `elif` in the source to an `if` if this node is an `elif`. Only this node,
-            any children will continue to be valid `elif`s.
         - `docstr`: How to treat multiline string docstring lines.
             - `False`: Don't dedent any.
             - `True`: Dedent all `Expr` multiline strings (as they serve no coding purpose).
@@ -1599,14 +1604,14 @@ class FST:
             return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop, expr_context and empty arguments
 
         if is_root:
-            return self._get_src(loc.ln, loc.col, loc.end_ln, loc.end_col, True)
+            return self._get_src(loc.ln, loc.col, loc.end_ln, loc.end_col, True)  # note, elif cannot exist at root so we don't check for it
 
         if docstr is None:
             docstr = FST.get_option('docstr')
 
         key = 'ownlS' if docstr == 'strict' else 'ownlT' if docstr else 'ownlF'
 
-        if cached := self._cache.get(key):
+        if cached := self._cache.get(key):  # cached indent and indentable lines
             dedent, lns = cached
 
         else:
@@ -1615,10 +1620,36 @@ class FST:
 
             self._cache[key] = (dedent, lns)
 
-        return self._dedented_lines(dedent, lns, fix_elif)
+        # params set up, now do it
+
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self.bloc
+
+        lines = self._get_src(bound_ln, bound_col, bound_end_ln, bound_end_col, True)
+
+        if dedent and lns:
+            ldedent = len(dedent)
+            bound_end_ln -= bound_ln
+
+            for ln in lns:
+                ln -= bound_ln
+
+                if (0 <= ln <= bound_end_ln) and (l := lines[ln]):
+                    if (l.startswith(dedent)
+                        or (lempty_start := re_empty_line_start.match(l, 0, 0x7fffffffffffffff).end()) >= ldedent
+                    ):  # only full dedent non-empty lines which have dedent length leading space
+                        lines[ln] = l[ldedent:]
+                    else:  # inconsistent dedentation
+                        lines[ln] = l[lempty_start:]
+
+        if self.is_elif():
+            assert lines[0].startswith('elif')
+
+            lines[0] = lines[0][2:]  # it will always be right at the beginning
+
+        return lines
 
     def own_src(
-        self, whole: bool = True, fix_elif: bool = True, *, docstr: bool | Literal['strict'] | None = None
+        self, whole: bool = True, *, docstr: bool | Literal['strict'] | None = None
     ) -> builtins.str:
         """Source of this node as a string copied out of the tree and dedented as if the node were copied out.
 
@@ -1631,14 +1662,15 @@ class FST:
 
         **Caveat:** There is an actual difference between this and `self.copy().src`. The copy operation may carry out
         some reformatting to make sure the node is presentable at root level (mostly adding parentheses), this function
-        does not do that. It will however convert an `elif` to an `if` according to the `fix_elif` parameter. The copy
-        also does trivia, we do not here (yet).
+        does not do that. It will however convert an `elif` to an `if`. The copy also does trivia, we do not here (yet).
+
+        **WARNING!** With the exception of the `elif` fix, you get just the text that is there so you will get
+        unparsable source if you get for example a string `Constant` from the `values` field of a `JoinedStr`, or a
+        'format_spec'.
 
         **Parameters:**
         - `whole`: If at root this determines whether to return the whole source or just the location of the node
             (which may not be the whole source).
-        - `fix_elif`: Whether to convert an `elif` in the source to an `if` if this node is an `elif`. Only this node,
-            any children will continue to be valid `elif`s.
         - `docstr`: How to treat multiline string docstring lines.
             - `False`: Don't dedent any.
             - `True`: Dedent all `Expr` multiline strings (as they serve no coding purpose).
@@ -1678,7 +1710,7 @@ class FST:
         ]
         """
 
-        return '\n'.join(self.own_lines(whole, fix_elif, docstr=docstr))
+        return '\n'.join(self.own_lines(whole, docstr=docstr))
 
     def ast_src(self) -> str:
         """Unparse the `AST` tree of self discarding all formatting. The unparse will correctly handle our own SPECIAL
@@ -1735,6 +1767,8 @@ class FST:
     def copy(self, whole: bool = True, **options) -> FST:
         r"""Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
         identical copy is made and no fixes / modifications are applied unless `whole=False`.
+
+        **Note:** If copying root node, the `trivia` option is not honored, its either `whole` or nothing.
 
         **Parameters:**
         - `whole`: This only applies when copying root nodes. If `True` then copies the entire tree and source without
@@ -1826,6 +1860,8 @@ class FST:
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
         **CAN** replace root node, in which case `self` remains the same but the top-level `AST` and source change.
+
+        **Note:** If replacing root node, the `trivia` option is not honored.
 
         **WARNING!** If passing an `FST` then this is not guaranteed to become the new node (on purpose). If you wish to
         continue using the `FST` node you just replaced then make sure to use the one returned from this function. The
@@ -2367,7 +2403,9 @@ class FST:
 
         * `None`: Nothing is reparsed or offset, the source is just put. There are few cases where this will result in
           a valid tree but can include removal of comments and trailing whitespace on a line or changing lines between
-          empty and comment.
+          empty and comment. Some caches are cleared on put determined by the node this is called on so best to call on
+          the node that "ows" the source being put. For comment, block statement it is in or general statement it is on
+          the line of. For other misc, best just node that it is "in".
 
         If the `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If
         `code` is an `FST` then the exact source of the `FST` is put. If passed as a string or lines then that is put
@@ -2472,12 +2510,14 @@ class FST:
             field = 'value' if self.a.__class__ in ASTS_LEAF_FTSTR_FMT_VALUE else False  # the 'value' is so that modifying spacing inside a debug string updates its preceding string Constant, don't need to do this for 'reparse'
 
             with self._modifying(field, None):  # we use raw=None to signal that the modification should be allowed on py < 3.12 as it only offsets
-                params_offset = root._put_src(put_lines, ln, col, end_ln, end_col, True, False, self)
+                params_offset = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, self)
 
                 self._offset(*params_offset, False, True, self_=False)
 
         elif action is None:
-            root._put_src(put_lines, ln, col, end_ln, end_col)
+            self._put_src(put_lines, ln, col, end_ln, end_col)
+            self._touchall(True, True, False)  # touch parents to clear bloc caches because comment on last child statement is included in parent bloc, include self_ just to be sure
+
         else:
             raise ValueError(f"action must be 'reparse', 'offset' or None, got {action!r}")
 
@@ -4487,7 +4527,6 @@ class FST:
         _indent_lns,
         _dedent_lns,
         _redent_lns,
-        _dedented_lines,
 
         _get_src,
         _put_src,
@@ -4528,8 +4567,8 @@ class FST:
         _delimit_node,
         _undelimit_node,
         _trim_delimiters,
-
         _normalize_block,
+
         _getput_line_comment,
     )
 
