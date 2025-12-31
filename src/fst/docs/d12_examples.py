@@ -730,6 +730,127 @@ with (open(a) as f,
 ```
 
 
+## Add decorator to class methods
+
+This one is very simple, we just want to add our own decorator to all class methods, not normal functions, with the
+constraint that it be as close to the function as possible but not after a `@contextmanager`.
+
+```py
+>>> src = r"""
+... def normal_function():
+...     ...
+...
+... class SomeClass:
+...     @staticmethod
+...     def get_options() -> dict[str, Any]:
+...         ...
+...
+...     # class comment
+...     @classmethod
+...     def get_cls_option(option: str, options: Mapping[str, Any] = {}) -> object:
+...         ...
+...
+...     # another class comment
+...     async def set_async_inst_options(**options) -> dict[str, Any]:
+...         ...
+...
+...     @ \
+... staticmethod
+...     # intentionally screwy
+...     @ (
+...         contextmanager
+...     )
+...     def options(**options) -> Iterator[dict[str, Any]]:
+...         ...
+... """.strip()
+```
+
+Function:
+
+```py
+>>> def insert_decorator_to_class_methods(src: str) -> str:
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk({FunctionDef, AsyncFunctionDef}):
+...         if f.parent.is_ClassDef:
+...             if any((deco := d).is_Name and d.id == 'contextmanager'
+...                    for d in f.decorator_list):
+...                 idx = deco.pfield.idx
+...             else:
+...                 idx = 'end'
+...
+...             f.decorator_list.insert('@our_decorator', idx, trivia=False)
+...
+...     return fst.src
+```
+
+Original:
+
+```py
+>>> pprint(src)
+def normal_function():
+    ...
+ 
+class SomeClass:
+    @staticmethod
+    def get_options() -> dict[str, Any]:
+        ...
+ 
+    # class comment
+    @classmethod
+    def get_cls_option(option: str, options: Mapping[str, Any] = {}) -> object:
+        ...
+ 
+    # another class comment
+    async def set_async_inst_options(**options) -> dict[str, Any]:
+        ...
+ 
+    @ \
+staticmethod
+    # intentionally screwy
+    @ (
+        contextmanager
+    )
+    def options(**options) -> Iterator[dict[str, Any]]:
+        ...
+```
+
+Processed:
+
+```py
+>>> pprint(insert_decorator_to_class_methods(src))
+def normal_function():
+    ...
+ 
+class SomeClass:
+    @staticmethod
+    @our_decorator
+    def get_options() -> dict[str, Any]:
+        ...
+ 
+    # class comment
+    @classmethod
+    @our_decorator
+    def get_cls_option(option: str, options: Mapping[str, Any] = {}) -> object:
+        ...
+ 
+    # another class comment
+    @our_decorator
+    async def set_async_inst_options(**options) -> dict[str, Any]:
+        ...
+ 
+    @ \
+staticmethod
+    # intentionally screwy
+    @our_decorator
+    @ (
+        contextmanager
+    )
+    def options(**options) -> Iterator[dict[str, Any]]:
+        ...
+```
+
+
 ## Comprehension to loop
 
 We build up a body and replace the original comprehension `Assign` statement with the new statements.
