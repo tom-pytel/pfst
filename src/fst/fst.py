@@ -1782,15 +1782,16 @@ class FST:
         r"""Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
         identical copy is made and no fixes / modifications are applied unless `whole=False`.
 
-        **Note:** If copying root node, the `trivia` option is not honored, its either `whole` or nothing.
-
         **Parameters:**
-        - `whole`: This only applies when copying root nodes. If `True` then copies the entire tree and source without
-            any modifications (including leading and trailing source which is not part of the node). Otherwise will trim
-            away any source that falls outside of the node for non-statementlike nodes and only copy the node and its
-            source (including any grouping parentheses as specified by the `pars` option). For statementlikes will
-            follow trivia rules as well.
-        - `options`: See `options()`, not all apply, mostly `trivia` and the various `pars`.
+        - `whole`: This only has meaning when copying a root nodes, otherwise all `options` rules apply.
+            - `True`: Copies the entire tree and source without any modifications (including leading and trailing source
+                which is not part of the node), no `options` are honored.
+            - `False`: For statementlike nodes will honor the `trivia` option and only copy allowed trivia source along
+                with the node. For expressions and patterns the various `pars` options will be honored and any
+                parentesization which may happen on a normal copy will be carried out as well. For all other node types
+                that have a location will trim away any source that falls outside of the node and only copy the node and
+                its own source.
+        - `options`: See `options()`.
 
         **Returns:**
         - `FST`: Copied node.
@@ -1859,7 +1860,7 @@ class FST:
 
             self._unmake_fst_parents()  # unmake the tmpf, can still use as `from_` below since the unmake just breaks .f/.a links
 
-        finally:  # in case of error try to leave self in valid state
+        finally:  # in case of error try to remake self anyway to leave in valid state
             FST(ast, lines, None, from_=tmpf, lcopy=False, tmake=False)  # recreate self as root node
 
         return ret
@@ -1950,7 +1951,7 @@ class FST:
         if code is None:
             raise ValueError('cannot delete root node')
         if options.get('to'):
-            raise ValueError("cannot replace root node using a 'to' option")
+            raise ValueError("cannot replace root node with 'to' option")
 
         with self._modifying():
             code = code_as_all(code, self.parse_params)

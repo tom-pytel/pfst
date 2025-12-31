@@ -7046,10 +7046,23 @@ finally:
                 else:
                     self.assertEqual(copy_src, src)
 
+                if f.is_parenthesizable(star=False):
+                    pard_src = f'({src})'
+
+                    f.par(force=True, whole=False)
+                    self.assertEqual(f.copy(whole=False, pars=False).src, src)
+                    self.assertEqual(f.copy(whole=False, pars=True).src, pard_src)
+
         except Exception:
             print(f'\n{mode=}, {src=}')
 
             raise
+
+        # recover from error
+
+        self.assertRaises(KeyError, (f := FST('a = b')).copy, False, trivia='bad')
+        self.assertEqual('a = b', f.src)
+        f.verify()
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
