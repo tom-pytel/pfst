@@ -1069,7 +1069,7 @@ def _is_expr_arglike(self: fst.FST) -> bool | None:
     **Returns:**
     - `True`: Is an unparenthesized arglike expression, `*not a`, `*a or b`.
     - `False`: Is a parenthesized arglike expression, `*(not a)`, `*(a or b)`.
-    - `None`: Is a not an arglike expression, `*x`, `y`, `i = 1`, `pass`, etc...
+    - `None`: Is a not an arglike expression, `*x`, `*(x)`, `y`, `i = 1`, `pass`, etc...
     """
 
     ast = self.a

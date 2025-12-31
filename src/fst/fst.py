@@ -3186,8 +3186,8 @@ class FST:
         unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`, adjusting the node location. If dealing with
         a `Starred` then the parentheses are applied to the child.
 
-        **WARNING!** This function doesn't do any higher level syntactic validation. So if you force-parenthesize
-        something that shouldn't be parenthesized, and you wind up poking an eye out, that's on you.
+        **WARNING!** If you unsafe-force-parenthesize something that shouldn't be parenthesized, and you wind up poking
+        an eye out, that's on you.
 
         **Parameters:**
         - `force`:
@@ -3197,7 +3197,7 @@ class FST:
                 if allowed by syntax, e.g. this won't parenthesize an `arg`, `withitem` any kind of `statement` or
                 anything which would cause a syntax error with the parentheses there, so no `Slice`s or f-string
                 `Constant`s either.
-            - `'unsafe'`: Add a layer of parentheses regardless if any already present or even allowed.
+            - `'unsafe'`: Add a layer of parentheses regardless if any already present or even syntactically allowed.
         - `whole`: If at root then parenthesize whole source instead of just node, if `False` then only node.
 
         **Returns:**
@@ -3279,18 +3279,18 @@ class FST:
         """Remove all parentheses if present. Normally removes just grouping parentheses but can also remove `Tuple`
         parentheses and `MatchSequence` parentheses or brackets intrinsic to the node if `node=True`. If dealing with a
         `Starred` then the parentheses are checked in and removed from the child. If `shared=None` then will also remove
-        parentheses which do not belong to this node but enclose it directly, this is mostly for internal use.
+        parentheses which do not belong to this node but enclose it directly, this is meant for internal use.
 
-        **WARNING!** This function doesn't do any higher level syntactic validation. So if you unparenthesize something
-        that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
+        **WARNING!** This function doesn't do any higher level parsability validation. So if you unparenthesize
+        something that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
         - `node`: If `True` then will remove intrinsic parentheses from a parenthesized `Tuple` and parentheses /
             brackets from parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if
-            present.
+            present. Also from a parentesized `Starred` arglike expression which can cause it to become unparsable.
         - `shared`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
-            parentheses or not. If `None` then will attempt to unparenthesize any enclosing parentheses, whether they
-            belong to this node or not (meant for internal use).
+            parentheses or not. If `None` then will attempt to unparenthesize **ANY** enclosing parentheses, whether
+            they belong to this node or not (meant for internal use).
 
         **Returns:**
         - `self`
@@ -3324,7 +3324,14 @@ class FST:
         >>> FST('[1, 2]', 'pattern').unpar(node=True).src
         '1, 2'
 
-        >>> FST('*(a or b)').unpar().src  # unpar() a Starred unparenthesizes its child
+        >>> FST('*(a)').unpar().src  # Starred unparenthesizes its child
+        '*a'
+
+        >>> # unless it is arglike since that is syntax error, the pars belong to the node
+        >>> FST('*(a or b)').unpar().src
+        '*(a or b)'
+
+        >>> FST('*(a or b)').unpar(node=True).src  # so can force with node=True
         '*a or b'
 
         >>> # not just root node
@@ -3344,7 +3351,10 @@ class FST:
         ast_cls = self.a.__class__
 
         if ast_cls is Starred:
-            if (value := ast.value.f).pars().n:
+            is_expr_arglike = self._is_expr_arglike()
+            value = ast.value.f
+
+            if (value.pars().n if is_expr_arglike is None else node and not is_expr_arglike):
                 with self._modifying():
                     value._unparenthesize_grouping(shared)
 
