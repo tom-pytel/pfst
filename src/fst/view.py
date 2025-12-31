@@ -85,7 +85,7 @@ class fstview:
     _start: int         ; """Start position within the target field list this view references."""
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
-    is_FST = False  ; """@private"""  # for quick checks vs. `FST`
+    is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
 
     @property
     def start(self) -> int:
@@ -157,12 +157,10 @@ class fstview:
         return values which may be `None` or may not be `FST` nodes.
 
         **Parameters:**
-        - `idx`: The index or `slice` where to get the element(s) from. If is a single string then this it will return
-            the first function, class or variable assignment to the name matching this string (if is a list of
-            statements, error otherwise). This is just a convenience and will probably change / expand in the future.
+        - `idx`: The index or `slice` where to get the element(s) from.
 
         **Returns:**
-        - `fstview | `: Either a single `FST` node if accessing a single item or a new `fstview` view
+        - `fstview | FST | str | None`: Either a single `FST` node if accessing a single item or a new `fstview` view
             according to the slice passed. `str` can also be returned from a view of `Global.names` or `None` from a
             `Dict.keys`.
 
@@ -213,7 +211,7 @@ class fstview:
 
     def __setitem__(self, idx: int | slice, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
-        bounds of this view. This is not just with a set, it is a full `FST` operation.
+        bounds of this view.
 
         Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
@@ -443,7 +441,7 @@ class fstview:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -451,7 +449,7 @@ class fstview:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to insert.
-        - `idx`: Index to insert BEFORE. Can be `'end'` to indicate add at end of slice.
+        - `idx`: Index to insert before. Can be `'end'` to indicate add at end of slice.
         - `one`: If `True` then will insert `code` as a single item. Otherwise `False` will attempt a slice insertion
             (type must be compatible).
         - `options`: See `fst.fst.FST.options()`.

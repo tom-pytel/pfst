@@ -2,7 +2,7 @@
 
 ### Fixed
 
-- fixed parenthesize multiline walrus not being parenthesized for parsability if `pars_walrus=False`
+- fixed parenthesize copied multiline walrus not being parenthesized for parsability if `pars_walrus=False`
 - update parent nodes' end locations correctly when a raw put to an elif completely removes it without replacing with anything
 - insert extra line at end when force-parenthesizing an expression at root that has a last line as a comment
 - diallow parenthesization of immediate string `Constant` children of f/t-strings
@@ -19,6 +19,8 @@
 
 ### Added
 
+- `insert()`, `append()`, `extend()`, `prepend()`, `prextend()` convenience functions to `FST` class, work same as `fstview` versions
+- `__getitem__()` and friends to `FST` class to access default field.
 - `own_src()` and `own_lines()` to efficiently get dedented code without having to `copy().src`
 - `ast_src()` to quickly get unparsed source with formatting stripped
 - `get_line_comment()` and `put_line_comment()` for easy get and set statement line comments

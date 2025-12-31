@@ -134,7 +134,7 @@ class fstloc(NamedTuple):
     loc      = property(lambda self: self)          ; """To be able to use as `FST.loc`."""
     bloc     = loc                                  ; """Alias for `loc`."""
 
-    is_FST   = False                                ; """@private"""  # for quick checks vs. `FST`
+    is_FST   = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
 
     def __repr__(self) -> str:
         ln, col, end_ln, end_col = self

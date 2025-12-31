@@ -440,7 +440,7 @@ class FST:
     _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
 
     # class attributes
-    is_FST:       bool = True  ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
+    is_FST:       bool = True  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `fstloc` or `fstview`
 
     @property
     def is_alive(self) -> bool:
@@ -1536,6 +1536,127 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Edit
 
+    def __getitem__(self, idx: int | builtins.slice) -> fstview | FST | builtins.str | None:
+        r"""Get a single item or a slice view from the default field of `self`. This is just an access, not a cut or a
+        copy, so if you want a copy you must explicitly do `.copy()` on the returned value.
+
+        Same as `self.default_field[idx]`.
+
+        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when dealing with
+        return values which may be `None` or may not be `FST` nodes.
+
+        **Parameters:**
+        - `idx`: The index or `builtins.slice` where to get the element(s) from.
+
+        **Returns:**
+        - `fstview | FST | str | None`: Either a single `FST` node if accessing a single item or a new `fstview` view
+            according to the slice passed. `builtins.str` can also be returned from a view of `Global.names` or `None`
+            from a `Dict.keys`.
+
+        **Examples:**
+
+        >>> FST('[0, 1, 2, 3]')[1].src
+        '1'
+
+        >>> FST('[0, 1, 2, 3]')[:3]
+        <<List ROOT 0,0..0,12>.elts[:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+
+        >>> FST('[0, 1, 2, 3]')[:3].copy().src
+        '[0, 1, 2]'
+
+        >>> FST('[0, 1, 2, 3]')[-3:]
+        <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+
+        >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body[1]
+        <ClassDef 1,0..1,15>
+
+        >>> FST('global a, b, c').names
+        <<Global ROOT 0,0..0,14>.names ['a', 'b', 'c']>
+
+        >>> FST('global a, b, c')[1]
+        'b'
+
+        @public
+        """
+
+        field, _ = fixup_field_body(self.a, None, True)
+
+        return getattr(self, field)[idx]
+
+    def __setitem__(self, idx: int | builtins.slice, code: Code | None) -> None:
+        """Set a single item or a slice view in the default field of `self`.
+
+        Same as `self.default_field[idx] = code`.
+
+        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        values.
+
+        **Parameters:**
+        - `idx`: The index or `builtins.slice` where to put the element(s).
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> (f := FST('[0, 1, 2, 3]'))[1] = '4'; f.src
+        '[0, 4, 2, 3]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[:3] = '[5]'; f.src
+        '[5, 3]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[:3] = '5,'; f.src
+        '[5, 3]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[-3:] = '[6]'; f.src
+        '[0, 6]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[:] = '7, 8'; f.src
+        '[7, 8]'
+
+        >>> f = FST('[0, 1, 2, 3]')
+        >>> f[2:2] = f[1:3].copy()
+        >>> f.src
+        '[0, 1, 1, 2, 2, 3]'
+
+        @public
+        """
+
+        field, _ = fixup_field_body(self.a, None, True)
+
+        getattr(self, field)[idx] = code
+
+    def __delitem__(self, idx: int | builtins.slice) -> None:
+        """Delete a single item or a slice from default field of `self`.
+
+        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        values.
+
+        **Parameters:**
+        - `idx`: The index or `builtins.slice` to delete.
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> del (f := FST('[0, 1, 2, 3]'))[1]; f.src
+        '[0, 2, 3]'
+
+        >>> del (f := FST('[0, 1, 2, 3]'))[:3]; f.src
+        '[3]'
+
+        >>> del (f := FST('[0, 1, 2, 3]'))[-3:]; f.src
+        '[0]'
+
+        >>> del (f := FST('[0, 1, 2, 3]'))[:]; f.src
+        '[]'
+
+        @public
+        """
+
+        field, _ = fixup_field_body(self.a, None, True)
+
+        del getattr(self, field)[idx]
+
     def own_lines(
         self, whole: bool = True, *, docstr: bool | Literal['strict'] | None = None
     ) -> list[builtins.str]:
@@ -1783,7 +1904,7 @@ class FST:
         identical copy is made and no fixes / modifications are applied unless `whole=False`.
 
         **Parameters:**
-        - `whole`: This only has meaning when copying a root nodes, otherwise all `options` rules apply.
+        - `whole`: This only has meaning when copying a root node, otherwise all `options` rules apply.
             - `True`: Copies the entire tree and source without any modifications (including leading and trailing source
                 which is not part of the node), no `options` are honored.
             - `False`: For statementlike nodes will honor the `trivia` option and only copy allowed trivia source along
@@ -1981,12 +2102,187 @@ class FST:
 
         parent._put_one(None, (pf := self.pfield).idx, pf.name, options)
 
+    def insert(
+        self,
+        code: Code,
+        idx: int | Literal['end'] = 0,
+        field: builtins.str | None = None,
+        *,
+        one: bool = True,
+        **options
+    ) -> FST:  # -> self
+        """Insert into `field` of `self` at a specific index. Default field if `field=None`. This is a convenience
+        function for `self.put_slice()`.
+
+        Same as `self.field.insert()`.
+
+        **Returns:**
+        - `self`
+
+        **Parameters:**
+        - `code`: `FST`, `AST` or source `str` or `list[str]` to insert.
+        - `idx`: Index to insert before. Can be `'end'` to indicate add at end of slice.
+        - `field`: Field to operate on or the default field if is `None`. Must be a list field.
+        - `one`: If `True` then will insert `code` as a single item. Otherwise `False` will attempt a slice insertion
+            (type must be compatible).
+        - `options`: See `fst.fst.FST.options()`.
+
+        **Note:** The `field` value can optionally be passed positionally in the `idx` parameter. If passed in `idx`
+        `idx` is assumed to be 0.
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 1).src
+        '[0, (4, 5), 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 'end', one=False).src
+        '[0, 1, 2, 3, 4, 5]'
+
+        >>> # same as 'end' but 'end' is always 'end'
+        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 4, one=False).src
+        '[0, 1, 2, 3, 4, 5]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].insert('*star').base.src
+        '[0, *star, 1, 2, 3]'
+        """
+
+        check_options(options)
+
+        idx, _, field = _swizzle_getput_params(idx, field, field, 0, None)
+        field, _ = fixup_field_body(self.a, field, True)
+
+        return self._put_slice(code, idx, idx, field, one, options)
+
+    def append(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self
+        """Append `code` as a single element to `field` of `self`. Default field if `field=None`. This is a convenience
+        function for `self.put_slice()`.
+
+        Same as `self.field.append()`.
+
+        **Returns:**
+        - `self`
+
+        **Parameters:**
+        - `code`: `FST`, `AST` or source `str` or `list[str]` to append.
+        - `field`: Field to operate on or the default field if is `None`. Must be a list field.
+        - `options`: See `fst.fst.FST.options()`.
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> FST('[0, 1, 2, 3]').append('(4, 5)').src
+        '[0, 1, 2, 3, (4, 5)]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].append('*star').base.src
+        '[0, 1, 2, *star, 3]'
+        """
+
+        check_options(options)
+
+        field, _ = fixup_field_body(self.a, field, True)
+
+        return self._put_slice(code, 'end', 'end', field, True, options)
+
+    def extend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self
+        """Extend `field` of `self` with the slice in `code` (type must be compatible). Default field if `field=None`.
+        This is a convenience function for `self.put_slice()`.
+
+        Same as `self.field.extend()`.
+
+        **Returns:**
+        - `self`
+
+        **Parameters:**
+        - `code`: `FST`, `AST` or source `str` or `list[str]` slice to extend.
+        - `field`: Field to operate on or the default field if is `None`. Must be a list field.
+        - `options`: See `fst.fst.FST.options()`.
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> FST('[0, 1, 2, 3]').extend('(4, 5)').src
+        '[0, 1, 2, 3, 4, 5]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].extend('(4, 5)').base.src
+        '[0, 1, 2, 4, 5, 3]'
+        """
+
+        check_options(options)
+
+        field, _ = fixup_field_body(self.a, field, True)
+
+        return self._put_slice(code, 'end', 'end', field, False, options)
+
+    def prepend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self
+        """prepend `code` as a single element to the beginning of `field` of `self`. Default field if `field=None`. This
+        is a convenience function for `self.put_slice()`.
+
+        Same as `self.field.prepend()`.
+
+        **Returns:**
+        - `self`
+
+        **Parameters:**
+        - `code`: `FST`, `AST` or source `str` or `list[str]` to preappend.
+        - `options`: See `fst.fst.FST.options()`.
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> FST('[0, 1, 2, 3]').prepend('(4, 5)').src
+        '[(4, 5), 0, 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].prepend('*star').base.src
+        '[0, *star, 1, 2, 3]'
+        """
+
+        check_options(options)
+
+        field, _ = fixup_field_body(self.a, field, True)
+
+        return self._put_slice(code, 0, 0, field, True, options)
+
+    def prextend(self, code: Code, field: builtins.str | None = None, **options) -> fstview:  # -> self
+        """Extend the beginning of the `field` of `self` with the slice in `code` (type must be compatible). Default
+        field if `field=None`. This is a convenience function for `self.put_slice()`.
+
+        Same as `self.field.prextend()`.
+
+        **Returns:**
+        - `self`
+
+        **Parameters:**
+        - `code`: `FST`, `AST` or source `str` or `list[str]` to extend at the start.
+        - `field`: Field to operate on or the default field if is `None`. Must be a list field.
+        - `options`: See `fst.fst.FST.options()`.
+
+        **Examples:**
+
+        >>> from fst import FST
+
+        >>> FST('[0, 1, 2, 3]').prextend('(4, 5)').src
+        '[4, 5, 0, 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].prextend('(4, 5)').base.src
+        '[0, 4, 5, 1, 2, 3]'
+        """
+
+        check_options(options)
+
+        field, _ = fixup_field_body(self.a, field, True)
+
+        return self._put_slice(code, 0, 0, field, False, options)
+
     def get(
         self,
         idx: int | Literal['end'] | None = None,
         stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
-        *,
         cut: bool = False,
         **options,
     ) -> FST | None | builtins.str | constant:
@@ -2083,15 +2379,14 @@ class FST:
         idx: int | Literal['end'] | None = None,
         stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
-        *,
         one: bool = True,
         **options,
     ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put an individual node or a slice of nodes to `self` if possible. The node is passed as an existing
         top-level `FST`, `AST`, string or list of string lines. If passed as an `FST` then it should be considered
         "consumed" after this function returns and should not be accessed again, even on failure. If passed as an `AST`
-        then it is copied and can be reused after this function returns. This function can do everything that
-        `put_slice()` can do.
+        then it is copied and can be reused after this function returns. This is the most general form of node put
+        function and can do everything that the other node put functions can.
 
         **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
         `raw=True` or if it happened as a fallback from `raw='auto'`). If there is a possibility of this happening then
@@ -2202,7 +2497,6 @@ class FST:
         start: int | Literal['end'] = 0,
         stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
-        *,
         cut: bool = False,
         **options,
     ) -> FST:
@@ -2268,7 +2562,6 @@ class FST:
         start: int | Literal['end'] = 0,
         stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
-        *,
         one: bool = False,
         **options,
     ) -> FST | None:  # -> self or None if deleted due to raw reparse

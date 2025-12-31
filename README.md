@@ -385,7 +385,8 @@ trivia by line number, as well as insert location. Direct comment manipulation f
 preserve more formatting.
 
 * Tree search, indentation of multiline sequences should be better, more coercion on put, different source encodings,
-code cleanups, API additions for real-world use, optimization, testing, bughunting, etc...
+code cleanups, decide between primitive or node ops on primitive fields, API additions for real-world use, optimization,
+testing, bughunting, etc...
 
 ## Trivia
 

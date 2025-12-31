@@ -7226,6 +7226,129 @@ opts.ignore_module = [mod.strip()
                       for i in opts.ignore_module for mod in i.split(',')]
             '''.strip(), 'exec').body[0].value.generators[0].iter.copy().src)
 
+    def test_fst___item__accessors(self):
+        f = parse('a\nb\nc').f
+        f[1:2] = 'd\ne'
+        self.assertEqual('a\nd\ne\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        f[1] = 'd'
+        self.assertEqual('a\nd\nc', f.src)
+
+        f = parse('a\nb\nc\nd\ne').f
+        f[1:4] = 'f'
+        self.assertEqual('a\nf\ne', f.src)
+
+        f = parse('a\nb\nc\nd\ne').f
+        f[1:4] = 'f\ng'
+        self.assertEqual('a\nf\ng\ne', f.src)
+
+        f = parse('a\nb\nc\nd\ne').f
+        del f[1:3]
+        self.assertEqual('a\nd\ne', f.src)
+        del f[1]
+        self.assertEqual('a\ne', f.src)
+        f[1:1] = 'b\nc\nd'
+        self.assertEqual('a\nb\nc\nd\ne', f.src)
+
+        f = parse('a\nb\nc').f
+        def test():
+            f[1] = 'd\ne'
+        self.assertRaises(ValueError, test)
+
+    def test_fst_insert_append_extend_prepend_prextend(self):
+        f = parse('a\nb\nc').f
+        g = f[1:2]
+        g.append('d')
+        self.assertEqual(2, len(g))
+        self.assertEqual('b', g[0].src)
+        self.assertEqual('d', g[1].src)
+        self.assertEqual('a\nb\nd\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        g = f[1:2]
+        g.extend('d\ne')
+        self.assertEqual(3, len(g))
+        self.assertEqual('b', g[0].src)
+        self.assertEqual('d', g[1].src)
+        self.assertEqual('e', g[2].src)
+        self.assertEqual('a\nb\nd\ne\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        g = f[1:2]
+        g.prepend('d')
+        self.assertEqual(2, len(g))
+        self.assertEqual('d', g[0].src)
+        self.assertEqual('b', g[1].src)
+        self.assertEqual('a\nd\nb\nc', f.src)
+
+        f = parse('a\nb\nc').f
+        g = f[1:2]
+        g.prextend('d\ne')
+        self.assertEqual(3, len(g))
+        self.assertEqual('d', g[0].src)
+        self.assertEqual('e', g[1].src)
+        self.assertEqual('b', g[2].src)
+        self.assertEqual('a\nd\ne\nb\nc', f.src)
+
+        f = parse('', 'exec').f
+        g = f
+        g.append('d')
+        self.assertEqual(1, len(g.body))
+        self.assertEqual('d', g[0].src)
+        self.assertEqual('d', f.src)
+        g.prepend('e')
+        self.assertEqual(2, len(g.body))
+        self.assertEqual('e', g[0].src)
+        self.assertEqual('d', g[1].src)
+        self.assertEqual('e\nd', f.src)
+        g.extend('f\ng')
+        self.assertEqual(4, len(g.body))
+        self.assertEqual('e', g[0].src)
+        self.assertEqual('d', g[1].src)
+        self.assertEqual('f', g[2].src)
+        self.assertEqual('g', g[3].src)
+        self.assertEqual('e\nd\nf\ng', f.src)
+        g.prextend('h\ni')
+        self.assertEqual(6, len(g.body))
+        self.assertEqual('h', g[0].src)
+        self.assertEqual('i', g[1].src)
+        self.assertEqual('e', g[2].src)
+        self.assertEqual('d', g[3].src)
+        self.assertEqual('f', g[4].src)
+        self.assertEqual('g', g[5].src)
+        self.assertEqual('h\ni\ne\nd\nf\ng', f.src)
+        g.body.replace('h')
+        self.assertEqual(1, len(g.body))
+        self.assertEqual('h', g[0].src)
+        self.assertEqual('h', f.src)
+        g.insert('i')
+        self.assertEqual(2, len(g.body))
+        self.assertEqual('i', g[0].src)
+        self.assertEqual('h', g[1].src)
+        self.assertEqual('i\nh', f.src)
+        g.insert('j', 1)
+        self.assertEqual(3, len(g.body))
+        self.assertEqual('i', g[0].src)
+        self.assertEqual('j', g[1].src)
+        self.assertEqual('h', g[2].src)
+        self.assertEqual('i\nj\nh', f.src)
+        g.insert('k', -1)
+        self.assertEqual(4, len(g.body))
+        self.assertEqual('i', g[0].src)
+        self.assertEqual('j', g[1].src)
+        self.assertEqual('k', g[2].src)
+        self.assertEqual('h', g[3].src)
+        self.assertEqual('i\nj\nk\nh', f.src)
+        g.insert('l', 'end')
+        self.assertEqual(5, len(g.body))
+        self.assertEqual('i', g[0].src)
+        self.assertEqual('j', g[1].src)
+        self.assertEqual('k', g[2].src)
+        self.assertEqual('h', g[3].src)
+        self.assertEqual('l', g[4].src)
+        self.assertEqual('i\nj\nk\nh\nl', f.src)
+
     def test_find_loc_in(self):
         f    = parse('abc += xyz').f
         fass = f.body[0]

@@ -140,6 +140,13 @@ True
 Constant 'ab' - ROOT 0,0..1,4
 
 
+## `insert()`, `append()`, `extend()`, `prepend()` and `prextend()`
+
+They work just like the `fstview` versions but on the default or specifiable field.
+
+TODO: this
+
+
 ## `put()` and `put_slice()`
 
 Just like with `copy()` and `cut()` using `get()`, `put()` is the underlying function used by `replace()` and `remove()`.
