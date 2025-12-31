@@ -1239,7 +1239,7 @@ class Par(Fuzzy):
                     if f.is_ftstr:
                         gen.send(False)
 
-                f.unpar(node=True).par(force=f.is_parenthesizable())
+                f.unpar(node=True).par(force=True)
 
                 if self.verify:
                     fst.verify()

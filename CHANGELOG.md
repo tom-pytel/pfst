@@ -38,6 +38,7 @@
 
 ### Updated
 
+- `par(force='unsafe')` parenthesizes anything, `par(force=True)` only what is syntactically valid
 - recognize line comment after a trailining statement semicolon as belonging to the statement
 - `copy()` can strip non-node source from root node copy using parameter `whole=False` (which can handle trivia ops at root)
 - can control optional parenthesization of cut / put `Tuple` slices via `pars` option

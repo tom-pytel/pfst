@@ -3180,17 +3180,24 @@ class FST:
 
         return locn
 
-    def par(self, force: bool = False, *, whole: bool = True) -> FST:  # -> self
+    def par(self, force: bool | Literal['safe'] = False, *, whole: bool = True) -> FST:  # -> self
         """Parenthesize node if it **MAY** need it. Will not parenthesize atoms which are always enclosed like `List`,
         or nodes which are not `is_parenthesizable()`, unless `force=True`. Will add intrinsic node-owned parentheses to
         unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`, adjusting the node location. If dealing with
         a `Starred` then the parentheses are applied to the child.
 
-        **WARNING!** This function doesn't do any higher level syntactic validation. So if you parenthesize something
-        that shouldn't be parenthesized, and you wind up poking an eye out, that's on you.
+        **WARNING!** This function doesn't do any higher level syntactic validation. So if you force-parenthesize
+        something that shouldn't be parenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
-        - `force`: If `True` then will add another layer of parentheses regardless if any already present.
+        - `force`:
+            - `False`: Only parenthesize if not currently parenthesized and if the node type is not an atom or is an
+                atom which can be split over multiple lines (in which case it would need parentheses for parsability).
+            - `True`: Add a layer of perentheses regardless if any already present or if node type is an atom, but only
+                if allowed by syntax, e.g. this won't parenthesize an `arg`, `withitem` any kind of `statement` or
+                anything which would cause a syntax error with the parentheses there, so no `Slice`s or f-string
+                `Constant`s either.
+            - `'unsafe'`: Add a layer of parentheses regardless if any already present or even allowed.
         - `whole`: If at root then parenthesize whole source instead of just node, if `False` then only node.
 
         **Returns:**
@@ -3216,6 +3223,12 @@ class FST:
         >>> FST('i').par(force=True).src  # so must be forced
         '(i)'
 
+        >>> FST('a:b:c', 'Slice').par(force=True).src  # syntactically wrong
+        'a:b:c'
+
+        >>> FST('a:b:c', 'Slice').par(force='unsafe').src  # can still force
+        '(a:b:c)'
+
         >>> # parethesize MatchSequence puts brackets like ast.unparse()
         >>> FST('1, 2', 'pattern').par().src
         '[1, 2]'
@@ -3237,6 +3250,13 @@ class FST:
                     and self._is_enclosed_or_line()  # _is_enclosed_or_line() can return 'unenclosable'
             )):
                 return self
+
+        elif force is True:
+            if not self.is_parenthesizable():
+                return self
+
+        elif force != 'unsafe':
+            raise ValueError(f"invalid force {force!r}, can only be True, False or 'unsafe'")
 
         with self._modifying():
             if ast_cls is Tuple:
