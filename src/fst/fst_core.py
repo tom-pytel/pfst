@@ -562,7 +562,7 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class methods
 
-def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
+def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> fst.FST:  # -> self
     """Create tree of `FST` nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
     to walk and make trees for individually. If the `AST`s already have `FST` nodes then those are repurposed in
     `FST()`. In this case the nodes are not removed from whatever previous parent `AST` contained them, that is up to
@@ -607,8 +607,10 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
 
                             FST(c, parent, astfield(field, i))  # no children
 
+    return self
 
-def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool = False) -> None:
+
+def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool = False) -> fst.FST:  # -> self
     """Destroy a tree of `FST` child nodes by breaking links between AST and `FST` nodes. This mainly helps make sure
     destroyed `FST` nodes can't be reused in a way that might corrupt valid remaining trees.
 
@@ -643,8 +645,10 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool =
                         elif isinstance(child, list) and not isinstance(child[0], str):
                             stack.extend(child)
 
+    return self
 
-def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
+
+def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> fst.FST:  # -> self
     """Unmake parent tree from `self` on up, unmaking `self` optionally as well if `self_=True`.
 
     **WARNING!** Only meant for parent chains of only children because will **NOT** unmake any siblings along the way.
@@ -655,6 +659,8 @@ def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
 
     while self := self.parent:
         self.a.f = self.a = None
+
+    return self
 
 
 def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = True) -> fst.FST:  # -> self

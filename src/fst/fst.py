@@ -810,7 +810,7 @@ class FST:
                 `pfield` is `False`, meaning a shortcut use of `FST()`.
             - `lcopy`: Whether to copy lines of source on root node create or just use what is passed in, which in this
                 case must be a list of `fst.astutil.bistr` and this node takes ownership of the list.
-            - `mktree`: Whether to do `_make_fst_tree()` on `self` or not. Turning this off can be used to create a root
+            - `tmake`: Whether to do `_make_fst_tree()` on `self` or not. Turning this off can be used to create a root
                 node for a specific existing `FST` tree. Useful for optimizing some operations.
         """
 
@@ -874,7 +874,7 @@ class FST:
             else:
                 self.indent = _DEFAULT_INDENT
 
-        if getattr(kwargs, 'mktree', True):
+        if getattr(kwargs, 'tmake', True):
             self._make_fst_tree()
 
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that, note that self.indent = '?' is used for checking
@@ -1838,39 +1838,31 @@ class FST:
         lines = self._lines
         ast = self.a
 
-        if (not whole
-            and (loc := (self.pars() if FST.get_option('pars', options) is True else self.bloc))
-            and loc != self.whole_loc
-        ):
+        if whole or not (loc := (self.pars() if FST.get_option('pars', options) is True else self.bloc)):
+            return FST(copy_ast(ast), lines[:], None, from_=self, lcopy=False)
 
+        if ast.__class__ not in ASTS_LEAF_STMTLIKE:
+            ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=False)
 
-            # TODO: walrus and arglike can havew loc == self.whole_loc and still need pars
-
-
-            if ast.__class__ not in ASTS_LEAF_STMTLIKE:
-                ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=FST.get_option('docstr', options))
-
-                ret._maybe_fix_copy(options)
-
-                return ret
-
-            # we do all this so that we can apply trivia rules at root, otherwise we could have just done the above for everything
-
-            tmpf = FST(Module(body=[], type_ignores=[]), lines, None, from_=self, lcopy=False)
-
-            tmpf._set_field([ast], 'body', True, False)  # yeah, hacky
-
-            try:
-                ret = tmpf._get_one(0, 'body', False, options)
-
-            finally:
-                self._unmake_fst_parents()  # the tmpf, can still use as `from_` below since the unmake just breaks .f/.a links
-
-                FST(ast, lines, None, from_=tmpf, lcopy=False, mktree=False)  # recreate self as root node
+            ret._maybe_fix_copy(options)
 
             return ret
 
-        return FST(copy_ast(ast), lines[:], None, from_=self, lcopy=False)
+        # we do all this so that we can apply trivia rules at root, otherwise we could have just done the above for everything
+
+        tmpf = FST(Module(body=[], type_ignores=[]), lines, None, from_=self, lcopy=False)
+
+        tmpf._set_field([ast], 'body', True, False)  # yeah, hacky
+
+        try:
+            ret = tmpf._get_one(0, 'body', False, options)
+
+            self._unmake_fst_parents()  # unmake the tmpf, can still use as `from_` below since the unmake just breaks .f/.a links
+
+        finally:  # in case of error try to leave self in valid state
+            FST(ast, lines, None, from_=tmpf, lcopy=False, tmake=False)  # recreate self as root node
+
+        return ret
 
     def cut(self, **options) -> FST:
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root

@@ -7001,6 +7001,32 @@ finally:
         self.assertEqual('# pre\ncase _: pass', f.copy(whole=False).src)
         self.assertEqual('# pre\ncase _: pass\n# post', f.copy(whole=False, trivia=('all', 'all')).src)
 
+        # parentheses
+
+        f = FST('(expr)')
+        self.assertEqual('expr', f.copy(False).src)
+        self.assertEqual('(expr)', f.copy(False, pars=True).src)
+
+        f = FST('a := b')
+        self.assertEqual('a := b', f.copy(False, pars_walrus=False).src)
+        self.assertEqual('(a := b)', f.copy(False, pars_walrus=True).src)
+
+        f = FST('(a := b)')
+        self.assertEqual('a := b', f.copy(False, pars_walrus=False).src)
+        self.assertEqual('(a := b)', f.copy(False, pars_walrus=True).src)
+
+        f = FST('*a or b')
+        self.assertEqual('*a or b', f.copy(False, pars_arglike=False).src)
+        self.assertEqual('*(a or b)', f.copy(False, pars_arglike=True).src)
+
+        f = FST('*(a or b)')
+        self.assertEqual('*(a or b)', f.copy(False, pars_arglike=False).src)
+        self.assertEqual('*(a or b)', f.copy(False, pars_arglike=True).src)
+
+        f = FST('a\n+\nb')
+        self.assertEqual('(a\n+\nb)', f.copy(False).src)
+        self.assertEqual('a\n+\nb', f.copy(False, pars=False).src)
+
         # all
 
         try:
