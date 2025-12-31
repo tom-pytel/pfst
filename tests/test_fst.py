@@ -6810,6 +6810,16 @@ finally:
             self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=None).src)
             self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False).src)
 
+        # need pars for parsability
+
+        f = FST('(a, i\n:=\n1\n)')
+        self.assertEqual('(i\n:=\n1)', f.elts[1].copy(pars_walrus=True).src)
+        self.assertEqual('(i\n:=\n1)', f.elts[1].copy(pars_walrus=None).src)
+        self.assertEqual('(i\n:=\n1)', f.elts[1].copy(pars_walrus=False).src)
+        self.assertEqual('(i\n:=\n1)', f.elts[1].copy(pars=False, pars_walrus=True).src)
+        self.assertEqual('i\n:=\n1', f.elts[1].copy(pars=False, pars_walrus=None).src)
+        self.assertEqual('i\n:=\n1', f.elts[1].copy(pars=False, pars_walrus=False).src)
+
     def test_pars_arglike(self):
         # not already parenthesized
 
@@ -6908,6 +6918,22 @@ finally:
             self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=False).src)
             self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=None).src)
             self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False).src)
+
+        f = FST('call(1, *\nnot\nb)')
+        self.assertEqual('*(\nnot\nb)', f.args[1].copy(pars_walrus=True).src)
+        self.assertEqual('*(\nnot\nb)', f.args[1].copy(pars_walrus=None).src)
+        self.assertEqual('*(\nnot\nb)', f.args[1].copy(pars_walrus=False).src)
+        self.assertEqual('*(\nnot\nb)', f.args[1].copy(pars=False, pars_arglike=True).src)
+        self.assertEqual('*\nnot\nb', f.args[1].copy(pars=False, pars_arglike=None).src)
+        self.assertEqual('*\nnot\nb', f.args[1].copy(pars=False, pars_arglike=False).src)
+
+        f = FST('call(1, *\nb)')
+        self.assertEqual('*(\nb)', f.args[1].copy(pars_walrus=True).src)
+        self.assertEqual('*(\nb)', f.args[1].copy(pars_walrus=None).src)
+        self.assertEqual('*(\nb)', f.args[1].copy(pars_walrus=False).src)
+        self.assertEqual('*\nb', f.args[1].copy(pars=False, pars_arglike=True).src)
+        self.assertEqual('*\nb', f.args[1].copy(pars=False, pars_arglike=None).src)
+        self.assertEqual('*\nb', f.args[1].copy(pars=False, pars_arglike=False).src)
 
     def test_pars_n(self):
         self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)

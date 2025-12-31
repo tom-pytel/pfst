@@ -743,10 +743,10 @@ b # word
         self.assertFalse(FST('(a), (b,)')._is_delimited_seq())
 
     def test__is_expr_arglike(self):
-        self.assertFalse(FST('*a')._is_expr_arglike())
+        self.assertIsNone(FST('*a')._is_expr_arglike())
         self.assertTrue(FST('*a or b')._is_expr_arglike())
         self.assertFalse(FST('*(a or b)')._is_expr_arglike())
-        self.assertFalse(FST('*(a, b)')._is_expr_arglike())
+        self.assertIsNone(FST('*(a, b)')._is_expr_arglike())
 
     def test__maybe_add_line_continuations(self):
         f = FST(r'''

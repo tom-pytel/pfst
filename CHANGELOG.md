@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fixed parenthesize multiline walrus not being parenthesized for parsability if `pars_walrus=False`
 - update parent nodes' end locations correctly when a raw put to an elif completely removes it without replacing with anything
 - insert extra line at end when force-parenthesizing an expression at root that has a last line as a comment
 - diallow parenthesization of immediate string `Constant` children of f/t-strings
@@ -18,6 +19,7 @@
 
 ### Added
 
+- `own_src()` and `own_lines()` to efficiently get dedented code without having to `copy().src`
 - `ast_src()` to quickly get unparsed source with formatting stripped
 - `get_line_comment()` and `put_line_comment()` for easy get and set statement line comments
 - `_body` virtual field for accessing block statement bodies leaving any possibly present docstr unchanged

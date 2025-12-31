@@ -1662,12 +1662,12 @@ class FST:
         parameters for getting this are also cached (not the source itself), so it is not so expensive to call this
         repeatedly.
 
-        Here is a rough performance comparison for scale when using the three methods of getting source on the
+        Here is a rough performance comparison for scale when using the three methods of getting source of the
         `FST.mark()` function from this class (py 3.14).
         - `.src`: 532 nanoseconds
         - `.copy().src`: 140 microseconds
-        - `.own_src()`: 7.96 microseconds  - caching disabled, always full computation
-        - `.own_src()`: 2.43 microseconds  - caching enabled
+        - `.own_src()`: 7.96 microseconds  - intermediate parameters not in cache
+        - `.own_src()`: 2.43 microseconds  - intermediate parameters in cache (second+ time)
 
         A string is always returned, even for nodes which can never have source like `Load`, etc...
 
@@ -1790,7 +1790,7 @@ class FST:
             away any source that falls outside of the node for non-statementlike nodes and only copy the node and its
             source (including any grouping parentheses as specified by the `pars` option). For statementlikes will
             follow trivia rules as well.
-        - `options`: See `options()`.
+        - `options`: See `options()`, not all apply, mostly `trivia` and the various `pars`.
 
         **Returns:**
         - `FST`: Copied node.
@@ -1799,6 +1799,8 @@ class FST:
 
         >>> FST('[a(), b(), c(), d()]').elts[1].copy().src
         'b()'
+
+        Copies at root are special, default copies everything.
 
         >>> f = FST('''
         ... # pre
@@ -1840,6 +1842,11 @@ class FST:
             and (loc := (self.pars() if FST.get_option('pars', options) is True else self.bloc))
             and loc != self.whole_loc
         ):
+
+
+            # TODO: walrus and arglike can havew loc == self.whole_loc and still need pars
+
+
             if ast.__class__ not in ASTS_LEAF_STMTLIKE:
                 ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=FST.get_option('docstr', options))
 
@@ -4593,7 +4600,6 @@ class FST:
         _maybe_fix_joined_alnum,
         _maybe_fix_undelimited_seq,
         _maybe_fix_tuple,
-        _maybe_fix_arglike,
         _maybe_fix_arglikes,
         _maybe_fix_elif,
         _maybe_fix_copy,

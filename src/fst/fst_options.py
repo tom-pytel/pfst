@@ -230,16 +230,19 @@ def options(**options) -> Iterator[dict[str, Any]]:
         - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
             on put if not needed (removed from destination first if needed and present on both). **DEFAULT**
     - `pars_walrus`: Whether to **ADD** parentheses to top level cut / copied `NamedExpr` nodes or not. If parentheses
-        were already copied due to `pars=True` then setting this to `False` will not remove them.
+        were already copied due to `pars=True` then setting this to `False` will not remove them. This is more of an
+        aesthetic option as `fst` can deal with unparenthesized walruses at root level.
         - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
-        - `None`: Parenthesize according to the `pars` option.
+        - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
     - `pars_arglike`: Whether to **ADD** parentheses to argumentlike expressions (`*not a`, `*b or c`) when cut /
         copied either as single element or as part of a slice. If parentheses were already present then setting this
-        to `False` will not remove them.
+        to `False` will not remove them. Unlike `pars_walrus` this is not mostly an aesthetic option as unparenthesized
+        arglike expressions are invalid everywhere except in `Call.args`, `ClassDef.bases` or an unparenthesized
+        `Subscript.slice` `Tuple`.
         - `True`: Parenthesize cut / copied argumentlike expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied argumentlike expressions.
-        - `None`: Parenthesize according to the `pars` option.
+        - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
     - `norm`: Default normalize option for puts, gets and self target. Determines how `AST`s which would otherwise
         be invalid because of an operation are handled. Mostly how zero or sometimes one-length elements which
         normally cannot be zero or one length are left / put / returned, e.g. zero-length `Set`. This option can be

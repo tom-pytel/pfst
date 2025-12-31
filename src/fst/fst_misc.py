@@ -1066,21 +1066,21 @@ def _is_expr_arglike(self: fst.FST) -> bool | None:
 
     **Returns:**
     - `True`: Is an unparenthesized arglike expression, `*not a`, `*a or b`.
-    - `None`: Is a parenthesized arglike expression, `*(not a)`, `*(a or b)`.
-    - `False`: Is a not an arglike expression, `*x`, `y`, `i = 1`, etc...
+    - `False`: Is a parenthesized arglike expression, `*(not a)`, `*(a or b)`.
+    - `None`: Is a not an arglike expression, `*x`, `y`, `i = 1`, `pass`, etc...
     """
 
     ast = self.a
 
     if ast.__class__ is not Starred or (child := ast.value).__class__ is Tuple:  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
-        return False
+        return None
 
     child_type = child.op.__class__ if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls
 
     if not precedence_require_parens_by_type(child_type, Starred, 'value'):
-        return False
+        return None
 
-    return None if child.f.pars().n else True
+    return not child.f.pars().n
 
 
 def _is_empty_set_call(self: fst.FST) -> bool:
@@ -1703,19 +1703,13 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: b
     return is_par
 
 
-def _maybe_fix_arglike(self: fst.FST, options: Mapping[str, Any]) -> None:
-    """Parenthesize `self` if is arglike expression according to `options`."""
-
-    if get_option_overridable('pars', 'pars_arglike', options) and self._is_expr_arglike():
-        self._parenthesize_grouping()
-
-
-def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
-    """Parenthesize any arglike expressions in `self` which is assumed to be a `Tuple` according to `options`."""
+def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> None:
+    """Parenthesize any arglike expressions in `self` which is assumed to be a `Tuple` according to `options` if not
+    `None`, otherwise always parenthesizes."""
 
     # assert isinstance(self.a, Tuple)
 
-    if get_option_overridable('pars', 'pars_arglike', options):
+    if options is None or get_option_overridable('pars', 'pars_arglike', options):
         for e in self.a.elts:
             if (f := e.f)._is_expr_arglike():
                 f._parenthesize_grouping()
@@ -1751,35 +1745,53 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
 
     self._set_ctx(Load)  # noop if no ctx
 
-    if is_walrus := (ast_cls is NamedExpr):
-        pars = get_option_overridable('pars', 'pars_walrus', options)
-    else:
-        pars = fst.FST.get_option('pars', options)
+    pars = fst.FST.get_option('pars', options)
 
-    if not pars:
-        return
+    if ast_cls is Tuple:
+        if (pars_arglike := options.get('pars_arglike', ...)) is ...:
+            pars_arglike = fst.FST.get_option('pars_arglike')
 
-    need_pars = None
-
-    if is_tuple := (ast_cls is Tuple):
-        if is_par := self._is_delimited_seq():
+        if pars_arglike or (pars_arglike is None and pars is True):
             need_pars = False
-        elif any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
-            need_pars = True
 
-        self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
+            for e in ast.elts:
+                if (f := e.f)._is_expr_arglike():
+                    f._parenthesize_grouping()
+                elif e.__class__ is NamedExpr and not need_pars and not e.f.pars().n:
+                    need_pars = True
 
-    elif is_walrus and not self.pars().n:
-        need_pars = True
-
-    if need_pars is None:
-        need_pars = not self._is_enclosed_or_line()
-
-    if need_pars:
-        if is_tuple:
-            self._delimit_node()
         else:
+            need_pars = None  # we don't know
+
+        if pars:
+            if is_par := self._is_delimited_seq():
+                need_pars = False
+            elif need_pars is None:  # unparenthesized walrus in naked tuple?
+                need_pars = any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts)
+
+            self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
+
+            if need_pars:
+                self._delimit_node()
+
+    elif ast_cls is NamedExpr:
+        if (pars_walrus := options.get('pars_walrus', ...)) is ...:
+            pars_walrus = fst.FST.get_option('pars_walrus')
+
+        if (((pars_walrus or (pars_walrus is None and pars)) and not self.pars().n)
+            or (pars and not self._is_enclosed_or_line())
+        ):
             self._parenthesize_grouping()
+
+    elif (is_expr_arglike := self._is_expr_arglike()) is not None:
+        if (pars_arglike := options.get('pars_arglike', ...)) is ...:
+            pars_arglike = fst.FST.get_option('pars_arglike')
+
+        if (pars_arglike or (pars_arglike is None and pars)) and is_expr_arglike:
+            self._parenthesize_grouping()
+
+    elif pars and not self._is_enclosed_or_line():
+        self._parenthesize_grouping()
 
 
 def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: bool = True) -> None:
