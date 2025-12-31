@@ -97,6 +97,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -610,6 +611,7 @@ _GET_ONE_HANDLERS = {
     (_match_cases, 'cases'):              _get_one_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
     (_decorator_list, 'decorator_list'):  _get_one_default,  # expr*
+    (_arglikes, 'arglikes'):              _get_one_default,  # expr|keyword*
     (_comprehensions, 'generators'):      _get_one_default,  # comprehension*
     (_comprehension_ifs, 'ifs'):          _get_one_default,  # expr*
     (_aliases, 'names'):                  _get_one_default,  # alias*

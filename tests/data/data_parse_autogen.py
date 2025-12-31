@@ -1502,6 +1502,164 @@ r'''**SyntaxError('invalid tuple')**'''),
 r''''''),
 r'''**SyntaxError('invalid tuple')**'''),
 
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r''''''),
+r'''_arglikes - ROOT 0,0..0,0'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''#'''),
+r'''_arglikes - ROOT 0,0..0,1'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''j'''), r'''
+_arglikes - ROOT 0,0..0,1
+  .arglikes[1]
+   0] Name 'j' Load - 0,0..0,1
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*s'''), r'''
+_arglikes - ROOT 0,0..0,2
+  .arglikes[1]
+   0] Starred - 0,0..0,2
+     .value Name 's' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*s,'''), r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] Starred - 0,0..0,2
+     .value Name 's' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*not a'''), r'''
+_arglikes - ROOT 0,0..0,6
+  .arglikes[1]
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*not a,'''), r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[1]
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*not a, *b or c'''), r'''
+_arglikes - ROOT 0,0..0,15
+  .arglikes[2]
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+   1] Starred - 0,8..0,15
+     .value BoolOp - 0,9..0,15
+       .op Or
+       .values[2]
+        0] Name 'b' Load - 0,9..0,10
+        1] Name 'c' Load - 0,14..0,15
+     .ctx Load
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''j, k'''), r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'j' Load - 0,0..0,1
+   1] Name 'k' Load - 0,3..0,4
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''i=1'''), r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .arg 'i'
+     .value Constant 1 - 0,2..0,3
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''**k'''), r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .value Name 'k' Load - 0,2..0,3
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''a, b=c'''), r'''
+_arglikes - ROOT 0,0..0,6
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] keyword - 0,3..0,6
+     .arg 'b'
+     .value Name 'c' Load - 0,5..0,6
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''a, *not b, c=d, *e, f=g, **h'''), r'''
+_arglikes - ROOT 0,0..0,28
+  .arglikes[6]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,9
+     .value UnaryOp - 0,4..0,9
+       .op Not - 0,4..0,7
+       .operand Name 'b' Load - 0,8..0,9
+     .ctx Load
+   2] keyword - 0,11..0,14
+     .arg 'c'
+     .value Name 'd' Load - 0,13..0,14
+   3] Starred - 0,16..0,18
+     .value Name 'e' Load - 0,17..0,18
+     .ctx Load
+   4] keyword - 0,20..0,23
+     .arg 'f'
+     .value Name 'g' Load - 0,22..0,23
+   5] keyword - 0,25..0,28
+     .value Name 'h' Load - 0,27..0,28
+'''),
+
+('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*a, **b'''), r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Starred - 0,0..0,2
+     .value Name 'a' Load - 0,1..0,2
+     .ctx Load
+   1] keyword - 0,4..0,7
+     .value Name 'b' Load - 0,6..0,7
+'''),
+
+('parse__arglikes', 0, 0, 'SyntaxError', {}, ('_arglikes',
+r'''a=b, c'''),
+r'''**SyntaxError('invalid arglikes')**'''),
+
+('parse__arglikes', 0, 0, 'SyntaxError', {}, ('_arglikes',
+r'''**a, *b'''),
+r'''**SyntaxError('iterable argument unpacking follows keyword argument unpacking')**'''),
+
+('parse__arglikes', 0, 0, 'SyntaxError', {}, ('_arglikes',
+r'''a:b'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__arglikes', 0, 0, 'SyntaxError', {}, ('_arglikes',
+r'''a:b:c'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_boolop', 0, 0, 'And', {}, ('boolop',
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),

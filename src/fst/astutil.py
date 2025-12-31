@@ -140,6 +140,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -154,6 +155,7 @@ __all__ = [
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'is_valid_target', 'is_valid_del_target',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments',
+    'merge_arglikes', 'unmerge_arglikes',
     'WalkFail', 'walk2', 'compare_asts', 'copy_ast', # 'copy_attributes', 'set_ctx',
     'last_block_header_child',
     'syntax_ordered_children',
@@ -320,6 +322,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
     (_match_cases,             (('cases', 'match_case*'),)),
     (_Assign_targets,          (('targets', 'expr*'),)),
     (_decorator_list,          (('decorator_list', 'expr*'),)),
+    (_arglikes,                (('arglikes', 'AST*'),)),
     (_comprehensions,          (('generators', 'comprehension*'),)),
     (_comprehension_ifs,       (('ifs', 'expr*'),)),
     (_aliases,                 (('names', 'alias*'),)),
@@ -692,6 +695,25 @@ def has_type_comments(ast: AST) -> bool:
             return True
 
     return False
+
+
+def merge_arglikes(exprs: list[expr], keywords: list[keyword]) -> list[AST]:
+    """Merge list of expressions with list of keywords according to location returning a single ordered list of both."""
+
+    if not keywords:
+        return exprs
+    if not exprs:
+        return keywords
+
+    arglikes = exprs + keywords
+
+    arglikes.sort(key=lambda a: (a.lineno, a.col_offset))
+
+    return arglikes
+
+
+def unmerge_arglikes() -> None:
+    raise NotImplementedError
 
 
 class WalkFail(Exception):
@@ -1425,6 +1447,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     _match_cases:       lambda ast: ast.cases.copy(),
     _Assign_targets:    lambda ast: ast.targets.copy(),
     _decorator_list:    lambda ast: ast.decorator_list.copy(),
+    _arglikes:          lambda ast: ast.arglikes.copy(),
     _comprehensions:    lambda ast: ast.generators.copy(),
     _comprehension_ifs: lambda ast: ast.ifs.copy(),
     _aliases:           lambda ast: ast.names.copy(),

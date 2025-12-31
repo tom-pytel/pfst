@@ -45,6 +45,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -81,6 +82,7 @@ from .parsex import (
     parse_Tuple,
     parse__Assign_targets,
     parse__decorator_list,
+    parse__arglikes,
     parse_boolop,
     parse_operator,
     parse_unaryop,
@@ -121,6 +123,7 @@ __all__ = [
     'code_as_Tuple',
     'code_as__Assign_targets',
     'code_as__decorator_list',
+    'code_as__arglikes',
     'code_as_boolop',
     'code_as_operator',
     'code_as_unaryop',
@@ -853,6 +856,15 @@ def code_as__decorator_list(
 
     return _code_as(code, parse_params, parse__decorator_list, _decorator_list, sanitize,
                     _coerce_as__decorator_list if coerce else None)
+
+
+def code_as__arglikes(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    """Convert `code` to an `_arglikes` of `expr`s and `keyword`s SPECIAL SLICE if possible."""
+
+    return _code_as(code, parse_params, parse__arglikes, _arglikes, sanitize)#,
+                    # _coerce_as__comprehension_ifs if coerce else None)
 
 
 def code_as_boolop(

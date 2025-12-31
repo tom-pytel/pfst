@@ -91,6 +91,7 @@ __all__ = [
     'tag',
     'bound',
     'default_value',
+    'arglikes',
 ]
 
 
@@ -1440,3 +1441,21 @@ else:  # safely access nonexistent field
     @default_value.deleter
     def default_value(self: 'fst.FST') -> None:
         pass
+
+
+# _arglikes
+@property
+def arglikes(self: 'fst.FST') -> fstview:
+    """`FST` accessor for `AST` field `arglikes`."""
+
+    self.a.arglikes  # noqa: B018
+
+    return fstview(self, 'arglikes')
+
+@arglikes.setter
+def arglikes(self: 'fst.FST', code: Code | None) -> None:
+    self._put_slice(code, 0, 'end', 'arglikes')
+
+@arglikes.deleter
+def arglikes(self: 'fst.FST') -> None:
+    self._put_slice(None, 0, 'end', 'arglikes')

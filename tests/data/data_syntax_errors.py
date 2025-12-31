@@ -446,6 +446,28 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: invalid tuple',
 ],
 
+('_arglikes', 'a=b, c'): [
+    'SyntaxError: invalid arglikes',
+],
+
+('_arglikes', '**a, *b'): [
+    '    **a, *b',
+    '       ^^^^',
+    'SyntaxError: iterable argument unpacking follows keyword argument unpacking',
+],
+
+('_arglikes', 'a:b'): [
+    '    a:b',
+    '     ^',
+    'SyntaxError: invalid syntax',
+],
+
+('_arglikes', 'a:b:c'): [
+    '    a:b:c',
+    '     ^',
+    'SyntaxError: invalid syntax',
+],
+
 ('boolop', 'and 1'): [
     "SyntaxError: unexpected code after boolop, '1'",
 ],

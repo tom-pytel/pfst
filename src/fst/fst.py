@@ -4822,6 +4822,7 @@ class FST:
     is__match_cases = fst_type_predicates.is__match_cases
     is__Assign_targets = fst_type_predicates.is__Assign_targets
     is__decorator_list = fst_type_predicates.is__decorator_list
+    is__arglikes = fst_type_predicates.is__arglikes
     is__comprehensions = fst_type_predicates.is__comprehensions
     is__comprehension_ifs = fst_type_predicates.is__comprehension_ifs
     is__aliases = fst_type_predicates.is__aliases
@@ -5013,6 +5014,7 @@ class FST:
         tag,
         bound,
         default_value,
+        arglikes,
     )
 
     # ------------------------------------------------------------------------------------------------------------------

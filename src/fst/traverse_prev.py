@@ -121,6 +121,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -1720,6 +1721,20 @@ def _prev__decorator_list_decorator_list(ast: AST, idx: int | None) -> _NextPrev
     return None
 
 
+def _prev__arglikes_END(ast: AST, idx: int | None) -> _NextPrevRet:
+    if a := ast.arglikes:
+        return a[-1].f
+
+    return None
+
+
+def _prev__arglikes_arglikes(ast: AST, idx: int | None) -> _NextPrevRet:
+    if (idx := idx - 1) >= 0:
+        return  ast.arglikes[idx].f
+
+    return None
+
+
 def _prev__comprehensions_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.generators:
         return a[-1].f
@@ -2068,6 +2083,8 @@ PREV_FUNCS = {
     (_Assign_targets, 'targets'): _prev__Assign_targets_targets,
     (_decorator_list, None): _prev__decorator_list_END,
     (_decorator_list, 'decorator_list'): _prev__decorator_list_decorator_list,
+    (_arglikes, None): _prev__arglikes_END,
+    (_arglikes, 'arglikes'): _prev__arglikes_arglikes,
     (_comprehensions, None): _prev__comprehensions_END,
     (_comprehensions, 'generators'): _prev__comprehensions_generators,
     (_comprehension_ifs, None): _prev__comprehension_ifs_END,

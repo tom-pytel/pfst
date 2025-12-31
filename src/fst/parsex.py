@@ -95,6 +95,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -113,6 +114,7 @@ from .astutil import (
     bistr,
     walk,
     reduce_ast,
+    merge_arglikes,
 )
 
 from .common import next_frag, shortstr
@@ -221,6 +223,7 @@ Mode = Literal[
     'Tuple',
     '_Assign_targets',
     '_decorator_list',
+    '_arglikes',
     'boolop',
     'operator',
     'unaryop',
@@ -370,6 +373,10 @@ def _unparse__decorator_list(ast: AST) -> str:
                                     lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[:-18]  # [:.rindex('\nclass c:\n    pass')]
 
 
+def _unparse__arglikes(ast: AST) -> str:
+    return _fixing_unparse(List(elts=ast.arglikes, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
+
+
 def _unparse__comprehensions(ast: AST) -> str:
     return _fixing_unparse(ListComp(elt=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
                                              end_lineno=1, end_col_offset=0),
@@ -436,6 +443,7 @@ _UNPARSE_FUNCS = {
     _match_cases:       _unparse__match_cases,
     _Assign_targets:    _unparse__Assign_targets,
     _decorator_list:    _unparse__decorator_list,
+    _arglikes:          _unparse__arglikes,
     _comprehensions:    _unparse__comprehensions,
     _comprehension_ifs: _unparse__comprehension_ifs,
     _aliases:           _unparse__aliases,
@@ -1236,6 +1244,23 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     return _decorator_list(decorator_list=ast.decorator_list, **_astloc_from_src(src, 1))
 
 
+def parse__arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more `expr_arglike`s and `keyword`s, returned as an `_arglikes` SPECIAL SLICE."""
+
+    try:
+        value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
+
+    except SyntaxError as exc:
+        if _syntax_error_in_loc(exc, src):  # check if error includes our wrapper code
+            raise
+
+        raise SyntaxError('invalid arglikes') from None
+
+    ast = _arglikes(arglikes=merge_arglikes(value.args, value.keywords), **_astloc_from_src(src, 2))
+
+    return _offset_linenos(ast, -1)
+
+
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `boolop`. We do it manually. We refuse to do equivalent of `ast.parse('or')` on principle. @private"""
 
@@ -1902,6 +1927,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not a,` (py 3.11+)
     '_Assign_targets':        parse__Assign_targets,
     '_decorator_list':        parse__decorator_list,
+    '_arglikes':              parse__arglikes,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,
     'unaryop':                parse_unaryop,
@@ -1957,6 +1983,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _match_cases:             parse__match_cases,
     _Assign_targets:          parse__Assign_targets,
     _decorator_list:          parse__decorator_list,
+    _arglikes:                parse__arglikes,
     _comprehensions:          parse__comprehensions,
     _comprehension_ifs:       parse__comprehension_ifs,
     _aliases:                 parse__aliases,

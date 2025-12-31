@@ -285,10 +285,10 @@ __all__ = [
     '_ExceptHandlers',
     '_match_cases',
     '_Assign_targets',
+    '_arglikes',
     '_decorator_list',
     '_comprehensions',
     '_comprehension_ifs',
-    # '_arglikes',
     '_aliases',
     '_withitems',
     '_type_params',
@@ -502,6 +502,30 @@ class _decorator_list(_slice):
         self.end_col_offset = end_col_offset
 
 
+class _arglikes(_slice):
+    """Slice of arglike expressions and keywords possibly intermixed (only permitted sequences). Used for
+    `Call.args+keywords` or `ClassDef.bases+keywords` as `expr_arglike` and `keyword`.
+
+    This is a special slice because elements can be mixed `expr` (arglike) and / or `keyword`."""
+
+    _fields      = ('arglikes',)
+    _field_types = {'arglikes': list[expr | keyword]}
+
+    def __init__(
+        self,
+        arglikes: list[expr | keyword],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
+        self.arglikes = arglikes
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
+
+
 class _comprehensions(_slice):
     """Slice of `ListComp/SetComp/DictComp/GeneratorExp.generators`.
 
@@ -548,29 +572,6 @@ class _comprehension_ifs(_slice):
         self.col_offset = col_offset
         self.end_lineno = end_lineno
         self.end_col_offset = end_col_offset
-
-
-# class _arglikes(_slice):
-#     """Slice of `Call.args+keywords` or `ClassDef.bases+keywords` as `expr_arglike` and `keyword`.
-
-#     This is a special slice because elements can be mixed `expr` (arglike) and / or `keyword`."""
-
-#     _fields      = ('arglikes',)
-#     _field_types = {'arglikes': list[expr | keyword]}
-
-#     def __init__(
-#         self,
-#         arglikes: list[expr | keyword],
-#         lineno: int = 1,
-#         col_offset: int = 0,
-#         end_lineno: int = 1,
-#         end_col_offset: int = 0,
-#     ) -> None:
-#         self.arglikes = arglikes
-#         self.lineno = lineno
-#         self.col_offset = col_offset
-#         self.end_lineno = end_lineno
-#         self.end_col_offset = end_col_offset
 
 
 class _aliases(_slice):
@@ -632,5 +633,5 @@ class _type_params(_slice):
         self.end_col_offset = end_col_offset
 
 
-ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _comprehensions,
-                              _comprehension_ifs, _aliases, _withitems, _type_params])
+ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _arglikes,
+                              _comprehensions, _comprehension_ifs, _aliases, _withitems, _type_params])

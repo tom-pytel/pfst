@@ -123,6 +123,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -248,6 +249,7 @@ __all__ = [
     'is__match_cases',
     'is__Assign_targets',
     'is__decorator_list',
+    'is__arglikes',
     'is__comprehensions',
     'is__comprehension_ifs',
     'is__aliases',
@@ -1073,6 +1075,13 @@ def is__decorator_list(self: 'fst.FST') -> bool:
     """Is a `_decorator_list` node."""
 
     return self.a.__class__ is _decorator_list
+
+
+@property
+def is__arglikes(self: 'fst.FST') -> bool:
+    """Is a `_arglikes` node."""
+
+    return self.a.__class__ is _arglikes
 
 
 @property
