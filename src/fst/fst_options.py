@@ -28,7 +28,7 @@ _DEFAULT_OPTIONS = {
     'pep8space':     True,    # True | False | 1
     'docstr':        True,    # True | False | 'strict'
     'pars':          'auto',  # True | False | 'auto'
-    'pars_walrus':   True,    # True | False | None
+    'pars_walrus':   False,   # True | False | None
     'pars_arglike':  True,    # True | False | None
     'norm':          False,   # True | False
     'norm_self':     None,    # True | False | None
@@ -75,7 +75,7 @@ def get_options() -> dict[str, Any]:
      'pep8space': True,
      'docstr': True,
      'pars': 'auto',
-     'pars_walrus': True,
+     'pars_walrus': False,
      'pars_arglike': True,
      'norm': False,
      'norm_self': None,
@@ -222,18 +222,18 @@ def options(**options) -> Iterator[dict[str, Any]]:
         operations, slice operations ignore this for the most part as parentheses usually cannot be removed or may need
         to be added to keep the slices usable. Raw puts generally do not have parentheses added or removed
         automatically, except maybe removed according to this from the destination node if putting to a node instead of
-        a pure location.
+        a pure location. See below for `pars` behavior matrix.
         - `False`: Parentheses are not **MODIFIED**, doesn't mean remove all parentheses. Not copied with nodes or
-            removed on put from source or destination. Using incorrectly can result in invalid trees.
-        - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
-            destination on put if not needed there (but not source).
-        - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
-            on put if not needed (removed from destination first if needed and present on both). **DEFAULT**
+            removed on put from destination or source. Using incorrectly can result in invalid trees.
+        - `True`: Parentheses are copied with nodes, added to copies if needed and not present and removed from
+            destination on put if not needed there (but not removed from source).
+        - `'auto'`: Same as `True` except they are not copied with nodes and possibly removed from source on put if not
+            needed (removed from destination first if needed and present on both). **DEFAULT**
     - `pars_walrus`: Whether to **ADD** parentheses to top level cut / copied `NamedExpr` nodes or not. If parentheses
         were already copied due to `pars=True` then setting this to `False` will not remove them. This is more of an
         aesthetic option as `fst` can deal with unparenthesized walruses at root level.
-        - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions. **DEFAULT**
-        - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions. **DEFAULT**
         - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
     - `pars_arglike`: Whether to **ADD** parentheses to argumentlike expressions (`*not a`, `*b or c`) when cut /
         copied either as single element or as part of a slice. If parentheses were already present then setting this

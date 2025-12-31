@@ -119,40 +119,47 @@ there are no parentheses in the source and it doesn't need parentheses added.
 >>> print(g.src)
 a
 
-Named expressions copied out of other expressions which may or may not have parentheses normally have those parentheses
-copied or added.
+Named expressions copied out of other expressions which may or may not have parentheses normally don't have those
+parentheses copied or added as `fst` does not need them (and it is cleaner). This differs from the default python
+`ast.unparse()` behavior of always parenthesizing them at the top level.
 
 >>> f = FST('a, b := c, d')
 
->>> g = f.elts[1].copy()
+>>> print(f.elts[1].copy().src)
+b := c
 
->>> print(g.src)
+>>> import ast
+>>> print(ast.unparse(f.elts[1].a))
 (b := c)
+
+You can enable the default python behavior with the `pars_walrus` option, either globally or on individual operations.
+This will parenthesize any walrus expressions pulled out to a top level. This does not affect any other parentesization
+behavior controlled via the `pars` option, just walruses copied out to a top level.
+
+>>> print(f.elts[1].copy(pars_walrus=True).src)
+(b := c)
+
+Set this globally and it applies everywhere (except if explicitly specified in any given operation of course).
+
+>>> FST.set_options(pars_walrus=True)
+{'pars_walrus': False}
+
+>>> print(f.elts[1].copy().src)
+(b := c)
+
+>>> FST.set_options(pars_walrus=False)
+{'pars_walrus': True}
+
+Having the `pars_walrus` option off does not affect the other normal `pars` behavior of copying existing parentheses if
+`pars=True`.
 
 >>> f = FST('a = (b := c)')
 
->>> g = f.value.copy()
+>>> print(f.value.copy().src)
+b := c
 
->>> print(g.src)
+>>> print(f.value.copy(pars=True).src)
 (b := c)
-
-This can be turned off with the `pars_walrus=False` option (it is normally not affected by the standard `pars` option
-(unless you set `pars_walrus=None` globally)). Though if you do this, keep in mind that an unparenthesized named
-expression is not normally parsable standalone by Python.
-
->>> f = FST('a, b := c, d')
-
->>> g = f.elts[1].copy(pars_walrus=False)
-
->>> print(g.src)
-b := c
-
->>> f = FST('a = (b := c)')
-
->>> g = f.value.copy(pars_walrus=False)
-
->>> print(g.src)
-b := c
 
 Argumentlike expressions which may not be valid outside their normal context (`Call.args`, `ClassDef.bases` or a
 `Subscript.slice` `Tuple`) are normally parenthesized on get. This can be turned off via the `pars_arglike` option.
@@ -170,6 +177,9 @@ If `pars_arglike=None` then they are parenthesized according to `pars`.
 >>> f = FST('class cls(*not a, *b, *c or d): pass')
 
 >>> print(f.get_slice('bases', pars_arglike=None, pars=True).src)
+(*(not a), *b, *(c or d))
+
+>>> print(f.get_slice('bases', pars_arglike=None, pars='auto').src)
 (*(not a), *b, *(c or d))
 
 >>> print(f.get_slice('bases', pars_arglike=None, pars=False).src)

@@ -34,7 +34,7 @@ To get a list of all global options defaults do.
  'pep8space': True,
  'docstr': True,
  'pars': 'auto',
- 'pars_walrus': True,
+ 'pars_walrus': False,
  'pars_arglike': True,
  'norm': False,
  'norm_self': None,
