@@ -1066,7 +1066,7 @@ def _get_slice_stmtlike_old(
         _set_end_pos_after_del(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
     if len(asts) == 1 and (a := asts[0]).__class__ is If:
-        a.f._maybe_fix_elif()
+        a.f._fix_elif()
 
     return fst_
 

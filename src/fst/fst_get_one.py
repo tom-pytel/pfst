@@ -167,7 +167,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=False)
 
-    ret._maybe_fix_copy(options)
+    ret._fix_copy(options)
 
     return ret
 

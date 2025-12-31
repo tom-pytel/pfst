@@ -1844,7 +1844,7 @@ class FST:
         if ast.__class__ not in ASTS_LEAF_STMTLIKE:
             ret, _ = self._make_fst_and_dedent('', copy_ast(self.a), loc, docstr=False)
 
-            ret._maybe_fix_copy(options)
+            ret._fix_copy(options)
 
             return ret
 
@@ -4589,12 +4589,12 @@ class FST:
         _maybe_del_separator,
         _maybe_ins_separator,
         _maybe_add_singleton_tuple_comma,
-        _maybe_fix_joined_alnum,
-        _maybe_fix_undelimited_seq,
-        _maybe_fix_tuple,
-        _maybe_fix_arglikes,
-        _maybe_fix_elif,
-        _maybe_fix_copy,
+        _fix_joined_alnum,
+        _fix_undelimited_seq,
+        _fix_tuple,
+        _fix_arglikes,
+        _fix_elif,
+        _fix_copy,
 
         _parenthesize_grouping,
         _unparenthesize_grouping,

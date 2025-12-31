@@ -317,7 +317,7 @@ def _maybe_par_above(above: fst.FST, below: fst.FST) -> bool:
     return False
 
 
-def _maybe_fix_With_items(self: fst.FST) -> None:
+def _fix_With_items(self: fst.FST) -> None:
     """If `Tuple` only element in `items` then add appropriate parentheses."""
 
     # assert isinstance(self.a, (With, AsyncWith))
@@ -1161,7 +1161,7 @@ def _put_one_with_items(
 ) -> fst.FST:
     ret = _put_one_exprlike_required(self, code, idx, field, child, static, options)
 
-    _maybe_fix_With_items(self)
+    _fix_With_items(self)
 
     return ret
 
@@ -1525,7 +1525,7 @@ def _put_one_withitem_context_expr(
     ret = _put_one_exprlike_optional(self, code, idx, field, child, static, options)
 
     if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITH:
-        _maybe_fix_With_items(parent)
+        _fix_With_items(parent)
 
     return ret
 
@@ -1545,7 +1545,7 @@ def _put_one_withitem_optional_vars(
     ret = _put_one_exprlike_optional(self, code, idx, field, child, static, options)
 
     if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITH:
-        _maybe_fix_With_items(parent)
+        _fix_With_items(parent)
 
     return ret
 

@@ -883,17 +883,17 @@ d  # comment3''', f.src)
         # parenthesize naked tuple preserve comments if present
 
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['# comment', ''], None)
-        f._maybe_fix_tuple()
+        f._fix_tuple()
         self.assertEqual('(# comment\n)', f.src)
         f.verify()
 
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=1), [' # comment', ' '], None)
-        f._maybe_fix_tuple()
+        f._fix_tuple()
         self.assertEqual('(# comment\n)', f.src)
         f.verify()
 
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['         ', ''], None)
-        f._maybe_fix_tuple()
+        f._fix_tuple()
         self.assertEqual('()', f.src)
         f.verify()
 
@@ -903,7 +903,7 @@ d  # comment3''', f.src)
         f.value.put_src(None, 0, 7, 0, 8, 'offset')
         del f.a.value.elts[-1]  # specifically just the AST
         self.assertEqual((0, 4, 0, 7), f.value.loc)
-        f.value._maybe_fix_tuple()
+        f.value._fix_tuple()
         self.assertEqual('a = b,', f.src)
         f.verify()
 
@@ -911,7 +911,7 @@ d  # comment3''', f.src)
         f.value.put_src(None, 0, 10, 0, 11, 'offset')
         del f.a.value.elts[-1]  # specifically just the AST
         self.assertEqual((0, 7, 0, 10), f.value.loc)
-        f.value._maybe_fix_tuple()
+        f.value._fix_tuple()
         self.assertEqual('(yield a,)', f.src)
         f.verify()
 
@@ -924,7 +924,7 @@ d  # comment3''', f.src)
         f = FST.fromsrc('(1 +\n2)')
         fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual(fc.src, '1 +\n2')
-        fc._maybe_fix_copy(dict(pars=True))
+        fc._fix_copy(dict(pars=True))
         self.assertEqual(fc.src, '(1 +\n2)')
         fc.verify(raise_=True)
 
@@ -939,24 +939,24 @@ d  # comment3''', f.src)
 
         f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
         self.assertEqual('i, j', f.src)
-        fc._maybe_fix_copy(dict(pars=True))
+        fc._fix_copy(dict(pars=True))
         self.assertEqual('i, j', f.src)  # because doesn't NEED them
 
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
         self.assertEqual('w := x,', f.src)
-        f._maybe_fix_copy(dict(pars=True))
+        f._fix_copy(dict(pars=True))
         self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('yield a1, a2')
         fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual('yield a1, a2', fc.src)
-        fc._maybe_fix_copy(dict(pars=True))
+        fc._fix_copy(dict(pars=True))
         self.assertEqual('yield a1, a2', fc.src)
 
         f = FST.fromsrc('yield from a')
         fc = f.a.body[0].value.f.copy()
         self.assertEqual('yield from a', fc.src)
-        fc._maybe_fix_copy(dict(pars=True))
+        fc._fix_copy(dict(pars=True))
         self.assertEqual('yield from a', fc.src)
 
         f = FST.fromsrc("""[
@@ -969,7 +969,7 @@ d  # comment3''', f.src)
 "Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
                "Raw value: {!r}".format""".strip(), fc.src)
-        fc._maybe_fix_copy(dict(pars=True))
+        fc._fix_copy(dict(pars=True))
         self.assertEqual("""
 ("Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
@@ -983,7 +983,7 @@ d  # comment3''', f.src)
         self.assertEqual("""
 (is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
-        fc._maybe_fix_copy(dict(pars=True))
+        fc._fix_copy(dict(pars=True))
         self.assertEqual("""
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
@@ -991,7 +991,7 @@ d  # comment3''', f.src)
         if PYGE12:
             fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
-            fc._maybe_fix_copy(dict(pars=True))
+            fc._fix_copy(dict(pars=True))
             self.assertEqual('*tuple[int, ...],', fc.src)
 
         # don't parenthesize copied Slice even if it looks like it needs it

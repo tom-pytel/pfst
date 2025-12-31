@@ -1554,11 +1554,11 @@ def func():
         self.assertRaises(ValueError, FST('pass').get, 'nonexistent_field')
         self.assertRaises(ValueError, FST('a = b').get_slice, 'value')
 
-        from fst.fst_get_slice import _maybe_fix_MatchSequence
+        from fst.fst_get_slice import _fix_MatchSequence
         f = FST('a, b', 'MatchSequence')
         del f.a.patterns[-1]
         f.put_src(None, 0, 1, 0, 4, 'offset')
-        _maybe_fix_MatchSequence(f)
+        _fix_MatchSequence(f)
         self.assertEqual('a,', f.src)
         f.verify()
 

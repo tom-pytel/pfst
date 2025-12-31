@@ -354,7 +354,7 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
         self._touchall(True, True, False)
 
 
-def _maybe_fix_naked_seq_loc(self: fst.FST, body: list[AST], is_first: bool = True, is_last: bool = True) -> None:
+def _fix_naked_seq_loc(self: fst.FST, body: list[AST], is_first: bool = True, is_last: bool = True) -> None:
     """Fix the start and end positions of self and parents of a naked sequence which may have changed location to those
     of first and last child."""
 
@@ -373,7 +373,7 @@ def _maybe_fix_naked_seq_loc(self: fst.FST, body: list[AST], is_first: bool = Tr
         self._set_end_pos(end_ln + 1, lines[end_ln].c2b(end_col), ast.end_lineno, ast.end_col_offset)
 
 
-def _maybe_fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: Mapping[str, Any]) -> None:
+def _fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: Mapping[str, Any]) -> None:
     """Parenthesize if needed and allowed. If is first child of an `Expr` statement then may need to dedent line
     continuation to `Expr` indentation if that is the first line left, which may not start exactly at proper indentation
     level."""
@@ -412,7 +412,7 @@ def _maybe_fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: 
                         break
 
 
-def _maybe_fix_BoolOp(
+def _fix_BoolOp(
     self: fst.FST,
     start: int,
     is_del: bool,
@@ -425,25 +425,25 @@ def _maybe_fix_BoolOp(
     body = self.a.values
     is_first = not start
 
-    _maybe_fix_naked_expr(self, is_del, is_first, options)
+    _fix_naked_expr(self, is_del, is_first, options)
 
     if body:
-        _maybe_fix_naked_seq_loc(self, body, is_first, is_last)  # if everything erased then nothing to adjust to and we just leave previous location
+        _fix_naked_seq_loc(self, body, is_first, is_last)  # if everything erased then nothing to adjust to and we just leave previous location
 
         if not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete
             ln, col, _, _ = body[start].f.loc
 
-            self._maybe_fix_joined_alnum(ln, col)
+            self._fix_joined_alnum(ln, col)
 
     ln, col, end_ln, end_col = self.loc
 
-    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
+    self._fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
 
     if norm and len(body) == 1:  # if only one element remains and normalizing then replace the BoolOp AST in self with the single `values` AST which remains
         self._set_ast(body.pop(), True)
 
 
-def _maybe_fix_Compare(
+def _fix_Compare(
     self: fst.FST,
     start: int,
     is_del: bool,
@@ -457,24 +457,24 @@ def _maybe_fix_Compare(
     body = self.a.comparators
     is_first = not start
 
-    _maybe_fix_naked_expr(self, is_del, is_first, options)
+    _fix_naked_expr(self, is_del, is_first, options)
 
     if body:
-        _maybe_fix_naked_seq_loc(self, body, is_first, is_last)  # if everything erased then nothing to adjust to and we just leave previous location
+        _fix_naked_seq_loc(self, body, is_first, is_last)  # if everything erased then nothing to adjust to and we just leave previous location
 
         if not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete on left
             ln, col, _, _ = body[start].f.loc
 
-            self._maybe_fix_joined_alnum(ln, col)
+            self._fix_joined_alnum(ln, col)
 
         if is_del and not is_first:  # on right of start of delete
             _, _, end_ln, end_col = body[start - 1].f.loc
 
-            self._maybe_fix_joined_alnum(end_ln, end_col)
+            self._fix_joined_alnum(end_ln, end_col)
 
     ln, col, end_ln, end_col = self.loc
 
-    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
+    self._fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
 
     if len(body) == 1 and norm:  # if only one element remains and normalizing then replace the Compare AST in self with the single `comparators` AST which remains
         self._set_ast(body.pop(), True)  # this will unmake the leftmost operator fine, placeholder or op_side left or rotated right as well as `left` placeholder
@@ -482,7 +482,7 @@ def _maybe_fix_Compare(
         _move_Compare_first_comparator_into_left(self)
 
 
-def _maybe_fix_Assign_target0(self: fst.FST) -> None:
+def _fix_Assign_target0(self: fst.FST) -> None:
     """If `Assign` has `target`s and first target does not start at same location as `self` then delete everything in
     between so that it starts at `self`."""
 
@@ -496,7 +496,7 @@ def _maybe_fix_Assign_target0(self: fst.FST) -> None:
             self._put_src(None, self_ln, self_col, t0_ln, t0_col, False)
 
 
-def _maybe_fix_decorator_list_trailing_newline(self: fst.FST, old_last_line: str) -> bool:
+def _fix_decorator_list_trailing_newline(self: fst.FST, old_last_line: str) -> bool:
     """After insert new last element or delete current last element we need to see if there is a new trailing newline
     that wasn't there before, and if so then remove it.
 
@@ -523,7 +523,7 @@ def _maybe_fix_decorator_list_trailing_newline(self: fst.FST, old_last_line: str
     return True
 
 
-def _maybe_fix_decorator_list_del(
+def _fix_decorator_list_del(
         self: fst.FST, start: int, bound_ln: int, old_first_line: str, old_last_line: str
 ) -> None:
     """Delete from decorator list may need fixing if:
@@ -532,7 +532,7 @@ def _maybe_fix_decorator_list_del(
     - Deleted last decorator leaving a trailing newline in a `_decorator_list`.
     """
 
-    if _maybe_fix_decorator_list_trailing_newline(self, old_last_line):
+    if _fix_decorator_list_trailing_newline(self, old_last_line):
         pass  # noop
 
     elif not start and not old_first_line:  # if del first element and preceding was empty line ...
@@ -545,7 +545,7 @@ def _maybe_fix_decorator_list_del(
             root._offset(bound_ln, 0, 1, 0)
 
 
-def _maybe_fix_Set(self: fst.FST, norm: bool | str = True) -> None:
+def _fix_Set(self: fst.FST, norm: bool | str = True) -> None:
     # assert isinstance(self.a, Set)
 
     ast = self.a
@@ -562,7 +562,7 @@ def _maybe_fix_Set(self: fst.FST, norm: bool | str = True) -> None:
         self._set_ast(new_ast)
 
 
-def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
+def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
     # assert isinstance(self.a, MatchSequence)
 
     if delims is None:
@@ -574,12 +574,12 @@ def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | No
         self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
 
     if not delims:
-        return self._maybe_fix_undelimited_seq(body, '[]')
+        return self._fix_undelimited_seq(body, '[]')
 
     return delims
 
 
-def _maybe_fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
+def _fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
     """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
     will convert a length 1 `MatchOr` to just its single element if `norm` is true.
 
@@ -627,10 +627,10 @@ def _maybe_fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
             did_par = True
 
     if not did_par:
-        self._maybe_fix_joined_alnum(*self.loc)
+        self._fix_joined_alnum(*self.loc)
 
 
-def _maybe_fix_stmt_end(
+def _fix_stmt_end(
     self: fst.FST, end_lineno: int, end_col_offset: int, old_end_lineno: int, old_end_col_offset: int
 ) -> None:
     """Fix end of statement that was modified. This sets new end position in self and parents if they originally ended
@@ -790,12 +790,12 @@ def _get_slice_Tuple_elts(
     par_if_needed = pars is True if self.is_root else pars is not False
 
     if not is_par:
-        fst_._maybe_fix_tuple(False, par_if_needed)  # cutting from unparenthesized tuple defaults to different parenthesization if needed depending if cutting from root or not
+        fst_._fix_tuple(False, par_if_needed)  # cutting from unparenthesized tuple defaults to different parenthesization if needed depending if cutting from root or not
 
-    fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions (could have come from a slice)
+    fst_._fix_arglikes(options)  # parenthesize any arglike expressions (could have come from a slice)
 
     if cut:
-        self._maybe_fix_tuple(is_par, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
+        self._fix_tuple(is_par, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
 
     return fst_
 
@@ -864,7 +864,7 @@ def _get_slice_Set_elts(
                          options, 'elts', '{', '}', ',', 0, 0)
 
     if cut:
-        _maybe_fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
+        _fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
 
     return fst_
 
@@ -933,16 +933,16 @@ def _get_slice_Delete_targets(
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'targets', '', '', ',', False, 1)
 
-    fst_._maybe_fix_tuple(False)
+    fst_._fix_tuple(False)
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            _maybe_fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+            _fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
                                 ast.end_lineno, ast.end_col_offset)
 
         ln, col, _, _ = self.loc
 
-        self._maybe_fix_joined_alnum(ln, col + 3)
+        self._fix_joined_alnum(ln, col + 3)
         self._maybe_add_line_continuations()
 
     return fst_
@@ -980,7 +980,7 @@ def _get_slice_Assign_targets(
                          options, 'targets', '', '', '=', True, True)
 
     if cut:
-        _maybe_fix_Assign_target0(self)
+        _fix_Assign_target0(self)
         self._maybe_add_line_continuations()
 
     return fst_
@@ -1036,7 +1036,7 @@ def _get_slice_With_AsyncWith_items(
         elif not start and len_slice != len_body:  # if not adding pars then need to make sure cut didn't join new first `withitem` with the `with`
             ln, col, _, _ = pars.bound
 
-            self._maybe_fix_joined_alnum(ln, col)
+            self._fix_joined_alnum(ln, col)
 
     return fst_
 
@@ -1081,7 +1081,7 @@ def _get_slice_Import_names(
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+            _fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
                                 ast.end_lineno, ast.end_col_offset)
 
         self._maybe_add_line_continuations()
@@ -1132,7 +1132,7 @@ def _get_slice_ImportFrom_names(
 
     if cut and not pars_n:  # only need to fix maybe if there are no parentheses
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+            _fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
                                 ast.end_lineno, ast.end_col_offset)
 
         if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
@@ -1206,11 +1206,11 @@ def _get_slice_Global_Nonlocal_names(
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'names', '', '', ',', False, 1)
 
-    fst_._maybe_fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
+    fst_._fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            _maybe_fix_stmt_end(self, bound_ln + 1, lines[bound_ln].c2b(bound_col), ast.end_lineno, ast.end_col_offset)
+            _fix_stmt_end(self, bound_ln + 1, lines[bound_ln].c2b(bound_col), ast.end_lineno, ast.end_col_offset)
 
         self._maybe_add_line_continuations()
 
@@ -1265,7 +1265,7 @@ def _get_slice_ClassDef_bases(
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'bases', '(', ')', ',', self_tail_sep, len_slice == 1)
 
-    fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions
+    fst_._fix_arglikes(options)  # parenthesize any arglike expressions
 
     if cut:
         if keywords:
@@ -1376,13 +1376,13 @@ def _get_slice_Boolop_values(
 
     # rest of cleanups
 
-    _maybe_fix_naked_seq_loc(fst_, fst_body)
+    _fix_naked_seq_loc(fst_, fst_body)
 
     if len(fst_body) == 1 and norm_get:  # if only one element gotten and normalizing then replace the BoolOp AST in fst_ with the single `values` AST which it has
         fst_._set_ast(fst_body.pop(), True)
 
     if cut:
-        _maybe_fix_BoolOp(self, start, cut, is_last, options, norm_self)
+        _fix_BoolOp(self, start, cut, is_last, options, norm_self)
 
     return fst_
 
@@ -1509,7 +1509,7 @@ def _get_slice_Compare__all(
 
     # rest of cleanups
 
-    _maybe_fix_naked_seq_loc(fst_, fst_body)
+    _fix_naked_seq_loc(fst_, fst_body)
 
     if len(fst_body) == 1 and norm_get:  # if only one element gotten and normalizing then replace the Compare AST in fst_ with the single `comparators` AST which it has, don't need to unmake `left` since it is None at this point
         fst_._set_ast(fst_body.pop(), True)  # this will unmake the leftmost operator fine, placeholder or op_side left or rotated right
@@ -1517,7 +1517,7 @@ def _get_slice_Compare__all(
         _move_Compare_first_comparator_into_left(fst_)
 
     if cut:
-        _maybe_fix_Compare(self, start, True, is_last, options, norm_self)
+        _fix_Compare(self, start, True, is_last, options, norm_self)
     else:
         _move_Compare_first_comparator_into_left(self)
 
@@ -1575,7 +1575,7 @@ def _get_slice_Call_args(
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
 
-    fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions
+    fst_._fix_arglikes(options)  # parenthesize any arglike expressions
 
     if cut and start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
         self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
@@ -1637,7 +1637,7 @@ def _get_slice_decorator_list(
         fst_._offset(1, 0, -1, 0)
 
     if cut:
-        _maybe_fix_decorator_list_del(self, start, bound_ln, old_first_line, old_last_line)
+        _fix_decorator_list_del(self, start, bound_ln, old_first_line, old_last_line)
 
     return fst_
 
@@ -1750,10 +1750,10 @@ def _get_slice_MatchSequence_patterns(
                          options, 'patterns', prefix, suffix, ',', tail_sep, tail_sep)
 
     if not delims:
-        _maybe_fix_MatchSequence(fst_, '')
+        _fix_MatchSequence(fst_, '')
 
     if cut:
-        _maybe_fix_MatchSequence(self, delims)
+        _fix_MatchSequence(self, delims)
 
     return fst_
 
@@ -1837,10 +1837,10 @@ def _get_slice_MatchOr_patterns(
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'patterns', '', '', '|', False, False)
 
-    _maybe_fix_MatchOr(fst_, norm_get)
+    _fix_MatchOr(fst_, norm_get)
 
     if cut:
-        _maybe_fix_MatchOr(self, norm_self)
+        _fix_MatchOr(self, norm_self)
 
     return fst_
 

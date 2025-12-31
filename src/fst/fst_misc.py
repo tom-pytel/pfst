@@ -1561,7 +1561,7 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) 
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
-def _maybe_fix_joined_alnum(
+def _fix_joined_alnum(
     self: fst.FST, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None
 ) -> None:
     """Check if location(s) `lines[ln][col-1 : col+1]` and optionally `lines[end_ln][end_col-1 : end_col+1] is / are
@@ -1581,7 +1581,7 @@ def _maybe_fix_joined_alnum(
         self._put_src([' '], ln, col, ln, col, False)
 
 
-def _maybe_fix_undelimited_seq(
+def _fix_undelimited_seq(
     self: fst.FST, body: list[AST], delims: str = '()', demlim_if_needed: bool = True
 ) -> bool:
     """Fix undelimited `Tuple` or `MatchSequence` if needed. Don't call on delimited sequence. Fixes locations as well
@@ -1672,12 +1672,12 @@ def _maybe_fix_undelimited_seq(
         end_ln = eend_ln
         end_col = eend_col
 
-    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)
+    self._fix_joined_alnum(ln, col, end_ln, end_col)
 
     return False
 
 
-def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = True) -> bool:
+def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = True) -> bool:
     """Add a missing trailing comma to a singleton tuple without one and parenthesize an empty tuple if it is not
     parenthesized or requires it for parsability (and is allowed by `pars` option).
 
@@ -1698,12 +1698,12 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: b
         self._maybe_add_singleton_tuple_comma(is_par)
 
     if not is_par:
-        return self._maybe_fix_undelimited_seq(body, '()', par_if_needed)
+        return self._fix_undelimited_seq(body, '()', par_if_needed)
 
     return is_par
 
 
-def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> None:
+def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> None:
     """Parenthesize any arglike expressions in `self` which is assumed to be a `Tuple` according to `options` if not
     `None`, otherwise always parenthesizes."""
 
@@ -1715,7 +1715,7 @@ def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None)
                 f._parenthesize_grouping()
 
 
-def _maybe_fix_elif(self: fst.FST) -> None:
+def _fix_elif(self: fst.FST) -> None:
     """If source at self is an `elif` instead of an `if` then convert it to `if`."""
 
     # assert isinstance(self.a, If)
@@ -1727,7 +1727,7 @@ def _maybe_fix_elif(self: fst.FST) -> None:
         self._put_src(None, ln, col, ln, col + 2, False)
 
 
-def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
+def _fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.

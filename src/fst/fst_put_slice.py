@@ -141,18 +141,18 @@ from .fst_get_slice import (
     _move_Compare_left_into_comparators,
     _add_MatchMapping_rest_as_real_node,
     _remove_MatchMapping_rest_real_node,
-    _maybe_fix_BoolOp,
-    _maybe_fix_Compare,
-    _maybe_fix_Assign_target0,
-    _maybe_fix_decorator_list_trailing_newline,
-    _maybe_fix_decorator_list_del,
-    _maybe_fix_Set,
-    _maybe_fix_MatchSequence,
-    _maybe_fix_MatchOr,
-    _maybe_fix_stmt_end,
+    _fix_BoolOp,
+    _fix_Compare,
+    _fix_Assign_target0,
+    _fix_decorator_list_trailing_newline,
+    _fix_decorator_list_del,
+    _fix_Set,
+    _fix_MatchSequence,
+    _fix_MatchOr,
+    _fix_stmt_end,
 )
 
-from .fst_put_one import _maybe_fix_With_items
+from .fst_put_one import _fix_With_items
 
 
 # * Keep src same.
@@ -308,7 +308,7 @@ def _code_to_slice_expr(
             fst_._delimit_node()
 
     elif ast__cls is Set:
-        _maybe_fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
+        _fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
     elif ast__cls is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
         if not fst_.pars().n and self.is_parenthesized_tuple() is False:
@@ -1156,7 +1156,7 @@ def _put_slice_Tuple_elts(
     else:  # for a delete we use the same rule as for a cut
         par_if_needed = pars is True if self.is_root else pars is not False
 
-    is_par = self._maybe_fix_tuple(is_par, par_if_needed)
+    is_par = self._fix_tuple(is_par, par_if_needed)
 
     if need_par and not is_par and par_if_needed:
         self._delimit_node()
@@ -1218,7 +1218,7 @@ def _put_slice_Set_elts(
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
-    _maybe_fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
+    _fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
 
 
 def _put_slice_Dict__all(
@@ -1311,12 +1311,12 @@ def _put_slice_Delete_targets(
         if body:
             _, _, bound_ln, bound_col = body[-1].f.pars()
 
-        _maybe_fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+        _fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
                             ast.end_lineno, ast.end_col_offset)
 
     ln, col, _, _ = self.loc
 
-    self._maybe_fix_joined_alnum(ln, col + 3)
+    self._fix_joined_alnum(ln, col + 3)
     self._maybe_add_line_continuations()
 
 
@@ -1348,7 +1348,7 @@ def _put_slice_Assign_targets(
     _put_slice_seq_and_asts(self, start, stop, 'targets', body, fst_, 'targets', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, '=', True, options)
 
-    _maybe_fix_Assign_target0(self)
+    _fix_Assign_target0(self)
     self._maybe_add_line_continuations()
 
 
@@ -1391,12 +1391,12 @@ def _put_slice_With_AsyncWith_items(
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
 
         else:
-            _maybe_fix_With_items(self)  # if we wound up with a tuple as the only item then need to parenthesize it because otherwise the elements will be mistaken for individual withitems on parse
+            _fix_With_items(self)  # if we wound up with a tuple as the only item then need to parenthesize it because otherwise the elements will be mistaken for individual withitems on parse
 
         if not start:  # if pars weren't added then need to make sure del or put didn't join new first `withitem` with the `with`
             ln, col, _, _ = pars.bound
 
-            self._maybe_fix_joined_alnum(ln, col)
+            self._fix_joined_alnum(ln, col)
 
 
 def _put_slice_Import_names(
@@ -1438,13 +1438,13 @@ def _put_slice_Import_names(
 
     if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
         if body:
-            _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+            _fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
                                 ast.end_lineno, ast.end_col_offset)
         else:
-            _maybe_fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+            _fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
                                 ast.end_lineno, ast.end_col_offset)
 
-    self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+    self._maybe_add_line_continuations()  # THEORETICALLY could need to _fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
 def _put_slice_ImportFrom_names(
@@ -1491,11 +1491,10 @@ def _put_slice_ImportFrom_names(
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
             if body:
-                _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
-                                    ast.end_lineno, ast.end_col_offset)
+                _fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
             else:
-                _maybe_fix_stmt_end(self, pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
-                                    ast.end_lineno, ast.end_col_offset)
+                _fix_stmt_end(self, pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
+                              ast.end_lineno, ast.end_col_offset)
 
         if not self._is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
@@ -1503,7 +1502,7 @@ def _put_slice_ImportFrom_names(
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
 
-        # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+        # THEORETICALLY could need to _fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
     elif put_star:  # if put star then must remove parentheses (including any trivia inside them)
         pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
@@ -1621,10 +1620,9 @@ def _put_slice_Global_Nonlocal_names(
         if fst_:
             _, _, last_end_ln, last_end_col = fst_last_loc
 
-        _maybe_fix_stmt_end(self, last_end_ln + 1, lines[last_end_ln].c2b(last_end_col),
-                            ast.end_lineno, ast.end_col_offset)
+        _fix_stmt_end(self, last_end_ln + 1, lines[last_end_ln].c2b(last_end_col), ast.end_lineno, ast.end_col_offset)
 
-    self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+    self._maybe_add_line_continuations()  # THEORETICALLY could need to _fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
 def _put_slice_ClassDef_bases(
@@ -1752,7 +1750,7 @@ def _put_slice_decorator_list(
 
         _put_slice_asts(self, start, stop, 'decorator_list', body, None, None)
 
-        _maybe_fix_decorator_list_del(self, start, bound_ln, old_first_line, old_last_line)
+        _fix_decorator_list_del(self, start, bound_ln, old_first_line, old_last_line)
 
     else:
         old_body_empty = not body  # for fixes after put
@@ -1766,7 +1764,7 @@ def _put_slice_decorator_list(
 
         _put_slice_asts(self, start, stop, 'decorator_list', body, fst_, fst_body)
 
-        if _maybe_fix_decorator_list_trailing_newline(self, old_last_line):
+        if _fix_decorator_list_trailing_newline(self, old_last_line):
             pass  # noop
 
         elif old_body_empty and bound_ln == old_loc.ln:  # if inserted to nonexistent decorators right at start of node line then the node will not have been offset correctly because hierarchically the decorators are INSIDE this node even though syntactically they precede it
@@ -1879,7 +1877,7 @@ def _put_slice_comprehension_ifs(
             if next_idx < len(parent_body):  # only if self was not last comprehension in list
                 ln, col, _, _ = parent_body[next_idx].f.loc
 
-                self._maybe_fix_joined_alnum(ln, col)
+                self._fix_joined_alnum(ln, col)
 
 
 def _put_slice_BoolOp_values(
@@ -1953,7 +1951,7 @@ def _put_slice_BoolOp_values(
 
     _put_slice_asts(self, start, stop, 'values', body, fst_, fst_body)
 
-    _maybe_fix_BoolOp(self, start, is_del, is_last, options, norm_self)
+    _fix_BoolOp(self, start, is_del, is_last, options, norm_self)
 
 
 def _put_slice_Compare__all(
@@ -2093,7 +2091,7 @@ def _put_slice_Compare__all(
         body[i].f.pfield = astfield('comparators', i)
         ops[i].f.pfield = astfield('ops', i)
 
-    _maybe_fix_Compare(self, start, is_del, is_last, options, get_option_overridable('norm', 'norm_self', options))
+    _fix_Compare(self, start, is_del, is_last, options, get_option_overridable('norm', 'norm_self', options))
 
 
 def _put_slice_Call_args(
@@ -2165,7 +2163,7 @@ def _put_slice_MatchSequence_patterns(
     _put_slice_seq_and_asts(self, start, stop, 'patterns', body, fst_, 'patterns', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', 0, options)
 
-    _maybe_fix_MatchSequence(self, delims)
+    _fix_MatchSequence(self, delims)
 
 
 def _put_slice_MatchMapping__all(
@@ -2295,7 +2293,7 @@ def _put_slice_MatchOr_patterns(
 
     put_slice_sep_end(self, end_params)
 
-    _maybe_fix_MatchOr(self, self_norm)
+    _fix_MatchOr(self, self_norm)
 
 
 def _put_slice_type_params(
