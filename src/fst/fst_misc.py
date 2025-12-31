@@ -492,7 +492,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
                 if isinstance(ast, AST):
                     _dump_node(ast.f, st, cind + st.lind, f'{c.clr_field}{i}]{c.end_field} ')
                 else:
-                    st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {ast!r}{st.eol}')
+                    st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {_dump_prim(ast, c)}{st.eol}')
 
 
 # ----------------------------------------------------------------------------------------------------------------------

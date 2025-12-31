@@ -73,7 +73,7 @@ From GitHub, after cloning for development:
 ...         if not f.value:
 ...             continue
 ...
-...         # '.own_src()' gives us the original source exactly as written dedented
+...         # own_src() gives us the original source exactly as written but dedented
 ...         target = f.target.own_src()
 ...         value = f.value.own_src()
 ...
@@ -381,12 +381,13 @@ This module is not finished but functional enough that it can be useful.
 operations where it may apply (where comment may belong to expression instead of statement). Allow specification of
 trivia by line number, as well as insert location. Direct comment manipulation functions.
 
-* Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
-preserve more formatting.
-
 * Tree search, indentation of multiline sequences should be better, more coercion on put, different source encodings,
 code cleanups, decide between primitive or node ops on primitive fields, API additions for real-world use, optimization,
 testing, bughunting, etc...
+
+* Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
+preserve more formatting.
+
 
 ## Trivia
 
