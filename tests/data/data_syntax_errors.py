@@ -446,6 +446,28 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: invalid tuple',
 ],
 
+('_arglike', 'a=b, c'): [
+    'SyntaxError: invalid arglike',
+],
+
+('_arglike', '**a, *b'): [
+    '    **a, *b',
+    '       ^^^^',
+    'SyntaxError: iterable argument unpacking follows keyword argument unpacking',
+],
+
+('_arglike', 'a:b'): [
+    '    a:b',
+    '     ^',
+    'SyntaxError: invalid syntax',
+],
+
+('_arglike', 'a:b:c'): [
+    '    a:b:c',
+    '     ^',
+    'SyntaxError: invalid syntax',
+],
+
 ('_arglikes', 'a=b, c'): [
     'SyntaxError: invalid arglikes',
 ],

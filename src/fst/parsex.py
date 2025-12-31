@@ -142,6 +142,9 @@ __all__ = [
     'parse_Tuple_elt',
     'parse_Tuple',
     'parse__Assign_targets',
+    'parse__decorator_list',
+    'parse__arglike',
+    'parse__arglikes',
     'parse_boolop',
     'parse_operator',
     'parse_unaryop',
@@ -223,6 +226,7 @@ Mode = Literal[
     'Tuple',
     '_Assign_targets',
     '_decorator_list',
+    '_arglike',
     '_arglikes',
     'boolop',
     'operator',
@@ -286,6 +290,10 @@ Mode = Literal[
     separators and an optional trailing `=`.
 - `'_decorator_list'`: Parse zero or more decorators returned in a `_decorator_list` SPECIAL SLICE. Each decorator must
     have a leading `@`.
+- `'_arglike'`: Parse an expression **OR** keyword as could be used in a `Call.args` or `Call.keywords`. The expression
+    is an `'expr_arglike'` which is one which might be invalid outside of a `Call.args`, e.g. `*a or b`.
+- `'_arglikes'`: Parse zero or more `_arglike` expressions and / or keywords as could be used in a `Call` or `ClassDef`.
+    The expressions are `'expr_arglike'` which are ones which might be invalid outside of a `Call.args`, e.g. `*a or b`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator.
 - `'unaryop'`: Parse to a `unaryop` operator.
@@ -1244,6 +1252,26 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     return _decorator_list(decorator_list=ast.decorator_list, **_astloc_from_src(src, 1))
 
 
+def parse__arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more `expr_arglike`s and `keyword`s, returned as an `_arglikes` SPECIAL SLICE."""
+
+    try:
+        value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
+
+    except SyntaxError as exc:
+        if _syntax_error_in_loc(exc, src):  # check if error includes our wrapper code
+            raise
+
+        raise SyntaxError('invalid arglike') from None
+
+    if len(args := value.args) + len(keywords := value.keywords) != 1:
+        raise ParseError(f'expecting single arglike')
+
+    ast = args[0] if args else keywords[0]
+
+    return _offset_linenos(ast, -1)
+
+
 def parse__arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `expr_arglike`s and `keyword`s, returned as an `_arglikes` SPECIAL SLICE."""
 
@@ -1927,6 +1955,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not a,` (py 3.11+)
     '_Assign_targets':        parse__Assign_targets,
     '_decorator_list':        parse__decorator_list,
+    '_arglike':               parse__arglike,
     '_arglikes':              parse__arglikes,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,

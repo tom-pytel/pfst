@@ -1502,6 +1502,99 @@ r'''**SyntaxError('invalid tuple')**'''),
 r''''''),
 r'''**SyntaxError('invalid tuple')**'''),
 
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r''''''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r'''#'''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'Name', {}, ('_arglike',
+r'''j'''),
+r'''Name 'j' Load - ROOT 0,0..0,1'''),
+
+('parse__arglike', 0, 0, 'Starred', {}, ('_arglike',
+r'''*s'''), r'''
+Starred - ROOT 0,0..0,2
+  .value Name 's' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('parse__arglike', 0, 0, 'Starred', {}, ('_arglike',
+r'''*s,'''), r'''
+Starred - ROOT 0,0..0,2
+  .value Name 's' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('parse__arglike', 0, 0, 'Starred', {}, ('_arglike',
+r'''*not a'''), r'''
+Starred - ROOT 0,0..0,6
+  .value UnaryOp - 0,1..0,6
+    .op Not - 0,1..0,4
+    .operand Name 'a' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+('parse__arglike', 0, 0, 'Starred', {}, ('_arglike',
+r'''*not a,'''), r'''
+Starred - ROOT 0,0..0,6
+  .value UnaryOp - 0,1..0,6
+    .op Not - 0,1..0,4
+    .operand Name 'a' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r'''*not a, *b or c'''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r'''j, k'''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'keyword', {}, ('_arglike',
+r'''i=1'''), r'''
+keyword - ROOT 0,0..0,3
+  .arg 'i'
+  .value Constant 1 - 0,2..0,3
+'''),
+
+('parse__arglike', 0, 0, 'keyword', {}, ('_arglike',
+r'''**k'''), r'''
+keyword - ROOT 0,0..0,3
+  .value Name 'k' Load - 0,2..0,3
+'''),
+
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r'''a, b=c'''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r'''a, *not b, c=d, *e, f=g, **h'''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'ParseError', {}, ('_arglike',
+r'''*a, **b'''),
+r'''**ParseError('expecting single arglike')**'''),
+
+('parse__arglike', 0, 0, 'SyntaxError', {}, ('_arglike',
+r'''a=b, c'''),
+r'''**SyntaxError('invalid arglike')**'''),
+
+('parse__arglike', 0, 0, 'SyntaxError', {}, ('_arglike',
+r'''**a, *b'''),
+r'''**SyntaxError('iterable argument unpacking follows keyword argument unpacking')**'''),
+
+('parse__arglike', 0, 0, 'SyntaxError', {}, ('_arglike',
+r'''a:b'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__arglike', 0, 0, 'SyntaxError', {}, ('_arglike',
+r'''a:b:c'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse__arglikes', 0, 0, '_arglikes', {}, ('_arglikes',
 r''''''),
 r'''_arglikes - ROOT 0,0..0,0'''),
