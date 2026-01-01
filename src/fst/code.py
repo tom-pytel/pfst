@@ -190,7 +190,7 @@ def _coerce_as__expr_arglikes(
 def _coerce_as__Assign_targets(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
+    fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
     ast_ = fst_.a
 
     if not is_valid_target(ast_):
@@ -217,6 +217,13 @@ def _coerce_as__decorator_list(
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
+# `coerce_src`: Whether to attempt coerce on source or not. Most should have this False (or not present) as the parse
+# attempt should already have given a definitive answer. Exists for still like `_decorator_names` and
+# `_comprehension_ifs` where those parsers expect a prefix like `@` or `if` but we want to allow expressions without the
+# prefixes as well.
+
+_coerce_as__decorator_list.coerce_src = True
+
 
 def _coerce_as__comprehensions(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
@@ -240,6 +247,8 @@ def _coerce_as__comprehension_ifs(
                               end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+
+_coerce_as__comprehension_ifs.coerce_src = True
 
 
 def _coerce_as_alias(
@@ -387,6 +396,8 @@ def _code_as(
     *,
     name: str | None = None,
 ) -> fst.FST:
+    """Generic handler for this."""
+
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -432,7 +443,7 @@ def _code_as(
                 ast = parse(src, parse_params)
 
             except Exception:
-                if not coerce_as:
+                if not (coerce_as and getattr(coerce_as, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense to)
                     raise
 
                 try:

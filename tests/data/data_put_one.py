@@ -10321,7 +10321,7 @@ Module - ROOT 0,0..0,12
 ('body[0].value', None, None, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
-r'''**ParseError('expecting lambda arguments, could not parse or coerce')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0].value', None, None, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
@@ -12563,12 +12563,7 @@ Module - ROOT 0,0..0,25
 ('', 0, None, 'names', {'raw': False}, (None,
 r'''import _'''), (None,
 r'''(a)'''),
-r'''import a''', r'''
-Import - ROOT 0,0..0,8
-  .names[1]
-   0] alias - 0,7..0,8
-     .name 'a'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, None, 'names', {'coerce': False}, (None,
 r'''import _'''), (None,
@@ -12974,18 +12969,12 @@ r'''**IndexError('index out of range')**'''),
 ('', 0, None, 'names', {'raw': False}, (None,
 r'''from . import _'''), (None,
 r'''(a)'''),
-r'''from . import a''', r'''
-ImportFrom - ROOT 0,0..0,15
-  .names[1]
-   0] alias - 0,14..0,15
-     .name 'a'
-  .level 1
-'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 
 ('', 0, None, 'names', {}, (None,
 r'''from . import _'''), (None,
 r'''(a, b)'''),
-r'''**ParseError('expecting alias, could not parse or coerce')**'''),
+r'''**ParseError('expecting single name')**'''),
 
 ('', 0, None, 'names', {'coerce': False}, (None,
 r'''from . import _'''), (None,
@@ -15845,32 +15834,17 @@ Import - ROOT 0,0..0,10
 ('', 0, None, None, {'raw': False}, (None,
 r'''import a'''), ('Name',
 r'''(x)'''),
-r'''import x''', r'''
-Import - ROOT 0,0..0,8
-  .names[1]
-   0] alias - 0,7..0,8
-     .name 'x'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, None, None, {'raw': False}, (None,
 r'''import a'''), ('Attribute',
 r'''(x).y'''),
-r'''import x.y''', r'''
-Import - ROOT 0,0..0,10
-  .names[1]
-   0] alias - 0,7..0,10
-     .name 'x.y'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, None, None, {'raw': False}, (None,
 r'''import a'''), ('Attribute',
 r'''((x).y)'''),
-r'''import x.y''', r'''
-Import - ROOT 0,0..0,10
-  .names[1]
-   0] alias - 0,7..0,10
-     .name 'x.y'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, None, None, {}, (None,
 r'''from _ import a'''), ('Name',
@@ -15887,7 +15861,7 @@ ImportFrom - ROOT 0,0..0,15
 ('', 0, None, None, {}, (None,
 r'''from _ import a'''), ('Attribute',
 r'''x.y'''),
-r'''**ParseError('expecting alias, could not parse or coerce')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, None, None, {'_src': False}, (None,
 r'''from _ import a'''), ('Attribute',
@@ -15927,7 +15901,7 @@ With - ROOT 0,0..0,14
 ('', 0, None, 'items', {}, (None,
 r'''with a as b: pass'''), ('Slice',
 r'''x:y:z'''),
-r'''**ParseError('expecting withitem, could not parse or coerce')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, None, 'items', {'_src': False}, (None,
 r'''with a as b: pass'''), ('Slice',

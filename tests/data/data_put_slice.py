@@ -22611,12 +22611,7 @@ Import - ROOT 0,0..0,14
 ('', 0, 'end', None, {}, (None,
 r'''import _'''), (None,
 r'''(a)'''),
-r'''import a''', r'''
-Import - ROOT 0,0..0,8
-  .names[1]
-   0] alias - 0,7..0,8
-     .name 'a'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {'coerce': False}, (None,
 r'''import _'''), (None,
@@ -22626,7 +22621,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 ('', 0, 'end', None, {}, (None,
 r'''import _'''), (None,
 r'''(a, b)'''),
-r'''**ParseError('expecting _aliases, could not parse or coerce')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {'coerce': False}, (None,
 r'''import _'''), (None,
@@ -22955,32 +22950,17 @@ _aliases - ROOT 0,0..0,11
 ('', 0, 'end', 'names', {}, (None,
 r'''import a'''), ('Name',
 r'''(x)'''),
-r'''import x''', r'''
-Import - ROOT 0,0..0,8
-  .names[1]
-   0] alias - 0,7..0,8
-     .name 'x'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', 'names', {}, (None,
 r'''import a'''), ('Attribute',
 r'''(x).y'''),
-r'''import x.y''', r'''
-Import - ROOT 0,0..0,10
-  .names[1]
-   0] alias - 0,7..0,10
-     .name 'x.y'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', 'names', {}, (None,
 r'''import a'''), ('Attribute',
 r'''((x).y)'''),
-r'''import x.y''', r'''
-Import - ROOT 0,0..0,10
-  .names[1]
-   0] alias - 0,7..0,10
-     .name 'x.y'
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'Import_names_semicolon': [  # ................................................................................
@@ -23412,7 +23392,7 @@ Module - ROOT 0,0..0,34
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''from mod import a, b, c  # comment'''), ('_Import_names',
 r'''x.y'''),
-r'''**ParseError('expecting _aliases, could not parse or coerce')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0]', 0, 'end', None, {}, ('exec',
 r'''from mod import a, b, c  # comment'''), ('_Import_names', r'''
@@ -23527,13 +23507,7 @@ If - ROOT 0,0..1,23
 ('', 0, 'end', None, {}, (None,
 r'''from . import _'''), (None,
 r'''(a)'''),
-r'''from . import a''', r'''
-ImportFrom - ROOT 0,0..0,15
-  .names[1]
-   0] alias - 0,14..0,15
-     .name 'a'
-  .level 1
-'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 
 ('', 0, 'end', None, {'coerce': False}, (None,
 r'''from . import _'''), (None,
@@ -23543,7 +23517,7 @@ r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 ('', 0, 'end', None, {}, (None,
 r'''from . import _'''), (None,
 r'''(a, b)'''),
-r'''**ParseError('expecting _aliases, could not parse or coerce')**'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 
 ('', 0, 'end', None, {'coerce': False}, (None,
 r'''from . import _'''), (None,
@@ -23808,13 +23782,7 @@ _aliases - ROOT 0,0..0,9
 ('', 0, 'end', 'names', {}, (None,
 r'''from . import a'''), ('Name',
 r'''(x)'''),
-r'''from . import x''', r'''
-ImportFrom - ROOT 0,0..0,15
-  .names[1]
-   0] alias - 0,14..0,15
-     .name 'x'
-  .level 1
-'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 ],
 
 'ImportFrom_names_w_pars': [  # ................................................................................
@@ -24053,7 +24021,7 @@ Module - ROOT 0,0..0,36
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''from mod import (a, b, c)  # comment'''), ('_Import_names',
 r'''x.y'''),
-r'''**ParseError('expecting _aliases, could not parse or coerce')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0]', 0, 'end', None, {}, ('exec',
 r'''from mod import (a, b, c)  # comment'''), ('_Import_names', r'''

@@ -34,7 +34,6 @@
 - pre-generate `AST` field accessors instead of on import, faster execution
 - `FST.is_alive` to check if node has been removed or replaced
 - `FST.scope_symbols()` to get the names used in a scope
-- added explicit user control over `NamedExpr.target` when walking with `scope=True`
 
 ### Updated
 
@@ -51,7 +50,7 @@
 - add negative and `'end'` index options to `get_src()` and `put_src()`
 - change get/put index specification to use 0 to `'end'` instead of archaic `None` and `False` for the slice endpoints
 - `FST.type_params` on py < 3.12 and `.default_value` on py < 3.13 give dummy values
-- `fstview` can represent unbounded field list, can grow as well as shring with modifications outside the view
+- `fstview` can represent unbounded field list, can grow as well as shrink with modifications outside the view
 - changed `.docstr` to `get_docstr()` which now dedents returned string
 - made some more useful predicate functions public
 - optimized some internal offset and syntax ordering functions
