@@ -20109,6 +20109,132 @@ Tuple - ROOT 0,0..0,28
 '''),
 ],
 
+'Call__args': [  # ................................................................................
+
+('', 0, 4, '_args', {}, (None,
+r'''call(a, *not b, c, e=f, *g, **h, i=j)'''),
+r'''call(*g, **h, i=j)''', r'''
+Call - ROOT 0,0..0,18
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,7
+     .value Name 'g' Load - 0,6..0,7
+     .ctx Load
+  .keywords[2]
+   0] keyword - 0,9..0,12
+     .value Name 'h' Load - 0,11..0,12
+   1] keyword - 0,14..0,17
+     .arg 'i'
+     .value Name 'j' Load - 0,16..0,17
+''',
+r'''a, *not b, c, e=f''', r'''
+_arglikes - ROOT 0,0..0,17
+  .arglikes[4]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,9
+     .value UnaryOp - 0,4..0,9
+       .op Not - 0,4..0,7
+       .operand Name 'b' Load - 0,8..0,9
+     .ctx Load
+   2] Name 'c' Load - 0,11..0,12
+   3] keyword - 0,14..0,17
+     .arg 'e'
+     .value Name 'f' Load - 0,16..0,17
+'''),
+
+('', 1, 5, '_args', {}, (None,
+r'''call(a, *not b, c, e=f, *g, **h, i=j)'''),
+r'''call(a, **h, i=j)''', r'''
+Call - ROOT 0,0..0,17
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+  .keywords[2]
+   0] keyword - 0,8..0,11
+     .value Name 'h' Load - 0,10..0,11
+   1] keyword - 0,13..0,16
+     .arg 'i'
+     .value Name 'j' Load - 0,15..0,16
+''',
+r'''*not b, c, e=f, *g''', r'''
+_arglikes - ROOT 0,0..0,18
+  .arglikes[4]
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'b' Load - 0,5..0,6
+     .ctx Load
+   1] Name 'c' Load - 0,8..0,9
+   2] keyword - 0,11..0,14
+     .arg 'e'
+     .value Name 'f' Load - 0,13..0,14
+   3] Starred - 0,16..0,18
+     .value Name 'g' Load - 0,17..0,18
+     .ctx Load
+'''),
+
+('', 2, 6, '_args', {}, (None,
+r'''call(a, *not b, c, e=f, *g, **h, i=j)'''),
+r'''call(a, *not b, i=j)''', r'''
+Call - ROOT 0,0..0,20
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,14
+     .value UnaryOp - 0,9..0,14
+       .op Not - 0,9..0,12
+       .operand Name 'b' Load - 0,13..0,14
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,16..0,19
+     .arg 'i'
+     .value Name 'j' Load - 0,18..0,19
+''',
+r'''c, e=f, *g, **h''', r'''
+_arglikes - ROOT 0,0..0,15
+  .arglikes[4]
+   0] Name 'c' Load - 0,0..0,1
+   1] keyword - 0,3..0,6
+     .arg 'e'
+     .value Name 'f' Load - 0,5..0,6
+   2] Starred - 0,8..0,10
+     .value Name 'g' Load - 0,9..0,10
+     .ctx Load
+   3] keyword - 0,12..0,15
+     .value Name 'h' Load - 0,14..0,15
+'''),
+
+('', 3, 7, '_args', {}, (None,
+r'''call(a, *not b, c, e=f, *g, **h, i=j)'''),
+r'''call(a, *not b, c)''', r'''
+Call - ROOT 0,0..0,18
+  .func Name 'call' Load - 0,0..0,4
+  .args[3]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,14
+     .value UnaryOp - 0,9..0,14
+       .op Not - 0,9..0,12
+       .operand Name 'b' Load - 0,13..0,14
+     .ctx Load
+   2] Name 'c' Load - 0,16..0,17
+''',
+r'''e=f, *g, **h, i=j''', r'''
+_arglikes - ROOT 0,0..0,17
+  .arglikes[4]
+   0] keyword - 0,0..0,3
+     .arg 'e'
+     .value Name 'f' Load - 0,2..0,3
+   1] Starred - 0,5..0,7
+     .value Name 'g' Load - 0,6..0,7
+     .ctx Load
+   2] keyword - 0,9..0,12
+     .value Name 'h' Load - 0,11..0,12
+   3] keyword - 0,14..0,17
+     .arg 'i'
+     .value Name 'j' Load - 0,16..0,17
+'''),
+],
+
 'decorator_list': [  # ................................................................................
 
 ('', 0, 1, 'decorator_list', {}, (None, r'''

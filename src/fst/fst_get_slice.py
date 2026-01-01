@@ -57,6 +57,7 @@ from .asttypes import (
     While,
     With,
     comprehension,
+    keyword,
     match_case,
     TryStar,
     TypeAlias,
@@ -73,7 +74,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import re_identifier, bistr, copy_ast
+from .astutil import re_identifier, bistr, copy_ast, merge_arglikes
 from .common import NodeError, astfield, fstloc, next_frag, next_find, next_find_re
 
 from .fst_misc import (
@@ -229,6 +230,79 @@ def _bounds_comprehension_ifs(self: fst.FST, start: int = 0) -> tuple[int, int, 
         _, _, bound_ln, bound_col = ast.iter.f.pars()
 
     return bound_ln, bound_col, bound_end_ln, bound_end_col
+
+
+def _normalize_solo_call_arg_genexp(self: fst.FST) -> object:
+    """If there is a solo `Call.args` `GeneratorExp` which shares its parentheses with the `Call` then parenthesize it
+    so that it has its own pars for editing.
+
+    **Returns:**
+    - `state`: Restore data to put it back into its original state via `_restore_solo_call_arg_genexp()` (if needed).
+    """
+
+    if not (
+        (args := self.a.args)
+        and (arg0 := args[0].f)._is_solo_call_arg_genexp()
+        and arg0.pars(shared=False).n == -1
+    ):  # if not single call argument GeneratorExp that shares parentheses with Call then done
+        return None
+
+    arg0._parenthesize_grouping()
+
+    return True
+
+
+def _restore_solo_call_arg_genexp(self: fst.FST, state: object) -> None:
+    """Possibly restore the original source of a solo `Call.args` `GeneratorExp` which shared its parentheses with the
+    `Call` and was normalized for the edit operation but was not removed so can be put back into its original state.
+
+    **WARNING!** This should only be called if it is known that no modification was made to the args. But it does not
+    have to be checked by the caller if it is a solo_call_arg_genexp, just pass the state and if a restore is needed
+    then it will be done, if not the noop.
+    """
+
+    if state is None:
+        return
+
+    arg0 = self.a.args[0]
+    ln, col, end_ln, end_col = arg0.f.loc
+
+    self._put_src(None, end_ln, end_col - 1, end_ln, end_col, True)
+    self._put_src(None, ln, col, ln, col + 1, True)
+
+    arg0.col_offset -= 1  # don't need to _touch() after this because it was done in the _put_src() above
+    arg0.end_col_offset += 1
+
+
+def _move_arglikes_into_one(self: fst.FST) -> tuple[str, list[AST], list[AST], list[AST]]:
+    """Move the merged orderded arglikes of `Call.args+keywords` or `ClassDef.bases+keywords` into the `args` or `bases`
+    field and set the `keywords` to empty in order to be able to operate on them easier. Specifically the `args` or
+    `bases` and not `keywords` because those have special processing when looking for parentheses to handle single
+    `expr` arguments. If a single `expr` arg was in `keywords` then `pars()` would give the wrong location possibly
+    including the `Call.args` or `ClassDef.bases` enclosing pars.
+
+    **Returns:**
+    - `(field, merged_arglikes, old_args_or_bases, old_keywords)`: The merged list of `args/bases+keywords` and old
+        `args/bases` list and the old `keywords` list for resetting if nothing is done, like in a `get(cut=False)`.
+        `merged_arglikes` and `old_args_or_bases` will be the same list if there are no `keywords`.
+    """
+
+    ast = self.a
+    field = 'args' if ast.__class__ is Call else 'bases'
+    exprs = getattr(ast, field)
+
+    if not (kws := ast.keywords):
+        return field, exprs, exprs, kws
+
+    ast.keywords = []
+    arglikes = merge_arglikes(exprs, kws)
+
+    setattr(ast, field, arglikes)
+
+    for i, a in enumerate(arglikes):
+        a.f.pfield = astfield(field, i)
+
+    return field, arglikes, exprs, kws
 
 
 def _move_Compare_left_into_comparators(self: fst.FST) -> None:
@@ -676,18 +750,20 @@ def _fix_stmt_end(
 # ours
 
 def _locs_and_bounds_get(
-    self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int
+    self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int, loc: fstloc | None = None
 ) -> tuple[fstloc, fstloc, int, int, int, int]:
     """Get the location of the first and last elemnts (assumed present) and the bounding location of a one or
     two-element sequence. The start bounding location must be past the ante-first element if present, otherwise start
     of self past any delimiters. The end bounding location must be end of self before any delimiters.
+
+    **Parameters:**
+    - `loc`: Override to standard location.
 
     **Returns:**
     - `(loc of first element, loc of last element, bound_ln, bound_col, bound_end_ln, bound_end_col)`
     """
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
-
     bound_end_col -= off
 
     if start:
@@ -1249,21 +1325,11 @@ def _get_slice_ClassDef_bases(
     else:
         self_tail_sep = None
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
-    bound_end_col -= 1
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    else:
-        bound_col += 1
-
-    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
-
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, self._loc_ClassDef_bases_pars())  # ClassDef bases pars definitely exist
     asts = _cut_or_copy_asts(start, stop, 'bases', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
-                         loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'bases', '(', ')', ',', self_tail_sep, len_slice == 1)
 
     fst_._fix_arglikes(options)  # parenthesize any arglike expressions
@@ -1556,30 +1622,83 @@ def _get_slice_Call_args(
     else:
         self_tail_sep = None
 
-        if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
-            f0._parenthesize_grouping()
+        state = _normalize_solo_call_arg_genexp(self)
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_Call_pars()
-    bound_end_col -= 1
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    else:
-        bound_col += 1
-
-    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
-
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, self._loc_Call_pars())
     asts = _cut_or_copy_asts(start, stop, 'args', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
-                         loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
 
     fst_._fix_arglikes(options)  # parenthesize any arglike expressions
 
-    if cut and start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+    if cut:
+        if start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+            self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    elif not keywords:  # only needs to be done if there were no keywords
+        _restore_solo_call_arg_genexp(self, state)
+
+    return fst_
+
+
+def _get_slice_Call__args(
+    self: fst.FST,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Combined `Call.args+keywords` slice, doesn't have to check ordering as a cut won't change it."""
+
+    ast = self.a
+    body = self._cached_arglikes()
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST(_arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
+
+    state = _normalize_solo_call_arg_genexp(self)
+    field, body, exprs, kws = _move_arglikes_into_one(self)
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, self._loc_Call_pars())
+    asts = _cut_or_copy_asts(start, stop, field, cut, body)
+    ret_ast = _arglikes(arglikes=asts)
+
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs, options, field, '', '', ',', 0, 0)
+
+    if cut:
+        if kws:  # only need to unmerge if there were keywords to begin with
+            ast.args = exprs = []
+            ast.keywords = kws = []
+
+            for a in body:  # separate single arglikes with hole cut out back into `args` and `keywords`, they are still ordered as only removal waas done so don't need to sort
+                if a.__class__ is keyword:
+                    a.f.pfield = astfield('keywords', len(kws))
+
+                    kws.append(a)
+
+                else:
+                    a.f.pfield = astfield('args', len(exprs))
+
+                    exprs.append(a)
+
+    else:  # just need to put back old lists and reset their pfields
+        if kws:  # only need to put back if there were keywords to begin with
+            ast.args = exprs
+            ast.keywords = kws
+
+            for i, a in enumerate(exprs):
+                a.f.pfield = astfield('args', i)
+
+            for i, a in enumerate(kws):
+                a.f.pfield = astfield('keywords', i)
+
+        else:  # only needs to be done if there were no keywords
+            _restore_solo_call_arg_genexp(self, state)
 
     return fst_
 
@@ -2004,20 +2123,21 @@ _GET_SLICE_HANDLERS = {
     (AsyncFunctionDef, 'decorator_list'):     _get_slice_decorator_list,  # expr*
     (ClassDef, 'decorator_list'):             _get_slice_decorator_list,  # expr*
     (ClassDef, 'bases'):                      _get_slice_ClassDef_bases,  # expr*
+    (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (ClassDef, '_bases'):                     _get_slice_NOT_IMPLEMENTED_YET,  # expr|keyword*
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_Boolop_values,  # expr*
     (Compare, '_all'):                        _get_slice_Compare__all,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
+    (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (Call, '_args'):                          _get_slice_Call__args,  # expr|keyword*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 
     (ListComp, 'generators'):                 _get_slice_generators,  # comprehension*
     (SetComp, 'generators'):                  _get_slice_generators,  # comprehension*
     (DictComp, 'generators'):                 _get_slice_generators,  # comprehension*
     (GeneratorExp, 'generators'):             _get_slice_generators,  # comprehension*
-
-    (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
     (Import, 'names'):                        _get_slice_Import_names,  # alias*
     (ImportFrom, 'names'):                    _get_slice_ImportFrom_names,  # alias*

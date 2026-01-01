@@ -218,7 +218,7 @@ def _coerce_as__decorator_list(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 # `coerce_src`: Whether to attempt coerce on source or not. Most should have this False (or not present) as the parse
-# attempt should already have given a definitive answer. Exists for still like `_decorator_names` and
+# attempt should already have given a definitive answer. Exists for stuff like `_decorator_names` and
 # `_comprehension_ifs` where those parsers expect a prefix like `@` or `if` but we want to allow expressions without the
 # prefixes as well.
 

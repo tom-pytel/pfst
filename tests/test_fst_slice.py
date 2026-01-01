@@ -2301,6 +2301,14 @@ if 1:
         self.assertEqual('3,', (f := FST("f'{3,}'")).values[0].value.get_slice().src)
         f.verify()
 
+        # make sure solo call arg GeneratorExp with shared parentehese is restored correctly after copy
+
+        f = FST('call(i for i in j)')
+        self.assertEqual('(i for i in j)', f.get_slice('_args').src)
+        self.assertEqual('call(i for i in j)', f.src)
+        self.assertEqual('((i for i in j),)', f.get_slice('args').src)
+        self.assertEqual('call(i for i in j)', f.src)
+
     def test_put_slice_special(self):
         if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
