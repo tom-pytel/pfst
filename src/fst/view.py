@@ -12,7 +12,7 @@ from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
 from .fst_options import check_options
 
-__all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare', 'fstview_dummy']
+__all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare', 'fstview_arglikes', 'fstview_dummy']
 
 
 class fstview:
@@ -713,6 +713,26 @@ class fstview__body(fstview):
         base = self.base
 
         return base.a.body[idx + base.has_docstr]
+
+
+class fstview_arglikes(fstview):
+    """View for `Call` merged `args+keywords` virtual field `_args` or `ClassDef` merged `bases+keywords` virtual field
+    `_bases`. @private"""
+
+    def _len_field(self) -> int:
+        ast = self.base.a
+
+        return len(getattr(ast, self.field)) + len(ast.keywords)
+
+    def _deref_one(self, idx: int) -> AST | str:
+        return self.base._cached_arglikes()[idx]
+
+    def __repr__(self) -> str:
+        start, stop, _ = self._get_indices()
+        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
+        base = self.base
+
+        return f'<{base!r}._{self.field}{indices} {tuple(a.f for a in base._cached_arglikes())}>'
 
 
 class fstview_dummy(fstview):

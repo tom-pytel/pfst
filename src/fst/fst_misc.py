@@ -113,6 +113,7 @@ from .astutil import (
     bistr,
     precedence_require_parens_by_type,
     arglike_kind,
+    merge_arglikes,
 )
 
 from .common import (
@@ -1093,6 +1094,20 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
 
     if src_plus and is_root:  # put any trailing lines if putting at root
         _dump_lines(self, st, len(self.root._lines), 0, 0, 0, None)
+
+
+def _cached_arglikes(self: fst.FST) -> list[AST]:
+    """Get cached merged arglikes from `Call.args+keywords` or `ClassDef.bases+keywords`."""
+
+    try:
+        arglikes = self._cache['arglikes']
+
+    except KeyError:
+        ast = self.a
+        field = 'args' if ast.__class__ is Call else 'bases'
+        arglikes = self._cache['arglikes'] = merge_arglikes(getattr(ast, field), ast.keywords)
+
+    return arglikes
 
 
 def _is_expr_arglike(self: fst.FST) -> bool | None:

@@ -61,6 +61,7 @@ from .asttypes import (
     BitAnd,
     BitOr,
     BitXor,
+    Call,
     ClassDef,
     Compare,
     Constant,
@@ -139,7 +140,7 @@ from .astutil import (
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
-from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body
+from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body, fstview_arglikes
 from .reconcile import Reconcile
 from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
@@ -4897,6 +4898,7 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
+        _cached_arglikes,
 
         _is_expr_arglike,
         _is_empty_set_call,
@@ -5128,6 +5130,60 @@ class FST:
     @_body.deleter
     def _body(self: FST) -> None:
         self._put_slice(None, 0, 'end', '_body')
+
+    @property
+    def _args(self: FST) -> fstview:
+        """Virtual `_args` field view for merged `Call.args+keywords`.
+
+        **Examples:**
+
+        >>> list(f.src for f in FST('call(a, *not b, c=d, *e, **h, f=g)')._args)
+        ['a', '*not b', 'c=d', '*e', '**h', 'f=g']
+
+        TODO: more slice examples when done
+
+        @public
+        """
+
+        if self.a.__class__ is Call:
+            return fstview_arglikes(self, 'args')
+
+        raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_args'")
+
+    @_args.setter
+    def _args(self: FST, code: Code | None) -> None:
+        self._put_slice(code, 0, 'end', '_args')
+
+    @_args.deleter
+    def _args(self: FST) -> None:
+        self._put_slice(None, 0, 'end', '_args')
+
+    @property
+    def _bases(self: FST) -> fstview:
+        """Virtual `_bases` field view for merged `ClassDef.bases+keywords`.
+
+        **Examples:**
+
+        >>> list(f.src for f in FST('class cls(a, *not b, c=d, *e, **h): pass')._bases)
+        ['a', '*not b', 'c=d', '*e', '**h']
+
+        TODO: more slice examples when done
+
+        @public
+        """
+
+        if self.a.__class__ is ClassDef:
+            return fstview_arglikes(self, 'bases')
+
+        raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_bases'")
+
+    @_bases.setter
+    def _bases(self: FST, code: Code | None) -> None:
+        self._put_slice(code, 0, 'end', '_bases')
+
+    @_bases.deleter
+    def _bases(self: FST) -> None:
+        self._put_slice(None, 0, 'end', '_bases')
 
 
 _VIRTUAL_FIELD_VIEW__ALL = {

@@ -105,7 +105,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import constant, bistr, copy_ast
+from .astutil import constant, bistr, copy_ast, merge_arglikes
 from .common import FTSTRING_END_TOKENS, PYGE13, NodeError, pyver
 from .fst_misc import fixup_one_index
 from .slice_stmtlike import get_slice_stmtlike
@@ -133,10 +133,14 @@ def _params_Compare(self: fst.FST, idx: int | None) -> tuple[int, str, AST | lis
         return None, 'left', ast.left
 
 
-def _validate_get(self: fst.FST, idx: int | None, field: str, start_at: int = 0) -> tuple[AST | None, int]:
-    """Check that `idx` was passed (or not) as needed."""
+def _validate_get(
+    self: fst.FST, idx: int | None, field: str, start_at: int = 0, child: AST | list[AST] | None = None
+) -> tuple[AST | None, int]:
+    """Check that `idx` was passed (or not) as needed. `start_at` used for `_body` virtual field. `child` override used
+    for `_args` and `_bases` virtual fields."""
 
-    child = getattr(self.a, field)
+    if child is None:
+        child = getattr(self.a, field)
 
     if isinstance(child, list):
         if idx is None:
@@ -154,8 +158,14 @@ def _validate_get(self: fst.FST, idx: int | None, field: str, start_at: int = 0)
 
 # ......................................................................................................................
 
-def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
-    child, _ = _validate_get(self, idx, field)
+def _get_one_default(
+    self: fst.FST,
+    idx: int | None,
+    field: str, cut: bool,
+    options: Mapping[str, Any],
+    child: AST | list[AST] | None = None,
+) -> _GetOneRet:
+    child, _ = _validate_get(self, idx, field, 0, child)
 
     if child is None:
         return None
@@ -227,6 +237,16 @@ def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, op
     return (fst.FST(And(), ['and'], None, from_=self)
             if child.__class__ is And else
             fst.FST(Or(), ['or'], None, from_=self))  # just create new ones because they can be in multiple places
+
+
+def _get_one_arglike(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+    """Get a single element from combined `expr` and `keyword` list fields of `Call.args`+`Call.keywords` or
+    `ClassDef.bases`+`ClassDef.keywords`."""
+
+    ast = self.a
+    child = merge_arglikes(getattr(ast, field[1:]), ast.keywords)
+
+    return _get_one_default(self, idx, field, cut, options, child)
 
 
 def _get_one_invalid_virtual(
@@ -425,6 +445,7 @@ _GET_ONE_HANDLERS = {
     (ClassDef, 'bases'):                  _get_one_default,  # expr*
     (ClassDef, 'keywords'):               _get_one_default,  # keyword*
     (ClassDef, 'body'):                   _get_one_stmtlike,  # stmt*
+    (ClassDef, '_bases'):                 _get_one_arglike,  # expr+keyword*
     (Return, 'value'):                    _get_one_default,  # expr?
     (Delete, 'targets'):                  _get_one_default,  # expr*
     (Assign, 'targets'):                  _get_one_default,  # expr*
@@ -515,6 +536,7 @@ _GET_ONE_HANDLERS = {
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_default,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
+    (Call, '_args'):                      _get_one_arglike,  # expr+keyword*
     (FormattedValue, 'value'):            _get_one_FormattedValue_value,  # expr
     (FormattedValue, 'conversion'):       _get_one_conversion,  # int
     (FormattedValue, 'format_spec'):      _get_one_format_spec,  # expr?  - no location on py < 3.12

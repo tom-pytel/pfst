@@ -2761,6 +2761,76 @@ r'''c''',
 r'''Name 'c' Load - ROOT 0,0..0,1'''),
 ],
 
+'ClassDef__bases': [  # ................................................................................
+
+('', 0, None, '_bases', {}, (None,
+r'''class cls(base, meta=cls, *bases, **kws): pass'''),
+r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''base''',
+r'''Name 'base' Load - ROOT 0,0..0,4'''),
+
+('', 1, None, '_bases', {}, (None,
+r'''class cls(base, meta=cls, *bases, **kws): pass'''),
+r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''meta=cls''', r'''
+keyword - ROOT 0,0..0,8
+  .arg 'meta'
+  .value Name 'cls' Load - 0,5..0,8
+'''),
+
+('', 2, None, '_bases', {}, (None,
+r'''class cls(base, meta=cls, *bases, **kws): pass'''),
+r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''*bases''', r'''
+Starred - ROOT 0,0..0,6
+  .value Name 'bases' Load - 0,1..0,6
+  .ctx Load
+'''),
+
+('', 3, None, '_bases', {}, (None,
+r'''class cls(base, meta=cls, *bases, **kws): pass'''),
+r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''**kws''', r'''
+keyword - ROOT 0,0..0,5
+  .value Name 'kws' Load - 0,2..0,5
+'''),
+],
+
+'Call__args': [  # ................................................................................
+
+('', 0, None, '_args', {}, (None,
+r'''call(arg, key=word, *args, **keywords)'''),
+r'''**NodeError('cannot delete Call._args')**''',
+r'''arg''',
+r'''Name 'arg' Load - ROOT 0,0..0,3'''),
+
+('', 1, None, '_args', {}, (None,
+r'''call(arg, key=word, *args, **keywords)'''),
+r'''**NodeError('cannot delete Call._args')**''',
+r'''key=word''', r'''
+keyword - ROOT 0,0..0,8
+  .arg 'key'
+  .value Name 'word' Load - 0,4..0,8
+'''),
+
+('', 2, None, '_args', {}, (None,
+r'''call(arg, key=word, *args, **keywords)'''),
+r'''**NodeError('cannot delete Call._args')**''',
+r'''*args''', r'''
+Starred - ROOT 0,0..0,5
+  .value Name 'args' Load - 0,1..0,5
+  .ctx Load
+'''),
+
+('', 3, None, '_args', {}, (None,
+r'''call(arg, key=word, *args, **keywords)'''),
+r'''**NodeError('cannot delete Call._args')**''',
+r'''**keywords''', r'''
+keyword - ROOT 0,0..0,10
+  .value Name 'keywords' Load - 0,2..0,10
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',
