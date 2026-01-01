@@ -1643,7 +1643,7 @@ def _get_slice_Call_args(
     return fst_
 
 
-def _get_slice_Call__args(
+def _get_slice_Call_ClassDef_arglikes(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -1651,7 +1651,8 @@ def _get_slice_Call__args(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Combined `Call.args+keywords` slice, doesn't have to check ordering as a cut won't change it."""
+    """Combined `Call.args+keywords` or `ClassDef.bases+keywords` slice, doesn't have to check ordering as a cut won't
+    change it."""
 
     ast = self.a
     body = self._cached_arglikes()
@@ -1662,42 +1663,55 @@ def _get_slice_Call__args(
         return fst.FST(_arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    state = _normalize_solo_call_arg_genexp(self)
+    is_call = ast.__class__ is Call
+
+    if is_call:
+        state = _normalize_solo_call_arg_genexp(self)
+
     field, body, exprs, kws = _move_arglikes_into_one(self)
-    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, self._loc_Call_pars())
+    loc = self._loc_Call_pars() if is_call else self._loc_ClassDef_bases_pars()
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, loc)
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
     ret_ast = _arglikes(arglikes=asts)
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs, options, field, '', '', ',', 0, 0)
 
     if cut:
-        if kws:  # only need to unmerge if there were keywords to begin with
-            ast.args = exprs = []
-            ast.keywords = kws = []
+        if not (is_call or body):  # everything was cut from a ClassDef, remove parentheses
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
 
-            for a in body:  # separate single arglikes with hole cut out back into `args` and `keywords`, they are still ordered as only removal waas done so don't need to sort
+            self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
+
+        if kws:  # only need to unmerge if there were keywords to begin with
+            ast.keywords = kws = []
+            exprs = []
+
+            setattr(ast, field, exprs)
+
+            for a in body:  # separate single arglikes with hole cut out back into `args/bases` and `keywords`, they are still ordered as only removal waas done so don't need to sort
                 if a.__class__ is keyword:
                     a.f.pfield = astfield('keywords', len(kws))
 
                     kws.append(a)
 
                 else:
-                    a.f.pfield = astfield('args', len(exprs))
+                    a.f.pfield = astfield(field, len(exprs))
 
                     exprs.append(a)
 
     else:  # just need to put back old lists and reset their pfields
         if kws:  # only need to put back if there were keywords to begin with
-            ast.args = exprs
             ast.keywords = kws
 
+            setattr(ast, field, exprs)
+
             for i, a in enumerate(exprs):
-                a.f.pfield = astfield('args', i)
+                a.f.pfield = astfield(field, i)
 
             for i, a in enumerate(kws):
                 a.f.pfield = astfield('keywords', i)
 
-        else:  # only needs to be done if there were no keywords
+        elif is_call:  # only needs to be done for a Call and only if there are no keywords
             _restore_solo_call_arg_genexp(self, state)
 
     return fst_
@@ -2124,14 +2138,14 @@ _GET_SLICE_HANDLERS = {
     (ClassDef, 'decorator_list'):             _get_slice_decorator_list,  # expr*
     (ClassDef, 'bases'):                      _get_slice_ClassDef_bases,  # expr*
     (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (ClassDef, '_bases'):                     _get_slice_NOT_IMPLEMENTED_YET,  # expr|keyword*
+    (ClassDef, '_bases'):                     _get_slice_Call_ClassDef_arglikes,  # expr|keyword*
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_Boolop_values,  # expr*
     (Compare, '_all'):                        _get_slice_Compare__all,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (Call, '_args'):                          _get_slice_Call__args,  # expr|keyword*
+    (Call, '_args'):                          _get_slice_Call_ClassDef_arglikes,  # expr|keyword*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 
     (ListComp, 'generators'):                 _get_slice_generators,  # comprehension*

@@ -17291,6 +17291,140 @@ r'''class cls[T](a, b=c, *d): pass'''),
 r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
 ],
 
+'ClassDef__bases': [  # ................................................................................
+
+('', 0, 4, '_bases', {}, (None,
+r'''class cls(a, *not b, c, e=f, *g, **h, i=j): pass'''),
+r'''class cls(*g, **h, i=j): pass''', r'''
+ClassDef - ROOT 0,0..0,29
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,10..0,12
+     .value Name 'g' Load - 0,11..0,12
+     .ctx Load
+  .keywords[2]
+   0] keyword - 0,14..0,17
+     .value Name 'h' Load - 0,16..0,17
+   1] keyword - 0,19..0,22
+     .arg 'i'
+     .value Name 'j' Load - 0,21..0,22
+  .body[1]
+   0] Pass - 0,25..0,29
+''',
+r'''a, *not b, c, e=f''', r'''
+_arglikes - ROOT 0,0..0,17
+  .arglikes[4]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,9
+     .value UnaryOp - 0,4..0,9
+       .op Not - 0,4..0,7
+       .operand Name 'b' Load - 0,8..0,9
+     .ctx Load
+   2] Name 'c' Load - 0,11..0,12
+   3] keyword - 0,14..0,17
+     .arg 'e'
+     .value Name 'f' Load - 0,16..0,17
+'''),
+
+('', 1, 5, '_bases', {}, (None,
+r'''class cls(a, *not b, c, e=f, *g, **h, i=j): pass'''),
+r'''class cls(a, **h, i=j): pass''', r'''
+ClassDef - ROOT 0,0..0,28
+  .name 'cls'
+  .bases[1]
+   0] Name 'a' Load - 0,10..0,11
+  .keywords[2]
+   0] keyword - 0,13..0,16
+     .value Name 'h' Load - 0,15..0,16
+   1] keyword - 0,18..0,21
+     .arg 'i'
+     .value Name 'j' Load - 0,20..0,21
+  .body[1]
+   0] Pass - 0,24..0,28
+''',
+r'''*not b, c, e=f, *g''', r'''
+_arglikes - ROOT 0,0..0,18
+  .arglikes[4]
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'b' Load - 0,5..0,6
+     .ctx Load
+   1] Name 'c' Load - 0,8..0,9
+   2] keyword - 0,11..0,14
+     .arg 'e'
+     .value Name 'f' Load - 0,13..0,14
+   3] Starred - 0,16..0,18
+     .value Name 'g' Load - 0,17..0,18
+     .ctx Load
+'''),
+
+('', 2, 6, '_bases', {}, (None,
+r'''class cls(a, *not b, c, e=f, *g, **h, i=j): pass'''),
+r'''class cls(a, *not b, i=j): pass''', r'''
+ClassDef - ROOT 0,0..0,31
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,19
+     .value UnaryOp - 0,14..0,19
+       .op Not - 0,14..0,17
+       .operand Name 'b' Load - 0,18..0,19
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,21..0,24
+     .arg 'i'
+     .value Name 'j' Load - 0,23..0,24
+  .body[1]
+   0] Pass - 0,27..0,31
+''',
+r'''c, e=f, *g, **h''', r'''
+_arglikes - ROOT 0,0..0,15
+  .arglikes[4]
+   0] Name 'c' Load - 0,0..0,1
+   1] keyword - 0,3..0,6
+     .arg 'e'
+     .value Name 'f' Load - 0,5..0,6
+   2] Starred - 0,8..0,10
+     .value Name 'g' Load - 0,9..0,10
+     .ctx Load
+   3] keyword - 0,12..0,15
+     .value Name 'h' Load - 0,14..0,15
+'''),
+
+('', 3, 7, '_bases', {}, (None,
+r'''class cls(a, *not b, c, e=f, *g, **h, i=j): pass'''),
+r'''class cls(a, *not b, c): pass''', r'''
+ClassDef - ROOT 0,0..0,29
+  .name 'cls'
+  .bases[3]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,19
+     .value UnaryOp - 0,14..0,19
+       .op Not - 0,14..0,17
+       .operand Name 'b' Load - 0,18..0,19
+     .ctx Load
+   2] Name 'c' Load - 0,21..0,22
+  .body[1]
+   0] Pass - 0,25..0,29
+''',
+r'''e=f, *g, **h, i=j''', r'''
+_arglikes - ROOT 0,0..0,17
+  .arglikes[4]
+   0] keyword - 0,0..0,3
+     .arg 'e'
+     .value Name 'f' Load - 0,2..0,3
+   1] Starred - 0,5..0,7
+     .value Name 'g' Load - 0,6..0,7
+     .ctx Load
+   2] keyword - 0,9..0,12
+     .value Name 'h' Load - 0,11..0,12
+   3] keyword - 0,14..0,17
+     .arg 'i'
+     .value Name 'j' Load - 0,16..0,17
+'''),
+],
+
 'BoolOp_values': [  # ................................................................................
 
 ('', 0, 0, None, {'_verify_get': False}, (None,

@@ -369,10 +369,10 @@ This module is not finished but functional enough that it can be useful.
   * `Interpolation.format_spec`
 
 * Prescribed get / put slice from / to:
-  * `MatchClass.patterns`
-  * `FunctionsDef/AsyncFunctionDef/ClassDef.args`
   * `ClassDef.bases+keywords`
   * `Call.args+keywords`
+  * `arguments._all`
+  * `MatchClass.patterns`
   * `MatchClass.patterns+kwd_attrs:kwd_patterns`
   * `JoinedStr.values`
   * `TemplateStr.values`

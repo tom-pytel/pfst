@@ -228,13 +228,12 @@ from .fst_put_one import _fix_With_items
 # *   N ao         (BoolOp, 'values'):                     # expr*                 -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                                  .
 #                                                                                  .
-#                  (FunctionsDef, 'args'):                 # arguments             -> arguments                  _parse_arguments / arguments_lambda
-#                  (AsyncFunctionDef, 'args'):             # arguments             -> arguments                  _parse_arguments / arguments_lambda
+#                  (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
+#                  (Call, '_args'):                        # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
 #                                                                                  .
-#                  (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes_n_kws                   - 'bases+keywords'
-#                  (Call, '_args'):                        # expr*+keyword*        -> _arglikes_n_kws                   - 'args+keywords'
+#                  (arguments, '_all'):                    # arguments             -> arguments                  _parse_arguments / arguments_lambda
 #                                                                                  .
-#                  (MatchClass, '_patterns'):              # pattern*+???                                               - 'patterns+kwd_attrs=kwd_patterns'):
+#                  (MatchClass, '_patterns'):              # pattern*+???                                        - 'patterns+kwd_attrs=kwd_patterns'):
 #                                                                                  .
 #                                                                                  .
 #                  (JoinedStr, 'values'):                  # Constant|FormattedValue*   -> JoinedStr
