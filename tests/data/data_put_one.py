@@ -13765,6 +13765,367 @@ r'''V: list[int]'''),
 r'''**IndexError('index out of range')**'''),
 ],
 
+'_arglikes': [  # ................................................................................
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b0'''), ('Name',
+r'''c0'''),
+r'''c0, b0''', r'''
+_arglikes - ROOT 0,0..0,6
+  .arglikes[2]
+   0] Name 'c0' Load - 0,0..0,2
+   1] Name 'b0' Load - 0,4..0,6
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, *b1'''), ('Name',
+r'''c0'''),
+r'''c0, *b1''', r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Name 'c0' Load - 0,0..0,2
+   1] Starred - 0,4..0,7
+     .value Name 'b1' Load - 0,5..0,7
+     .ctx Load
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b=2'''), ('Name',
+r'''c0'''),
+r'''c0, b=2''', r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Name 'c0' Load - 0,0..0,2
+   1] keyword - 0,4..0,7
+     .arg 'b'
+     .value Constant 2 - 0,6..0,7
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('Name',
+r'''c0'''),
+r'''c0, **b3''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] Name 'c0' Load - 0,0..0,2
+   1] keyword - 0,4..0,8
+     .value Name 'b3' Load - 0,6..0,8
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b0'''), ('Starred',
+r'''*c1'''),
+r'''*c1, b0''', r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'c1' Load - 0,1..0,3
+     .ctx Load
+   1] Name 'b0' Load - 0,5..0,7
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, *b1'''), ('Starred',
+r'''*c1'''),
+r'''*c1, *b1''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'c1' Load - 0,1..0,3
+     .ctx Load
+   1] Starred - 0,5..0,8
+     .value Name 'b1' Load - 0,6..0,8
+     .ctx Load
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b=2'''), ('Starred',
+r'''*c1'''),
+r'''*c1, b=2''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'c1' Load - 0,1..0,3
+     .ctx Load
+   1] keyword - 0,5..0,8
+     .arg 'b'
+     .value Constant 2 - 0,7..0,8
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('Starred',
+r'''*c1'''),
+r'''*c1, **b3''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'c1' Load - 0,1..0,3
+     .ctx Load
+   1] keyword - 0,5..0,9
+     .value Name 'b3' Load - 0,7..0,9
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b0'''), ('keyword',
+r'''c=2'''),
+r'''**NodeError('keyword arglike cannot precede positional arglike')**'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, *b1'''), ('keyword',
+r'''c=2'''),
+r'''c=2, *b1''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] keyword - 0,0..0,3
+     .arg 'c'
+     .value Constant 2 - 0,2..0,3
+   1] Starred - 0,5..0,8
+     .value Name 'b1' Load - 0,6..0,8
+     .ctx Load
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b=2'''), ('keyword',
+r'''c=2'''),
+r'''c=2, b=2''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] keyword - 0,0..0,3
+     .arg 'c'
+     .value Constant 2 - 0,2..0,3
+   1] keyword - 0,5..0,8
+     .arg 'b'
+     .value Constant 2 - 0,7..0,8
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('keyword',
+r'''c=2'''),
+r'''c=2, **b3''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] keyword - 0,0..0,3
+     .arg 'c'
+     .value Constant 2 - 0,2..0,3
+   1] keyword - 0,5..0,9
+     .value Name 'b3' Load - 0,7..0,9
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b0'''), ('keyword',
+r'''**c3'''),
+r'''**NodeError('keyword arglike unpacking cannot precede positional arglike')**'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, *b1'''), ('keyword',
+r'''**c3'''),
+r'''**NodeError('keyword arglike unpacking cannot precede iterable arglike unpacking')**'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, b=2'''), ('keyword',
+r'''**c3'''),
+r'''**c3, b=2''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] keyword - 0,0..0,4
+     .value Name 'c3' Load - 0,2..0,4
+   1] keyword - 0,6..0,9
+     .arg 'b'
+     .value Constant 2 - 0,8..0,9
+'''),
+
+('', 0, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('keyword',
+r'''**c3'''),
+r'''**c3, **b3''', r'''
+_arglikes - ROOT 0,0..0,10
+  .arglikes[2]
+   0] keyword - 0,0..0,4
+     .value Name 'c3' Load - 0,2..0,4
+   1] keyword - 0,6..0,10
+     .value Name 'b3' Load - 0,8..0,10
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('Name',
+r'''c0'''),
+r'''a0, c0''', r'''
+_arglikes - ROOT 0,0..0,6
+  .arglikes[2]
+   0] Name 'a0' Load - 0,0..0,2
+   1] Name 'c0' Load - 0,4..0,6
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''*a1, **b3'''), ('Name',
+r'''c0'''),
+r'''*a1, c0''', r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'a1' Load - 0,1..0,3
+     .ctx Load
+   1] Name 'c0' Load - 0,5..0,7
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a=2, **b3'''), ('Name',
+r'''c0'''),
+r'''**NodeError('positional arglike cannot follow keyword arglike')**'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''**a3, **b3'''), ('Name',
+r'''c0'''),
+r'''**NodeError('positional arglike cannot follow keyword arglike unpacking')**'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('Starred',
+r'''*c1'''),
+r'''a0, *c1''', r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Name 'a0' Load - 0,0..0,2
+   1] Starred - 0,4..0,7
+     .value Name 'c1' Load - 0,5..0,7
+     .ctx Load
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''*a1, **b3'''), ('Starred',
+r'''*c1'''),
+r'''*a1, *c1''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'a1' Load - 0,1..0,3
+     .ctx Load
+   1] Starred - 0,5..0,8
+     .value Name 'c1' Load - 0,6..0,8
+     .ctx Load
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a=2, **b3'''), ('Starred',
+r'''*c1'''),
+r'''a=2, *c1''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] keyword - 0,0..0,3
+     .arg 'a'
+     .value Constant 2 - 0,2..0,3
+   1] Starred - 0,5..0,8
+     .value Name 'c1' Load - 0,6..0,8
+     .ctx Load
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''**a3, **b3'''), ('Starred',
+r'''*c1'''),
+r'''**NodeError('iterable arglike unpacking cannot follow keyword arglike unpacking')**'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('keyword',
+r'''c=2'''),
+r'''a0, c=2''', r'''
+_arglikes - ROOT 0,0..0,7
+  .arglikes[2]
+   0] Name 'a0' Load - 0,0..0,2
+   1] keyword - 0,4..0,7
+     .arg 'c'
+     .value Constant 2 - 0,6..0,7
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''*a1, **b3'''), ('keyword',
+r'''c=2'''),
+r'''*a1, c=2''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'a1' Load - 0,1..0,3
+     .ctx Load
+   1] keyword - 0,5..0,8
+     .arg 'c'
+     .value Constant 2 - 0,7..0,8
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a=2, **b3'''), ('keyword',
+r'''c=2'''),
+r'''a=2, c=2''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] keyword - 0,0..0,3
+     .arg 'a'
+     .value Constant 2 - 0,2..0,3
+   1] keyword - 0,5..0,8
+     .arg 'c'
+     .value Constant 2 - 0,7..0,8
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''**a3, **b3'''), ('keyword',
+r'''c=2'''),
+r'''**a3, c=2''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] keyword - 0,0..0,4
+     .value Name 'a3' Load - 0,2..0,4
+   1] keyword - 0,6..0,9
+     .arg 'c'
+     .value Constant 2 - 0,8..0,9
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a0, **b3'''), ('keyword',
+r'''**c3'''),
+r'''a0, **c3''', r'''
+_arglikes - ROOT 0,0..0,8
+  .arglikes[2]
+   0] Name 'a0' Load - 0,0..0,2
+   1] keyword - 0,4..0,8
+     .value Name 'c3' Load - 0,6..0,8
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''*a1, **b3'''), ('keyword',
+r'''**c3'''),
+r'''*a1, **c3''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] Starred - 0,0..0,3
+     .value Name 'a1' Load - 0,1..0,3
+     .ctx Load
+   1] keyword - 0,5..0,9
+     .value Name 'c3' Load - 0,7..0,9
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''a=2, **b3'''), ('keyword',
+r'''**c3'''),
+r'''a=2, **c3''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] keyword - 0,0..0,3
+     .arg 'a'
+     .value Constant 2 - 0,2..0,3
+   1] keyword - 0,5..0,9
+     .value Name 'c3' Load - 0,7..0,9
+'''),
+
+('', 1, None, None, {}, ('_arglikes',
+r'''**a3, **b3'''), ('keyword',
+r'''**c3'''),
+r'''**a3, **c3''', r'''
+_arglikes - ROOT 0,0..0,10
+  .arglikes[2]
+   0] keyword - 0,0..0,4
+     .value Name 'a3' Load - 0,2..0,4
+   1] keyword - 0,6..0,10
+     .value Name 'c3' Load - 0,8..0,10
+'''),
+],
+
 'arglike': [  # ................................................................................
 
 ('', 0, None, 'bases', {}, (None,

@@ -336,7 +336,7 @@ __all__ = [
 ]
 
 
-# leaf node types, as set for quick checks
+# leaf node types, as set for quick checks, must be frozenset() as some code depends on this for checks
 
 ASTS_LEAF_MOD                = frozenset([Module, Interactive, Expression])
 

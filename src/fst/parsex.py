@@ -743,9 +743,9 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_arg, parse_arguments, parse_arguments_lambda,
-                                    _parse_all__withitems, _parse_all__type_params, parse__arglikes,
-                                    parse__Assign_targets))
+                                   (parse_expr_all, parse_pattern, parse_arg,  # because of "vararg: *TypeVarTuple"
+                                    parse_arguments, parse_arguments_lambda, _parse_all__withitems,
+                                    _parse_all__type_params, parse__arglikes, parse__Assign_targets))
 
     if groupdict['stmt']:
         return reduce_ast(parse_stmts(src, parse_params), True)
@@ -773,9 +773,9 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             pass
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_arg, parse_arguments, parse_arguments_lambda,
-                                    _parse_all__withitems, _parse_all__type_params, parse__arglikes,
-                                    parse__Assign_targets))
+                                   (parse_expr_all, parse_pattern, parse_arg,  # because of "vararg: *TypeVarTuple"
+                                    parse_arguments, parse_arguments_lambda, _parse_all__withitems,
+                                    _parse_all__type_params, parse__arglikes, parse__Assign_targets))
 
     if groupdict['at']:
         return _parse_all_multiple(src, parse_params, True, (parse__decorator_list,))

@@ -121,7 +121,6 @@ from .asttypes import (
 )
 
 from .astutil import (
-    ARGLIKE_KIND_NAME,
     constant,
     re_alnum,
     re_alnumdot,
@@ -136,7 +135,6 @@ from .astutil import (
     is_valid_MatchMapping_key,
     get_field,
     set_field,
-    arglike_kind,
     precedence_require_parens,
 )
 
@@ -184,7 +182,7 @@ from .code import (
     code_as_constant,
 )
 
-from .fst_misc import fixup_one_index
+from .fst_misc import fixup_one_index, validate_put_arglike
 from .fst_get_one import _params_Compare
 
 
@@ -1640,18 +1638,8 @@ def _put_one__arglikes_arglikes(
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
-    arglikes = ast.arglikes
-    put_kind = arglike_kind(code.a)
 
-    if (idx and put_kind < 2
-        and (max_kind_before := max(map(arglike_kind, arglikes[:idx]))) > put_kind + 1
-    ):
-        raise NodeError(f'{ARGLIKE_KIND_NAME[put_kind]} cannot follow {ARGLIKE_KIND_NAME[max_kind_before]}')
-
-    if (idx < len(arglikes) - 1 and put_kind > 1
-        and (min_kind_after := min(map(arglike_kind, arglikes[idx + 1:]))) < put_kind - 1
-    ):
-        raise NodeError(f'{ARGLIKE_KIND_NAME[put_kind]} cannot precede {ARGLIKE_KIND_NAME[min_kind_after]}')
+    validate_put_arglike(ast.arglikes, idx, idx + 1, code.a)
 
     return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
 

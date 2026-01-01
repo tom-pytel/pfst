@@ -75,6 +75,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -82,7 +83,14 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import re_identifier, OPCLS2STR, bistr, is_valid_target, is_valid_del_target, reduce_ast
+from .astutil import (
+    re_identifier,
+    OPCLS2STR,
+    bistr,
+    is_valid_target,
+    is_valid_del_target,
+    reduce_ast,
+)
 
 from .common import (
     PYLT11,
@@ -114,6 +122,7 @@ from .code import (
     code_as_expr_all,
     code_as__Assign_targets,
     code_as__decorator_list,
+    code_as__arglikes,
     code_as__comprehensions,
     code_as__comprehension_ifs,
     code_as__aliases,
@@ -126,7 +135,7 @@ from .code import (
     _coerce_as__expr_arglikes,
 )
 
-from .fst_misc import get_option_overridable, fixup_slice_indices
+from .fst_misc import get_option_overridable, fixup_slice_indices, validate_put_arglike
 from .slice_stmtlike import put_slice_stmtlike
 from .slice_exprlike import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
 
@@ -153,12 +162,6 @@ from .fst_get_slice import (
 )
 
 from .fst_put_one import _fix_With_items
-
-
-# * Keep src same.
-# * Use normal AST and src where possible.
-# * Delimiters where would match ast.unparse().
-# * Special unparse where needed.
 
 
 #   (!) SPECIAL SLICE, (?) sometimes SPECIAL SLICE???
@@ -230,6 +233,7 @@ from .fst_put_one import _fix_With_items
 #                                                                                  .
 #                  (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes_n_kws                   - 'bases+keywords'
 #                  (Call, '_args'):                        # expr*+keyword*        -> _arglikes_n_kws                   - 'args+keywords'
+#                                                                                  .
 #                  (MatchClass, '_patterns'):              # pattern*+???                                               - 'patterns+kwd_attrs=kwd_patterns'):
 #                                                                                  .
 #                                                                                  .
@@ -869,6 +873,12 @@ def _code_to_slice__decorator_list(
     return _code_to_slice__special(self, code, 'decorator_list', one, options, _decorator_list, code_as__decorator_list)
 
 
+def _code_to_slice__arglikes(
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+) -> fst.FST | None:
+    return _code_to_slice__special(self, code, 'arglikes', one, options, _arglikes, code_as__arglikes)
+
+
 def _code_to_slice__comprehensions(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
@@ -1070,6 +1080,7 @@ def _put_slice_seq_and_asts(
 
 _SPECIAL_SLICE_STATICS = {
     _Assign_targets: slicestatic(_code_to_slice__Assign_targets, '=', True, True),
+    _arglikes:       slicestatic(_code_to_slice__arglikes, ',', False, False),
     _aliases:        slicestatic(_code_to_slice__aliases, ',', False, False),
     _withitems:      slicestatic(_code_to_slice__withitems, ',', False, False),
     _type_params:    slicestatic(_code_to_slice__type_params, ',', False, False),
@@ -2369,6 +2380,8 @@ def _put_slice__slice(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
+    """This handles generic SPECIAL SLICE puts which don't have very special rules or formatting."""
+
     ast = self.a
     static = _SPECIAL_SLICE_STATICS[ast.__class__]
     body = getattr(ast, field)
@@ -2378,8 +2391,12 @@ def _put_slice__slice(
 
     fst_ = static.code_to(self, code, one, options)
 
-    if not fst_ and not len_slice:
-        return
+    if not fst_:
+        if not len_slice:
+            return
+
+    elif ast.__class__ is _arglikes:
+        validate_put_arglike(body, start, stop, fst_.a.arglikes)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -2500,6 +2517,7 @@ _PUT_SLICE_HANDLERS = {
     (_match_cases, 'cases'):                  put_slice_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):             _put_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _put_slice_decorator_list,  # expr*
+    (_arglikes, 'arglikes'):                  _put_slice__slice,  # expr|keyword*
     (_comprehensions, 'generators'):          _put_slice_generators,  # comprehensions*
     (_comprehension_ifs, 'ifs'):              _put_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _put_slice__slice,  # alias*

@@ -65,6 +65,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -2044,6 +2045,7 @@ _GET_SLICE_HANDLERS = {
     (_match_cases, 'cases'):                  get_slice_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):             _get_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _get_slice_decorator_list,  # expr*
+    (_arglikes, 'arglikes'):                  _get_slice__slice,  # expr|keyword*
     (_comprehensions, 'generators'):          _get_slice_generators,  # comprehensions*
     (_comprehension_ifs, 'ifs'):              _get_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _get_slice__slice,  # alias*

@@ -105,7 +105,15 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import pat_alnum, constant, re_alnumdot_alnum, bistr, precedence_require_parens_by_type
+from .astutil import (
+    ARGLIKE_KIND_NAME,
+    pat_alnum,
+    constant,
+    re_alnumdot_alnum,
+    bistr,
+    precedence_require_parens_by_type,
+    arglike_kind,
+)
 
 from .common import (
     NodeError,
@@ -136,6 +144,7 @@ __all__ = [
     'fixup_one_index',
     'fixup_slice_indices',
     'fixup_field_body',
+    'validate_put_arglike',
 ]
 
 
@@ -1027,6 +1036,30 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
         raise ValueError(f'expecting a list field {ast.__class__.__name__}.{field}')
 
     return field, body
+
+
+def validate_put_arglike(body: list[AST], start: int, stop: int, ast_or_list: AST | list[AST]) -> None:
+    """Make sure that a put of a single or list of arglikes doesn't violate ordering rules for these."""
+
+    if not isinstance(ast_or_list, list):
+        kind_put_min = kind_put_max = arglike_kind(ast_or_list)
+
+    else:
+        kinds_put = list(map(arglike_kind, ast_or_list))
+        kind_put_min = min(kinds_put)
+        kind_put_max = max(kinds_put)
+
+    if (start
+        and kind_put_min < 2
+        and (kind_before_max := max(map(arglike_kind, body[:start]))) > kind_put_min + 1
+    ):
+        raise NodeError(f'{ARGLIKE_KIND_NAME[kind_put_min]} cannot follow {ARGLIKE_KIND_NAME[kind_before_max]}')
+
+    if (stop < len(body)
+        and kind_put_max > 1
+        and (kind_after_min := min(map(arglike_kind, body[stop:]))) < kind_put_max - 1
+    ):
+        raise NodeError(f'{ARGLIKE_KIND_NAME[kind_put_max]} cannot precede {ARGLIKE_KIND_NAME[kind_after_min]}')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
