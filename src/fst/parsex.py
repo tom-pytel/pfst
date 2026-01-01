@@ -188,12 +188,12 @@ _re_parse_all_category = re.compile(r'''
     (?P<async_or_for>                  (?: async | for ) \b ) |
     (?P<if>                            (?: if ) \b ) |
     (?P<except>                        (?: except ) \b ) |
-    (?P<case>                          (?: case ) \b ) |
+    (?P<case>                          (?: case ) \b ) |    # soft keyword
     (?P<not>                           (?: not ) \b ) |
     (?P<boolop>                        (?: and | or ) \b ) |
     (?P<cmpop_w>                       (?: is | in ) \b ) |
     (?P<syntax_error>                  (?: elif | else | finally | as ) \b ) |
-    (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
+    (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |  # soft keywords
     (?P<stmt_or_expr_or_pat_or_witem>  (?: [(\[{"'.\d] ) ) |
     (?P<minus>                         (?: - ) ) |
     (?P<starstar>                      (?: \*\* ) ) |
@@ -743,8 +743,9 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                    _parse_all__withitems, parse_arg, _parse_all__type_params, parse__Assign_targets))
+                                   (parse_expr_all, parse_pattern, parse_arg, parse_arguments, parse_arguments_lambda,
+                                    _parse_all__withitems, _parse_all__type_params, parse__arglikes,
+                                    parse__Assign_targets))
 
     if groupdict['stmt']:
         return reduce_ast(parse_stmts(src, parse_params), True)
@@ -772,8 +773,9 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             pass
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                    _parse_all__withitems, parse_arg, _parse_all__type_params, parse__Assign_targets))
+                                   (parse_expr_all, parse_pattern, parse_arg, parse_arguments, parse_arguments_lambda,
+                                    _parse_all__withitems, _parse_all__type_params, parse__arglikes,
+                                    parse__Assign_targets))
 
     if groupdict['at']:
         return _parse_all_multiple(src, parse_params, True, (parse__decorator_list,))
@@ -781,7 +783,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                   _parse_all__type_params, parse_operator, parse__Assign_targets))
+                                   _parse_all__type_params, parse__arglikes, parse_operator, parse__Assign_targets))
 
         if ast.__class__ is Assign and len(targets := ast.targets) == 1 and targets[0].__class__ is Starred:  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
             return _parse_all__type_params(src, parse_params)
@@ -804,8 +806,8 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         return _parse_all_multiple(src, parse_params, False, (parse_expr_all,))
 
     if groupdict['starstar']:
-        return _parse_all_multiple(src, parse_params, False, (parse_arguments, parse_arguments_lambda,
-                                                              _parse_all__type_params, parse_operator))
+        return _parse_all_multiple(src, parse_params, False, (parse_keyword, parse_arguments, parse_arguments_lambda,
+                                                              _parse_all__type_params, parse__arglikes, parse_operator))
 
     if groupdict['plus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
@@ -1265,7 +1267,7 @@ def parse__arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         raise SyntaxError('invalid arglike') from None
 
     if len(args := value.args) + len(keywords := value.keywords) != 1:
-        raise ParseError(f'expecting single arglike')
+        raise ParseError('expecting single arglike')
 
     ast = args[0] if args else keywords[0]
 

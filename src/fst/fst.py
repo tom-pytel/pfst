@@ -48,7 +48,7 @@ from .asttypes import (
     ASTS_LEAF_IMPORT,
     ASTS_LEAF_COMP,
     ASTS_LEAF_FTSTR,
-    ASTS_LEAF_FTSTR_FMT_VALUE,
+    ASTS_LEAF_FTSTR_FMT,
     ASTS_LEAF_MAYBE_DOCSTR,
     ASTS_LEAF__SLICE,
     AST,
@@ -2835,7 +2835,7 @@ class FST:
             ):
                 raise ValueError("location with 'offset' must be at or inside location of node")
 
-            field = 'value' if self.a.__class__ in ASTS_LEAF_FTSTR_FMT_VALUE else False  # the 'value' is so that modifying spacing inside a debug string updates its preceding string Constant, don't need to do this for 'reparse'
+            field = 'value' if self.a.__class__ in ASTS_LEAF_FTSTR_FMT else False  # the 'value' is so that modifying spacing inside a debug string updates its preceding string Constant, don't need to do this for 'reparse'
 
             with self._modifying(field, None):  # we use raw=None to signal that the modification should be allowed on py < 3.12 as it only offsets
                 params_offset = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, self)

@@ -6,7 +6,7 @@ from array import array
 from ast import iter_fields, walk
 from keyword import iskeyword as keyword_iskeyword
 from types import EllipsisType, NoneType
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, Literal
 from enum import IntEnum, auto
 
 from .asttypes import (
@@ -155,7 +155,7 @@ __all__ = [
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'is_valid_target', 'is_valid_del_target',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments',
-    'merge_arglikes', 'unmerge_arglikes',
+    'arglike_kind', 'merge_arglikes', 'unmerge_arglikes',
     'WalkFail', 'walk2', 'compare_asts', 'copy_ast', # 'copy_attributes', 'set_ctx',
     'last_block_header_child',
     'syntax_ordered_children',
@@ -398,6 +398,8 @@ OPSTR2CLS_BOOL = {
 
 OPSTR2CLS = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CLS_BOOL}                                ; """Mapping of operator string to operator `AST` class, e.g. `'+': ast.Add`. Unary `'-'` and `'+'` are overridden by the binary versions."""
 OPCLS2STR = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; """Mapping of operator `AST` class to operator string, e.g. `ast.Add: '+'`."""
+
+ARGLIKE_KIND_NAME = ['positional arglike', 'iterable arglike unpacking', 'keyword arglike', 'keyword arglike unpacking']
 
 
 class bistr(str):
@@ -695,6 +697,20 @@ def has_type_comments(ast: AST) -> bool:
             return True
 
     return False
+
+
+def arglike_kind(ast: AST) -> Literal[0, 1, 2, 3]:
+    """Type of arglike for ordering restrinction comparisons. Assumes `ast` is a valid arglike.
+
+    - 0: expr
+    - 1: *Starred
+    - 2: keyword=value
+    - 3: **keywordvalue
+    """
+
+    ast_cls = ast.__class__
+
+    return 1 if ast_cls is Starred else 0 if ast_cls is not keyword else 3 if ast.arg is None else 2
 
 
 def merge_arglikes(exprs: list[expr], keywords: list[keyword]) -> list[AST]:

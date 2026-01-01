@@ -11,6 +11,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR_STMT_OR_MOD,
+    ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
     Attribute,
     Constant,
@@ -866,9 +867,14 @@ def code_as__arglike(
 ) -> fst.FST:
     """Convert `code` to a single `expr_arglike` or `keyword` if possible."""
 
-    return _code_as(code, parse_params, parse__arglike, (expr, keyword), sanitize,
+    fst_ = _code_as(code, parse_params, parse__arglike, (expr, keyword), sanitize,
                     # _coerce_as__comprehension_ifs if coerce else None
-                    name='expression (arglike) or keyword')
+                    name='arglike')
+
+    if fst_ is code and fst_.a.__class__ in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # fst_ is code only if FST passed in, in which case make sure we didn't get an invalid arglike
+        raise NodeError(f'expecting arglike, got {fst_.a.__class__.__name__}', rawable=True)
+
+    return fst_
 
 
 def code_as__arglikes(

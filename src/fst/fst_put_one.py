@@ -15,6 +15,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_PATTERN,
     ASTS_LEAF_WITH,
+    ASTS_LEAF_ARGLIKE,
     AST,
     Add,
     And,
@@ -111,6 +112,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _decorator_list,
+    _arglikes,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -119,6 +121,7 @@ from .asttypes import (
 )
 
 from .astutil import (
+    ARGLIKE_KIND_NAME,
     constant,
     re_alnum,
     re_alnumdot,
@@ -133,6 +136,7 @@ from .astutil import (
     is_valid_MatchMapping_key,
     get_field,
     set_field,
+    arglike_kind,
     precedence_require_parens,
 )
 
@@ -158,6 +162,7 @@ from .code import (
     code_as_expr_arglike,
     code_as_expr_slice,
     code_as_Tuple_elt,
+    code_as__arglike,
     code_as_boolop,
     code_as_operator,
     code_as_unaryop,
@@ -236,10 +241,15 @@ def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, 
                 raise NodeError(f'{self.a.__class__.__name__}.{field} '
                                 f'cannot be {put_ast.__class__.__name__}', rawable=True)
 
-        elif restrict.__class__ is FunctionType:
+        elif (res_cls := restrict.__class__) is FunctionType:
             if not restrict(put_ast):  # not "restrict" meaning is inverted here, really means "not allow"
                 raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}'
                                 f', got {put_ast.__class__.__name__}', rawable=True)
+
+        elif res_cls is frozenset:  # ASTS_LEAF_?
+            if put_ast.__class__ not in restrict:
+                raise NodeError(f'{self.a.__class__.__name__}.{field} '
+                                f'cannot be {put_ast.__class__.__name__}', rawable=True)
 
         elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
             raise NodeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
@@ -1615,6 +1625,37 @@ def _put_one_pattern(
     return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
 
 
+def _put_one__arglikes_arglikes(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Put a single arglike (expression or keyword) to an `_arglikes` special slice. Needs own function because has
+    restricted ordering constraints."""
+
+    ast = self.a
+    child, idx = _validate_put(self, code, idx, field, child)
+    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    arglikes = ast.arglikes
+    put_kind = arglike_kind(code.a)
+
+    if (idx and put_kind < 2
+        and (max_kind_before := max(map(arglike_kind, arglikes[:idx]))) > put_kind + 1
+    ):
+        raise NodeError(f'{ARGLIKE_KIND_NAME[put_kind]} cannot follow {ARGLIKE_KIND_NAME[max_kind_before]}')
+
+    if (idx < len(arglikes) - 1 and put_kind > 1
+        and (min_kind_after := min(map(arglike_kind, arglikes[idx + 1:]))) < put_kind - 1
+    ):
+        raise NodeError(f'{ARGLIKE_KIND_NAME[put_kind]} cannot precede {ARGLIKE_KIND_NAME[min_kind_after]}')
+
+    return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
+
+
 # ......................................................................................................................
 # identifier put
 
@@ -1796,6 +1837,7 @@ def _one_info_exprlike_required(self: fst.FST, static: onestatic, idx: int | Non
 _onestatic_expr_required             = onestatic(_one_info_exprlike_required, _restrict_default)
 _onestatic_expr_required_w_starred   = onestatic(_one_info_exprlike_required, _restrict_fmtval_slice)
 _onestatic_expr_required_arglike     = onestatic(_one_info_exprlike_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)
+_onestatic__arglike_required         = onestatic(_one_info_exprlike_required, ASTS_LEAF_ARGLIKE, code_as=code_as__arglike)
 _onestatic_comprehension_required    = onestatic(_one_info_exprlike_required, comprehension, code_as=code_as_comprehension)
 _onestatic_arguments_required        = onestatic(_one_info_exprlike_required, arguments, code_as=code_as_arguments)
 _onestatic_arguments_lambda_required = onestatic(_one_info_exprlike_required, arguments, code_as=code_as_arguments_lambda)
@@ -2607,6 +2649,7 @@ _PUT_ONE_HANDLERS = {
     (_match_cases, 'cases'):              (True,  None, None),  # stmt*,  # match_case*
     (_Assign_targets, 'targets'):         (True,  _put_one_exprlike_required, _onestatic_target),  # expr*
     (_decorator_list, 'decorator_list'):  (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
+    (_arglikes, 'arglikes'):              (True,  _put_one__arglikes_arglikes, _onestatic__arglike_required),  # expr|keyword*
     (_comprehensions, 'generators'):      (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (_comprehension_ifs, 'ifs'):          (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
     (_aliases, 'names'):                  (True,  _put_one_exprlike_required, _onestatic_alias_required),  # alias*
