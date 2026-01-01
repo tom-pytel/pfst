@@ -2765,13 +2765,13 @@ r'''Name 'c' Load - ROOT 0,0..0,1'''),
 
 ('', 0, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''**NodeError('cannot put slice to ClassDef._bases')**''',
 r'''base''',
 r'''Name 'base' Load - ROOT 0,0..0,4'''),
 
 ('', 1, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''**NodeError('cannot put slice to ClassDef._bases')**''',
 r'''meta=cls''', r'''
 keyword - ROOT 0,0..0,8
   .arg 'meta'
@@ -2780,7 +2780,7 @@ keyword - ROOT 0,0..0,8
 
 ('', 2, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''**NodeError('cannot put slice to ClassDef._bases')**''',
 r'''*bases''', r'''
 Starred - ROOT 0,0..0,6
   .value Name 'bases' Load - 0,1..0,6
@@ -2789,7 +2789,7 @@ Starred - ROOT 0,0..0,6
 
 ('', 3, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot delete ClassDef._bases')**''',
+r'''**NodeError('cannot put slice to ClassDef._bases')**''',
 r'''**kws''', r'''
 keyword - ROOT 0,0..0,5
   .value Name 'kws' Load - 0,2..0,5
@@ -2800,13 +2800,13 @@ keyword - ROOT 0,0..0,5
 
 ('', 0, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot delete Call._args')**''',
+r'''**NodeError('cannot put slice to Call._args')**''',
 r'''arg''',
 r'''Name 'arg' Load - ROOT 0,0..0,3'''),
 
 ('', 1, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot delete Call._args')**''',
+r'''**NodeError('cannot put slice to Call._args')**''',
 r'''key=word''', r'''
 keyword - ROOT 0,0..0,8
   .arg 'key'
@@ -2815,7 +2815,7 @@ keyword - ROOT 0,0..0,8
 
 ('', 2, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot delete Call._args')**''',
+r'''**NodeError('cannot put slice to Call._args')**''',
 r'''*args''', r'''
 Starred - ROOT 0,0..0,5
   .value Name 'args' Load - 0,1..0,5
@@ -2824,7 +2824,7 @@ Starred - ROOT 0,0..0,5
 
 ('', 3, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot delete Call._args')**''',
+r'''**NodeError('cannot put slice to Call._args')**''',
 r'''**keywords''', r'''
 keyword - ROOT 0,0..0,10
   .value Name 'keywords' Load - 0,2..0,10

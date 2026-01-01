@@ -135,6 +135,7 @@ from .astutil import (
     is_valid_MatchMapping_key,
     get_field,
     set_field,
+    arglike_kind,
     precedence_require_parens,
 )
 
@@ -907,7 +908,7 @@ def _put_one_exprlike_required(
     ctx = ctx.__class__ if (ctx := getattr(child, 'ctx', None)) else Load
 
     put_fst = _make_exprlike_fst(self, code, idx, field, static, options, target or childf, ctx, prefix, '', validated,
-                                arglike)
+                                 arglike)
 
     childf._set_ast(put_fst.a)
 
@@ -1623,6 +1624,48 @@ def _put_one_pattern(
     return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
 
 
+def _put_one_arglikes(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Put a single arglike (expression or keyword) to a `ClassDef._bases` or `Call._args` virtual field with restricted
+    ordering constraints."""
+
+    arglikes = self._cached_arglikes()
+    child, idx = _validate_put(self, code, idx, field, arglikes)
+    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    put_kind = validate_put_arglike(arglikes, idx, idx + 1, code.a)
+    child_kind = arglike_kind(child)
+    child_field, idx = child.f.pfield
+
+    ret = _put_one_exprlike_required(self, code, idx, child_field, child, static, options, 2, arglike=True)
+
+    if put_kind >> 1 != child_kind >> 1:  # if type changed (expr vs. keyword) then we need to update lists because need to move from one to the other as our put just put it into the list that the child was in
+        ast = self.a
+        put_field = field[1:] if child_field == 'keywords' else 'keywords'
+        child_list = getattr(ast, child_field)  # list we are moving from
+        put_list = getattr(ast, put_field)  # list we are moving to
+
+        put_list.append(child_list[idx])
+
+        del child_list[idx]
+
+        for i in range(idx, len(child_list)):
+            child_list[i].f.pfield = astfield(child_field, i)
+
+        put_list.sort(key=lambda a: (a.lineno, a.col_offset))  # child_list was already ordered so only need to sort this
+
+        for i in range(len(put_list)):
+            put_list[i].f.pfield = astfield(put_field, i)
+
+    return ret
+
+
 def _put_one__arglikes_arglikes(
     self: fst.FST,
     code: _PutOneCode,
@@ -1632,8 +1675,8 @@ def _put_one__arglikes_arglikes(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Put a single arglike (expression or keyword) to an `_arglikes` special slice. Needs own function because has
-    restricted ordering constraints."""
+    """Put a single arglike (expression or keyword) to an `_arglikes` SPECIAL SLICE with restricted ordering
+    constraints."""
 
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
@@ -1641,7 +1684,7 @@ def _put_one__arglikes_arglikes(
 
     validate_put_arglike(ast.arglikes, idx, idx + 1, code.a)
 
-    return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
+    return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2, arglike=True)
 
 
 # ......................................................................................................................
@@ -2450,6 +2493,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_arglike),  # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
     (ClassDef, 'body'):                   (True,  None, None),  # stmt*
+    (ClassDef, '_bases'):                 (True,  _put_one_arglikes, _onestatic__arglike_required),  # expr|keyword*
     (Return, 'value'):                    (False, _put_one_exprlike_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
     (Delete, 'targets'):                  (True,  _put_one_exprlike_required, onestatic(_one_info_exprlike_required, is_valid_del_target, ctx_cls=Del)),  # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprlike_required, _onestatic_target),  # expr*
@@ -2540,6 +2584,7 @@ _PUT_ONE_HANDLERS = {
     (Call, 'func'):                       (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, _onestatic_expr_required_arglike),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
+    (Call, '_args'):                      (True,  _put_one_arglikes, _onestatic__arglike_required),  # expr|keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)),  # int  # onestatic only here for info for raw put, Constant must be str
     (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_format_spec, JoinedStr)),  # expr?  # onestatic only here for info for raw put
@@ -2717,6 +2762,10 @@ def _put_one_raw(
             if not to:
                 to = (child if idx is None else child[idx]).f
 
+        elif ast_cls in (Call, ClassDef):
+            child = self._cached_arglikes()
+            idx = fixup_one_index(len(child), idx)
+
         elif ast_cls is MatchMapping:
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             child = ast.keys
@@ -2747,7 +2796,7 @@ def _put_one_raw(
                 idx = None
 
         else:
-            raise RuntimeError('should not get here')  # pragma: no cover
+            raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 
     child, idx = _validate_put(self, code, idx, field, child)
 
@@ -2859,9 +2908,10 @@ def _put_one(
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementlikes and virtual fields (which have handler=None)
+        start_at = 0
+
         if not (is_virtual_field := field.startswith('_')):
             len_ = len(child)
-            start_at = 0
 
         elif field == '_body':  # block stmtlike
             is_virtual_field = False
@@ -2871,11 +2921,15 @@ def _put_one(
 
         elif (keys := getattr(ast, 'keys', None)) is not None:  # Dict, MatchMapping
             len_ = len(keys) + (1 if getattr(self.a, 'rest', None) else 0)
-            start_at = 0
 
-        else:  # Compare
+        elif (ast_cls := ast.__class__) is Compare:
             len_ = len(ast.comparators) + 1
-            start_at = 0
+
+        elif ast_cls in (Call, ClassDef):  # '_args' or '_bases'
+            len_ = len(getattr(ast, field[1:])) + len(ast.keywords)
+
+        else:
+            raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 
         idx = fixup_one_index(len_, idx, start_at)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just clip to [0..len(body))
 
@@ -2888,7 +2942,7 @@ def _put_one(
             return None
 
         if is_virtual_field:
-            assert keys is not None  # only Dict or MatchMapping get here, Compare is only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare._all has handler _put_one_Compare__all
+            assert keys is not None  # only Dict or MatchMapping get here, Compare and others are only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare and others have handlers
 
             return None
 

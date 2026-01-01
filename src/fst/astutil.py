@@ -155,7 +155,7 @@ __all__ = [
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'is_valid_target', 'is_valid_del_target',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments',
-    'arglike_kind', 'merge_arglikes', 'unmerge_arglikes',
+    'arglike_kind', 'merge_arglikes',
     'WalkFail', 'walk2', 'compare_asts', 'copy_ast', # 'copy_attributes', 'set_ctx',
     'last_block_header_child',
     'syntax_ordered_children',
@@ -702,10 +702,10 @@ def has_type_comments(ast: AST) -> bool:
 def arglike_kind(ast: AST) -> Literal[0, 1, 2, 3]:
     """Type of arglike for ordering restrinction comparisons. Assumes `ast` is a valid arglike.
 
-    - 0: expr
-    - 1: *Starred
-    - 2: keyword=value
-    - 3: **keywordvalue
+    - 0: expr: expr
+    - 1: expr: *Starred
+    - 2: keyword: keyword=value
+    - 3: keyword: **keywordvalue
     """
 
     ast_cls = ast.__class__
@@ -726,10 +726,6 @@ def merge_arglikes(exprs: list[expr], keywords: list[keyword]) -> list[AST]:
     arglikes.sort(key=lambda a: (a.lineno, a.col_offset))
 
     return arglikes
-
-
-def unmerge_arglikes() -> None:
-    raise NotImplementedError
 
 
 class WalkFail(Exception):

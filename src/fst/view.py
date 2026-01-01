@@ -722,7 +722,7 @@ class fstview_arglikes(fstview):
     def _len_field(self) -> int:
         ast = self.base.a
 
-        return len(getattr(ast, self.field)) + len(ast.keywords)
+        return len(getattr(ast, self.field[1:])) + len(ast.keywords)
 
     def _deref_one(self, idx: int) -> AST | str:
         return self.base._cached_arglikes()[idx]

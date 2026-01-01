@@ -5146,7 +5146,7 @@ class FST:
         """
 
         if self.a.__class__ is Call:
-            return fstview_arglikes(self, 'args')
+            return fstview_arglikes(self, '_args')
 
         raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_args'")
 
@@ -5173,7 +5173,7 @@ class FST:
         """
 
         if self.a.__class__ is ClassDef:
-            return fstview_arglikes(self, 'bases')
+            return fstview_arglikes(self, '_bases')
 
         raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_bases'")
 

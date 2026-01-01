@@ -13765,6 +13765,852 @@ r'''V: list[int]'''),
 r'''**IndexError('index out of range')**'''),
 ],
 
+'Call__args': [  # ................................................................................
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b0)'''), ('Name',
+r'''c0'''),
+r'''call(c0, b0)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'c0' Load - 0,5..0,7
+   1] Name 'b0' Load - 0,9..0,11
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, *b1)'''), ('Name',
+r'''c0'''),
+r'''call(c0, *b1)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'c0' Load - 0,5..0,7
+   1] Starred - 0,9..0,12
+     .value Name 'b1' Load - 0,10..0,12
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b=2)'''), ('Name',
+r'''c0'''),
+r'''call(c0, b=2)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'c0' Load - 0,5..0,7
+  .keywords[1]
+   0] keyword - 0,9..0,12
+     .arg 'b'
+     .value Constant 2 - 0,11..0,12
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('Name',
+r'''c0'''),
+r'''call(c0, **b3)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'c0' Load - 0,5..0,7
+  .keywords[1]
+   0] keyword - 0,9..0,13
+     .value Name 'b3' Load - 0,11..0,13
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b0)'''), ('Starred',
+r'''*c1'''),
+r'''call(*c1, b0)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Starred - 0,5..0,8
+     .value Name 'c1' Load - 0,6..0,8
+     .ctx Load
+   1] Name 'b0' Load - 0,10..0,12
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, *b1)'''), ('Starred',
+r'''*c1'''),
+r'''call(*c1, *b1)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Starred - 0,5..0,8
+     .value Name 'c1' Load - 0,6..0,8
+     .ctx Load
+   1] Starred - 0,10..0,13
+     .value Name 'b1' Load - 0,11..0,13
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b=2)'''), ('Starred',
+r'''*c1'''),
+r'''call(*c1, b=2)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,8
+     .value Name 'c1' Load - 0,6..0,8
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .arg 'b'
+     .value Constant 2 - 0,12..0,13
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('Starred',
+r'''*c1'''),
+r'''call(*c1, **b3)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,8
+     .value Name 'c1' Load - 0,6..0,8
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,14
+     .value Name 'b3' Load - 0,12..0,14
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b0)'''), ('keyword',
+r'''c=2'''),
+r'''**NodeError('keyword arglike cannot precede positional arglike')**'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, *b1)'''), ('keyword',
+r'''c=2'''),
+r'''call(c=2, *b1)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,10..0,13
+     .value Name 'b1' Load - 0,11..0,13
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .arg 'c'
+     .value Constant 2 - 0,7..0,8
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b=2)'''), ('keyword',
+r'''c=2'''),
+r'''call(c=2, b=2)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,8
+     .arg 'c'
+     .value Constant 2 - 0,7..0,8
+   1] keyword - 0,10..0,13
+     .arg 'b'
+     .value Constant 2 - 0,12..0,13
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('keyword',
+r'''c=2'''),
+r'''call(c=2, **b3)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,8
+     .arg 'c'
+     .value Constant 2 - 0,7..0,8
+   1] keyword - 0,10..0,14
+     .value Name 'b3' Load - 0,12..0,14
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b0)'''), ('keyword',
+r'''**c3'''),
+r'''**NodeError('keyword arglike unpacking cannot precede positional arglike')**'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, *b1)'''), ('keyword',
+r'''**c3'''),
+r'''**NodeError('keyword arglike unpacking cannot precede iterable arglike unpacking')**'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, b=2)'''), ('keyword',
+r'''**c3'''),
+r'''call(**c3, b=2)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,9
+     .value Name 'c3' Load - 0,7..0,9
+   1] keyword - 0,11..0,14
+     .arg 'b'
+     .value Constant 2 - 0,13..0,14
+'''),
+
+('', 0, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('keyword',
+r'''**c3'''),
+r'''call(**c3, **b3)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,9
+     .value Name 'c3' Load - 0,7..0,9
+   1] keyword - 0,11..0,15
+     .value Name 'b3' Load - 0,13..0,15
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('Name',
+r'''c0'''),
+r'''call(a0, c0)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a0' Load - 0,5..0,7
+   1] Name 'c0' Load - 0,9..0,11
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(*a1, **b3)'''), ('Name',
+r'''c0'''),
+r'''call(*a1, c0)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Starred - 0,5..0,8
+     .value Name 'a1' Load - 0,6..0,8
+     .ctx Load
+   1] Name 'c0' Load - 0,10..0,12
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a=2, **b3)'''), ('Name',
+r'''c0'''),
+r'''**NodeError('positional arglike cannot follow keyword arglike')**'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(**a3, **b3)'''), ('Name',
+r'''c0'''),
+r'''**NodeError('positional arglike cannot follow keyword arglike unpacking')**'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('Starred',
+r'''*c1'''),
+r'''call(a0, *c1)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a0' Load - 0,5..0,7
+   1] Starred - 0,9..0,12
+     .value Name 'c1' Load - 0,10..0,12
+     .ctx Load
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(*a1, **b3)'''), ('Starred',
+r'''*c1'''),
+r'''call(*a1, *c1)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Starred - 0,5..0,8
+     .value Name 'a1' Load - 0,6..0,8
+     .ctx Load
+   1] Starred - 0,10..0,13
+     .value Name 'c1' Load - 0,11..0,13
+     .ctx Load
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a=2, **b3)'''), ('Starred',
+r'''*c1'''),
+r'''call(a=2, *c1)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,10..0,13
+     .value Name 'c1' Load - 0,11..0,13
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .arg 'a'
+     .value Constant 2 - 0,7..0,8
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(**a3, **b3)'''), ('Starred',
+r'''*c1'''),
+r'''**NodeError('iterable arglike unpacking cannot follow keyword arglike unpacking')**'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('keyword',
+r'''c=2'''),
+r'''call(a0, c=2)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a0' Load - 0,5..0,7
+  .keywords[1]
+   0] keyword - 0,9..0,12
+     .arg 'c'
+     .value Constant 2 - 0,11..0,12
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(*a1, **b3)'''), ('keyword',
+r'''c=2'''),
+r'''call(*a1, c=2)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,8
+     .value Name 'a1' Load - 0,6..0,8
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .arg 'c'
+     .value Constant 2 - 0,12..0,13
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a=2, **b3)'''), ('keyword',
+r'''c=2'''),
+r'''call(a=2, c=2)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,8
+     .arg 'a'
+     .value Constant 2 - 0,7..0,8
+   1] keyword - 0,10..0,13
+     .arg 'c'
+     .value Constant 2 - 0,12..0,13
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(**a3, **b3)'''), ('keyword',
+r'''c=2'''),
+r'''call(**a3, c=2)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,9
+     .value Name 'a3' Load - 0,7..0,9
+   1] keyword - 0,11..0,14
+     .arg 'c'
+     .value Constant 2 - 0,13..0,14
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a0, **b3)'''), ('keyword',
+r'''**c3'''),
+r'''call(a0, **c3)''', r'''
+Call - ROOT 0,0..0,14
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a0' Load - 0,5..0,7
+  .keywords[1]
+   0] keyword - 0,9..0,13
+     .value Name 'c3' Load - 0,11..0,13
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(*a1, **b3)'''), ('keyword',
+r'''**c3'''),
+r'''call(*a1, **c3)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,8
+     .value Name 'a1' Load - 0,6..0,8
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,14
+     .value Name 'c3' Load - 0,12..0,14
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(a=2, **b3)'''), ('keyword',
+r'''**c3'''),
+r'''call(a=2, **c3)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,8
+     .arg 'a'
+     .value Constant 2 - 0,7..0,8
+   1] keyword - 0,10..0,14
+     .value Name 'c3' Load - 0,12..0,14
+'''),
+
+('', 1, None, '_args', {}, ('Call',
+r'''call(**a3, **b3)'''), ('keyword',
+r'''**c3'''),
+r'''call(**a3, **c3)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[2]
+   0] keyword - 0,5..0,9
+     .value Name 'a3' Load - 0,7..0,9
+   1] keyword - 0,11..0,15
+     .value Name 'c3' Load - 0,13..0,15
+'''),
+],
+
+'ClassDef__bases': [  # ................................................................................
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b0): pass'''), ('Name',
+r'''c0'''),
+r'''class cls(c0, b0): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[2]
+   0] Name 'c0' Load - 0,10..0,12
+   1] Name 'b0' Load - 0,14..0,16
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, *b1): pass'''), ('Name',
+r'''c0'''),
+r'''class cls(c0, *b1): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[2]
+   0] Name 'c0' Load - 0,10..0,12
+   1] Starred - 0,14..0,17
+     .value Name 'b1' Load - 0,15..0,17
+     .ctx Load
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b=2): pass'''), ('Name',
+r'''c0'''),
+r'''class cls(c0, b=2): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[1]
+   0] Name 'c0' Load - 0,10..0,12
+  .keywords[1]
+   0] keyword - 0,14..0,17
+     .arg 'b'
+     .value Constant 2 - 0,16..0,17
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('Name',
+r'''c0'''),
+r'''class cls(c0, **b3): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[1]
+   0] Name 'c0' Load - 0,10..0,12
+  .keywords[1]
+   0] keyword - 0,14..0,18
+     .value Name 'b3' Load - 0,16..0,18
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b0): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(*c1, b0): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[2]
+   0] Starred - 0,10..0,13
+     .value Name 'c1' Load - 0,11..0,13
+     .ctx Load
+   1] Name 'b0' Load - 0,15..0,17
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, *b1): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(*c1, *b1): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[2]
+   0] Starred - 0,10..0,13
+     .value Name 'c1' Load - 0,11..0,13
+     .ctx Load
+   1] Starred - 0,15..0,18
+     .value Name 'b1' Load - 0,16..0,18
+     .ctx Load
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b=2): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(*c1, b=2): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,10..0,13
+     .value Name 'c1' Load - 0,11..0,13
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,15..0,18
+     .arg 'b'
+     .value Constant 2 - 0,17..0,18
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(*c1, **b3): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,10..0,13
+     .value Name 'c1' Load - 0,11..0,13
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,15..0,19
+     .value Name 'b3' Load - 0,17..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b0): pass'''), ('keyword',
+r'''c=2'''),
+r'''**NodeError('keyword arglike cannot precede positional arglike')**'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, *b1): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(c=2, *b1): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,15..0,18
+     .value Name 'b1' Load - 0,16..0,18
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .arg 'c'
+     .value Constant 2 - 0,12..0,13
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b=2): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(c=2, b=2): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,13
+     .arg 'c'
+     .value Constant 2 - 0,12..0,13
+   1] keyword - 0,15..0,18
+     .arg 'b'
+     .value Constant 2 - 0,17..0,18
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(c=2, **b3): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,13
+     .arg 'c'
+     .value Constant 2 - 0,12..0,13
+   1] keyword - 0,15..0,19
+     .value Name 'b3' Load - 0,17..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b0): pass'''), ('keyword',
+r'''**c3'''),
+r'''**NodeError('keyword arglike unpacking cannot precede positional arglike')**'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, *b1): pass'''), ('keyword',
+r'''**c3'''),
+r'''**NodeError('keyword arglike unpacking cannot precede iterable arglike unpacking')**'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, b=2): pass'''), ('keyword',
+r'''**c3'''),
+r'''class cls(**c3, b=2): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,14
+     .value Name 'c3' Load - 0,12..0,14
+   1] keyword - 0,16..0,19
+     .arg 'b'
+     .value Constant 2 - 0,18..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 0, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('keyword',
+r'''**c3'''),
+r'''class cls(**c3, **b3): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,14
+     .value Name 'c3' Load - 0,12..0,14
+   1] keyword - 0,16..0,20
+     .value Name 'b3' Load - 0,18..0,20
+  .body[1]
+   0] Pass - 0,23..0,27
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('Name',
+r'''c0'''),
+r'''class cls(a0, c0): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[2]
+   0] Name 'a0' Load - 0,10..0,12
+   1] Name 'c0' Load - 0,14..0,16
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(*a1, **b3): pass'''), ('Name',
+r'''c0'''),
+r'''class cls(*a1, c0): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[2]
+   0] Starred - 0,10..0,13
+     .value Name 'a1' Load - 0,11..0,13
+     .ctx Load
+   1] Name 'c0' Load - 0,15..0,17
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a=2, **b3): pass'''), ('Name',
+r'''c0'''),
+r'''**NodeError('positional arglike cannot follow keyword arglike')**'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(**a3, **b3): pass'''), ('Name',
+r'''c0'''),
+r'''**NodeError('positional arglike cannot follow keyword arglike unpacking')**'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(a0, *c1): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[2]
+   0] Name 'a0' Load - 0,10..0,12
+   1] Starred - 0,14..0,17
+     .value Name 'c1' Load - 0,15..0,17
+     .ctx Load
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(*a1, **b3): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(*a1, *c1): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[2]
+   0] Starred - 0,10..0,13
+     .value Name 'a1' Load - 0,11..0,13
+     .ctx Load
+   1] Starred - 0,15..0,18
+     .value Name 'c1' Load - 0,16..0,18
+     .ctx Load
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a=2, **b3): pass'''), ('Starred',
+r'''*c1'''),
+r'''class cls(a=2, *c1): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,15..0,18
+     .value Name 'c1' Load - 0,16..0,18
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .arg 'a'
+     .value Constant 2 - 0,12..0,13
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(**a3, **b3): pass'''), ('Starred',
+r'''*c1'''),
+r'''**NodeError('iterable arglike unpacking cannot follow keyword arglike unpacking')**'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(a0, c=2): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[1]
+   0] Name 'a0' Load - 0,10..0,12
+  .keywords[1]
+   0] keyword - 0,14..0,17
+     .arg 'c'
+     .value Constant 2 - 0,16..0,17
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(*a1, **b3): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(*a1, c=2): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,10..0,13
+     .value Name 'a1' Load - 0,11..0,13
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,15..0,18
+     .arg 'c'
+     .value Constant 2 - 0,17..0,18
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a=2, **b3): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(a=2, c=2): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,13
+     .arg 'a'
+     .value Constant 2 - 0,12..0,13
+   1] keyword - 0,15..0,18
+     .arg 'c'
+     .value Constant 2 - 0,17..0,18
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(**a3, **b3): pass'''), ('keyword',
+r'''c=2'''),
+r'''class cls(**a3, c=2): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,14
+     .value Name 'a3' Load - 0,12..0,14
+   1] keyword - 0,16..0,19
+     .arg 'c'
+     .value Constant 2 - 0,18..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a0, **b3): pass'''), ('keyword',
+r'''**c3'''),
+r'''class cls(a0, **c3): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[1]
+   0] Name 'a0' Load - 0,10..0,12
+  .keywords[1]
+   0] keyword - 0,14..0,18
+     .value Name 'c3' Load - 0,16..0,18
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(*a1, **b3): pass'''), ('keyword',
+r'''**c3'''),
+r'''class cls(*a1, **c3): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,10..0,13
+     .value Name 'a1' Load - 0,11..0,13
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,15..0,19
+     .value Name 'c3' Load - 0,17..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(a=2, **b3): pass'''), ('keyword',
+r'''**c3'''),
+r'''class cls(a=2, **c3): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,13
+     .arg 'a'
+     .value Constant 2 - 0,12..0,13
+   1] keyword - 0,15..0,19
+     .value Name 'c3' Load - 0,17..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 1, None, '_bases', {}, ('ClassDef',
+r'''class cls(**a3, **b3): pass'''), ('keyword',
+r'''**c3'''),
+r'''class cls(**a3, **c3): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .keywords[2]
+   0] keyword - 0,10..0,14
+     .value Name 'a3' Load - 0,12..0,14
+   1] keyword - 0,16..0,20
+     .value Name 'c3' Load - 0,18..0,20
+  .body[1]
+   0] Pass - 0,23..0,27
+'''),
+],
+
 '_arglikes': [  # ................................................................................
 
 ('', 0, None, None, {}, ('_arglikes',
@@ -14126,7 +14972,7 @@ _arglikes - ROOT 0,0..0,10
 '''),
 ],
 
-'arglike': [  # ................................................................................
+'arglike_no_parenthesize': [  # ................................................................................
 
 ('', 0, None, 'bases', {}, (None,
 r'''class cls(b): pass'''),
@@ -14208,60 +15054,51 @@ Subscript - ROOT 0,0..0,14
     .ctx Load
   .ctx Load
 '''),
-],
 
-'virtual_fields': [  # ................................................................................
-
-('', 1, None, '_all', {}, ('Dict',
-r'''{1: a, 2: b, 3: c}'''),
-r'''**DEL**''',
-r'''{1: a, 3: c}''', r'''
-Dict - ROOT 0,0..0,12
-  .keys[2]
-   0] Constant 1 - 0,1..0,2
-   1] Constant 3 - 0,7..0,8
-  .values[2]
-   0] Name 'a' Load - 0,4..0,5
-   1] Name 'c' Load - 0,10..0,11
+('', 1, None, '_bases', {}, (None,
+r'''class cls(a, *b): pass'''),
+r'''*not b''',
+r'''class cls(a, *not b): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,19
+     .value UnaryOp - 0,14..0,19
+       .op Not - 0,14..0,17
+       .operand Name 'b' Load - 0,18..0,19
+     .ctx Load
+  .body[1]
+   0] Pass - 0,22..0,26
 '''),
 
-('', 1, None, '_all', {}, ('MatchMapping',
-r'''{1: a, 2: b, 3: c}'''),
-r'''**DEL**''',
-r'''{1: a, 3: c}''', r'''
-MatchMapping - ROOT 0,0..0,12
-  .keys[2]
-   0] Constant 1 - 0,1..0,2
-   1] Constant 3 - 0,7..0,8
-  .patterns[2]
-   0] MatchAs - 0,4..0,5
-     .name 'a'
-   1] MatchAs - 0,10..0,11
-     .name 'c'
+('', 1, None, '_args', {}, (None,
+r'''call(a, *b)'''),
+r'''*not b''',
+r'''call(a, *not b)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,14
+     .value UnaryOp - 0,9..0,14
+       .op Not - 0,9..0,12
+       .operand Name 'b' Load - 0,13..0,14
+     .ctx Load
 '''),
 
-('', 1, None, '_all', {'_verify_get': False}, ('Compare',
-r'''a < b > c'''),
-r'''**DEL**''',
-r'''a > c''', r'''
-Compare - ROOT 0,0..0,5
-  .left Name 'a' Load - 0,0..0,1
-  .ops[1]
-   0] Gt - 0,2..0,3
-  .comparators[1]
-   0] Name 'c' Load - 0,4..0,5
-'''),
-
-('', 1, None, '_all', {'_verify_get': False, 'op_side': 'right'}, ('Compare',
-r'''a < b > c'''),
-r'''**DEL**''',
-r'''a < c''', r'''
-Compare - ROOT 0,0..0,5
-  .left Name 'a' Load - 0,0..0,1
-  .ops[1]
-   0] Lt - 0,2..0,3
-  .comparators[1]
-   0] Name 'c' Load - 0,4..0,5
+('', 1, None, None, {}, ('_arglikes',
+r'''a, *b'''),
+r'''*not b''',
+r'''a, *not b''', r'''
+_arglikes - ROOT 0,0..0,9
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,9
+     .value UnaryOp - 0,4..0,9
+       .op Not - 0,4..0,7
+       .operand Name 'b' Load - 0,8..0,9
+     .ctx Load
 '''),
 ],
 
@@ -15098,6 +15935,61 @@ r'''x:y:z'''),
 r'''**NodeError('expecting withitem, got Slice, could not coerce')**'''),
 ],
 
+'virtual_field__all': [  # ................................................................................
+
+('', 1, None, '_all', {}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''),
+r'''**DEL**''',
+r'''{1: a, 3: c}''', r'''
+Dict - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 3 - 0,7..0,8
+  .values[2]
+   0] Name 'a' Load - 0,4..0,5
+   1] Name 'c' Load - 0,10..0,11
+'''),
+
+('', 1, None, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''),
+r'''**DEL**''',
+r'''{1: a, 3: c}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 3 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'c'
+'''),
+
+('', 1, None, '_all', {'_verify_get': False}, ('Compare',
+r'''a < b > c'''),
+r'''**DEL**''',
+r'''a > c''', r'''
+Compare - ROOT 0,0..0,5
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Gt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 0,4..0,5
+'''),
+
+('', 1, None, '_all', {'_verify_get': False, 'op_side': 'right'}, ('Compare',
+r'''a < b > c'''),
+r'''**DEL**''',
+r'''a < c''', r'''
+Compare - ROOT 0,0..0,5
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 0,4..0,5
+'''),
+],
+
 'virtual_field__body': [  # ................................................................................
 
 ('', 0, None, '_body', {}, ('Module', r'''
@@ -15720,6 +16612,36 @@ For - ROOT 0,0..1,5
   .body[1]
    0] Expr - 1,4..1,5
      .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', 1, None, '_bases', {'raw': True, 'to': 'keywords[0]'}, (None,
+r'''class cls(a, *b, c=d, **e): pass'''),
+r'''x''',
+r'''class cls(a, x, **e): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Name 'x' Load - 0,13..0,14
+  .keywords[1]
+   0] keyword - 0,16..0,19
+     .value Name 'e' Load - 0,18..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 1, None, '_args', {'raw': True, 'to': 'keywords[0]'}, (None,
+r'''call(a, *b, c=d, **e)'''),
+r'''x''',
+r'''call(a, x, **e)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Name 'x' Load - 0,8..0,9
+  .keywords[1]
+   0] keyword - 0,11..0,14
+     .value Name 'e' Load - 0,13..0,14
 '''),
 ],
 

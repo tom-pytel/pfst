@@ -1039,16 +1039,22 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
     return field, body
 
 
-def validate_put_arglike(body: list[AST], start: int, stop: int, ast_or_list: AST | list[AST]) -> None:
-    """Make sure that a put of a single or list of arglikes doesn't violate ordering rules for these."""
+def validate_put_arglike(body: list[AST], start: int, stop: int, ast_or_list: AST | list[AST]) -> int | tuple[int, int]:
+    """Make sure that a put of a single or list of arglikes doesn't violate ordering rules for these.
+
+    **Returns:**
+    - `kind`: Single arglike kind if `AST` passed in.
+    - `(min kind, max kind)`: Minumum and maximum arglike kind if list passed in.
+    """
 
     if not isinstance(ast_or_list, list):
-        kind_put_min = kind_put_max = arglike_kind(ast_or_list)
+        ret = kind_put_min = kind_put_max = arglike_kind(ast_or_list)
 
     else:
         kinds_put = list(map(arglike_kind, ast_or_list))
         kind_put_min = min(kinds_put)
         kind_put_max = max(kinds_put)
+        ret = (kind_put_min, kind_put_max)
 
     if (start
         and kind_put_min < 2
@@ -1061,6 +1067,8 @@ def validate_put_arglike(body: list[AST], start: int, stop: int, ast_or_list: AS
         and (kind_after_min := min(map(arglike_kind, body[stop:]))) < kind_put_max - 1
     ):
         raise NodeError(f'{ARGLIKE_KIND_NAME[kind_put_max]} cannot precede {ARGLIKE_KIND_NAME[kind_after_min]}')
+
+    return ret
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1097,7 +1105,7 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
 
 
 def _cached_arglikes(self: fst.FST) -> list[AST]:
-    """Get cached merged arglikes from `Call.args+keywords` or `ClassDef.bases+keywords`."""
+    """Get cached merged ordered arglikes from `Call.args+keywords` or `ClassDef.bases+keywords`."""
 
     try:
         arglikes = self._cache['arglikes']
