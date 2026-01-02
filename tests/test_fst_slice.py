@@ -2573,7 +2573,7 @@ if 1:
         if PYGE11:
             # multiple arglikes as `one` to single arglike field
 
-            self.assertEqual('call((*not a, *b or c))', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), one=True).src)  # TODO this should be fixed on put
+            self.assertEqual('call((*not a, *b or c))', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), 'args', one=True).src)  # TODO this should be fixed on put?
             self.assertFalse(f.verify(raise_=False))
 
         # more unparenthesized tuple schenanigans
@@ -3266,8 +3266,8 @@ i ; \\
         self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]').a, 0, 2, 'bases', raw=True).src)
         self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)').a, 0, 2, 'bases', raw=True).src)
 
-        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('[x]').a, 0, 2, raw=True).src)
-        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('[x]').a, 0, 2, 'args', raw=True).src)
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('(x,)').a, 0, 2, 'args', raw=True).src)
 
         self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('[x]').a, 0, 2, raw=True).src)
         self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
@@ -3275,8 +3275,8 @@ i ; \\
         self.assertEqual('class cls([x] ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]').a, 0, 2, 'bases', raw=True, one=True).src)
         self.assertEqual('class cls((x,) ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)').a, 0, 2, 'bases', raw=True, one=True).src)
 
-        self.assertEqual('call([x] ,)', FST('call(a, b ,)').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
-        self.assertEqual('call((x,) ,)', FST('call(a, b ,)').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('call([x] ,)', FST('call(a, b ,)').put_slice(FST('[x]').a, 0, 2, 'args', raw=True, one=True).src)
+        self.assertEqual('call((x,) ,)', FST('call(a, b ,)').put_slice(FST('(x,)').a, 0, 2, 'args', raw=True, one=True).src)
 
         self.assertEqual('del [x] ,', FST('del a, b ,').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
         self.assertEqual('del (x,) ,', FST('del a, b ,').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
@@ -3619,8 +3619,8 @@ i ; \\
         self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]'), 0, 2, 'bases', raw=True).src)
         self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)'), 0, 2, 'bases', raw=True).src)
 
-        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('[x]'), 0, 2, raw=True).src)
-        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('[x]'), 0, 2, 'args', raw=True).src)
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('(x,)'), 0, 2, 'args', raw=True).src)
 
         self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('[x]'), 0, 2, raw=True).src)
         self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('(x,)'), 0, 2, raw=True).src)
@@ -3628,8 +3628,8 @@ i ; \\
         self.assertEqual('class cls([x] ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]'), 0, 2, 'bases', raw=True, one=True).src)
         self.assertEqual('class cls((x,) ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)'), 0, 2, 'bases', raw=True, one=True).src)
 
-        self.assertEqual('call([x] ,)', FST('call(a, b ,)').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
-        self.assertEqual('call((x,) ,)', FST('call(a, b ,)').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('call([x] ,)', FST('call(a, b ,)').put_slice(FST('[x]'), 0, 2, 'args', raw=True, one=True).src)
+        self.assertEqual('call((x,) ,)', FST('call(a, b ,)').put_slice(FST('(x,)'), 0, 2, 'args', raw=True, one=True).src)
 
         self.assertEqual('del [x] ,', FST('del a, b ,').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
         self.assertEqual('del (x,) ,', FST('del a, b ,').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)

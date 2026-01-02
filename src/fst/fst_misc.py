@@ -226,12 +226,12 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('values',                (BoolOp, JoinedStr, TemplateStr)),
     ('generators',            (_comprehensions,)),
     ('ifs',                   (_comprehension_ifs,)),
-    ('args',                  (Call,)),  # potential conflict of default body with put to empty 'set()'
 
-    # special case fields
+    # virtual fields
     ('_all',                  (Dict,)),          # key:value
     ('_all',                  (MatchMapping,)),  # key:pattern,rest?
     ('_all',                  (Compare,)),       # left,op:comparator
+    ('_args',                 (Call,)),          # args+keywords
 
     # single value fields
     ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,

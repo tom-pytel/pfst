@@ -159,7 +159,7 @@ ClassDef - ROOT 0,0..0,18
 
 ........................................................................................................................
 >>> f = FST('call(*not a, *[] or ())')
->>> g = f.get_slice(pars_arglike=False)
+>>> g = f.get_slice('args', pars_arglike=False)
 >>> g.src
 '(*not a, *[] or ())'
 >>> g.dump()

@@ -7766,7 +7766,7 @@ r'''[i for i in j if a if (b)]'''), (None,
 r'''new'''),
 r'''**IndexError('index out of range')**'''),
 
-('body[0].value', 0, None, None, {}, ('exec',
+('body[0].value', 0, None, 'args', {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''**DEL**'''),
 r'''call((b))''', r'''
@@ -7779,7 +7779,7 @@ Module - ROOT 0,0..0,9
         0] Name 'b' Load - 0,6..0,7
 '''),
 
-('body[0].value', 0, None, None, {}, ('exec',
+('body[0].value', 0, None, 'args', {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''new'''),
 r'''call(new, (b))''', r'''
@@ -7793,7 +7793,7 @@ Module - ROOT 0,0..0,14
         1] Name 'b' Load - 0,11..0,12
 '''),
 
-('body[0].value', 1, None, None, {}, ('exec',
+('body[0].value', 1, None, 'args', {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''new'''),
 r'''call(a, new)''', r'''
@@ -7807,7 +7807,7 @@ Module - ROOT 0,0..0,12
         1] Name 'new' Load - 0,8..0,11
 '''),
 
-('body[0].value', -1, None, None, {}, ('exec',
+('body[0].value', -1, None, 'args', {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''new'''),
 r'''call(a, new)''', r'''
@@ -7821,7 +7821,7 @@ Module - ROOT 0,0..0,12
         1] Name 'new' Load - 0,8..0,11
 '''),
 
-('body[0].value', -2, None, None, {}, ('exec',
+('body[0].value', -2, None, 'args', {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''f()'''),
 r'''call(f(), (b))''', r'''
@@ -7836,12 +7836,12 @@ Module - ROOT 0,0..0,14
         1] Name 'b' Load - 0,11..0,12
 '''),
 
-('body[0].value', -4, None, None, {}, ('exec',
+('body[0].value', -4, None, 'args', {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''new'''),
 r'''**IndexError('index out of range')**'''),
 
-('body[0].value', 0, None, None, {}, ('exec',
+('body[0].value', 0, None, 'args', {}, ('exec',
 r'''call(i for i in j)'''), (None,
 r'''new'''),
 r'''call(new)''', r'''
@@ -7854,7 +7854,7 @@ Module - ROOT 0,0..0,9
         0] Name 'new' Load - 0,5..0,8
 '''),
 
-('body[0].value', 0, None, None, {}, ('exec',
+('body[0].value', 0, None, 'args', {}, ('exec',
 r'''call((i for i in j))'''), (None,
 r'''new'''),
 r'''call(new)''', r'''
@@ -7867,7 +7867,7 @@ Module - ROOT 0,0..0,9
         0] Name 'new' Load - 0,5..0,8
 '''),
 
-('body[0].value', 0, None, None, {}, ('exec',
+('body[0].value', 0, None, 'args', {}, ('exec',
 r'''call(i for i in j)'''), (None,
 r'''(a for a in b)'''),
 r'''call((a for a in b))''', r'''
@@ -7886,7 +7886,7 @@ Module - ROOT 0,0..0,20
              .is_async 0
 '''),
 
-('body[0].value', 0, None, None, {}, ('exec',
+('body[0].value', 0, None, 'args', {}, ('exec',
 r'''call((i for i in j))'''), (None,
 r'''(a for a in b)'''),
 r'''call((a for a in b))''', r'''
@@ -14979,7 +14979,7 @@ ClassDef - ROOT 0,0..0,23
    0] Pass - 0,19..0,23
 '''),
 
-('', 0, None, None, {}, (None,
+('', 0, None, 'args', {}, (None,
 r'''call(a)'''),
 r'''*not a''',
 r'''call(*not a)''', r'''

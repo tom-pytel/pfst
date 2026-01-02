@@ -19652,7 +19652,7 @@ Compare - ROOT 1,0..1,1
 
 'Call_args': [  # ................................................................................
 
-('', 0, 0, None, {}, (None,
+('', 0, 0, 'args', {}, (None,
 r'''call(a, *b)'''),
 r'''call(a, *b)''', r'''
 Call - ROOT 0,0..0,11
@@ -19668,7 +19668,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', 0, 'end', None, {}, (None,
+('', 0, 'end', 'args', {}, (None,
 r'''call(a, *b)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -19684,7 +19684,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('', 0, 1, None, {}, (None,
+('', 0, 1, 'args', {}, (None,
 r'''call(a, *b)'''),
 r'''call(*b)''', r'''
 Call - ROOT 0,0..0,8
@@ -19701,7 +19701,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None,
+('', 1, 2, 'args', {}, (None,
 r'''call(a, *b)'''),
 r'''call(a)''', r'''
 Call - ROOT 0,0..0,7
@@ -19718,7 +19718,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', 0, 'end', None, {}, (None,
+('', 0, 'end', 'args', {}, (None,
 r'''call(a, *b, c=d)'''),
 r'''call(c=d)''', r'''
 Call - ROOT 0,0..0,9
@@ -19738,7 +19738,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('', 0, 1, None, {}, (None,
+('', 0, 1, 'args', {}, (None,
 r'''call(a, *b, c=d)'''),
 r'''call(*b, c=d)''', r'''
 Call - ROOT 0,0..0,13
@@ -19759,7 +19759,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None,
+('', 1, 2, 'args', {}, (None,
 r'''call(a, *b, c=d)'''),
 r'''call(a, c=d)''', r'''
 Call - ROOT 0,0..0,12
@@ -19780,7 +19780,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', 0, 'end', None, {}, (None,
+('', 0, 'end', 'args', {}, (None,
 r'''call(a, *b, **c)'''),
 r'''call(**c)''', r'''
 Call - ROOT 0,0..0,9
@@ -19799,7 +19799,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('', 0, 1, None, {}, (None,
+('', 0, 1, 'args', {}, (None,
 r'''call(a, *b, **c)'''),
 r'''call(*b, **c)''', r'''
 Call - ROOT 0,0..0,13
@@ -19819,7 +19819,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None,
+('', 1, 2, 'args', {}, (None,
 r'''call(a, *b, **c)'''),
 r'''call(a, **c)''', r'''
 Call - ROOT 0,0..0,12
@@ -19839,7 +19839,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None, r'''
+('', 1, 2, 'args', {}, (None, r'''
 call( \
 a \
 , \
@@ -19884,7 +19884,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-('', 0, 3, None, {}, (None, r'''
+('', 0, 3, 'args', {}, (None, r'''
 call( \
 a \
 , \
@@ -19928,7 +19928,7 @@ Tuple - ROOT 0,0..8,1
   .ctx Load
 '''),
 
-('', 0, 3, None, {}, (None, r'''
+('', 0, 3, 'args', {}, (None, r'''
 call( \
 a, \
 * \
@@ -19966,7 +19966,7 @@ Tuple - ROOT 0,0..5,1
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None, r'''
+('', 1, 2, 'args', {}, (None, r'''
 call(
 a
 ,
@@ -20011,7 +20011,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-('', 0, 3, None, {}, (None, r'''
+('', 0, 3, 'args', {}, (None, r'''
 call(
 a
 ,
@@ -20055,7 +20055,7 @@ Tuple - ROOT 0,0..8,1
   .ctx Load
 '''),
 
-('', 0, 3, None, {}, (None, r'''
+('', 0, 3, 'args', {}, (None, r'''
 call(
 a,
 *
@@ -20093,15 +20093,15 @@ Tuple - ROOT 0,0..5,1
   .ctx Load
 '''),
 
-('', 0, 2, None, {}, (None,
+('', 0, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''),
 r'''**NodeError('cannot get Call.args slice because it includes keyword(s)')**'''),
 
-('', 1, 2, None, {}, (None,
+('', 1, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''),
 r'''**NodeError('cannot get Call.args slice because it includes keyword(s)')**'''),
 
-('', 0, 1, None, {}, (None,
+('', 0, 1, 'args', {}, (None,
 r'''call(a, b, c=d, *e)'''),
 r'''call(b, c=d, *e)''', r'''
 Call - ROOT 0,0..0,16
@@ -20123,7 +20123,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None,
+('', 1, 2, 'args', {}, (None,
 r'''call(a, b, c=d, *e)'''),
 r'''call(a, c=d, *e)''', r'''
 Call - ROOT 0,0..0,16
@@ -20145,7 +20145,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', 1, 2, None, {}, (None,
+('', 1, 2, 'args', {}, (None,
 r'''call(a, b, c=d, *e,)'''),
 r'''call(a, c=d, *e,)''', r'''
 Call - ROOT 0,0..0,17
@@ -20167,7 +20167,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', 0, 1, None, {}, (None,
+('', 0, 1, 'args', {}, (None,
 r'''call(i for i in j)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -20186,7 +20186,7 @@ Tuple - ROOT 0,0..0,17
   .ctx Load
 '''),
 
-('', 0, 'end', None, {}, (None,
+('', 0, 'end', 'args', {}, (None,
 r'''call(*not a, b, *c or d, *e)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -20214,7 +20214,7 @@ Tuple - ROOT 0,0..0,28
   .ctx Load
 '''),
 
-('', 0, 'end', None, {'pars': False, '_verify_get': False}, (None,
+('', 0, 'end', 'args', {'pars': False, '_verify_get': False}, (None,
 r'''call(*not a, b, *c or d, *e)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
