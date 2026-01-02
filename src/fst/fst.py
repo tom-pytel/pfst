@@ -1090,6 +1090,62 @@ class FST:
     set_options = fst_options.set_options
     options = fst_options.options
 
+    def reparse(self) -> FST:  # -> self
+        """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed
+        with non-native or non-synchronous operations such as `put_src()` with only offset. Usage of this function
+        should not be necessary unless doing things which are not explicitly supported by `fst`.
+
+        **Returns:**
+        - `self`: New self after reparse, if possible, otherwise `None` if could not be found. May also be another
+            neighbor node if the source of `self` was structurally changed too much.
+
+        **Examples:**
+
+        >>> f = FST('f"{expr}"')
+
+        >>> f.dump('stmt', loc=False)  # loc=False because of py < 3.12
+        0: f"{expr}"
+        JoinedStr - ROOT
+          .values[1]
+           0] FormattedValue
+             .value Name 'expr' Load
+             .conversion -1
+
+        >>> f.put_src('=', 0, 7, 0, 7, 'offset')
+        (0, 8)
+
+        >>> f.dump('stmt', loc=False)
+        0: f"{expr=}"
+        JoinedStr - ROOT
+          .values[1]
+           0] FormattedValue
+             .value Name 'expr' Load
+             .conversion -1
+
+        >>> f = f.reparse()
+
+        >>> f.dump('stmt', loc=False)
+        0: f"{expr=}"
+        JoinedStr - ROOT
+          .values[2]
+           0] Constant 'expr='
+           1] FormattedValue
+             .value Name 'expr' Load
+             .conversion 114
+        """
+
+        if not (loc := self.loc):
+            raise ValueError('cannot reparse node without a location')
+
+        ln, col, end_ln, end_col = loc
+
+        self.put_src(self._get_src(ln, col, end_ln, end_col), ln, col, end_ln, end_col)
+
+        if new := self.repath():
+            return new
+
+        return self.find_loc(ln, col, end_ln, end_col, True)
+
     def dump(
         self,
         src: Literal['stmt', 'all'] | None = None,

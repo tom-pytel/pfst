@@ -19,6 +19,7 @@
 
 ### Added
 
+- `reparse()` to force reparse of `AST` tree from source
 - prescribed slicing and `_args` virtual field for `Call.args+keywords`
 - prescribed slicing and `_bases` virtual field for `ClassDef.bases+keywords`
 - `insert()`, `append()`, `extend()`, `prepend()`, `prextend()` convenience functions to `FST` class, work same as `fstview` versions

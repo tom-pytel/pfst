@@ -3117,6 +3117,191 @@ def f():
         self.assertIsNone(f.verify(raise_=False))
         self.assertRaises(SyntaxError, f.verify)
 
+    def test_reparse(self):
+        a = (f := FST('# pre\nstmt  # line\n# post', 'stmt')).a
+        g = f.reparse()
+        self.assertIs(g, f)
+        self.assertIsNot(g.a, a)
+        self.assertEqual('# pre\nstmt  # line\n# post', g.src)
+
+        a = (f := FST('# pre\nand  # line\n# post', 'And')).a
+        g = f.reparse()
+        self.assertIs(g, f)
+        self.assertIsNot(g.a, a)
+        self.assertEqual('# pre\nand  # line\n# post', g.src)
+
+        a = (f := FST('# pre\n  # line\n# post', 'Load')).a
+        g = f.reparse()
+        self.assertIs(g, f)
+        self.assertIsNot(g.a, a)
+        self.assertEqual('# pre\n  # line\n# post', g.src)
+
+        f = FST('a\nb\nc')
+        fa = old_fa = (old_aa := f.a.body[0]).f
+        fb = old_fb = (old_ab := f.a.body[1]).f
+        fc = old_fc = (old_ac := f.a.body[2]).f
+
+        fa.put_src('new_a', *fa.loc, 'offset')
+        fa = fa.reparse()
+        self.assertIs(fa, old_fa)
+        self.assertIsNot(fa.a, old_aa)
+        self.assertIs(fb, old_fb)
+        self.assertIs(fb.a, old_ab)
+        self.assertIs(fc, old_fc)
+        self.assertIs(fc.a, old_ac)
+        old_aa = fa.a
+
+        fc.put_src('new_c', *fc.loc, 'offset')
+        fc = fc.reparse()
+        self.assertIs(fc, old_fc)
+        self.assertIsNot(fc.a, old_aa)
+        self.assertIs(fa, old_fa)
+        self.assertIs(fa.a, old_aa)
+        self.assertIs(fb, old_fb)
+        self.assertIs(fb.a, old_ab)
+        old_ac = fc.a
+
+        fb.put_src('new_b', *fb.loc, 'offset')
+        fb = fb.reparse()
+        self.assertIs(fb, old_fb)
+        self.assertIsNot(fb.a, old_aa)
+        self.assertIs(fa, old_fa)
+        self.assertIs(fa.a, old_aa)
+        self.assertIs(fc, old_fc)
+        self.assertIs(fc.a, old_ac)
+        old_ac = fb.a
+
+        a = f.a
+        f = f.reparse()
+        self.assertIsNot(f.a, a)
+        self.assertIsNot(f.body[0], old_fa)
+        self.assertIsNot(f.body[0].a, old_aa)
+        self.assertIsNot(f.body[1], old_fb)
+        self.assertIsNot(f.body[1].a, old_aa)
+        self.assertIsNot(f.body[2], old_fc)
+        self.assertIsNot(f.body[2].a, old_ac)
+
+        self.assertEqual(f.dump('stmt', out=list), [
+            'Module - ROOT 0,0..2,5',
+            '  .body[3]',
+            '0: new_a',
+            '   0] Expr - 0,0..0,5',
+            "     .value Name 'new_a' Load - 0,0..0,5",
+            '1: new_b',
+            '   1] Expr - 1,0..1,5',
+            "     .value Name 'new_b' Load - 1,0..1,5",
+            '2: new_c',
+            '   2] Expr - 2,0..2,5',
+            "     .value Name 'new_c' Load - 2,0..2,5",
+        ])
+
+        if PYGE12:
+            f = FST('a\nf"a{b}c"\nc')
+            fa = old_fa = (old_aa := f.a.body[0]).f
+            fb = old_fb = (old_ab := f.a.body[1]).f
+            fc = old_fc = (old_ac := f.a.body[2]).f
+
+            self.assertEqual(f.dump('stmt', out=list), [
+                'Module - ROOT 0,0..2,1',
+                '  .body[3]',
+                '0: a',
+                '   0] Expr - 0,0..0,1',
+                "     .value Name 'a' Load - 0,0..0,1",
+                '1: f"a{b}c"',
+                '   1] Expr - 1,0..1,8',
+                '     .value JoinedStr - 1,0..1,8',
+                '       .values[3]',
+                "        0] Constant 'a' - 1,2..1,3",
+                '        1] FormattedValue - 1,3..1,6',
+                "          .value Name 'b' Load - 1,4..1,5",
+                '          .conversion -1',
+                "        2] Constant 'c' - 1,6..1,7",
+                '2: c',
+                '   2] Expr - 2,0..2,1',
+                "     .value Name 'c' Load - 2,0..2,1",
+            ])
+
+            fa.put_src('new_a', *fa.loc, 'offset')
+            fa = fa.reparse()
+            self.assertIs(fa, old_fa)
+            self.assertIsNot(fa.a, old_aa)
+            self.assertIs(fb, old_fb)
+            self.assertIs(fb.a, old_ab)
+            self.assertIs(fc, old_fc)
+            self.assertIs(fc.a, old_ac)
+            old_aa = fa.a
+
+            fc.put_src('new_c', *fc.loc, 'offset')
+            fc = fc.reparse()
+            self.assertIs(fc, old_fc)
+            self.assertIsNot(fc.a, old_aa)
+            self.assertIs(fa, old_fa)
+            self.assertIs(fa.a, old_aa)
+            self.assertIs(fb, old_fb)
+            self.assertIs(fb.a, old_ab)
+            old_ac = fc.a
+
+            fb.value.values[1].put_src('=', 1, 5, 1, 5, 'offset')
+
+            self.assertEqual(f.dump('stmt', out=list), [
+                'Module - ROOT 0,0..2,5',
+                '  .body[3]',
+                '0: new_a',
+                '   0] Expr - 0,0..0,5',
+                "     .value Name 'new_a' Load - 0,0..0,5",
+                '1: f"a{b=}c"',
+                '   1] Expr - 1,0..1,9',
+                '     .value JoinedStr - 1,0..1,9',
+                '       .values[3]',
+                "        0] Constant 'a' - 1,2..1,3",
+                '        1] FormattedValue - 1,3..1,7',
+                "          .value Name 'b' Load - 1,4..1,5",
+                '          .conversion -1',
+                "        2] Constant 'c' - 1,7..1,8",
+                '2: new_c',
+                '   2] Expr - 2,0..2,5',
+                "     .value Name 'new_c' Load - 2,0..2,5",
+            ])
+
+            fb = fb.reparse()
+            self.assertIs(fb, old_fb)
+            self.assertIsNot(fb.a, old_aa)
+            self.assertIs(fa, old_fa)
+            self.assertIs(fa.a, old_aa)
+            self.assertIs(fc, old_fc)
+            self.assertIs(fc.a, old_ac)
+            old_ac = fb.a
+
+            self.assertEqual(f.dump('stmt', out=list), [
+                'Module - ROOT 0,0..2,5',
+                '  .body[3]',
+                '0: new_a',
+                '   0] Expr - 0,0..0,5',
+                "     .value Name 'new_a' Load - 0,0..0,5",
+                '1: f"a{b=}c"',
+                '   1] Expr - 1,0..1,9',
+                '     .value JoinedStr - 1,0..1,9',
+                '       .values[3]',
+                "        0] Constant 'ab=' - 1,2..1,6",
+                '        1] FormattedValue - 1,3..1,7',
+                "          .value Name 'b' Load - 1,4..1,5",
+                '          .conversion 114',
+                "        2] Constant 'c' - 1,7..1,8",
+                '2: new_c',
+                '   2] Expr - 2,0..2,5',
+                "     .value Name 'new_c' Load - 2,0..2,5",
+            ])
+
+            a = f.a
+            f = f.reparse()
+            self.assertIsNot(f.a, a)
+            self.assertIsNot(f.body[0], old_fa)
+            self.assertIsNot(f.body[0].a, old_aa)
+            self.assertIsNot(f.body[1], old_fb)
+            self.assertIsNot(f.body[1].a, old_aa)
+            self.assertIsNot(f.body[2], old_fc)
+            self.assertIsNot(f.body[2].a, old_ac)
+
     def test_own_src(self):
         # whole
 
