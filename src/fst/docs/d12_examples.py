@@ -1183,6 +1183,83 @@ Module - ROOT 0,0..2,22
 ```
 
 
+## Make all f-strings self-documenting
+
+**Note:** This example in particular is Python 3.12+ because of the comment in the multiline f-string. The function
+itself will work mostly on lower version Pythons.
+
+Suppose you just want to improve the debug logs by adding self-documenting debug strings to all f-strings, e.g.
+`f"{var}"` into `f"{var=}"`. The example below shows how, and works just fine, there is just one caveat not handled
+here:
+
+The source is updated and all the node locations are fine, but the `put_src(..., action='offset')` only offsets node
+locations and does not create the `AST` nodes for any new `Constant` strings due to the newly self-documenting
+`FormattedValue` nodes. If you only care about source for output (like this example) then this is a non-issue. If you
+need those nodes to continue working with an `AST` tree then you can do a `root.reparse()` after making all the changes,
+or individual `reparse()` on each modified statement, or use `put_src(..., action='reparse')` for each individual
+change, but that would be slower.
+
+```py
+>>> src = """
+... f'added here {a}, and here { ( b ) }'
+...
+... f'not added here {c=}'
+...
+... f\"\"\"{(  # =========================
+...     d,  # commented out =, so added
+... )}, {e
+...     =} <- not commented out so not added\"\"\"
+... """.strip()
+```
+
+Function:
+
+```py
+>>> def self_document_fstring_expressions(src: str) -> str:
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk(FormattedValue):  # could add Interpolation to do both
+...         _, _, end_ln, end_col = f.value.pars()  # value end after parentheses
+...
+...         # hacky but valid way to check if '=' already there and not in comment
+...         # between the end of the expression and end of FormattedValue
+...         lines = f.get_src(end_ln, end_col, f.end_ln, f.end_col - 1, as_lines=True)
+...
+...         if not any(l.lstrip().startswith('=') for l in lines):
+...             # insert the equals just after the expression
+...             f.put_src('=', end_ln, end_col, end_ln, end_col, 'offset')
+...
+...     return fst.src
+```
+
+Original:
+
+```py
+>>> pprint(src)
+f'added here {a}, and here { ( b ) }'
+ 
+f'not added here {c=}'
+ 
+f"""{(  # =========================
+    d,  # commented out =, so added
+)}, {e
+    =} <- not commented out so not added"""
+```
+
+Processed:
+
+```py
+f'added here {a=}, and here { ( b )= }'
+ 
+f'not added here {c=}'
+ 
+f"""{(  # =========================
+    d,  # commented out =, so added
+)=}, {e
+    =} <- not commented out so not added"""
+```
+
+
 ## Normalize docstrings
 
 `get_docstr()` gives you a normal string and `put_docstr()` puts it with appropriate formatting for a docstring. In this
