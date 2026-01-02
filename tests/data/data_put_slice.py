@@ -28497,6 +28497,20 @@ ClassDef - ROOT 0,0..0,48
   .body[1]
    0] Pass - 0,44..0,48
 '''),
+
+('', 1, 2, '_bases', {}, ('ClassDef',
+r'''class cls(a=3, *b()): pass'''), ('_arglikes',
+r''''''),
+r'''class cls(a=3): pass''', r'''
+ClassDef - ROOT 0,0..0,20
+  .name 'cls'
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .arg 'a'
+     .value Constant 3 - 0,12..0,13
+  .body[1]
+   0] Pass - 0,16..0,20
+'''),
 ],
 
 'BoolOp_values': [  # ................................................................................
@@ -33068,6 +33082,18 @@ Call - ROOT 0,0..0,37
      .arg 'i'
      .value Name 'j' Load - 0,35..0,36
 '''),
+
+('', 1, 2, '_args', {}, ('Call',
+r'''call(a=3, *b())'''), ('_arglikes',
+r''''''),
+r'''call(a=3)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .arg 'a'
+     .value Constant 3 - 0,7..0,8
+'''),
 ],
 
 'decorator_list': [  # ................................................................................
@@ -33821,6 +33847,17 @@ _arglikes - ROOT 0,0..0,10
      .value Name 'a3' Load - 0,2..0,4
    1] keyword - 0,6..0,10
      .value Name 'c3' Load - 0,8..0,10
+'''),
+
+('', 1, 2, None, {}, ('_arglikes',
+r'''a=3, *b()'''), ('_arglikes',
+r''''''),
+r'''a=3''', r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .arg 'a'
+     .value Constant 3 - 0,2..0,3
 '''),
 ],
 

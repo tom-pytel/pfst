@@ -556,8 +556,17 @@ def _loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
 
         return fstlocn(ln, col, lpln, lpcol, n=0)
 
-    if last := (last[-1].value if (last := ast.keywords) else last[-1] if (last := ast.bases) else None):
-        _, _, ln, col = last.f.pars()
+    if keywords := ast.keywords:
+        lastkw = keywords[-1].value.f
+
+        if (bases := ast.bases) and (lastbase := bases[-1].f).loc > lastkw.loc:
+            _, _, ln, col = lastbase.pars()
+        else:
+            _, _, ln, col = lastkw.pars()
+
+    elif bases := ast.bases:
+        _, _, ln, col = bases[-1].f.pars()
+
     else:
         ln = lpln
         col = lpcol + 1
