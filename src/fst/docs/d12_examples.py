@@ -129,6 +129,79 @@ def func():
 ```
 
 
+## Inject logging metadata
+
+You want to add a `correlation_id=CID` keyword argument to all `logger.info()` calls, but only if its not already there.
+
+```py
+>>> src = """
+... logger.info('Hello world...')  # ok
+... logger.info('Already have id', correlation_id=other_cid)  # ok
+... logger.info()  # yes, no logger message, too bad
+...
+... class cls:
+...     def method(self, thing, extra):
+...         if not thing:
+...             (logger).info(  # just checking
+...                 f'not a {thing}',  # this is fine
+...                 extra=extra,       # this currently gets nuked
+...             )
+... """.strip()
+```
+
+Function:
+
+```py
+>>> def inject_logging_metadata(src: str) -> str:
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk(Call):
+...         if (f.func.is_Attribute
+...             and f.func.attr == 'info'
+...             and f.func.value.is_Name
+...             and f.func.value.id == 'logger'
+...             and not any(kw.arg == 'correlation_id' for kw in f.keywords)
+...         ):
+...             f.append('correlation_id=CID')
+...
+...     return fst.src
+```
+
+Original.
+
+```py
+>>> pprint(src)
+logger.info('Hello world...')  # ok
+logger.info('Already have id', correlation_id=other_cid)  # ok
+logger.info()  # yes, no logger message, too bad
+ 
+class cls:
+    def method(self, thing, extra):
+        if not thing:
+            (logger).info(  # just checking
+                f'not a {thing}',  # this is fine
+                extra=extra,       # this currently gets nuked
+            )
+```
+
+Processed:
+
+```py
+>>> pprint(inject_logging_metadata(src))
+logger.info('Hello world...', correlation_id=CID)  # ok
+logger.info('Already have id', correlation_id=other_cid)  # ok
+logger.info(correlation_id=CID)  # yes, no logger message, too bad
+ 
+class cls:
+    def method(self, thing, extra):
+        if not thing:
+            (logger).info(  # just checking
+                f'not a {thing}',  # this is fine
+                extra=extra, correlation_id=CID
+            )
+```
+
+
 ## `else if` chain to `elif`
 
 `fst` has `elif` <-> `else if` code built in as its needed for statement insertions and deletions from conditional
