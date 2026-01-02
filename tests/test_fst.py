@@ -9740,6 +9740,7 @@ match a:
         f = FST('f"{1}"')
 
         self.assertTrue(f.is_ftstr)
+        self.assertTrue(f.values[0].is_ftstr_fmt)
         self.assertIs(f.values[0].value.parent_ftstr(), f)
         self.assertIs(f.parent_ftstr(self_=True), f)
 
@@ -9747,6 +9748,7 @@ match a:
             f = FST('t"{1}"')
 
             self.assertTrue(f.is_ftstr)
+            self.assertTrue(f.values[0].is_ftstr_fmt)
             self.assertIs(f.values[0].value.parent_ftstr(), f)
             self.assertIs(f.parent_ftstr(self_=True), f)
 

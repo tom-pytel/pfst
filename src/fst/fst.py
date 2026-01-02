@@ -4787,6 +4787,12 @@ class FST:
         return self.a.__class__ in ASTS_LEAF_FTSTR
 
     @property
+    def is_ftstr_fmt(self) -> bool:
+        """Is an f-string `FormattedValue` or t-string `Interpolation` node."""
+
+        return self.a.__class__ in ASTS_LEAF_FTSTR_FMT
+
+    @property
     def is__slice(self) -> bool:
         """Is one of our own custom SPECIAL SLICE nodes."""
 
