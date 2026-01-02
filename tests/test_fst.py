@@ -5750,6 +5750,25 @@ if 1:
         self.assertEqual((1, 1), (f := FST('i')).put_src(['a', 'b'], 0, 0, 0, 1, None))  # misc, not really reparse
         self.assertEqual('a\nb', f.src)
 
+        # reparse FormattedValue and Interpolation crating and destroying self-documenting debug Constant
+
+        f = FST('f"{a}"')
+        f.put_src('=', 0, 4, 0, 4)
+        f.verify()
+
+        f = FST('f"{a=}"')
+        f.put_src(None, 0, 4, 0, 5)
+        f.verify()
+
+        if PYGE14:
+            f = FST('t"{a}"')
+            f.put_src('=', 0, 4, 0, 4)
+            f.verify()
+
+            f = FST('t"{a=}"')
+            f.put_src(None, 0, 4, 0, 5)
+            f.verify()
+
     def test_put_src_offset(self):
         f = FST('a, b, c')
         f.put_src(' ', 0, 0, 0, 0, 'offset')

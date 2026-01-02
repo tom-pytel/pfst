@@ -9,7 +9,21 @@ from ast import walk
 
 from . import fst
 
-from .asttypes import ASTS_LEAF_BLOCK, AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod, _slice
+from .asttypes import (
+    ASTS_LEAF_BLOCK,
+    ASTS_LEAF_FTSTR,
+    AST,
+    ExceptHandler,
+    Match,
+    Pass,
+    Slice,
+    Try,
+    TryStar,
+    match_case,
+    mod,
+    _slice,
+)
+
 from .astutil import bistr
 
 from .common import NodeError, astfield
@@ -280,6 +294,9 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
             and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler, _slice)
         ):  # first generalize a bit
             mode = base
+
+        if self is not root and self.parent.a.__class__ in ASTS_LEAF_FTSTR:  # reparsing a direct child of one of these alone is problematic because they may create or destroy self-documenting debug Constant nodes
+            self = self.parent
 
         _reparse_raw_base(self, new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
                           None if self is root else root.child_path(self), True, mode)
