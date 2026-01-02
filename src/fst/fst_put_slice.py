@@ -147,6 +147,9 @@ from .fst_get_slice import (
     _bounds_decorator_list,
     _bounds_generators,
     _bounds_comprehension_ifs,
+    _normalize_solo_call_arg_genexp,
+    _move_arglikes_into_one_field,
+    _split_arglikes_into_two_fields,
     _move_Compare_left_into_comparators,
     _add_MatchMapping_rest_as_real_node,
     _remove_MatchMapping_rest_real_node,
@@ -228,8 +231,8 @@ from .fst_put_one import _fix_With_items
 # *   N ao         (BoolOp, 'values'):                     # expr*                 -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                                  .
 #                                                                                  .
-#                  (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
-#                  (Call, '_args'):                        # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
+# *                (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
+# *                (Call, '_args'):                        # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
 #                                                                                  .
 #                  (arguments, '_all'):                    # arguments             -> arguments                  _parse_arguments / arguments_lambda
 #                                                                                  .
@@ -2146,6 +2149,68 @@ def _put_slice_Call_args(
         self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
 
+def _put_slice_Call_ClassDef_arglikes(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> None:
+    ast = self.a
+    body = self._cached_arglikes()
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    fst_ = _code_to_slice__arglikes(self, code, one, options)
+
+    if not fst_:
+        if not len_slice:
+            return
+
+    else:
+        validate_put_arglike(body, start, stop, fst_.a.arglikes)
+
+    is_call = ast.__class__ is Call
+
+    if is_call:
+        _normalize_solo_call_arg_genexp(self)
+
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_Call_pars()
+
+        bound_col += 1
+        bound_end_col -= 1
+
+    else:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
+
+        if bases_pars.n:
+            bound_col += 1
+            bound_end_col -= 1
+
+        else:  # parentheses don't exist, add them first
+            self._put_src('()', bound_ln, bound_col, bound_end_ln, bound_end_col, False)
+
+            bound_col += 1
+            bound_end_col = bound_col
+            bound_end_ln = bound_ln
+
+    field, _, _ = _move_arglikes_into_one_field(self, body)
+
+    _put_slice_seq_and_asts(self, start, stop, field, body, fst_, 'arglikes', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', False, options)
+
+    if body:
+        _split_arglikes_into_two_fields(self, body, field)
+
+    elif not is_call:  # everything was cut from a ClassDef, remove parentheses
+        pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
+
+        self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
+
+
 def _put_slice_MatchSequence_patterns(
     self: fst.FST,
     code: Code | None,
@@ -2475,11 +2540,13 @@ _PUT_SLICE_HANDLERS = {
     (AsyncFunctionDef, 'decorator_list'):     _put_slice_decorator_list,  # expr*
     (ClassDef, 'decorator_list'):             _put_slice_decorator_list,  # expr*
     (ClassDef, 'bases'):                      _put_slice_ClassDef_bases,  # expr*
+    (ClassDef, '_bases'):                     _put_slice_Call_ClassDef_arglikes,  # expr*
     (Delete, 'targets'):                      _put_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _put_slice_BoolOp_values,  # expr*
     (Compare, '_all'):                        _put_slice_Compare__all,  # expr*
     (Call, 'args'):                           _put_slice_Call_args,  # expr*
+    (Call, '_args'):                          _put_slice_Call_ClassDef_arglikes,  # expr*
     (comprehension, 'ifs'):                   _put_slice_comprehension_ifs,  # expr*
 
     (ListComp, 'generators'):                 _put_slice_generators,  # comprehension*

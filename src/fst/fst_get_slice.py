@@ -74,7 +74,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import re_identifier, bistr, copy_ast, merge_arglikes
+from .astutil import re_identifier, bistr, copy_ast
 from .common import NodeError, astfield, fstloc, next_frag, next_find, next_find_re
 
 from .fst_misc import (
@@ -118,6 +118,33 @@ def _get_option_op_side(is_first: bool, is_last: bool, options: Mapping[str, Any
         return True
     else:
         return fst.FST.get_option('op_side', options) == 'left'
+
+
+def _locs_and_bounds_get(
+    self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int, loc: fstloc | None = None
+) -> tuple[fstloc, fstloc, int, int, int, int]:
+    """Get the location of the first and last elemnts (assumed present) and the bounding location of a one or
+    two-element sequence. The start bounding location must be past the ante-first element if present, otherwise start
+    of self past any delimiters. The end bounding location must be end of self before any delimiters.
+
+    **Parameters:**
+    - `loc`: Override to standard location.
+
+    **Returns:**
+    - `(loc of first element, loc of last element, bound_ln, bound_col, bound_end_ln, bound_end_col)`
+    """
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+    bound_end_col -= off
+
+    if start:
+        _, _, bound_ln, bound_col = body2[start - 1].f.pars()
+    else:
+        bound_col += off
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body2)
+
+    return loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col
 
 
 def _bounds_Delete_targets(
@@ -274,17 +301,20 @@ def _restore_solo_call_arg_genexp(self: fst.FST, state: object) -> None:
     arg0.end_col_offset += 1
 
 
-def _move_arglikes_into_one(self: fst.FST) -> tuple[str, list[AST], list[AST], list[AST]]:
-    """Move the merged orderded arglikes of `Call.args+keywords` or `ClassDef.bases+keywords` into the `args` or `bases`
+def _move_arglikes_into_one_field(self: fst.FST, arglikes: list[AST]) -> tuple[str, list[AST], list[AST]]:
+    """Put merged orderded `arglikes` of `Call.args+keywords` or `ClassDef.bases+keywords` into the `args` or `bases`
     field and set the `keywords` to empty in order to be able to operate on them easier. Specifically the `args` or
     `bases` and not `keywords` because those have special processing when looking for parentheses to handle single
     `expr` arguments. If a single `expr` arg was in `keywords` then `pars()` would give the wrong location possibly
     including the `Call.args` or `ClassDef.bases` enclosing pars.
 
+    **Parameters:**
+    - `arglikes`: The already merged arglikes to set. Because you will probably need them before calling this function
+        anyway, get from `_cached_arglikes()`.
+
     **Returns:**
-    - `(field, merged_arglikes, old_args_or_bases, old_keywords)`: The merged list of `args/bases+keywords` and old
-        `args/bases` list and the old `keywords` list for resetting if nothing is done, like in a `get(cut=False)`.
-        `merged_arglikes` and `old_args_or_bases` will be the same list if there are no `keywords`.
+    - `(field, old_args_or_bases, old_keywords)`: The field name (without underscore) and the old `args/bases` list and
+        old `keywords` list for resetting if nothing is done, like in a `get(cut=False)`.
     """
 
     ast = self.a
@@ -292,17 +322,40 @@ def _move_arglikes_into_one(self: fst.FST) -> tuple[str, list[AST], list[AST], l
     exprs = getattr(ast, field)
 
     if not (kws := ast.keywords):
-        return field, exprs, exprs, kws
+        return field, exprs, kws
 
     ast.keywords = []
-    arglikes = merge_arglikes(exprs, kws)
+    # arglikes = merge_arglikes(exprs, kws)
 
     setattr(ast, field, arglikes)
 
     for i, a in enumerate(arglikes):
         a.f.pfield = astfield(field, i)
 
-    return field, arglikes, exprs, kws
+    return field, exprs, kws
+
+
+def _split_arglikes_into_two_fields(self: fst.FST, arglikes: list[AST], field: str) -> None:
+    """Split merged ordered `arglikes` of `Call.args+keywords` or `ClassDef.bases+keywords` into two field, the `expr`
+    field of `args` or `bases` and the `keyword` field of `keywords`. The `arglikes` are ordered so all that needs to be
+    done is send the `exprs` to field 1 and the `keywords` to field 2."""
+
+    ast = self.a
+    ast.keywords = kws = []
+    exprs = []
+
+    setattr(ast, field, exprs)
+
+    for a in arglikes:  # separate single arglikes with hole cut out back into `args/bases` and `keywords`
+        if a.__class__ is keyword:
+            a.f.pfield = astfield('keywords', len(kws))
+
+            kws.append(a)
+
+        else:
+            a.f.pfield = astfield(field, len(exprs))
+
+            exprs.append(a)
 
 
 def _move_Compare_left_into_comparators(self: fst.FST) -> None:
@@ -744,36 +797,6 @@ def _fix_stmt_end(
     semi_col = min(semi_col, len(self._get_block_indent()))  # try to preserve original space before semicolon, silly, yes
 
     self._put_src(None, bound_ln, bound_col, semi_ln, semi_col, False)
-
-
-# ......................................................................................................................
-# ours
-
-def _locs_and_bounds_get(
-    self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int, loc: fstloc | None = None
-) -> tuple[fstloc, fstloc, int, int, int, int]:
-    """Get the location of the first and last elemnts (assumed present) and the bounding location of a one or
-    two-element sequence. The start bounding location must be past the ante-first element if present, otherwise start
-    of self past any delimiters. The end bounding location must be end of self before any delimiters.
-
-    **Parameters:**
-    - `loc`: Override to standard location.
-
-    **Returns:**
-    - `(loc of first element, loc of last element, bound_ln, bound_col, bound_end_ln, bound_end_col)`
-    """
-
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
-    bound_end_col -= off
-
-    if start:
-        _, _, bound_ln, bound_col = body2[start - 1].f.pars()
-    else:
-        bound_col += off
-
-    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body2)
-
-    return loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col
 
 
 def _cut_or_copy_asts(start: int, stop: int, field: str, cut: bool, body: list[AST]) -> list[AST]:
@@ -1624,7 +1647,7 @@ def _get_slice_Call_ClassDef_arglikes(
     if is_call:
         state = _normalize_solo_call_arg_genexp(self)
 
-    field, body, exprs, kws = _move_arglikes_into_one(self)
+    field, _, kws = _move_arglikes_into_one_field(self, body)
     loc = self._loc_Call_pars() if is_call else self._loc_ClassDef_bases_pars()
     locs = _locs_and_bounds_get(self, start, stop, body, body, 1, loc)
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
@@ -1638,37 +1661,11 @@ def _get_slice_Call_ClassDef_arglikes(
 
             self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
 
-        if kws:  # only need to unmerge if there were keywords to begin with
-            ast.keywords = kws = []
-            exprs = []
+    elif is_call:  # only needs to be done for a Call and only if there are no keywords
+        _restore_solo_call_arg_genexp(self, state)
 
-            setattr(ast, field, exprs)
-
-            for a in body:  # separate single arglikes with hole cut out back into `args/bases` and `keywords`, they are still ordered as only removal waas done so don't need to sort
-                if a.__class__ is keyword:
-                    a.f.pfield = astfield('keywords', len(kws))
-
-                    kws.append(a)
-
-                else:
-                    a.f.pfield = astfield(field, len(exprs))
-
-                    exprs.append(a)
-
-    else:  # just need to put back old lists and reset their pfields
-        if kws:  # only need to put back if there were keywords to begin with
-            ast.keywords = kws
-
-            setattr(ast, field, exprs)
-
-            for i, a in enumerate(exprs):
-                a.f.pfield = astfield(field, i)
-
-            for i, a in enumerate(kws):
-                a.f.pfield = astfield('keywords', i)
-
-        elif is_call:  # only needs to be done for a Call and only if there are no keywords
-            _restore_solo_call_arg_genexp(self, state)
+    if kws:  # only need to unmerge if there were keywords to begin with
+        _split_arglikes_into_two_fields(self, body, field)
 
     return fst_
 

@@ -2765,13 +2765,41 @@ r'''Name 'c' Load - ROOT 0,0..0,1'''),
 
 ('', 0, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot put slice to ClassDef._bases')**''',
+r'''class cls(meta=cls, *bases, **kws): pass''', r'''
+ClassDef - ROOT 0,0..0,40
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,20..0,26
+     .value Name 'bases' Load - 0,21..0,26
+     .ctx Load
+  .keywords[2]
+   0] keyword - 0,10..0,18
+     .arg 'meta'
+     .value Name 'cls' Load - 0,15..0,18
+   1] keyword - 0,28..0,33
+     .value Name 'kws' Load - 0,30..0,33
+  .body[1]
+   0] Pass - 0,36..0,40
+''',
 r'''base''',
 r'''Name 'base' Load - ROOT 0,0..0,4'''),
 
 ('', 1, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot put slice to ClassDef._bases')**''',
+r'''class cls(base, *bases, **kws): pass''', r'''
+ClassDef - ROOT 0,0..0,36
+  .name 'cls'
+  .bases[2]
+   0] Name 'base' Load - 0,10..0,14
+   1] Starred - 0,16..0,22
+     .value Name 'bases' Load - 0,17..0,22
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,24..0,29
+     .value Name 'kws' Load - 0,26..0,29
+  .body[1]
+   0] Pass - 0,32..0,36
+''',
 r'''meta=cls''', r'''
 keyword - ROOT 0,0..0,8
   .arg 'meta'
@@ -2780,7 +2808,20 @@ keyword - ROOT 0,0..0,8
 
 ('', 2, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot put slice to ClassDef._bases')**''',
+r'''class cls(base, meta=cls, **kws): pass''', r'''
+ClassDef - ROOT 0,0..0,38
+  .name 'cls'
+  .bases[1]
+   0] Name 'base' Load - 0,10..0,14
+  .keywords[2]
+   0] keyword - 0,16..0,24
+     .arg 'meta'
+     .value Name 'cls' Load - 0,21..0,24
+   1] keyword - 0,26..0,31
+     .value Name 'kws' Load - 0,28..0,31
+  .body[1]
+   0] Pass - 0,34..0,38
+''',
 r'''*bases''', r'''
 Starred - ROOT 0,0..0,6
   .value Name 'bases' Load - 0,1..0,6
@@ -2789,7 +2830,21 @@ Starred - ROOT 0,0..0,6
 
 ('', 3, None, '_bases', {}, (None,
 r'''class cls(base, meta=cls, *bases, **kws): pass'''),
-r'''**NodeError('cannot put slice to ClassDef._bases')**''',
+r'''class cls(base, meta=cls, *bases): pass''', r'''
+ClassDef - ROOT 0,0..0,39
+  .name 'cls'
+  .bases[2]
+   0] Name 'base' Load - 0,10..0,14
+   1] Starred - 0,26..0,32
+     .value Name 'bases' Load - 0,27..0,32
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,16..0,24
+     .arg 'meta'
+     .value Name 'cls' Load - 0,21..0,24
+  .body[1]
+   0] Pass - 0,35..0,39
+''',
 r'''**kws''', r'''
 keyword - ROOT 0,0..0,5
   .value Name 'kws' Load - 0,2..0,5
@@ -2800,13 +2855,37 @@ keyword - ROOT 0,0..0,5
 
 ('', 0, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot put slice to Call._args')**''',
+r'''call(key=word, *args, **keywords)''', r'''
+Call - ROOT 0,0..0,33
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,15..0,20
+     .value Name 'args' Load - 0,16..0,20
+     .ctx Load
+  .keywords[2]
+   0] keyword - 0,5..0,13
+     .arg 'key'
+     .value Name 'word' Load - 0,9..0,13
+   1] keyword - 0,22..0,32
+     .value Name 'keywords' Load - 0,24..0,32
+''',
 r'''arg''',
 r'''Name 'arg' Load - ROOT 0,0..0,3'''),
 
 ('', 1, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot put slice to Call._args')**''',
+r'''call(arg, *args, **keywords)''', r'''
+Call - ROOT 0,0..0,28
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'arg' Load - 0,5..0,8
+   1] Starred - 0,10..0,15
+     .value Name 'args' Load - 0,11..0,15
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,17..0,27
+     .value Name 'keywords' Load - 0,19..0,27
+''',
 r'''key=word''', r'''
 keyword - ROOT 0,0..0,8
   .arg 'key'
@@ -2815,7 +2894,18 @@ keyword - ROOT 0,0..0,8
 
 ('', 2, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot put slice to Call._args')**''',
+r'''call(arg, key=word, **keywords)''', r'''
+Call - ROOT 0,0..0,31
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'arg' Load - 0,5..0,8
+  .keywords[2]
+   0] keyword - 0,10..0,18
+     .arg 'key'
+     .value Name 'word' Load - 0,14..0,18
+   1] keyword - 0,20..0,30
+     .value Name 'keywords' Load - 0,22..0,30
+''',
 r'''*args''', r'''
 Starred - ROOT 0,0..0,5
   .value Name 'args' Load - 0,1..0,5
@@ -2824,7 +2914,19 @@ Starred - ROOT 0,0..0,5
 
 ('', 3, None, '_args', {}, (None,
 r'''call(arg, key=word, *args, **keywords)'''),
-r'''**NodeError('cannot put slice to Call._args')**''',
+r'''call(arg, key=word, *args)''', r'''
+Call - ROOT 0,0..0,26
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'arg' Load - 0,5..0,8
+   1] Starred - 0,20..0,25
+     .value Name 'args' Load - 0,21..0,25
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,10..0,18
+     .arg 'key'
+     .value Name 'word' Load - 0,14..0,18
+''',
 r'''**keywords''', r'''
 keyword - ROOT 0,0..0,10
   .value Name 'keywords' Load - 0,2..0,10
