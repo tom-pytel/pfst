@@ -95,7 +95,7 @@ _re_empty_line_start_maybe_cont_1 = re.compile(r'[ \t]+\\?')  # empty line start
 
 
 # ......................................................................................................................
-# shared with fst_slice_put
+# shared with fst_put_slice
 
 def _get_option_norm(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
     norm_value = get_option_overridable('norm', override_option, options)
@@ -1294,59 +1294,6 @@ def _get_slice_Global_Nonlocal_names(
     return fst_
 
 
-def _get_slice_ClassDef_bases(
-    self: fst.FST,
-    start: int | Literal['end'],
-    stop: int | Literal['end'],
-    field: str,
-    cut: bool,
-    options: Mapping[str, Any],
-) -> fst.FST:
-    """A `ClassDef.bases` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a
-    normal expression tuple."""
-
-    ast = self.a
-    body = ast.bases
-    len_body = len(body)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice = stop - start
-
-    if start == stop:
-        return new_empty_tuple(from_=self)
-
-    if keywords := ast.keywords:
-        kw0_pos = keywords[0].f.loc[:2]
-
-        if kw0_pos < body[stop - 1].f.loc[2:]:
-            raise NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')
-
-        self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
-
-    else:
-        self_tail_sep = None
-
-    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, self._loc_ClassDef_bases_pars())  # ClassDef bases pars definitely exist
-    asts = _cut_or_copy_asts(start, stop, 'bases', cut, body)
-    ret_ast = Tuple(elts=asts, ctx=Load())
-
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
-                         options, 'bases', '(', ')', ',', self_tail_sep, len_slice == 1)
-
-    fst_._fix_arglikes(options)  # parenthesize any arglike expressions
-
-    if cut:
-        if keywords:
-            if cut and start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-                self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
-
-        elif not body:  # everything was cut and no keywords, remove parentheses
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
-
-            self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
-
-    return fst_
-
-
 def _get_slice_Boolop_values(
     self: fst.FST,
     start: int | Literal['end'],
@@ -1591,7 +1538,7 @@ def _get_slice_Compare__all(
     return fst_
 
 
-def _get_slice_Call_args(
+def _get_slice_Call_ClassDef_args_bases(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -1599,14 +1546,15 @@ def _get_slice_Call_args(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """A `Call.args` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a normal
-    expression tuple."""
+    """A `Call.args` or `ClassDef.bases` slice is just a normal `Tuple`, with possibly expr_arglike elements which are
+    invalid in a normal expression tuple."""
 
     ast = self.a
-    body = ast.args
+    body = getattr(ast, field)
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+    is_call = ast.__class__ is Call
 
     if start == stop:
         return new_empty_tuple(from_=self)
@@ -1615,29 +1563,37 @@ def _get_slice_Call_args(
         kw0_pos = keywords[0].f.loc[:2]
 
         if kw0_pos < body[stop - 1].f.loc[2:]:
-            raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
+            raise NodeError(f'cannot get {ast.__class__.__name__}.{field} slice because it includes keyword(s)')
 
         self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
 
     else:
         self_tail_sep = None
 
-        state = _normalize_solo_call_arg_genexp(self)
+        if is_call:
+            state = _normalize_solo_call_arg_genexp(self)
 
-    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, self._loc_Call_pars())
-    asts = _cut_or_copy_asts(start, stop, 'args', cut, body)
+    loc = self._loc_Call_pars() if is_call else self._loc_ClassDef_bases_pars()
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, loc)
+    asts = _cut_or_copy_asts(start, stop, field, cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
-                         options, 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
+                         options, field, '(', ')', ',', self_tail_sep, len_slice == 1)
 
     fst_._fix_arglikes(options)  # parenthesize any arglike expressions
 
     if cut:
-        if start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-            self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+        if keywords:
+            if start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+                self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
-    elif not keywords:  # only needs to be done if there were no keywords
+        elif not (is_call or body):  # everything was cut from a ClassDef and no keywords, remove parentheses
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
+
+            self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
+
+    elif is_call and not keywords:  # only needs to be done for Call and if there were no keywords
         _restore_solo_call_arg_genexp(self, state)
 
     return fst_
@@ -2136,14 +2092,14 @@ _GET_SLICE_HANDLERS = {
     (FunctionDef, 'decorator_list'):          _get_slice_decorator_list,  # expr*
     (AsyncFunctionDef, 'decorator_list'):     _get_slice_decorator_list,  # expr*
     (ClassDef, 'decorator_list'):             _get_slice_decorator_list,  # expr*
-    (ClassDef, 'bases'):                      _get_slice_ClassDef_bases,  # expr*
+    (ClassDef, 'bases'):                      _get_slice_Call_ClassDef_args_bases,  # expr*
     (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
     (ClassDef, '_bases'):                     _get_slice_Call_ClassDef_arglikes,  # expr|keyword*
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_Boolop_values,  # expr*
     (Compare, '_all'):                        _get_slice_Compare__all,  # expr*
-    (Call, 'args'):                           _get_slice_Call_args,  # expr*
+    (Call, 'args'):                           _get_slice_Call_ClassDef_args_bases,  # expr*
     (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
     (Call, '_args'):                          _get_slice_Call_ClassDef_arglikes,  # expr|keyword*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*

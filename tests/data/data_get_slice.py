@@ -16379,11 +16379,11 @@ Tuple - ROOT 0,0..5,1
 
 ('', 0, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot get ClassDef.bases slice because it includes keyword(s)')**'''),
 
 ('', 1, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot get ClassDef.bases slice because it includes keyword(s)')**'''),
 
 ('', 0, 1, 'bases', {}, (None,
 r'''class cls(a, b, c=d, *e): pass'''),
@@ -17284,11 +17284,11 @@ Tuple - ROOT 0,0..5,1
 
 ('', 0, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls[T](a, b=c, *d): pass'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot get ClassDef.bases slice because it includes keyword(s)')**'''),
 
 ('', 1, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls[T](a, b=c, *d): pass'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot get ClassDef.bases slice because it includes keyword(s)')**'''),
 ],
 
 'ClassDef__bases': [  # ................................................................................
@@ -20095,11 +20095,11 @@ Tuple - ROOT 0,0..5,1
 
 ('', 0, 2, None, {}, (None,
 r'''call(a, b=c, *d)'''),
-r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot get Call.args slice because it includes keyword(s)')**'''),
 
 ('', 1, 2, None, {}, (None,
 r'''call(a, b=c, *d)'''),
-r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot get Call.args slice because it includes keyword(s)')**'''),
 
 ('', 0, 1, None, {}, (None,
 r'''call(a, b, c=d, *e)'''),
