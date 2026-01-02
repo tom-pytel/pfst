@@ -2689,6 +2689,18 @@ def _loc_slice_raw_put_MatchMapping__all(
 
     return ln, col, end_ln, end_col, start, stop, patterns
 
+def _loc_slice_raw_put_Call_ClassDef_arglikes(
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
+) -> tuple[int, int, int, int, int, int, list[AST]]:
+    arglikes = self._cached_arglikes()
+    start, stop = _fixup_slice_index_for_raw(len(arglikes), start, stop)
+    ln, col, end_ln, end_col = arglikes[start].f.pars()
+
+    if stop != start:
+        _, _, end_ln, end_col = arglikes[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, arglikes
+
 def _loc_slice_raw_put__body(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
@@ -2732,6 +2744,9 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (Dict, '_all'):                       _loc_slice_raw_put_Dict__all,
     (Compare, '_all'):                    _loc_slice_raw_put_Compare__all,
     (MatchMapping, '_all'):               _loc_slice_raw_put_MatchMapping__all,
+
+    (ClassDef, '_bases'):                 _loc_slice_raw_put_Call_ClassDef_arglikes,
+    (Call, '_args'):                      _loc_slice_raw_put_Call_ClassDef_arglikes,
 
     (Module, '_body'):                    _loc_slice_raw_put__body,
     (Interactive, '_body'):               _loc_slice_raw_put__body,

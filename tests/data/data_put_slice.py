@@ -39582,6 +39582,38 @@ For - ROOT 0,0..1,5
    0] Expr - 1,4..1,5
      .value Name 'x' Load - 1,4..1,5
 '''),
+
+('', 1, -1, '_args', {'raw': True}, ('Call',
+r'''call(a, *not b, c, e=f, *g, **h, i=j)'''),
+r'''x''',
+r'''call(a, x, i=j)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Name 'x' Load - 0,8..0,9
+  .keywords[1]
+   0] keyword - 0,11..0,14
+     .arg 'i'
+     .value Name 'j' Load - 0,13..0,14
+'''),
+
+('', 1, -1, '_bases', {'raw': True}, ('ClassDef',
+r'''class cls(a, *not b, c, e=f, *g, **h, i=j): pass'''),
+r'''x''',
+r'''class cls(a, x, i=j): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Name 'x' Load - 0,13..0,14
+  .keywords[1]
+   0] keyword - 0,16..0,19
+     .arg 'i'
+     .value Name 'j' Load - 0,18..0,19
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
 ],
 
 'misc': [  # ................................................................................
