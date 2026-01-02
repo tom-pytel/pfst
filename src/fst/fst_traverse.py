@@ -50,7 +50,7 @@ _ASTS_LEAF_WALK_SCOPE = ASTS_LEAF_FUNCDEF | ASTS_LEAF_TYPE_PARAM | {ClassDef, La
                                                                     GeneratorExp, comprehension, arguments, arg}  # used in walk(scope=True) for a little optimization
 
 
-def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST]) -> bool:
+def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]]) -> bool:
     """Check 'all' parameter condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
 
     if all is True:
@@ -126,7 +126,7 @@ def prev_bound_step(self: fst.FST) -> tuple[int, int]:
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class methods
 
-def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
+def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False) -> fst.FST | None:
     """Get next sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -139,8 +139,8 @@ def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] 
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if last valid sibling in parent, otherwise next node.
@@ -172,7 +172,7 @@ def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] 
             return self
 
 
-def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
+def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False) -> fst.FST | None:
     """Get previous sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -185,8 +185,8 @@ def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] 
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if first valid sibling in parent, otherwise previous node.
@@ -218,7 +218,7 @@ def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] 
             return self
 
 
-def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
+def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False) -> fst.FST | None:
     """Get first valid child in syntactic order.
 
     **Parameters:**
@@ -231,8 +231,8 @@ def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Containe
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if no valid children, otherwise first valid child.
@@ -265,7 +265,7 @@ def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Containe
         field, idx = self.pfield
 
 
-def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
+def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False) -> fst.FST | None:
     """Get last valid child in syntactic order.
 
     **Parameters:**
@@ -278,8 +278,8 @@ def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if no valid children, otherwise last valid child.
@@ -309,7 +309,9 @@ def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container
         field, idx = self.pfield
 
 
-def last_header_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
+def last_header_child(
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False
+) -> fst.FST | None:
     r"""Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
     `if something: pass`.
 
@@ -323,8 +325,8 @@ def last_header_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Co
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if no valid children or if `self` is not a block statement, otherwise last valid child in the block
@@ -360,7 +362,7 @@ def last_header_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Co
 
 
 def next_child(
-    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | type[AST] | Container[AST] = False
+    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False
 ) -> fst.FST | None:
     """Get the next child in syntactic order, meant for simple iteration.
 
@@ -377,8 +379,8 @@ def next_child(
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if last valid child in `self`, otherwise next child node.
@@ -421,7 +423,7 @@ def next_child(
 
 
 def prev_child(
-    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | type[AST] | Container[AST] = False
+    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False
 ) -> fst.FST | None:
     """Get the previous child in syntactic order, meant for simple iteration.
 
@@ -438,8 +440,8 @@ def prev_child(
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if first valid child in `self`, otherwise previous child node.
@@ -482,7 +484,7 @@ def prev_child(
 
 
 def step_fwd(
-    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False, recurse_self: bool = True
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False, recurse_self: bool = True
 ) -> fst.FST | None:
     """Step forward in the tree in syntactic order, as if `walk()`ing forward, **NOT** the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
@@ -498,8 +500,8 @@ def step_fwd(
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes of
         `self` on start.
 
@@ -577,7 +579,7 @@ def step_fwd(
 
 
 def step_back(
-    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False, recurse_self: bool = True
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False, recurse_self: bool = True
 ) -> fst.FST | None:
     """Step backward in the tree in syntactic order, as if `walk()`ing backward, **NOT** the inverse of `step_fwd()`.
     Will walk up parents and down children to get the next node, returning `None` only when we are at the beginning
@@ -593,8 +595,8 @@ def step_back(
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to previous nodes
         of `self` on start.
 
@@ -643,7 +645,7 @@ def step_back(
 
 def walk(
     self: fst.FST,
-    all: bool | Literal['loc'] | type[AST] | Container[AST] = False,
+    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False,
     *,
     self_: bool = True,
     recurse: bool = True,
@@ -690,9 +692,9 @@ def walk(
             do not always have a well defined location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
-        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-            or `dict` with the keys being the `AST` classes as those are the fastest checks. This will not constrain the
-            walk, just filter which nodes are returned.
+        - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
+            `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks. This will not
+            constrain the walk, just filter which nodes are returned.
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the first level of children by default, `send(True)` for a given node will

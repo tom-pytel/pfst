@@ -2954,15 +2954,15 @@ class FST:
 
         return '\n'.join(lines)
 
-    def put_docstr(self, text: builtins.str | None, reinsert: bool = False, **options) -> FST:
+    def put_docstr(self, text: builtins.str | None, reput: bool = False, **options) -> FST:
         r'''Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
         be formatted with triple quotes and indented as needed.
 
         **Parameters:**
         - `text`: The string to set as a docstring or `None` to delete.
-        - `reinsert`: If `True` then remove old docstring `Expr` first (if present) before reinserting new one. This is
-            to allow repositioning the docstring before any comments.
+        - `reput`: If `True` then remove old docstring `Expr` first (if present) before reinserting new one. This is to
+            allow repositioning the docstring before any comments.
         - `options`: The options to use for a put if a put is done, see `options()`.
 
         **Returns:**
@@ -3001,7 +3001,7 @@ class FST:
         if 'trivia' not in options:
             options['trivia'] = (False, False)
 
-        if reinsert and has_docstr:  # if user wants to reinsert then delete old one first
+        if reput and has_docstr:  # if user wants to re-put then delete old one first
             self._put_slice(None, 0, 1, 'body', False, options)
 
             has_docstr = False
@@ -3127,6 +3127,8 @@ class FST:
         _validate_get_put_line_comment_field(self, field)
 
         return self._getput_line_comment(comment, field, full)
+
+    # TODO: get/put_leading/trailing_comments()
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing **GROUPING** parentheses if present. Will balance parentheses if `self` is

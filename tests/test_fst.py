@@ -6026,7 +6026,7 @@ class cls:
     """docstr"""  # line-comment
     # post-comment
 '''.strip())
-        f.put_docstr('test', reinsert=True)
+        f.put_docstr('test', reput=True)
         self.assertEqual('''
 class cls:
     """test"""

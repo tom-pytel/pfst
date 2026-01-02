@@ -313,6 +313,9 @@ the length is reduced by 1 in this case.
 ...     call()
 ... '''.strip())
 
+>>> len(f.body), len(f._body)
+(3, 2)
+
 >>> print(f.get_slice('body').src)
 '''docstring'''
 a = b
@@ -347,6 +350,83 @@ call()
 
 Also note that `_body` is not the default field unlike `_all` is for its respective node types, you will always have to
 specify it explicitly.
+
+
+## `_args` virtual field
+
+This is a field on the `Call` node which combines the `args` and `keywords` fields into one and accesses them in
+syntax order (this is important as the two separate lists may have elements which are intermixed).
+
+>>> f = FST('call(a, b=c, *d)')
+
+>>> print([g.src for g in [*f.args, *f.keywords]])
+['a', '*d', 'b=c']
+
+>>> print([g.src for g in f._args])
+['a', 'b=c', '*d']
+
+You can operate on this field just like any other normal or virtual field.
+
+>>> print(f.put('*new_d', 2, '_args').src)
+call(a, b=c, *new_d)
+
+>>> print(f.get_slice(0, 2).src)  # its the default field so you can omit it
+a, b=c
+
+>>> print(f._args[1:].copy().src)
+b=c, *new_d
+
+But you can't break syntax ordering rules.
+
+>>> f._args[0] = '**nope'
+Traceback (most recent call last):
+...
+fst.NodeError: keyword arglike unpacking cannot precede iterable arglike unpacking
+
+>>> f.put_slice('a, b', 2, 'end')
+Traceback (most recent call last):
+...
+fst.NodeError: positional arglike cannot follow keyword arglike
+
+
+## `_bases` virtual field
+
+This is a field on a `ClassDef` which follows basically the same syntax rules as `Call._args`, even if it doesn't always
+make sense.
+
+>>> f = FST('class cls(a, b=c, *d): pass')
+
+>>> print([g.src for g in [*f.bases, *f.keywords]])
+['a', '*d', 'b=c']
+
+>>> print([g.src for g in f._bases])
+['a', 'b=c', '*d']
+
+Just like with `_args`, you can operate on this field again like any other normal or virtual field.
+
+>>> print(f.put('*new_d', 2, '_bases').src)
+class cls(a, b=c, *new_d): pass
+
+`_bases` is **NOT** the default field for a `ClassDef`, so if you want to use it you must always specify it. Otherwise
+the operation is on `body` which is the default field for a `ClassDef`.
+
+>>> print(f.get_slice(0, 2, '_bases').src)
+a, b=c
+
+>>> print(f._bases[1:].copy().src)
+b=c, *new_d
+
+And you still can't break syntax ordering rules.
+
+>>> f._bases[0] = '**nope'
+Traceback (most recent call last):
+...
+fst.NodeError: keyword arglike unpacking cannot precede iterable arglike unpacking
+
+>>> f.put_slice('a, b', 2, 'end', '_bases')
+Traceback (most recent call last):
+...
+fst.NodeError: positional arglike cannot follow keyword arglike
 
 
 ## Virtual field attribute access

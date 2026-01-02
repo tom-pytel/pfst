@@ -1263,7 +1263,7 @@ f"""{(  # =========================
 ## Normalize docstrings
 
 `get_docstr()` gives you a normal string and `put_docstr()` puts it with appropriate formatting for a docstring. In this
-case we also pass `reinsert=True` because we specifically want it to remove and reinsert the docstring expression so
+case we also pass `reput=True` because we specifically want it to remove and then put the docstring expression again so
 that it precedes any comments. Otherwise it just replaces the docstring in the location where it currently is.
 
 ```py
@@ -1292,7 +1292,7 @@ Function:
 ...
 ...     for f in fst.walk():
 ...         if f.has_docstr:
-...             f.put_docstr(f.get_docstr(), reinsert=True)
+...             f.put_docstr(f.get_docstr(), reput=True)
 ...
 ...     return fst.src
 ```
