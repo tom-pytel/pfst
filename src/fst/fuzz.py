@@ -15,7 +15,7 @@ from math import log10
 from pprint import pp
 from random import choice, randint, random, seed, shuffle, sample
 from types import NoneType
-from typing import Any, Generator, Iterable, Literal, NamedTuple
+from typing import Any, Callable, Generator, Iterable, Literal, NamedTuple
 from unicodedata import normalize
 
 from .asttypes import TypeAlias, TemplateStr, Interpolation, _ExceptHandlers
@@ -2121,6 +2121,7 @@ class SliceExprlike(Fuzzy):
         min_tmp:     int
         one:         bool
         fst:         FST
+        transfer:    Callable | None = None
 
     @staticmethod
     def rnd_trivia():
@@ -2247,6 +2248,107 @@ class SliceExprlike(Fuzzy):
             # dst.dump()
             print()
 
+    def transfer_arglikes(
+        self,
+        dir: str,
+        cat: str,
+        field: str | None,
+        slice_field: str | None,
+        src: FST,
+        dst: FST,
+        min_src: int,
+        min_dst: int,
+        one: bool,
+    ):
+        if '>' in dir:  # from script to bucket
+            src_field = '_args' if src.a.__class__ is Call else '_bases'
+            dst_field = 'arglikes'
+            src_len = len(src_body := src._cached_arglikes())
+            dst_len = len(dst_body := getattr(dst.a, 'arglikes'))
+
+        else:
+            src_field = 'arglikes'
+            dst_field = '_args' if dst.a.__class__ is Call else '_bases'
+            src_len = len(src_body := getattr(src.a, 'arglikes'))
+            dst_len = len(dst_body := dst._cached_arglikes())
+
+
+        src_start = randint(0, src_len)
+        src_stop = randint(src_start, src_len)
+        dst_start = randint(0, dst_len)
+        dst_stop = randint(dst_start, dst_len)
+        src_trivia = SliceExprlike.rnd_trivia()
+        dst_trivia = SliceExprlike.rnd_trivia()
+
+        while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
+            if dst_stop != dst_start:  # first reduce size being overwritten if possible
+                dst_start += (i := randint(0, 1))
+                dst_stop -= i ^ 1
+
+            else:  # can't reduce any more
+                if src_start and (randint(0, 1) or src_stop == src_len):
+                    src_start -= 1
+                elif src_stop < src_len:
+                    src_stop += 1
+                else:
+                    break  # can actually get here because of initially lower length containers than we allow
+
+        len_src_slice = src_stop - src_start
+        cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
+
+        if one:
+            if src_stop - src_start == 0 and isinstance(src.a, Set):
+                one = False
+            else:
+                one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst or len_src_slice < min_src else bool(randint(0, 1))  # len_src_slice < min_src because of potentially invalid slice ASTs
+
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print(f'\x08... {dir} {cat = }, {cut = }, {one = }')
+            print(f'    {src_start = }, {src_stop = }, {src_len = }, {min_src = }, {src_trivia = }')
+            print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
+            print('   PRE SRC: ', src, src.src)
+            print('   PRE DST: ', dst, dst.src)
+            # if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
+            # src.dump()
+
+        src_elts = src_body[src_start : src_stop]
+        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
+        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
+
+        slice = src.get_slice(src_start_, src_stop_, field=src_field, cut=cut, trivia=src_trivia)
+
+        slice_elts = slice.arglikes[:]
+
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   SLICE:   ', slice, slice.src)
+
+        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
+        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
+
+        try:
+            dst.put_slice(slice, dst_start_, dst_stop_, field=dst_field, one=one, trivia=dst_trivia)
+
+        except NodeError as exc:  # positional stuff, put thing back if we cut it
+            if cut:
+                src.put_slice(slice, src_start, src_start, field=src_field, trivia=(False, False))
+
+            if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+                print('   FAILED:', str(exc))
+
+            return
+
+        if not one:
+            dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
+
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   POST SRC:', src, src.src)
+            print('   POST DST:', dst, dst.src)
+            # if src.parent: print('   POST SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   POST DST PARENT: ', dst.parent, dst.parent.src)
+            # dst.dump()
+            print()
+
     @staticmethod
     def cat(fst: FST) -> tuple[str | type[AST], ...]:
         ast = fst.a
@@ -2274,7 +2376,7 @@ class SliceExprlike(Fuzzy):
             if not ast.keywords:
                 return ('type_params', 'decorator_list', 'ClassDef_bases')
             else:
-                return ('type_params', 'decorator_list')
+                return ('type_params', 'decorator_list', 'arglikes')
 
         if isinstance(ast, Compare):
             return (Compare,)
@@ -2291,7 +2393,7 @@ class SliceExprlike(Fuzzy):
             ):
                 return ('Call_args',)
             else:
-                return ()
+                return ('arglikes',)
 
         if isinstance(ast, ImportFrom):
             return (ImportFrom,) if ast.module != '__future__' and ast.names[0].name != '*' else ()
@@ -2321,6 +2423,7 @@ class SliceExprlike(Fuzzy):
             'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
+            'arglikes':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes'), self.transfer_arglikes),
             'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
             MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
@@ -2382,12 +2485,14 @@ class SliceExprlike(Fuzzy):
                         continue
 
                     with FST.options(norm=False):
-                        self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprlike, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
+                        transfer = bucket.transfer or self.transfer
+
+                        transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprlike, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
 
                         if self.verify:
                             fst.verify()
 
-                        self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprlike, bucket.min_tmp, bucket.min_script, bucket.one)
+                        transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprlike, bucket.min_tmp, bucket.min_script, bucket.one)
 
                         if self.verify:
                             fst.verify()
