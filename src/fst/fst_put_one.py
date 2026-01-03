@@ -2493,7 +2493,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_arglike),  # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
     (ClassDef, 'body'):                   (True,  None, None),  # stmt*
-    (ClassDef, '_bases'):                 (True,  _put_one_arglikes, _onestatic__arglike_required),  # expr|keyword*
+    (ClassDef, '_bases'):                 (True,  _put_one_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
     (Return, 'value'):                    (False, _put_one_exprlike_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
     (Delete, 'targets'):                  (True,  _put_one_exprlike_required, onestatic(_one_info_exprlike_required, is_valid_del_target, ctx_cls=Del)),  # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprlike_required, _onestatic_target),  # expr*
@@ -2584,7 +2584,7 @@ _PUT_ONE_HANDLERS = {
     (Call, 'func'):                       (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, _onestatic_expr_required_arglike),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
-    (Call, '_args'):                      (True,  _put_one_arglikes, _onestatic__arglike_required),  # expr|keyword*
+    (Call, '_args'):                      (True,  _put_one_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
     (FormattedValue, 'value'):            (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)),  # int  # onestatic only here for info for raw put, Constant must be str
     (FormattedValue, 'format_spec'):      (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_format_spec, JoinedStr)),  # expr?  # onestatic only here for info for raw put
@@ -2682,7 +2682,7 @@ _PUT_ONE_HANDLERS = {
     (_match_cases, 'cases'):              (True,  None, None),  # stmt*,  # match_case*
     (_Assign_targets, 'targets'):         (True,  _put_one_exprlike_required, _onestatic_target),  # expr*
     (_decorator_list, 'decorator_list'):  (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
-    (_arglikes, 'arglikes'):              (True,  _put_one__arglikes_arglikes, _onestatic__arglike_required),  # expr|keyword*
+    (_arglikes, 'arglikes'):              (True,  _put_one__arglikes_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
     (_comprehensions, 'generators'):      (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (_comprehension_ifs, 'ifs'):          (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
     (_aliases, 'names'):                  (True,  _put_one_exprlike_required, _onestatic_alias_required),  # alias*

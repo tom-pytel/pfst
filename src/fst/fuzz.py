@@ -2318,6 +2318,10 @@ class SliceExprlike(Fuzzy):
 
         slice = src.get_slice(src_start_, src_stop_, field=src_field, cut=cut, trivia=src_trivia)
 
+        slice_elts = getattr(slice.a, 'arglikes')[:]
+
+        # assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
+
         slice_elts = slice.arglikes[:]
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
@@ -2340,6 +2344,8 @@ class SliceExprlike(Fuzzy):
 
         if not one:
             dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
+
+            # assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   POST SRC:', src, src.src)
@@ -2374,7 +2380,7 @@ class SliceExprlike(Fuzzy):
 
         if isinstance(ast, ClassDef):
             if not ast.keywords:
-                return ('type_params', 'decorator_list', 'ClassDef_bases')
+                return ('type_params', 'decorator_list', 'ClassDef_bases',)# 'keywords')
             else:
                 return ('type_params', 'decorator_list', 'arglikes')
 
@@ -2391,7 +2397,7 @@ class SliceExprlike(Fuzzy):
             if ((ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp))  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
                 and not ast.keywords
             ):
-                return ('Call_args',)
+                return ('Call_args',)# 'keywords')
             else:
                 return ('arglikes',)
 
@@ -2423,6 +2429,7 @@ class SliceExprlike(Fuzzy):
             'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
+            # 'keywords':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes')),
             'arglikes':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes'), self.transfer_arglikes),
             'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),

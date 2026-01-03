@@ -188,8 +188,8 @@ from .fst_put_one import _fix_With_items
 #     S ,          (MatchClass, 'patterns'):               # pattern*              -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
 #                                                                                  .
 #                                                                                  .
-# *   S ,          (ClassDef, 'bases'):                    # expr*                 -> Tuple[expr_arglike]        _parse__expr_arglikes  - keywords and Starred bases can mix
-# *   S ,          (Call, 'args'):                         # expr*                 -> Tuple[expr_arglike]        _parse__expr_arglikes  - keywords and Starred args can mix
+# *   S ,          (ClassDef, 'bases'):                    # expr*                 -> Tuple[expr_arglike]        _parse__expr_arglikes  - keywords and Starred bases can mix, don't allow here
+# *   S ,          (Call, 'args'):                         # expr*                 -> Tuple[expr_arglike]        _parse__expr_arglikes  - keywords and Starred args can mix, don't allow here
 #                                                                                  .
 # *   S ,          (Delete, 'targets'):                    # expr*                 -> Tuple[target]              _parse_expr / restrict del_targets
 # * ! N =          (Assign, 'targets'):                    # expr*                 -> _Assign_targets            _parse__Assign_targets
@@ -199,8 +199,8 @@ from .fst_put_one import _fix_With_items
 # *   S ,          (Nonlocal, 'names'):                    # identifier*           -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                                  .
 #                                                                                  .
-#   ! S ,          (ClassDef, 'keywords'):                 # keyword*              -> _keywords                  _parse__keywords  - keywords and Starred bases can mix
-#   ! S ,          (Call, 'keywords'):                     # keyword*              -> _keywords                  _parse__keywords  - keywords and Starred args can mix
+# * ! S ,          (ClassDef, 'keywords'):                 # keyword*              -> _arglikes                  _parse__arglikes  - keywords and Starred bases can mix, don't allow here
+# * ! S ,          (Call, 'keywords'):                     # keyword*              -> _arglikes                  _parse__arglikes  - keywords and Starred args can mix, don't allow here
 #                                                                                  .
 # * ! S ,          (FunctionDef, 'type_params'):           # type_param*           -> _type_params               _parse__type_params
 # * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*           -> _type_params               _parse__type_params
@@ -231,8 +231,8 @@ from .fst_put_one import _fix_With_items
 # *   N ao         (BoolOp, 'values'):                     # expr*                 -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                                  .
 #                                                                                  .
-# *                (ClassDef, '_bases'):                   # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
-# *                (Call, '_args'):                        # expr*+keyword*        -> _arglikes                  _parse__arglikes / exprs and keywords
+# *                (ClassDef, '_bases'):                   # (expr|keyword)*       -> _arglikes                  _parse__arglikes / exprs and keywords  - keywords and Starred bases can mix, allow here
+# *                (Call, '_args'):                        # (expr|keyword)*       -> _arglikes                  _parse__arglikes / exprs and keywords  - keywords and Starred args can mix, allow here
 #                                                                                  .
 #                  (arguments, '_all'):                    # arguments             -> arguments                  _parse_arguments / arguments_lambda
 #                                                                                  .
@@ -1662,7 +1662,7 @@ def _put_slice_ClassDef_bases(
 
     if keywords := ast.keywords:
         if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
-            raise NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')
+            raise NodeError('cannot put ClassDef.bases slice because it includes keywords')
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
 
@@ -2130,7 +2130,7 @@ def _put_slice_Call_args(
 
     if keywords := ast.keywords:
         if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
-            raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
+            raise NodeError('cannot put Call.args slice because it includes keywords')
 
     else:
         if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
@@ -2209,6 +2209,32 @@ def _put_slice_Call_ClassDef_arglikes(
         pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
 
         self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
+
+
+def _put_slice_Call_ClassDef_keywords(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> None:
+    """A `Call.keywords` or `ClassDef.keywords` slice is just check to make sure the slice is all keywords then fall
+    through to put arglikes."""
+
+    ast = self.a
+    body = ast.keywords
+    start, stop = fixup_slice_indices(len(body), start, stop)
+    exprs_field = 'args' if ast.__class__ is Call else 'bases'
+    exprs = getattr(ast, exprs_field)
+
+    if exprs and start != stop and body[start].f.loc < exprs[-1].f.loc:
+        raise NodeError(f'cannot put {ast.__class__.__name__}.keywords slice because it includes {exprs_field}')
+
+    nexprs = len(exprs)
+
+    return _put_slice_Call_ClassDef_arglikes(self, code, start + nexprs, stop + nexprs, '_' + exprs_field, one, options)
 
 
 def _put_slice_MatchSequence_patterns(
@@ -2540,22 +2566,21 @@ _PUT_SLICE_HANDLERS = {
     (AsyncFunctionDef, 'decorator_list'):     _put_slice_decorator_list,  # expr*
     (ClassDef, 'decorator_list'):             _put_slice_decorator_list,  # expr*
     (ClassDef, 'bases'):                      _put_slice_ClassDef_bases,  # expr*
-    (ClassDef, '_bases'):                     _put_slice_Call_ClassDef_arglikes,  # expr*
+    (ClassDef, 'keywords'):                   _put_slice_Call_ClassDef_keywords,  # keyword*
+    (ClassDef, '_bases'):                     _put_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (Delete, 'targets'):                      _put_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _put_slice_BoolOp_values,  # expr*
     (Compare, '_all'):                        _put_slice_Compare__all,  # expr*
     (Call, 'args'):                           _put_slice_Call_args,  # expr*
-    (Call, '_args'):                          _put_slice_Call_ClassDef_arglikes,  # expr*
+    (Call, 'keywords'):                       _put_slice_Call_ClassDef_keywords,  # keyword*
+    (Call, '_args'):                          _put_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (comprehension, 'ifs'):                   _put_slice_comprehension_ifs,  # expr*
 
     (ListComp, 'generators'):                 _put_slice_generators,  # comprehension*
     (SetComp, 'generators'):                  _put_slice_generators,  # comprehension*
     (DictComp, 'generators'):                 _put_slice_generators,  # comprehension*
     (GeneratorExp, 'generators'):             _put_slice_generators,  # comprehension*
-
-    (ClassDef, 'keywords'):                   _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (Call, 'keywords'):                       _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
     (Import, 'names'):                        _put_slice_Import_names,  # alias*
     (ImportFrom, 'names'):                    _put_slice_ImportFrom_names,  # alias*
@@ -2583,7 +2608,7 @@ _PUT_SLICE_HANDLERS = {
     (_match_cases, 'cases'):                  put_slice_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):             _put_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _put_slice_decorator_list,  # expr*
-    (_arglikes, 'arglikes'):                  _put_slice__slice,  # expr|keyword*
+    (_arglikes, 'arglikes'):                  _put_slice__slice,  # (expr|keyword)*
     (_comprehensions, 'generators'):          _put_slice_generators,  # comprehensions*
     (_comprehension_ifs, 'ifs'):              _put_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _put_slice__slice,  # alias*

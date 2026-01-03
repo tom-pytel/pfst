@@ -571,8 +571,6 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> fst.FST
     **WARNING!** `stack` is consumed.
     """
 
-    # THIS IS A HOT FUNCTION!
-
     if stack is None:
         stack = [self]
 
@@ -1621,8 +1619,6 @@ def _offset(
     0123456789ABC       0123456789ABC
     ```
     """
-
-    # THIS IS A HOT FUNCTION!
 
     # WARNING! In the inner loop of this function there are two `break` statements with a note to see this warning. This
     # is because here we assume that locations and specifically order of nodes is maintained during editing operations.

@@ -9127,7 +9127,7 @@ if 1:
         self.assertEqual('@deco\nclass new(base, meta=other): pass', test(f, 'name', 'new', None, 'cls').src)
         self.assertEqual('@deco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass,', fstview, '(base,)').src)
         self.assertEqual('@deco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', fstview,
-                                                                         '<<ClassDef ROOT 1,0..1,33>.keywords [<keyword 1,16..1,26>]>').src)
+                                                                         'meta=other').src)
         self.assertEqual('@deco\nclass new(bass, moto=some):\n    return', test(f, 'body', 'return', fstview, 'pass').src)
 
         self.assertEqual('return yup', test(FST('return yes'), 'value', 'yup', FST, 'yes').src)
@@ -9276,7 +9276,7 @@ if 1:
         f = FST('call(arg, kw=blah)')
         self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', fstview, '(arg,)').src)
         self.assertEqual('call(a, b, kw1=bloh, kws=hmm)', test(f, 'keywords', 'kw1=bloh, kws=hmm', fstview,
-                                                               '<<Call ROOT 0,0..0,19>.keywords [<keyword 0,11..0,18>]>').src)
+                                                               'kw=blah').src)
 
         f = FST('u"a"')
         self.assertEqual('u', f.kind)

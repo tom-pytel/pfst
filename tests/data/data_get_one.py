@@ -301,7 +301,12 @@ r'''Name 'base' Load - ROOT 0,0..0,4'''),
 
 ('', 0, None, 'keywords', {}, (ClassDef,
 r'''class cls(key=val): pass'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 0,11..0,15
+''',
 r'''key=val''', r'''
 keyword - ROOT 0,0..0,7
   .arg 'key'
@@ -1246,7 +1251,10 @@ r'''Name 'arg' Load - ROOT 0,0..0,3'''),
 
 ('', 0, None, 'keywords', {}, (Call,
 r'''call(key=val)'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
 r'''key=val''', r'''
 keyword - ROOT 0,0..0,7
   .arg 'key'

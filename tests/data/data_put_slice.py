@@ -26205,12 +26205,12 @@ ClassDef - ROOT 0,0..3,7
 ('', 0, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''), (None,
 r'''x,'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot put ClassDef.bases slice because it includes keywords')**'''),
 
 ('', 1, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''), (None,
 r'''x,'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot put ClassDef.bases slice because it includes keywords')**'''),
 
 ('', 0, 1, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''), (None,
@@ -27200,7 +27200,7 @@ ClassDef - ROOT 0,0..5,7
 ('', 0, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls [T, *U, **V] (a, b=c, *d): pass'''), (None,
 r'''x,'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot put ClassDef.bases slice because it includes keywords')**'''),
 
 ('', 1, 2, 'bases', {'_ver': 12}, (None, r'''
 class cls [T,
@@ -27209,7 +27209,7 @@ class cls [T,
 ] (a, b=c, *d): pass
 '''), (None,
 r'''x,'''),
-r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot put ClassDef.bases slice because it includes keywords')**'''),
 
 ('', 0, 1, 'bases', {'_ver': 12}, (None,
 r'''class cls[T,](a, b=c, *d): pass'''), (None,
@@ -28017,6 +28017,62 @@ ClassDef - ROOT 0,0..0,39
    2] ParamSpec - 0,15..0,18
      .name 'V'
 '''),
+],
+
+'ClassDef_keywords': [  # ................................................................................
+
+('', 1, 'end', 'keywords', {}, (None,
+r'''class cls(a, b=c, *d, **e): pass'''), ('_arglikes',
+r'''f=g, **h'''),
+r'''class cls(a, b=c, *d, f=g, **h): pass''', r'''
+ClassDef - ROOT 0,0..0,37
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'd' Load - 0,19..0,20
+     .ctx Load
+  .keywords[3]
+   0] keyword - 0,13..0,16
+     .arg 'b'
+     .value Name 'c' Load - 0,15..0,16
+   1] keyword - 0,22..0,25
+     .arg 'f'
+     .value Name 'g' Load - 0,24..0,25
+   2] keyword - 0,27..0,30
+     .value Name 'h' Load - 0,29..0,30
+  .body[1]
+   0] Pass - 0,33..0,37
+'''),
+
+('', -1, 'end', 'keywords', {}, (None,
+r'''class cls(a, b=c, *d, **e): pass'''), ('_arglikes',
+r'''f=g, **h'''),
+r'''class cls(a, b=c, *d, f=g, **h): pass''', r'''
+ClassDef - ROOT 0,0..0,37
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'd' Load - 0,19..0,20
+     .ctx Load
+  .keywords[3]
+   0] keyword - 0,13..0,16
+     .arg 'b'
+     .value Name 'c' Load - 0,15..0,16
+   1] keyword - 0,22..0,25
+     .arg 'f'
+     .value Name 'g' Load - 0,24..0,25
+   2] keyword - 0,27..0,30
+     .value Name 'h' Load - 0,29..0,30
+  .body[1]
+   0] Pass - 0,33..0,37
+'''),
+
+('', -2, 'end', 'keywords', {}, (None,
+r'''class cls(a, b=c, *d, **e): pass'''), ('_arglikes',
+r'''f=g, **h'''),
+r'''**NodeError('cannot put ClassDef.keywords slice because it includes bases')**'''),
 ],
 
 'ClassDef__bases': [  # ................................................................................
@@ -32090,12 +32146,12 @@ Call - ROOT 0,0..3,1
 ('', 0, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''), (None,
 r'''x,'''),
-r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot put Call.args slice because it includes keywords')**'''),
 
 ('', 1, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''), (None,
 r'''x,'''),
-r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+r'''**NodeError('cannot put Call.args slice because it includes keywords')**'''),
 
 ('', 0, 1, 'args', {}, (None,
 r'''call(a, b=c, *d)'''), (None,
@@ -32656,6 +32712,58 @@ Call - ROOT 0,0..0,15
      .ctx Load
    1] Name 'c' Load - 0,13..0,14
 '''),
+],
+
+'Call_keywords': [  # ................................................................................
+
+('', 1, 'end', 'keywords', {}, (None,
+r'''call(a, b=c, *d, **e)'''), ('_arglikes',
+r'''f=g, **h'''),
+r'''call(a, b=c, *d, f=g, **h)''', r'''
+Call - ROOT 0,0..0,26
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'd' Load - 0,14..0,15
+     .ctx Load
+  .keywords[3]
+   0] keyword - 0,8..0,11
+     .arg 'b'
+     .value Name 'c' Load - 0,10..0,11
+   1] keyword - 0,17..0,20
+     .arg 'f'
+     .value Name 'g' Load - 0,19..0,20
+   2] keyword - 0,22..0,25
+     .value Name 'h' Load - 0,24..0,25
+'''),
+
+('', -1, 'end', 'keywords', {}, (None,
+r'''call(a, b=c, *d, **e)'''), ('_arglikes',
+r'''f=g, **h'''),
+r'''call(a, b=c, *d, f=g, **h)''', r'''
+Call - ROOT 0,0..0,26
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'd' Load - 0,14..0,15
+     .ctx Load
+  .keywords[3]
+   0] keyword - 0,8..0,11
+     .arg 'b'
+     .value Name 'c' Load - 0,10..0,11
+   1] keyword - 0,17..0,20
+     .arg 'f'
+     .value Name 'g' Load - 0,19..0,20
+   2] keyword - 0,22..0,25
+     .value Name 'h' Load - 0,24..0,25
+'''),
+
+('', -2, 'end', 'keywords', {}, (None,
+r'''call(a, b=c, *d, **e)'''), ('_arglikes',
+r'''f=g, **h'''),
+r'''**NodeError('cannot put Call.keywords slice because it includes args')**'''),
 ],
 
 'Call__args': [  # ................................................................................

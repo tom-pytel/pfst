@@ -489,6 +489,8 @@ def _code_as_expr(
             if not coerce:
                 raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}', rawable=True)
 
+            # TODO: move this out to _coerce_as_expr()
+
             if ast_cls is withitem:
                 if ast.optional_vars:
                     raise NodeError(f'{_expecting_expr(parse)}, got withitem with optional_vars, '
@@ -520,6 +522,8 @@ def _code_as_expr(
     else:
         if is_ast := isinstance(code, AST):
             code_cls = code.__class__
+
+            # TODO: move this out to _coerce_as_expr()
 
             if code_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
                 if not coerce:

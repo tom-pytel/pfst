@@ -9585,7 +9585,18 @@ r'''**IndexError('index out of range')**'''),
 ('body[0]', 0, None, 'keywords', {}, ('exec',
 r'''class c(a=1, b = (2)): pass'''), ('keyword',
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''class c(b = (2)): pass''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ClassDef - 0,0..0,22
+     .name 'c'
+     .keywords[1]
+      0] keyword - 0,8..0,15
+        .arg 'b'
+        .value Constant 2 - 0,13..0,14
+     .body[1]
+      0] Pass - 0,18..0,22
+'''),
 
 ('body[0]', 0, None, 'keywords', {}, ('exec',
 r'''class c(a=1, b = (2)): pass'''), ('keyword',
@@ -9675,7 +9686,17 @@ r'''**IndexError('index out of range')**'''),
 ('body[0].value', 0, None, 'keywords', {}, ('exec',
 r'''call(a=1, b = (2))'''), ('keyword',
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''call(b = (2))''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+   0] Expr - 0,0..0,13
+     .value Call - 0,0..0,13
+       .func Name 'call' Load - 0,0..0,4
+       .keywords[1]
+        0] keyword - 0,5..0,12
+          .arg 'b'
+          .value Constant 2 - 0,10..0,11
+'''),
 
 ('body[0].value', 0, None, 'keywords', {}, ('exec',
 r'''call(a=1, b = (2))'''), ('keyword',

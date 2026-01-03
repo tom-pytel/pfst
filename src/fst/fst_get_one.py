@@ -445,7 +445,7 @@ _GET_ONE_HANDLERS = {
     (ClassDef, 'bases'):                  _get_one_default,  # expr*
     (ClassDef, 'keywords'):               _get_one_default,  # keyword*
     (ClassDef, 'body'):                   _get_one_stmtlike,  # stmt*
-    (ClassDef, '_bases'):                 _get_one_arglike,  # expr+keyword*
+    (ClassDef, '_bases'):                 _get_one_arglike,  # (expr|keyword)*
     (Return, 'value'):                    _get_one_default,  # expr?
     (Delete, 'targets'):                  _get_one_default,  # expr*
     (Assign, 'targets'):                  _get_one_default,  # expr*
@@ -536,7 +536,7 @@ _GET_ONE_HANDLERS = {
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_default,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
-    (Call, '_args'):                      _get_one_arglike,  # expr+keyword*
+    (Call, '_args'):                      _get_one_arglike,  # (expr|keyword)*
     (FormattedValue, 'value'):            _get_one_FormattedValue_value,  # expr
     (FormattedValue, 'conversion'):       _get_one_conversion,  # int
     (FormattedValue, 'format_spec'):      _get_one_format_spec,  # expr?  - no location on py < 3.12
@@ -633,7 +633,7 @@ _GET_ONE_HANDLERS = {
     (_match_cases, 'cases'):              _get_one_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
     (_decorator_list, 'decorator_list'):  _get_one_default,  # expr*
-    (_arglikes, 'arglikes'):              _get_one_default,  # expr|keyword*
+    (_arglikes, 'arglikes'):              _get_one_default,  # (expr|keyword)*
     (_comprehensions, 'generators'):      _get_one_default,  # comprehension*
     (_comprehension_ifs, 'ifs'):          _get_one_default,  # expr*
     (_aliases, 'names'):                  _get_one_default,  # alias*

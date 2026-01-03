@@ -5338,6 +5338,12 @@ class cls:
             self.assertEqual('', f.put_slice(g, 'end').src)
             f.verify()
 
+        # arglikes
+
+        self.assertEqual('a', (g := (f := FST('a, *b, c=d', '_arglikes').get_slice(0, 2)).get_slice(0, 1)).src)
+        self.assertEqual('a, *b, a', f.put_slice(g, 'end').src)
+        f.verify()
+
         # comprehensions
 
         with FST.options(norm=True):

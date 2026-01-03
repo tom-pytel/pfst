@@ -369,8 +369,6 @@ This module is not finished but functional enough that it can be useful.
   * `Interpolation.format_spec`
 
 * Prescribed get / put slice from / to:
-  * `ClassDef.keywords`
-  * `Call.keywords`
   * `arguments._all`
   * `MatchClass.patterns`
   * `MatchClass.patterns+kwd_attrs:kwd_patterns`
@@ -378,12 +376,12 @@ This module is not finished but functional enough that it can be useful.
   * `TemplateStr.values`
 
 * Improve comment and whitespace handling, especially allow get / put comments in single element non-statement
-operations where it may apply (where comment may belong to expression instead of statement). Allow specification of
-trivia by line number, as well as insert location. Direct comment manipulation functions.
+operations where it may apply (where comment may belong to expression instead of statement). Allow specify insert line.
+Direct comment manipulation functions.
 
-* Tree search, indentation of multiline sequences should be better, more coercion on put, different source encodings,
-code cleanups, decide between primitive or node ops on primitive fields, API additions for real-world use, optimization,
-testing, bughunting, etc...
+* More and better coercion, tree search, indentation of multiline sequences should be better, decide between primitive
+or node ops on primitive fields, different source encodings, code cleanups, API additions for real-world use,
+optimization, testing, bughunting, etc...
 
 * Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
 preserve more formatting.

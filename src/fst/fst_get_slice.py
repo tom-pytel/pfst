@@ -314,25 +314,25 @@ def _move_arglikes_into_one_field(self: fst.FST, arglikes: list[AST]) -> tuple[s
 
     **Returns:**
     - `(field, old_args_or_bases, old_keywords)`: The field name (without underscore) and the old `args/bases` list and
-        old `keywords` list for resetting if nothing is done, like in a `get(cut=False)`.
+        old `keywords` list.
     """
 
     ast = self.a
     field = 'args' if ast.__class__ is Call else 'bases'
     exprs = getattr(ast, field)
 
-    if not (kws := ast.keywords):
-        return field, exprs, kws
+    if not (keywords := ast.keywords):
+        return field, exprs, keywords
 
     ast.keywords = []
-    # arglikes = merge_arglikes(exprs, kws)
+    # arglikes = merge_arglikes(exprs, keywords)
 
     setattr(ast, field, arglikes)
 
     for i, a in enumerate(arglikes):
         a.f.pfield = astfield(field, i)
 
-    return field, exprs, kws
+    return field, exprs, keywords
 
 
 def _split_arglikes_into_two_fields(self: fst.FST, arglikes: list[AST], field: str) -> None:
@@ -341,16 +341,16 @@ def _split_arglikes_into_two_fields(self: fst.FST, arglikes: list[AST], field: s
     done is send the `exprs` to field 1 and the `keywords` to field 2."""
 
     ast = self.a
-    ast.keywords = kws = []
+    ast.keywords = keywords = []
     exprs = []
 
     setattr(ast, field, exprs)
 
     for a in arglikes:  # separate single arglikes with hole cut out back into `args/bases` and `keywords`
         if a.__class__ is keyword:
-            a.f.pfield = astfield('keywords', len(kws))
+            a.f.pfield = astfield('keywords', len(keywords))
 
-            kws.append(a)
+            keywords.append(a)
 
         else:
             a.f.pfield = astfield(field, len(exprs))
@@ -1579,16 +1579,16 @@ def _get_slice_Call_ClassDef_args_bases(
     len_slice = stop - start
     is_call = ast.__class__ is Call
 
-    if start == stop:
+    if not len_slice:
         return new_empty_tuple(from_=self)
 
     if keywords := ast.keywords:
-        kw0_pos = keywords[0].f.loc[:2]
+        kw0_pos = keywords[0].f.loc
 
-        if kw0_pos < body[stop - 1].f.loc[2:]:
-            raise NodeError(f'cannot get {ast.__class__.__name__}.{field} slice because it includes keyword(s)')
+        if kw0_pos < body[stop - 1].f.loc:  # don't need to do pars()
+            raise NodeError(f'cannot get {ast.__class__.__name__}.{field} slice because it includes keywords')
 
-        self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
+        self_tail_sep = True if body[-1].f.loc < kw0_pos else None
 
     else:
         self_tail_sep = None
@@ -1647,13 +1647,14 @@ def _get_slice_Call_ClassDef_arglikes(
     if is_call:
         state = _normalize_solo_call_arg_genexp(self)
 
-    field, _, kws = _move_arglikes_into_one_field(self, body)
+    field, _, keywords = _move_arglikes_into_one_field(self, body)
     loc = self._loc_Call_pars() if is_call else self._loc_ClassDef_bases_pars()
     locs = _locs_and_bounds_get(self, start, stop, body, body, 1, loc)
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
     ret_ast = _arglikes(arglikes=asts)
 
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs, options, field, '', '', ',', 0, 0)
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                         options, field, '', '', ',', False, False)
 
     if cut:
         if not (is_call or body):  # everything was cut from a ClassDef, remove parentheses
@@ -1664,10 +1665,35 @@ def _get_slice_Call_ClassDef_arglikes(
     elif is_call:  # only needs to be done for a Call and only if there are no keywords
         _restore_solo_call_arg_genexp(self, state)
 
-    if kws:  # only need to unmerge if there were keywords to begin with
+    if keywords:  # only need to unmerge if there were keywords to begin with
         _split_arglikes_into_two_fields(self, body, field)
 
     return fst_
+
+
+def _get_slice_Call_ClassDef_keywords(
+    self: fst.FST,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """A `Call.keywords` or `ClassDef.keywords` slice is just check to make sure the slice is all keywords then fall
+    through to get arglikes."""
+
+    ast = self.a
+    body = ast.keywords
+    start, stop = fixup_slice_indices(len(body), start, stop)
+    exprs_field = 'args' if ast.__class__ is Call else 'bases'
+    exprs = getattr(ast, exprs_field)
+
+    if exprs and start != stop and body[start].f.loc < exprs[-1].f.loc:
+        raise NodeError(f'cannot get {ast.__class__.__name__}.keywords slice because it includes {exprs_field}')
+
+    len_exprs = len(exprs)
+
+    return _get_slice_Call_ClassDef_arglikes(self, start + len_exprs, stop + len_exprs, '_' + exprs_field, cut, options)
 
 
 def _get_slice_decorator_list(
@@ -2090,15 +2116,15 @@ _GET_SLICE_HANDLERS = {
     (AsyncFunctionDef, 'decorator_list'):     _get_slice_decorator_list,  # expr*
     (ClassDef, 'decorator_list'):             _get_slice_decorator_list,  # expr*
     (ClassDef, 'bases'):                      _get_slice_Call_ClassDef_args_bases,  # expr*
-    (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (ClassDef, '_bases'):                     _get_slice_Call_ClassDef_arglikes,  # expr|keyword*
+    (ClassDef, 'keywords'):                   _get_slice_Call_ClassDef_keywords,  # keyword*
+    (ClassDef, '_bases'):                     _get_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_Boolop_values,  # expr*
     (Compare, '_all'):                        _get_slice_Compare__all,  # expr*
     (Call, 'args'):                           _get_slice_Call_ClassDef_args_bases,  # expr*
-    (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (Call, '_args'):                          _get_slice_Call_ClassDef_arglikes,  # expr|keyword*
+    (Call, 'keywords'):                       _get_slice_Call_ClassDef_keywords,  # keyword*
+    (Call, '_args'):                          _get_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 
     (ListComp, 'generators'):                 _get_slice_generators,  # comprehension*
@@ -2132,7 +2158,7 @@ _GET_SLICE_HANDLERS = {
     (_match_cases, 'cases'):                  get_slice_stmtlike,  # match_case*
     (_Assign_targets, 'targets'):             _get_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _get_slice_decorator_list,  # expr*
-    (_arglikes, 'arglikes'):                  _get_slice__slice,  # expr|keyword*
+    (_arglikes, 'arglikes'):                  _get_slice__slice,  # (expr|keyword)*
     (_comprehensions, 'generators'):          _get_slice_generators,  # comprehensions*
     (_comprehension_ifs, 'ifs'):              _get_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _get_slice__slice,  # alias*
