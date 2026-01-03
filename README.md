@@ -246,6 +246,21 @@ if True:
 
 # Misc
 
+Familiar AST structure and pythonic operations.
+
+```py
+>>> f = FST('if a:\n    print(a)')
+
+>>> f.test = 'not a'
+
+>>> f.body.append('return a')
+
+>>> print(f.src)
+if not a:
+    print(a)
+    return a
+```
+
 Higher level slice abstraction.
 
 ```py
@@ -257,21 +272,12 @@ a < b
 >>> print(f.pattern.get_slice(1, 3, '_all').src)
 {2: b, **c}
 
->>> print(FST('call(a, b=c, *d)')._args[1:].copy().src)
-b=c, *d
-```
+>>> f = FST('call(a, b=c, *d)')
 
-Traversal is in syntactic order.
+>>> f._args[1:] = '*e, f=g, **h'
 
-```py
->>> list(f.src for f in FST('call(a, x=1, *b, y=2, **c)').walk())[1:]
-['call', 'a', 'x=1', '1', '*b', 'b', 'y=2', '2', '**c', 'c']
-
->>> list(f.src for f in FST('def func[T](a=1, b=2) -> int: pass').walk())[1:]
-['T', 'a=1, b=2', 'a', '1', 'b', '2', 'int', 'pass']
-
->>> list(f.src for f in FST('{key1: val1, **val2, key3: val3}').walk())[1:]
-['key1', 'val1', 'val2', 'key3', 'val3']
+>>> print(f.src)
+call(a, *e, f=g, **h)
 ```
 
 Can zero out bodies.
@@ -340,6 +346,19 @@ class cls:
     """docstring"""
     pass
     c = d
+```
+
+Traversal is in syntactic order.
+
+```py
+>>> list(f.src for f in FST('call(a, x=1, *b, y=2, **c)').walk())[1:]
+['call', 'a', 'x=1', '1', '*b', 'b', 'y=2', '2', '**c', 'c']
+
+>>> list(f.src for f in FST('def func[T](a=1, b=2) -> int: pass').walk())[1:]
+['T', 'a=1, b=2', 'a', '1', 'b', '2', 'int', 'pass']
+
+>>> list(f.src for f in FST('{key1: val1, **val2, key3: val3}').walk())[1:]
+['key1', 'val1', 'val2', 'key3', 'val3']
 ```
 
 Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`

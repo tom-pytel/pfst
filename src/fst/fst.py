@@ -2167,7 +2167,7 @@ class FST:
         *,
         one: bool = True,
         **options
-    ) -> FST:  # -> self
+    ) -> FST:  # -> self or None if deleted due to raw reparse
         """Insert into `field` of `self` at a specific index. Default field if `field=None`. This is a convenience
         function for `self.put_slice()`.
 
@@ -2212,7 +2212,7 @@ class FST:
 
         return self._put_slice(code, idx, idx, field, one, options)
 
-    def append(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self
+    def append(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
         """Append `code` as a single element to `field` of `self`. Default field if `field=None`. This is a convenience
         function for `self.put_slice()`.
 
@@ -2243,7 +2243,7 @@ class FST:
 
         return self._put_slice(code, 'end', 'end', field, True, options)
 
-    def extend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self
+    def extend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
         """Extend `field` of `self` with the slice in `code` (type must be compatible). Default field if `field=None`.
         This is a convenience function for `self.put_slice()`.
 
@@ -2274,7 +2274,7 @@ class FST:
 
         return self._put_slice(code, 'end', 'end', field, False, options)
 
-    def prepend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self
+    def prepend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
         """prepend `code` as a single element to the beginning of `field` of `self`. Default field if `field=None`. This
         is a convenience function for `self.put_slice()`.
 
@@ -2304,7 +2304,7 @@ class FST:
 
         return self._put_slice(code, 0, 0, field, True, options)
 
-    def prextend(self, code: Code, field: builtins.str | None = None, **options) -> fstview:  # -> self
+    def prextend(self, code: Code, field: builtins.str | None = None, **options) -> fstview:  # -> self or None if deleted due to raw reparse
         """Extend the beginning of the `field` of `self` with the slice in `code` (type must be compatible). Default
         field if `field=None`. This is a convenience function for `self.put_slice()`.
 
@@ -2954,7 +2954,7 @@ class FST:
 
         return '\n'.join(lines)
 
-    def put_docstr(self, text: builtins.str | None, reput: bool = False, **options) -> FST:
+    def put_docstr(self, text: builtins.str | None, reput: bool = False, **options) -> FST:  # -> self
         r'''Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
         be formatted with triple quotes and indented as needed.
