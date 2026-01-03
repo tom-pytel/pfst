@@ -246,6 +246,21 @@ if True:
 
 # Misc
 
+Higher level slice abstraction.
+
+```py
+>>> print(FST('a < b < c')._all[:2].copy().src)
+a < b
+
+>>> f = FST('case {1: a, 2: b, **c}: pass')  # match_case
+
+>>> print(f.pattern.get_slice(1, 3, '_all').src)
+{2: b, **c}
+
+>>> print(FST('call(a, b=c, *d)')._args[1:].copy().src)
+b=c, *d
+```
+
 Traversal is in syntactic order.
 
 ```py
@@ -340,18 +355,6 @@ class cls:
     """docstring"""
     pass
     c = d
-```
-
-Higher level slice abstraction.
-
-```py
->>> print(FST('a < b < c')._all[:2].copy().src)
-a < b
-
->>> f = FST('case {1: a, 2: b, **c}: pass', 'match_case')
-
->>> print(f.pattern.get_slice(1, 3, '_all').src)
-{2: b, **c}
 ```
 
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the

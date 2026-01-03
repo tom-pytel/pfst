@@ -2130,6 +2130,70 @@ class SliceExprlike(Fuzzy):
             choice(('none', 'block', 'all', 'line')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
         )
 
+    @staticmethod
+    def rnd_indices(src_len: int, dst_len: int, min_dst: int) -> tuple[int, int, int, int]:
+        src_start = randint(0, src_len)
+        src_stop = randint(src_start, src_len)
+        dst_start = randint(0, dst_len)
+        dst_stop = randint(dst_start, dst_len)
+
+        while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
+            if dst_stop != dst_start:  # first reduce size being overwritten if possible
+                dst_start += (i := randint(0, 1))
+                dst_stop -= i ^ 1
+
+            else:  # can't reduce any more
+                if src_start and (randint(0, 1) or src_stop == src_len):
+                    src_start -= 1
+                elif src_stop < src_len:
+                    src_stop += 1
+                else:
+                    break  # can actually get here because of initially lower length containers than we allow
+
+        return src_start, src_stop, dst_start, dst_stop
+
+    def debug_pre(
+        self,
+        dir: str,
+        cat: str,
+        cut: bool,
+        one: bool,
+        src: FST,
+        src_start: int,
+        src_stop: int,
+        src_len: int,
+        min_src: int,
+        src_trivia: tuple,
+        dst: FST,
+        dst_start: int,
+        dst_stop: int,
+        dst_len: int,
+        min_dst: int,
+        dst_trivia: tuple,
+    ) -> None:
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print(f'\x08... {dir} {cat = }, {cut = }, {one = }')
+            print(f'    {src_start = }, {src_stop = }, {src_len = }, {min_src = }, {src_trivia = }')
+            print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
+            print('   PRE SRC: ', src, src.src)
+            print('   PRE DST: ', dst, dst.src)
+            # if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
+            # src.dump()
+
+    def debug_slice(self, slice: FST) -> None:
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   SLICE:   ', slice, slice.src)
+
+    def debug_post(self, src: FST, dst: FST) -> None:
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   POST SRC:', src, src.src)
+            print('   POST DST:', dst, dst.src)
+            # if src.parent: print('   POST SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   POST DST PARENT: ', dst.parent, dst.parent.src)
+            # dst.dump()
+            print()
+
     def transfer(
         self,
         dir: str,
@@ -2145,41 +2209,11 @@ class SliceExprlike(Fuzzy):
         if slice_field is None:
             slice_field = field
 
-        if is_compare := isinstance(src.a, Compare):
-            src_len = len(src_body := getattr(src.a, 'comparators')) + 1
-            dst_len = len(dst_body := getattr(dst.a, 'comparators')) + 1
-        else:
-            src_len = len(src_body := getattr(src.a, field or 'keys'))
-            dst_len = len(dst_body := getattr(dst.a, field or 'keys'))
+        src_len = len(src_body := getattr(src.a, field or 'keys'))
+        dst_len = len(dst_body := getattr(dst.a, field or 'keys'))
 
-        src_start = randint(0, src_len)
-        src_stop = randint(src_start, src_len)
-        dst_start = randint(0, dst_len)
-        dst_stop = randint(dst_start, dst_len)
-        src_trivia = SliceExprlike.rnd_trivia()
-        dst_trivia = SliceExprlike.rnd_trivia()
-
-        while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
-            if dst_stop != dst_start:  # first reduce size being overwritten if possible
-                dst_start += (i := randint(0, 1))
-                dst_stop -= i ^ 1
-
-            else:  # can't reduce any more
-                if src_start and (randint(0, 1) or src_stop == src_len):
-                    src_start -= 1
-                elif src_stop < src_len:
-                    src_stop += 1
-                else:
-                    break  # can actually get here because of initially lower length containers than we allow
-
-        if is_compare:  # can't get empty slice from or insert into Compare
-            if src_stop == src_start:
-                src_stop += not src_start
-                src_start -= bool(src_start)
-
-            if dst_stop == dst_start:
-                dst_stop += not dst_start
-                dst_start -= bool(dst_start)
+        src_start, src_stop, dst_start, dst_stop = self.rnd_indices(src_len, dst_len, min_dst)
+        src_trivia, dst_trivia = self.rnd_trivia(), self.rnd_trivia()
 
         len_src_slice = src_stop - src_start
         cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
@@ -2190,21 +2224,12 @@ class SliceExprlike(Fuzzy):
             else:
                 one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst or len_src_slice < min_src else bool(randint(0, 1))  # len_src_slice < min_src because of potentially invalid slice ASTs
 
-        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print(f'\x08... {dir} {cat = }, {cut = }, {one = }')
-            print(f'    {src_start = }, {src_stop = }, {src_len = }, {min_src = }, {src_trivia = }')
-            print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
-            print('   PRE SRC: ', src, src.src)
-            print('   PRE DST: ', dst, dst.src)
-            # if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
-            # if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
-            # src.dump()
+        self.debug_pre(dir, cat, cut, one, src, src_start, src_stop, src_len, min_src, src_trivia, dst, dst_start, dst_stop, dst_len, min_dst, dst_trivia)
 
-        if not is_compare:
-            src_elts = src_body[src_start : src_stop]
+        src_elts = src_body[src_start : src_stop]
 
-            if not field:  # Dict or MatchMapping
-                src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
+        if not field:  # Dict or MatchMapping
+            src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
         src_rest = bool(getattr(src.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
         src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len - src_rest  # randomly change index to negative (referring to same location)
@@ -2212,17 +2237,15 @@ class SliceExprlike(Fuzzy):
 
         slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
 
-        if not is_compare:
-            slice_elts = getattr(slice.a, slice_field or 'keys')[:]
+        slice_elts = getattr(slice.a, slice_field or 'keys')[:]
 
-            if not slice_field:  # Dict or MatchMapping
-                slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
+        if not slice_field:  # Dict or MatchMapping
+            slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
 
-            if cut and not isinstance(src.a, (Global, Nonlocal)):
-                assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
+        if cut and not isinstance(src.a, (Global, Nonlocal)):
+            assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
 
-        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print('   SLICE:   ', slice, slice.src)
+        self.debug_slice(slice)
 
         dst_rest = bool(getattr(dst.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
         dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len - dst_rest  # randomly change index to negative (referring to same location)
@@ -2230,23 +2253,72 @@ class SliceExprlike(Fuzzy):
 
         dst.put_slice(slice, dst_start_, dst_stop_, field=field, one=one, trivia=dst_trivia)
 
-        if not is_compare:
-            if not one:
-                dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
+        if not one:
+            dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
 
-                if not field:  # Dict or MatchMapping
-                    dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
+            if not field:  # Dict or MatchMapping
+                dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
 
-                if not isinstance(src.a, (Global, Nonlocal)):
-                    assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
+            if not isinstance(src.a, (Global, Nonlocal)):
+                assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
-        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print('   POST SRC:', src, src.src)
-            print('   POST DST:', dst, dst.src)
-            # if src.parent: print('   POST SRC PARENT: ', src.parent, src.parent.src)
-            # if dst.parent: print('   POST DST PARENT: ', dst.parent, dst.parent.src)
-            # dst.dump()
-            print()
+        self.debug_post(src, dst)
+
+    def transfer_Compare(
+        self,
+        dir: str,
+        cat: str,
+        field: str | None,
+        slice_field: str | None,
+        src: FST,
+        dst: FST,
+        min_src: int,
+        min_dst: int,
+        one: bool,
+    ):
+        if slice_field is None:
+            slice_field = field
+
+        src_len = len(src_body := getattr(src.a, 'comparators')) + 1
+        dst_len = len(dst_body := getattr(dst.a, 'comparators')) + 1
+
+        src_start, src_stop, dst_start, dst_stop = self.rnd_indices(src_len, dst_len, min_dst)
+        src_trivia, dst_trivia = self.rnd_trivia(), self.rnd_trivia()
+
+        if src_stop == src_start:
+            src_stop += not src_start
+            src_start -= bool(src_start)
+
+        if dst_stop == dst_start:
+            dst_stop += not dst_start
+            dst_start -= bool(dst_start)
+
+        len_src_slice = src_stop - src_start
+        cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
+
+        if one:
+            if src_stop - src_start == 0 and isinstance(src.a, Set):
+                one = False
+            else:
+                one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst or len_src_slice < min_src else bool(randint(0, 1))  # len_src_slice < min_src because of potentially invalid slice ASTs
+
+        self.debug_pre(dir, cat, cut, one, src, src_start, src_stop, src_len, min_src, src_trivia, dst, dst_start, dst_stop, dst_len, min_dst, dst_trivia)
+
+        src_rest = bool(getattr(src.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
+        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len - src_rest  # randomly change index to negative (referring to same location)
+        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len - src_rest
+
+        slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
+
+        self.debug_slice(slice)
+
+        dst_rest = bool(getattr(dst.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
+        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len - dst_rest  # randomly change index to negative (referring to same location)
+        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len - dst_rest
+
+        dst.put_slice(slice, dst_start_, dst_stop_, field=field, one=one, trivia=dst_trivia)
+
+        self.debug_post(src, dst)
 
     def transfer_arglikes(
         self,
@@ -2272,26 +2344,8 @@ class SliceExprlike(Fuzzy):
             src_len = len(src_body := getattr(src.a, 'arglikes'))
             dst_len = len(dst_body := dst._cached_arglikes())
 
-
-        src_start = randint(0, src_len)
-        src_stop = randint(src_start, src_len)
-        dst_start = randint(0, dst_len)
-        dst_stop = randint(dst_start, dst_len)
-        src_trivia = SliceExprlike.rnd_trivia()
-        dst_trivia = SliceExprlike.rnd_trivia()
-
-        while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
-            if dst_stop != dst_start:  # first reduce size being overwritten if possible
-                dst_start += (i := randint(0, 1))
-                dst_stop -= i ^ 1
-
-            else:  # can't reduce any more
-                if src_start and (randint(0, 1) or src_stop == src_len):
-                    src_start -= 1
-                elif src_stop < src_len:
-                    src_stop += 1
-                else:
-                    break  # can actually get here because of initially lower length containers than we allow
+        src_start, src_stop, dst_start, dst_stop = self.rnd_indices(src_len, dst_len, min_dst)
+        src_trivia, dst_trivia = self.rnd_trivia(), self.rnd_trivia()
 
         len_src_slice = src_stop - src_start
         cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
@@ -2302,15 +2356,7 @@ class SliceExprlike(Fuzzy):
             else:
                 one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst or len_src_slice < min_src else bool(randint(0, 1))  # len_src_slice < min_src because of potentially invalid slice ASTs
 
-        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print(f'\x08... {dir} {cat = }, {cut = }, {one = }')
-            print(f'    {src_start = }, {src_stop = }, {src_len = }, {min_src = }, {src_trivia = }')
-            print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
-            print('   PRE SRC: ', src, src.src)
-            print('   PRE DST: ', dst, dst.src)
-            # if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
-            # if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
-            # src.dump()
+        self.debug_pre(dir, cat, cut, one, src, src_start, src_stop, src_len, min_src, src_trivia, dst, dst_start, dst_stop, dst_len, min_dst, dst_trivia)
 
         src_elts = src_body[src_start : src_stop]
         src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
@@ -2324,8 +2370,7 @@ class SliceExprlike(Fuzzy):
 
         slice_elts = slice.arglikes[:]
 
-        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print('   SLICE:   ', slice, slice.src)
+        self.debug_slice(slice)
 
         dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
         dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
@@ -2347,13 +2392,7 @@ class SliceExprlike(Fuzzy):
 
             # assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
-        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
-            print('   POST SRC:', src, src.src)
-            print('   POST DST:', dst, dst.src)
-            # if src.parent: print('   POST SRC PARENT: ', src.parent, src.parent.src)
-            # if dst.parent: print('   POST DST PARENT: ', dst.parent, dst.parent.src)
-            # dst.dump()
-            print()
+        self.debug_post(src, dst)
 
     @staticmethod
     def cat(fst: FST) -> tuple[str | type[AST], ...]:
@@ -2427,7 +2466,7 @@ class SliceExprlike(Fuzzy):
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
             'and':            self.Bucket('values', None, 2, 2, True, FST('a and b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
-            Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
+            Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare), self.transfer_Compare),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             # 'keywords':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes')),
             'arglikes':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes'), self.transfer_arglikes),

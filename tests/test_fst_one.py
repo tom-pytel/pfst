@@ -3629,7 +3629,7 @@ if __name__ == '__main__':
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
         if PYLT12:
-            raise RuntimeError('cannot regenerate on python version < 3.12')
+            raise RuntimeError('cannot regenerate on python version < 3.14')
 
     if args.regen_get_one or args.regen_all:
         print('Regenerating get one test data...')

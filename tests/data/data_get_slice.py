@@ -17478,6 +17478,48 @@ _arglikes - ROOT 0,0..0,17
      .arg 'i'
      .value Name 'j' Load - 0,16..0,17
 '''),
+
+('', 0, 0, '_bases', {}, (None,
+r'''class cls: pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 0,11..0,15
+''',
+r'''''',
+r'''_arglikes - ROOT 0,0..0,0'''),
+
+('', 0, 'end', '_bases', {}, (None,
+r'''class cls(a, *not b, c, e=f, *g, **h, i=j): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 0,11..0,15
+''',
+r'''a, *not b, c, e=f, *g, **h, i=j''', r'''
+_arglikes - ROOT 0,0..0,31
+  .arglikes[7]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,9
+     .value UnaryOp - 0,4..0,9
+       .op Not - 0,4..0,7
+       .operand Name 'b' Load - 0,8..0,9
+     .ctx Load
+   2] Name 'c' Load - 0,11..0,12
+   3] keyword - 0,14..0,17
+     .arg 'e'
+     .value Name 'f' Load - 0,16..0,17
+   4] Starred - 0,19..0,21
+     .value Name 'g' Load - 0,20..0,21
+     .ctx Load
+   5] keyword - 0,23..0,26
+     .value Name 'h' Load - 0,25..0,26
+   6] keyword - 0,28..0,31
+     .arg 'i'
+     .value Name 'j' Load - 0,30..0,31
+'''),
 ],
 
 'BoolOp_values': [  # ................................................................................

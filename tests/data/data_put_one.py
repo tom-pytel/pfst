@@ -16703,6 +16703,21 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'x' Load - 0,0..0,1
 '''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('expecting arglike, got Slice')**'''),
+
+('', 0, None, None, {'_src': False, 'raw': False}, (None,
+r'''import a'''), (None,
+r'''(b).c'''),
+r'''import b.c''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'b.c'
+'''),
 ],
 
 }
