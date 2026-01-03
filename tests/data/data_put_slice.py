@@ -28569,6 +28569,104 @@ ClassDef - ROOT 0,0..0,20
 '''),
 ],
 
+'ClassDef__bases_coerce': [  # ................................................................................
+
+('', 1, 3, '_bases', {'one': True}, (None,
+r'''class cls(a, b, c): pass'''), ('expr',
+r'''*s'''),
+r'''class cls(a, *s): pass''', r'''
+ClassDef - ROOT 0,0..0,22
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,15
+     .value Name 's' Load - 0,14..0,15
+     .ctx Load
+  .body[1]
+   0] Pass - 0,18..0,22
+'''),
+
+('', 1, 3, '_bases', {'coerce': False}, (None,
+r'''class cls(a, b, c): pass'''), ('expr',
+r'''*s'''),
+r'''class cls(a, *s): pass''',
+r'''**NodeError('expecting _arglikes, got Starred')**''', r'''
+ClassDef - ROOT 0,0..0,22
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,15
+     .value Name 's' Load - 0,14..0,15
+     .ctx Load
+  .body[1]
+   0] Pass - 0,18..0,22
+'''),
+
+('', 1, 3, '_bases', {'coerce': False, 'one': True}, (None,
+r'''class cls(a, b, c): pass'''), ('expr',
+r'''*s'''),
+r'''class cls(a, *s): pass''', r'''
+ClassDef - ROOT 0,0..0,22
+  .name 'cls'
+  .bases[2]
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,15
+     .value Name 's' Load - 0,14..0,15
+     .ctx Load
+  .body[1]
+   0] Pass - 0,18..0,22
+'''),
+
+('', 1, 3, '_bases', {'one': True}, (None,
+r'''class cls(a, b, c): pass'''), ('keyword',
+r'''k=w'''),
+r'''class cls(a, k=w): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[1]
+   0] Name 'a' Load - 0,10..0,11
+  .keywords[1]
+   0] keyword - 0,13..0,16
+     .arg 'k'
+     .value Name 'w' Load - 0,15..0,16
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', 1, 3, '_bases', {'coerce': False}, (None,
+r'''class cls(a, b, c): pass'''), ('keyword',
+r'''k=w'''),
+r'''class cls(a, k=w): pass''',
+r'''**NodeError('expecting _arglikes, got keyword')**''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[1]
+   0] Name 'a' Load - 0,10..0,11
+  .keywords[1]
+   0] keyword - 0,13..0,16
+     .arg 'k'
+     .value Name 'w' Load - 0,15..0,16
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', 1, 3, '_bases', {'coerce': False, 'one': True}, (None,
+r'''class cls(a, b, c): pass'''), ('keyword',
+r'''k=w'''),
+r'''class cls(a, k=w): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[1]
+   0] Name 'a' Load - 0,10..0,11
+  .keywords[1]
+   0] keyword - 0,13..0,16
+     .arg 'k'
+     .value Name 'w' Load - 0,15..0,16
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+],
+
 'BoolOp_values': [  # ................................................................................
 
 ('', 0, 1, None, {}, (None,
@@ -33201,6 +33299,92 @@ Call - ROOT 0,0..0,9
    0] keyword - 0,5..0,8
      .arg 'a'
      .value Constant 3 - 0,7..0,8
+'''),
+],
+
+'Call__args_coerce': [  # ................................................................................
+
+('', 1, 3, '_args', {'one': True}, (None,
+r'''call(a, b, c)'''), ('expr',
+r'''*s'''),
+r'''call(a, *s)''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,10
+     .value Name 's' Load - 0,9..0,10
+     .ctx Load
+'''),
+
+('', 1, 3, '_args', {'coerce': False}, (None,
+r'''call(a, b, c)'''), ('expr',
+r'''*s'''),
+r'''call(a, *s)''',
+r'''**NodeError('expecting _arglikes, got Starred')**''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,10
+     .value Name 's' Load - 0,9..0,10
+     .ctx Load
+'''),
+
+('', 1, 3, '_args', {'coerce': False, 'one': True}, (None,
+r'''call(a, b, c)'''), ('expr',
+r'''*s'''),
+r'''call(a, *s)''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,10
+     .value Name 's' Load - 0,9..0,10
+     .ctx Load
+'''),
+
+('', 1, 3, '_args', {'one': True}, (None,
+r'''call(a, b, c)'''), ('keyword',
+r'''k=w'''),
+r'''call(a, k=w)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'k'
+     .value Name 'w' Load - 0,10..0,11
+'''),
+
+('', 1, 3, '_args', {'coerce': False}, (None,
+r'''call(a, b, c)'''), ('keyword',
+r'''k=w'''),
+r'''call(a, k=w)''',
+r'''**NodeError('expecting _arglikes, got keyword')**''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'k'
+     .value Name 'w' Load - 0,10..0,11
+'''),
+
+('', 1, 3, '_args', {'coerce': False, 'one': True}, (None,
+r'''call(a, b, c)'''), ('keyword',
+r'''k=w'''),
+r'''call(a, k=w)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'k'
+     .value Name 'w' Load - 0,10..0,11
 '''),
 ],
 

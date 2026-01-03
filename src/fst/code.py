@@ -1,4 +1,4 @@
-"""Convert `Code` to `FST`."""
+"""Convert `Code` to `FST`, coercion happens here."""
 
 from __future__ import annotations
 
@@ -225,6 +225,16 @@ def _coerce_as__decorator_list(
 _coerce_as__decorator_list.coerce_src = True
 
 
+def _coerce_as__arglikes(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
+    ast_ = _arglikes(arglikes=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                     end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+
+
 def _coerce_as__comprehensions(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
@@ -443,7 +453,7 @@ def _code_as(
                 ast = parse(src, parse_params)
 
             except Exception:
-                if not (coerce_as and getattr(coerce_as, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense to)
+                if not (coerce_as and getattr(coerce_as, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense)
                     raise
 
                 try:
@@ -883,7 +893,7 @@ def code_as__arglike(
     """Convert `code` to a single `expr_arglike` or `keyword` if possible."""
 
     fst_ = _code_as(code, parse_params, parse__arglike, (expr, keyword), sanitize,
-                    # _coerce_as__comprehension_ifs if coerce else None
+                    # _coerce_as__arglike if coerce else None,
                     name='arglike')
 
     if fst_ is code and fst_.a.__class__ in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # fst_ is code only if FST passed in, in which case make sure we didn't get an invalid arglike
@@ -897,8 +907,8 @@ def code_as__arglikes(
 ) -> fst.FST:
     """Convert `code` to an `_arglikes` of `expr`s and `keyword`s SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__arglikes, _arglikes, sanitize)#,
-                    # _coerce_as__comprehension_ifs if coerce else None)
+    return _code_as(code, parse_params, parse__arglikes, _arglikes, sanitize,
+                    _coerce_as__arglikes if coerce else None)
 
 
 def code_as_boolop(
