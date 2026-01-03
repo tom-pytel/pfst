@@ -274,20 +274,6 @@ Traversal is in syntactic order.
 ['key1', 'val1', 'val2', 'key3', 'val3']
 ```
 
-Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
-nodes.
-
-```py
->>> FST('蟒=Æ+д').dump()
-Assign - ROOT 0,0..0,5
-  .targets[1]
-   0] Name '蟒' Store - 0,0..0,1
-  .value BinOp - 0,2..0,5
-    .left Name 'Æ' Load - 0,2..0,3
-    .op Add - 0,3..0,4
-    .right Name 'д' Load - 0,4..0,5
-```
-
 Can zero out bodies.
 
 ```py
@@ -302,7 +288,6 @@ Can zero out bodies.
 def func(self):  # comment
 
 >>> f.body.append('pass')
-<<FunctionDef ROOT 0,0..1,8>.body [<Pass 1,4..1,8>]>
 
 >>> print(f.src)
 def func(self):  # comment
@@ -355,6 +340,20 @@ class cls:
     """docstring"""
     pass
     c = d
+```
+
+Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
+nodes.
+
+```py
+>>> FST('蟒=Æ+д').dump()
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name '蟒' Store - 0,0..0,1
+  .value BinOp - 0,2..0,5
+    .left Name 'Æ' Load - 0,2..0,3
+    .op Add - 0,3..0,4
+    .right Name 'д' Load - 0,4..0,5
 ```
 
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the

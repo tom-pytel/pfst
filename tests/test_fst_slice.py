@@ -1888,6 +1888,14 @@ if (
 
         self.assertEqual('a or (x, y) or d', FST('a or b or c or d').put_slice('x, y', 1, 3).src)
 
+        # insert single element with dangling operator, but only single, multiple give errors
+
+        self.assertEqual('a or c or b', FST('a or b').put_slice('or c', 1, 1, one=True).src)
+        self.assertEqual('a or c or b', FST('a or b').put_slice('c or', 1, 1, one=True).src)
+
+        self.assertRaises(SyntaxError, FST('a or b').insert, 'or c or d', 1)
+        self.assertRaises(SyntaxError, FST('a or b').insert, 'c or d or', 1)
+
         # other misc
 
         f = FST(r'''
@@ -2130,6 +2138,14 @@ if (
         # parenthesize tuple put as one
 
         self.assertEqual('a < (x, y) > d', FST('a < b == c > d').put_slice('x, y', 1, 3).src)
+
+        # insert single element with dangling operator, but only single, multiple give errors
+
+        self.assertEqual('a == c < b', FST('a < b').put_slice('== c', 1, 1, one=True).src)
+        self.assertEqual('a < c == b', FST('a < b').put_slice('c ==', 1, 1, one=True).src)
+
+        self.assertRaises(SyntaxError, FST('a < b').insert, '== c == d', 1)
+        self.assertRaises(SyntaxError, FST('a < b').insert, 'c == d ==', 1)
 
         # other misc
 

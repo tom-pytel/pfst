@@ -446,9 +446,6 @@ def _code_to_slice_BoolOp_values_maybe_dangling(
         fst_ = _code_to_slice_BoolOp_values(self, code, one, options)
 
     except SyntaxError:  # maybe a dangling op in source, if conditions allow then check for this
-        if one:
-            raise
-
         if not (is_first and is_last) and ((is_str := isinstance(code, str)) or isinstance(code, list)):  # can only be present if replacement is not of entire BoolOp from first to last
             if is_str:
                 lines = (src := code).split('\n')
@@ -475,6 +472,9 @@ def _code_to_slice_BoolOp_values_maybe_dangling(
                     pass
 
             if ast_:
+                if one and len(ast_.values) > 1:  # if putting `one` then can only allow a single operator
+                    raise
+
                 if ast_.op.__class__ is not self.a.op.__class__:
                     raise ParseError('dangling BoolOp operator does not match') from None
 
@@ -584,9 +584,6 @@ def _code_to_slice_Compare__all_maybe_dangling(
         fst_ = _code_to_slice_Compare__all(self, code, one, options)
 
     except SyntaxError:  # maybe a dangling op in source, if conditions allow then check for this
-        if one:
-            raise
-
         if not (is_first and is_last) and ((is_str := isinstance(code, str)) or isinstance(code, list)):  # can only be present if replacement is not of entire Compare from first to last
             if is_str:
                 lines = (src := code).split('\n')
@@ -613,6 +610,9 @@ def _code_to_slice_Compare__all_maybe_dangling(
                     pass
 
             if ast_:
+                if one and len(ast_.comparators) > 1:  # if putting `one` then can only allow a single operator
+                    raise
+
                 return fst.FST(ast_, lines, None, parse_params=parse_params), op_side_left
 
         raise  # reraise original _code_to_slice_Compare__all() exception

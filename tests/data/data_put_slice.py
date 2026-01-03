@@ -30170,6 +30170,19 @@ If - ROOT 0,0..5,5
 ('', 1, 2, None, {'one': True}, (None,
 r'''a or b or c'''), (None,
 r'''x or'''),
+r'''a or x or c''',
+r'''**ParseError('invalid syntax')**''', r'''
+BoolOp - ROOT 0,0..0,11
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,5..0,6
+   2] Name 'c' Load - 0,10..0,11
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x or y or'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, None, {}, (None,
@@ -31889,7 +31902,22 @@ If - ROOT 0,0..5,5
 
 ('', 1, 2, None, {'one': True}, (None,
 r'''a < b > c'''), (None,
-r'''x or'''),
+r'''x =='''),
+r'''a < x == c''',
+r'''**ParseError('invalid syntax')**''', r'''
+Compare - ROOT 0,0..0,10
+  .left Name 'a' Load - 0,0..0,1
+  .ops[2]
+   0] Lt - 0,2..0,3
+   1] Eq - 0,6..0,8
+  .comparators[2]
+   0] Name 'x' Load - 0,4..0,5
+   1] Name 'c' Load - 0,9..0,10
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a < b > c'''), (None,
+r'''x == y =='''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 1, None, {'one': True}, (None,
