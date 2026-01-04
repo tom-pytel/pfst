@@ -2,6 +2,7 @@
 
 import os
 import traceback
+import types
 import unittest
 from ast import unparse as ast_unparse
 from keyword import kwlist as keyword_kwlist
@@ -43,6 +44,7 @@ from support import BaseCases, ParseCases
 DIR_NAME = os.path.dirname(__file__)
 FNM_PARSE_AUTOGEN = os.path.join(DIR_NAME, 'data/data_parse_autogen.py')
 FNM_SYNTAX_ERRORS = os.path.join(DIR_NAME, 'data/data_syntax_errors.py')
+FNM_PARSE_INVALID_SRC = os.path.join(DIR_NAME, 'data/data_parse_invalid_src.txt')
 
 PARSE_TESTS = [
     ('all',                px.parse_stmts,              Module,                   '#'),
@@ -343,8 +345,8 @@ PARSE_TESTS = [
     ('comprehension',      px.parse_comprehension,      comprehension,            'async for u in v'),
     ('comprehension',      px.parse_comprehension,      comprehension,            'for u in v if w'),
     ('comprehension',      px.parse_comprehension,      ParseError,               'for u in v async for s in t'),
-    ('comprehension',      px.parse_comprehension,      ParseError,               '#'),
-    ('comprehension',      px.parse_comprehension,      ParseError,               ']+['),
+    ('comprehension',      px.parse_comprehension,      SyntaxError,              '#'),
+    ('comprehension',      px.parse_comprehension,      SyntaxError,              ']+['),
 
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          ''),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          '#'),
@@ -352,7 +354,7 @@ PARSE_TESTS = [
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'async for u in v'),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'for u in v if w async for s in t'),
     ('_comprehensions',    px.parse__comprehensions,    ParseError,               'if i'),
-    ('_comprehensions',    px.parse__comprehensions,    ParseError,               ']+['),
+    ('_comprehensions',    px.parse__comprehensions,    SyntaxError,              ']+['),
 
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       ''),
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       '#'),
@@ -362,7 +364,7 @@ PARSE_TESTS = [
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '(a)'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '.b'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '+b'),
-    ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               ']+['),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, SyntaxError,              ']+['),
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               'for _ in _'),
 
     ('arguments',          px.parse_arguments,          arguments,                ''),
@@ -686,7 +688,7 @@ PARSE_TESTS = [
 
     (comprehension,        px.parse_comprehension,      comprehension,            'for u in v'),
     (comprehension,        px.parse_comprehension,      comprehension,            'for u in v if w'),
-    (comprehension,        px.parse_comprehension,      ParseError,               '()'),
+    (comprehension,        px.parse_comprehension,      SyntaxError,              '()'),
 
     (arguments,            px.parse_arguments,          arguments,                ''),
     (arguments,            px.parse_arguments,          arguments,                'a: list[str], /, b: int = 1, *c, d=100, **e'),
@@ -852,6 +854,72 @@ def read(fnm):
         return f.read()
 
 
+def parse_invalid_src_data():
+    funcs = []  # [('name', func), ...]
+    data = []  # ['line', ...]
+
+    for name in sorted(dir(px)):
+        if name.startswith('parse_') and isinstance(func := getattr(px, name), types.FunctionType):
+            funcs.append((name, func))
+
+    for src in [
+        ')+(',
+        '),(',
+        'a)(',
+        'a)(b',
+        'a),(b',
+        'a,)(b',
+        'a,),(b',
+        'a,b)(b',
+        'a)=(',
+
+        ' #0 ) \\\n + \\\n (',
+        ' #0 ) \\\n, \\\n (',
+        ' #0\n a #1\n ) \\\n(',
+        ' #0\n a #1\n ) \\\n( #2\n b',
+        ' #0\n a #1\n ) \\\n ,( b',
+        ' #0\n a #1\n ) \\\n , \\\n ( #2\n b',
+        ' #0\n a #1\n , #2\n ) \\\n ( #3\n b',
+        ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b',
+        ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b',
+        ' #0\n a #1\n ) \\\n = \\\n (',
+
+        ']+[',
+        '],[',
+        'a][',
+        'a][b',
+        'a],[b',
+        'a,][b',
+        'a,],[b',
+        'a,b][b',
+        'a]=[',
+
+        ' #0 ] \\\n + \\\n [',
+        ' #0 ] \\\n, \\\n [',
+        ' #0\n a #1\n ] \\\n[',
+        ' #0\n a #1\n ] \\\n[ #2\n b',
+        ' #0\n a #1\n ] \\\n ,[ b',
+        ' #0\n a #1\n ] \\\n , \\\n [ #2\n b',
+        ' #0\n a #1\n , #2\n ] \\\n [ #3\n b',
+        ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b',
+        ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b',
+        ' #0\n a #1\n ] \\\n = \\\n [',
+    ]:
+        for name, func in funcs:
+            try:
+                res = func(src)
+            except SyntaxError as exc:
+                res = '**SyntaxError**' if len(exc.args) > 1 else f'**{exc!r}**'
+            except Exception as exc:
+                res = f'**{exc!r}**'
+            else:
+                res = f'{res.__class__.__name__}  - TODO: FIX THIS!!! TODO: FIX THIS!!! TODO: FIX THIS!!! TODO: FIX THIS!!!'
+
+            data.append(f'{src!r:<12} {name:<32} {res}')
+
+    return data
+
+
 def regen_parse_autogen_data():
     with open(FNM_PARSE_AUTOGEN) as f:
         lines = f.readlines()
@@ -909,8 +977,17 @@ def regen_syntax_errors_data():
         fp.write('\n'.join(out))
 
 
+def regen_parse_invalid_src_data():
+    data = parse_invalid_src_data()
+
+    with open(FNM_PARSE_INVALID_SRC, 'w') as fp:
+        fp.write('\n'.join(data))
+
+
 class TestParse(unittest.TestCase):
     """Genral parse and unparse and `Code` conversions."""
+
+    maxDiff = None
 
     def test_parse_autogen(self):
         DATA_PARSE_AUTOGEN = ParseCases(FNM_PARSE_AUTOGEN)
@@ -919,6 +996,40 @@ class TestParse(unittest.TestCase):
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 if not (c.startswith('**SyntaxError(') and r.startswith('**SyntaxError(')):  # because we will get different texts for different py versions
                     self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
+
+    def test_parse_invalid_src(self):
+        cur_data = '\n'.join(parse_invalid_src_data())
+
+        with open(FNM_PARSE_INVALID_SRC) as fp:
+            old_data = fp.read()
+
+        self.assertEqual(old_data, cur_data)
+
+    def test_parse_invalid_src_selected(self):
+        self.assertRaises(SyntaxError, px.parse_expr, '),(')
+        self.assertRaises(SyntaxError, px.parse_expr, 'a,)(b')
+        self.assertRaises(SyntaxError, px.parse_expr, 'a,),(b')
+        self.assertRaises(SyntaxError, px.parse_expr, 'a,b)(')
+
+        self.assertRaises(SyntaxError, px.parse__withitems, 'a),(b')
+        self.assertRaises(SyntaxError, px.parse__withitems, 'a) as c,(b')
+        self.assertRaises(SyntaxError, px.parse_expr, 'a),(b')
+        self.assertRaises(SyntaxError, px.parse__withitems, 'a),(b')
+        self.assertRaises(SyntaxError, px.parse_expr, '#0\n a #1\n) \\\n, \\\n( #4')
+
+        self.assertRaises(SyntaxError, px.parse_expr_slice, 'a][b')
+
+        self.assertRaises(SyntaxError, px.parse_expr_arglike, '#0\n a #1\n) \\\n, \\\n( #4\n b')
+
+        self.assertRaises(SyntaxError, px.parse_expr, ' #0\n a #1\n ) \\\n , \\\n ( #4\n b')
+        self.assertRaises(SyntaxError, px.parse_expr, ' #0\n a #1\n ) , ( #4\n b')
+        self.assertRaises(SyntaxError, px.parse_expr, ' #0\n a #1\n ) , ( b')
+
+        self.assertRaises(SyntaxError, px.parse__arglikes, 'a)(')
+        self.assertRaises(SyntaxError, px.parse__arglikes, 'a,b)(b')
+        self.assertRaises(SyntaxError, px.parse__expr_arglikes, 'a)(')
+        self.assertRaises(SyntaxError, px.parse_expr_arglike, 'a)(b')
+        self.assertRaises(SyntaxError, px.parse_expr_arglike, 'a,)(b')
 
     def test_unparse(self):
         self.assertEqual('for i in j', px.unparse(FST('[i for i in j]').generators[0].a))
@@ -2102,6 +2213,11 @@ match a:
         self.assertEqual('a:b:c', parse(FST('a:b:c').a).f.src)
         self.assertEqual('except:\n    pass', parse(FST('except: pass').a).f.src)
 
+    def test_parse_coverage(self):
+        self.assertRaises(SyntaxError, px.parse_expr, ')+(')
+        self.assertRaises(SyntaxError, px.parse_withitem, ')+(')
+        self.assertRaises(SyntaxError, px.parse__withitems, ')+(')
+
     def test_code_coverage(self):
         # misc stuff to fill out test coverage
 
@@ -2158,6 +2274,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
     parser.add_argument('--regen-parse-autogen', default=False, action='store_true', help="regenerate autogenerated parse test data")
     parser.add_argument('--regen-syntax-errors', default=False, action='store_true', help="regenerate detailed syntax errors")
+    parser.add_argument('--regen-parse-invalid-src', default=False, action='store_true', help="regenerate parse invalid source")
 
     args, _ = parser.parse_known_args()
 
@@ -2172,6 +2289,10 @@ if __name__ == '__main__':
     if args.regen_syntax_errors or args.regen_all:
         print('Regenerating detailed parse syntax error data...')
         regen_syntax_errors_data()
+
+    if args.regen_parse_invalid_src or args.regen_all:
+        print('Regenerating parse invalid source data...')
+        regen_parse_invalid_src_data()
 
     if (all(not getattr(args, n) for n in dir(args) if n.startswith('regen_'))):
         unittest.main()

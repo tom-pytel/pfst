@@ -1714,7 +1714,9 @@ class PutOne(Fuzzy):
 
 
 class ReconcileRnd(Fuzzy):
-    """This changes as many things as possible, so really testing reconcile."""
+    """This changes as many things as possible, so really not just testing reconcile. Through its use of standard
+    `put()` and `put_slice()`, this caught a lot of bugs in those, so its really just using the reconcile mechanism
+    to test the underlying code."""
 
     name = 'reconcile_rnd'
     forever = True

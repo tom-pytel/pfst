@@ -423,12 +423,7 @@ def gastf(ast: AST) -> FST | None:
 class FST:
     """Class which maintains structure and formatted source code for an `AST` tree. An instance of this class is added
     to each `AST` node in a tree. It provides format-preserving operations as well as ability to navigate the tree in
-    any direction.
-
-    **Note:** `AST` type check predicates of the form `is_For` and `is_BinOp` exist but they are not documented here
-    for brevity. You can also access `AST` node fields through this class like `FST.left` or `FST.op`, these are
-    likewise not documented.
-    """
+    any direction."""
 
     a:            AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
     parent:       FST | None       ; """Parent `FST` node, `None` in root node."""

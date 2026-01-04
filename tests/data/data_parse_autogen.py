@@ -1861,13 +1861,13 @@ comprehension - ROOT 0,0..0,15
 r'''for u in v async for s in t'''),
 r'''**ParseError('expecting single comprehension')**'''),
 
-('parse_comprehension', 0, 0, 'ParseError', {}, ('comprehension',
+('parse_comprehension', 0, 0, 'SyntaxError', {}, ('comprehension',
 r'''#'''),
-r'''**ParseError('expecting comprehension, got List')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
-('parse_comprehension', 0, 0, 'ParseError', {}, ('comprehension',
+('parse_comprehension', 0, 0, 'SyntaxError', {}, ('comprehension',
 r''']+['''),
-r'''**ParseError('expecting comprehension, got BinOp')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r''''''),
@@ -1917,9 +1917,9 @@ _comprehensions - ROOT 0,0..0,32
 r'''if i'''),
 r'''**ParseError('expecting comprehensions, got comprehension ifs')**'''),
 
-('parse__comprehensions', 0, 0, 'ParseError', {}, ('_comprehensions',
+('parse__comprehensions', 0, 0, 'SyntaxError', {}, ('_comprehensions',
 r''']+['''),
-r'''**ParseError('expecting comprehensions, got BinOp')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
 r''''''),
@@ -1960,9 +1960,9 @@ r'''**ParseError("expecting comprehension ifs, does not start with 'if'")**'''),
 r'''+b'''),
 r'''**ParseError("expecting comprehension ifs, does not start with 'if'")**'''),
 
-('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
+('parse__comprehension_ifs', 0, 0, 'SyntaxError', {}, ('_comprehension_ifs',
 r''']+['''),
-r'''**ParseError('expecting comprehensions ifs, got BinOp')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
 r'''for _ in _'''),
@@ -4103,9 +4103,9 @@ comprehension - ROOT 0,0..0,15
   .is_async 0
 '''),
 
-('parse_comprehension', 0, 0, 'ParseError', {}, (comprehension,
+('parse_comprehension', 0, 0, 'SyntaxError', {}, (comprehension,
 r'''()'''),
-r'''**ParseError('expecting comprehension, got List')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, (arguments,
 r''''''),

@@ -223,7 +223,7 @@ But it can cause problems.
 >>> f.elts[0].replace('z', raw=True, pars=False, to=f.elts[2])
 Traceback (most recent call last):
 ...
-fst.ParseError: invalid syntax
+SyntaxError: invalid syntax
 
 This failed because the source code winds up being `[z, )]`.
 

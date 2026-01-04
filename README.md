@@ -12,7 +12,7 @@ This module exists in order to facilitate quick and easy high level editing of P
 See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
 
 ```py
->>> import fst
+>>> import fst  # pip install pfst, import fst
 
 >>> ext_ast = fst.parse('if a: b = c, d  # comment')
 

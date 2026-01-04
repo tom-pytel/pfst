@@ -29801,7 +29801,7 @@ or # left
 x or
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 BoolOp - ROOT 0,1..3,1
   .op Or
   .values[3]
@@ -29848,7 +29848,7 @@ x or b
 or # right
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 BoolOp - ROOT 0,1..4,1
   .op Or
   .values[4]
@@ -29908,7 +29908,7 @@ b
 or # right
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 BoolOp - ROOT 0,1..6,1
   .op Or
   .values[4]
@@ -29969,7 +29969,7 @@ b
 or # right
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 BoolOp - ROOT 0,1..6,1
   .op Or
   .values[4]
@@ -30080,7 +30080,7 @@ if 1:
          c
     )
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 If - ROOT 0,0..6,5
   .test Constant 1 - 0,3..0,4
   .body[1]
@@ -30151,7 +30151,7 @@ if 1:
          c
     )
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 If - ROOT 0,0..5,5
   .test Constant 1 - 0,3..0,4
   .body[1]
@@ -30171,7 +30171,7 @@ If - ROOT 0,0..5,5
 r'''a or b or c'''), (None,
 r'''x or'''),
 r'''a or x or c''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 BoolOp - ROOT 0,0..0,11
   .op Or
   .values[3]
@@ -31362,7 +31362,7 @@ r'''x !='''), r'''
 x !=
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 Compare - ROOT 0,1..3,1
   .left Name 'a' Load - 0,1..0,2
   .ops[2]
@@ -31430,7 +31430,7 @@ r'''x =='''), r'''
 x ==
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 Compare - ROOT 0,1..3,1
   .left Name 'a' Load - 0,1..0,2
   .ops[2]
@@ -31482,7 +31482,7 @@ x == b
 > # right
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 Compare - ROOT 0,1..4,1
   .left Name 'a' Load - 0,1..0,2
   .ops[3]
@@ -31548,7 +31548,7 @@ b
 > # right
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 Compare - ROOT 0,1..6,1
   .left Name 'a' Load - 0,1..0,2
   .ops[3]
@@ -31615,7 +31615,7 @@ b
 > # right
 c)
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 Compare - ROOT 0,1..6,1
   .left Name 'x' Load - 0,1..0,2
   .ops[3]
@@ -31804,7 +31804,7 @@ if 1:
          c
     )
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 If - ROOT 0,0..6,5
   .test Constant 1 - 0,3..0,4
   .body[1]
@@ -31881,7 +31881,7 @@ if 1:
          c
     )
 ''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 If - ROOT 0,0..5,5
   .test Constant 1 - 0,3..0,4
   .body[1]
@@ -31904,7 +31904,7 @@ If - ROOT 0,0..5,5
 r'''a < b > c'''), (None,
 r'''x =='''),
 r'''a < x == c''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''**SyntaxError('invalid syntax')**''', r'''
 Compare - ROOT 0,0..0,10
   .left Name 'a' Load - 0,0..0,1
   .ops[2]
@@ -38483,7 +38483,7 @@ Tuple - ROOT 0,0..0,4
 ('', 0, 1, None, {'raw': True}, (None,
 r'''(a,)'''), (None,
 r'''x,'''),
-r'''**ParseError('invalid syntax')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 2, None, {'raw': True}, (None,
 r'''(a, b)'''), (None,
@@ -38534,7 +38534,7 @@ List - ROOT 0,0..0,4
 ('', 0, 1, None, {'raw': True}, (None,
 r'''[a,]'''), (None,
 r'''x,'''),
-r'''**ParseError('invalid syntax')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 2, None, {'raw': True}, (None,
 r'''[a, b]'''), (None,
@@ -38572,7 +38572,7 @@ Tuple - ROOT 0,0..0,12
 ('', 1, 2, None, {'raw': True}, (None,
 r'''(a, b, c)'''), (None,
 r'''x, y,'''),
-r'''**ParseError('invalid syntax')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, None, {'raw': True}, (None,
 r'''(a, b, c)'''), (None,
@@ -39070,7 +39070,7 @@ MatchClass - ROOT 0,0..0,15
 ('', 1, 2, None, {'raw': True}, ('pattern',
 r'''cls(a, b, c)'''), (None,
 r'''z=1'''),
-r'''**ParseError('invalid syntax')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 2, 3, None, {'raw': True}, ('pattern',
 r'''cls(a, b, c)'''), (None,
@@ -39224,12 +39224,12 @@ Call - ROOT 0,0..0,16
 ('', 1, 2, 'args', {'raw': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''**z'''),
-r'''**ParseError('invalid syntax')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, 'args', {'raw': True}, (None,
 r'''call(a, b, *c)'''), (None,
 r'''**z'''),
-r'''**ParseError('invalid syntax')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, 'args', {'raw': True}, (None,
 r'''call(a, b, *c)'''), (None,

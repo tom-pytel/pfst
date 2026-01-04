@@ -1,0 +1,1862 @@
+')+('        parse_ExceptHandler              **SyntaxError**
+')+('        parse_Expression                 **SyntaxError**
+')+('        parse_ImportFrom_name            **SyntaxError**
+')+('        parse_Import_name                **SyntaxError**
+')+('        parse_Interactive                **SyntaxError**
+')+('        parse_Module                     **SyntaxError**
+')+('        parse_Tuple                      **SyntaxError('invalid tuple')**
+')+('        parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+')+('        parse__Assign_targets            **SyntaxError**
+')+('        parse__BoolOp_dangling_left      **ParseError('expecting BoolOp with dangling operator on left side')**
+')+('        parse__BoolOp_dangling_right     **ParseError('expecting BoolOp with dangling operator on right side')**
+')+('        parse__Compare_dangling_left     **ParseError('expecting Compare with dangling operator on left side')**
+')+('        parse__Compare_dangling_right    **ParseError('expecting Compare with dangling operator on right side')**
+')+('        parse__ExceptHandlers            **SyntaxError**
+')+('        parse__ImportFrom_names          **SyntaxError**
+')+('        parse__Import_names              **SyntaxError**
+')+('        parse__aliases                   **SyntaxError**
+')+('        parse__arglike                   **SyntaxError('invalid arglike')**
+')+('        parse__arglikes                  **SyntaxError('invalid arglikes')**
+')+('        parse__comprehension_ifs         **SyntaxError**
+')+('        parse__comprehensions            **SyntaxError**
+')+('        parse__decorator_list            **SyntaxError**
+')+('        parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+')+('        parse__match_cases               **SyntaxError**
+')+('        parse__type_params               **SyntaxError**
+')+('        parse__withitems                 **SyntaxError('invalid syntax')**
+')+('        parse_alias                      **SyntaxError**
+')+('        parse_all                        **SyntaxError**
+')+('        parse_arg                        **SyntaxError**
+')+('        parse_arguments                  **SyntaxError**
+')+('        parse_arguments_lambda           **SyntaxError**
+')+('        parse_boolop                     **SyntaxError("expecting boolop, got ')+('")**
+')+('        parse_cmpop                      **SyntaxError("expecting cmpop, got ')+('")**
+')+('        parse_comprehension              **SyntaxError**
+')+('        parse_expr                       **SyntaxError('invalid syntax')**
+')+('        parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+')+('        parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+')+('        parse_expr_slice                 **SyntaxError('invalid syntax')**
+')+('        parse_func                       **SyntaxError**
+')+('        parse_keyword                    **SyntaxError('invalid syntax')**
+')+('        parse_match_case                 **SyntaxError**
+')+('        parse_operator                   **SyntaxError("expecting operator, got ')+('")**
+')+('        parse_pattern                    **SyntaxError**
+')+('        parse_stmt                       **SyntaxError**
+')+('        parse_stmts                      **SyntaxError**
+')+('        parse_strict                     **SyntaxError**
+')+('        parse_type_param                 **SyntaxError**
+')+('        parse_unaryop                    **SyntaxError("expecting unaryop, got ')+('")**
+')+('        parse_withitem                   **SyntaxError('invalid syntax')**
+'),('        parse_ExceptHandler              **SyntaxError**
+'),('        parse_Expression                 **SyntaxError**
+'),('        parse_ImportFrom_name            **SyntaxError**
+'),('        parse_Import_name                **SyntaxError**
+'),('        parse_Interactive                **SyntaxError**
+'),('        parse_Module                     **SyntaxError**
+'),('        parse_Tuple                      **SyntaxError('invalid tuple')**
+'),('        parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'),('        parse__Assign_targets            **SyntaxError**
+'),('        parse__BoolOp_dangling_left      **ParseError('expecting BoolOp with dangling operator on left side')**
+'),('        parse__BoolOp_dangling_right     **ParseError('expecting BoolOp with dangling operator on right side')**
+'),('        parse__Compare_dangling_left     **ParseError('expecting Compare with dangling operator on left side')**
+'),('        parse__Compare_dangling_right    **ParseError('expecting Compare with dangling operator on right side')**
+'),('        parse__ExceptHandlers            **SyntaxError**
+'),('        parse__ImportFrom_names          **SyntaxError**
+'),('        parse__Import_names              **SyntaxError**
+'),('        parse__aliases                   **SyntaxError**
+'),('        parse__arglike                   **SyntaxError('invalid arglike')**
+'),('        parse__arglikes                  **SyntaxError('invalid arglikes')**
+'),('        parse__comprehension_ifs         **SyntaxError**
+'),('        parse__comprehensions            **SyntaxError**
+'),('        parse__decorator_list            **SyntaxError**
+'),('        parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'),('        parse__match_cases               **SyntaxError**
+'),('        parse__type_params               **SyntaxError**
+'),('        parse__withitems                 **SyntaxError('invalid syntax')**
+'),('        parse_alias                      **SyntaxError**
+'),('        parse_all                        **SyntaxError**
+'),('        parse_arg                        **SyntaxError**
+'),('        parse_arguments                  **SyntaxError**
+'),('        parse_arguments_lambda           **SyntaxError**
+'),('        parse_boolop                     **SyntaxError("expecting boolop, got '),('")**
+'),('        parse_cmpop                      **SyntaxError("expecting cmpop, got '),('")**
+'),('        parse_comprehension              **SyntaxError**
+'),('        parse_expr                       **SyntaxError('invalid syntax')**
+'),('        parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'),('        parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+'),('        parse_expr_slice                 **SyntaxError('cannot have unparenthesized tuple containing Starred in slice')**
+'),('        parse_func                       **SyntaxError**
+'),('        parse_keyword                    **SyntaxError('invalid syntax')**
+'),('        parse_match_case                 **SyntaxError**
+'),('        parse_operator                   **SyntaxError("expecting operator, got '),('")**
+'),('        parse_pattern                    **SyntaxError('invalid syntax')**
+'),('        parse_stmt                       **SyntaxError**
+'),('        parse_stmts                      **SyntaxError**
+'),('        parse_strict                     **SyntaxError**
+'),('        parse_type_param                 **SyntaxError**
+'),('        parse_unaryop                    **SyntaxError("expecting unaryop, got '),('")**
+'),('        parse_withitem                   **ParseError('expecting single withitem')**
+'a)('        parse_ExceptHandler              **SyntaxError**
+'a)('        parse_Expression                 **SyntaxError**
+'a)('        parse_ImportFrom_name            **SyntaxError**
+'a)('        parse_Import_name                **SyntaxError**
+'a)('        parse_Interactive                **SyntaxError**
+'a)('        parse_Module                     **SyntaxError**
+'a)('        parse_Tuple                      **SyntaxError('invalid tuple')**
+'a)('        parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a)('        parse__Assign_targets            **SyntaxError**
+'a)('        parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a)('        parse__BoolOp_dangling_right     **ParseError('expecting BoolOp with dangling operator on right side')**
+'a)('        parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a)('        parse__Compare_dangling_right    **ParseError('expecting Compare with dangling operator on right side')**
+'a)('        parse__ExceptHandlers            **SyntaxError**
+'a)('        parse__ImportFrom_names          **SyntaxError**
+'a)('        parse__Import_names              **SyntaxError**
+'a)('        parse__aliases                   **SyntaxError**
+'a)('        parse__arglike                   **SyntaxError('invalid arglike')**
+'a)('        parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a)('        parse__comprehension_ifs         **SyntaxError**
+'a)('        parse__comprehensions            **SyntaxError**
+'a)('        parse__decorator_list            **SyntaxError**
+'a)('        parse__expr_arglikes             **SyntaxError('invalid syntax')**
+'a)('        parse__match_cases               **SyntaxError**
+'a)('        parse__type_params               **SyntaxError**
+'a)('        parse__withitems                 **SyntaxError('invalid syntax')**
+'a)('        parse_alias                      **SyntaxError**
+'a)('        parse_all                        **SyntaxError('invalid syntax')**
+'a)('        parse_arg                        **SyntaxError**
+'a)('        parse_arguments                  **SyntaxError**
+'a)('        parse_arguments_lambda           **SyntaxError**
+'a)('        parse_boolop                     **SyntaxError("expecting boolop, got 'a)('")**
+'a)('        parse_cmpop                      **SyntaxError("expecting cmpop, got 'a)('")**
+'a)('        parse_comprehension              **SyntaxError**
+'a)('        parse_expr                       **SyntaxError('invalid syntax')**
+'a)('        parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a)('        parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+'a)('        parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a)('        parse_func                       **SyntaxError**
+'a)('        parse_keyword                    **ParseError('expecting single keyword')**
+'a)('        parse_match_case                 **SyntaxError**
+'a)('        parse_operator                   **SyntaxError("expecting operator, got 'a)('")**
+'a)('        parse_pattern                    **SyntaxError**
+'a)('        parse_stmt                       **SyntaxError**
+'a)('        parse_stmts                      **SyntaxError**
+'a)('        parse_strict                     **SyntaxError**
+'a)('        parse_type_param                 **SyntaxError**
+'a)('        parse_unaryop                    **SyntaxError("expecting unaryop, got 'a)('")**
+'a)('        parse_withitem                   **SyntaxError('invalid syntax')**
+'a)(b'       parse_ExceptHandler              **SyntaxError**
+'a)(b'       parse_Expression                 **SyntaxError**
+'a)(b'       parse_ImportFrom_name            **SyntaxError**
+'a)(b'       parse_Import_name                **SyntaxError**
+'a)(b'       parse_Interactive                **SyntaxError**
+'a)(b'       parse_Module                     **SyntaxError**
+'a)(b'       parse_Tuple                      **SyntaxError('invalid tuple')**
+'a)(b'       parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a)(b'       parse__Assign_targets            **SyntaxError**
+'a)(b'       parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a)(b'       parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a)(b'       parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a)(b'       parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a)(b'       parse__ExceptHandlers            **SyntaxError**
+'a)(b'       parse__ImportFrom_names          **SyntaxError**
+'a)(b'       parse__Import_names              **SyntaxError**
+'a)(b'       parse__aliases                   **SyntaxError**
+'a)(b'       parse__arglike                   **SyntaxError('invalid arglike')**
+'a)(b'       parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a)(b'       parse__comprehension_ifs         **SyntaxError**
+'a)(b'       parse__comprehensions            **SyntaxError**
+'a)(b'       parse__decorator_list            **SyntaxError**
+'a)(b'       parse__expr_arglikes             **SyntaxError('invalid syntax')**
+'a)(b'       parse__match_cases               **SyntaxError**
+'a)(b'       parse__type_params               **SyntaxError**
+'a)(b'       parse__withitems                 **SyntaxError('invalid syntax')**
+'a)(b'       parse_alias                      **SyntaxError**
+'a)(b'       parse_all                        **SyntaxError('invalid syntax')**
+'a)(b'       parse_arg                        **SyntaxError**
+'a)(b'       parse_arguments                  **SyntaxError**
+'a)(b'       parse_arguments_lambda           **SyntaxError**
+'a)(b'       parse_boolop                     **SyntaxError("expecting boolop, got 'a)(b'")**
+'a)(b'       parse_cmpop                      **SyntaxError("expecting cmpop, got 'a)(b'")**
+'a)(b'       parse_comprehension              **SyntaxError**
+'a)(b'       parse_expr                       **SyntaxError('invalid syntax')**
+'a)(b'       parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a)(b'       parse_expr_arglike               **SyntaxError('invalid arglike')**
+'a)(b'       parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a)(b'       parse_func                       **SyntaxError**
+'a)(b'       parse_keyword                    **ParseError('expecting single keyword')**
+'a)(b'       parse_match_case                 **SyntaxError**
+'a)(b'       parse_operator                   **SyntaxError("expecting operator, got 'a)(b'")**
+'a)(b'       parse_pattern                    **SyntaxError**
+'a)(b'       parse_stmt                       **SyntaxError**
+'a)(b'       parse_stmts                      **SyntaxError**
+'a)(b'       parse_strict                     **SyntaxError**
+'a)(b'       parse_type_param                 **SyntaxError**
+'a)(b'       parse_unaryop                    **SyntaxError("expecting unaryop, got 'a)(b'")**
+'a)(b'       parse_withitem                   **SyntaxError('invalid syntax')**
+'a),(b'      parse_ExceptHandler              **SyntaxError**
+'a),(b'      parse_Expression                 **SyntaxError**
+'a),(b'      parse_ImportFrom_name            **SyntaxError**
+'a),(b'      parse_Import_name                **SyntaxError**
+'a),(b'      parse_Interactive                **SyntaxError**
+'a),(b'      parse_Module                     **SyntaxError**
+'a),(b'      parse_Tuple                      **SyntaxError('invalid tuple')**
+'a),(b'      parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a),(b'      parse__Assign_targets            **SyntaxError**
+'a),(b'      parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a),(b'      parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a),(b'      parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a),(b'      parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a),(b'      parse__ExceptHandlers            **SyntaxError**
+'a),(b'      parse__ImportFrom_names          **SyntaxError**
+'a),(b'      parse__Import_names              **SyntaxError**
+'a),(b'      parse__aliases                   **SyntaxError**
+'a),(b'      parse__arglike                   **SyntaxError('invalid arglike')**
+'a),(b'      parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a),(b'      parse__comprehension_ifs         **SyntaxError**
+'a),(b'      parse__comprehensions            **SyntaxError**
+'a),(b'      parse__decorator_list            **SyntaxError**
+'a),(b'      parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a),(b'      parse__match_cases               **SyntaxError**
+'a),(b'      parse__type_params               **SyntaxError**
+'a),(b'      parse__withitems                 **SyntaxError('invalid syntax')**
+'a),(b'      parse_alias                      **SyntaxError**
+'a),(b'      parse_all                        **SyntaxError('invalid syntax')**
+'a),(b'      parse_arg                        **SyntaxError**
+'a),(b'      parse_arguments                  **SyntaxError**
+'a),(b'      parse_arguments_lambda           **SyntaxError**
+'a),(b'      parse_boolop                     **SyntaxError("expecting boolop, got 'a),(b'")**
+'a),(b'      parse_cmpop                      **SyntaxError("expecting cmpop, got 'a),(b'")**
+'a),(b'      parse_comprehension              **SyntaxError**
+'a),(b'      parse_expr                       **SyntaxError('invalid syntax')**
+'a),(b'      parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a),(b'      parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+'a),(b'      parse_expr_slice                 **SyntaxError('cannot have unparenthesized tuple containing Starred in slice')**
+'a),(b'      parse_func                       **SyntaxError**
+'a),(b'      parse_keyword                    **SyntaxError('invalid syntax')**
+'a),(b'      parse_match_case                 **SyntaxError**
+'a),(b'      parse_operator                   **SyntaxError("expecting operator, got 'a),(b'")**
+'a),(b'      parse_pattern                    **SyntaxError('invalid syntax')**
+'a),(b'      parse_stmt                       **SyntaxError**
+'a),(b'      parse_stmts                      **SyntaxError**
+'a),(b'      parse_strict                     **SyntaxError**
+'a),(b'      parse_type_param                 **SyntaxError**
+'a),(b'      parse_unaryop                    **SyntaxError("expecting unaryop, got 'a),(b'")**
+'a),(b'      parse_withitem                   **ParseError('expecting single withitem')**
+'a,)(b'      parse_ExceptHandler              **SyntaxError**
+'a,)(b'      parse_Expression                 **SyntaxError**
+'a,)(b'      parse_ImportFrom_name            **SyntaxError**
+'a,)(b'      parse_Import_name                **SyntaxError**
+'a,)(b'      parse_Interactive                **SyntaxError**
+'a,)(b'      parse_Module                     **SyntaxError**
+'a,)(b'      parse_Tuple                      **SyntaxError('invalid tuple')**
+'a,)(b'      parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a,)(b'      parse__Assign_targets            **SyntaxError**
+'a,)(b'      parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a,)(b'      parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a,)(b'      parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a,)(b'      parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a,)(b'      parse__ExceptHandlers            **SyntaxError**
+'a,)(b'      parse__ImportFrom_names          **SyntaxError**
+'a,)(b'      parse__Import_names              **SyntaxError**
+'a,)(b'      parse__aliases                   **SyntaxError**
+'a,)(b'      parse__arglike                   **SyntaxError('invalid arglike')**
+'a,)(b'      parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a,)(b'      parse__comprehension_ifs         **SyntaxError**
+'a,)(b'      parse__comprehensions            **SyntaxError**
+'a,)(b'      parse__decorator_list            **SyntaxError**
+'a,)(b'      parse__expr_arglikes             **SyntaxError('invalid syntax')**
+'a,)(b'      parse__match_cases               **SyntaxError**
+'a,)(b'      parse__type_params               **SyntaxError**
+'a,)(b'      parse__withitems                 **SyntaxError('invalid syntax')**
+'a,)(b'      parse_alias                      **SyntaxError**
+'a,)(b'      parse_all                        **SyntaxError('invalid syntax')**
+'a,)(b'      parse_arg                        **SyntaxError**
+'a,)(b'      parse_arguments                  **SyntaxError**
+'a,)(b'      parse_arguments_lambda           **SyntaxError**
+'a,)(b'      parse_boolop                     **SyntaxError("expecting boolop, got 'a,)(b'")**
+'a,)(b'      parse_cmpop                      **SyntaxError("expecting cmpop, got 'a,)(b'")**
+'a,)(b'      parse_comprehension              **SyntaxError**
+'a,)(b'      parse_expr                       **SyntaxError('invalid syntax')**
+'a,)(b'      parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a,)(b'      parse_expr_arglike               **SyntaxError('invalid arglike')**
+'a,)(b'      parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a,)(b'      parse_func                       **SyntaxError**
+'a,)(b'      parse_keyword                    **ParseError('expecting single keyword')**
+'a,)(b'      parse_match_case                 **SyntaxError**
+'a,)(b'      parse_operator                   **SyntaxError("expecting operator, got 'a,)(b'")**
+'a,)(b'      parse_pattern                    **SyntaxError**
+'a,)(b'      parse_stmt                       **SyntaxError**
+'a,)(b'      parse_stmts                      **SyntaxError**
+'a,)(b'      parse_strict                     **SyntaxError**
+'a,)(b'      parse_type_param                 **SyntaxError**
+'a,)(b'      parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,)(b'")**
+'a,)(b'      parse_withitem                   **SyntaxError('invalid syntax')**
+'a,),(b'     parse_ExceptHandler              **SyntaxError**
+'a,),(b'     parse_Expression                 **SyntaxError**
+'a,),(b'     parse_ImportFrom_name            **SyntaxError**
+'a,),(b'     parse_Import_name                **SyntaxError**
+'a,),(b'     parse_Interactive                **SyntaxError**
+'a,),(b'     parse_Module                     **SyntaxError**
+'a,),(b'     parse_Tuple                      **SyntaxError('invalid tuple')**
+'a,),(b'     parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a,),(b'     parse__Assign_targets            **SyntaxError**
+'a,),(b'     parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a,),(b'     parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a,),(b'     parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a,),(b'     parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a,),(b'     parse__ExceptHandlers            **SyntaxError**
+'a,),(b'     parse__ImportFrom_names          **SyntaxError**
+'a,),(b'     parse__Import_names              **SyntaxError**
+'a,),(b'     parse__aliases                   **SyntaxError**
+'a,),(b'     parse__arglike                   **SyntaxError('invalid arglike')**
+'a,),(b'     parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a,),(b'     parse__comprehension_ifs         **SyntaxError**
+'a,),(b'     parse__comprehensions            **SyntaxError**
+'a,),(b'     parse__decorator_list            **SyntaxError**
+'a,),(b'     parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a,),(b'     parse__match_cases               **SyntaxError**
+'a,),(b'     parse__type_params               **SyntaxError**
+'a,),(b'     parse__withitems                 **SyntaxError('invalid syntax')**
+'a,),(b'     parse_alias                      **SyntaxError**
+'a,),(b'     parse_all                        **SyntaxError('invalid syntax')**
+'a,),(b'     parse_arg                        **SyntaxError**
+'a,),(b'     parse_arguments                  **SyntaxError**
+'a,),(b'     parse_arguments_lambda           **SyntaxError**
+'a,),(b'     parse_boolop                     **SyntaxError("expecting boolop, got 'a,),(b'")**
+'a,),(b'     parse_cmpop                      **SyntaxError("expecting cmpop, got 'a,),(b'")**
+'a,),(b'     parse_comprehension              **SyntaxError**
+'a,),(b'     parse_expr                       **SyntaxError('invalid syntax')**
+'a,),(b'     parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a,),(b'     parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+'a,),(b'     parse_expr_slice                 **SyntaxError('cannot have unparenthesized tuple containing Starred in slice')**
+'a,),(b'     parse_func                       **SyntaxError**
+'a,),(b'     parse_keyword                    **SyntaxError('invalid syntax')**
+'a,),(b'     parse_match_case                 **SyntaxError**
+'a,),(b'     parse_operator                   **SyntaxError("expecting operator, got 'a,),(b'")**
+'a,),(b'     parse_pattern                    **SyntaxError('invalid syntax')**
+'a,),(b'     parse_stmt                       **SyntaxError**
+'a,),(b'     parse_stmts                      **SyntaxError**
+'a,),(b'     parse_strict                     **SyntaxError**
+'a,),(b'     parse_type_param                 **SyntaxError**
+'a,),(b'     parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,),(b'")**
+'a,),(b'     parse_withitem                   **ParseError('expecting single withitem')**
+'a,b)(b'     parse_ExceptHandler              **SyntaxError**
+'a,b)(b'     parse_Expression                 **SyntaxError**
+'a,b)(b'     parse_ImportFrom_name            **SyntaxError**
+'a,b)(b'     parse_Import_name                **SyntaxError**
+'a,b)(b'     parse_Interactive                **SyntaxError**
+'a,b)(b'     parse_Module                     **SyntaxError**
+'a,b)(b'     parse_Tuple                      **SyntaxError('invalid tuple')**
+'a,b)(b'     parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a,b)(b'     parse__Assign_targets            **SyntaxError**
+'a,b)(b'     parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a,b)(b'     parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a,b)(b'     parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a,b)(b'     parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a,b)(b'     parse__ExceptHandlers            **SyntaxError**
+'a,b)(b'     parse__ImportFrom_names          **SyntaxError**
+'a,b)(b'     parse__Import_names              **SyntaxError**
+'a,b)(b'     parse__aliases                   **SyntaxError**
+'a,b)(b'     parse__arglike                   **SyntaxError('invalid arglike')**
+'a,b)(b'     parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a,b)(b'     parse__comprehension_ifs         **SyntaxError**
+'a,b)(b'     parse__comprehensions            **SyntaxError**
+'a,b)(b'     parse__decorator_list            **SyntaxError**
+'a,b)(b'     parse__expr_arglikes             **SyntaxError('invalid syntax')**
+'a,b)(b'     parse__match_cases               **SyntaxError**
+'a,b)(b'     parse__type_params               **SyntaxError**
+'a,b)(b'     parse__withitems                 **SyntaxError('invalid syntax')**
+'a,b)(b'     parse_alias                      **SyntaxError**
+'a,b)(b'     parse_all                        **SyntaxError('invalid syntax')**
+'a,b)(b'     parse_arg                        **SyntaxError**
+'a,b)(b'     parse_arguments                  **SyntaxError**
+'a,b)(b'     parse_arguments_lambda           **SyntaxError**
+'a,b)(b'     parse_boolop                     **SyntaxError("expecting boolop, got 'a,b)(b'")**
+'a,b)(b'     parse_cmpop                      **SyntaxError("expecting cmpop, got 'a,b)(b'")**
+'a,b)(b'     parse_comprehension              **SyntaxError**
+'a,b)(b'     parse_expr                       **SyntaxError('invalid syntax')**
+'a,b)(b'     parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a,b)(b'     parse_expr_arglike               **SyntaxError('invalid arglike')**
+'a,b)(b'     parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a,b)(b'     parse_func                       **SyntaxError**
+'a,b)(b'     parse_keyword                    **ParseError('expecting single keyword')**
+'a,b)(b'     parse_match_case                 **SyntaxError**
+'a,b)(b'     parse_operator                   **SyntaxError("expecting operator, got 'a,b)(b'")**
+'a,b)(b'     parse_pattern                    **SyntaxError**
+'a,b)(b'     parse_stmt                       **SyntaxError**
+'a,b)(b'     parse_stmts                      **SyntaxError**
+'a,b)(b'     parse_strict                     **SyntaxError**
+'a,b)(b'     parse_type_param                 **SyntaxError**
+'a,b)(b'     parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,b)(b'")**
+'a,b)(b'     parse_withitem                   **SyntaxError('invalid syntax')**
+'a)=('       parse_ExceptHandler              **SyntaxError**
+'a)=('       parse_Expression                 **SyntaxError**
+'a)=('       parse_ImportFrom_name            **SyntaxError**
+'a)=('       parse_Import_name                **SyntaxError**
+'a)=('       parse_Interactive                **SyntaxError**
+'a)=('       parse_Module                     **SyntaxError**
+'a)=('       parse_Tuple                      **SyntaxError**
+'a)=('       parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+'a)=('       parse__Assign_targets            **SyntaxError**
+'a)=('       parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a)=('       parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a)=('       parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a)=('       parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a)=('       parse__ExceptHandlers            **SyntaxError**
+'a)=('       parse__ImportFrom_names          **SyntaxError**
+'a)=('       parse__Import_names              **SyntaxError**
+'a)=('       parse__aliases                   **SyntaxError**
+'a)=('       parse__arglike                   **SyntaxError('invalid arglike')**
+'a)=('       parse__arglikes                  **SyntaxError('invalid arglikes')**
+'a)=('       parse__comprehension_ifs         **SyntaxError**
+'a)=('       parse__comprehensions            **SyntaxError**
+'a)=('       parse__decorator_list            **SyntaxError**
+'a)=('       parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a)=('       parse__match_cases               **SyntaxError**
+'a)=('       parse__type_params               **SyntaxError**
+'a)=('       parse__withitems                 **SyntaxError**
+'a)=('       parse_alias                      **SyntaxError**
+'a)=('       parse_all                        **SyntaxError('invalid syntax')**
+'a)=('       parse_arg                        **SyntaxError**
+'a)=('       parse_arguments                  **SyntaxError**
+'a)=('       parse_arguments_lambda           **SyntaxError**
+'a)=('       parse_boolop                     **SyntaxError("expecting boolop, got 'a)=('")**
+'a)=('       parse_cmpop                      **SyntaxError("expecting cmpop, got 'a)=('")**
+'a)=('       parse_comprehension              **SyntaxError**
+'a)=('       parse_expr                       **SyntaxError('invalid syntax')**
+'a)=('       parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+'a)=('       parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+'a)=('       parse_expr_slice                 **SyntaxError**
+'a)=('       parse_func                       **SyntaxError**
+'a)=('       parse_keyword                    **SyntaxError**
+'a)=('       parse_match_case                 **SyntaxError**
+'a)=('       parse_operator                   **SyntaxError("expecting operator, got 'a)=('")**
+'a)=('       parse_pattern                    **SyntaxError**
+'a)=('       parse_stmt                       **SyntaxError**
+'a)=('       parse_stmts                      **SyntaxError**
+'a)=('       parse_strict                     **SyntaxError**
+'a)=('       parse_type_param                 **SyntaxError**
+'a)=('       parse_unaryop                    **SyntaxError("expecting unaryop, got 'a)=('")**
+'a)=('       parse_withitem                   **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0 ) \\\n + \\\n (' parse_Expression                 **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_ImportFrom_name            **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_Import_name                **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_Interactive                **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_Module                     **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_Tuple                      **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_Tuple_elt                  **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__Assign_targets            **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0 ) \\\n + \\\n (' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0 ) \\\n + \\\n (' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0 ) \\\n + \\\n (' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0 ) \\\n + \\\n (' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0 ) \\\n + \\\n (' parse__ImportFrom_names          **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__Import_names              **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__aliases                   **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0 ) \\\n + \\\n (' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0 ) \\\n + \\\n (' parse__comprehension_ifs         **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__comprehensions            **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__decorator_list            **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0 ) \\\n + \\\n (' parse__match_cases               **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__type_params               **SyntaxError**
+' #0 ) \\\n + \\\n (' parse__withitems                 **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_alias                      **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_all                        **SyntaxError('invalid syntax')**
+' #0 ) \\\n + \\\n (' parse_arg                        **SyntaxError('invalid arg')**
+' #0 ) \\\n + \\\n (' parse_arguments                  **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_arguments_lambda           **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_boolop                     **SyntaxError("expecting boolop, got '+'")**
+' #0 ) \\\n + \\\n (' parse_cmpop                      **SyntaxError("expecting cmpop, got '+'")**
+' #0 ) \\\n + \\\n (' parse_comprehension              **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_expr                       **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_expr_all                   **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_expr_arglike               **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_expr_slice                 **SyntaxError('invalid expression (slice)')**
+' #0 ) \\\n + \\\n (' parse_func                       **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_keyword                    **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_match_case                 **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_operator                   **SyntaxError("unexpected code after operator, '('")**
+' #0 ) \\\n + \\\n (' parse_pattern                    **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_stmt                       **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_stmts                      **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_strict                     **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_type_param                 **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_unaryop                    **SyntaxError("unexpected code after unaryop, '('")**
+' #0 ) \\\n + \\\n (' parse_withitem                   **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_ExceptHandler              **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Expression                 **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_ImportFrom_name            **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Import_name                **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Interactive                **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Module                     **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Tuple                      **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Tuple_elt                  **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__Assign_targets            **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0 ) \\\n, \\\n (' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0 ) \\\n, \\\n (' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0 ) \\\n, \\\n (' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0 ) \\\n, \\\n (' parse__ExceptHandlers            **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__ImportFrom_names          **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__Import_names              **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__aliases                   **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0 ) \\\n, \\\n (' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0 ) \\\n, \\\n (' parse__comprehension_ifs         **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__comprehensions            **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__decorator_list            **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0 ) \\\n, \\\n (' parse__match_cases               **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__type_params               **SyntaxError**
+' #0 ) \\\n, \\\n (' parse__withitems                 **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_alias                      **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_all                        **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_arg                        **SyntaxError('invalid arg')**
+' #0 ) \\\n, \\\n (' parse_arguments                  **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_arguments_lambda           **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_boolop                     **SyntaxError("expecting boolop, got ','")**
+' #0 ) \\\n, \\\n (' parse_cmpop                      **SyntaxError("expecting cmpop, got ','")**
+' #0 ) \\\n, \\\n (' parse_comprehension              **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_expr                       **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_expr_all                   **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_expr_arglike               **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_expr_slice                 **SyntaxError('invalid expression (slice)')**
+' #0 ) \\\n, \\\n (' parse_func                       **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_keyword                    **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_match_case                 **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_operator                   **SyntaxError("expecting operator, got ','")**
+' #0 ) \\\n, \\\n (' parse_pattern                    **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_stmt                       **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_stmts                      **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_strict                     **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_type_param                 **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_unaryop                    **SyntaxError("expecting unaryop, got ','")**
+' #0 ) \\\n, \\\n (' parse_withitem                   **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n(' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n ) \\\n(' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n(' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ) \\\n(' parse__BoolOp_dangling_right     **ParseError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ) \\\n(' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ) \\\n(' parse__Compare_dangling_right    **ParseError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ) \\\n(' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n(' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n ) \\\n(' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n ) \\\n(' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__expr_arglikes             **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n(' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__type_params               **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n(' parse_alias                      **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n(' parse_arg                        **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ) \\\n(' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ) \\\n(' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n(' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n ) \\\n(' parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+' #0\n a #1\n ) \\\n(' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n(' parse_func                       **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_keyword                    **ParseError('expecting single keyword')**
+' #0\n a #1\n ) \\\n(' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ) \\\n(' parse_pattern                    **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_strict                     **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ) \\\n(' parse_withitem                   **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__expr_arglikes             **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ) \\\n( #2\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ) \\\n( #2\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_expr_arglike               **SyntaxError('invalid arglike')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_keyword                    **ParseError('expecting single keyword')**
+' #0\n a #1\n ) \\\n( #2\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ) \\\n( #2\n b' parse_pattern                    **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ) \\\n( #2\n b' parse_withitem                   **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n ,( b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n ) \\\n ,( b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ) \\\n ,( b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ) \\\n ,( b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ) \\\n ,( b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ) \\\n ,( b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n ,( b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n ) \\\n ,( b' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n ) \\\n ,( b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ) \\\n ,( b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__type_params               **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse_alias                      **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse_arg                        **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ) \\\n ,( b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ) \\\n ,( b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n ) \\\n ,( b' parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+' #0\n a #1\n ) \\\n ,( b' parse_expr_slice                 **SyntaxError('cannot have unparenthesized tuple containing Starred in slice')**
+' #0\n a #1\n ) \\\n ,( b' parse_func                       **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_keyword                    **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ) \\\n ,( b' parse_pattern                    **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_strict                     **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ) \\\n ,( b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ) \\\n ,( b' parse_withitem                   **ParseError('expecting single withitem')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_expr_slice                 **SyntaxError('cannot have unparenthesized tuple containing Starred in slice')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_keyword                    **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_pattern                    **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_withitem                   **ParseError('expecting single withitem')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__expr_arglikes             **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_expr_arglike               **SyntaxError('invalid arglike')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_keyword                    **ParseError('expecting single keyword')**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_pattern                    **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_withitem                   **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_expr_slice                 **SyntaxError('cannot have unparenthesized tuple containing Starred in slice')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_keyword                    **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_pattern                    **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_withitem                   **ParseError('expecting single withitem')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__expr_arglikes             **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__withitems                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_expr_arglike               **SyntaxError('invalid arglike')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_keyword                    **ParseError('expecting single keyword')**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_pattern                    **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_withitem                   **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n = \\\n (' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ) \\\n = \\\n (' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__type_params               **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__withitems                 **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_alias                      **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n = \\\n (' parse_arg                        **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ) \\\n = \\\n (' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ) \\\n = \\\n (' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_expr                       **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n = \\\n (' parse_expr_all                   **SyntaxError('invalid expression (all types)')**
+' #0\n a #1\n ) \\\n = \\\n (' parse_expr_arglike               **SyntaxError('invalid expression (arglike)')**
+' #0\n a #1\n ) \\\n = \\\n (' parse_expr_slice                 **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_func                       **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_keyword                    **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ) \\\n = \\\n (' parse_pattern                    **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_strict                     **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ) \\\n = \\\n (' parse_withitem                   **SyntaxError**
+']+['        parse_ExceptHandler              **SyntaxError**
+']+['        parse_Expression                 **SyntaxError**
+']+['        parse_ImportFrom_name            **SyntaxError**
+']+['        parse_Import_name                **SyntaxError**
+']+['        parse_Interactive                **SyntaxError**
+']+['        parse_Module                     **SyntaxError**
+']+['        parse_Tuple                      **SyntaxError**
+']+['        parse_Tuple_elt                  **SyntaxError**
+']+['        parse__Assign_targets            **SyntaxError**
+']+['        parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+']+['        parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+']+['        parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+']+['        parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+']+['        parse__ExceptHandlers            **SyntaxError**
+']+['        parse__ImportFrom_names          **SyntaxError**
+']+['        parse__Import_names              **SyntaxError**
+']+['        parse__aliases                   **SyntaxError**
+']+['        parse__arglike                   **SyntaxError**
+']+['        parse__arglikes                  **SyntaxError**
+']+['        parse__comprehension_ifs         **SyntaxError('invalid syntax')**
+']+['        parse__comprehensions            **SyntaxError('invalid syntax')**
+']+['        parse__decorator_list            **SyntaxError**
+']+['        parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+']+['        parse__match_cases               **SyntaxError**
+']+['        parse__type_params               **SyntaxError**
+']+['        parse__withitems                 **SyntaxError**
+']+['        parse_alias                      **SyntaxError**
+']+['        parse_all                        **SyntaxError**
+']+['        parse_arg                        **SyntaxError**
+']+['        parse_arguments                  **SyntaxError**
+']+['        parse_arguments_lambda           **SyntaxError**
+']+['        parse_boolop                     **SyntaxError("expecting boolop, got ']+['")**
+']+['        parse_cmpop                      **SyntaxError("expecting cmpop, got ']+['")**
+']+['        parse_comprehension              **SyntaxError('invalid syntax')**
+']+['        parse_expr                       **SyntaxError**
+']+['        parse_expr_all                   **SyntaxError**
+']+['        parse_expr_arglike               **SyntaxError**
+']+['        parse_expr_slice                 **SyntaxError**
+']+['        parse_func                       **SyntaxError**
+']+['        parse_keyword                    **SyntaxError**
+']+['        parse_match_case                 **SyntaxError**
+']+['        parse_operator                   **SyntaxError("expecting operator, got ']+['")**
+']+['        parse_pattern                    **SyntaxError**
+']+['        parse_stmt                       **SyntaxError**
+']+['        parse_stmts                      **SyntaxError**
+']+['        parse_strict                     **SyntaxError**
+']+['        parse_type_param                 **SyntaxError**
+']+['        parse_unaryop                    **SyntaxError("expecting unaryop, got ']+['")**
+']+['        parse_withitem                   **SyntaxError**
+'],['        parse_ExceptHandler              **SyntaxError**
+'],['        parse_Expression                 **SyntaxError**
+'],['        parse_ImportFrom_name            **SyntaxError**
+'],['        parse_Import_name                **SyntaxError**
+'],['        parse_Interactive                **SyntaxError**
+'],['        parse_Module                     **SyntaxError**
+'],['        parse_Tuple                      **SyntaxError**
+'],['        parse_Tuple_elt                  **SyntaxError**
+'],['        parse__Assign_targets            **SyntaxError**
+'],['        parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'],['        parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'],['        parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'],['        parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'],['        parse__ExceptHandlers            **SyntaxError**
+'],['        parse__ImportFrom_names          **SyntaxError**
+'],['        parse__Import_names              **SyntaxError**
+'],['        parse__aliases                   **SyntaxError**
+'],['        parse__arglike                   **SyntaxError**
+'],['        parse__arglikes                  **SyntaxError**
+'],['        parse__comprehension_ifs         **SyntaxError('invalid syntax')**
+'],['        parse__comprehensions            **SyntaxError('invalid syntax')**
+'],['        parse__decorator_list            **SyntaxError**
+'],['        parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'],['        parse__match_cases               **SyntaxError**
+'],['        parse__type_params               **SyntaxError**
+'],['        parse__withitems                 **SyntaxError**
+'],['        parse_alias                      **SyntaxError**
+'],['        parse_all                        **SyntaxError**
+'],['        parse_arg                        **SyntaxError**
+'],['        parse_arguments                  **SyntaxError**
+'],['        parse_arguments_lambda           **SyntaxError**
+'],['        parse_boolop                     **SyntaxError("expecting boolop, got '],['")**
+'],['        parse_cmpop                      **SyntaxError("expecting cmpop, got '],['")**
+'],['        parse_comprehension              **SyntaxError('invalid syntax')**
+'],['        parse_expr                       **SyntaxError**
+'],['        parse_expr_all                   **SyntaxError**
+'],['        parse_expr_arglike               **SyntaxError**
+'],['        parse_expr_slice                 **SyntaxError**
+'],['        parse_func                       **SyntaxError**
+'],['        parse_keyword                    **SyntaxError**
+'],['        parse_match_case                 **SyntaxError**
+'],['        parse_operator                   **SyntaxError("expecting operator, got '],['")**
+'],['        parse_pattern                    **ParseError('expecting single pattern')**
+'],['        parse_stmt                       **SyntaxError**
+'],['        parse_stmts                      **SyntaxError**
+'],['        parse_strict                     **SyntaxError**
+'],['        parse_type_param                 **SyntaxError**
+'],['        parse_unaryop                    **SyntaxError("expecting unaryop, got '],['")**
+'],['        parse_withitem                   **SyntaxError**
+'a]['        parse_ExceptHandler              **SyntaxError**
+'a]['        parse_Expression                 **SyntaxError**
+'a]['        parse_ImportFrom_name            **SyntaxError**
+'a]['        parse_Import_name                **SyntaxError**
+'a]['        parse_Interactive                **SyntaxError**
+'a]['        parse_Module                     **SyntaxError**
+'a]['        parse_Tuple                      **SyntaxError**
+'a]['        parse_Tuple_elt                  **SyntaxError**
+'a]['        parse__Assign_targets            **SyntaxError**
+'a]['        parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a]['        parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a]['        parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a]['        parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a]['        parse__ExceptHandlers            **SyntaxError**
+'a]['        parse__ImportFrom_names          **SyntaxError**
+'a]['        parse__Import_names              **SyntaxError**
+'a]['        parse__aliases                   **SyntaxError**
+'a]['        parse__arglike                   **SyntaxError**
+'a]['        parse__arglikes                  **SyntaxError**
+'a]['        parse__comprehension_ifs         **SyntaxError**
+'a]['        parse__comprehensions            **SyntaxError**
+'a]['        parse__decorator_list            **SyntaxError**
+'a]['        parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a]['        parse__match_cases               **SyntaxError**
+'a]['        parse__type_params               **SyntaxError**
+'a]['        parse__withitems                 **SyntaxError**
+'a]['        parse_alias                      **SyntaxError**
+'a]['        parse_all                        **SyntaxError('invalid syntax')**
+'a]['        parse_arg                        **SyntaxError**
+'a]['        parse_arguments                  **SyntaxError**
+'a]['        parse_arguments_lambda           **SyntaxError**
+'a]['        parse_boolop                     **SyntaxError("expecting boolop, got 'a]['")**
+'a]['        parse_cmpop                      **SyntaxError("expecting cmpop, got 'a]['")**
+'a]['        parse_comprehension              **SyntaxError**
+'a]['        parse_expr                       **SyntaxError**
+'a]['        parse_expr_all                   **SyntaxError**
+'a]['        parse_expr_arglike               **SyntaxError**
+'a]['        parse_expr_slice                 **SyntaxError**
+'a]['        parse_func                       **SyntaxError**
+'a]['        parse_keyword                    **SyntaxError**
+'a]['        parse_match_case                 **SyntaxError**
+'a]['        parse_operator                   **SyntaxError("expecting operator, got 'a]['")**
+'a]['        parse_pattern                    **SyntaxError**
+'a]['        parse_stmt                       **SyntaxError**
+'a]['        parse_stmts                      **SyntaxError**
+'a]['        parse_strict                     **SyntaxError**
+'a]['        parse_type_param                 **SyntaxError**
+'a]['        parse_unaryop                    **SyntaxError("expecting unaryop, got 'a]['")**
+'a]['        parse_withitem                   **SyntaxError**
+'a][b'       parse_ExceptHandler              **SyntaxError**
+'a][b'       parse_Expression                 **SyntaxError**
+'a][b'       parse_ImportFrom_name            **SyntaxError**
+'a][b'       parse_Import_name                **SyntaxError**
+'a][b'       parse_Interactive                **SyntaxError**
+'a][b'       parse_Module                     **SyntaxError**
+'a][b'       parse_Tuple                      **SyntaxError**
+'a][b'       parse_Tuple_elt                  **SyntaxError**
+'a][b'       parse__Assign_targets            **SyntaxError**
+'a][b'       parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a][b'       parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a][b'       parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a][b'       parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a][b'       parse__ExceptHandlers            **SyntaxError**
+'a][b'       parse__ImportFrom_names          **SyntaxError**
+'a][b'       parse__Import_names              **SyntaxError**
+'a][b'       parse__aliases                   **SyntaxError**
+'a][b'       parse__arglike                   **SyntaxError**
+'a][b'       parse__arglikes                  **SyntaxError**
+'a][b'       parse__comprehension_ifs         **SyntaxError**
+'a][b'       parse__comprehensions            **SyntaxError**
+'a][b'       parse__decorator_list            **SyntaxError**
+'a][b'       parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a][b'       parse__match_cases               **SyntaxError**
+'a][b'       parse__type_params               **SyntaxError**
+'a][b'       parse__withitems                 **SyntaxError**
+'a][b'       parse_alias                      **SyntaxError**
+'a][b'       parse_all                        **SyntaxError('invalid syntax')**
+'a][b'       parse_arg                        **SyntaxError**
+'a][b'       parse_arguments                  **SyntaxError**
+'a][b'       parse_arguments_lambda           **SyntaxError**
+'a][b'       parse_boolop                     **SyntaxError("expecting boolop, got 'a][b'")**
+'a][b'       parse_cmpop                      **SyntaxError("expecting cmpop, got 'a][b'")**
+'a][b'       parse_comprehension              **SyntaxError**
+'a][b'       parse_expr                       **SyntaxError**
+'a][b'       parse_expr_all                   **SyntaxError**
+'a][b'       parse_expr_arglike               **SyntaxError**
+'a][b'       parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a][b'       parse_func                       **SyntaxError**
+'a][b'       parse_keyword                    **SyntaxError**
+'a][b'       parse_match_case                 **SyntaxError**
+'a][b'       parse_operator                   **SyntaxError("expecting operator, got 'a][b'")**
+'a][b'       parse_pattern                    **SyntaxError**
+'a][b'       parse_stmt                       **SyntaxError**
+'a][b'       parse_stmts                      **SyntaxError**
+'a][b'       parse_strict                     **SyntaxError**
+'a][b'       parse_type_param                 **SyntaxError**
+'a][b'       parse_unaryop                    **SyntaxError("expecting unaryop, got 'a][b'")**
+'a][b'       parse_withitem                   **SyntaxError**
+'a],[b'      parse_ExceptHandler              **SyntaxError**
+'a],[b'      parse_Expression                 **SyntaxError**
+'a],[b'      parse_ImportFrom_name            **SyntaxError**
+'a],[b'      parse_Import_name                **SyntaxError**
+'a],[b'      parse_Interactive                **SyntaxError**
+'a],[b'      parse_Module                     **SyntaxError**
+'a],[b'      parse_Tuple                      **SyntaxError**
+'a],[b'      parse_Tuple_elt                  **SyntaxError**
+'a],[b'      parse__Assign_targets            **SyntaxError**
+'a],[b'      parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a],[b'      parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a],[b'      parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a],[b'      parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a],[b'      parse__ExceptHandlers            **SyntaxError**
+'a],[b'      parse__ImportFrom_names          **SyntaxError**
+'a],[b'      parse__Import_names              **SyntaxError**
+'a],[b'      parse__aliases                   **SyntaxError**
+'a],[b'      parse__arglike                   **SyntaxError**
+'a],[b'      parse__arglikes                  **SyntaxError**
+'a],[b'      parse__comprehension_ifs         **SyntaxError**
+'a],[b'      parse__comprehensions            **SyntaxError**
+'a],[b'      parse__decorator_list            **SyntaxError**
+'a],[b'      parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a],[b'      parse__match_cases               **SyntaxError**
+'a],[b'      parse__type_params               **SyntaxError**
+'a],[b'      parse__withitems                 **SyntaxError**
+'a],[b'      parse_alias                      **SyntaxError**
+'a],[b'      parse_all                        **SyntaxError('invalid syntax')**
+'a],[b'      parse_arg                        **SyntaxError**
+'a],[b'      parse_arguments                  **SyntaxError**
+'a],[b'      parse_arguments_lambda           **SyntaxError**
+'a],[b'      parse_boolop                     **SyntaxError("expecting boolop, got 'a],[b'")**
+'a],[b'      parse_cmpop                      **SyntaxError("expecting cmpop, got 'a],[b'")**
+'a],[b'      parse_comprehension              **SyntaxError**
+'a],[b'      parse_expr                       **SyntaxError**
+'a],[b'      parse_expr_all                   **SyntaxError**
+'a],[b'      parse_expr_arglike               **SyntaxError**
+'a],[b'      parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a],[b'      parse_func                       **SyntaxError**
+'a],[b'      parse_keyword                    **SyntaxError**
+'a],[b'      parse_match_case                 **SyntaxError**
+'a],[b'      parse_operator                   **SyntaxError("expecting operator, got 'a],[b'")**
+'a],[b'      parse_pattern                    **ParseError('expecting single pattern')**
+'a],[b'      parse_stmt                       **SyntaxError**
+'a],[b'      parse_stmts                      **SyntaxError**
+'a],[b'      parse_strict                     **SyntaxError**
+'a],[b'      parse_type_param                 **SyntaxError**
+'a],[b'      parse_unaryop                    **SyntaxError("expecting unaryop, got 'a],[b'")**
+'a],[b'      parse_withitem                   **SyntaxError**
+'a,][b'      parse_ExceptHandler              **SyntaxError**
+'a,][b'      parse_Expression                 **SyntaxError**
+'a,][b'      parse_ImportFrom_name            **SyntaxError**
+'a,][b'      parse_Import_name                **SyntaxError**
+'a,][b'      parse_Interactive                **SyntaxError**
+'a,][b'      parse_Module                     **SyntaxError**
+'a,][b'      parse_Tuple                      **SyntaxError**
+'a,][b'      parse_Tuple_elt                  **SyntaxError**
+'a,][b'      parse__Assign_targets            **SyntaxError**
+'a,][b'      parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a,][b'      parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a,][b'      parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a,][b'      parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a,][b'      parse__ExceptHandlers            **SyntaxError**
+'a,][b'      parse__ImportFrom_names          **SyntaxError**
+'a,][b'      parse__Import_names              **SyntaxError**
+'a,][b'      parse__aliases                   **SyntaxError**
+'a,][b'      parse__arglike                   **SyntaxError**
+'a,][b'      parse__arglikes                  **SyntaxError**
+'a,][b'      parse__comprehension_ifs         **SyntaxError**
+'a,][b'      parse__comprehensions            **SyntaxError**
+'a,][b'      parse__decorator_list            **SyntaxError**
+'a,][b'      parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a,][b'      parse__match_cases               **SyntaxError**
+'a,][b'      parse__type_params               **SyntaxError**
+'a,][b'      parse__withitems                 **SyntaxError**
+'a,][b'      parse_alias                      **SyntaxError**
+'a,][b'      parse_all                        **SyntaxError('invalid syntax')**
+'a,][b'      parse_arg                        **SyntaxError**
+'a,][b'      parse_arguments                  **SyntaxError**
+'a,][b'      parse_arguments_lambda           **SyntaxError**
+'a,][b'      parse_boolop                     **SyntaxError("expecting boolop, got 'a,][b'")**
+'a,][b'      parse_cmpop                      **SyntaxError("expecting cmpop, got 'a,][b'")**
+'a,][b'      parse_comprehension              **SyntaxError**
+'a,][b'      parse_expr                       **SyntaxError**
+'a,][b'      parse_expr_all                   **SyntaxError**
+'a,][b'      parse_expr_arglike               **SyntaxError**
+'a,][b'      parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a,][b'      parse_func                       **SyntaxError**
+'a,][b'      parse_keyword                    **SyntaxError**
+'a,][b'      parse_match_case                 **SyntaxError**
+'a,][b'      parse_operator                   **SyntaxError("expecting operator, got 'a,][b'")**
+'a,][b'      parse_pattern                    **SyntaxError**
+'a,][b'      parse_stmt                       **SyntaxError**
+'a,][b'      parse_stmts                      **SyntaxError**
+'a,][b'      parse_strict                     **SyntaxError**
+'a,][b'      parse_type_param                 **SyntaxError**
+'a,][b'      parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,][b'")**
+'a,][b'      parse_withitem                   **SyntaxError**
+'a,],[b'     parse_ExceptHandler              **SyntaxError**
+'a,],[b'     parse_Expression                 **SyntaxError**
+'a,],[b'     parse_ImportFrom_name            **SyntaxError**
+'a,],[b'     parse_Import_name                **SyntaxError**
+'a,],[b'     parse_Interactive                **SyntaxError**
+'a,],[b'     parse_Module                     **SyntaxError**
+'a,],[b'     parse_Tuple                      **SyntaxError**
+'a,],[b'     parse_Tuple_elt                  **SyntaxError**
+'a,],[b'     parse__Assign_targets            **SyntaxError**
+'a,],[b'     parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a,],[b'     parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a,],[b'     parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a,],[b'     parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a,],[b'     parse__ExceptHandlers            **SyntaxError**
+'a,],[b'     parse__ImportFrom_names          **SyntaxError**
+'a,],[b'     parse__Import_names              **SyntaxError**
+'a,],[b'     parse__aliases                   **SyntaxError**
+'a,],[b'     parse__arglike                   **SyntaxError**
+'a,],[b'     parse__arglikes                  **SyntaxError**
+'a,],[b'     parse__comprehension_ifs         **SyntaxError**
+'a,],[b'     parse__comprehensions            **SyntaxError**
+'a,],[b'     parse__decorator_list            **SyntaxError**
+'a,],[b'     parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a,],[b'     parse__match_cases               **SyntaxError**
+'a,],[b'     parse__type_params               **SyntaxError**
+'a,],[b'     parse__withitems                 **SyntaxError**
+'a,],[b'     parse_alias                      **SyntaxError**
+'a,],[b'     parse_all                        **SyntaxError('invalid syntax')**
+'a,],[b'     parse_arg                        **SyntaxError**
+'a,],[b'     parse_arguments                  **SyntaxError**
+'a,],[b'     parse_arguments_lambda           **SyntaxError**
+'a,],[b'     parse_boolop                     **SyntaxError("expecting boolop, got 'a,],[b'")**
+'a,],[b'     parse_cmpop                      **SyntaxError("expecting cmpop, got 'a,],[b'")**
+'a,],[b'     parse_comprehension              **SyntaxError**
+'a,],[b'     parse_expr                       **SyntaxError**
+'a,],[b'     parse_expr_all                   **SyntaxError**
+'a,],[b'     parse_expr_arglike               **SyntaxError**
+'a,],[b'     parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a,],[b'     parse_func                       **SyntaxError**
+'a,],[b'     parse_keyword                    **SyntaxError**
+'a,],[b'     parse_match_case                 **SyntaxError**
+'a,],[b'     parse_operator                   **SyntaxError("expecting operator, got 'a,],[b'")**
+'a,],[b'     parse_pattern                    **ParseError('expecting single pattern')**
+'a,],[b'     parse_stmt                       **SyntaxError**
+'a,],[b'     parse_stmts                      **SyntaxError**
+'a,],[b'     parse_strict                     **SyntaxError**
+'a,],[b'     parse_type_param                 **SyntaxError**
+'a,],[b'     parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,],[b'")**
+'a,],[b'     parse_withitem                   **SyntaxError**
+'a,b][b'     parse_ExceptHandler              **SyntaxError**
+'a,b][b'     parse_Expression                 **SyntaxError**
+'a,b][b'     parse_ImportFrom_name            **SyntaxError**
+'a,b][b'     parse_Import_name                **SyntaxError**
+'a,b][b'     parse_Interactive                **SyntaxError**
+'a,b][b'     parse_Module                     **SyntaxError**
+'a,b][b'     parse_Tuple                      **SyntaxError**
+'a,b][b'     parse_Tuple_elt                  **SyntaxError**
+'a,b][b'     parse__Assign_targets            **SyntaxError**
+'a,b][b'     parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a,b][b'     parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a,b][b'     parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a,b][b'     parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a,b][b'     parse__ExceptHandlers            **SyntaxError**
+'a,b][b'     parse__ImportFrom_names          **SyntaxError**
+'a,b][b'     parse__Import_names              **SyntaxError**
+'a,b][b'     parse__aliases                   **SyntaxError**
+'a,b][b'     parse__arglike                   **SyntaxError**
+'a,b][b'     parse__arglikes                  **SyntaxError**
+'a,b][b'     parse__comprehension_ifs         **SyntaxError**
+'a,b][b'     parse__comprehensions            **SyntaxError**
+'a,b][b'     parse__decorator_list            **SyntaxError**
+'a,b][b'     parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a,b][b'     parse__match_cases               **SyntaxError**
+'a,b][b'     parse__type_params               **SyntaxError**
+'a,b][b'     parse__withitems                 **SyntaxError**
+'a,b][b'     parse_alias                      **SyntaxError**
+'a,b][b'     parse_all                        **SyntaxError('invalid syntax')**
+'a,b][b'     parse_arg                        **SyntaxError**
+'a,b][b'     parse_arguments                  **SyntaxError**
+'a,b][b'     parse_arguments_lambda           **SyntaxError**
+'a,b][b'     parse_boolop                     **SyntaxError("expecting boolop, got 'a,b][b'")**
+'a,b][b'     parse_cmpop                      **SyntaxError("expecting cmpop, got 'a,b][b'")**
+'a,b][b'     parse_comprehension              **SyntaxError**
+'a,b][b'     parse_expr                       **SyntaxError**
+'a,b][b'     parse_expr_all                   **SyntaxError**
+'a,b][b'     parse_expr_arglike               **SyntaxError**
+'a,b][b'     parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a,b][b'     parse_func                       **SyntaxError**
+'a,b][b'     parse_keyword                    **SyntaxError**
+'a,b][b'     parse_match_case                 **SyntaxError**
+'a,b][b'     parse_operator                   **SyntaxError("expecting operator, got 'a,b][b'")**
+'a,b][b'     parse_pattern                    **SyntaxError**
+'a,b][b'     parse_stmt                       **SyntaxError**
+'a,b][b'     parse_stmts                      **SyntaxError**
+'a,b][b'     parse_strict                     **SyntaxError**
+'a,b][b'     parse_type_param                 **SyntaxError**
+'a,b][b'     parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,b][b'")**
+'a,b][b'     parse_withitem                   **SyntaxError**
+'a]=['       parse_ExceptHandler              **SyntaxError**
+'a]=['       parse_Expression                 **SyntaxError**
+'a]=['       parse_ImportFrom_name            **SyntaxError**
+'a]=['       parse_Import_name                **SyntaxError**
+'a]=['       parse_Interactive                **SyntaxError**
+'a]=['       parse_Module                     **SyntaxError**
+'a]=['       parse_Tuple                      **SyntaxError**
+'a]=['       parse_Tuple_elt                  **SyntaxError**
+'a]=['       parse__Assign_targets            **SyntaxError**
+'a]=['       parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+'a]=['       parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+'a]=['       parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+'a]=['       parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+'a]=['       parse__ExceptHandlers            **SyntaxError**
+'a]=['       parse__ImportFrom_names          **SyntaxError**
+'a]=['       parse__Import_names              **SyntaxError**
+'a]=['       parse__aliases                   **SyntaxError**
+'a]=['       parse__arglike                   **SyntaxError**
+'a]=['       parse__arglikes                  **SyntaxError**
+'a]=['       parse__comprehension_ifs         **SyntaxError**
+'a]=['       parse__comprehensions            **SyntaxError**
+'a]=['       parse__decorator_list            **SyntaxError**
+'a]=['       parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+'a]=['       parse__match_cases               **SyntaxError**
+'a]=['       parse__type_params               **SyntaxError**
+'a]=['       parse__withitems                 **SyntaxError**
+'a]=['       parse_alias                      **SyntaxError**
+'a]=['       parse_all                        **SyntaxError('invalid syntax')**
+'a]=['       parse_arg                        **SyntaxError**
+'a]=['       parse_arguments                  **SyntaxError**
+'a]=['       parse_arguments_lambda           **SyntaxError**
+'a]=['       parse_boolop                     **SyntaxError("expecting boolop, got 'a]=['")**
+'a]=['       parse_cmpop                      **SyntaxError("expecting cmpop, got 'a]=['")**
+'a]=['       parse_comprehension              **SyntaxError**
+'a]=['       parse_expr                       **SyntaxError**
+'a]=['       parse_expr_all                   **SyntaxError**
+'a]=['       parse_expr_arglike               **SyntaxError**
+'a]=['       parse_expr_slice                 **SyntaxError('invalid syntax')**
+'a]=['       parse_func                       **SyntaxError**
+'a]=['       parse_keyword                    **SyntaxError**
+'a]=['       parse_match_case                 **SyntaxError**
+'a]=['       parse_operator                   **SyntaxError("expecting operator, got 'a]=['")**
+'a]=['       parse_pattern                    **SyntaxError**
+'a]=['       parse_stmt                       **SyntaxError**
+'a]=['       parse_stmts                      **SyntaxError**
+'a]=['       parse_strict                     **SyntaxError**
+'a]=['       parse_type_param                 **SyntaxError**
+'a]=['       parse_unaryop                    **SyntaxError("expecting unaryop, got 'a]=['")**
+'a]=['       parse_withitem                   **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0 ] \\\n + \\\n [' parse_Expression                 **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_ImportFrom_name            **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_Import_name                **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_Interactive                **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_Module                     **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_Tuple                      **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_Tuple_elt                  **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__Assign_targets            **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0 ] \\\n + \\\n [' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0 ] \\\n + \\\n [' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0 ] \\\n + \\\n [' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0 ] \\\n + \\\n [' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0 ] \\\n + \\\n [' parse__ImportFrom_names          **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__Import_names              **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__aliases                   **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0 ] \\\n + \\\n [' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0 ] \\\n + \\\n [' parse__comprehension_ifs         **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__comprehensions            **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__decorator_list            **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0 ] \\\n + \\\n [' parse__match_cases               **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__type_params               **SyntaxError**
+' #0 ] \\\n + \\\n [' parse__withitems                 **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_alias                      **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_all                        **SyntaxError('invalid syntax')**
+' #0 ] \\\n + \\\n [' parse_arg                        **SyntaxError('invalid arg')**
+' #0 ] \\\n + \\\n [' parse_arguments                  **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_arguments_lambda           **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_boolop                     **SyntaxError("expecting boolop, got '+'")**
+' #0 ] \\\n + \\\n [' parse_cmpop                      **SyntaxError("expecting cmpop, got '+'")**
+' #0 ] \\\n + \\\n [' parse_comprehension              **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_expr                       **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_expr_all                   **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_expr_arglike               **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_expr_slice                 **SyntaxError('invalid expression (slice)')**
+' #0 ] \\\n + \\\n [' parse_func                       **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_keyword                    **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_match_case                 **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_operator                   **SyntaxError("unexpected code after operator, '['")**
+' #0 ] \\\n + \\\n [' parse_pattern                    **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_stmt                       **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_stmts                      **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_strict                     **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_type_param                 **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_unaryop                    **SyntaxError("unexpected code after unaryop, '['")**
+' #0 ] \\\n + \\\n [' parse_withitem                   **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_ExceptHandler              **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Expression                 **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_ImportFrom_name            **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Import_name                **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Interactive                **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Module                     **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Tuple                      **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Tuple_elt                  **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__Assign_targets            **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0 ] \\\n, \\\n [' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0 ] \\\n, \\\n [' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0 ] \\\n, \\\n [' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0 ] \\\n, \\\n [' parse__ExceptHandlers            **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__ImportFrom_names          **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__Import_names              **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__aliases                   **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__arglike                   **SyntaxError('invalid arglike')**
+' #0 ] \\\n, \\\n [' parse__arglikes                  **SyntaxError('invalid arglikes')**
+' #0 ] \\\n, \\\n [' parse__comprehension_ifs         **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__comprehensions            **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__decorator_list            **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0 ] \\\n, \\\n [' parse__match_cases               **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__type_params               **SyntaxError**
+' #0 ] \\\n, \\\n [' parse__withitems                 **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_alias                      **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_all                        **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_arg                        **SyntaxError('invalid arg')**
+' #0 ] \\\n, \\\n [' parse_arguments                  **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_arguments_lambda           **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_boolop                     **SyntaxError("expecting boolop, got ','")**
+' #0 ] \\\n, \\\n [' parse_cmpop                      **SyntaxError("expecting cmpop, got ','")**
+' #0 ] \\\n, \\\n [' parse_comprehension              **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_expr                       **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_expr_all                   **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_expr_arglike               **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_expr_slice                 **SyntaxError('invalid expression (slice)')**
+' #0 ] \\\n, \\\n [' parse_func                       **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_keyword                    **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_match_case                 **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_operator                   **SyntaxError("expecting operator, got ','")**
+' #0 ] \\\n, \\\n [' parse_pattern                    **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_stmt                       **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_stmts                      **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_strict                     **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_type_param                 **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_unaryop                    **SyntaxError("expecting unaryop, got ','")**
+' #0 ] \\\n, \\\n [' parse_withitem                   **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n[' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ] \\\n[' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ] \\\n[' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ] \\\n[' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ] \\\n[' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n[' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__arglike                   **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ] \\\n[' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__type_params               **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__withitems                 **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_alias                      **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n[' parse_arg                        **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ] \\\n[' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ] \\\n[' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_expr                       **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_expr_slice                 **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_func                       **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_keyword                    **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ] \\\n[' parse_pattern                    **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_strict                     **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ] \\\n[' parse_withitem                   **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__arglike                   **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__withitems                 **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_expr                       **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_keyword                    **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_pattern                    **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_withitem                   **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n ,[ b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ] \\\n ,[ b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ] \\\n ,[ b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ] \\\n ,[ b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ] \\\n ,[ b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n ,[ b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__arglike                   **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ] \\\n ,[ b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__type_params               **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse__withitems                 **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_alias                      **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n ,[ b' parse_arg                        **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ] \\\n ,[ b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ] \\\n ,[ b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_expr                       **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n ,[ b' parse_func                       **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_keyword                    **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ] \\\n ,[ b' parse_pattern                    **ParseError('expecting single pattern')**
+' #0\n a #1\n ] \\\n ,[ b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_strict                     **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ] \\\n ,[ b' parse_withitem                   **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__arglike                   **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__withitems                 **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_expr                       **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_keyword                    **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_pattern                    **ParseError('expecting single pattern')**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_withitem                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__arglike                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__withitems                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_expr                       **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_keyword                    **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_pattern                    **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_withitem                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__arglike                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__withitems                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_expr                       **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_keyword                    **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_pattern                    **ParseError('expecting single pattern')**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_withitem                   **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Expression                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Import_name                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__Import_names              **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__aliases                   **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__arglike                   **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__match_cases               **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__type_params               **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__withitems                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_alias                      **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_arg                        **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_arguments                  **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_comprehension              **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_expr                       **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_func                       **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_keyword                    **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_match_case                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_pattern                    **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_stmt                       **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_stmts                      **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_strict                     **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_type_param                 **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_withitem                   **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_ExceptHandler              **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Expression                 **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_ImportFrom_name            **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Import_name                **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Tuple                      **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Tuple_elt                  **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__Assign_targets            **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+' #0\n a #1\n ] \\\n = \\\n [' parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+' #0\n a #1\n ] \\\n = \\\n [' parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+' #0\n a #1\n ] \\\n = \\\n [' parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+' #0\n a #1\n ] \\\n = \\\n [' parse__ExceptHandlers            **IndentationError('unexpected indent')**
+' #0\n a #1\n ] \\\n = \\\n [' parse__ImportFrom_names          **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__Import_names              **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__aliases                   **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__arglike                   **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__arglikes                  **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__comprehension_ifs         **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__comprehensions            **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__decorator_list            **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+' #0\n a #1\n ] \\\n = \\\n [' parse__match_cases               **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__type_params               **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__withitems                 **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_alias                      **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_all                        **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n = \\\n [' parse_arg                        **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_arguments                  **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_arguments_lambda           **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_boolop                     **SyntaxError("expecting boolop, got 'a'")**
+' #0\n a #1\n ] \\\n = \\\n [' parse_cmpop                      **SyntaxError("expecting cmpop, got 'a'")**
+' #0\n a #1\n ] \\\n = \\\n [' parse_comprehension              **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_expr                       **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_expr_all                   **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_expr_arglike               **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_expr_slice                 **SyntaxError('invalid syntax')**
+' #0\n a #1\n ] \\\n = \\\n [' parse_func                       **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_keyword                    **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_match_case                 **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_operator                   **SyntaxError("expecting operator, got 'a'")**
+' #0\n a #1\n ] \\\n = \\\n [' parse_pattern                    **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_stmt                       **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_stmts                      **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_strict                     **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_type_param                 **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_unaryop                    **SyntaxError("expecting unaryop, got 'a'")**
+' #0\n a #1\n ] \\\n = \\\n [' parse_withitem                   **SyntaxError**

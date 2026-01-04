@@ -144,7 +144,7 @@ You want to add a `correlation_id=CID` keyword argument to all `logger.info()` c
 ...         if not thing:
 ...             (logger).info(  # just checking
 ...                 f'not a {thing}',  # this is fine
-...                 extra=extra,       # this currently gets nuked
+...                 extra=extra,       # also this
 ...             )
 ... """.strip()
 ```
@@ -162,7 +162,7 @@ Function:
 ...             and f.func.value.id == 'logger'
 ...             and not any(kw.arg == 'correlation_id' for kw in f.keywords)
 ...         ):
-...             f.append('correlation_id=CID')
+...             f.append('correlation_id=CID', trivia=(False, False))
 ...
 ...     return fst.src
 ```
@@ -180,7 +180,7 @@ class cls:
         if not thing:
             (logger).info(  # just checking
                 f'not a {thing}',  # this is fine
-                extra=extra,       # this currently gets nuked
+                extra=extra,       # also this
             )
 ```
 
@@ -197,7 +197,7 @@ class cls:
         if not thing:
             (logger).info(  # just checking
                 f'not a {thing}',  # this is fine
-                extra=extra, correlation_id=CID
+                extra=extra, correlation_id=CID # also this
             )
 ```
 
@@ -739,7 +739,7 @@ the alignment is ugly, it will eventually be done properly, first priority was f
 ... with open(a) as f:
 ...     with (
 ...         lock1,  # first lock
-...         func() as lock2,  # this doesn't get preserved :( yet
+...         func() as lock2,  # this gets preserved
 ...     ):
 ...         with ctx():  # this does not belong to ctx()
 ...             # body comment
@@ -758,7 +758,8 @@ Function:
 ...
 ...     for f in fst.walk(With):  # we only get With nodes
 ...         while f.body[0].is_With:  # first child is another With
-...             f.items.extend(f.body[0].items.copy())  # append child items to ours
+...             # append child items to ours
+...             f.items.extend(f.body[0].items.copy(), trivia=(False, False))
 ...
 ...             f.put_slice(  # copy child body into our own
 ...                 f.body[0].get_slice(trivia=('all+', 'block'), cut=True),
@@ -776,7 +777,7 @@ Original:
 with open(a) as f:
     with (
         lock1,  # first lock
-        func() as lock2,  # this doesn't get preserved :( yet
+        func() as lock2,  # this gets preserved
     ):
         with ctx():  # this does not belong to ctx()
             # body comment
@@ -793,7 +794,7 @@ Processed:
 # with comment
 with (open(a) as f,
      lock1,  # first lock
-     func() as lock2, ctx()
+     func() as lock2, ctx() # this gets preserved
      ):
     # body comment
     pass

@@ -546,9 +546,25 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: expecting cmpop, got nothing',
 ],
 
+('comprehension', '#'): [
+    'SyntaxError: invalid syntax',
+],
+
+('comprehension', ']+['): [
+    'SyntaxError: invalid syntax',
+],
+
+('_comprehensions', ']+['): [
+    'SyntaxError: invalid syntax',
+],
+
 ('_comprehension_ifs', 'if 1 else 2'): [
     '    if 1 else 2',
     '         ^^^^',
+    'SyntaxError: invalid syntax',
+],
+
+('_comprehension_ifs', ']+['): [
     'SyntaxError: invalid syntax',
 ],
 
