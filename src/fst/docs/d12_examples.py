@@ -133,6 +133,9 @@ def func():
 
 You want to add a `correlation_id=CID` keyword argument to all `logger.info()` calls, but only if its not already there.
 
+**Note:** The aesthetics of the formatting are not finalized yet so eventually the `correlation_id` will go onto its own
+line when adding to arguments which are on their own lines.
+
 ```py
 >>> src = """
 ... logger.info('Hello world...')  # ok
@@ -524,8 +527,11 @@ Function:
 ...             fdef = FST(f"""
 ... def {f.targets[0].id}({flmb.args.src}):
 ...     return _
-...             """.strip())  # template
+...                 """.strip())  # template
 ...             fdef.body[0].value = flmb.body.copy()
+...
+...             # explicitly preserve lambda line comment
+...             fdef.put_line_comment(f.get_line_comment(full=True), full=True)
 ...
 ...             f.replace(
 ...                 fdef,
@@ -558,7 +564,7 @@ Processed:
 ```py
 >>> pprint(src := lambdas_to_defs(src))
 # lambda comment
-def mymin(a, b):
+def mymin(a, b):  # inline lambda comment
     return a if a < b else b
  
 # class comment
@@ -578,7 +584,7 @@ Now lets also pull out the nested function.
 ```py
 >>> pprint(pull_out_inner_funcs_safely(src))
 # lambda comment
-def mymin(a, b):
+def mymin(a, b):  # inline lambda comment
     return a if a < b else b
  
 def cls_method_add(a, b):
@@ -731,7 +737,8 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
 ## Squash nested `with`s
 
 Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway. Yes
-the alignment is ugly, it will eventually be done properly, first priority was functional correctness.
+the alignment is ugly, it will eventually be done properly, first priority was functional correctness. The comment on
+the `with ctx():` could be preserved explicitly but not doing it here, eventually will be automatic option.
 
 ```py
 >>> src = r"""
@@ -1190,8 +1197,7 @@ Module - ROOT 0,0..2,22
 itself will work mostly on lower version Pythons.
 
 Suppose you just want to improve the debug logs by adding self-documenting debug strings to all f-strings, e.g.
-`f"{var}"` into `f"{var=}"`. The example below shows how, and works just fine, there is just one caveat not handled
-here:
+`f"{var}"` into `f"{var=}"`. The example below shows how, though there is just one caveat not handled here:
 
 The source is updated and all the node locations are fine, but the `put_src(..., action='offset')` only offsets node
 locations and does not create the `AST` nodes for any new `Constant` strings due to the newly self-documenting

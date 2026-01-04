@@ -11,7 +11,12 @@ To be able to execute the examples, import this.
 `AST` nodes may have individual `AST` children like `FunctionDef.returns` or lists of `AST` children like
 `FunctionDef.body`. Any single node or a single element of a list of children can be gotten individually as one node,
 but getting a sequence of nodes from a list of children requires a slice operation via `get_slice()` or `put_slice()`
-(or the equivalent attribute accesses). (`fst.fst.FST.get_slice()`, `fst.fst.FST.put_slice()`)
+(or the equivalent attribute accesses). See `fst.fst.FST.get_slice()` and `fst.fst.FST.put_slice()`.
+
+The benefit of a slice operation is that it allows you to move blocks of elements while preserving the trivia and
+comments **WITHIN** the block itself, also around the block according to the `trivia` option. Individual element
+operations don't do comments except for statements and statementlike nodes, not `expr`essions or `keyword`s or
+`withitem`s, etc...
 
 In many cases a slice of a list of children of a node can be returned as the same type of node. For example a slice of a
 `Tuple` is a `Tuple`.
@@ -337,9 +342,10 @@ For some types of `AST` nodes it is permissible to remove all children and still
 >>> print(node.src)
 []
 
-Note how for the unparenthesized `Tuple` parentheses were added for the empty `Tuple` to be valid. However deleting all
-field elements from a node does not always result in a valid `AST`. `fst` allows you to delete all the elements in these
-cases for editing purposes and it is on you to ensure that something is put there before writing the code out for use.
+Note how for the unparenthesized `Tuple` parentheses were added for the empty `Tuple` in order to remain valid. However
+deleting all field elements from a node does not always result in a valid `AST`. `fst` allows you to delete all the
+elements in these cases for editing purposes and it is on you to ensure that something is put there before writing the
+code out for use.
 
 You can delete all the statements from bodies (or `orelse` or `handlers` or `finalbody` or `Match.cases`).
 
@@ -383,7 +389,7 @@ as a `Set`).
 {}
 
 In all cases these result in invalid `AST` nodes but is allowed with the understanding that valid data will be replaced
-eventually, preferably sooner rather than later as not all operations are valid on invalid `AST` nodes.
+eventually, preferably sooner rather than later as not all operations work on invalid `AST` nodes.
 
 >>> node.put_slice('x, y')
 <Set ROOT 0,0..0,6>

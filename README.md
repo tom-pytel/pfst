@@ -400,8 +400,8 @@ This module is not finished but functional enough that it can be useful.
 operations where it may apply (where comment may belong to expression instead of statement). Allow specify insert line.
 Direct comment manipulation functions.
 
-* Redo coercion better, tree search, indentation of multiline sequences should be better, decide between primitive or
-node ops on primitive fields, different source encodings, code cleanups, API additions for real-world use,
+* Redo coercion better, tree search / match, indentation of multiline sequences should be better, decide between
+primitive or node ops on primitive fields, different source encodings, code cleanups, API additions for real-world use,
 optimization, testing, bughunting, etc...
 
 * Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to

@@ -1384,7 +1384,7 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     ast = _ast_parse1(f'{src}\nclass c: pass', parse_params, ClassDef)
 
     if len(body := ast.body) != 1 or body[0].__class__ is not Pass:  # couldn't happen because line continuations don't work with compound statments, but just to be extra pedantic
-        raise SyntaxError('invalid syntax')
+        raise SyntaxError('invalid syntax')  # pragma: no cover
 
     return _decorator_list(decorator_list=ast.decorator_list, **_astloc_from_src(src, 1))
 

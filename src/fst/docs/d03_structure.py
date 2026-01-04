@@ -83,7 +83,8 @@ Module - ROOT 0,0..0,3
      .value Name 'var' Load - 0,0..0,3
 
 This is the node layout, note that even the `.ctx` gets an `FST`, every `AST` node does. Also note that the `FST` class
-type is not differentiated according to the `AST`.
+type is not differentiated according to the `AST`. Note that the `.root` link is not an actual attribute but a
+`@property` derived from the `.parent` chain.
 
 ```
                                  None
