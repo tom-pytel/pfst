@@ -376,20 +376,16 @@ def _unparse_Tuple(ast: AST) -> str:
 
     return src
 
-
 def _unparse__ExceptHandlers(ast: AST) -> str:
     return _fixing_unparse(Module(body=ast.handlers, type_ignores=[]))
 
-
 def _unparse__match_cases(ast: AST) -> str:
     return _fixing_unparse(Module(body=ast.cases, type_ignores=[]))
-
 
 def _unparse__Assign_targets(ast: AST) -> str:
     return _fixing_unparse(Assign(targets=ast.targets, value=Name(id='', ctx=Load(), lineno=1, col_offset=0,
                                                                   end_lineno=1, end_col_offset=0),
                                   lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
-
 
 def _unparse__decorator_list(ast: AST) -> str:
     return _fixing_unparse(ClassDef(name='c', bases=[], keywords=[],
@@ -397,17 +393,14 @@ def _unparse__decorator_list(ast: AST) -> str:
                                     decorator_list=ast.decorator_list,
                                     lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[:-18]  # [:.rindex('\nclass c:\n    pass')]
 
-
 def _unparse__arglikes(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.arglikes, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
-
 
 def _unparse__comprehensions(ast: AST) -> str:
     return _fixing_unparse(ListComp(elt=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
                                              end_lineno=1, end_col_offset=0),
                                     generators=ast.generators, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                            )[3:-1]
-
 
 def _unparse__comprehension_ifs(ast: AST) -> str:
     return _fixing_unparse(ListComp(elt=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
@@ -419,18 +412,14 @@ def _unparse__comprehension_ifs(ast: AST) -> str:
                                                               ifs=ast.ifs, is_async=0)]),
                            )[14:-1]
 
-
 def _unparse__aliases(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.names, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
-
 
 def _unparse__withitems(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.items, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
-
 def _unparse__type_params(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.type_params, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
-
 
 _UNPARSE_FUNCS = {
     Tuple:              _unparse_Tuple,

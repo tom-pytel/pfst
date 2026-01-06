@@ -15765,7 +15765,139 @@ TemplateStr - ROOT 0,0..0,12
 
 'coerce_to_expr': [  # ................................................................................
 
-('', None, None, 'value', {}, (None,
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Module',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('Module',
+r'''(x)'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Module', r'''
+x
+y
+'''),
+r'''**NodeError('expecting expression (standard), got multiple statements, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Module',
+r'''x = y'''),
+r'''**NodeError('expecting expression (standard), got Assign, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Interactive',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('Interactive',
+r'''(x)'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Interactive',
+r'''x; y'''),
+r'''**NodeError('expecting expression (standard), got multiple statements, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Expression',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('Expression',
+r'''(x)'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Expr',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('Expr',
+r'''(x)'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('arg',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('arg',
+r'''x: int'''),
+r'''**NodeError('expecting expression (standard), got arg with annotation, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('alias',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('alias',
+r'''x as y'''),
+r'''**NodeError('expecting expression (standard), got alias with asname, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('alias',
+r'''*'''),
+r'''**NodeError("expecting expression (standard), got '*' star alias, could not coerce")**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('withitem',
 r'''x'''),
 r'''i = x''', r'''
@@ -15775,15 +15907,300 @@ Assign - ROOT 0,0..0,5
   .value Name 'x' Load - 0,4..0,5
 '''),
 
-('', None, None, 'value', {}, (None,
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('withitem',
+r'''(x)'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('withitem',
 r'''x as y'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**NodeError('expecting expression (standard), got withitem with optional_vars, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
+r'''i = v'''), ('TypeVar',
+r'''T'''),
+r'''i = T''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'T' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
+r'''i = v'''), ('TypeVar',
+r'''T: int'''),
+r'''**NodeError('expecting expression (standard), got TypeVar with bound, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
+r'''i = v'''), ('TypeVar',
+r'''T = int'''),
+r'''**NodeError('expecting expression (standard), got TypeVar with default_value, could not coerce')**'''),
+
+('', 0, None, None, {'_src': False, '_ver': 12}, (None,
+r'''[v]'''), ('TypeVarTuple',
+r'''*T'''),
+r'''[*T]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'T' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
+r'''i = v'''), ('TypeVarTuple',
+r'''*T = ()'''),
+r'''**NodeError('expecting expression (standard), got TypeVarTuple with default_value, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchValue',
+r'''1'''),
+r'''i = 1''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Constant 1 - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchValue',
+r'''(1)'''),
+r'''i = 1''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Constant 1 - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchSingleton',
+r'''True'''),
+r'''i = True''', r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Constant True - 0,4..0,8
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchSingleton',
+r'''False'''),
+r'''i = False''', r'''
+Assign - ROOT 0,0..0,9
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Constant False - 0,4..0,9
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchSingleton',
+r'''None'''),
+r'''i = None''', r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Constant None - 0,4..0,8
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchSingleton',
+r'''(None)'''),
+r'''i = None''', r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Constant None - 0,4..0,8
+'''),
+
+('', 0, None, None, {'_src': False}, (None,
+r'''[v]'''), ('MatchStar',
+r'''*s'''),
+r'''[*s]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 's' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchAs',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchAs',
+r'''(x)'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchAs',
+r'''x as y'''),
+r'''**NodeError('expecting expression (standard), got MatchAs with pattern, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False, '_same': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchSequence',
+r'''x, 1, True, *y'''),
+r'''i = (x, 1, True, *y)''',
+r'''i = [x, 1, True, *y]''', r'''
+Assign - ROOT 0,0..0,20
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,20
+    .elts[4]
+     0] Name 'x' Load - 0,5..0,6
+     1] Constant 1 - 0,8..0,9
+     2] Constant True - 0,11..0,15
+     3] Starred - 0,17..0,19
+       .value Name 'y' Load - 0,18..0,19
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, '_same': False}, (None,
+r'''i = v'''), ('MatchSequence',
+r'''(x, 1, True, *y)'''),
+r'''i = (x, 1, True, *y)''',
+r'''i = [x, 1, True, *y]''', r'''
+Assign - ROOT 0,0..0,20
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,20
+    .elts[4]
+     0] Name 'x' Load - 0,5..0,6
+     1] Constant 1 - 0,8..0,9
+     2] Constant True - 0,11..0,15
+     3] Starred - 0,17..0,19
+       .value Name 'y' Load - 0,18..0,19
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchSequence',
+r'''[x, 1, True, *y]'''),
+r'''i = [x, 1, True, *y]''', r'''
+Assign - ROOT 0,0..0,20
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value List - 0,4..0,20
+    .elts[4]
+     0] Name 'x' Load - 0,5..0,6
+     1] Constant 1 - 0,8..0,9
+     2] Constant True - 0,11..0,15
+     3] Starred - 0,17..0,19
+       .value Name 'y' Load - 0,18..0,19
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, '_same': False}, (None,
+r'''i = v'''), ('MatchSequence',
+r'''[([x, 1, True, *y],)]'''),
+r'''i = [([x, 1, True, *y],)]''',
+r'''i = [[[x, 1, True, *y]]]''', r'''
+Assign - ROOT 0,0..0,25
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value List - 0,4..0,25
+    .elts[1]
+     0] Tuple - 0,5..0,24
+       .elts[1]
+        0] List - 0,6..0,22
+          .elts[4]
+           0] Name 'x' Load - 0,7..0,8
+           1] Constant 1 - 0,10..0,11
+           2] Constant True - 0,13..0,17
+           3] Starred - 0,19..0,21
+             .value Name 'y' Load - 0,20..0,21
+             .ctx Load
+          .ctx Load
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchSequence',
+r'''([x, 1, True, *y])'''),
+r'''i = [x, 1, True, *y]''', r'''
+Assign - ROOT 0,0..0,20
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value List - 0,4..0,20
+    .elts[4]
+     0] Name 'x' Load - 0,5..0,6
+     1] Constant 1 - 0,8..0,9
+     2] Constant True - 0,11..0,15
+     3] Starred - 0,17..0,19
+       .value Name 'y' Load - 0,18..0,19
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchMapping',
+r'''{1: a, b.c: d, **e}'''),
+r'''i = {1: a, b.c: d, **e}''', r'''
+Assign - ROOT 0,0..0,23
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Dict - 0,4..0,23
+    .keys[3]
+     0] Constant 1 - 0,5..0,6
+     1] Attribute - 0,11..0,14
+       .value Name 'b' Load - 0,11..0,12
+       .attr 'c'
+       .ctx Load
+     2] None
+    .values[3]
+     0] Name 'a' Load - 0,8..0,9
+     1] Name 'd' Load - 0,16..0,17
+     2] Name 'e' Load - 0,21..0,22
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchMapping',
+r'''({1: a, b.c: d, **e})'''),
+r'''i = {1: a, b.c: d, **e}''', r'''
+Assign - ROOT 0,0..0,23
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Dict - 0,4..0,23
+    .keys[3]
+     0] Constant 1 - 0,5..0,6
+     1] Attribute - 0,11..0,14
+       .value Name 'b' Load - 0,11..0,12
+       .attr 'c'
+       .ctx Load
+     2] None
+    .values[3]
+     0] Name 'a' Load - 0,8..0,9
+     1] Name 'd' Load - 0,16..0,17
+     2] Name 'e' Load - 0,21..0,22
+'''),
 ],
 
 'coerce_to_arguments': [  # ................................................................................
 
-('', None, None, 'args', {}, (None,
+('', None, None, 'args', {'_src': False}, (None,
 r'''def f(): pass'''), ('arg',
 r'''x'''),
 r'''def f(x): pass''', r'''
@@ -15797,7 +16214,7 @@ FunctionDef - ROOT 0,0..0,14
    0] Pass - 0,10..0,14
 '''),
 
-('', None, None, 'args', {}, (None,
+('', None, None, 'args', {'_src': False}, (None,
 r'''def f(): pass'''), ('arg',
 r'''x: int'''),
 r'''def f(x: int): pass''', r'''
@@ -15812,7 +16229,7 @@ FunctionDef - ROOT 0,0..0,19
    0] Pass - 0,15..0,19
 '''),
 
-('', None, None, 'args', {}, (None,
+('', None, None, 'args', {'_src': False}, (None,
 r'''lambda: None'''), ('arg',
 r'''x'''),
 r'''lambda x: None''', r'''
@@ -15832,7 +16249,7 @@ r'''**NodeError('expecting lambda arguments, got arg, could not coerce')**'''),
 
 'coerce_to_alias': [  # ................................................................................
 
-('', 0, None, None, {}, (None,
+('', 0, None, None, {'_src': False}, (None,
 r'''import a'''), ('Name',
 r'''x'''),
 r'''import x''', r'''
@@ -15842,7 +16259,7 @@ Import - ROOT 0,0..0,8
      .name 'x'
 '''),
 
-('', 0, None, None, {}, (None,
+('', 0, None, None, {'_src': False}, (None,
 r'''import a'''), ('Attribute',
 r'''x.y'''),
 r'''import x.y''', r'''
@@ -15852,22 +16269,37 @@ Import - ROOT 0,0..0,10
      .name 'x.y'
 '''),
 
-('', 0, None, None, {'raw': False}, (None,
+('', 0, None, None, {'_src': False, 'raw': False}, (None,
 r'''import a'''), ('Name',
 r'''(x)'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
 
-('', 0, None, None, {'raw': False}, (None,
+('', 0, None, None, {'_src': False, 'raw': False}, (None,
 r'''import a'''), ('Attribute',
 r'''(x).y'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
 
-('', 0, None, None, {'raw': False}, (None,
+('', 0, None, None, {'_src': False, 'raw': False}, (None,
 r'''import a'''), ('Attribute',
 r'''((x).y)'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
 
-('', 0, None, None, {}, (None,
+('', 0, None, None, {'_src': False}, (None,
 r'''from _ import a'''), ('Name',
 r'''x'''),
 r'''from _ import x''', r'''
@@ -15879,10 +16311,10 @@ ImportFrom - ROOT 0,0..0,15
   .level 0
 '''),
 
-('', 0, None, None, {}, (None,
+('', 0, None, None, {'_src': False}, (None,
 r'''from _ import a'''), ('Attribute',
 r'''x.y'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**NodeError('expecting alias, got Attribute, could not coerce')**'''),
 
 ('', 0, None, None, {'_src': False}, (None,
 r'''from _ import a'''), ('Attribute',
@@ -15892,7 +16324,7 @@ r'''**NodeError('expecting alias, got Attribute, could not coerce')**'''),
 
 'coerce_to_withitem': [  # ................................................................................
 
-('', 0, None, 'items', {}, (None,
+('', 0, None, 'items', {'_src': False}, (None,
 r'''with a as b: pass'''), ('Name',
 r'''x'''),
 r'''with x: pass''', r'''
@@ -15904,7 +16336,7 @@ With - ROOT 0,0..0,12
    0] Pass - 0,8..0,12
 '''),
 
-('', 0, None, 'items', {}, (None,
+('', 0, None, 'items', {'_src': False}, (None,
 r'''with a as b: pass'''), ('Attribute',
 r'''x.y'''),
 r'''with x.y: pass''', r'''
@@ -15919,10 +16351,10 @@ With - ROOT 0,0..0,14
    0] Pass - 0,10..0,14
 '''),
 
-('', 0, None, 'items', {}, (None,
+('', 0, None, 'items', {'_src': False}, (None,
 r'''with a as b: pass'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**NodeError('expecting withitem, got Slice, could not coerce')**'''),
 
 ('', 0, None, 'items', {'_src': False}, (None,
 r'''with a as b: pass'''), ('Slice',

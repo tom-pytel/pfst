@@ -372,7 +372,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                                 elif g is not l:
                                     raise RuntimeError('FST returned from func AST put not identical to passed in')
 
-                                if cmp_asts and not compare_asts(l.root.a, f.root.a):
+                                if cmp_asts and not compare_asts(l.root.a, f.root.a) and options.get('_same', True):
                                     exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out=str)}\n...\n{f.root.dump(out=str)}')  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
 
                                     if is_raw:

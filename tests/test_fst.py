@@ -8659,7 +8659,7 @@ if 1:
     "a\n"
     f"{f()}"
                 '''.strip(), 'exec')).mark()
-            o.a.body[0].body[1].value.values[0].value.func = o.a.body[0].body[0]
+            o.a.body[0].body[1].value.values[0].value.func = o.a.body[0].body[0].value
             o = o.reconcile()
             self.assertEqual(r'''
 if 1:

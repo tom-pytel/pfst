@@ -294,6 +294,7 @@ __all__ = [
     '_type_params',
 
     'ASTS_LEAF_MOD',
+    'ASTS_LEAF_MOD_STMTS',
     'ASTS_LEAF_STMT',
     'ASTS_LEAF_EXPR',
     'ASTS_LEAF_EXPR_CONTEXT',
@@ -313,9 +314,9 @@ __all__ = [
     'ASTS_LEAF_BLOCK_OR_MOD',
     'ASTS_LEAF_SCOPE',
     'ASTS_LEAF_SCOPE_OR_MOD',
-    'ASTS_LEAF_NAMED_SCOPE',
-    'ASTS_LEAF_NAMED_SCOPE_OR_MOD',
-    'ASTS_LEAF_ANON_SCOPE',
+    'ASTS_LEAF_SCOPE_NAMED',
+    'ASTS_LEAF_SCOPE_NAMED_OR_MOD',
+    'ASTS_LEAF_SCOPE_ANON',
     'ASTS_LEAF_FUNCDEF',
     'ASTS_LEAF_DEF',
     'ASTS_LEAF_DEF_OR_MOD',
@@ -341,6 +342,7 @@ __all__ = [
 # leaf node types, as set for quick checks, must be frozenset() as some code depends on this for checks
 
 ASTS_LEAF_MOD                = frozenset([Module, Interactive, Expression])
+ASTS_LEAF_MOD_STMTS          = frozenset([Module, Interactive])
 
 ASTS_LEAF_STMT               = frozenset([FunctionDef, AsyncFunctionDef, ClassDef, Return, Delete, Assign, TypeAlias,
                                           AugAssign, AnnAssign, For, AsyncFor, While, If, With, AsyncWith, Match, Raise,
@@ -377,9 +379,9 @@ ASTS_LEAF_BLOCK_OR_MOD       = ASTS_LEAF_BLOCK | ASTS_LEAF_MOD
 ASTS_LEAF_SCOPE              = frozenset([FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp,
                                           GeneratorExp])
 ASTS_LEAF_SCOPE_OR_MOD       = ASTS_LEAF_SCOPE | ASTS_LEAF_MOD
-ASTS_LEAF_NAMED_SCOPE        = frozenset([FunctionDef, AsyncFunctionDef, ClassDef])
-ASTS_LEAF_NAMED_SCOPE_OR_MOD = ASTS_LEAF_NAMED_SCOPE | ASTS_LEAF_MOD
-ASTS_LEAF_ANON_SCOPE         = frozenset([Lambda, ListComp, SetComp, DictComp, GeneratorExp])
+ASTS_LEAF_SCOPE_NAMED        = frozenset([FunctionDef, AsyncFunctionDef, ClassDef])
+ASTS_LEAF_SCOPE_NAMED_OR_MOD = ASTS_LEAF_SCOPE_NAMED | ASTS_LEAF_MOD
+ASTS_LEAF_SCOPE_ANON         = frozenset([Lambda, ListComp, SetComp, DictComp, GeneratorExp])
 
 ASTS_LEAF_FUNCDEF            = frozenset([FunctionDef, AsyncFunctionDef])
 ASTS_LEAF_DEF                = ASTS_LEAF_FUNCDEF | {ClassDef}
@@ -402,7 +404,7 @@ ASTS_LEAF_OP                 = ASTS_LEAF_OP_NON_BOOL | ASTS_LEAF_BOOLOP
 ASTS_LEAF_CMPOP_TWO_WORD     = frozenset([IsNot, NotIn])
 ASTS_LEAF_CMPOP_ONE_WORD     = ASTS_LEAF_CMPOP - ASTS_LEAF_CMPOP_TWO_WORD
 
-ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_NAMED_SCOPE | {Module}  # these may have a docstring as the first Const str Expr in the body, we specifically leave out Interactive because... its not a Module?
+ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_SCOPE_NAMED | {Module}  # these may have a docstring as the first Const str Expr in the body, we specifically leave out Interactive because... its not a Module?
 
 # ASTS_LEAF_MAYBE_SINGLETON    = (ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
 #                                 | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree

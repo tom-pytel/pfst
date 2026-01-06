@@ -19539,7 +19539,7 @@ del a, x, \
     y, \
     c
 ''',
-r'''**NodeError('expecting expression (standard), got multiple statements')**''', r'''
+r'''**NodeError('expecting expression (standard), got multiple statements, could not coerce')**''', r'''
 Delete - ROOT 0,0..3,5
   .targets[4]
    0] Name 'a' Del - 0,4..0,5
