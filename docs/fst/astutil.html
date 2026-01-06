@@ -40,14 +40,14 @@
                         <li>
                                 <a class="function" href="#bistr.b2c">b2c</a>
                         </li>
-                        <li>
-                                <a class="function" href="#bistr.clear_cache">clear_cache</a>
-                        </li>
                 </ul>
 
             </li>
             <li>
                     <a class="variable" href="#constant">constant</a>
+            </li>
+            <li>
+                    <a class="function" href="#repr_str_multiline">repr_str_multiline</a>
             </li>
             <li>
                     <a class="function" href="#is_valid_identifier">is_valid_identifier</a>
@@ -89,10 +89,10 @@
                     <a class="function" href="#has_type_comments">has_type_comments</a>
             </li>
             <li>
-                    <a class="function" href="#is_parsable">is_parsable</a>
+                    <a class="function" href="#arglike_kind">arglike_kind</a>
             </li>
             <li>
-                    <a class="function" href="#get_parse_mode">get_parse_mode</a>
+                    <a class="function" href="#merge_arglikes">merge_arglikes</a>
             </li>
             <li>
                     <a class="class" href="#WalkFail">WalkFail</a>
@@ -107,22 +107,10 @@
                     <a class="function" href="#compare_asts">compare_asts</a>
             </li>
             <li>
-                    <a class="function" href="#copy_attributes">copy_attributes</a>
-            </li>
-            <li>
                     <a class="function" href="#copy_ast">copy_ast</a>
             </li>
             <li>
-                    <a class="function" href="#set_ctx">set_ctx</a>
-            </li>
-            <li>
-                    <a class="function" href="#get_func_class_or_ass_by_name">get_func_class_or_ass_by_name</a>
-            </li>
-            <li>
                     <a class="function" href="#last_block_header_child">last_block_header_child</a>
-            </li>
-            <li>
-                    <a class="function" href="#is_atom">is_atom</a>
             </li>
             <li>
                     <a class="function" href="#syntax_ordered_children">syntax_ordered_children</a>
@@ -215,21 +203,6 @@ mapped to the beginning of the character.</p>
 
 
                             </div>
-                            <div id="bistr.clear_cache" class="classattr">
-                                <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">clear_cache</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#bistr.clear_cache"></a>
-    
-            <div class="docstring"><p>Remove the lookup array (if need to save some memory).</p>
-</div>
-
-
-                            </div>
                 </section>
                 <section id="constant">
                     <div class="attr variable">
@@ -241,6 +214,21 @@ mapped to the beginning of the character.</p>
     <a class="headerlink" href="#constant"></a>
     
     
+
+                </section>
+                <section id="repr_str_multiline">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">repr_str_multiline</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">string</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#repr_str_multiline"></a>
+    
+            <div class="docstring"><p>Get triple-quoted multiline string representation.</p>
+</div>
+
 
                 </section>
                 <section id="is_valid_identifier">
@@ -454,33 +442,39 @@ possibly nested <code>Tuple</code> and <code>List</code>. No <code>Starred</code
 
 
                 </section>
-                <section id="is_parsable">
+                <section id="arglike_kind">
                     <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">is_parsable</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+        <span class="name">arglike_kind</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>:</span></span>
 
         
     </div>
-    <a class="headerlink" href="#is_parsable"></a>
+    <a class="headerlink" href="#arglike_kind"></a>
     
-            <div class="docstring"><p>Really means if the AST is <code>unparse()</code>able and then re<code>parse()</code>able which will get it to this top level AST node
-surrounded by the appropriate <code>ast.mod</code></p>
+            <div class="docstring"><p>Type of arglike for ordering restrinction comparisons. Assumes <code>ast</code> is a valid arglike.</p>
+
+<ul>
+<li>0: expr: expr</li>
+<li>1: expr: *Starred</li>
+<li>2: keyword: keyword=value</li>
+<li>3: keyword: **keywordvalue</li>
+</ul>
 </div>
 
 
                 </section>
-                <section id="get_parse_mode">
+                <section id="merge_arglikes">
                     <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_parse_mode</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">]</span>:</span></span>
+        <span class="name">merge_arglikes</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">exprs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">expr</span><span class="p">]</span>, </span><span class="param"><span class="n">keywords</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">keyword</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="nb">list</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]</span>:</span></span>
 
         
     </div>
-    <a class="headerlink" href="#get_parse_mode"></a>
+    <a class="headerlink" href="#merge_arglikes"></a>
     
-            <div class="docstring"><p>Return the original <code>mode</code> string that is used to parse to this <code>mod</code>.</p>
+            <div class="docstring"><p>Merge list of expressions with list of keywords according to location returning a single ordered list of both.</p>
 </div>
 
 
@@ -495,7 +489,7 @@ surrounded by the appropriate <code>ast.mod</code></p>
     </div>
     <a class="headerlink" href="#WalkFail"></a>
     
-            <div class="docstring"><p>Raised in <code><a href="#walk2">walk2()</a></code>, <code><a href="#compare_asts">compare_asts()</a></code> and <code><a href="#copy_attributes">copy_attributes()</a></code> on compare failure.</p>
+            <div class="docstring"><p>Raised in <code><a href="#walk2">walk2()</a></code>, <code><a href="#compare_asts">compare_asts()</a></code> and <code>copy_attributes()</code> on compare failure.</p>
 </div>
 
 
@@ -572,40 +566,6 @@ should return <code>True</code> if the two primitives compare same or not. Used 
 
 
                 </section>
-                <section id="copy_attributes">
-                    <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">copy_attributes</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">dst</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">compare</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">recurse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">skip1</span><span class="p">:</span> <span class="nb">set</span> <span class="o">|</span> <span class="nb">frozenset</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">skip2</span><span class="p">:</span> <span class="nb">set</span> <span class="o">|</span> <span class="nb">frozenset</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">raise_</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#copy_attributes"></a>
-    
-            <div class="docstring"><p>Copy attributes from one tree to another using <code><a href="#walk2">walk2()</a></code> to walk them both simultaneously and this checking
-structure equality in the process. By "attributes" we mean everything specified in <code>src._attributes</code>.</p>
-
-<p><strong>Parameters:</strong></p>
-
-<ul>
-<li><code>src</code>: Source <code>AST</code> tree to copy attributes from.</li>
-<li><code>dst</code>: Destination <code>AST</code> tree to copy attributes to.</li>
-<li><code>recurse</code>: Whether recurse into children or not. With this as <code>False</code> it just becomes a copy of attributes from one
-<code>AST</code> node to another.</li>
-<li><code>skip1</code>: List of nodes in the source tree to skip.</li>
-<li><code>skip2</code>: List of nodes in the destination tree to skip.</li>
-<li><code>raise_</code>: Whether to raise <code><a href="#WalkFail">WalkFail</a></code> on compare fail or just return <code>False</code>.</li>
-</ul>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>bool</code>: Indicating if the two trees compare equal during the walk (if return on error allowed by <code>raise_</code>).</li>
-</ul>
-</div>
-
-
-                </section>
                 <section id="copy_ast">
                     <div class="attr function">
             
@@ -617,71 +577,6 @@ structure equality in the process. By "attributes" we mean everything specified 
     <a class="headerlink" href="#copy_ast"></a>
     
             <div class="docstring"><p>Copy a whole tree.</p>
-</div>
-
-
-                </section>
-                <section id="set_ctx">
-                    <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">set_ctx</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">asts</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">expr_context</span><span class="p">]</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">doit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#set_ctx"></a>
-    
-            <div class="docstring"><p>Set all <code>ctx</code> fields in this node and any children which may participate in an assignment (<code>Tuple</code>, <code>List</code>,
-<code>Starred</code>, <code>Subscript</code>, <code>Attribute</code>, <code>Name</code>) to the passed <code>ctx</code> type.</p>
-
-<p><strong>WARNING!</strong> This will not recurse into elements which have a <code>ctx</code> of the type being set.</p>
-
-<p><strong>Parameters:</strong></p>
-
-<ul>
-<li><code>asts</code>: Single <code>AST</code> (will be recursed) or list of <code>AST</code> nodes (will be consumed, each one will also be recursed)
-to process.</li>
-<li><code>ctx</code>: The <code>exprt_context</code> <code>AST</code> type to set. Any container encountered which matches this <code>ctx</code> will not be
-recursed.</li>
-<li><code>doit</code>: Whether to actually carry out the assignments or just analyze and return whethere there are candidate
-locations for assignment. <code>doit=False</code> used to query if any context-modifiable <code>ctx</code> present.</li>
-</ul>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>bool</code>: Whether any modifications were made or can be made (if <code>doit=False</code>).</li>
-</ul>
-</div>
-
-
-                </section>
-                <section id="get_func_class_or_ass_by_name">
-                    <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">get_func_class_or_ass_by_name</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">asts</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]</span>, </span><span class="param"><span class="n">name</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">ass</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#get_func_class_or_ass_by_name"></a>
-    
-            <div class="docstring"><p>Walk through an <code>Iterable</code> of <code>AST</code> nodes looking for the first <code>FunctionDef</code>, <code>AsyncFunctionDef</code>, <code>ClassDef</code> or
-optionally <code>Assign</code> or <code>AnnAssign</code> which has a <code>name</code> or <code>target</code> or any <code>targets</code> field matching <code>name</code>.</p>
-
-<p><strong>Parameters:</strong></p>
-
-<ul>
-<li><code>asts</code>: <code>Iterable</code> of <code>AST</code>s to search through, e.g. a <code>body</code> list.</li>
-<li><code>name</code>: Name to look for.</li>
-<li><code>ass</code>: A domesticated donkey: a sturdy, short-haired animal used as a beast of burden.</li>
-</ul>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>AST</code> node if found matching, else <code>None</code></li>
-</ul>
 </div>
 
 
@@ -702,44 +597,6 @@ optionally <code>Assign</code> or <code>AnnAssign</code> which has a <code>name<
 
 
                 </section>
-                <section id="is_atom">
-                    <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">is_atom</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">unparse_pars_as_atom</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">tuple_as_atom</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">matchseq_as_atom</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#is_atom"></a>
-    
-            <div class="docstring"><p>Whether <code>ast</code> is enclosed in some kind of delimiters <code>'()'</code>, <code>'[]'</code>, <code>'{}'</code> when <code>unparse()</code>d or otherwise atomic
-like <code>Name</code>, <code>Constant</code>, etc... Node types where this doesn't normally apply like <code>stmt</code> will return <code>True</code>. <code>Tuple</code>
-and <code>MatchSequence</code> which can otherwise be ambiguous will normally return <code>True</code> as they <code>unparse()</code> with
-delimiters, but can be overridden.</p>
-
-<p><strong>Parameters:</strong></p>
-
-<ul>
-<li><code>ast</code>: Self-explanatory.</li>
-<li><code>unparse_pars_as_atom</code>: What to return for <code>NamedExpr</code>, <code>Yield</code> and <code>YieldFrom</code> node type as they <code>unparse()</code> with
-enclosing parentheses. Default <code>None</code> as falsey value but also distinguishes from <code>False</code>.</li>
-<li><code>tuple_as_atom</code>: What to return for <code>Tuple</code> as this always <code>unparse()</code>s with parentheses but these are not
-strictly required for a <code>Tuple</code>.</li>
-<li><code>matchseq_as_atom</code>: What to return for <code>MatchSequence</code> as this always <code>unparse()</code>s with brackets but these are not
-strictly required for a <code>MatchSequence</code>.</li>
-</ul>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>True</code> if is enclosed and no combination with another node can change its precedence, <code>False</code> otherwise. Returns
-<code>unparse_pars_as_atom</code> value for <code>NamedExpr</code>, <code>Yield</code> and <code>YieldFrom</code>, <code>tuple_as_atom</code> value for <code>Tuple</code> and
-<code>matchseq_as_atom</code> for <code>MatchSequence</code> as those all are special cases.</li>
-</ul>
-</div>
-
-
-                </section>
                 <section id="syntax_ordered_children">
                     <div class="attr function">
             
@@ -752,7 +609,7 @@ strictly required for a <code>MatchSequence</code>.</li>
     
             <div class="docstring"><p>Get list of all <code>AST</code> children in syntax order. This will include individual fields and aggregate fields like
 <code>body</code> all smushed up together into a single flat list. The list may contain <code>None</code> values for example from a <code>Dict</code>
-<code>keys</code> field which has <code>**</code> elements.</p>
+<code>keys</code> field which has <code>**</code> elements as it is faster to check for those in the calling functions than here.</p>
 </div>
 
 

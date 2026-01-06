@@ -375,8 +375,12 @@ information in them). When used like this, the <code>AST</code> nodes are <stron
 
 <p>A note on the <code>.src</code> attribute, it gives the full valid source only if accessed at the root node. If accessed at any
 node below, it will return the <strong>INDENTED</strong> source for the location of the node, except for the first line which will be
-completely unindented. If you want full correctly unindented source for nodes which are not root, you should <code>copy()</code>
-that node and get the source of that (<code><a href="../fst.html#FST.copy">fst.fst.FST.copy()</a></code>). E.g.</p>
+completely unindented. You can also wind up with unparsable source if you get for example a string <code>Constant</code> from the
+<code>values</code> field of a <code>JoinedStr</code>.</p>
+
+<p>If you want unindented source for nodes which are not root, you should use <code>own_src()</code>. Or <code>copy()</code> that node and get
+the source of that (<code><a href="../fst.html#FST.copy">fst.fst.FST.copy()</a></code>), which does even more format fixing. The difference between the <code>own_src()</code>
+and the <code>copy().src</code> is that the former executes much faster (and you don't get a copied node).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -415,6 +419,15 @@ that node and get the source of that (<code><a href="../fst.html#FST.copy">fst.f
 </div>
 
 <div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">own_src</span><span class="p">())</span>
+<span class="go">if a:</span>
+<span class="go">    print(a)</span>
+<span class="go">else:</span>
+<span class="go">    print(-a)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">if a:</span>
 <span class="go">    print(a)</span>
@@ -445,6 +458,7 @@ that node and get the source of that (<code><a href="../fst.html#FST.copy">fst.f
 <span class="go">          .func Name &#39;print&#39; Load - 2,8..2,13</span>
 <span class="go">          .args[1]</span>
 <span class="go">           0] Name &#39;a&#39; Load - 2,14..2,15</span>
+<span class="go">3:     else:</span>
 <span class="go">     .orelse[1]</span>
 <span class="go">4:         print(-a)</span>
 <span class="go">      0] Expr - 4,8..4,17</span>

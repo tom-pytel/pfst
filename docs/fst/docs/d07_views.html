@@ -26,12 +26,16 @@
 
             <h2>Contents</h2>
             <ul>
-  <li><a href="#fst-slice-indexing"><code>FST</code> slice indexing</a>
+  <li><a href="#slice-views-and-virtual-fields">Slice views and virtual fields</a>
   <ul>
     <li><a href="#how-to-get">How to get</a></li>
     <li><a href="#indexing">Indexing</a></li>
     <li><a href="#other-operations">Other operations</a></li>
-    <li><a href="#why-ephemeral">Why ephemeral?</a></li>
+    <li><a href="#_all-virtual-field"><code>_all</code> virtual field</a></li>
+    <li><a href="#_body-virtual-field"><code>_body</code> virtual field</a></li>
+    <li><a href="#_args-virtual-field"><code>_args</code> virtual field</a></li>
+    <li><a href="#_bases-virtual-field"><code>_bases</code> virtual field</a></li>
+    <li><a href="#virtual-field-attribute-access">Virtual field attribute access</a></li>
   </ul></li>
 </ul>
 
@@ -51,33 +55,41 @@
                     <h1 class="modulename">
 <a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d07_views    </h1>
 
-                        <div class="docstring"><h1 id="fst-slice-indexing"><code>FST</code> slice indexing</h1>
+                        <div class="docstring"><h1 id="slice-views-and-virtual-fields">Slice views and virtual fields</h1>
 
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
 <h2 id="how-to-get">How to get</h2>
 
-<p>An <code>fstview</code> is a lightweight short-lived object meant to facilitate access to lists of child objects like a block
-statement <code>body</code> or <code>Tuple</code> / <code>List</code> / <code>Set</code> <code>elts</code> field. Any field which is a list of other objects (or even strings
-in the case of <code>Global</code> or <code>Nonlocal</code>) will make use of an <code>fstview</code> when accessed through the field name on the parent
-<code>FST</code> object.</p>
+<p>An <code>fstview</code> is a lightweight object meant to facilitate access to lists of child objects like a block statement <code>body</code>
+or <code>Tuple</code> / <code>List</code> / <code>Set</code> <code>elts</code> field. Any field which is a list of other objects (or even strings in the case of
+<code>Global</code> or <code>Nonlocal</code>) will make use of an <code>fstview</code> when accessed through the field name on the parent <code>FST</code> object.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">view</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc"><a href="../view.html#fstview">fst.view.fstview</a></span><span class="s1">&#39;&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">view</span><span class="p">)</span>
+<span class="go">&lt;class &#39;<a href="../view.html#fstview">fst.view.fstview</a>&#39;&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span>
-<span class="o">&lt;&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">7..0</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span><span class="p">]</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">view</span><span class="p">)[:</span><span class="mi">88</span><span class="p">])</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,9&gt;.elts [&lt;Constant 0,1..0,2&gt;, &lt;Constant 0,4..0,5&gt;, &lt;Constant 0,7..0,8</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span><span class="o">.</span><span class="n">fst</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">stop</span>
-<span class="p">(</span><span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span><span class="p">,</span> <span class="s1">&#39;elts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">view</span><span class="o">.</span><span class="n">stop</span>
+<span class="go">(&lt;List ROOT 0,0..0,9&gt;, &#39;elts&#39;, 0, 3)</span>
 </code></pre>
 </div>
 
@@ -85,26 +97,46 @@ in the case of <code>Global</code> or <code>Nonlocal</code>) will make use of an
 basically exists to facilitate direct access to slices of children for immediate operations.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">)</span>
-<span class="o">&lt;&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">7..0</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span><span class="p">]</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">)</span>  <span class="c1"># _ just shuts up output</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, 3]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 3]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 4, 3]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[3]</span>
 </code></pre>
 </div>
 
@@ -113,46 +145,73 @@ basically exists to facilitate direct access to slices of children for immediate
 <p>You can copy or cut slices from an <code>FST</code> using a view.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... i = 1</span>
-<span class="s1">... j = 2</span>
-<span class="s1">... k = 3</span>
-<span class="s1">... l = 4</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">i = 1</span>
+<span class="gp">... </span><span class="s1">j = 2</span>
+<span class="gp">... </span><span class="s1">k = 3</span>
+<span class="gp">... </span><span class="s1">l = 4</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">j</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">j = 2</span>
+<span class="go">k = 3</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">j</span> <span class="o">=</span> <span class="mi">2</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">i = 1</span>
+<span class="go">j = 2</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">l</span> <span class="o">=</span> <span class="mi">4</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">k = 3</span>
+<span class="go">l = 4</span>
 </code></pre>
 </div>
 
 <p>You can assign slices to a view.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;{x, y}&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;{x, y}&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, x, y, b]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, x, a, x, y, b]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="p">[])</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="p">[])</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[]</span>
 </code></pre>
 </div>
 
@@ -160,25 +219,37 @@ basically exists to facilitate direct access to slices of children for immediate
 slice is the source.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x, y, z]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x, y, z]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">y</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">y</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[a, b]&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[a, b]&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y, [a, b]]</span>
 </code></pre>
 </div>
 
 <p>If you want to assign the element as a slice, you must use slice indexing.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[c, d]&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[c, d]&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y, [a, b], c, d]</span>
 </code></pre>
 </div>
 
@@ -186,117 +257,602 @@ slice is the source.</p>
 setter of the <code>FST</code> class itself.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span> <span class="o">=</span> <span class="s1">&#39;t, u, v&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span> <span class="o">=</span> <span class="s1">&#39;t, u, v&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[t, u, v]</span>
+</code></pre>
+</div>
+
+<p>It is safe to modify the underlying object outside of the view as the view validates its indices every time they are
+used and truncates them to the actual size of the target field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,15&gt;.elts[1:3] [&lt;Name 0,4..0,5&gt;, &lt;Name 0,7..0,8&gt;]&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,6&gt;.elts[1:2] [&lt;Name 0,4..0,5&gt;]&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,2&gt;.elts[:0] []&gt;</span>
 </code></pre>
 </div>
 
 <h2 id="other-operations">Other operations</h2>
 
-<p>With the exception if <code>insert()</code> (since its a standard pattern) these operations don't take indices but rather are meant
-to be executed on a particular indexed view which selects their range in the list.</p>
+<p>With the exception if <code>insert()</code>, these operations don't take indices but rather are meant to be executed on a
+particular indexed view which selects their range in the list.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[x, y]]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, [x, y], b, c]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, [x, y], b, c]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, x, y, b, c]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, c, x, y]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, c, [x, y]]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, c, x, y]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[x, y], a, b, c]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y, a, b, c]</span>
 </code></pre>
 </div>
 
 <p>They work on subviews as well.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, [x, y], c]</span>
 </code></pre>
 </div>
-
-<h2 id="why-ephemeral">Why ephemeral?</h2>
-
-<p>As stated above, views are meant for direct use and not for keeping around. The reason for this is that any operation
-that changes the size of the target of a view, if it is not effectuated through the view itself, will almost certainly
-invalidate the view information.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>  <span class="c1"># operation on node</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span>  <span class="c1"># notice the size of the view is 3 but there are only two elements</span>
-<span class="o">&lt;&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span><span class="p">]</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span>  <span class="c1"># not an operation on this view but a child view</span>
-<span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span>  <span class="c1"># WRONG again</span>
-<span class="o">&lt;&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">]</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, x, y, c]</span>
 </code></pre>
 </div>
 
-<p>So it is better to let a view go away after using it rather than trying to keep it around.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, [x, y], c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, [x, y], c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, x, y, c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, x, y, c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, [x, y], c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, x, y, c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, [x, y], b, c]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, x, y, b, c]</span>
+</code></pre>
+</div>
+
+<h2 id="_all-virtual-field"><code>_all</code> virtual field</h2>
+
+<p>Standard <code>AST</code> fields are used to access and modify values where there is a one-to-one correspondence and the indexing
+aligns. Virtual fields allow access to the tree structure that wouldn't be possible if just trying to access
+<code>Dict.keys</code> in the case of <code>_all</code>, or provides the convenience of working with statement bodies without having to check
+for docstrings in the case of <code>_body</code>.</p>
+
+<p>Virtual fields can be used in put and get functions for the <code>field</code> value, they can be gotten as special slice views
+and they can be accessed directly as attributes to operate on just like any other normal <code>AST</code> field (but only on the
+<code>FST</code> node, if you try to access these on the <code>AST</code> node you will get an error).</p>
+
+<p>The <code>_all</code> field allows slice and index access to the paired <code>key:value</code> elements of a <code>Dict</code> or <code>key:pattern</code> elements
+of a <code>MatchMapping</code> (along with the <code>rest</code> if present). This way you can get and put them in a common-sense manner.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1: a, 2: b, 3: c, 4: d}&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{2: b, 3: c}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{-1: x}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
+<span class="go">&lt;Dict ROOT 0,0..0,19&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{1: a, -1: x, 4: d}</span>
+</code></pre>
+</div>
+
+<p>You can delete individual elements in this way.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
+<span class="go">&lt;Dict ROOT 0,0..0,12&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{1: a, 4: d}</span>
+</code></pre>
+</div>
+
+<p>But not put individual elements, since there is not an <code>AST</code> which represents a <code>key:value</code> pair. If you want to replace
+a single element in this way you must use slice operations.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;{-2: y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">cannot put as &#39;one&#39; item to a Dict slice</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{-2: y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
+<span class="go">&lt;Dict ROOT 0,0..0,13&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{1: a, -2: y}</span>
+</code></pre>
+</div>
+
+<p>When using <code>_all</code> on a <code>MatchMapping</code>, the <code>rest</code> element is included in the virtual field for both get and put
+operations.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1: a, 2: b, **c}&#39;</span><span class="p">,</span> <span class="s1">&#39;MatchMapping&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{2: b, **c}</span>
+</code></pre>
+</div>
+
+<p><code>_all</code> is the default field for <code>Dict</code>, <code>MatchMapping</code> and <code>Compare</code> so you don't need to include it as a parameter.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{-1: x, -2: y, **z}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;MatchMapping ROOT 0,0..0,25&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{1: a, -1: x, -2: y, **z}</span>
+</code></pre>
+</div>
+
+<p>You can only modify the <code>rest</code> element within the rules of the <code>MatchMapping</code> syntax, only one of those is permitted and
+only at the end of the pattern:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{**BAD}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">put slice with &#39;rest&#39; element to MatchMapping must be at end</span>
+</code></pre>
+</div>
+
+<p>For a <code>Compare</code>, there is no problem with having to pair elements for slicing, but the rather indexing is changed to
+include the <code>left</code> element as the first element of the virtual field. This applies both to single element operations as
+well as slices.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b == c &gt; d&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b == c</span>
+</code></pre>
+</div>
+
+<p>When carrying out slice operations on a <code>Compare</code> though there are extra considerations to take into account for the
+operators. This is explained in more detail in the section on slices <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
+
+<h2 id="_body-virtual-field"><code>_body</code> virtual field</h2>
+
+<p>This is a pure convenience field. It doesn't solve any problem but rather allows you to work with blocks of statements
+without having to take into account the possible presence of a docstring. <code>_body</code> provides a view on the real <code>body</code>
+field as if the docstring expression were not present, so the first statement after the docstring becomes index 0 and
+the length is reduced by 1 in this case.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">def func():</span>
+<span class="gp">... </span><span class="s1">    </span><span class="se">\&#39;\&#39;\&#39;</span><span class="s1">docstring</span><span class="se">\&#39;\&#39;\&#39;</span>
+<span class="gp">... </span><span class="s1">    a = b</span>
+<span class="gp">... </span><span class="s1">    call()</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_body</span><span class="p">)</span>
+<span class="go">(3, 2)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">&#39;&#39;&#39;docstring&#39;&#39;&#39;</span>
+<span class="go">a = b</span>
+<span class="go">call()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;_body&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a = b</span>
+<span class="go">call()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;_body&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a = b</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;_body&#39;</span><span class="p">)</span>
+<span class="go">&lt;FunctionDef ROOT 0,0..1,19&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">def func():</span>
+<span class="go">    &#39;&#39;&#39;docstring&#39;&#39;&#39;</span>
+</code></pre>
+</div>
+
+<p>If a docstring is not present, or if the <code>AST</code> node is a block statement that cannot have a docstring then the <code>_body</code>
+field acts identically to the normal <code>body</code> field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if 1:</span>
+<span class="gp">... </span><span class="s1">    </span><span class="se">\&#39;\&#39;\&#39;</span><span class="s1">not-docstring</span><span class="se">\&#39;\&#39;\&#39;</span>
+<span class="gp">... </span><span class="s1">    a = b</span>
+<span class="gp">... </span><span class="s1">    call()</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;_body&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">&#39;&#39;&#39;not-docstring&#39;&#39;&#39;</span>
+<span class="go">a = b</span>
+<span class="go">call()</span>
+</code></pre>
+</div>
+
+<p>Also note that <code>_body</code> is not the default field unlike <code>_all</code> is for its respective node types, you will always have to
+specify it explicitly.</p>
+
+<h2 id="_args-virtual-field"><code>_args</code> virtual field</h2>
+
+<p>This is a field on the <code>Call</code> node which combines the <code>args</code> and <code>keywords</code> fields into one and accesses them in
+syntax order (this is important as the two separate lists may have elements which are intermixed).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a, b=c, *d)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">keywords</span><span class="p">]])</span>
+<span class="go">[&#39;a&#39;, &#39;*d&#39;, &#39;b=c&#39;]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">_args</span><span class="p">])</span>
+<span class="go">[&#39;a&#39;, &#39;b=c&#39;, &#39;*d&#39;]</span>
+</code></pre>
+</div>
+
+<p>You can operate on this field just like any other normal or virtual field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;*new_d&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;_args&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">call(a, b=c, *new_d)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># its the default field so you can omit it</span>
+<span class="go">a, b=c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b=c, *new_d</span>
+</code></pre>
+</div>
+
+<p>But you can't break syntax ordering rules.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;**nope&#39;</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">keyword arglike unpacking cannot precede iterable arglike unpacking</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;a, b&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">positional arglike cannot follow keyword arglike</span>
+</code></pre>
+</div>
+
+<h2 id="_bases-virtual-field"><code>_bases</code> virtual field</h2>
+
+<p>This is a field on a <code>ClassDef</code> which follows basically the same syntax rules as <code>Call._args</code>, even if it doesn't always
+make sense.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(a, b=c, *d): pass&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">bases</span><span class="p">,</span> <span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">keywords</span><span class="p">]])</span>
+<span class="go">[&#39;a&#39;, &#39;*d&#39;, &#39;b=c&#39;]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">_bases</span><span class="p">])</span>
+<span class="go">[&#39;a&#39;, &#39;b=c&#39;, &#39;*d&#39;]</span>
+</code></pre>
+</div>
+
+<p>Just like with <code>_args</code>, you can operate on this field again like any other normal or virtual field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;*new_d&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;_bases&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">class cls(a, b=c, *new_d): pass</span>
+</code></pre>
+</div>
+
+<p><code>_bases</code> is <strong>NOT</strong> the default field for a <code>ClassDef</code>, so if you want to use it you must always specify it. Otherwise
+the operation is on <code>body</code> which is the default field for a <code>ClassDef</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;_bases&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b=c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_bases</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b=c, *new_d</span>
+</code></pre>
+</div>
+
+<p>And you still can't break syntax ordering rules.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">_bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;**nope&#39;</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">keyword arglike unpacking cannot precede iterable arglike unpacking</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;a, b&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="s1">&#39;_bases&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">positional arglike cannot follow keyword arglike</span>
+</code></pre>
+</div>
+
+<h2 id="virtual-field-attribute-access">Virtual field attribute access</h2>
+
+<p>Just like normal fields, virtual fields can be accessed by their name on an <code>FST</code> class and give the same expected
+results.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1: a, 2: b, 3: c}&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{2: b, 3: c}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">_all</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;{-1: x}&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{-1: x, 3: c}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{3: c}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;left &lt; comp0 &lt; comp1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">left</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="se">\&#39;\&#39;\&#39;</span><span class="s1">docstring</span><span class="se">\&#39;\&#39;\&#39;</span>
+<span class="gp">... </span><span class="s1">a = b</span>
+<span class="gp">... </span><span class="s1">call()</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>  <span class="c1"># Module</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a = b</span>
+<span class="go">call()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">_body</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">&#39;&#39;&#39;docstring&#39;&#39;&#39;</span>
+</code></pre>
+</div>
 </div>
 
                 

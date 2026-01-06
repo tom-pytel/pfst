@@ -100,11 +100,10 @@ the first line) or isolation.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exception:&#39;</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
-<span class="go">Exception: expecting root node</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">expecting root node</span>
 </code></pre>
 </div>
 
@@ -128,7 +127,7 @@ the first line) or isolation.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="go">&lt;&lt;If ROOT 0,0..8,13&gt;.body[0:2] [&lt;If 1,4..4,13&gt;, &lt;If 5,4..8,13&gt;]&gt;</span>
+<span class="go">&lt;&lt;If ROOT 0,0..8,13&gt;.body [&lt;If 1,4..4,13&gt;, &lt;If 5,4..8,13&gt;]&gt;</span>
 </code></pre>
 </div>
 
@@ -151,7 +150,7 @@ tree. It does not have to be valid parsable code, any node is supported as the r
 can be put into other <code>FST</code> trees.</p>
 
 <p>You can also cut nodes out, which will remove them from the tree. Important, the <code>FST</code> node returned by <code>cut()</code> may be,
-but will not necessarily be the same <code>FST</code> node that was in the tree! See <code><a href="../fst.html#FST.cut">fst.fst.FST.cut()</a></code>.</p>
+but will not necessarily be the same <code>FST</code> node that was in the tree!</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span>
@@ -189,7 +188,7 @@ because most operations will fail with a tree in this state.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="go">&lt;&lt;If 1,4..4,13&gt;.body[0:1] [&lt;Assign 2,8..2,13&gt;]&gt;</span>
+<span class="go">&lt;&lt;If 1,4..4,13&gt;.body [&lt;Assign 2,8..2,13&gt;]&gt;</span>
 </code></pre>
 </div>
 
@@ -204,11 +203,10 @@ because most operations will fail with a tree in this state.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
-<span class="go">ValueError(&#39;cannot cut all elements from If.body without norm_self=False&#39;)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">cannot cut all elements from If.body without norm_self=False</span>
 </code></pre>
 </div>
 
@@ -256,11 +254,10 @@ the tree in a valid state.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span>
-<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exception:&#39;</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
-<span class="go">Exception: cannot cut root node</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">cannot cut root node</span>
 </code></pre>
 </div>
 
@@ -352,7 +349,8 @@ can do, but not vice-versa.</p>
 </code></pre>
 </div>
 
-<p>It can only get individual elements as slices, unlike <code>get()</code> which can get them as the element itself.</p>
+<p>If you try to get an individual element then it is always returned as a slice, unlike <code>get()</code> which can get it as the
+element itself.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
@@ -366,17 +364,17 @@ can do, but not vice-versa.</p>
 </code></pre>
 </div>
 
-<p>Both <code>get()</code> and <code>get_slice()</code> can specify slice beginning and end points as <code>None</code>, which specifies from beginning of
-the body or to the end of it.</p>
+<p>Both <code>get()</code> and <code>get_slice()</code> can specify slice beginning and end points as. Passing <code>'end'</code> as an index specifies the
+end of the body however long it may be.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[2, 3]</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[1, 2]</span>
 </code></pre>
 </div>
@@ -403,7 +401,7 @@ slicing behavior which slices across the multiple fields and gives a new <code>D
 and <code>Compare</code> in order to allow access to combined elements which are not normally accessible by themselves as <code>AST</code>
 nodes.</p>
 
-<p>Note below that the first <code>a</code> in the <code>Compare</code> is normally not part of a <code>list</code> field but can be sliced as if it were
+<p>Note that the first <code>a</code> in the <code>Compare</code> below is normally not part of a <code>list</code> field but can be sliced as if it were by
 using the <code>'_all'</code> virtual field (which is the default field for <code>Compare</code> but we include it explicitly for
 demonstration purposes).</p>
 
@@ -412,6 +410,8 @@ demonstration purposes).</p>
 <span class="go">a &lt; b</span>
 </code></pre>
 </div>
+
+<p>For more on virtual fields see <code><a href="d07_views.html">fst.docs.d07_views</a></code>.</p>
 
 <p>Slices being gotten or put are implemented using common sense containers, like for sequences using the same type of
 sequence or for a dictionary returning / expecting a <code>Dict</code>. When there is not possible pure container for a slice of
@@ -559,7 +559,7 @@ for this purpose. This is not a valid <code>AST</code> object of course, but wor
 <p>The <code>FST</code> class provides properties that mirror the fields of all possible <code>AST</code> classes in order to allow direct access
 to those fields through the <code>FST</code> class. When accessing like this, fields which are <code>AST</code> nodes have their corresponding
 <code>FST</code> node returned and fields which are lists of <code>AST</code> nodes return an <code>fstview</code> which acts as a list of corresponding
-<code>FST</code> nodes. Elements which are primitive values are returned as such.</p>
+<code>FST</code> nodes (see <code><a href="d07_views.html">fst.docs.d07_views</a></code>). Elements which are primitive values are returned as such.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i, j = [x, 2.5]&#39;</span><span class="p">)</span>
@@ -568,7 +568,7 @@ to those fields through the <code>FST</code> class. When accessing like this, fi
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">targets</span>  <span class="c1"># this is an `fstview`</span>
-<span class="go">&lt;&lt;Assign ROOT 0,0..0,15&gt;.targets[0:1] [&lt;Tuple 0,0..0,4&gt;]&gt;</span>
+<span class="go">&lt;&lt;Assign ROOT 0,0..0,15&gt;.targets [&lt;Tuple 0,0..0,4&gt;]&gt;</span>
 </code></pre>
 </div>
 
@@ -586,7 +586,7 @@ to those fields through the <code>FST</code> class. When accessing like this, fi
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span>
-<span class="go">&lt;&lt;List 0,7..0,15&gt;.elts[0:2] [&lt;Name 0,8..0,9&gt;, &lt;Constant 0,11..0,14&gt;]&gt;</span>
+<span class="go">&lt;&lt;List 0,7..0,15&gt;.elts [&lt;Name 0,8..0,9&gt;, &lt;Constant 0,11..0,14&gt;]&gt;</span>
 </code></pre>
 </div>
 

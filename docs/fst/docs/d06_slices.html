@@ -37,6 +37,7 @@
     <li><a href="#put-as-onetrue">Put as <code>one=True</code></a></li>
     <li><a href="#trivia">Trivia</a></li>
     <li><a href="#trivia-trailing">Trivia (trailing)</a></li>
+    <li><a href="#trivia-by-line-number">Trivia by line number</a></li>
   </ul></li>
 </ul>
 
@@ -70,7 +71,12 @@
 <p><code>AST</code> nodes may have individual <code>AST</code> children like <code>FunctionDef.returns</code> or lists of <code>AST</code> children like
 <code>FunctionDef.body</code>. Any single node or a single element of a list of children can be gotten individually as one node,
 but getting a sequence of nodes from a list of children requires a slice operation via <code>get_slice()</code> or <code>put_slice()</code>
-(or the equivalent attribute accesses). (<code><a href="../fst.html#FST.get_slice">fst.fst.FST.get_slice()</a></code>, <code><a href="../fst.html#FST.put_slice">fst.fst.FST.put_slice()</a></code>)</p>
+(or the equivalent attribute accesses). See <code><a href="../fst.html#FST.get_slice">fst.fst.FST.get_slice()</a></code> and <code><a href="../fst.html#FST.put_slice">fst.fst.FST.put_slice()</a></code>.</p>
+
+<p>The benefit of a slice operation is that it allows you to move blocks of elements while preserving the trivia and
+comments <strong>WITHIN</strong> the block itself, also around the block according to the <code>trivia</code> option. Individual element
+operations don't do comments except for statements and statementlike nodes, not <code>expr</code>essions or <code>keyword</code>s or
+<code>withitem</code>s, etc...</p>
 
 <p>In many cases a slice of a list of children of a node can be returned as the same type of node. For example a slice of a
 <code>Tuple</code> is a <code>Tuple</code>.</p>
@@ -554,11 +560,10 @@ being put to the compare or as a separate <code>op</code> option.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>  <span class="c1"># no extra op in source or `op` option</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
-<span class="go">ValueError(&quot;insertion to Compare requires and &#39;op&#39; extra operator to insert&quot;)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">insertion to Compare requires an &#39;op&#39; extra operator to insert</span>
 </code></pre>
 </div>
 
@@ -622,9 +627,10 @@ being put to the compare or as a separate <code>op</code> option.</p>
 </code></pre>
 </div>
 
-<p>Note how for the unparenthesized <code>Tuple</code> parentheses were added for the empty <code>Tuple</code> to be valid. However deleting all
-field elements from a node does not always result in a valid <code>AST</code>. <code><a href="../../fst.html">fst</a></code> allows you to delete all the elements in these
-cases for editing purposes and it is on you to ensure that something is put there before writing the code out for use.</p>
+<p>Note how for the unparenthesized <code>Tuple</code> parentheses were added for the empty <code>Tuple</code> in order to remain valid. However
+deleting all field elements from a node does not always result in a valid <code>AST</code>. <code><a href="../../fst.html">fst</a></code> allows you to delete all the
+elements in these cases for editing purposes and it is on you to ensure that something is put there before writing the
+code out for use.</p>
 
 <p>You can delete all the statements from bodies (or <code>orelse</code> or <code>handlers</code> or <code>finalbody</code> or <code>Match.cases</code>).</p>
 
@@ -704,7 +710,7 @@ as a <code>Set</code>).</p>
 </div>
 
 <p>In all cases these result in invalid <code>AST</code> nodes but is allowed with the understanding that valid data will be replaced
-eventually, preferably sooner rather than later as not all operations are valid on invalid <code>AST</code> nodes.</p>
+eventually, preferably sooner rather than later as not all operations work on invalid <code>AST</code> nodes.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">)</span>
@@ -798,11 +804,10 @@ allowed to delete all the children of that node even if it is not valid to do so
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># try to delete everything</span>
-<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-<span class="go">cannot delete all Assign.targets without norm_self=False</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># try to delete everything</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">cannot delete all Assign.targets without norm_self=False</span>
 </code></pre>
 </div>
 
@@ -901,35 +906,22 @@ using that one as a slice.</p>
 </code></pre>
 </div>
 
-<p>It also allows putting things which are not slices of the given type to a slice range withing the target.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a | b | c | d: pass&#39;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x as y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">a | (x as y) | d</span>
-</code></pre>
-</div>
-
 <h2 id="trivia">Trivia</h2>
 
 <p>"Trivia" refers to the parts of the source code which don't actually code for anything like comments and whitespace. The
 whole point of the <code><a href="../../fst.html">fst</a></code> module is to preserve this stuff while editing some parts of the code. Trivia can be gotten and
-put in all slice operations and single element operations on statement-ish nodes but not single operations on
-expression-ish elements (for now).</p>
+put in all slice operations and single element operations on statementlike nodes but not single operations on
+expressionlike elements (for now).</p>
 
-<p>Note: Statement-ish refers to statement nodes, <code>match_case</code>, <code>ExceptHandler</code> and their special slice containers and
-<code>mod</code> nodes. Expression-ish is everything else.</p>
+<p><strong>Note:</strong> Statementlike refers to statement nodes, <code>match_case</code>, <code>ExceptHandler</code> and their special slice containers and
+<code>mod</code> nodes. Expressionlike is most of everything else.</p>
 
-<p>When getting a slice or statement-ish node you can specify comments and empty lines to copy and / or cut as well as
-specifying those to be overwritten on a slice or statement-ish put. The option to specify this is <code>trivia</code> and it can
+<p>When getting a slice or statementlike node you can specify comments and empty lines to copy and / or cut as well as
+specifying those to be overwritten on a slice or statementlike put. The option to specify this is <code>trivia</code> and it can
 specify just the leading trivia or both the leading and trailing.</p>
 
 <p>Leading trivia can specify a leading comment block, all leading comments and a maximum number of empty lines before that
-to copy or cut or delete.</p>
+to copy or cut or delete. You can also pass explicit line numbers, explained further down.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>  <span class="c1"># helper</span>
@@ -971,7 +963,7 @@ comments.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">))</span>  <span class="c1"># &#39;block&#39; same as True for leading comments</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">))</span>
 <span class="go">&#39;# pre-comment 2a&#39;</span>
 <span class="go">&#39;# pre-comment 2b&#39;</span>
 <span class="go">&#39;target_stmt&#39;</span>
@@ -982,7 +974,7 @@ comments.</p>
 start of block statement or top of module).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">))</span>  <span class="c1"># &#39;block&#39; same as True for leading comments</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">))</span>
 <span class="go">&#39;# pre-comment 1a&#39;</span>
 <span class="go">&#39;# pre-comment 1b&#39;</span>
 <span class="go">&#39;&#39;</span>
@@ -1149,7 +1141,7 @@ not returned in the gotten node.</p>
 <p>The plus instead of the minus only means return the empty space that was cut. In all cases the space is removed from the
 target.</p>
 
-<p>All of this applies to all statement-ish operations but also expression-ish slice operations as well.</p>
+<p>All of this applies to all statementlike operations but also expressionlike slice operations as well.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;[</span>
@@ -1272,8 +1264,120 @@ is normally <code>'block'</code> for leading trivia.</p>
 </code></pre>
 </div>
 
-<p>The same rules apply for what is copied and what is removed or overwritten with plus and minus. You can specify how to
-handle both leading and trailing trivia as one parameter, for example <code>trivia=('block+2', 'all+')</code>.</p>
+<p>The same rules apply for what is copied and what is removed or overwritten with plus <code>'+'</code> and minus <code>'-'</code>. You can
+specify how to handle both leading and trailing trivia as one parameter.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">pre_stmt</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># pre-comment 1a</span>
+<span class="gp">... </span><span class="s1"># pre-comment 1b</span>
+<span class="gp">...</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># pre-comment 2a</span>
+<span class="gp">... </span><span class="s1"># pre-comment 2b</span>
+<span class="gp">... </span><span class="s1">target_stmt  # line-comment</span>
+<span class="gp">... </span><span class="s1"># post-comment 1a</span>
+<span class="gp">... </span><span class="s1"># post-comment 1b</span>
+<span class="gp">...</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># post-comment 2a</span>
+<span class="gp">... </span><span class="s1"># post-comment 2b</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">post_stmt</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block+1&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">)))</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_stmt  # line-comment&#39;</span>
+<span class="go">&#39;# post-comment 1a&#39;</span>
+<span class="go">&#39;# post-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# post-comment 2a&#39;</span>
+<span class="go">&#39;# post-comment 2b&#39;</span>
+</code></pre>
+</div>
+
+<h2 id="trivia-by-line-number">Trivia by line number</h2>
+
+<p>You can also indicate lines of trivia specifically by passing the exact line number (inclusive, starting at 0) for both
+the leading and trailing trivia. The trivia will be gotten from the first line through to the last, assuming the lines
+fall within the allowed range of trivia to select (whole lines only and cannot cross preceding or following node
+elements).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">pre_stmt  # line 0</span>
+<span class="gp">... </span><span class="s1"># line 1</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># line 3</span>
+<span class="gp">... </span><span class="s1">target_stmt  # line 4</span>
+<span class="gp">... </span><span class="s1"># line 5</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># line 7</span>
+<span class="gp">... </span><span class="s1">post_stmt # line 8</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# line 3&#39;</span>
+<span class="go">&#39;target_stmt  # line 4&#39;</span>
+<span class="go">&#39;# line 5&#39;</span>
+</code></pre>
+</div>
+
+<p>The line range is clipped to what is allowed and only complete lines of trivia are allowed, so the line comment
+<code># line 0</code> from the preceding statement is not returned.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">999</span><span class="p">,</span> <span class="mi">999</span><span class="p">)))</span>
+<span class="go">&#39;# line 1&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# line 3&#39;</span>
+<span class="go">&#39;target_stmt  # line 4&#39;</span>
+<span class="go">&#39;# line 5&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# line 7&#39;</span>
+</code></pre>
+</div>
+
+<p>Line number usage for leading / trailing is independent and does not have to be passed as a range.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span>
+<span class="go">&#39;# line 3&#39;</span>
+<span class="go">&#39;target_stmt  # line 4&#39;</span>
+</code></pre>
+</div>
+
+<p>If the trailing trivial line is exactly the line of the last element of the node then the line comment on that line is
+returned. If it is before then the line comment is excluded, but it does not affect the leading trivia.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">999</span><span class="p">)))</span>
+<span class="go">&#39;# line 3&#39;</span>
+<span class="go">&#39;target_stmt&#39;</span>
+</code></pre>
+</div>
+
+<p>Likewise, nothing bad happens if the leading trivia line is past the element line, there is just no leading trivia
+selected.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="mi">999</span><span class="p">,</span> <span class="o">-</span><span class="mi">999</span><span class="p">)))</span>
+<span class="go">&#39;target_stmt&#39;</span>
+</code></pre>
+</div>
 </div>
 
                 

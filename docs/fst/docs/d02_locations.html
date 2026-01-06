@@ -144,7 +144,7 @@
 </code></pre>
 </div>
 
-<p>If you noticed above, nodes which normally don't have locations in <code>AST</code> nodes have their locations computed and added
+<p>If you noticed above, nodes which normally don't have locations in <code>AST</code> nodes have their locations calculated and added
 in <code>FST</code> nodes, like <code>arguments</code> or <code>operators</code>.</p>
 
 <div class="pdoc-code codehilite">
@@ -180,7 +180,7 @@ in <code>FST</code> nodes, like <code>arguments</code> or <code>operators</code>
 </ol>
 
 <p>Other nodes that normally don't have locations like <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and other operators all
-have locations computed for them by <code>FST</code>.</p>
+have locations calculated for them by <code>FST</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
@@ -313,7 +313,7 @@ which don't normally have them.</p>
 </code></pre>
 </div>
 
-<p>You can check if a location comes from an <code>AST</code> node or if is computed by <code>FST</code>.</p>
+<p>You can check if a location comes from an <code>AST</code> node or if is calculated by <code>FST</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">has_own_loc</span>
@@ -408,10 +408,10 @@ using <code><a href="../fst.html#FST.find_in_loc">fst.fst.FST.find_in_loc()</a><
 </code></pre>
 </div>
 
-<p>Or you can search for a node which <strong>CONTAINS</strong> a location using <code><a href="../fst.html#FST.find_loc_in">fst.fst.FST.find_loc_in()</a></code>.</p>
+<p>Or you can search for a node which <strong>CONTAINS</strong> a location using <code><a href="../fst.html#FST.find_contains_loc">fst.fst.FST.find_contains_loc()</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># &quot; &lt;&quot;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_contains_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># &quot; &lt;&quot;</span>
 <span class="go">&lt;Compare 0,3..0,8&gt;</span>
 </code></pre>
 </div>
@@ -419,7 +419,7 @@ using <code><a href="../fst.html#FST.find_in_loc">fst.fst.FST.find_in_loc()</a><
 <p>Will include nodes which match the location <strong>EXACTLY</strong> by default.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_contains_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
 <span class="go">&lt;Compare 0,3..0,8&gt;</span>
 </code></pre>
 </div>
@@ -427,7 +427,7 @@ using <code><a href="../fst.html#FST.find_in_loc">fst.fst.FST.find_in_loc()</a><
 <p>But that can be disabled.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">allow_exact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_contains_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">allow_exact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
 <span class="go">&lt;If ROOT 0,0..1,8&gt;</span>
 </code></pre>
 </div>
@@ -444,9 +444,13 @@ contained in the location, or if no candidate for that then one which contains t
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="s1">&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="gp">... </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="gp">... </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_contains_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="gp">... </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
 <span class="go">f.find_loc(*loc) = &lt;Compare 0,3..0,8&gt;</span>
-<span class="go">f.find_loc_in(*loc) = &lt;Compare 0,3..0,8&gt;</span>
+<span class="go">f.find_contains_loc(*loc) = &lt;Compare 0,3..0,8&gt;</span>
 <span class="go">f.find_in_loc(*loc) = None</span>
 </code></pre>
 </div>
@@ -460,9 +464,13 @@ here.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="s1">&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="gp">... </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="gp">... </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_contains_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="gp">... </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
 <span class="go">f.find_loc(*loc) = &lt;Name 0,3..0,4&gt;</span>
-<span class="go">f.find_loc_in(*loc) = &lt;Compare 0,3..0,8&gt;</span>
+<span class="go">f.find_contains_loc(*loc) = &lt;Compare 0,3..0,8&gt;</span>
 <span class="go">f.find_in_loc(*loc) = &lt;Name 0,3..0,4&gt;</span>
 </code></pre>
 </div>

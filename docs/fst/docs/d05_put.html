@@ -31,6 +31,7 @@
     <li><a href="#code-for-modifying"><code>Code</code> for modifying</a></li>
     <li><a href="#replace-and-remove"><code>replace()</code> and <code>remove()</code></a></li>
     <li><a href="#put-and-put_slice"><code>put()</code> and <code>put_slice()</code></a></li>
+    <li><a href="#insert-append-extend-prepend-and-prextend"><code>insert()</code>, <code>append()</code>, <code>extend()</code>, <code>prepend()</code> and <code>prextend()</code></a></li>
     <li><a href="#by-attribute">By attribute</a></li>
     <li><a href="#put_src"><code>put_src()</code></a></li>
   </ul></li>
@@ -66,29 +67,29 @@
 <p>When modifying a node, you specify what to replace the node <code>AST</code> with. You can pass this as either source code, an
 <code>AST</code> node or an <code>FST</code> root node. If an <code>FST</code> node is used then it should be considered consumed on use, whether the
 modification succeeds or not. <code>AST</code> nodes are not consumed as they are unparsed and then reparsed in order to make sure
-their locations are correct. Source code in the form of a string or a list of lines is also not consumed.</p>
+their locations are correct. Source code in the form of a list of line strings is also not consumed.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;i = 1&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;i = 1&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;i = 1&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;i = 1&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;i&#39;</span><span class="p">)],</span>
-<span class="gp">... </span>                             <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;i&#39;</span><span class="p">)],</span>
+<span class="gp">... </span>                       <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;i = 1&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;i = 1&#39;</span>
 </code></pre>
 </div>
@@ -175,17 +176,18 @@ tree through the root node (<code><a href="../fst.html#FST.replace">fst.fst.FST.
 </code></pre>
 </div>
 
-<p>Notice the parentheses added atomatically (because they are needed).</p>
-
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[(j := 3), a(), blah()]</span>
 </code></pre>
 </div>
 
-<p>The <code>replace()</code> function returns the new replaced node, as the actual <code>FST</code> node (regardless of the contents) can be
-different from the original <code>FST</code> at this location under some circumstances (raw put). Except for the root <code>FST</code> node,
-which is the only one guarenteed to never change under any circumstances.</p>
+<p>Notice the parentheses were added atomatically (because they are needed).</p>
+
+<p>The <code>replace()</code> function returns the new replaced node. This is because the actual final new <code>FST</code> node in the tree
+(regardless of the contents) can be different from both the <code>FST</code> node put <strong>AND</strong> the original <code>FST</code> at this location
+(mostly when using raw put but may happen for other reasons like coercion). The only <code>FST</code> node which is guaranteed to
+never change identity is the root <code>FST</code> node.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span>
@@ -335,7 +337,7 @@ not vice versa.</p>
 element, not as a slice. You can specify slice operation via the <code>one</code> parameter, which is normally <code>True</code> for <code>put()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
 <span class="go">&lt;List ROOT 0,0..0,14&gt;</span>
 </code></pre>
 </div>
@@ -347,7 +349,7 @@ element, not as a slice. You can specify slice operation via the <code>one</code
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">&lt;List ROOT 0,0..0,12&gt;</span>
 </code></pre>
 </div>
@@ -375,7 +377,7 @@ element, not as a slice. You can specify slice operation via the <code>one</code
 <p>Slices from compatible containers can be put to each other.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3, 4]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3, 4]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
@@ -386,13 +388,18 @@ element, not as a slice. You can specify slice operation via the <code>one</code
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c, d}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c, d}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">{a, 2, 3, 4, d}</span>
 </code></pre>
 </div>
 
 <p>Either <code>put()</code> or <code>put_slice()</code> can be used to insert by setting the <code>start</code> and <code>stop</code> locations to the same thing,
 possibly at the start, end or between other elements (<code><a href="../fst.html#FST.put_slice">fst.fst.FST.put_slice()</a></code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, c]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -447,7 +454,7 @@ possibly at the start, end or between other elements (<code><a href="../fst.html
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;k = 3&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;k = 3&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">)</span>
 <span class="go">&lt;If ROOT 0,0..4,9&gt;</span>
 </code></pre>
 </div>
@@ -459,6 +466,20 @@ possibly at the start, end or between other elements (<code><a href="../fst.html
 <span class="go">else:</span>
 <span class="go">    j = 2</span>
 <span class="go">    k = 3</span>
+</code></pre>
+</div>
+
+<p>You can use <code>'end'</code> with <code>put()</code> or <code>put_slice()</code> to append or extend to a list field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, x]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, x, y]</span>
 </code></pre>
 </div>
 
@@ -556,6 +577,141 @@ order to continue operating on the same element in the tree you need the new <co
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">2.5</span>
+</code></pre>
+</div>
+
+<p><code>put()</code> and <code>put_slice()</code> use virtual fields for special puts just like the get functions (<code><a href="d07_views.html">fst.docs.d07_views</a></code>):</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, c: d}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{x: y, u: v}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;_all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{a: b, x: y, u: v, c: d}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b == c &gt; d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;_all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a == c &gt; d</span>
+</code></pre>
+</div>
+
+<h2 id="insert-append-extend-prepend-and-prextend"><code>insert()</code>, <code>append()</code>, <code>extend()</code>, <code>prepend()</code> and <code>prextend()</code></h2>
+
+<p>These do what they say and are essentially just convenience functions which call <code>put_slice()</code> underneath. They work in
+exactly the same way as their <code>fstview</code> counterparts but allow you to specify a field to operate on explicitly, and if
+not provided they operate on the default field of the node (assuming it is a list field).</p>
+
+<p>Below are examples of their usage along with the corresponding <code>put_slice()</code> call to demonstrate what is happening.</p>
+
+<p>Insert is the only one which takes an index and optional <code>one</code> field to specify single element or slice insertion.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, [x, y], 2, 3]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, [x, y], 2, 3]</span>
+</code></pre>
+</div>
+
+<p>Or you can insert as a slice:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, x, y, 2, 3]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, x, y, 2, 3]</span>
+</code></pre>
+</div>
+
+<p><code>append()</code> works just like the Python version.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, 3, [x, y]]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, 3, [x, y]]</span>
+</code></pre>
+</div>
+
+<p>Likewise <code>extend()</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, 3, x, y]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, 3, x, y]</span>
+</code></pre>
+</div>
+
+<p><code>prepend()</code> is just <code>append()</code> at the beginning.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[x, y], 1, 2, 3]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[x, y], 1, 2, 3]</span>
+</code></pre>
+</div>
+
+<p>And <code>prextend()</code> is the same for <code>extend()</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y, 1, 2, 3]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y, 1, 2, 3]</span>
+</code></pre>
+</div>
+
+<p>If you specify a field to any of these operations, it is the same as specifying a field to <code>put_slice()</code> and the
+operation will be carried out on that field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if a:</span>
+<span class="gp">... </span><span class="s1">    i = 1</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;j = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a:</span>
+<span class="go">    i = 1</span>
+<span class="go">else:</span>
+<span class="go">    j = 2</span>
+</code></pre>
+</div>
+
+<p>And this is the same as the function on the <code>fstview</code> (<code><a href="d07_views.html">fst.docs.d07_views</a></code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if a:</span>
+<span class="gp">... </span><span class="s1">    i = 1</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;j = 2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a:</span>
+<span class="go">    i = 1</span>
+<span class="go">else:</span>
+<span class="go">    j = 2</span>
 </code></pre>
 </div>
 
@@ -684,7 +840,7 @@ amount of code which is reparsed and the minimum elemenent that can be reparsed 
 header. Though multiple statements or even entire blocks may be reparsed if the changes span those blocks. Whatever is
 reparsed will have its <code>FST</code> nodes changed, except the root node.</p>
 
-<p>The actual location for the reparse is not restricted in any way. It doesn't have to fall on node bondaries and can
+<p>The actual location for the reparse is not restricted in any way. It doesn't have to fall on node boundaries and can
 extend over the entire source code if need be. Like <code>get_src()</code>, it doesn't matter what node of the tree this function
 is called on in this mode, the domain is always over the entire tree.</p>
 
@@ -745,10 +901,10 @@ functions.</p>
 </div>
 
 <p>We got <code>a</code> because that is the first node in the modified part. If you want the lowest level node which completely
-encompasses the modification then use <code>find_loc_in()</code>.</p>
+encompasses the modification then use <code>find_contains_loc()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_contains_loc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;a &lt; d&#39;</span>
 </code></pre>
 </div>

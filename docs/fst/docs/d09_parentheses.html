@@ -250,8 +250,9 @@ there are no parentheses in the source and it doesn't need parentheses added.</p
 </code></pre>
 </div>
 
-<p>Named expressions copied out of other expressions which may or may not have parentheses normally have those parentheses
-copied or added.</p>
+<p>Named expressions copied out of other expressions which may or may not have parentheses normally don't have those
+parentheses copied or added as <code><a href="../../fst.html">fst</a></code> does not need them (and it is cleaner). This differs from the default python
+<code>ast.unparse()</code> behavior of always parenthesizing them at the top level.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
@@ -259,15 +260,50 @@ copied or added.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b := c</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">))</span>
 <span class="go">(b := c)</span>
 </code></pre>
 </div>
+
+<p>You can enable the default python behavior with the <code>pars_walrus</code> option, either globally or on individual operations.
+This will parenthesize any walrus expressions pulled out to a top level. This does not affect any other parentesization
+behavior controlled via the <code>pars</code> option, just walruses copied out to a top level.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b := c)</span>
+</code></pre>
+</div>
+
+<p>Set this globally and it applies everywhere (except if explicitly specified in any given operation of course).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">{&#39;pars_walrus&#39;: False}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b := c)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">{&#39;pars_walrus&#39;: True}</span>
+</code></pre>
+</div>
+
+<p>Having the <code>pars_walrus</code> option off does not affect the other normal <code>pars</code> behavior of copying existing parentheses if
+<code>pars=True</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b := c)&#39;</span><span class="p">)</span>
@@ -275,53 +311,18 @@ copied or added.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b := c</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">(b := c)</span>
 </code></pre>
 </div>
 
-<p>This can be turned off with the <code>pars_walrus=False</code> option (it is normally not affected by the standard <code>pars</code> option
-(unless you set <code>pars_walrus=None</code> globally)). Though if you do this, keep in mind that an unparenthesized named
-expression is not normally parsable standalone by Python.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">b := c</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b := c)&#39;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">b := c</span>
-</code></pre>
-</div>
-
-<p>Argument-like expressions which may not be valid outside their normal context (<code>Call.args</code>, <code>ClassDef.bases</code> or a
+<p>Argumentlike expressions which may not be valid outside their normal context (<code>Call.args</code>, <code>ClassDef.bases</code> or a
 <code>Subscript.slice</code> <code>Tuple</code>) are normally parenthesized on get. This can be turned off via the <code>pars_arglike</code> option.</p>
 
 <div class="pdoc-code codehilite">
@@ -350,6 +351,12 @@ expression is not normally parsable standalone by Python.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;bases&#39;</span><span class="p">,</span> <span class="n">pars_arglike</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(*(not a), *b, *(c or d))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;bases&#39;</span><span class="p">,</span> <span class="n">pars_arglike</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">(*(not a), *b, *(c or d))</span>
 </code></pre>
 </div>
