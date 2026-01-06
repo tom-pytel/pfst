@@ -614,7 +614,7 @@ def _fix_Assign_target0(self: fst.FST) -> None:
     """If `Assign` has `target`s and first target does not start at same location as `self` then delete everything in
     between so that it starts at `self`."""
 
-    # assert isinstance(self.a, Assign)
+    assert self.a.__class__ is Assign
 
     if targets := self.a.targets:
         t0_ln, t0_col, _, _ = targets[0].f.pars()
@@ -674,7 +674,7 @@ def _fix_decorator_list_del(
 
 
 def _fix_Set(self: fst.FST, norm: bool | str = True) -> None:
-    # assert isinstance(self.a, Set)
+    assert self.a.__class__ is Set
 
     ast = self.a
 
@@ -691,7 +691,7 @@ def _fix_Set(self: fst.FST, norm: bool | str = True) -> None:
 
 
 def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
-    # assert isinstance(self.a, MatchSequence)
+    assert self.a.__class__ is MatchSequence
 
     if delims is None:
         delims = self.is_delimited_matchseq()
@@ -715,7 +715,7 @@ def _fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
     will work on any-old `MatchOr`.
     """
 
-    # assert isinstance(self.a, MatchOr)
+    assert self.a.__class__ is MatchOr
 
     if not (patterns := self.a.patterns):
         return

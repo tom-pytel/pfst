@@ -13,18 +13,36 @@ from typing import Literal
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_BLOCK,
     ASTS_LEAF_FUNCDEF,
+    ASTS_LEAF_DEF,
+    ASTS_LEAF_WITH,
+    ASTS_LEAF_VAR_SCOPE_DECL,
+    ASTS_LEAF_OP,
     ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
     And,
     AsyncFunctionDef,
     AsyncWith,
+    BoolOp,
+    Call,
+    ClassDef,
     Compare,
     GeneratorExp,
     Global,
+    ImportFrom,
     Lambda,
+    MatchClass,
+    MatchMapping,
+    Subscript,
+    TypeAlias,
     UnaryOp,
+    arguments,
     comprehension,
+    match_case,
+    withitem,
+    _comprehension_ifs,
+    _decorator_list,
 )
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
@@ -33,6 +51,9 @@ from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find,
 
 from .fst_traverse import next_bound, prev_bound
 
+
+_ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
+_ASTS_LEAF_COMPREHENSION_OR_IFS = frozenset([comprehension, _comprehension_ifs])
 
 _re_deco_start         = re.compile(r'[ \t]*@')
 
@@ -118,7 +139,7 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
     **Note:** This function is explicitly safe to use from `FST.loc`.
     """
 
-    # assert isinstance(self.a, arguments)
+    assert self.a.__class__ is arguments
 
     if not (first := self.first_child()):
         return None
@@ -173,7 +194,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
     **Note:** This function is explicitly safe to use from `FST.loc`.
     """
 
-    # assert isinstance(self.a, comprehension)
+    assert self.a.__class__ is comprehension
 
     ast = self.a
     first = ast.target.f
@@ -219,7 +240,7 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     **Note:** This function is explicitly safe to use from `FST.loc`.
     """
 
-    # assert isinstance(self.a, withitem)
+    assert self.a.__class__ is withitem
 
     ast = self.a
     ce = ast.context_expr.f
@@ -267,7 +288,7 @@ def _loc_match_case(self: fst.FST) -> fstloc:
     **Note:** This function is explicitly safe to use from `FST.loc`.
     """
 
-    # assert isinstance(self.a, match_case)
+    assert self.a.__class__ is match_case
 
     ast = self.a
     lines = self.root._lines
@@ -294,7 +315,7 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     **Note:** This function is explicitly safe to call from `FST.loc`.
     """
 
-    # assert isinstance(self.a, (operator, unaryop, cmpop))
+    assert self.a.__class__ in ASTS_LEAF_OP
 
     ast = self.a
     ast_cls = ast.__class__
@@ -380,7 +401,7 @@ def _loc_block_header_end(
         past the `:` of the block header.
     """
 
-    # assert self.a.__class__ in ASTS_LEAF_BLOCK
+    assert self.a.__class__ in ASTS_LEAF_BLOCK
 
     ast = self.a
     ln, col, end_ln, end_col = self.loc
@@ -425,7 +446,7 @@ def _loc_block_header_end(
 def _loc_arguments_empty(self: fst.FST) -> fstloc:
     """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!"""
 
-    # assert isinstance(self.a, arguments)
+    assert self.a.__class__ is arguments
 
     if not (parent := self.parent):
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))  # parent=None means we are root
@@ -455,7 +476,7 @@ def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     **WARNING:** `idx` must be non-negative.
     """
 
-    # assert isinstance(self.a, (comprehension, _comprehension_ifs))
+    assert self.a.__class__ in _ASTS_LEAF_COMPREHENSION_OR_IFS
 
     ast = self.a
     ifs = ast.ifs
@@ -484,7 +505,7 @@ def _loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     **WARNING:** `idx` must be non-negative.
     """
 
-    # assert isinstance(self.a, (FunctionDef, AsyncFunctionDef, ClassDef, _decorator_list))
+    assert self.a.__class__ in _ASTS_LEAF_DEF_OR_DECO_LIST
 
     ast = self.a
     lines = self.root._lines
@@ -504,7 +525,7 @@ def _loc_Lambda_args_entire(self: fst.FST) -> fstloc:
     """`Lambda` `args` entire location from just past `lambda` keyword to ':', empty or not. `self` is the `Lambda`, not
     the `arguments`."""
 
-    # assert isinstance(self.a, Lambda)
+    assert self.a.__class__ is Lambda
 
     ln, col, end_ln, end_col = self.loc
     col += 6
@@ -530,7 +551,7 @@ def _loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
         actually are.
     """
 
-    # assert isinstance(self.a, ClassDef)
+    assert self.a.__class__ is ClassDef
 
     ast = self.a
     lines = self.root._lines
@@ -587,7 +608,7 @@ def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocn:
         they should go and `n=1` meaning parentheses present and location is where they actually are.
     """
 
-    # assert isinstance(self.a, ImportFrom)
+    assert self.a.__class__ is ImportFrom
 
     lines = self.root._lines
     ln, col, end_ln, end_col = self.loc
@@ -625,7 +646,7 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocn:
         location from just past the `with` (no space) to just before the `:`.
     """
 
-    # assert isinstance(self.a, (With, AsyncWith))
+    assert self.a.__class__ in ASTS_LEAF_WITH
 
     ast = self.a
     lines = self.root._lines
@@ -676,7 +697,7 @@ def _loc_BoolOp_op(self: fst.FST, idx: int) -> fstloc:
     """Get location of operator in a `BoolOp` at index `idx`. The index works the same as in a `Compare.ops`, the first
     operator is between the first and second `values` and there are n-1 operators for n elements."""
 
-    # assert isinstance(self.a, BoolOp)
+    assert self.a.__class__ is BoolOp
 
     lines = self.root._lines
     ast = self.a
@@ -691,7 +712,7 @@ def _loc_BoolOp_op(self: fst.FST, idx: int) -> fstloc:
 def _loc_Call_pars(self: fst.FST) -> fstloc:
     """Location is from just before opening par to just past closing par."""
 
-    # assert isinstance(self.a, Call)
+    assert self.a.__class__ is Call
 
     ast = self.a
     lines = self.root._lines
@@ -703,7 +724,7 @@ def _loc_Call_pars(self: fst.FST) -> fstloc:
 
 
 def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
-    # assert isinstance(self.a, Subscript)
+    assert self.a.__class__ is Subscript
 
     ast = self.a
     lines = self.root._lines
@@ -717,7 +738,7 @@ def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
 def _loc_MatchMapping_rest(self: fst.FST) -> fstloc | None:
     """Location of `rest` identifier if present, otherwise `None`."""
 
-    # assert isinstance(self.a, MatchMapping)
+    assert self.a.__class__ is MatchMapping
 
     ast = self.a
 
@@ -738,7 +759,7 @@ def _loc_MatchMapping_rest(self: fst.FST) -> fstloc | None:
 
 
 def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
-    # assert isinstance(self.a, MatchClass)
+    assert self.a.__class__ is MatchClass
 
     ast = self.a
     lines = self.root._lines
@@ -757,7 +778,7 @@ def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None,
     - (loc brackets | None, pos end of name)
     """
 
-    # assert isinstance(self.a, (FunctionDef, AsyncFunctionDef))
+    assert self.a.__class__ in ASTS_LEAF_FUNCDEF
 
     ast = self.a
     lines = self.root._lines
@@ -804,7 +825,7 @@ def _loc_ClassDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
     - (loc brackets | None, pos end of name)
     """
 
-    # assert isinstance(self.a, ClassDef)
+    assert self.a.__class__ is ClassDef
 
     ast = self.a
     lines = self.root._lines
@@ -845,7 +866,7 @@ def _loc_TypeAlias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, t
     - (loc brackets | None, pos end of name)
     """
 
-    # assert isinstance(self.a, TypeAlias)
+    assert self.a.__class__ is TypeAlias
 
     ast = self.a
     lines = self.root._lines
@@ -873,7 +894,7 @@ def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = Non
     """We assume `first` and optionally `last` are in [0..len(names)), no negative or out-of-bounds and `last` follows
     or equals `first` if present."""
 
-    # assert isinstance(self.a, (Global, Nonlocal))
+    assert self.a.__class__ in ASTS_LEAF_VAR_SCOPE_DECL
 
     ln, col, end_ln, end_col = self.loc
 

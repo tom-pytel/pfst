@@ -162,7 +162,6 @@ DEFAULT_COLOR = (
     None
 )
 
-
 DUMP_COLOR = nspace(
     clr_field = '\033[95m',
     clr_ast   = '\033[1;34m',
@@ -248,6 +247,8 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('context_expr',          (withitem,)),
     ('pattern',               (MatchAs,)),
 ] for kls in classes}
+
+_ASTS_LEAF_TUPLE_OR_MATCHSEQ = frozenset([Tuple, MatchSequence])
 
 _re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)
 _re_one_space_or_end   = re.compile(r'\s|$')
@@ -1612,7 +1613,7 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) 
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
     into account. `self.a` must be a `Tuple`."""
 
-    # assert isinstance(self.a, Tuple)
+    assert self.a.__class__ is Tuple
 
     if len(elts := self.a.elts) == 1:
         self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
@@ -1650,7 +1651,7 @@ def _fix_undelimited_seq(
         Delimiters are always added to empty sequences irrespective of this parameter.
     """
 
-    # assert isinstance(self.a, (Tuple, MatchSequence))
+    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
 
     if not body:  # if is empty then just need to delimit
         lines = self.root._lines
@@ -1747,7 +1748,7 @@ def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = 
     - `bool`: Whether the tuple is parenthesized or not (after the fix, regardless of if fix was done or not).
     """
 
-    # assert isinstance(self.a, Tuple)
+    assert self.a.__class__ is Tuple
 
     if is_par is None:
         is_par = self._is_delimited_seq()
@@ -1765,7 +1766,7 @@ def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> No
     """Parenthesize any arglike expressions in `self` which is assumed to be a `Tuple` according to `options` if not
     `None`, otherwise always parenthesizes."""
 
-    # assert isinstance(self.a, Tuple)
+    assert self.a.__class__ is Tuple
 
     if options is None or get_option_overridable('pars', 'pars_arglike', options):
         for e in self.a.elts:
@@ -1776,7 +1777,7 @@ def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> No
 def _fix_elif(self: fst.FST) -> None:
     """If source at self is an `elif` instead of an `if` then convert it to `if`."""
 
-    # assert isinstance(self.a, If)
+    assert self.a.__class__ is If
 
     lines = self.root._lines
     ln, col, _, _ = self.loc
@@ -1793,7 +1794,7 @@ def _fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
     **WARNING!** Only call on root node!
     """
 
-    # assert not self.parent  # self.is_root
+    assert not self.parent  # self.is_root
 
     ast = self.a
     ast_cls = ast.__class__
@@ -1966,7 +1967,7 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
     - `whole`: If at root then delimit whole source instead of just node.
     """
 
-    # assert isinstance(self.a, (Tuple, MatchSequence))
+    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
 
     lines = self.root._lines
     ast = self.a
@@ -2011,7 +2012,7 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     - `bool`: Whether delimiters were removed or not (they may not be for an empty tuple).
     """
 
-    # assert isinstance(self.a, Tuple)
+    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
 
     if not (body := getattr(self.a, field, None)):
         return False
@@ -2043,7 +2044,7 @@ def _trim_delimiters(self: fst.FST) -> None:
     """Remove the delimiters of `self` and everything before and after them. `self` must be a container with single
     character delimiters like a parenthesized `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` or `MatchMapping`."""
 
-    # assert not self.parent  # self.is_root
+    assert not self.parent  # self.is_root
 
     lines = self._lines
     ast = self.a

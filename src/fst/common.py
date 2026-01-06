@@ -416,7 +416,7 @@ def prev_frag(
             end_col = 0x7fffffffffffffff
 
         else:
-            return srcwpos(end_ln, m.start(1), m.group(1))  # assert not (s := m.group(1)).startswith('#') or comment
+            return srcwpos(end_ln, m.start(1), m.group(1))
 
         i = end_ln + 1
 

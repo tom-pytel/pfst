@@ -329,7 +329,7 @@ def _maybe_par_above(above: fst.FST, below: fst.FST) -> bool:
 def _fix_With_items(self: fst.FST) -> None:
     """If `Tuple` only element in `items` then add appropriate parentheses."""
 
-    # assert isinstance(self.a, (With, AsyncWith))
+    assert self.a.__class__ in ASTS_LEAF_WITH
 
     if len(items := self.a.items) != 1:
         return
