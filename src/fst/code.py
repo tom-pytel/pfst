@@ -172,7 +172,7 @@ def _expecting_expr(parse: Callable[[Code, Mapping[str, Any]], AST]) -> str:
             'expecting expression (standard)')
 
 
-def _coerce_as__expr_arglikes(
+def _coerce_to__expr_arglikes(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize)
@@ -187,7 +187,7 @@ def _coerce_as__expr_arglikes(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__Assign_targets(
+def _coerce_to__Assign_targets(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
@@ -204,7 +204,7 @@ def _coerce_as__Assign_targets(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__decorator_list(
+def _coerce_to__decorator_list(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
@@ -222,10 +222,10 @@ def _coerce_as__decorator_list(
 # `_comprehension_ifs` where those parsers expect a prefix like `@` or `if` but we want to allow expressions without the
 # prefixes as well.
 
-_coerce_as__decorator_list.coerce_src = True
+_coerce_to__decorator_list.coerce_src = True
 
 
-def _coerce_as__arglikes(
+def _coerce_to__arglikes(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
@@ -235,7 +235,7 @@ def _coerce_as__arglikes(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__comprehensions(
+def _coerce_to__comprehensions(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_comprehension(code, parse_params, sanitize=sanitize)
@@ -245,7 +245,7 @@ def _coerce_as__comprehensions(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__comprehension_ifs(
+def _coerce_to__comprehension_ifs(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
@@ -258,10 +258,10 @@ def _coerce_as__comprehension_ifs(
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
-_coerce_as__comprehension_ifs.coerce_src = True
+_coerce_to__comprehension_ifs.coerce_src = True
 
 
-def _coerce_as_alias(
+def _coerce_to_alias(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
@@ -289,7 +289,7 @@ def _coerce_as_alias(
     return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__aliases(
+def _coerce_to__aliases(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_alias(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce Name or Attribute to alias if necessary
@@ -299,10 +299,10 @@ def _coerce_as__aliases(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-_coerce_as__Import_name = _coerce_as_alias
+_coerce_to__Import_name = _coerce_to_alias
 
 
-def _coerce_as__Import_names(
+def _coerce_to__Import_names(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_Import_name(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce Name or Attribute to alias if necessary
@@ -312,7 +312,7 @@ def _coerce_as__Import_names(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__ImportFrom_name(
+def _coerce_to__ImportFrom_name(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
@@ -330,7 +330,7 @@ def _coerce_as__ImportFrom_name(
     return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__ImportFrom_names(
+def _coerce_to__ImportFrom_names(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_ImportFrom_name(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce Name to alias if necessary
@@ -340,7 +340,7 @@ def _coerce_as__ImportFrom_names(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as_arguments(
+def _coerce_to_arguments(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_arg(code, parse_params, sanitize=sanitize)
@@ -349,7 +349,7 @@ def _coerce_as_arguments(
     return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as_arguments_lambda(
+def _coerce_to_arguments_lambda(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_arg(code, parse_params, sanitize=sanitize)
@@ -363,7 +363,7 @@ def _coerce_as_arguments_lambda(
     return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as_withitem(
+def _coerce_to_withitem(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
@@ -376,7 +376,7 @@ def _coerce_as_withitem(
     return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__withitems(
+def _coerce_to__withitems(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_withitem(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce expr to withitem if necessary
@@ -386,7 +386,7 @@ def _coerce_as__withitems(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _coerce_as__type_params(
+def _coerce_to__type_params(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_type_param(code, parse_params, sanitize=sanitize)
@@ -402,7 +402,7 @@ def _code_as(
     parse: Callable[[Code, Mapping[str, Any]], AST],
     ast_cls: type[AST] | tuple[type[AST], ...],
     sanitize: bool,
-    coerce_as: CodeAs | None = None,
+    coerce_to: CodeAs | None = None,
     *,
     name: str | None = None,
 ) -> fst.FST:
@@ -413,11 +413,11 @@ def _code_as(
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, ast_cls):
-            if not coerce_as:
+            if not coerce_to:
                 raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}', rawable=True)
 
             try:
-                return coerce_as(code, parse_params, sanitize=sanitize)
+                return coerce_to(code, parse_params, sanitize=sanitize)
             except Exception as exc:
                 raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}, '
                                 'could not coerce', rawable=True) from exc
@@ -425,12 +425,12 @@ def _code_as(
     else:
         if isinstance(code, AST):
             if not isinstance(code, ast_cls):
-                if not coerce_as:
+                if not coerce_to:
                     raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}',
                                     rawable=True)
 
                 try:
-                    return coerce_as(code, parse_params, sanitize=sanitize)
+                    return coerce_to(code, parse_params, sanitize=sanitize)
                 except Exception as exc:
                     raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}, '
                                     'could not coerce', rawable=True) from exc
@@ -453,11 +453,11 @@ def _code_as(
                 ast = parse(src, parse_params)
 
             except Exception:
-                if not (coerce_as and getattr(coerce_as, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense)
+                if not (coerce_to and getattr(coerce_to, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense)
                     raise
 
                 try:
-                    fst_ = coerce_as(code, parse_params, sanitize=sanitize)
+                    fst_ = coerce_to(code, parse_params, sanitize=sanitize)
                 except Exception as exc:
                     raise ParseError(f'expecting {name or ast_cls.__name__}, could not parse or coerce') from exc
 
@@ -499,7 +499,7 @@ def _code_as_expr(
             if not coerce:
                 raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}', rawable=True)
 
-            # TODO: move this out to _coerce_as_expr()
+            # TODO: move this out to _coerce_to_expr()
 
             if ast_cls is withitem:
                 if ast.optional_vars:
@@ -533,7 +533,7 @@ def _code_as_expr(
         if is_ast := isinstance(code, AST):
             code_cls = code.__class__
 
-            # TODO: move this out to _coerce_as_expr()
+            # TODO: move this out to _coerce_to_expr()
 
             if code_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
                 if not coerce:
@@ -875,7 +875,7 @@ def code_as__Assign_targets(
     """Convert `code` to an `_Assign_targets` SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__Assign_targets, _Assign_targets, sanitize,
-                    _coerce_as__Assign_targets if coerce else None)
+                    _coerce_to__Assign_targets if coerce else None)
 
 
 def code_as__decorator_list(
@@ -884,7 +884,7 @@ def code_as__decorator_list(
     """Convert `code` to an `_decorator_list` SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__decorator_list, _decorator_list, sanitize,
-                    _coerce_as__decorator_list if coerce else None)
+                    _coerce_to__decorator_list if coerce else None)
 
 
 def code_as__arglike(
@@ -893,7 +893,7 @@ def code_as__arglike(
     """Convert `code` to a single `expr_arglike` or `keyword` if possible."""
 
     fst_ = _code_as(code, parse_params, parse__arglike, (expr, keyword), sanitize,
-                    # _coerce_as__arglike if coerce else None,
+                    # _coerce_to__arglike if coerce else None,
                     name='arglike')
 
     if fst_ is code and fst_.a.__class__ in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # fst_ is code only if FST passed in, in which case make sure we didn't get an invalid arglike
@@ -908,7 +908,7 @@ def code_as__arglikes(
     """Convert `code` to an `_arglikes` of `expr`s and `keyword`s SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__arglikes, _arglikes, sanitize,
-                    _coerce_as__arglikes if coerce else None)
+                    _coerce_to__arglikes if coerce else None)
 
 
 def code_as_boolop(
@@ -957,7 +957,7 @@ def code_as__comprehensions(
     """Convert `code` to a `_comprehensions` of `comprehensions` SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__comprehensions, _comprehensions, sanitize,
-                    _coerce_as__comprehensions if coerce else None)
+                    _coerce_to__comprehensions if coerce else None)
 
 
 def code_as__comprehension_ifs(
@@ -966,7 +966,7 @@ def code_as__comprehension_ifs(
     """Convert `code` to a `_comprehension_ifs` of `if` prepended `expr`s SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__comprehension_ifs, _comprehension_ifs, sanitize,
-                    _coerce_as__comprehension_ifs if coerce else None)
+                    _coerce_to__comprehension_ifs if coerce else None)
 
 
 def code_as_arguments(
@@ -975,7 +975,7 @@ def code_as_arguments(
     """Convert `code` to a arguments `FST` if possible."""
 
     return _code_as(code, parse_params, parse_arguments, arguments, sanitize,
-                    _coerce_as_arguments if coerce else None)
+                    _coerce_to_arguments if coerce else None)
 
 
 def code_as_arguments_lambda(
@@ -984,7 +984,7 @@ def code_as_arguments_lambda(
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
     fst_ = _code_as(code, parse_params, parse_arguments_lambda, arguments, sanitize,
-                    _coerce_as_arguments_lambda if coerce else None,
+                    _coerce_to_arguments_lambda if coerce else None,
                     name='lambda arguments')
 
     if fst_ is code:  # validation if returning same FST that was passed in
@@ -1023,7 +1023,7 @@ def code_as_alias(
     """Convert `code` to an `alias` `FST` if possible, star or dotted."""
 
     return _code_as(code, parse_params, parse_alias, alias, sanitize,
-                    _coerce_as_alias if coerce else None)
+                    _coerce_to_alias if coerce else None)
 
 
 def code_as__aliases(
@@ -1032,7 +1032,7 @@ def code_as__aliases(
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, star or dotted."""
 
     return _code_as(code, parse_params, parse__aliases, _aliases, sanitize,
-                    _coerce_as__aliases if coerce else None)
+                    _coerce_to__aliases if coerce else None)
 
 
 def code_as_Import_name(
@@ -1041,7 +1041,7 @@ def code_as_Import_name(
     """Convert `code` to an `alias` `FST` if possible, dotted as in `alias` for `Import.names`."""
 
     fst_ = _code_as(code, parse_params, parse_Import_name, alias, sanitize,
-                    _coerce_as__Import_name if coerce else None)
+                    _coerce_to__Import_name if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
         if fst_.a.name == '*':
@@ -1056,7 +1056,7 @@ def code_as__Import_names(
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, dotted as in `alias` for `Import.names`."""
 
     fst_ = _code_as(code, parse_params, parse__Import_names, _aliases, sanitize,
-                    _coerce_as__Import_names if coerce else None)
+                    _coerce_to__Import_names if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
         if any(a.name == '*' for a in fst_.a.names):
@@ -1071,7 +1071,7 @@ def code_as_ImportFrom_name(
     """Convert `code` to an `alias` `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
     fst_ = _code_as(code, parse_params, parse_ImportFrom_name, alias, sanitize,
-                    _coerce_as__ImportFrom_name if coerce else None)
+                    _coerce_to__ImportFrom_name if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
         if '.' in fst_.a.name:
@@ -1087,7 +1087,7 @@ def code_as__ImportFrom_names(
     `FromImport.names`."""
 
     fst_ = _code_as(code, parse_params, parse__ImportFrom_names, _aliases, sanitize,
-                    _coerce_as__ImportFrom_names if coerce else None)
+                    _coerce_to__ImportFrom_names if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
         for a in (names := fst_.a.names):
@@ -1109,7 +1109,7 @@ def code_as_withitem(
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(code, parse_params, parse_withitem, withitem, sanitize,
-                    _coerce_as_withitem if coerce else None)
+                    _coerce_to_withitem if coerce else None)
 
 
 def code_as__withitems(
@@ -1118,7 +1118,7 @@ def code_as__withitems(
     """Convert `code` to a `_withitems` of `withitem` SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__withitems, _withitems, sanitize,
-                    _coerce_as__withitems if coerce else None)
+                    _coerce_to__withitems if coerce else None)
 
 
 def code_as_pattern(
@@ -1160,7 +1160,7 @@ def code_as__type_params(
     """Convert `code` to a `_type_params` of `type_param` SPECIAL SLICE if possible."""
 
     return _code_as(code, parse_params, parse__type_params, _type_params, sanitize,
-                    _coerce_as__type_params if coerce else None)
+                    _coerce_to__type_params if coerce else None)
 
 
 def code_as_identifier(
@@ -1335,7 +1335,7 @@ def code_as__expr_arglikes(
         code = _fixing_unparse(code)[1:-1]
 
     fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,
-                    _coerce_as__expr_arglikes if coerce else None)
+                    _coerce_to__expr_arglikes if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
         if any(e.__class__ is Slice for e in fst_.a.elts):

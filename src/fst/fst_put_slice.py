@@ -132,7 +132,7 @@ from .code import (
     code_as_pattern,
     code_as__type_params,
     code_as__expr_arglikes,
-    _coerce_as__expr_arglikes,
+    _coerce_to__expr_arglikes,
 )
 
 from .fst_misc import get_option_overridable, fixup_slice_indices, validate_put_arglike
@@ -920,7 +920,7 @@ def _code_to_slice__expr_arglikes(
     coerce = fst.FST.get_option('coerce', options)
 
     if one:
-        fst_ = _coerce_as__expr_arglikes(code, self.root.parse_params, coerce=coerce)
+        fst_ = _coerce_to__expr_arglikes(code, self.root.parse_params, coerce=coerce)
     else:
         fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce)
 
