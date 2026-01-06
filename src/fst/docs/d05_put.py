@@ -140,13 +140,6 @@ True
 Constant 'ab' - ROOT 0,0..1,4
 
 
-## `insert()`, `append()`, `extend()`, `prepend()` and `prextend()`
-
-They work just like the `fstview` versions but on the default or specifiable field.
-
-TODO: this
-
-
 ## `put()` and `put_slice()`
 
 Just like with `copy()` and `cut()` using `get()`, `put()` is the underlying function used by `replace()` and `remove()`.
@@ -315,6 +308,86 @@ Constant 2.5 - ROOT 0,0..0,3
 
 >>> print(FST('a < b == c > d').put(None, 1, field='_all').src)
 a == c > d
+
+
+## `insert()`, `append()`, `extend()`, `prepend()` and `prextend()`
+
+These do what they say and are essentially just convenience functions which call `put_slice()` underneath. They work in
+exactly the same way as their `fstview` counterparts but allow you to specify a field to operate on explicitly, and if
+not provided they operate on the default field of the node (assuming it is a list field).
+
+Below are examples of their usage along with the corresponding `put_slice()` call to demonstrate what is happening.
+
+Insert is the only one which takes an index and optional `one` field to specify single element or slice insertion.
+
+>>> print(FST('[1, 2, 3]').insert('[x, y]', 1).src)
+[1, [x, y], 2, 3]
+
+>>> print(FST('[1, 2, 3]').put_slice('[x, y]', 1, 1, one=True).src)
+[1, [x, y], 2, 3]
+
+Or you can insert as a slice:
+
+>>> print(FST('[1, 2, 3]').insert('[x, y]', 1, one=False).src)
+[1, x, y, 2, 3]
+
+>>> print(FST('[1, 2, 3]').put_slice('[x, y]', 1, 1).src)
+[1, x, y, 2, 3]
+
+`append()` works just like the Python version.
+
+>>> print(FST('[1, 2, 3]').append('[x, y]').src)
+[1, 2, 3, [x, y]]
+
+>>> print(FST('[1, 2, 3]').put_slice('[x, y]', 'end', one=True).src)
+[1, 2, 3, [x, y]]
+
+Likewise `extend()`.
+
+>>> print(FST('[1, 2, 3]').extend('[x, y]').src)
+[1, 2, 3, x, y]
+
+>>> print(FST('[1, 2, 3]').put_slice('[x, y]', 'end').src)
+[1, 2, 3, x, y]
+
+`prepend()` is just `append()` at the beginning.
+
+>>> print(FST('[1, 2, 3]').prepend('[x, y]').src)
+[[x, y], 1, 2, 3]
+
+>>> print(FST('[1, 2, 3]').put_slice('[x, y]', 0, 0, one=True).src)
+[[x, y], 1, 2, 3]
+
+And `prextend()` is the same for `extend()`.
+
+>>> print(FST('[1, 2, 3]').prextend('[x, y]').src)
+[x, y, 1, 2, 3]
+
+>>> print(FST('[1, 2, 3]').put_slice('[x, y]', 0, 0).src)
+[x, y, 1, 2, 3]
+
+If you specify a field to any of these operations, it is the same as specifying a field to `put_slice()` and the
+operation will be carried out on that field.
+
+>>> print(FST('''
+... if a:
+...     i = 1
+... '''.strip()).append('j = 2', 'orelse').src)
+if a:
+    i = 1
+else:
+    j = 2
+
+And this is the same as the function on the `fstview` (`fst.docs.d07_views`).
+
+>>> print(FST('''
+... if a:
+...     i = 1
+... '''.strip()).orelse.append('j = 2').base.src)
+if a:
+    i = 1
+else:
+    j = 2
 
 
 ## By attribute

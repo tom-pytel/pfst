@@ -470,7 +470,7 @@ class FST:
         lines list returned is always a copy so safe to modify.
 
         **WARNING!** You get just the text that is there so you will get unparsable source if you get for example a
-        string `Constant` from the `values` field of a `JoinedStr`, or a 'format_spec'.
+        string `Constant` from the `values` field of a `JoinedStr`, or a `format_spec`.
         """
 
         if not self.parent:  # is_root
@@ -482,14 +482,14 @@ class FST:
 
     @property
     def src(self) -> builtins.str:
-        """Source code of this node from the **RAW SOURCE** clipped out of as a single string, without any dedentation.
+        """Source code of this node from the **RAW SOURCE** clipped out as a single string, without any dedentation.
         Will have indentation as it appears in the top level source if multiple lines. If gotten at root then the entire
         source is returned, regardless of whether the actual top level node location includes it or not.
 
         A string is always returned, even for nodes which can never have source like `Load`, etc...
 
         **WARNING!** You get just the text that is there so you will get unparsable source if you get for example a
-        string `Constant` from the `values` field of a `JoinedStr`, or a 'format_spec'.
+        string `Constant` from the `values` field of a `JoinedStr`, or a `format_spec`.
         """
 
         if not self.parent:  # is_root
@@ -758,7 +758,9 @@ class FST:
         >>> FST('start:stop')
         <AnnAssign ROOT 0,0..0,10>
 
-        So you can tell it.
+        So you can tell it. This is also usually faster to parse than if `fst` has to guess and try parsing something
+        that it is not before finding out what it is, so if this is important to you then always pass the type you
+        expect to get when you can.
 
         >>> FST('start:stop', 'Slice')
         <Slice ROOT 0,0..0,10>
@@ -2357,8 +2359,9 @@ class FST:
         - `options`: See `options()`.
 
         **Note:** The `field` value can optionally be passed positionally in either the `idx` or `stop` parameter. If
-        passed in `idx` then the field is assumed to be single element and a value of `None` is used for `idx`. If
-        passed in `stop` then the `idx` value is present and `stop` is assumed to be `None`.
+        passed in `idx` a value of `None` is used for `idx`, which will select either just the element from a single
+        element field or the entire slice from a list field. If passed in `stop` then the `idx` value is present and
+        `stop` is assumed to be `None`.
 
         **Returns:**
         - `FST`: When getting an actual node (most situations).
@@ -2470,8 +2473,9 @@ class FST:
                 node to the node specified in `to` with the `code` passed.
 
         **Note:** The `field` value can optionally be passed positionally in either the `idx` or `stop` parameter. If
-        passed in `idx` then the field is assumed to be single element and a value of `None` is used for `idx`. If
-        passed in `stop` then the `idx` value is present and `stop` is assumed to be `None`.
+        passed in `idx` a value of `None` is used for `idx`, which will select either just the element from a single
+        element field or the entire slice from a list field. If passed in `stop` then the `idx` value is present and
+        `stop` is assumed to be `None`.
 
         **Returns:**
         - `self` or `None` if a raw put was done and corresponding new node could not be found.
@@ -5199,7 +5203,16 @@ class FST:
         >>> list(f.src for f in FST('call(a, *not b, c=d, *e, **h, f=g)')._args)
         ['a', '*not b', 'c=d', '*e', '**h', 'f=g']
 
-        TODO: more slice examples when done
+        >>> FST('call(a, *not b, c=d, *e, **h, f=g)')._args[1:-1].copy().src
+        '*not b, c=d, *e, **h'
+
+        >>> FST('call(a, b, c, d)').put_slice('k=w, *s', 1, 'end').src
+        'call(a, k=w, *s)'
+
+        >>> FST('call(a, b)').put('k=w', 0)
+        Traceback (most recent call last):
+        ...
+        fst.NodeError: keyword arglike cannot precede positional arglike
 
         @public
         """
@@ -5226,7 +5239,15 @@ class FST:
         >>> list(f.src for f in FST('class cls(a, *not b, c=d, *e, **h): pass')._bases)
         ['a', '*not b', 'c=d', '*e', '**h']
 
-        TODO: more slice examples when done
+        >>> FST('class cls(base, meta=cls, *other_bases): pass')._bases[-2:].copy().src
+        'meta=cls, *other_bases'
+
+        >>> f = FST('class cls(base, meta=cls): pass')
+
+        >>> del f._bases
+
+        >>> print(f.src)
+        class cls: pass
 
         @public
         """

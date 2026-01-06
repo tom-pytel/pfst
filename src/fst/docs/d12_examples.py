@@ -29,31 +29,6 @@ This doesn't do full validation and there could be extra functionality added for
 are set in a constructor, but should be enough to show how something more complete would be done.
 
 ```py
->>> src = """
-... def func():
-...     normal = assign
-...
-...     x: int = 1
-...
-...     # y is such and such
-...     y: float = 2.0  # more about y
-...     # y was a good variable...
-...
-...     structure: tuple[
-...         tuple[int, int],  # extraneous comment
-...         dict[str, Any],   # could break stuff
-...     ] | None = None# blah
-...
-...     call(  # invalid but just for demonstration purposes
-...         some_arg,          # non-extraneous comment
-...         some_kw=kw_value,  # will not break stuff
-...     )[start : stop].attr: SomeClass = getthis()
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def type_annotations_to_type_comments(src: str) -> str:
 ...     fst_ = FST(src, 'exec')  # same as "fst.parse(src).f"
 ...
@@ -81,6 +56,29 @@ Function:
 ...         f.replace(new_src, trivia=False)
 ...
 ...     return fst_.src  # same as fst.unparse(fst_.a)
+```
+
+```py
+>>> src = """
+... def func():
+...     normal = assign
+...
+...     x: int = 1
+...
+...     # y is such and such
+...     y: float = 2.0  # more about y
+...     # y was a good variable...
+...
+...     structure: tuple[
+...         tuple[int, int],  # extraneous comment
+...         dict[str, Any],   # could break stuff
+...     ] | None = None# blah
+...
+...     call(  # invalid but just for demonstration purposes
+...         some_arg,          # non-extraneous comment
+...         some_kw=kw_value,  # will not break stuff
+...     )[start : stop].attr: SomeClass = getthis()
+... """.strip()
 ```
 
 Original.
@@ -134,25 +132,7 @@ def func():
 You want to add a `correlation_id=CID` keyword argument to all `logger.info()` calls, but only if its not already there.
 
 **Note:** The aesthetics of the formatting are not finalized yet so eventually the `correlation_id` will go onto its own
-line when adding to arguments which are on their own lines.
-
-```py
->>> src = """
-... logger.info('Hello world...')  # ok
-... logger.info('Already have id', correlation_id=other_cid)  # ok
-... logger.info()  # yes, no logger message, too bad
-...
-... class cls:
-...     def method(self, thing, extra):
-...         if not thing:
-...             (logger).info(  # just checking
-...                 f'not a {thing}',  # this is fine
-...                 extra=extra,       # also this
-...             )
-... """.strip()
-```
-
-Function:
+line when adding to arguments which are on their own lines. Also should inherit the trailing comma.
 
 ```py
 >>> def inject_logging_metadata(src: str) -> str:
@@ -168,6 +148,22 @@ Function:
 ...             f.append('correlation_id=CID', trivia=(False, False))
 ...
 ...     return fst.src
+```
+
+```py
+>>> src = """
+... logger.info('Hello world...')  # ok
+... logger.info('Already have id', correlation_id=other_cid)  # ok
+... logger.info()  # yes, no logger message, too bad
+...
+... class cls:
+...     def method(self, thing, extra):
+...         if not thing:
+...             (logger).info(  # just checking
+...                 f'not a {thing}',  # this is fine
+...                 extra=extra,       # also this
+...             )
+... """.strip()
 ```
 
 Original.
@@ -216,6 +212,23 @@ Yes the comments on the replaced `else` headers disappear. Could preserve them e
 and then inserting them above the `if` manually using `put_src()`. Eventually should make this automatic.
 
 ```py
+>>> def else_if_chain_to_elifs(src):
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
+...         if (len(f.orelse) == 1
+...             and f.orelse[0].is_elif() is False  # False means normal `if`
+...         ):
+...             f.orelse[0].replace(  # can replace while walking
+...                 f.orelse[0].copy(trivia=('block', 'all')),
+...                 trivia=(False, 'all'),  # trivia specifies how to handle comments
+...                 elif_=True,  # elif_=True is default, here to show usage
+...             )
+...
+...     return fst.src
+```
+
+```py
 >>> src = r"""
 ... def func():
 ...     # pre-if-a
@@ -249,25 +262,6 @@ and then inserting them above the `if` manually using `put_src()`. Eventually sh
 ...
 ...     # post-else-a
 ... """.strip()
-```
-
-Function:
-
-```py
->>> def else_if_chain_to_elifs(src):
-...     fst = FST(src, 'exec')
-...
-...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
-...         if (len(f.orelse) == 1
-...             and f.orelse[0].is_elif() is False  # False means normal `if`
-...         ):
-...             f.orelse[0].replace(  # can replace while walking
-...                 f.orelse[0].copy(trivia=('block', 'all')),
-...                 trivia=(False, 'all'),  # trivia specifies how to handle comments
-...                 elif_=True,  # elif_=True is default, here to show usage
-...             )
-...
-...     return fst.src
 ```
 
 Original:
@@ -356,37 +350,6 @@ also don't check for name override in children when replacing function name, but
 demonstration purposes.
 
 ```py
->>> src = r"""
-... def get_lookup(val):
-...     if not val:
-...         return
-...
-...     def closure():  # can't pull out because of closure
-...         return val[0]
-...
-...     def default_arg(val=val):  # can't pull out because of default arg
-...         return val[0]
-...
-...     def safe(val):  # safe to pull out
-...         return val[0]
-...
-...     return closure, default_arg, safe
-...
-... class cls:
-...     def method1(self, a, b):
-...         def fib(n):  # recursive for fun
-...             if n <= 1:
-...                 return n
-...
-...             return fib(n - 1) + fib(n - 2)
-...
-...         return fib(n)
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def pull_out_inner_funcs_safely(src):
 ...     fst = FST(src, 'exec')
 ...
@@ -428,6 +391,35 @@ Function:
 ...             fst.body.insert(f, top_scope.pfield.idx, pep8space=1)
 ...
 ...     return fst.src
+```
+
+```py
+>>> src = r"""
+... def get_lookup(val):
+...     if not val:
+...         return
+...
+...     def closure():  # can't pull out because of closure
+...         return val[0]
+...
+...     def default_arg(val=val):  # can't pull out because of default arg
+...         return val[0]
+...
+...     def safe(val):  # safe to pull out
+...         return val[0]
+...
+...     return closure, default_arg, safe
+...
+... class cls:
+...     def method1(self, a, b):
+...         def fib(n):  # recursive for fun
+...             if n <= 1:
+...                 return n
+...
+...             return fib(n - 1) + fib(n - 2)
+...
+...         return fib(n)
+... """.strip()
 ```
 
 Original:
@@ -497,26 +489,9 @@ Maybe you have too many lambdas and want proper function defs for debugging or l
 left in the same scope in case of nonlocals.
 
 ```py
->>> src = r"""
-... # lambda comment
-... mymin = lambda a, b: a if a < b else b  # inline lambda comment
-...
-... # class comment
-... class cls:
-...     name = lambda self: str(self)
-...
-...     def method(self, a, b):
-...         add = lambda a, b: a + b
-...
-...         return add(a, b)
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def lambdas_to_defs(src):
 ...     fst = FST(src, 'exec')
+...     indent = fst.indent  # to show its there, inferred from src, single level str
 ...
 ...     for f in fst.walk(Assign):
 ...         if (f.value.is_Lambda
@@ -526,7 +501,7 @@ Function:
 ...             flmb = f.value
 ...             fdef = FST(f"""
 ... def {f.targets[0].id}({flmb.args.src}):
-...     return _
+... {indent}return _
 ...                 """.strip())  # template
 ...             fdef.body[0].value = flmb.body.copy()
 ...
@@ -542,6 +517,22 @@ Function:
 ...     return fst.src
 ```
 
+```py
+>>> src = r"""
+... # lambda comment
+... mymin = lambda a, b: a if a < b else b  # inline lambda comment
+...
+... # class comment
+... class cls:
+...         name = lambda self: str(self)
+...
+...         def method(self, a, b):
+...                 add = lambda a, b: a + b
+...
+...                 return add(a, b)
+... """.strip()
+```
+
 Original:
 
 ```py
@@ -551,12 +542,12 @@ mymin = lambda a, b: a if a < b else b  # inline lambda comment
  
 # class comment
 class cls:
-    name = lambda self: str(self)
+        name = lambda self: str(self)
  
-    def method(self, a, b):
-        add = lambda a, b: a + b
+        def method(self, a, b):
+                add = lambda a, b: a + b
  
-        return add(a, b)
+                return add(a, b)
 ```
 
 Processed:
@@ -565,18 +556,18 @@ Processed:
 >>> pprint(src := lambdas_to_defs(src))
 # lambda comment
 def mymin(a, b):  # inline lambda comment
-    return a if a < b else b
+        return a if a < b else b
  
 # class comment
 class cls:
-    def name(self):
-        return str(self)
+        def name(self):
+                return str(self)
  
-    def method(self, a, b):
-        def add(a, b):
-            return a + b
+        def method(self, a, b):
+                def add(a, b):
+                        return a + b
  
-        return add(a, b)
+                return add(a, b)
 ```
 
 Now lets also pull out the nested function.
@@ -585,18 +576,18 @@ Now lets also pull out the nested function.
 >>> pprint(pull_out_inner_funcs_safely(src))
 # lambda comment
 def mymin(a, b):  # inline lambda comment
-    return a if a < b else b
+        return a if a < b else b
  
 def cls_method_add(a, b):
-    return a + b
+        return a + b
  
 # class comment
 class cls:
-    def name(self):
-        return str(self)
+        def name(self):
+                return str(self)
  
-    def method(self, a, b):
-        return cls_method_add(a, b)
+        def method(self, a, b):
+                return cls_method_add(a, b)
 ```
 
 
@@ -605,29 +596,6 @@ class cls:
 Maybe you realize that all your `isinstance()` checks are incurring a 1.3% performance penalty and you don't like that
 so you want to replace them all in your codebase with direct class identity checks. This can be done for non-base
 classes (like most `AST` types are).
-
-```py
->>> src = """
-... def is_valid_target(asts: AST | list[AST]) -> bool:
-...     \"\"\"Check if `asts` is a valid target for `Assign` or `For`
-...     operations. Must be `Name`, `Attribute`, `Subscript`
-...     and / or possibly nested `Starred`, `Tuple` and `List`.\"\"\"
-...
-...     stack = [asts] if isinstance(asts, AST) else list(asts)
-...
-...     while stack:
-...         if isinstance(a := stack.pop(), (Tuple, List)):
-...             stack.extend(a.elts)
-...         elif isinstance(a, Starred):
-...             stack.append(a.value)
-...         elif not isinstance(a, (Name, Attribute, Subscript)):
-...             return False
-...
-...     return True
-... """.strip()
-```
-
-Function:
 
 ```py
 >>> NAMES = {
@@ -690,6 +658,27 @@ Function:
 ...     return fst.src
 ```
 
+```py
+>>> src = """
+... def is_valid_target(asts: AST | list[AST]) -> bool:
+...     \"\"\"Check if `asts` is a valid target for `Assign` or `For`
+...     operations. Must be `Name`, `Attribute`, `Subscript`
+...     and / or possibly nested `Starred`, `Tuple` and `List`.\"\"\"
+...
+...     stack = [asts] if isinstance(asts, AST) else list(asts)
+...
+...     while stack:
+...         if isinstance(a := stack.pop(), (Tuple, List)):
+...             stack.extend(a.elts)
+...         elif isinstance(a, Starred):
+...             stack.append(a.value)
+...         elif not isinstance(a, (Name, Attribute, Subscript)):
+...             return False
+...
+...     return True
+... """.strip()
+```
+
 Original:
 
 ```py
@@ -741,25 +730,6 @@ the alignment is ugly, it will eventually be done properly, first priority was f
 the `with ctx():` could be preserved explicitly but not doing it here, eventually will be automatic option.
 
 ```py
->>> src = r"""
-... # with comment
-... with open(a) as f:
-...     with (
-...         lock1,  # first lock
-...         func() as lock2,  # this gets preserved
-...     ):
-...         with ctx():  # this does not belong to ctx()
-...             # body comment
-...             pass
-...             # end body comment
-...
-... # post-with comment
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def squash_nested_withs(src: str) -> str:
 ...     fst = FST(src, 'exec')
 ...
@@ -774,6 +744,23 @@ Function:
 ...             )
 ...
 ...     return fst.src
+```
+
+```py
+>>> src = r"""
+... # with comment
+... with open(a) as f:
+...     with (
+...         lock1,  # first lock
+...         func() as lock2,  # this gets preserved
+...     ):
+...         with ctx():  # this does not belong to ctx()
+...             # body comment
+...             pass
+...             # end body comment
+...
+... # post-with comment
+... """.strip()
 ```
 
 Original:
@@ -817,6 +804,23 @@ This one is very simple, we just want to add our own decorator to all class meth
 constraint that it be as close to the function as possible but not after a `@contextmanager`.
 
 ```py
+>>> def insert_decorator_to_class_methods(src: str) -> str:
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk({FunctionDef, AsyncFunctionDef}):
+...         if f.parent.is_ClassDef:
+...             if any((deco := d).is_Name and d.id == 'contextmanager'
+...                    for d in f.decorator_list):
+...                 idx = deco.pfield.idx
+...             else:
+...                 idx = 'end'
+...
+...             f.decorator_list.insert('@our_decorator', idx, trivia=False)
+...
+...     return fst.src
+```
+
+```py
 >>> src = r"""
 ... def normal_function():
 ...     ...
@@ -844,25 +848,6 @@ constraint that it be as close to the function as possible but not after a `@con
 ...     def options(**options) -> Iterator[dict[str, Any]]:
 ...         ...
 ... """.strip()
-```
-
-Function:
-
-```py
->>> def insert_decorator_to_class_methods(src: str) -> str:
-...     fst = FST(src, 'exec')
-...
-...     for f in fst.walk({FunctionDef, AsyncFunctionDef}):
-...         if f.parent.is_ClassDef:
-...             if any((deco := d).is_Name and d.id == 'contextmanager'
-...                    for d in f.decorator_list):
-...                 idx = deco.pfield.idx
-...             else:
-...                 idx = 'end'
-...
-...             f.decorator_list.insert('@our_decorator', idx, trivia=False)
-...
-...     return fst.src
 ```
 
 Original:
@@ -937,33 +922,6 @@ staticmethod
 We build up a body and replace the original comprehension `Assign` statement with the new statements.
 
 ```py
->>> src = r"""
-... def f(k):
-...     # safe comment
-...     clean = [i for i in k]
-...
-...     # happy comment
-...     messy = [
-...         ( i )  # weird pars
-...         for (
-...             j
-...         ) in k  # outer loop
-...         if
-...         j  # misc comment
-...         and not validate(j)
-...         for i in j  # inner loop
-...         if i
-...         if validate(i)
-...     ]
-...     # silly comment
-...
-...     return clean + messy
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def list_comprehensions_to_loops(src):
 ...     fst = FST(src, 'exec')
 ...
@@ -1012,6 +970,31 @@ Function:
 ...             )
 ...
 ...     return fst.src
+```
+
+```py
+>>> src = r"""
+... def f(k):
+...     # safe comment
+...     clean = [i for i in k]
+...
+...     # happy comment
+...     messy = [
+...         ( i )  # weird pars
+...         for (
+...             j
+...         ) in k  # outer loop
+...         if
+...         j  # misc comment
+...         and not validate(j)
+...         for i in j  # inner loop
+...         if i
+...         if validate(i)
+...     ]
+...     # silly comment
+...
+...     return clean + messy
+... """.strip()
 ```
 
 Original:
@@ -1072,28 +1055,6 @@ get aligned. All the source put function does is offset `AST` node locations for
 proxy for verifying same parent.
 
 ```py
->>> src = r"""
-... a = 1
-... this = that
-... whatever[f].a   = "YAY!"
-...
-... on_multiple_lines = (
-...     1, 2)
-... we_dont_align = None
-...
-... ASTS_LEAF_FUNCDEF = {FunctionDef, AsyncFunctionDef}
-... ASTS_LEAF_DEF = ASTS_LEAF_FUNCDEF | {ClassDef}
-... ASTS_LEAF_DEF_OR_MOD = ASTS_LEAF_DEF | ASTS_LEAF_MOD
-... ASTS_LEAF_FOR = {For, AsyncFor}
-... ASTS_LEAF_WITH = {With, AsyncWith}
-... ASTS_LEAF_TRY = {Try, TryStar}
-... ASTS_LEAF_IMPORT = {Import, ImportFrom}
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def align_equals(fst):
 ...     flast = None
 ...     blocks = []  # [[feq1, feq2, ...], [feq1, ...], ...]
@@ -1115,6 +1076,26 @@ Function:
 ...                 eq_str = f'{" " * (eq_col - end_col)} = '
 ...
 ...                 f.put_src(eq_str, ln, end_col, ln, f.value.pars().col, 'offset')
+```
+
+```py
+>>> src = r"""
+... a = 1
+... this = that
+... whatever[f].a   = "YAY!"
+...
+... on_multiple_lines = (
+...     1, 2)
+... we_dont_align = None
+...
+... ASTS_LEAF_FUNCDEF = {FunctionDef, AsyncFunctionDef}
+... ASTS_LEAF_DEF = ASTS_LEAF_FUNCDEF | {ClassDef}
+... ASTS_LEAF_DEF_OR_MOD = ASTS_LEAF_DEF | ASTS_LEAF_MOD
+... ASTS_LEAF_FOR = {For, AsyncFor}
+... ASTS_LEAF_WITH = {With, AsyncWith}
+... ASTS_LEAF_TRY = {Try, TryStar}
+... ASTS_LEAF_IMPORT = {Import, ImportFrom}
+... """.strip()
 ```
 
 Original:
@@ -1197,7 +1178,8 @@ Module - ROOT 0,0..2,22
 itself will work mostly on lower version Pythons.
 
 Suppose you just want to improve the debug logs by adding self-documenting debug strings to all f-strings, e.g.
-`f"{var}"` into `f"{var=}"`. The example below shows how, though there is just one caveat not handled here:
+`f"{var}"` into `f"{var=}"`. The example below shows how, though there is just one caveat to look out for if you want to
+continue working with the `AST` tree:
 
 The source is updated and all the node locations are fine, but the `put_src(..., action='offset')` only offsets node
 locations and does not create the `AST` nodes for any new `Constant` strings due to the newly self-documenting
@@ -1205,21 +1187,6 @@ locations and does not create the `AST` nodes for any new `Constant` strings due
 need those nodes to continue working with an `AST` tree then you can do a `root.reparse()` after making all the changes,
 or individual `reparse()` on each modified statement, or use `put_src(..., action='reparse')` for each individual
 change, but that would be slower.
-
-```py
->>> src = """
-... f'added here {a}, and here { ( b ) }'
-...
-... f'not added here {c=}'
-...
-... f\"\"\"{(  # =========================
-...     d,  # commented out =, so added
-... )}, {e
-...     =} <- not commented out so not added\"\"\"
-... """.strip()
-```
-
-Function:
 
 ```py
 >>> def self_document_fstring_expressions(src: str) -> str:
@@ -1237,6 +1204,19 @@ Function:
 ...             f.put_src('=', end_ln, end_col, end_ln, end_col, 'offset')
 ...
 ...     return fst.src
+```
+
+```py
+>>> src = """
+... f'added here {a}, and here { ( b ) }'
+...
+... f'not added here {c=}'
+...
+... f\"\"\"{(  # =========================
+...     d,  # commented out =, so added
+... )}, {e
+...     =} <- not commented out so not added\"\"\"
+... """.strip()
 ```
 
 Original:
@@ -1274,6 +1254,17 @@ case we also pass `reput=True` because we specifically want it to remove and the
 that it precedes any comments. Otherwise it just replaces the docstring in the location where it currently is.
 
 ```py
+>>> def normalize_docstrings(src):
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk():
+...         if f.has_docstr:
+...             f.put_docstr(f.get_docstr(), reput=True)
+...
+...     return fst.src
+```
+
+```py
 >>> src = """
 ... class cls:
 ...     # docstr should be before this
@@ -1289,19 +1280,6 @@ that it precedes any comments. Otherwise it just replaces the docstring in the l
 ...
 ...         pass
 ... """.strip()
-```
-
-Function:
-
-```py
->>> def normalize_docstrings(src):
-...     fst = FST(src, 'exec')
-...
-...     for f in fst.walk():
-...         if f.has_docstr:
-...             f.put_docstr(f.get_docstr(), reput=True)
-...
-...     return fst.src
 ```
 
 Original:
@@ -1353,6 +1331,17 @@ or ugly parenthesization. Yes we realize some unnecessary parenthesization may b
 aesthetic paradigm of any given project. This is just to show proper functional parenthesization by `fst`.
 
 ```py
+>>> def reparenthesize_simple(src):
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk():
+...         if f.is_parenthesizable():
+...             f.replace(f.copy())
+...
+...     return fst.src
+```
+
+```py
 >>> src = r"""
 ... (x * y) * (a + b)  # "x * y" doesn't need pars, 'a + b' does
 ...
@@ -1379,19 +1368,6 @@ aesthetic paradigm of any given project. This is just to show proper functional 
 ...     case ( ( (a, b) ) ):  # but the unnecessary ones are
 ...         pass
 ... """.strip()
-```
-
-Function:
-
-```py
->>> def reparenthesize_simple(src):
-...     fst = FST(src, 'exec')
-...
-...     for f in fst.walk():
-...         if f.is_parenthesizable():
-...             f.replace(f.copy())
-...
-...     return fst.src
 ```
 
 Original:
@@ -1489,19 +1465,6 @@ types is actually the order they will be evaluated in. This is not always the ca
 middle gets evaluated first `THEN_THIS if FIRST_THIS else OR_THEN_THIS`.
 
 ```py
->>> src = r"""
-... def shape_score(a, b, c, d):
-...     x = (a * b) - -(c + d)
-...     y = ~(a - c) + (b ^ d)
-...     z = (x // (abs(y) or 1))
-...
-...     return (z < 0) * -z + (z >= 0) * +z
-... """.strip()
-```
-
-Function:
-
-```py
 >>> def instrument_operations(src):
 ...     fst = FST(src, 'exec')
 ...
@@ -1542,6 +1505,17 @@ Function:
 ...         fnew._base_idx = base + nargs - 1  # safe start idx for children to use
 ...
 ...     return fst.src
+```
+
+```py
+>>> src = r"""
+... def shape_score(a, b, c, d):
+...     x = (a * b) - -(c + d)
+...     y = ~(a - c) + (b ^ d)
+...     z = (x // (abs(y) or 1))
+...
+...     return (z < 0) * -z + (z >= 0) * +z
+... """.strip()
 ```
 
 Original:

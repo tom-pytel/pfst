@@ -736,7 +736,7 @@ class fstview_arglikes(fstview):
 
 
 class fstview_dummy(fstview):
-    """Dummy view for nonexistent fields (type_params on py < 3.12)."""
+    """Dummy view for nonexistent fields (type_params on py < 3.12). @private"""
 
     def _len_field(self) -> int:
         return 0

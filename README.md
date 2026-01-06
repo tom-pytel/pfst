@@ -1,6 +1,6 @@
 # Overview
 
-This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal with the minutiae of:
+This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal with the details of:
 
 - Operator precedence and parentheses
 - Indentation and line continuations
@@ -59,6 +59,9 @@ From GitHub, after cloning for development:
     pip install -e .[dev]
 
 # Example
+
+Maybe you need to convert modern Python type annotations into older style type comments for something which doesn't
+understand annotations?
 
 ```py
 >>> from fst import *
@@ -400,7 +403,7 @@ This module is not finished but functional enough that it can be useful.
 operations where it may apply (where comment may belong to expression instead of statement). Allow specify insert line.
 Direct comment manipulation functions.
 
-* Redo coercion better, tree search / match, indentation of multiline sequences should be better, decide between
+* Add a lot more coercion, tree search / match, indentation of multiline sequences should be better, decide between
 primitive or node ops on primitive fields, different source encodings, code cleanups, API additions for real-world use,
 optimization, testing, bughunting, etc...
 
