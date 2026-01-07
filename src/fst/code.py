@@ -399,22 +399,26 @@ def _ast_coerce_to_expr(ast: AST, is_FST: bool, parse_params: Mapping[str, Any])
 
 
 def _coerce_to__expr_arglikes(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize)
-    ast_ = fst_.a
 
     if fst_.is_parenthesized_tuple() is False:  # can't have unparenthesized tuple as sole element, will look like multiple elements
         fst_._delimit_node()
 
-    ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                 end_col_offset=ls[-1].lenbytes)
+    ret_ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    return fst.FST(ret_ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'elts', True, False)
+
+    # return (fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+    #                       end_col_offset=ls[-1].lenbytes),
+    #                 ls, None, from_=fst_, lcopy=False)
+    #         ._set_field([fst_.a], 'elts', True, False))
 
 
 def _coerce_to__Assign_targets(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
     ast_ = fst_.a
@@ -424,26 +428,26 @@ def _coerce_to__Assign_targets(
 
     fst_._set_ctx(Store)
 
-    ast_ = _Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                           end_col_offset=ls[-1].lenbytes)
+    ast = _Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                          end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)
 
 
 def _coerce_to__decorator_list(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
     ln = fst_.pars().ln
 
     fst_._put_src('@', ln, 0, ln, 0, False)  # prepend '@' to expression on line of expression at start to make it a _decorator_list slice
 
-    ast_ = _decorator_list(decorator_list=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                           end_col_offset=ls[-1].lenbytes)
+    ast = _decorator_list(decorator_list=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                          end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'decorator_list', True, False)
 
-# `coerce_src`: Whether to attempt coerce on source or not. Most should have this False (or not present) as the parse
+# `.coerce_src`: Whether to attempt coerce on source or not. Most should have this False (or not present) as the parse
 # attempt should already have given a definitive answer. Exists for stuff like `_decorator_names` and
 # `_comprehension_ifs` where those parsers expect a prefix like `@` or `if` but we want to allow expressions without the
 # prefixes as well.
@@ -452,43 +456,45 @@ _coerce_to__decorator_list.coerce_src = True
 
 
 def _coerce_to__arglikes(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
-    ast_ = _arglikes(arglikes=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                     end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'arglikes', True, False)
 
 
 def _coerce_to__comprehensions(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_comprehension(code, parse_params, sanitize=sanitize)
-    ast_ = _comprehensions(generators=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                           end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _comprehensions(generators=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                          end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'generators', True, False)
 
 
 def _coerce_to__comprehension_ifs(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
     ln, col, _, _ = fst_.pars()
 
     fst_._put_src('if ', ln, col, ln, col, False)  # prepend 'if' to expression to make it a _comprehension_ifs slice, we do it before the container because the container will have to start at 0, 0
 
-    ast_ = _comprehension_ifs(ifs=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                              end_col_offset=ls[-1].lenbytes)
+    ast = _comprehension_ifs(ifs=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                             end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'ifs', True, False)
 
 _coerce_to__comprehension_ifs.coerce_src = True
 
 
 def _coerce_to_arg(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
     ast_ = fst_.a
@@ -499,66 +505,66 @@ def _coerce_to_arg(
     if fst_.pars().n:  # args can't have pars
         fst_._unparenthesize_grouping(False)
 
-    ast_ = arg(arg=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
-               end_col_offset=ast_.end_col_offset)
+    ast = arg(arg=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
+              end_col_offset=ast_.end_col_offset)
 
-    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
 
 def _coerce_to_alias(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     # TODO: coerce "with a as b" items[0] -> "import a as b"?
     fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
-    ast_ = fst_.a
+    ast_ = a = fst_.a
     name = ''
 
-    while ast_.__class__ is Attribute:
-        name = f'.{ast_.attr}{name}'  # we build it up like this because there can be whitespace, line continuations and newlines in the source
-        ast_ = ast_.value
+    while a.__class__ is Attribute:
+        name = f'.{a.attr}{name}'  # we build it up like this because there can be whitespace, line continuations and newlines in the source
+        a = a.value
 
-        if ast_.f.pars().n:  # aliases can't have pars
-            ast_.f._unparenthesize_grouping(False)
+        if a.f.pars().n:  # aliases can't have pars
+            a.f._unparenthesize_grouping(False)
 
-    if ast_.__class__ is not Name:
-        raise NodeError(f'cannot coerce {ast_.__class__.__name__} to alias, must be Name or Attribute')
+    if a.__class__ is not Name:
+        raise NodeError(f'cannot coerce {a.__class__.__name__} to alias, must be Name or Attribute')
 
     if fst_.pars().n:  # aliases can't have pars
         fst_._unparenthesize_grouping(False)
 
-    name = ast_.id + name
-    ast_ = fst_.a
-    ast_ = alias(name=name, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
-                 end_col_offset=ast_.end_col_offset)
+    ast = alias(name=a.id + name, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
+                end_col_offset=ast_.end_col_offset)
 
-    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
 
 def _coerce_to__aliases(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_alias(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce Name or Attribute to alias if necessary
-    ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                    end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                   end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
 
 _coerce_to__Import_name = _coerce_to_alias
 
 
 def _coerce_to__Import_names(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_Import_name(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce Name or Attribute to alias if necessary
-    ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                    end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                   end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
 
 def _coerce_to__ImportFrom_name(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = fst_.a
@@ -569,33 +575,35 @@ def _coerce_to__ImportFrom_name(
     if fst_.pars().n:  # aliases can't have pars
         fst_._unparenthesize_grouping(False)
 
-    ast_ = alias(name=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
-                 end_col_offset=ast_.end_col_offset)
+    ast = alias(name=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
+                end_col_offset=ast_.end_col_offset)
 
-    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
 
 def _coerce_to__ImportFrom_names(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_ImportFrom_name(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce Name to alias if necessary
-    ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                    end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                   end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
 
 def _coerce_to_arguments(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_arg(code, parse_params, sanitize=sanitize)
-    ast_ = arguments(posonlyargs=[], args=[fst_.a], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
 
-    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+    ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
+
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'args', True, False)
 
 
 def _coerce_to_arguments_lambda(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_arg(code, parse_params, sanitize=sanitize)
     ast_ = fst_.a
@@ -603,13 +611,13 @@ def _coerce_to_arguments_lambda(
     if ast_.annotation:
         raise NodeError('lambda arguments cannot have annotations')
 
-    ast_ = arguments(posonlyargs=[], args=[fst_.a], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
+    ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
 
-    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'args', True, False)
 
 
 def _coerce_to_withitem(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     # TODO: coerce "import a as b" names[0] -> "with a as b"?
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
@@ -617,29 +625,31 @@ def _coerce_to_withitem(
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
 
-    ast_ = withitem(context_expr=fst_.a)
+    ast = withitem(context_expr=None)
 
-    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'context_expr', True, False)
 
 
 def _coerce_to__withitems(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_withitem(code, parse_params, sanitize=sanitize, coerce=True)  # coerce=True to coerce expr to withitem if necessary
-    ast_ = _withitems(items=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                      end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _withitems(items=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                     end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'items', True, False)
 
 
 def _coerce_to__type_params(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_type_param(code, parse_params, sanitize=sanitize)
-    ast_ = _type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                        end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+    ast = _type_params(type_params=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                       end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'type_params', True, False)
 
 
 def _code_as(

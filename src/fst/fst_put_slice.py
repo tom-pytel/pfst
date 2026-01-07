@@ -920,7 +920,7 @@ def _code_to_slice__expr_arglikes(
     coerce = fst.FST.get_option('coerce', options)
 
     if one:
-        fst_ = _coerce_to__expr_arglikes(code, self.root.parse_params, coerce=coerce)
+        fst_ = _coerce_to__expr_arglikes(code, self.root.parse_params)
     else:
         fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce)
 

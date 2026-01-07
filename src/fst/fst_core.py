@@ -713,9 +713,9 @@ def _set_field(
     nodes and `_make_fst_tree` for the new node(s) if needed (not `valid_fst`). Optionally `_unmake_fst_tree()` for old
     field `AST` node or list of nodes. Returns `self` for chaining.
 
-    It is the caller's responsibility to remove the `ast_or_list` or list of `AST`s passed in from any other `FST` tree they may
-    have belonged to (specifically their parent `AST`), though can be root(s) of their own. Also for setting the proper
-    location for `self.a` as well as parents obviously.
+    It is the caller's responsibility to remove the `ast_or_list` or list of `AST`s passed in from any other `FST` tree
+    they may have belonged to (specifically their parent `AST`), though can be root(s) of their own. Also for setting
+    the proper location for `self.a` as well as parent's obviously.
 
     **Note:** This does not preserve the current `FST` of a single-element field if setting that.
 
