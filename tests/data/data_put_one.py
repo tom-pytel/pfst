@@ -15980,6 +15980,32 @@ Assign - ROOT 0,0..0,5
 '''),
 
 ('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchValue',
+r'''a.b'''),
+r'''i = a.b''', r'''
+Assign - ROOT 0,0..0,7
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Attribute - 0,4..0,7
+    .value Name 'a' Load - 0,4..0,5
+    .attr 'b'
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchValue',
+r'''(a.b)'''),
+r'''i = a.b''', r'''
+Assign - ROOT 0,0..0,7
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Attribute - 0,4..0,7
+    .value Name 'a' Load - 0,4..0,5
+    .attr 'b'
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchSingleton',
 r'''True'''),
 r'''i = True''', r'''
@@ -16247,7 +16273,489 @@ r'''x: int'''),
 r'''**NodeError('expecting lambda arguments, got arg, could not coerce')**'''),
 ],
 
+'coerce_to_arg': [  # ................................................................................
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Module',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, 'raw': False}, ('arguments',
+r'''a, b, c'''), ('Module',
+r'''(x)'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Module', r'''
+x
+y
+'''),
+r'''**NodeError('expecting arg, got Module, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Module',
+r'''x = y'''),
+r'''**NodeError('expecting arg, got Module, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Interactive',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, 'raw': False}, ('arguments',
+r'''a, b, c'''), ('Interactive',
+r'''(x)'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Interactive',
+r'''x; y'''),
+r'''**NodeError('expecting arg, got Interactive, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Expression',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, 'raw': False}, ('arguments',
+r'''a, b, c'''), ('Expression',
+r'''(x)'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('Expr',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, 'raw': False}, ('arguments',
+r'''a, b, c'''), ('Expr',
+r'''(x)'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('alias',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('alias',
+r'''x as y'''),
+r'''**NodeError('expecting arg, got alias, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('alias',
+r'''*'''),
+r'''**NodeError('expecting arg, got alias, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('withitem',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, 'raw': False}, ('arguments',
+r'''a, b, c'''), ('withitem',
+r'''(x)'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('withitem',
+r'''x as y'''),
+r'''**NodeError('expecting arg, got withitem, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False, '_ver': 12}, ('arguments',
+r'''a, b, c'''), ('TypeVar',
+r'''T'''),
+r'''a, T, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'T'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, '_ver': 12}, ('arguments',
+r'''a, b, c'''), ('TypeVar',
+r'''T: int'''),
+r'''**NodeError('expecting arg, got TypeVar, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False, '_ver': 13}, ('arguments',
+r'''a, b, c'''), ('TypeVar',
+r'''T = int'''),
+r'''**NodeError('expecting arg, got TypeVar, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('MatchValue',
+r'''a.b'''),
+r'''**NodeError('expecting arg, got MatchValue, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('MatchValue',
+r'''(a.b)'''),
+r'''**NodeError('expecting arg, got MatchValue, could not coerce')**'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('MatchAs',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('MatchAs',
+r'''x'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False, 'raw': False}, ('arguments',
+r'''a, b, c'''), ('MatchAs',
+r'''(x)'''),
+r'''a, x, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'x'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 1, None, 'args', {'_src': False}, ('arguments',
+r'''a, b, c'''), ('MatchAs',
+r'''x as y'''),
+r'''**NodeError('expecting arg, got MatchAs, could not coerce')**'''),
+],
+
 'coerce_to_alias': [  # ................................................................................
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Module',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('Module',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Module', r'''
+x
+y
+'''),
+r'''**NodeError('expecting alias, got Module, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Module',
+r'''x = y'''),
+r'''**NodeError('expecting alias, got Module, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Interactive',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('Interactive',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Interactive',
+r'''x; y'''),
+r'''**NodeError('expecting alias, got Interactive, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Expression',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('Expression',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('Expr',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('Expr',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('arg',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('arg',
+r'''x: int'''),
+r'''**NodeError('expecting alias, got arg, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('withitem',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('withitem',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('withitem',
+r'''x as y'''),
+r'''**NodeError('expecting alias, got withitem, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False, '_ver': 12}, (None,
+r'''import a'''), ('TypeVar',
+r'''T'''),
+r'''import T''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'T'
+'''),
+
+('', 0, None, 'names', {'_src': False, '_ver': 12}, (None,
+r'''import a'''), ('TypeVar',
+r'''T: int'''),
+r'''**NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False, '_ver': 13}, (None,
+r'''import a'''), ('TypeVar',
+r'''T = int'''),
+r'''**NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('MatchValue',
+r'''a.b'''),
+r'''import a.b''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'a.b'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('MatchValue',
+r'''(a.b)'''),
+r'''import a.b''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'a.b'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('MatchAs',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('MatchAs',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False, 'raw': False}, (None,
+r'''import a'''), ('MatchAs',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, 'names', {'_src': False}, (None,
+r'''import a'''), ('MatchAs',
+r'''x as y'''),
+r'''**NodeError('expecting alias, got MatchAs, could not coerce')**'''),
 
 ('', 0, None, None, {'_src': False}, (None,
 r'''import a'''), ('Name',
@@ -16323,6 +16831,476 @@ r'''**NodeError('expecting alias, got Attribute, could not coerce')**'''),
 ],
 
 'coerce_to_withitem': [  # ................................................................................
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Module',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('Module',
+r'''(x)'''),
+r'''with (x): pass''',
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Name 'x' Load - 0,6..0,7
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Module', r'''
+x
+y
+'''),
+r'''**NodeError('expecting withitem, got Module, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Module',
+r'''x = y'''),
+r'''**NodeError('expecting withitem, got Module, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Interactive',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('Interactive',
+r'''(x)'''),
+r'''with (x): pass''',
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Name 'x' Load - 0,6..0,7
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Interactive',
+r'''x; y'''),
+r'''**NodeError('expecting withitem, got Interactive, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Expression',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('Expression',
+r'''(x)'''),
+r'''with (x): pass''',
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Name 'x' Load - 0,6..0,7
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('Expr',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('Expr',
+r'''(x)'''),
+r'''with (x): pass''',
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Name 'x' Load - 0,6..0,7
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('arg',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('arg',
+r'''x: int'''),
+r'''**NodeError('expecting withitem, got arg, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('alias',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('alias',
+r'''x as y'''),
+r'''**NodeError('expecting withitem, got alias, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('alias',
+r'''*'''),
+r'''**NodeError('expecting withitem, got alias, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False, '_ver': 12}, (None,
+r'''with a: pass'''), ('TypeVar',
+r'''T'''),
+r'''with T: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'T' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, '_ver': 12}, (None,
+r'''with a: pass'''), ('TypeVar',
+r'''T: int'''),
+r'''**NodeError('expecting withitem, got TypeVar, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False, '_ver': 13}, (None,
+r'''with a: pass'''), ('TypeVar',
+r'''T = int'''),
+r'''**NodeError('expecting withitem, got TypeVar, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchValue',
+r'''1'''),
+r'''with 1: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Constant 1 - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchValue',
+r'''(1)'''),
+r'''with (1): pass''',
+r'''with 1: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Constant 1 - 0,6..0,7
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchValue',
+r'''a.b'''),
+r'''with a.b: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Attribute - 0,5..0,8
+       .value Name 'a' Load - 0,5..0,6
+       .attr 'b'
+       .ctx Load
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchValue',
+r'''(a.b)'''),
+r'''with (a.b): pass''',
+r'''with a.b: pass''', r'''
+With - ROOT 0,0..0,16
+  .items[1]
+   0] withitem - 0,5..0,10
+     .context_expr Attribute - 0,6..0,9
+       .value Name 'a' Load - 0,6..0,7
+       .attr 'b'
+       .ctx Load
+  .body[1]
+   0] Pass - 0,12..0,16
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchSingleton',
+r'''True'''),
+r'''with True: pass''', r'''
+With - ROOT 0,0..0,15
+  .items[1]
+   0] withitem - 0,5..0,9
+     .context_expr Constant True - 0,5..0,9
+  .body[1]
+   0] Pass - 0,11..0,15
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchSingleton',
+r'''False'''),
+r'''with False: pass''', r'''
+With - ROOT 0,0..0,16
+  .items[1]
+   0] withitem - 0,5..0,10
+     .context_expr Constant False - 0,5..0,10
+  .body[1]
+   0] Pass - 0,12..0,16
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchSingleton',
+r'''None'''),
+r'''with None: pass''', r'''
+With - ROOT 0,0..0,15
+  .items[1]
+   0] withitem - 0,5..0,9
+     .context_expr Constant None - 0,5..0,9
+  .body[1]
+   0] Pass - 0,11..0,15
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchSingleton',
+r'''(None)'''),
+r'''with (None): pass''',
+r'''with None: pass''', r'''
+With - ROOT 0,0..0,17
+  .items[1]
+   0] withitem - 0,5..0,11
+     .context_expr Constant None - 0,6..0,10
+  .body[1]
+   0] Pass - 0,13..0,17
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchAs',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchAs',
+r'''(x)'''),
+r'''with (x): pass''',
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Name 'x' Load - 0,6..0,7
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchAs',
+r'''x as y'''),
+r'''**NodeError('expecting withitem, got MatchAs, could not coerce')**'''),
+
+('', 0, None, 'items', {'_src': False, '_same': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchSequence',
+r'''x, 1, True, *y'''),
+r'''with ((x, 1, True, *y)): pass''',
+r'''with [x, 1, True, *y]: pass''', r'''
+With - ROOT 0,0..0,29
+  .items[1]
+   0] withitem - 0,5..0,23
+     .context_expr Tuple - 0,6..0,22
+       .elts[4]
+        0] Name 'x' Load - 0,7..0,8
+        1] Constant 1 - 0,10..0,11
+        2] Constant True - 0,13..0,17
+        3] Starred - 0,19..0,21
+          .value Name 'y' Load - 0,20..0,21
+          .ctx Load
+       .ctx Load
+  .body[1]
+   0] Pass - 0,25..0,29
+'''),
+
+('', 0, None, 'items', {'_src': False, '_same': False}, (None,
+r'''with a: pass'''), ('MatchSequence',
+r'''(x, 1, True, *y)'''),
+r'''with ((x, 1, True, *y)): pass''',
+r'''with [x, 1, True, *y]: pass''', r'''
+With - ROOT 0,0..0,29
+  .items[1]
+   0] withitem - 0,5..0,23
+     .context_expr Tuple - 0,6..0,22
+       .elts[4]
+        0] Name 'x' Load - 0,7..0,8
+        1] Constant 1 - 0,10..0,11
+        2] Constant True - 0,13..0,17
+        3] Starred - 0,19..0,21
+          .value Name 'y' Load - 0,20..0,21
+          .ctx Load
+       .ctx Load
+  .body[1]
+   0] Pass - 0,25..0,29
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchSequence',
+r'''[x, 1, True, *y]'''),
+r'''with [x, 1, True, *y]: pass''', r'''
+With - ROOT 0,0..0,27
+  .items[1]
+   0] withitem - 0,5..0,21
+     .context_expr List - 0,5..0,21
+       .elts[4]
+        0] Name 'x' Load - 0,6..0,7
+        1] Constant 1 - 0,9..0,10
+        2] Constant True - 0,12..0,16
+        3] Starred - 0,18..0,20
+          .value Name 'y' Load - 0,19..0,20
+          .ctx Load
+       .ctx Load
+  .body[1]
+   0] Pass - 0,23..0,27
+'''),
+
+('', 0, None, 'items', {'_src': False, '_same': False}, (None,
+r'''with a: pass'''), ('MatchSequence',
+r'''[([x, 1, True, *y],)]'''),
+r'''with [([x, 1, True, *y],)]: pass''',
+r'''with [[[x, 1, True, *y]]]: pass''', r'''
+With - ROOT 0,0..0,32
+  .items[1]
+   0] withitem - 0,5..0,26
+     .context_expr List - 0,5..0,26
+       .elts[1]
+        0] Tuple - 0,6..0,25
+          .elts[1]
+           0] List - 0,7..0,23
+             .elts[4]
+              0] Name 'x' Load - 0,8..0,9
+              1] Constant 1 - 0,11..0,12
+              2] Constant True - 0,14..0,18
+              3] Starred - 0,20..0,22
+                .value Name 'y' Load - 0,21..0,22
+                .ctx Load
+             .ctx Load
+          .ctx Load
+       .ctx Load
+  .body[1]
+   0] Pass - 0,28..0,32
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchSequence',
+r'''([x, 1, True, *y])'''),
+r'''with ([x, 1, True, *y]): pass''',
+r'''with [x, 1, True, *y]: pass''', r'''
+With - ROOT 0,0..0,29
+  .items[1]
+   0] withitem - 0,5..0,23
+     .context_expr List - 0,6..0,22
+       .elts[4]
+        0] Name 'x' Load - 0,7..0,8
+        1] Constant 1 - 0,10..0,11
+        2] Constant True - 0,13..0,17
+        3] Starred - 0,19..0,21
+          .value Name 'y' Load - 0,20..0,21
+          .ctx Load
+       .ctx Load
+  .body[1]
+   0] Pass - 0,25..0,29
+'''),
+
+('', 0, None, 'items', {'_src': False}, (None,
+r'''with a: pass'''), ('MatchMapping',
+r'''{1: a, b.c: d, **e}'''),
+r'''with {1: a, b.c: d, **e}: pass''', r'''
+With - ROOT 0,0..0,30
+  .items[1]
+   0] withitem - 0,5..0,24
+     .context_expr Dict - 0,5..0,24
+       .keys[3]
+        0] Constant 1 - 0,6..0,7
+        1] Attribute - 0,12..0,15
+          .value Name 'b' Load - 0,12..0,13
+          .attr 'c'
+          .ctx Load
+        2] None
+       .values[3]
+        0] Name 'a' Load - 0,9..0,10
+        1] Name 'd' Load - 0,17..0,18
+        2] Name 'e' Load - 0,22..0,23
+  .body[1]
+   0] Pass - 0,26..0,30
+'''),
+
+('', 0, None, 'items', {'_src': False, 'raw': False}, (None,
+r'''with a: pass'''), ('MatchMapping',
+r'''({1: a, b.c: d, **e})'''),
+r'''with ({1: a, b.c: d, **e}): pass''',
+r'''with {1: a, b.c: d, **e}: pass''', r'''
+With - ROOT 0,0..0,32
+  .items[1]
+   0] withitem - 0,5..0,26
+     .context_expr Dict - 0,6..0,25
+       .keys[3]
+        0] Constant 1 - 0,7..0,8
+        1] Attribute - 0,13..0,16
+          .value Name 'b' Load - 0,13..0,14
+          .attr 'c'
+          .ctx Load
+        2] None
+       .values[3]
+        0] Name 'a' Load - 0,10..0,11
+        1] Name 'd' Load - 0,18..0,19
+        2] Name 'e' Load - 0,23..0,24
+  .body[1]
+   0] Pass - 0,28..0,32
+'''),
 
 ('', 0, None, 'items', {'_src': False}, (None,
 r'''with a as b: pass'''), ('Name',

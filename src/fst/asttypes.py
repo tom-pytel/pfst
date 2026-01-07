@@ -285,8 +285,8 @@ __all__ = [
     '_ExceptHandlers',
     '_match_cases',
     '_Assign_targets',
-    '_arglikes',
     '_decorator_list',
+    '_arglikes',
     '_comprehensions',
     '_comprehension_ifs',
     '_aliases',
@@ -294,7 +294,7 @@ __all__ = [
     '_type_params',
 
     'ASTS_LEAF_MOD',
-    'ASTS_LEAF_MOD_STMTS',
+    'ASTS_LEAF_STMTMOD',
     'ASTS_LEAF_STMT',
     'ASTS_LEAF_EXPR',
     'ASTS_LEAF_EXPR_CONTEXT',
@@ -342,7 +342,7 @@ __all__ = [
 # leaf node types, as set for quick checks, must be frozenset() as some code depends on this for checks
 
 ASTS_LEAF_MOD                = frozenset([Module, Interactive, Expression])
-ASTS_LEAF_MOD_STMTS          = frozenset([Module, Interactive])
+ASTS_LEAF_STMTMOD            = frozenset([Module, Interactive])
 
 ASTS_LEAF_STMT               = frozenset([FunctionDef, AsyncFunctionDef, ClassDef, Return, Delete, Assign, TypeAlias,
                                           AugAssign, AnnAssign, For, AsyncFor, While, If, With, AsyncWith, Match, Raise,
