@@ -15790,12 +15790,12 @@ r'''i = v'''), ('Module', r'''
 x
 y
 '''),
-r'''**NodeError('expecting expression (standard), got multiple statements, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Module',
 r'''x = y'''),
-r'''**NodeError('expecting expression (standard), got Assign, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Interactive',
@@ -15820,7 +15820,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Interactive',
 r'''x; y'''),
-r'''**NodeError('expecting expression (standard), got multiple statements, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got Interactive, could not coerce, multiple statements')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Expression',
@@ -15875,7 +15875,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('arg',
 r'''x: int'''),
-r'''**NodeError('expecting expression (standard), got arg with annotation, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got arg, could not coerce, arg has annotation')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
@@ -15890,12 +15890,12 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
 r'''x as y'''),
-r'''**NodeError('expecting expression (standard), got alias with asname, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
 r'''*'''),
-r'''**NodeError("expecting expression (standard), got '*' star alias, could not coerce")**'''),
+r'''**NodeError("expecting expression (standard), got alias, could not coerce, star '*' alias")**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('withitem',
@@ -15920,7 +15920,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('withitem',
 r'''x as y'''),
-r'''**NodeError('expecting expression (standard), got withitem with optional_vars, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got withitem, could not coerce, withitem has optional_vars')**'''),
 
 ('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
 r'''i = v'''), ('TypeVar',
@@ -15935,12 +15935,12 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
 r'''i = v'''), ('TypeVar',
 r'''T: int'''),
-r'''**NodeError('expecting expression (standard), got TypeVar with bound, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has bound')**'''),
 
 ('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
 r'''i = v'''), ('TypeVar',
 r'''T = int'''),
-r'''**NodeError('expecting expression (standard), got TypeVar with default_value, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has default_value')**'''),
 
 ('', 0, None, None, {'_src': False, '_ver': 12}, (None,
 r'''[v]'''), ('TypeVarTuple',
@@ -15957,7 +15957,7 @@ List - ROOT 0,0..0,4
 ('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
 r'''i = v'''), ('TypeVarTuple',
 r'''*T = ()'''),
-r'''**NodeError('expecting expression (standard), got TypeVarTuple with default_value, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, TypeVarTuple has default_value')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchValue',
@@ -16080,7 +16080,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchAs',
 r'''x as y'''),
-r'''**NodeError('expecting expression (standard), got MatchAs with pattern, could not coerce')**'''),
+r'''**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**'''),
 
 ('', None, None, 'value', {'_src': False, '_same': False, 'raw': False}, (None,
 r'''i = v'''), ('MatchSequence',
@@ -17166,7 +17166,7 @@ With - ROOT 0,0..0,29
    0] Pass - 0,25..0,29
 '''),
 
-('', 0, None, 'items', {'_src': False, '_same': False}, (None,
+('', 0, None, 'items', {'_src': False, '_same': False, 'raw': False}, (None,
 r'''with a: pass'''), ('MatchSequence',
 r'''(x, 1, True, *y)'''),
 r'''with ((x, 1, True, *y)): pass''',

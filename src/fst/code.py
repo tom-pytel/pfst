@@ -174,13 +174,13 @@ __all__ = [
 Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 CodeAs = Callable[[Code, Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
 
-_EXPECTING_EXPR = {
-    parse_Tuple:        'expecting Tuple',
-    parse_Tuple_elt:    'expecting expression (tuple element)',
-    parse_expr_slice:   'expecting expression (slice)',
-    parse_expr_arglike: 'expecting expression (arglike)',
-    parse_expr_all:     'expecting expression (all types)',
-    parse_expr:         'expecting expression (standard)',
+_EXPR_PARSE_FUNC_TO_NAME = {
+    parse_Tuple:        'Tuple',
+    parse_Tuple_elt:    'expression (tuple element)',
+    parse_expr_slice:   'expression (slice)',
+    parse_expr_arglike: 'expression (arglike)',
+    parse_expr_all:     'expression (all types)',
+    parse_expr:         'expression (standard)',
 }
 
 
@@ -191,10 +191,10 @@ def _ast_coerce_to_expr_value(ast: AST, is_FST: bool, parse_params: Mapping[str,
 
 def _ast_coerce_to_expr_stmtmod(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if len(body := ast.body) != 1:
-        return 'got multiple statements'
+        return 'multiple statements'
 
     if (ast := body[0]).__class__ is not Expr:
-        return f'got {ast.__class__.__name__}'
+        return f'uncoercable type {ast.__class__.__name__}'
 
     return ast.value
 
@@ -203,16 +203,16 @@ def _ast_coerce_to_expr_Expression(ast: AST, is_FST: bool, parse_params: Mapping
 
 def _ast_coerce_to_expr_arg(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if ast.annotation:
-        return 'got arg with annotation'
+        return 'arg has annotation'
 
     return (Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                  end_col_offset=ast.end_col_offset),)  # a tuple means it is a completely new AST
 
 def _ast_coerce_to_expr_alias(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if ast.asname:
-        return 'got alias with asname'
+        return 'alias has asname'
     if ast.name == '*':
-        return "got '*' star alias"
+        return "star '*' alias"
 
     if '.' not in (name := ast.name):
         ast = Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
@@ -232,13 +232,13 @@ def _ast_coerce_to_expr_alias(ast: AST, is_FST: bool, parse_params: Mapping[str,
             return str(exc)
 
         if ast.__class__ is not Attribute:
-            return 'could not reparse to Attribute'
+            return 'failed reparse to Attribute'
 
     return (ast,)
 
 def _ast_coerce_to_expr_withitem(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if ast.optional_vars:
-        return 'got withitem with optional_vars'
+        return 'withitem has optional_vars'
 
     return ast.context_expr  # if coerce from withitem can reuse its AST
 
@@ -262,7 +262,7 @@ def _ast_coerce_to_expr_MatchStar(ast: AST, is_FST: bool, parse_params: Mapping[
 
 def _ast_coerce_to_expr_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if ast.pattern:
-        return 'got MatchAs with pattern'
+        return 'MatchAs has pattern'
 
     return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset),)
@@ -326,16 +326,16 @@ def _ast_coerce_to_expr_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
 
 def _ast_coerce_to_expr_TypeVar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if ast.bound:
-        return 'got TypeVar with bound'
+        return 'TypeVar has bound'
     if getattr(ast, 'default_value', None):
-        return 'got TypeVar with default_value'
+        return 'TypeVar has default_value'
 
     return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset),)
 
 def _ast_coerce_to_expr_TypeVarTuple(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> AST | tuple[AST] | str:
     if getattr(ast, 'default_value', None):
-        return 'got TypeVarTuple with default_value'
+        return 'TypeVarTuple has default_value'
 
     name = ast.name
     lineno = ast.lineno
@@ -658,11 +658,12 @@ def _code_as(
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(code.a, ast_cls):
-            if not coerce_to:
-                raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}', rawable=True)
+        codea = code.a
 
-            codea = code.a
+        if not isinstance(codea, ast_cls):
+            if not coerce_to:
+                raise NodeError(f'expecting {name or ast_cls.__name__}, got {codea.__class__.__name__}'
+                                ', coerce disabled', rawable=True)
 
             try:
                 return coerce_to(code, parse_params, sanitize=sanitize)
@@ -740,13 +741,16 @@ def _code_as_expr(
 
         if ast_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
             if not coerce:
-                raise NodeError(f'{_EXPECTING_EXPR[parse]}, got {ast_cls.__name__}, coercion disabled', rawable=True)
+                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {ast_cls.__name__}, coerce disabled',
+                                rawable=True)
 
+            old_ast = ast
             ast = _ast_coerce_to_expr(ast, True, parse_params)
             ast_cls = ast.__class__
 
             if ast_cls is str:
-                raise NodeError(f'{_EXPECTING_EXPR[parse]}{", " + ast if ast else ast}, could not coerce', rawable=True)
+                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {old_ast.__class__.__name__}'
+                                f', could not coerce{", " + ast if ast else ""}', rawable=True)
 
             if ast_cls is not tuple:
                 ast.f._unmake_fst_parents()  # WARNING! make sure ast is only child of parent and whole parent chain is only-children if coerced!!!
@@ -756,15 +760,16 @@ def _code_as_expr(
                 ast = ast[0]
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
-            ast_cls = ast.__class__
+            ast_cls = code.a.__class__
 
         if ast_cls is Slice:
             if not allow_Slice:
-                raise NodeError(f'{_EXPECTING_EXPR[parse]}, got Slice', rawable=True)
+                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got Slice', rawable=True)
 
         elif ast_cls is Tuple:
             if not allow_Tuple_of_Slice and any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'{_EXPECTING_EXPR[parse]}, got Tuple with a Slice in it', rawable=True)
+                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got Tuple with a Slice in it',
+                                rawable=True)
 
             if parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
                 code._maybe_add_singleton_tuple_comma()
@@ -775,14 +780,16 @@ def _code_as_expr(
 
             if code_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
                 if not coerce:
-                    raise NodeError(f'{_EXPECTING_EXPR[parse]}, got {code_cls.__name__}, coercion disabled', rawable=True)
+                    raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {code_cls.__name__}'
+                                    ', coerce disabled', rawable=True)
 
+                old_code = code
                 code = _ast_coerce_to_expr(code, False, parse_params)
                 code_cls = code.__class__
 
                 if code_cls is str:
-                    raise NodeError(f'{_EXPECTING_EXPR[parse]}{", " + code if code else code}'
-                                    ', could not coerce', rawable=True)
+                    raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {old_code.__class__.__name__}'
+                                    f', could not coerce{", " + code if code else ""}', rawable=True)
 
                 if code_cls is tuple:
                     code = code[0]

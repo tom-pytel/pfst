@@ -175,7 +175,7 @@ import match
 >>> print(f.put(FST('mismatch', 'Name'), 0, coerce=False).src)
 Traceback (most recent call last):
 ...
-fst.NodeError: expecting alias, got Name
+fst.NodeError: expecting alias, got Name, coerce disabled
 
 >>> print(f.put(FST('coerced', 'Name'), 0, coerce=True).src)  # default
 import coerced

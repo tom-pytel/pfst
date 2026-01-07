@@ -783,7 +783,7 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
 class ParseError(SyntaxError):
     """Not technically a syntax error but mostly not the code we were expecting."""
 
-    __module__ = 'fst'  # so the exception shows up as 'fst.NodeError'
+    __module__ = 'fst'  # so the exception shows up as 'fst.ParseError'
 
 
 def unparse(ast: AST) -> str:

@@ -19539,7 +19539,7 @@ del a, x, \
     y, \
     c
 ''',
-r'''**NodeError('expecting expression (standard), got multiple statements, could not coerce')**''', r'''
+r'''**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**''', r'''
 Delete - ROOT 0,0..3,5
   .targets[4]
    0] Name 'a' Del - 0,4..0,5
@@ -20110,7 +20110,7 @@ Assign - ROOT 0,0..0,9
 r'''a = b = c = d'''), ('Name',
 r'''x'''),
 r'''a = x = d''',
-r'''**NodeError('expecting _Assign_targets, got Name')**''', r'''
+r'''**NodeError('expecting _Assign_targets, got Name, coerce disabled')**''', r'''
 Assign - ROOT 0,0..0,9
   .targets[2]
    0] Name 'a' Store - 0,0..0,1
@@ -20166,7 +20166,7 @@ _Assign_targets - ROOT 0,0..0,7
 r'''a = b = c ='''), ('Name',
 r'''x'''),
 r'''a = x =''',
-r'''**NodeError('expecting _Assign_targets, got Name')**''', r'''
+r'''**NodeError('expecting _Assign_targets, got Name, coerce disabled')**''', r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
    0] Name 'a' Store - 0,0..0,1
@@ -20684,7 +20684,7 @@ With - ROOT 0,0..0,25
 r'''with a as a, b as b, c as c: pass'''), ('withitem',
 r'''x as x'''),
 r'''with a as a, x as x: pass''',
-r'''**NodeError('expecting _withitems, got withitem')**''', r'''
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 With - ROOT 0,0..0,25
   .items[2]
    0] withitem - 0,5..0,11
@@ -20732,7 +20732,7 @@ With - ROOT 0,0..0,20
 r'''with a as a, b as b, c as c: pass'''), ('Name',
 r'''x'''),
 r'''with a as a, x: pass''',
-r'''**NodeError('expecting _withitems, got Name')**''', r'''
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
 With - ROOT 0,0..0,20
   .items[2]
    0] withitem - 0,5..0,11
@@ -20812,7 +20812,7 @@ _withitems - ROOT 0,0..0,14
 r'''a as a, b as b, c as c'''), ('withitem',
 r'''x as x'''),
 r'''a as a, x as x''',
-r'''**NodeError('expecting _withitems, got withitem')**''', r'''
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
    0] withitem - 0,0..0,6
@@ -20854,7 +20854,7 @@ _withitems - ROOT 0,0..0,9
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''',
-r'''**NodeError('expecting _withitems, got Name')**''', r'''
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
 _withitems - ROOT 0,0..0,9
   .items[2]
    0] withitem - 0,0..0,6
@@ -21721,7 +21721,7 @@ AsyncWith - ROOT 0,0..0,31
 r'''async with a as a, b as b, c as c: pass'''), ('withitem',
 r'''x as x'''),
 r'''async with a as a, x as x: pass''',
-r'''**NodeError('expecting _withitems, got withitem')**''', r'''
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 AsyncWith - ROOT 0,0..0,31
   .items[2]
    0] withitem - 0,11..0,17
@@ -21769,7 +21769,7 @@ AsyncWith - ROOT 0,0..0,26
 r'''async with a as a, b as b, c as c: pass'''), ('Name',
 r'''x'''),
 r'''async with a as a, x: pass''',
-r'''**NodeError('expecting _withitems, got Name')**''', r'''
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
 AsyncWith - ROOT 0,0..0,26
   .items[2]
    0] withitem - 0,11..0,17
@@ -21849,7 +21849,7 @@ _withitems - ROOT 0,0..0,14
 r'''a as a, b as b, c as c'''), ('withitem',
 r'''x as x'''),
 r'''a as a, x as x''',
-r'''**NodeError('expecting _withitems, got withitem')**''', r'''
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
    0] withitem - 0,0..0,6
@@ -21891,7 +21891,7 @@ _withitems - ROOT 0,0..0,9
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''',
-r'''**NodeError('expecting _withitems, got Name')**''', r'''
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
 _withitems - ROOT 0,0..0,9
   .items[2]
    0] withitem - 0,0..0,6
@@ -22684,7 +22684,7 @@ Import - ROOT 0,0..0,25
 r'''import a.a as a, b.b as b, c.c as c'''), ('alias',
 r'''x.x as x'''),
 r'''import a.a as a, x.x as x''',
-r'''**NodeError('expecting _aliases, got alias')**''', r'''
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 Import - ROOT 0,0..0,25
   .names[2]
    0] alias - 0,7..0,15
@@ -22726,7 +22726,7 @@ Import - ROOT 0,0..0,18
 r'''import a.a as a, b.b as b, c.c as c'''), ('Name',
 r'''x'''),
 r'''import a.a as a, x''',
-r'''**NodeError('expecting _aliases, got Name')**''', r'''
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 Import - ROOT 0,0..0,18
   .names[2]
    0] alias - 0,7..0,15
@@ -22766,7 +22766,7 @@ Import - ROOT 0,0..0,20
 r'''import a.a as a, b.b as b, c.c as c'''), ('Attribute',
 r'''x.x'''),
 r'''import a.a as a, x.x''',
-r'''**NodeError('expecting _aliases, got Attribute')**''', r'''
+r'''**NodeError('expecting _aliases, got Attribute, coerce disabled')**''', r'''
 Import - ROOT 0,0..0,20
   .names[2]
    0] alias - 0,7..0,15
@@ -22842,7 +22842,7 @@ _aliases - ROOT 0,0..0,16
 r'''a as a, b as b, c as c'''), ('alias',
 r'''x.x as x'''),
 r'''a as a, x.x as x''',
-r'''**NodeError('expecting _aliases, got alias')**''', r'''
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
    0] alias - 0,0..0,6
@@ -22884,7 +22884,7 @@ _aliases - ROOT 0,0..0,9
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''',
-r'''**NodeError('expecting _aliases, got Name')**''', r'''
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,9
   .names[2]
    0] alias - 0,0..0,6
@@ -22924,7 +22924,7 @@ _aliases - ROOT 0,0..0,11
 r'''a as a, b as b, c as c'''), ('Attribute',
 r'''x.x'''),
 r'''a as a, x.x''',
-r'''**NodeError('expecting _aliases, got Attribute')**''', r'''
+r'''**NodeError('expecting _aliases, got Attribute, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,11
   .names[2]
    0] alias - 0,0..0,6
@@ -23586,7 +23586,7 @@ ImportFrom - ROOT 0,0..0,28
 r'''from _ import a as a, b as b, c as c'''), ('alias',
 r'''x as x'''),
 r'''from _ import a as a, x as x''',
-r'''**NodeError('expecting _aliases, got alias')**''', r'''
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 ImportFrom - ROOT 0,0..0,28
   .module '_'
   .names[2]
@@ -23634,7 +23634,7 @@ ImportFrom - ROOT 0,0..0,23
 r'''from _ import a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''from _ import a as a, x''',
-r'''**NodeError('expecting _aliases, got Name')**''', r'''
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 ImportFrom - ROOT 0,0..0,23
   .module '_'
   .names[2]
@@ -23714,7 +23714,7 @@ _aliases - ROOT 0,0..0,14
 r'''a as a, b as b, c as c'''), ('alias',
 r'''x as x'''),
 r'''a as a, x as x''',
-r'''**NodeError('expecting _aliases, got alias')**''', r'''
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
    0] alias - 0,0..0,6
@@ -23756,7 +23756,7 @@ _aliases - ROOT 0,0..0,9
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''',
-r'''**NodeError('expecting _aliases, got Name')**''', r'''
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,9
   .names[2]
    0] alias - 0,0..0,6
@@ -28590,7 +28590,7 @@ ClassDef - ROOT 0,0..0,22
 r'''class cls(a, b, c): pass'''), ('expr',
 r'''*s'''),
 r'''class cls(a, *s): pass''',
-r'''**NodeError('expecting _arglikes, got Starred')**''', r'''
+r'''**NodeError('expecting _arglikes, got Starred, coerce disabled')**''', r'''
 ClassDef - ROOT 0,0..0,22
   .name 'cls'
   .bases[2]
@@ -28637,7 +28637,7 @@ ClassDef - ROOT 0,0..0,23
 r'''class cls(a, b, c): pass'''), ('keyword',
 r'''k=w'''),
 r'''class cls(a, k=w): pass''',
-r'''**NodeError('expecting _arglikes, got keyword')**''', r'''
+r'''**NodeError('expecting _arglikes, got keyword, coerce disabled')**''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
@@ -33349,7 +33349,7 @@ Call - ROOT 0,0..0,11
 r'''call(a, b, c)'''), ('expr',
 r'''*s'''),
 r'''call(a, *s)''',
-r'''**NodeError('expecting _arglikes, got Starred')**''', r'''
+r'''**NodeError('expecting _arglikes, got Starred, coerce disabled')**''', r'''
 Call - ROOT 0,0..0,11
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -33390,7 +33390,7 @@ Call - ROOT 0,0..0,12
 r'''call(a, b, c)'''), ('keyword',
 r'''k=w'''),
 r'''call(a, k=w)''',
-r'''**NodeError('expecting _arglikes, got keyword')**''', r'''
+r'''**NodeError('expecting _arglikes, got keyword, coerce disabled')**''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
@@ -34260,7 +34260,7 @@ r'''**SyntaxError('unexpected multiple statements')**'''),
 def f(): pass
 '''), ('Name',
 r'''x'''),
-r'''**NodeError('expecting _decorator_list, got Name')**'''),
+r'''**NodeError('expecting _decorator_list, got Name, coerce disabled')**'''),
 
 ('', 1, 3, 'decorator_list', {'coerce': False, 'one': True}, (None, r'''
 @a
@@ -35573,7 +35573,7 @@ ListComp - ROOT 0,0..0,25
 r'''[_ for a in a for b in b for c in c]'''), ('comprehension',
 r'''for x in x'''),
 r'''[_ for a in a for x in x]''',
-r'''**NodeError('expecting _comprehensions, got comprehension')**''', r'''
+r'''**NodeError('expecting _comprehensions, got comprehension, coerce disabled')**''', r'''
 ListComp - ROOT 0,0..0,25
   .elt Name '_' Load - 0,1..0,2
   .generators[2]
@@ -35665,7 +35665,7 @@ _comprehensions - ROOT 0,0..0,21
 r'''for a in a for b in b for c in c'''), ('comprehension',
 r'''for x in x'''),
 r'''for a in a for x in x''',
-r'''**NodeError('expecting _comprehensions, got comprehension')**''', r'''
+r'''**NodeError('expecting _comprehensions, got comprehension, coerce disabled')**''', r'''
 _comprehensions - ROOT 0,0..0,21
   .generators[2]
    0] comprehension - 0,0..0,10
@@ -37908,7 +37908,7 @@ TypeAlias - ROOT 0,0..0,20
 r'''type t[T, *U, **V] = ...'''), ('type_param',
 r'''**X'''),
 r'''type t[T, **X] = ...''',
-r'''**NodeError('expecting _type_params, got ParamSpec')**''', r'''
+r'''**NodeError('expecting _type_params, got ParamSpec, coerce disabled')**''', r'''
 TypeAlias - ROOT 0,0..0,20
   .name Name 't' Store - 0,5..0,6
   .type_params[2]
@@ -37978,7 +37978,7 @@ _type_params - ROOT 0,0..0,6
 r'''T, *U, **V'''), ('type_param',
 r'''**X'''),
 r'''T, **X''',
-r'''**NodeError('expecting _type_params, got ParamSpec')**''', r'''
+r'''**NodeError('expecting _type_params, got ParamSpec, coerce disabled')**''', r'''
 _type_params - ROOT 0,0..0,6
   .type_params[2]
    0] TypeVar - 0,0..0,1
