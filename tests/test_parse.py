@@ -2344,6 +2344,8 @@ match a:
 
         self.assertEqual('a\nb', code.code_as_constant(['a', 'b']))
 
+        self.assertRaises(ParseError, code.code_as__comprehension_ifs, '**z', coerce=True)
+
 
 if __name__ == '__main__':
     import argparse

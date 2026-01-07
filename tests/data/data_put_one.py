@@ -15889,6 +15889,22 @@ Assign - ROOT 0,0..0,5
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
+r'''x.y.z'''),
+r'''i = x.y.z''', r'''
+Assign - ROOT 0,0..0,9
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Attribute - 0,4..0,9
+    .value Attribute - 0,4..0,7
+      .value Name 'x' Load - 0,4..0,5
+      .attr 'y'
+      .ctx Load
+    .attr 'z'
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('alias',
 r'''x as y'''),
 r'''**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**'''),
 
@@ -16181,6 +16197,11 @@ Assign - ROOT 0,0..0,20
     .ctx Load
 '''),
 
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchSequence',
+r'''[x as y]'''),
+r'''**NodeError('expecting expression (standard), got MatchSequence, could not coerce, MatchAs has pattern')**'''),
+
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchMapping',
 r'''{1: a, b.c: d, **e}'''),
@@ -16221,6 +16242,484 @@ Assign - ROOT 0,0..0,23
      0] Name 'a' Load - 0,8..0,9
      1] Name 'd' Load - 0,16..0,17
      2] Name 'e' Load - 0,21..0,22
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchMapping',
+r'''{1: a as b}'''),
+r'''**NodeError('expecting expression (standard), got MatchMapping, could not coerce, MatchAs has pattern')**'''),
+],
+
+'coerce_to__arglike': [  # ................................................................................
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Module',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('Module',
+r'''(x)'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Module', r'''
+x
+y
+'''),
+r'''**NodeError('expecting arglike, got Module, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Module',
+r'''x = y'''),
+r'''**NodeError('expecting arglike, got Module, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Interactive',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('Interactive',
+r'''(x)'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Interactive',
+r'''x; y'''),
+r'''**NodeError('expecting arglike, got Interactive, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Expression',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('Expression',
+r'''(x)'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('Expr',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('Expr',
+r'''(x)'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('arg',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('arg',
+r'''x: int'''),
+r'''**NodeError('expecting arglike, got arg, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('alias',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('alias',
+r'''x as y'''),
+r'''**NodeError('expecting arglike, got alias, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('alias',
+r'''*'''),
+r'''**NodeError('expecting arglike, got alias, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('withitem',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('withitem',
+r'''(x)'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('withitem',
+r'''x as y'''),
+r'''**NodeError('expecting arglike, got withitem, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
+r'''call(a)'''), ('TypeVar',
+r'''T'''),
+r'''call(T)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'T' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
+r'''call(a)'''), ('TypeVar',
+r'''T: int'''),
+r'''**NodeError('expecting arglike, got TypeVar, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False, '_ver': 13}, (None,
+r'''call(a)'''), ('TypeVar',
+r'''T = int'''),
+r'''**NodeError('expecting arglike, got TypeVar, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
+r'''call(a)'''), ('TypeVarTuple',
+r'''*T'''),
+r'''call(*T)''', r'''
+Call - ROOT 0,0..0,8
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,7
+     .value Name 'T' Load - 0,6..0,7
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False, '_ver': 13}, (None,
+r'''call(a)'''), ('TypeVarTuple',
+r'''*T = ()'''),
+r'''**NodeError('expecting arglike, got TypeVarTuple, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchValue',
+r'''1'''),
+r'''call(1)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Constant 1 - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchValue',
+r'''(1)'''),
+r'''call(1)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Constant 1 - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchValue',
+r'''a.b'''),
+r'''call(a.b)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Attribute - 0,5..0,8
+     .value Name 'a' Load - 0,5..0,6
+     .attr 'b'
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchValue',
+r'''(a.b)'''),
+r'''call(a.b)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Attribute - 0,5..0,8
+     .value Name 'a' Load - 0,5..0,6
+     .attr 'b'
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchSingleton',
+r'''True'''),
+r'''call(True)''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Constant True - 0,5..0,9
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchSingleton',
+r'''False'''),
+r'''call(False)''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Constant False - 0,5..0,10
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchSingleton',
+r'''None'''),
+r'''call(None)''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Constant None - 0,5..0,9
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchSingleton',
+r'''(None)'''),
+r'''call(None)''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Constant None - 0,5..0,9
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchStar',
+r'''*s'''),
+r'''call(*s)''', r'''
+Call - ROOT 0,0..0,8
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,7
+     .value Name 's' Load - 0,6..0,7
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchAs',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchAs',
+r'''(x)'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchAs',
+r'''x as y'''),
+r'''**NodeError('expecting arglike, got MatchAs, could not coerce')**'''),
+
+('', 0, None, '_args', {'_src': False, '_same': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchSequence',
+r'''x, 1, True, *y'''),
+r'''call((x, 1, True, *y))''',
+r'''call([x, 1, True, *y])''', r'''
+Call - ROOT 0,0..0,22
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..0,21
+     .elts[4]
+      0] Name 'x' Load - 0,6..0,7
+      1] Constant 1 - 0,9..0,10
+      2] Constant True - 0,12..0,16
+      3] Starred - 0,18..0,20
+        .value Name 'y' Load - 0,19..0,20
+        .ctx Load
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False, '_same': False}, (None,
+r'''call(a)'''), ('MatchSequence',
+r'''(x, 1, True, *y)'''),
+r'''call((x, 1, True, *y))''',
+r'''call([x, 1, True, *y])''', r'''
+Call - ROOT 0,0..0,22
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..0,21
+     .elts[4]
+      0] Name 'x' Load - 0,6..0,7
+      1] Constant 1 - 0,9..0,10
+      2] Constant True - 0,12..0,16
+      3] Starred - 0,18..0,20
+        .value Name 'y' Load - 0,19..0,20
+        .ctx Load
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchSequence',
+r'''[x, 1, True, *y]'''),
+r'''call([x, 1, True, *y])''', r'''
+Call - ROOT 0,0..0,22
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] List - 0,5..0,21
+     .elts[4]
+      0] Name 'x' Load - 0,6..0,7
+      1] Constant 1 - 0,9..0,10
+      2] Constant True - 0,12..0,16
+      3] Starred - 0,18..0,20
+        .value Name 'y' Load - 0,19..0,20
+        .ctx Load
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False, '_same': False}, (None,
+r'''call(a)'''), ('MatchSequence',
+r'''[([x, 1, True, *y],)]'''),
+r'''call([([x, 1, True, *y],)])''',
+r'''call([[[x, 1, True, *y]]])''', r'''
+Call - ROOT 0,0..0,27
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] List - 0,5..0,26
+     .elts[1]
+      0] Tuple - 0,6..0,25
+        .elts[1]
+         0] List - 0,7..0,23
+           .elts[4]
+            0] Name 'x' Load - 0,8..0,9
+            1] Constant 1 - 0,11..0,12
+            2] Constant True - 0,14..0,18
+            3] Starred - 0,20..0,22
+              .value Name 'y' Load - 0,21..0,22
+              .ctx Load
+           .ctx Load
+        .ctx Load
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchSequence',
+r'''([x, 1, True, *y])'''),
+r'''call([x, 1, True, *y])''', r'''
+Call - ROOT 0,0..0,22
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] List - 0,5..0,21
+     .elts[4]
+      0] Name 'x' Load - 0,6..0,7
+      1] Constant 1 - 0,9..0,10
+      2] Constant True - 0,12..0,16
+      3] Starred - 0,18..0,20
+        .value Name 'y' Load - 0,19..0,20
+        .ctx Load
+     .ctx Load
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('MatchMapping',
+r'''{1: a, b.c: d, **e}'''),
+r'''call({1: a, b.c: d, **e})''', r'''
+Call - ROOT 0,0..0,25
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Dict - 0,5..0,24
+     .keys[3]
+      0] Constant 1 - 0,6..0,7
+      1] Attribute - 0,12..0,15
+        .value Name 'b' Load - 0,12..0,13
+        .attr 'c'
+        .ctx Load
+      2] None
+     .values[3]
+      0] Name 'a' Load - 0,9..0,10
+      1] Name 'd' Load - 0,17..0,18
+      2] Name 'e' Load - 0,22..0,23
+'''),
+
+('', 0, None, '_args', {'_src': False, 'raw': False}, (None,
+r'''call(a)'''), ('MatchMapping',
+r'''({1: a, b.c: d, **e})'''),
+r'''call({1: a, b.c: d, **e})''', r'''
+Call - ROOT 0,0..0,25
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Dict - 0,5..0,24
+     .keys[3]
+      0] Constant 1 - 0,6..0,7
+      1] Attribute - 0,12..0,15
+        .value Name 'b' Load - 0,12..0,13
+        .attr 'c'
+        .ctx Load
+      2] None
+     .values[3]
+      0] Name 'a' Load - 0,9..0,10
+      1] Name 'd' Load - 0,17..0,18
+      2] Name 'e' Load - 0,22..0,23
+'''),
+
+('', 0, None, '_args', {'_src': False}, (None,
+r'''call(a)'''), ('keyword',
+r'''x=y'''),
+r'''call(x=y)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .arg 'x'
+     .value Name 'y' Load - 0,7..0,8
 '''),
 ],
 
@@ -17338,6 +17837,288 @@ r'''**NodeError('expecting withitem, got Slice, could not coerce')**'''),
 r'''with a as b: pass'''), ('Slice',
 r'''x:y:z'''),
 r'''**NodeError('expecting withitem, got Slice, could not coerce')**'''),
+],
+
+'coerce_to_type_param': [  # ................................................................................
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Module',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Module',
+r'''(x)'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Module', r'''
+x
+y
+'''),
+r'''**NodeError('expecting type_param, got Module, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Module',
+r'''x = y'''),
+r'''**NodeError('expecting type_param, got Module, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Interactive',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Interactive',
+r'''(x)'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Interactive',
+r'''x; y'''),
+r'''**NodeError('expecting type_param, got Interactive, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Expression',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Expression',
+r'''(x)'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Expr',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Expr',
+r'''(x)'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('arg',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('arg',
+r'''x: int'''),
+r'''**NodeError('expecting type_param, got arg, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('alias',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('alias',
+r'''x as y'''),
+r'''**NodeError('expecting type_param, got alias, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('alias',
+r'''*'''),
+r'''**NodeError('expecting type_param, got alias, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('withitem',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('withitem',
+r'''(x)'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('withitem',
+r'''x as y'''),
+r'''**NodeError('expecting type_param, got withitem, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchValue',
+r'''1'''),
+r'''**NodeError('expecting type_param, got MatchValue, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchValue',
+r'''(1)'''),
+r'''**NodeError('expecting type_param, got MatchValue, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchValue',
+r'''a.b'''),
+r'''**NodeError('expecting type_param, got MatchValue, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchValue',
+r'''(a.b)'''),
+r'''**NodeError('expecting type_param, got MatchValue, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchSingleton',
+r'''True'''),
+r'''**NodeError('expecting type_param, got MatchSingleton, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchSingleton',
+r'''False'''),
+r'''**NodeError('expecting type_param, got MatchSingleton, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchSingleton',
+r'''None'''),
+r'''**NodeError('expecting type_param, got MatchSingleton, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchSingleton',
+r'''(None)'''),
+r'''**NodeError('expecting type_param, got MatchSingleton, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchStar',
+r'''*s'''),
+r'''type t[*s] = ...''', r'''
+TypeAlias - ROOT 0,0..0,16
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVarTuple - 0,7..0,9
+     .name 's'
+  .value Constant Ellipsis - 0,13..0,16
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchAs',
+r'''x'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchAs',
+r'''(x)'''),
+r'''type t[x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('MatchAs',
+r'''x as y'''),
+r'''**NodeError('expecting type_param, got MatchAs, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_same': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Starred',
+r'''*a.b'''),
+r'''**NodeError('expecting type_param, got Starred, could not coerce')**'''),
+
+('', 0, None, 'type_params', {'_src': False, '_same': False, 'raw': False, '_ver': 12}, (None,
+r'''type t[T] = ...'''), ('Starred',
+r'''*(a)'''),
+r'''type t[*a] = ...''', r'''
+TypeAlias - ROOT 0,0..0,16
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVarTuple - 0,7..0,9
+     .name 'a'
+  .value Constant Ellipsis - 0,13..0,16
+'''),
 ],
 
 'virtual_field__all': [  # ................................................................................

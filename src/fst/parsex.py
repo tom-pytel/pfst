@@ -646,9 +646,10 @@ def _fix_undelimited_seq_parsed_delimited(
     en = elts[-1]
     e0_ln = e0.lineno - lineno  # "- lineno" because of extra line introduced in parse, offset from start of lines
     en_end_ln = en.end_lineno - lineno
+    ast_end_ln = ast.end_lineno - (lineno + 1)
     nlines = len(lines)
 
-    if e0_ln < 0 or en_end_ln >= nlines:  # if this happens then something unexpected got parsed, definitely an error
+    if e0_ln < 0 or en_end_ln >= nlines or ast_end_ln >= nlines:  # if this happens then something unexpected got parsed, definitely an error
         raise SyntaxError('invalid syntax') from None
 
     if en is e0:  # len(elts) == 1
@@ -666,7 +667,7 @@ def _fix_undelimited_seq_parsed_delimited(
     ast.col_offset = e0.col_offset
     en_end_col = len(lines[en_end_ln].encode()[:en.end_col_offset].decode())
 
-    if (not (frag := next_frag(lines, en_end_ln, en_end_col, ast.end_lineno - (lineno + 1), 0x7fffffffffffffff))  # if nothing following then last element is ast end, "- (lineno + 1)" because end also had \n tacked on
+    if (not (frag := next_frag(lines, en_end_ln, en_end_col, ast_end_ln, 0x7fffffffffffffff))  # if nothing following then last element is ast end, "- (lineno + 1)" because end also had \n tacked on
         or not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
         ast.end_lineno = en.end_lineno
