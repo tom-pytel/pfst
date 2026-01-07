@@ -461,6 +461,9 @@ def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
 
+    if fst_.is_parenthesized_tuple() is False:
+        fst_._delimit_node()
+
     ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
 
@@ -480,6 +483,10 @@ def _coerce_to__comprehension_ifs(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+
+    if fst_.is_parenthesized_tuple() is False:
+        fst_._delimit_node()
+
     ln, col, _, _ = fst_.pars()
 
     fst_._put_src('if ', ln, col, ln, col, False)  # prepend 'if' to expression to make it a _comprehension_ifs slice, we do it before the container because the container will have to start at 0, 0

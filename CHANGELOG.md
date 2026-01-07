@@ -2,7 +2,11 @@
 
 ### Fixed
 
+- fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized
+
 ### Added
+
+- a lot more coercion cases allowed for node puts (non-source)
 
 ### Updated
 
