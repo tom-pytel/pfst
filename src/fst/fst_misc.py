@@ -1119,9 +1119,9 @@ def _cached_arglikes(self: fst.FST) -> list[AST]:
     return arglikes
 
 
-def _is_expr_arglike(self: fst.FST) -> bool | None:
+def _is_expr_arglike_only(self: fst.FST) -> bool | None:
     """Is an argumentlike expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
-    `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`.
+    `Tuple.elts` in py 3.11+) list because the syntax is invalid outside of that, e.g. `*not a`, `*a or b`.
 
     **Returns:**
     - `True`: Is an unparenthesized arglike expression, `*not a`, `*a or b`.
@@ -1770,7 +1770,7 @@ def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> No
 
     if options is None or get_option_overridable('pars', 'pars_arglike', options):
         for e in self.a.elts:
-            if (f := e.f)._is_expr_arglike():
+            if (f := e.f)._is_expr_arglike_only():
                 f._parenthesize_grouping()
 
 
@@ -1814,7 +1814,7 @@ def _fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
             need_pars = False
 
             for e in ast.elts:
-                if (f := e.f)._is_expr_arglike():
+                if (f := e.f)._is_expr_arglike_only():
                     f._parenthesize_grouping()
                 elif e.__class__ is NamedExpr and not need_pars and not e.f.pars().n:
                     need_pars = True
@@ -1842,7 +1842,7 @@ def _fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
         ):
             self._parenthesize_grouping()
 
-    elif (is_expr_arglike := self._is_expr_arglike()) is not None:
+    elif (is_expr_arglike := self._is_expr_arglike_only()) is not None:
         if (pars_arglike := options.get('pars_arglike', ...)) is ...:
             pars_arglike = fst.FST.get_option('pars_arglike')
 

@@ -742,11 +742,11 @@ b # word
         self.assertFalse(FST('(a,), (b)')._is_delimited_seq())
         self.assertFalse(FST('(a), (b,)')._is_delimited_seq())
 
-    def test__is_expr_arglike(self):
-        self.assertIsNone(FST('*a')._is_expr_arglike())
-        self.assertTrue(FST('*a or b')._is_expr_arglike())
-        self.assertFalse(FST('*(a or b)')._is_expr_arglike())
-        self.assertIsNone(FST('*(a, b)')._is_expr_arglike())
+    def test__is_expr_arglike_only(self):
+        self.assertIsNone(FST('*a')._is_expr_arglike_only())
+        self.assertTrue(FST('*a or b')._is_expr_arglike_only())
+        self.assertFalse(FST('*(a or b)')._is_expr_arglike_only())
+        self.assertIsNone(FST('*(a, b)')._is_expr_arglike_only())
 
     def test__maybe_add_line_continuations(self):
         f = FST(r'''

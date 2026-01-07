@@ -3409,7 +3409,7 @@ class FST:
         ast_cls = self.a.__class__
 
         if ast_cls is Starred:
-            is_expr_arglike = self._is_expr_arglike()
+            is_expr_arglike = self._is_expr_arglike_only()
             value = ast.value.f
 
             if (value.pars().n if is_expr_arglike is None else node and not is_expr_arglike):
@@ -4963,7 +4963,7 @@ class FST:
         _dump,
         _cached_arglikes,
 
-        _is_expr_arglike,
+        _is_expr_arglike_only,
         _is_empty_set_call,
         _is_empty_set_star,
         _is_solo_class_base,
