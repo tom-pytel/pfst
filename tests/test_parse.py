@@ -1989,50 +1989,78 @@ match a:
             else:
                 r = (f.a.__class__, f.src)
 
-            self.assertEqual(res, r)
+            try:
+                self.assertEqual(res, r)
+            except Exception:
+                print(f'{res=}\n{r=}')
+                raise
 
         cases = [
             (code_as_expr, (Module, 'a'), (Name, 'a')),
             (code_as_expr, (Module, 'a\nb'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**",  # AST
-                "**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**"),  # FST
+                "**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**",  # FST
+                "**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**"),  # AST
             (code_as_expr, (Module, 'a = b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**",  # AST
-                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**"),  # FST
+                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**",  # FST
+                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**"),  # AST
             (code_as_expr, (Interactive, 'a'), (Name, 'a')),
             (code_as_expr, (Interactive, 'a; b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got Interactive, could not coerce, multiple statements')**",  # AST
-                "**NodeError('expecting expression (standard), got Interactive, could not coerce, multiple statements')**"),  # FST
+                "**NodeError('expecting expression (standard), got Interactive, could not coerce, multiple statements')**",  # FST
+                "**NodeError('expecting expression (standard), got Interactive, could not coerce, multiple statements')**"),  # AST
             (code_as_expr, (Interactive, 'a = b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**",  # AST
-                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**"),  # FST
+                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**",  # FST
+                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**"),  # AST
             (code_as_expr, (Expression, 'a'), (Name, 'a')),
             (code_as_expr, (Expr, 'a'), (Name, 'a')),
             (code_as_expr, (arg, 'a'), (Name, 'a')),
             (code_as_expr, (arg, 'a: int'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got arg, could not coerce, arg has annotation')**",  # AST
-                "**NodeError('expecting expression (standard), got arg, could not coerce, arg has annotation')**"),  # FST
+                "**NodeError('expecting expression (standard), got arg, could not coerce, arg has annotation')**",  # FST
+                "**NodeError('expecting expression (standard), got arg, could not coerce, arg has annotation')**"),  # AST
             (code_as_expr, (alias, 'a'), (Name, 'a')),
             (code_as_expr, (alias, 'a as b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**",  # AST
-                "**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**"),  # FST
+                "**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**",  # FST
+                "**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**"),  # AST
             (code_as_expr, (alias, '*'),
                 "**SyntaxError**",  # src
-                "**NodeError(\"expecting expression (standard), got alias, could not coerce, star '*' alias\")**",  # AST
-                "**NodeError(\"expecting expression (standard), got alias, could not coerce, star '*' alias\")**"),  # FST
+                "**NodeError(\"expecting expression (standard), got alias, could not coerce, star '*' alias\")**",  # FST
+                "**NodeError(\"expecting expression (standard), got alias, could not coerce, star '*' alias\")**"),  # AST
             (code_as_expr, (alias, 'a.b'), (Attribute, 'a.b')),
             (code_as_expr, (alias, 'a\\\n.\\\nb'), (Attribute, 'a\\\n.\\\nb'), (Attribute, 'a.b')),
+            (code_as_expr, (_aliases, ''),
+                "**SyntaxError**",  # src
+                (Tuple, '()'),  # FST
+                (Tuple, '()')),  # AST
+            (code_as_expr, (_aliases, 'a'),
+                (Name, 'a'),  # src
+                (Tuple, 'a,'),  # FST
+                (Tuple, '(a,)')),  # AST
+            (code_as_expr, (_aliases, 'a, b as c'),
+                "**SyntaxError**",  # src
+                "**NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**",  # FST
+                "**NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**"),  # AST
+            (code_as_expr, (_aliases, '*'),
+                "**SyntaxError**",  # src
+                "**NodeError(\"expecting expression (standard), got _aliases, could not coerce, star '*' alias\")**",  # FST
+                "**NodeError(\"expecting expression (standard), got _aliases, could not coerce, star '*' alias\")**"),  # AST
+            (code_as_expr, (_aliases, 'a, b.c'),
+                (Tuple, 'a, b.c'),  # src
+                (Tuple, 'a, b.c'),  # FST
+                (Tuple, '(a, b.c)')),  # AST
+            (code_as_expr, (_aliases, ' a, b\\\n.\\\nc '),
+                (Tuple, ' a, b\\\n.\\\nc '),  # src
+                (Tuple, ' a, b\\\n.\\\nc '),  # FST
+                (Tuple, '(a, b.c)')),  # AST
             (code_as_expr, (withitem, 'a'), (Name, 'a')),
             (code_as_expr, (withitem, 'a as b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got withitem, could not coerce, withitem has optional_vars')**",  # AST
-                "**NodeError('expecting expression (standard), got withitem, could not coerce, withitem has optional_vars')**"),  # FST
+                "**NodeError('expecting expression (standard), got withitem, could not coerce, withitem has optional_vars')**",  # FST
+                "**NodeError('expecting expression (standard), got withitem, could not coerce, withitem has optional_vars')**"),  # AST
             (code_as_expr, (MatchValue, '1'), (Constant, '1')),
             (code_as_expr, (MatchSingleton, 'True'), (Constant, 'True')),
             (code_as_expr, (MatchSingleton, 'False'), (Constant, 'False')),
@@ -2041,14 +2069,70 @@ match a:
             (code_as_expr, (MatchAs, 'a'), (Name, 'a')),
             (code_as_expr, (MatchAs, 'a as b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**",  # AST
-                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**"),  # FST
+                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**",  # FST
+                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**"),  # AST
             (code_as_expr, (MatchSequence, 'x, 1, True, *y'), (Tuple, 'x, 1, True, *y'), (List, '[x, 1, True, *y]')),
             (code_as_expr, (MatchSequence, '(x, 1, True, *y)'), (Tuple, '(x, 1, True, *y)'), (List, '[x, 1, True, *y]')),
             (code_as_expr, (MatchSequence, '[x, 1, True, *y]'), (List, '[x, 1, True, *y]')),
             (code_as_expr, (MatchSequence, '[([x, 1, True, *y],)]'), (List, '[([x, 1, True, *y],)]'), (List, '[[[x, 1, True, *y]]]')),
             (code_as_expr, (MatchMapping, '{1: a, b.c: d, **e}'), (Dict, '{1: a, b.c: d, **e}')),
             # (code_as_expr, (MatchOr, 'a | b | c'), (BinOp, 'a | b | c')),
+            (code_as_expr, (_Assign_targets, 'a = b = c ='),
+                "**SyntaxError**",  # src
+                "**NodeError('expecting expression (standard), got _Assign_targets, could not coerce, FST has incompatible source')**",  # FST
+                (Tuple, '(a, b, c)')),  # AST
+            (code_as_expr, (_decorator_list, '@a\n@b\n@c'),
+                "**SyntaxError**",  # src
+                "**NodeError('expecting expression (standard), got _decorator_list, could not coerce, FST has incompatible source')**",  # FST
+                (Tuple, '(a, b, c)')),  # AST
+            (code_as_expr, (_comprehension_ifs, 'if a if b if c'),
+                "**SyntaxError**",  # src
+                "**NodeError('expecting expression (standard), got _comprehension_ifs, could not coerce, FST has incompatible source')**",  # FST
+                (Tuple, '(a, b, c)')),  # AST
+            (code_as_expr, (_arglikes, ''),
+                "**SyntaxError**",  # src
+                (Tuple, '()'),  # FST
+                (Tuple, '()')),  # AST
+            (code_as_expr, (_arglikes, 'a'),
+                (Name, 'a'),  # src
+                (Tuple, 'a,'),  # FST
+                (Tuple, '(a,)')),  # AST
+            (code_as_expr, (_arglikes, 'a, b=c'),
+                "**SyntaxError**",  # src
+                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, _arglikes has a keyword')**",  # FST
+                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, _arglikes has a keyword')**"),  # AST
+            (code_as_expr, (_arglikes, 'a, *b'),
+                (Tuple, 'a, *b'),  # src
+                (Tuple, 'a, *b'),  # FST
+                (Tuple, '(a, *b)')),  # AST
+            (code_as_expr, (_arglikes, ' a, *b '),
+                (Tuple, ' a, *b '),  # src
+                (Tuple, 'a, *b'),  # FST
+                (Tuple, '(a, *b)')),  # AST
+            (code_as_expr, (_arglikes, ' *not a, *b or c '),
+                "**SyntaxError**",  # src
+                (Tuple, '*(not a), *(b or c)'),  # FST
+                (Tuple, '(*(not a), *(b or c))')),  # AST
+            (code_as_expr, (_withitems, ''),
+                "**SyntaxError**",  # src
+                (Tuple, '()'),  # FST
+                (Tuple, '()')),  # AST
+            (code_as_expr, (_withitems, 'a'),
+                (Name, 'a'),  # src
+                (Tuple, 'a,'),  # FST
+                (Tuple, '(a,)')),  # AST
+            (code_as_expr, (_withitems, 'a as b'),
+                "**SyntaxError**",  # src
+                "**NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**",  # FST
+                "**NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**"),  # AST
+            (code_as_expr, (_withitems, 'a, b'),
+                (Tuple, 'a, b'),  # src
+                (Tuple, 'a, b'),  # FST
+                (Tuple, '(a, b)')),  # AST
+            (code_as_expr, (_withitems, ' a, b '),
+                (Tuple, ' a, b '),  # src
+                (Tuple, 'a, b'),  # FST
+                (Tuple, '(a, b)')),  # AST
 
             (code_as__Assign_targets, (Name, 'a'), (_Assign_targets, 'a')),
             (code_as__Assign_targets, (Attribute, 'a.b'), (_Assign_targets, 'a.b')),
@@ -2061,8 +2145,8 @@ match a:
             (code_as__Assign_targets, (Starred, '*a'), (_Assign_targets, '*a')),
             (code_as__Assign_targets, (Call, 'f()'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting _Assign_targets, got Call, could not coerce')**",  # AST
-                "**NodeError('expecting _Assign_targets, got Call, could not coerce')**"),  # FST
+                "**NodeError('expecting _Assign_targets, got Call, could not coerce')**",  # FST
+                "**NodeError('expecting _Assign_targets, got Call, could not coerce')**"),  # AST
             (code_as__Assign_targets, (Name, '#0\n ( a ) #1\n#2'),
                 "**SyntaxError**",
                 (_Assign_targets, '( a )'),
@@ -2235,10 +2319,29 @@ match a:
                 (code_as_expr, (TypeVar, 'T'), (Name, 'T')),
                 (code_as_expr, (TypeVar, 'T: int'),
                     "**SyntaxError**",  # src
-                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has bound')**",  # AST
-                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has bound')**"),  # FST
-
+                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has bound')**",  # FST
+                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has bound')**"),  # AST
                 (code_as_expr, (TypeVarTuple, '*T'), (Starred, '*T')),
+                (code_as_expr, (_type_params, ''),
+                    "**SyntaxError**",  # src
+                    (Tuple, '()'),  # FST
+                    (Tuple, '()')),  # AST
+                (code_as_expr, (_type_params, 'T'),
+                    (Name, 'T'),  # src
+                    (Tuple, 'T,'),  # FST
+                    (Tuple, '(T,)')),  # AST
+                (code_as_expr, (_type_params, 'T, *U'),
+                    (Tuple, 'T, *U'),  # src
+                    (Tuple, 'T, *U'),  # FST
+                    (Tuple, '(T, *U)')),  # AST
+                (code_as_expr, (_type_params, 'T, *U, **V'),
+                    "**SyntaxError**",  # src
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**",  # FST
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**"),  # AST
+                (code_as_expr, (_type_params, 'T: int, *U'),
+                    "**SyntaxError**",  # src
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has bound')**",  # FST
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has bound')**"),  # AST
 
                 (code_as__type_params, (type_param, '**X'), (_type_params, '**X')),
                 (code_as__type_params, (type_param, '#0\n **X #1\n#2'),
@@ -2250,13 +2353,16 @@ match a:
             cases.extend([
                 (code_as_expr, (TypeVar, 'T = int'),
                     "**SyntaxError**",  # src
-                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has default_value')**",  # AST
-                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has default_value')**"),  # FST
-
+                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has default_value')**",  # FST
+                    "**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has default_value')**"),  # AST
                 (code_as_expr, (TypeVarTuple, '*T = ()'),
                     "**SyntaxError**",  # src
-                    "**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, TypeVarTuple has default_value')**",  # AST
-                    "**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, TypeVarTuple has default_value')**"),  # FST
+                    "**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, TypeVarTuple has default_value')**",  # FST
+                    "**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, TypeVarTuple has default_value')**"),  # AST
+                (code_as_expr, (_type_params, 'T = int, *U'),
+                    "**SyntaxError**",  # src
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has default_value')**",  # FST
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has default_value')**"),  # AST
             ])
 
         for case in cases:
@@ -2283,6 +2389,44 @@ match a:
                 print(f'\nCase: {case}')
 
                 raise
+
+    def test_unmake__ast_coerce_to_expr(self):
+        mode_and_src = [
+            (Module, 'a'),
+            (Interactive, 'a'),
+            (Expression, 'a'),
+            (Expr, 'a'),
+            # (_Assign_targets, 'a ='),  # incompatible src for FST
+            # (_decorator_list, '@a'),  # incompatible src for FST
+            (_arglikes, 'a'),
+            # (_comprehension_ifs, 'if a'),  # incompatible src for FST
+            (arg, 'a'),
+            (alias, 'a'),
+            (_aliases, 'a'),
+            (withitem, 'a'),
+            (_withitems, 'a'),
+            (MatchValue, '1'),
+            (MatchSingleton, 'True'),
+            (MatchSequence, '[a]'),
+            (MatchMapping, '{1: a}'),
+            # (MatchClass, ''),
+            (MatchStar, '*a'),
+            (MatchAs, 'a'),
+            # (MatchOr, ''),
+        ]
+
+        if PYGE12:
+            mode_and_src.extend([
+                (TypeVar, 'a'),
+                (TypeVarTuple, '*a'),
+                (_type_params, 'a'),
+            ])
+
+        for mode, src in mode_and_src:
+            fst_ = FST(src, mode)
+            ast, _ = code._ast_coerce_to_expr(fst_.a, True, {}, 'test')
+
+            self.assertIsNone(fst_.a)
 
     def test_fst_parse_non_str(self):
         self.assertEqual('if 1: pass', parse(b'if 1: pass').f.src)

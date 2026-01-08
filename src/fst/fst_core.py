@@ -612,6 +612,9 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool =
     """Destroy a tree of `FST` child nodes by breaking links between AST and `FST` nodes. This mainly helps make sure
     destroyed `FST` nodes can't be reused in a way that might corrupt valid remaining trees.
 
+    Unmake exists for two reasons. First it breaks links to make garbage collection easier (which is not really a big
+    deal in modern python). More importantly it marks `FST` nodes as invalid.
+
     **WARNING!** `stack` is consumed.
 
     **Parameters:**

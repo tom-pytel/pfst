@@ -16248,6 +16248,131 @@ Assign - ROOT 0,0..0,23
 r'''i = v'''), ('MatchMapping',
 r'''{1: a as b}'''),
 r'''**NodeError('expecting expression (standard), got MatchMapping, could not coerce, MatchAs has pattern')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_Assign_targets',
+r'''x = y = z ='''),
+r'''**NodeError('expecting expression (standard), got _Assign_targets, could not coerce, FST has incompatible source')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_decorator_list', r'''
+@x
+@y
+@z
+'''),
+r'''**NodeError('expecting expression (standard), got _decorator_list, could not coerce, FST has incompatible source')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_comprehension_ifs',
+r'''if x if y if z'''),
+r'''**NodeError('expecting expression (standard), got _comprehension_ifs, could not coerce, FST has incompatible source')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_arglikes',
+r''''''),
+r'''**SyntaxError('expecting expression, got nothing')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('_arglikes',
+r'''a'''),
+r'''i = (a,)''', r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,8
+    .elts[1]
+     0] Name 'a' Load - 0,5..0,6
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_arglikes',
+r'''a, b=c'''),
+r'''**NodeError('expecting expression (standard), got _arglikes, could not coerce, _arglikes has a keyword')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('_arglikes',
+r'''a, *b'''),
+r'''i = (a, *b)''', r'''
+Assign - ROOT 0,0..0,11
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,11
+    .elts[2]
+     0] Name 'a' Load - 0,5..0,6
+     1] Starred - 0,8..0,10
+       .value Name 'b' Load - 0,9..0,10
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_withitems',
+r''''''),
+r'''**SyntaxError('expecting expression, got nothing')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('_withitems',
+r'''a'''),
+r'''i = (a,)''', r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,8
+    .elts[1]
+     0] Name 'a' Load - 0,5..0,6
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('_withitems',
+r'''a as b'''),
+r'''**NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('_withitems',
+r'''a, b'''),
+r'''i = (a, b)''', r'''
+Assign - ROOT 0,0..0,10
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,10
+    .elts[2]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'b' Load - 0,8..0,9
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 12, 'raw': False}, (None,
+r'''i = v'''), ('_type_params',
+r'''T, *U'''),
+r'''i = (T, *U)''', r'''
+Assign - ROOT 0,0..0,11
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,11
+    .elts[2]
+     0] Name 'T' Load - 0,5..0,6
+     1] Starred - 0,8..0,10
+       .value Name 'U' Load - 0,9..0,10
+       .ctx Load
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
+r'''i = v'''), ('_type_params',
+r'''T, *U, **V'''),
+r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
+r'''i = v'''), ('_type_params',
+r'''T: int, *U'''),
+r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has bound')**'''),
+
+('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
+r'''i = v'''), ('_type_params',
+r'''T = int, *U'''),
+r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has default_value')**'''),
 ],
 
 'coerce_to__arglike': [  # ................................................................................
