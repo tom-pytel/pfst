@@ -37876,8 +37876,7 @@ Module - ROOT 0,0..0,21
 ('body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, ('exec',
 r'''type t[T, *U, **V] = ...'''), (None,
 r'''X, *Y'''),
-r'''type t[X, *Y] = ...''',
-r'''**NodeError('expecting _type_params, got Tuple, could not coerce')**''', r'''
+r'''type t[X, *Y] = ...''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
    0] TypeAlias - 0,0..0,19
@@ -37893,8 +37892,7 @@ Module - ROOT 0,0..0,19
 ('body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, ('exec',
 r'''type t[T, *U, **V] = ...'''), (None,
 r'''X,'''),
-r'''type t[X] = ...''',
-r'''**NodeError('expecting _type_params, got Tuple, could not coerce')**''', r'''
+r'''type t[X] = ...''', r'''
 Module - ROOT 0,0..0,15
   .body[1]
    0] TypeAlias - 0,0..0,15

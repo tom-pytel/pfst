@@ -574,6 +574,9 @@ def _ast_coerce_to_expr(
 
     This function will unmake the source `FST` if is one.
 
+    **WARNING!** Can not assume any `AST` nodes returned from here have valid `FST` nodes even if `is_FST=True`. They
+    must always be recreated.
+
     **Parameters:**
     - `ast`: The `AST` node to coerce, can be part of an `FST` tree.
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
@@ -633,7 +636,7 @@ def _coerce_to__slice_with_commas(
 
     if ast_cls not in (Tuple, List, Set):
         if is_FST:
-            if ast_cls is _arglikes:
+            if ast_cls is _arglikes:  # if this is true then we are coercing to something other than _arglikes which will need this fix
                 code._fix_arglikes(field='arglikes')
             elif ast_cls is MatchSequence and code.is_delimited_matchseq():
                 code._trim_delimiters()
@@ -737,7 +740,7 @@ def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
     """See `_coerce_to__Assign_targets()`."""
 
     if fst_ := _coerce_to__slice_with_commas(code, parse_params, parse__arglikes, _arglikes):  # sequence as sequence?
-        if fst_.__class__ is list:
+        if fst_.__class__ is list:  # this means code is an FST
             ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                             end_col_offset=ls[-1].lenbytes)
 
@@ -840,7 +843,7 @@ def _coerce_to_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
 def _coerce_to__aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce _withitems?
+    # TODO: coerce _withitems specially for the "a as b" format?
 
     fst_ = code_as_alias(code, parse_params, sanitize=sanitize, coerce=True)
 
@@ -855,6 +858,8 @@ _coerce_to__Import_name = _coerce_to_alias
 
 def _coerce_to__Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
+
+    # TODO: coerce _withitems specially for the "a as b" format?
 
     fst_ = code_as_Import_name(code, parse_params, sanitize=sanitize, coerce=True)
 
@@ -886,6 +891,8 @@ def _coerce_to__ImportFrom_names(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
+
+    # TODO: coerce _withitems specially for the "a as b" format?
 
     fst_ = code_as_ImportFrom_name(code, parse_params, sanitize=sanitize, coerce=True)
 
@@ -937,9 +944,9 @@ def _coerce_to_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _coerce_to__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce aliases specially for the "a as b" format?
+    # TODO: coerce _aliases specially for the "a as b" format?
 
-    if fst_ := _coerce_to__slice_with_commas(code, parse_params, parse__withitems, _withitems, True):  # sequence as sequence? always_reparse=True because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
+    if fst_ := _coerce_to__slice_with_commas(code, parse_params, parse__withitems, _withitems, always_reparse=True):  # sequence as sequence? always_reparse=True because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
         return fst_._sanitize() if sanitize else fst_
 
     # single element as sequence
@@ -995,7 +1002,49 @@ def _coerce_to_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, s
 def _coerce_to__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce Tuple? _arglikes?
+    codea = getattr(code, 'a', None)
+
+    if fst_ := _coerce_to__slice_with_commas(code, parse_params, parse__type_params, _type_params):  # sequence as sequence?
+        if fst_.__class__ is list:  # this means code is an FST
+            elts = fst_
+            ast = Tuple(elts=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                        end_col_offset=ls[-1].lenbytes)
+
+            tmp = fst.FST(ast, ls, None, from_=code, lcopy=False)  # temporary Tuple so that we can unparenthesize everything
+
+            type_params = []
+
+            for e in elts:
+                e.f._unparenthesize_grouping()  # type_params can't have pars
+
+                if (e_cls := e.__class__) is Name:
+                    tp = TypeVar(name=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                                 end_col_offset=e.end_col_offset)
+
+                elif e_cls is Starred:
+                    if (v := e.value).__class__ is Name:
+                        tp = TypeVarTuple(name=v.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                                          end_col_offset=e.end_col_offset)
+                    else:
+                        raise NodeError(f'expecting _type_params, got {codea.__class__.__name__}'
+                                        f', could not coerce, found Starred {v.__class__.__name__}')
+
+                else:
+                    raise NodeError(f'expecting _type_params, got {codea.__class__.__name__}'
+                                    f', could not coerce, found {e_cls.__name__}')
+
+                type_params.append(tp)
+
+            tmp._unmake_fst_tree()
+
+            ast = _type_params(type_params=type_params, lineno=1, col_offset=0, end_lineno=tmp.end_lineno,
+                               end_col_offset=tmp.end_col_offset)
+
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+
+        return fst_._sanitize() if sanitize else fst_
+
+    # single element as sequence
 
     fst_ = code_as_type_param(code, parse_params, sanitize=sanitize, coerce=True)
 

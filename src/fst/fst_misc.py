@@ -1907,7 +1907,7 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
 
 def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_child: bool = True) -> bool:
     """Remove grouping parentheses from anything if present. Just remove text parens around node and everything between
-    them and node adjusting parent locations but not the node itself.
+    them and node adjusting parent locations but not the node itself. Safe to call on nodes which are not parenthesized.
 
     **Parameters:**
     - `shared`: Whether to allow merge of parentheses into shared single call argument generator expression or not. If
