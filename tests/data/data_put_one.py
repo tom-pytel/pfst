@@ -16402,12 +16402,12 @@ r'''call(a)'''), ('Module', r'''
 x
 y
 '''),
-r'''**NodeError('expecting arglike, got Module, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got Module, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('Module',
 r'''x = y'''),
-r'''**NodeError('expecting arglike, got Module, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got Module, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('Interactive',
@@ -16432,7 +16432,7 @@ Call - ROOT 0,0..0,7
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('Interactive',
 r'''x; y'''),
-r'''**NodeError('expecting arglike, got Interactive, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got Interactive, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('Expression',
@@ -16487,7 +16487,7 @@ Call - ROOT 0,0..0,7
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('arg',
 r'''x: int'''),
-r'''**NodeError('expecting arglike, got arg, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got arg, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('alias',
@@ -16502,12 +16502,12 @@ Call - ROOT 0,0..0,7
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('alias',
 r'''x as y'''),
-r'''**NodeError('expecting arglike, got alias, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got alias, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('alias',
 r'''*'''),
-r'''**NodeError('expecting arglike, got alias, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got alias, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('withitem',
@@ -16532,7 +16532,7 @@ Call - ROOT 0,0..0,7
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('withitem',
 r'''x as y'''),
-r'''**NodeError('expecting arglike, got withitem, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got withitem, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
 r'''call(a)'''), ('TypeVar',
@@ -16547,12 +16547,12 @@ Call - ROOT 0,0..0,7
 ('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
 r'''call(a)'''), ('TypeVar',
 r'''T: int'''),
-r'''**NodeError('expecting arglike, got TypeVar, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False, '_ver': 13}, (None,
 r'''call(a)'''), ('TypeVar',
 r'''T = int'''),
-r'''**NodeError('expecting arglike, got TypeVar, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
 r'''call(a)'''), ('TypeVarTuple',
@@ -16569,7 +16569,7 @@ Call - ROOT 0,0..0,8
 ('', 0, None, '_args', {'_src': False, '_ver': 13}, (None,
 r'''call(a)'''), ('TypeVarTuple',
 r'''*T = ()'''),
-r'''**NodeError('expecting arglike, got TypeVarTuple, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got TypeVarTuple, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('MatchValue',
@@ -16692,7 +16692,7 @@ Call - ROOT 0,0..0,7
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('MatchAs',
 r'''x as y'''),
-r'''**NodeError('expecting arglike, got MatchAs, could not coerce')**'''),
+r'''**NodeError('expecting expression (arglike), got MatchAs, could not coerce')**'''),
 
 ('', 0, None, '_args', {'_src': False, '_same': False, 'raw': False}, (None,
 r'''call(a)'''), ('MatchSequence',
@@ -19023,7 +19023,7 @@ Module - ROOT 0,0..0,1
 ('', 0, None, '_args', {'_src': False}, (None,
 r'''call(a)'''), ('Slice',
 r'''x:y:z'''),
-r'''**NodeError('expecting arglike, got Slice')**'''),
+r'''**NodeError('expecting expression (arglike), got Slice')**'''),
 
 ('', 0, None, None, {'_src': False, 'raw': False}, (None,
 r'''import a'''), (None,
