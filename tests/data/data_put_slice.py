@@ -38098,6 +38098,1221 @@ _type_params - ROOT 0,0..0,6
 '''),
 ],
 
+'coerce_to_expr_seq': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_Assign_targets', r'''
+x = \
+y =
+'''),
+r'''**NodeError('expecting expression (all types), got _Assign_targets, could not coerce, FST has incompatible source')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_decorator_list', r'''
+@x
+@y
+'''),
+r'''**NodeError('expecting expression (all types), got _decorator_list, could not coerce, FST has incompatible source')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''),
+r'''**NodeError('expecting expression (all types), got _comprehension_ifs, could not coerce, FST has incompatible source')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+(x,
+y)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+(x,
+y.z)
+''',
+r'''x, y.z''', r'''
+Tuple - ROOT 0,0..1,4
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Attribute - 1,0..1,3
+     .value Name 'y' Load - 1,0..1,1
+     .attr 'z'
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+(x,
+y)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+(x,
+y)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('expr',
+r'''a,'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('expr',
+r'''a,'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''), r'''
+(x,
+*y
+)
+''',
+r'''x, *y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Starred - 1,0..1,2
+     .value Name 'y' Load - 1,1..1,2
+     .ctx Load
+  .ctx Load
+'''),
+],
+
+'coerce_to__arglikes': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_Assign_targets', r'''
+x = \
+y =
+'''),
+r'''**NodeError('expecting _arglikes, got _Assign_targets, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_decorator_list', r'''
+@x
+@y
+'''),
+r'''**NodeError('expecting _arglikes, got _decorator_list, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''),
+r'''**NodeError('expecting _arglikes, got _comprehension_ifs, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..1,1
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+x,
+y.z
+''',
+r'''x, y.z''', r'''
+_arglikes - ROOT 0,0..1,3
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Attribute - 1,0..1,3
+     .value Name 'y' Load - 1,0..1,1
+     .attr 'z'
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..1,1
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..1,1
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_arglikes',
+r'''a,'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_arglikes',
+r'''a,'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''), r'''
+x,
+*y
+
+''',
+r'''x, *y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Starred - 1,0..1,2
+     .value Name 'y' Load - 1,1..1,2
+     .ctx Load
+'''),
+],
+
+'coerce_to__aliases': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_Assign_targets', r'''
+x = \
+y =
+'''),
+r'''**NodeError('expecting _aliases, got _Assign_targets, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_decorator_list', r'''
+@x
+@y
+'''),
+r'''**NodeError('expecting _aliases, got _decorator_list, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''),
+r'''**NodeError('expecting _aliases, got _comprehension_ifs, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+x,
+y.z
+''',
+r'''x, y.z''', r'''
+_aliases - ROOT 0,0..1,3
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,3
+     .name 'y.z'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_aliases',
+r'''a'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_aliases',
+r'''a'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+],
+
+'coerce_to__withitems': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_Assign_targets', r'''
+x = \
+y =
+'''),
+r'''**NodeError('expecting _withitems, got _Assign_targets, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_decorator_list', r'''
+@x
+@y
+'''),
+r'''**NodeError('expecting _withitems, got _decorator_list, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_withitems', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''),
+r'''**NodeError('expecting _withitems, got _comprehension_ifs, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..1,1
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+x,
+y.z
+''',
+r'''x, y.z''', r'''
+_withitems - ROOT 0,0..1,3
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,3
+     .context_expr Attribute - 1,0..1,3
+       .value Name 'y' Load - 1,0..1,1
+       .attr 'z'
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..1,1
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..1,1
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_withitems',
+r'''a,'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_withitems',
+r'''a,'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+],
+
+'coerce_to__type_params': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_Assign_targets', r'''
+x = \
+y =
+'''),
+r'''**NodeError('expecting _type_params, got _Assign_targets, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_decorator_list', r'''
+@x
+@y
+'''),
+r'''**NodeError('expecting _type_params, got _decorator_list, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_withitems', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''),
+r'''**NodeError('expecting _type_params, got _comprehension_ifs, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..1,1
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_aliases', r'''
+x,
+y.z
+'''),
+r'''**NodeError('expecting _type_params, got _aliases, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..1,1
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..1,1
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''), r'''
+x,
+*y
+
+''',
+r'''x, *y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVarTuple - 1,0..1,2
+     .name 'y'
+'''),
+],
+
 'virtual_field__all': [  # ................................................................................
 
 ('', 1, 2, '_all', {}, ('Dict',

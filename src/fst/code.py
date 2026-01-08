@@ -634,14 +634,14 @@ def _coerce_to__slice_with_commas(
     ):
         return None
 
-    if is_FST and (last_child := code.last_child()):  # remove trailing comma if present, needed for _aliases, preferred for the others
-        _, _, ln, col = last_child.pars()
-        _, _, end_ln, end_col = code.loc
+    # if is_FST and (last_child := code.last_child()):  # remove trailing comma if present, needed for _aliases, preferred for the others
+    #     _, _, ln, col = last_child.pars()
+    #     _, _, end_ln, end_col = code.loc
 
-        if (frag := next_frag(code._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
-            ln, col, _ = frag
+    #     if (frag := next_frag(code._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
+    #         ln, col, _ = frag
 
-            code._put_src(None, ln, col, ln, col + 1, True)
+    #         code._put_src(None, ln, col, ln, col + 1, True)
 
     if ast_cls not in (Tuple, List, Set):
         if is_FST:
@@ -707,9 +707,7 @@ def _coerce_to__aliases_common(
         elts = fst_
         ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                     end_col_offset=ls[-1].lenbytes)
-
         tmp = fst.FST(ast, ls, None, from_=code, lcopy=False)  # temporary Tuple so that we can unparenthesize everything
-
         names = []
 
         for e in elts:
@@ -748,17 +746,16 @@ def _coerce_to__aliases_common(
 
         ast = _aliases(names=names, lineno=1, col_offset=0, end_lineno=tmp.end_lineno,
                        end_col_offset=tmp.end_col_offset)
-
         fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
-    # if names := fst_.a.names:  # remove trailing comma if present, not legal in Import/From names mostly (except parenthesized ImportFrom.names)
-    #     _, _, ln, col = names[-1].f.loc
-    #     _, _, end_ln, end_col = fst_.loc
+    if names := fst_.a.names:  # remove trailing comma if present, not legal in Import/From names mostly (except parenthesized ImportFrom.names)
+        _, _, ln, col = names[-1].f.loc
+        _, _, end_ln, end_col = fst_.loc
 
-    #     if (frag := next_frag(fst_._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
-    #         ln, col, _ = frag
+        if (frag := next_frag(fst_._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
+            ln, col, _ = frag
 
-    #         fst_._put_src(None, ln, col, ln, col + 1, True)
+            fst_._put_src(None, ln, col, ln, col + 1, True)
 
     return fst_._sanitize() if sanitize else fst_
 
@@ -830,10 +827,9 @@ def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
-            ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+            ast = _arglikes(arglikes=fst_, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                             end_col_offset=ls[-1].lenbytes)
-
-            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)._set_field(fst_, 'arglikes', True, False)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
         return fst_._sanitize() if sanitize else fst_
 
@@ -1204,7 +1200,6 @@ def _code_as(
 
             try:
                 return coerce_to(code, parse_params, sanitize=sanitize)
-
             except Exception as exc:
                 raise NodeError(f'expecting {name or ast_cls.__name__}, got {codea.__class__.__name__}, '
                                 'could not coerce', rawable=True) from exc
@@ -1218,7 +1213,6 @@ def _code_as(
 
                 try:
                     return coerce_to(code, parse_params, sanitize=sanitize)
-
                 except Exception as exc:
                     raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}, '
                                     'could not coerce', rawable=True) from exc
