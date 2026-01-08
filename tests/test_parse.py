@@ -2287,10 +2287,14 @@ match a:
                 (_aliases, 'a, b'),
                 (_aliases, 'a, b'),
                 (_aliases, 'a, b')),
-            (code_as__aliases, (Tuple, 'a, b.c'),
-                (_aliases, 'a, b.c'),
-                (_aliases, 'a, b.c'),
-                (_aliases, 'a, b.c')),
+            (code_as__aliases, (Tuple, 'a, b.c.d.e'),
+                (_aliases, 'a, b.c.d.e'),
+                (_aliases, 'a, b.c.d.e'),
+                (_aliases, 'a, b.c.d.e')),
+            (code_as__aliases, (Tuple, 'a, b().c.d.e'),
+                "**SyntaxError**",
+                "**NodeError('expecting _aliases, got Tuple, could not coerce')**",
+                "**NodeError('expecting _aliases, got Tuple, could not coerce')**"),
             (code_as__aliases, (Tuple, '(a,)'),
                 "**SyntaxError**",
                 (_aliases, 'a'),
@@ -2898,6 +2902,8 @@ match a:
         self.assertEqual('a\nb', code.code_as_constant(['a', 'b']))
 
         self.assertRaises(ParseError, code.code_as__comprehension_ifs, '**z', coerce=True)
+
+        self.assertEqual('if (1,)', code.code_as__comprehension_ifs(FST('1,'), coerce=True).src)
 
 
 if __name__ == '__main__':

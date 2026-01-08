@@ -328,13 +328,12 @@ def _ast_coerce_to_expr__aliases(ast: AST, is_FST: bool, parse_params: Mapping[s
             if a.name == '*':
                 return "star '*' alias"
 
-
         if not is_FST:
             for a in ast.names:
                 res = _ast_coerce_to_expr_alias(a, is_FST, parse_params)
 
                 if res.__class__ is str:
-                    return res
+                    return res  # pragma: no cover  # this cannot currently happen
 
                 elts.append(res[0])
 
@@ -837,8 +836,8 @@ def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
 
     fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
 
-    if fst_.is_parenthesized_tuple() is False:
-        fst_._delimit_node()
+    # if fst_.is_parenthesized_tuple() is False:  # doesn't currently happen, but could in the future, tuple is caught above and tuple str fails in parse
+    #     fst_._delimit_node()
 
     ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
