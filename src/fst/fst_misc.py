@@ -249,6 +249,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
 ] for kls in classes}
 
 _ASTS_LEAF_TUPLE_OR_MATCHSEQ = frozenset([Tuple, MatchSequence])
+_ASTS_LEAF_SINGLE_CHAR_DELIM_SEQ = frozenset([Tuple, List, Set, MatchSequence])
 
 _re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)
 _re_one_space_or_end   = re.compile(r'\s|$')
@@ -2005,6 +2006,8 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     for the removed delimiters. Will not undelimit an empty `Tuple` or `MatchSequence`. Removes everything between the
     delimiters and the actual sequence, e.g. `(  1, 2  # yay \\n)` -> `1, 2`.
 
+    Can also unbracketize / uncurlyize a `List` or `Set` in case of unconventional need.
+
     **WARNING!** No checks are done so make sure to call where it is appropriate! Does not check to see if node is
     properly paren/bracketized so make sure of this before calling!
 
@@ -2012,7 +2015,7 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     - `bool`: Whether delimiters were removed or not (they may not be for an empty tuple).
     """
 
-    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
+    assert self.a.__class__ in _ASTS_LEAF_SINGLE_CHAR_DELIM_SEQ  # _ASTS_LEAF_TUPLE_OR_MATCHSEQ
 
     if not (body := getattr(self.a, field, None)):
         return False

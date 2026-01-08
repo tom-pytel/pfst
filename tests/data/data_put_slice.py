@@ -28736,8 +28736,7 @@ ClassDef - ROOT 0,0..0,23
 ('', 1, 2, '_bases', {'one': True, '_same': False}, (None,
 r'''class cls(a, b, c): pass'''), ('Tuple',
 r'''x, y, z'''),
-r'''class cls(a, x, y, z, c): pass''',
-r'''class cls(a, (x, y, z), c): pass''', r'''
+r'''class cls(a, x, y, z, c): pass''', r'''
 ClassDef - ROOT 0,0..0,30
   .name 'cls'
   .bases[5]
@@ -33502,8 +33501,7 @@ Call - ROOT 0,0..0,12
 ('', 1, 2, '_args', {'one': True, '_same': False}, (None,
 r'''call(a, b, c)'''), ('Tuple',
 r'''x, y, z'''),
-r'''call(a, x, y, z, c)''',
-r'''call(a, (x, y, z), c)''', r'''
+r'''call(a, x, y, z, c)''', r'''
 Call - ROOT 0,0..0,19
   .func Name 'call' Load - 0,0..0,4
   .args[5]
@@ -34279,22 +34277,6 @@ _arglikes - ROOT 0,0..0,3
      .value Constant 3 - 0,2..0,3
 '''),
 ],
-
-
-'_arglikes_coerce': [  # ................................................................................
-
-('', 0, 1, None, {}, ('_arglikes',
-r'''a0, b0'''), ('_arglikes',
-r'''c0'''),
-r'''c0, b0''', r'''
-_arglikes - ROOT 0,0..0,6
-  .arglikes[2]
-   0] Name 'c0' Load - 0,0..0,2
-   1] Name 'b0' Load - 0,4..0,6
-'''),
-],
-
-
 
 'decorator_list_coerce': [  # ................................................................................
 

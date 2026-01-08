@@ -32,6 +32,7 @@ from .asttypes import (
     Module,
     Name,
     Pass,
+    Set,
     Slice,
     Starred,
     Store,
@@ -171,6 +172,9 @@ __all__ = [
 
 Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 CodeAs = Callable[[Code, Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
+
+_ASTS_LEAF_EXPRISH_SEQ = frozenset([Tuple, List, Set, MatchSequence, _Assign_targets, _decorator_list, _arglikes,
+                                    _comprehension_ifs, _aliases, _withitems, _type_params])
 
 _EXPR_PARSE_FUNC_TO_NAME = {
     parse_Tuple:        'Tuple',
@@ -663,6 +667,47 @@ def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
+
+    ast = code
+    ast_cls = code.__class__
+    is_FST = False
+
+    if (ast_cls in _ASTS_LEAF_EXPRISH_SEQ
+        or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
+    ):  # coerce sequence to sequence
+        if ast_cls not in (Tuple, List, Set):
+            if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
+                code._trim_delimiters()
+
+            ast, _ = _ast_coerce_to_expr(ast, is_FST, parse_params, '_arglikes')
+
+        else:
+            if ast_cls is Tuple:
+                if any(e.__class__ is Slice for e in ast.elts):
+                    raise NodeError('expecting _arglikes, got Tuple with a Slice in it, could not coerce',
+                                    rawable=True)
+
+            if is_FST:
+                if code.is_parenthesized_tuple() is not False:
+                    code._trim_delimiters()
+
+                code._unmake_fst_parents(True)
+
+        if is_FST:
+            elts = ast.elts
+            ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                            end_col_offset=ls[-1].lenbytes)
+
+            return fst.FST(ast, ls, None, from_=code, lcopy=False)._set_field(elts, 'arglikes', True, False)
+
+        src = unparse(ast)[1:-1]  # need to strip Tuple or List or Set unparsed delimiters
+        lines = src.split('\n')
+
+        ast = parse__arglikes(src, parse_params)
+
+        return fst.FST(ast, lines, None)
+
+    # coerce single element to single element sequence
 
     fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
 
