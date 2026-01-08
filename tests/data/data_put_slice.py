@@ -20561,65 +20561,57 @@ With - ROOT 0,0..0,18
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''with _: pass'''), ('Tuple',
 r'''x, y'''),
-r'''with ((x, y)): pass''', r'''
-With - ROOT 0,0..0,19
-  .items[1]
-   0] withitem - 0,5..0,13
-     .context_expr Tuple - 0,6..0,12
-       .elts[2]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'y' Load - 0,10..0,11
-       .ctx Load
+r'''with x, y: pass''', r'''
+With - ROOT 0,0..0,15
+  .items[2]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'y' Load - 0,8..0,9
   .body[1]
-   0] Pass - 0,15..0,19
+   0] Pass - 0,11..0,15
 '''),
 
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''with _: pass'''), ('Tuple',
 r'''(x, y)'''),
-r'''with ((x, y)): pass''', r'''
-With - ROOT 0,0..0,19
-  .items[1]
-   0] withitem - 0,5..0,13
-     .context_expr Tuple - 0,6..0,12
-       .elts[2]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'y' Load - 0,10..0,11
-       .ctx Load
+r'''with x, y: pass''', r'''
+With - ROOT 0,0..0,15
+  .items[2]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'y' Load - 0,8..0,9
   .body[1]
-   0] Pass - 0,15..0,19
+   0] Pass - 0,11..0,15
 '''),
 
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''with (_): pass'''), ('Tuple',
 r'''x, y'''),
-r'''with ((x, y)): pass''', r'''
-With - ROOT 0,0..0,19
-  .items[1]
-   0] withitem - 0,5..0,13
-     .context_expr Tuple - 0,6..0,12
-       .elts[2]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'y' Load - 0,10..0,11
-       .ctx Load
+r'''with x, y: pass''', r'''
+With - ROOT 0,0..0,15
+  .items[2]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'y' Load - 0,8..0,9
   .body[1]
-   0] Pass - 0,15..0,19
+   0] Pass - 0,11..0,15
 '''),
 
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''with (_): pass'''), ('Tuple',
 r'''(x, y)'''),
-r'''with ((x, y)): pass''', r'''
-With - ROOT 0,0..0,19
-  .items[1]
-   0] withitem - 0,5..0,13
-     .context_expr Tuple - 0,6..0,12
-       .elts[2]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'y' Load - 0,10..0,11
-       .ctx Load
+r'''with x, y: pass''', r'''
+With - ROOT 0,0..0,15
+  .items[2]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'y' Load - 0,8..0,9
   .body[1]
-   0] Pass - 0,15..0,19
+   0] Pass - 0,11..0,15
 '''),
 ],
 
@@ -20880,8 +20872,7 @@ _withitems - ROOT 0,0..0,9
 ('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''with a as a, 1, 2, 3, c as c: pass''',
-r'''with a as a, (1, 2, 3), c as c: pass''', r'''
+r'''with a as a, 1, 2, 3, c as c: pass''', r'''
 With - ROOT 0,0..0,34
   .items[5]
    0] withitem - 0,5..0,11
@@ -20903,8 +20894,7 @@ With - ROOT 0,0..0,34
 ('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''a as a, 1, 2, 3, c as c''',
-r'''a as a, (1, 2, 3), c as c''', r'''
+r'''a as a, 1, 2, 3, c as c''', r'''
 _withitems - ROOT 0,0..0,23
   .items[5]
    0] withitem - 0,0..0,6
@@ -20919,6 +20909,28 @@ _withitems - ROOT 0,0..0,23
    4] withitem - 0,17..0,23
      .context_expr Name 'c' Load - 0,17..0,18
      .optional_vars Name 'c' Store - 0,22..0,23
+'''),
+
+('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('Tuple',
+r'''(1, 2, 3)'''),
+r'''a as a, (1, 2, 3), c as c''',
+r'''a as a, 1, 2, 3, c as c''', r'''
+_withitems - ROOT 0,0..0,25
+  .items[3]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,17
+     .context_expr Tuple - 0,8..0,17
+       .elts[3]
+        0] Constant 1 - 0,9..0,10
+        1] Constant 2 - 0,12..0,13
+        2] Constant 3 - 0,15..0,16
+       .ctx Load
+   2] withitem - 0,19..0,25
+     .context_expr Name 'c' Load - 0,19..0,20
+     .optional_vars Name 'c' Store - 0,24..0,25
 '''),
 ],
 
@@ -21642,65 +21654,57 @@ If - ROOT 0,0..2,9
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''async with _: pass'''), ('Tuple',
 r'''x, y'''),
-r'''async with ((x, y)): pass''', r'''
-AsyncWith - ROOT 0,0..0,25
-  .items[1]
-   0] withitem - 0,11..0,19
-     .context_expr Tuple - 0,12..0,18
-       .elts[2]
-        0] Name 'x' Load - 0,13..0,14
-        1] Name 'y' Load - 0,16..0,17
-       .ctx Load
+r'''async with x, y: pass''', r'''
+AsyncWith - ROOT 0,0..0,21
+  .items[2]
+   0] withitem - 0,11..0,12
+     .context_expr Name 'x' Load - 0,11..0,12
+   1] withitem - 0,14..0,15
+     .context_expr Name 'y' Load - 0,14..0,15
   .body[1]
-   0] Pass - 0,21..0,25
+   0] Pass - 0,17..0,21
 '''),
 
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''async with _: pass'''), ('Tuple',
 r'''(x, y)'''),
-r'''async with ((x, y)): pass''', r'''
-AsyncWith - ROOT 0,0..0,25
-  .items[1]
-   0] withitem - 0,11..0,19
-     .context_expr Tuple - 0,12..0,18
-       .elts[2]
-        0] Name 'x' Load - 0,13..0,14
-        1] Name 'y' Load - 0,16..0,17
-       .ctx Load
+r'''async with x, y: pass''', r'''
+AsyncWith - ROOT 0,0..0,21
+  .items[2]
+   0] withitem - 0,11..0,12
+     .context_expr Name 'x' Load - 0,11..0,12
+   1] withitem - 0,14..0,15
+     .context_expr Name 'y' Load - 0,14..0,15
   .body[1]
-   0] Pass - 0,21..0,25
+   0] Pass - 0,17..0,21
 '''),
 
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''async with (_): pass'''), ('Tuple',
 r'''x, y'''),
-r'''async with ((x, y)): pass''', r'''
-AsyncWith - ROOT 0,0..0,25
-  .items[1]
-   0] withitem - 0,11..0,19
-     .context_expr Tuple - 0,12..0,18
-       .elts[2]
-        0] Name 'x' Load - 0,13..0,14
-        1] Name 'y' Load - 0,16..0,17
-       .ctx Load
+r'''async with x, y: pass''', r'''
+AsyncWith - ROOT 0,0..0,21
+  .items[2]
+   0] withitem - 0,11..0,12
+     .context_expr Name 'x' Load - 0,11..0,12
+   1] withitem - 0,14..0,15
+     .context_expr Name 'y' Load - 0,14..0,15
   .body[1]
-   0] Pass - 0,21..0,25
+   0] Pass - 0,17..0,21
 '''),
 
 ('', 0, 'end', 'items', {'_src': False}, (None,
 r'''async with (_): pass'''), ('Tuple',
 r'''(x, y)'''),
-r'''async with ((x, y)): pass''', r'''
-AsyncWith - ROOT 0,0..0,25
-  .items[1]
-   0] withitem - 0,11..0,19
-     .context_expr Tuple - 0,12..0,18
-       .elts[2]
-        0] Name 'x' Load - 0,13..0,14
-        1] Name 'y' Load - 0,16..0,17
-       .ctx Load
+r'''async with x, y: pass''', r'''
+AsyncWith - ROOT 0,0..0,21
+  .items[2]
+   0] withitem - 0,11..0,12
+     .context_expr Name 'x' Load - 0,11..0,12
+   1] withitem - 0,14..0,15
+     .context_expr Name 'y' Load - 0,14..0,15
   .body[1]
-   0] Pass - 0,21..0,25
+   0] Pass - 0,17..0,21
 '''),
 ],
 
@@ -21961,8 +21965,7 @@ _withitems - ROOT 0,0..0,9
 ('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''async with a as a, 1, 2, 3, c as c: pass''',
-r'''async with a as a, (1, 2, 3), c as c: pass''', r'''
+r'''async with a as a, 1, 2, 3, c as c: pass''', r'''
 AsyncWith - ROOT 0,0..0,40
   .items[5]
    0] withitem - 0,11..0,17

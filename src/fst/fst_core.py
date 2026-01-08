@@ -608,9 +608,11 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> fst.FST
     return self
 
 
-def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool = False) -> fst.FST:  # -> self
+def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> fst.FST:  # -> self
     """Destroy a tree of `FST` child nodes by breaking links between AST and `FST` nodes. This mainly helps make sure
     destroyed `FST` nodes can't be reused in a way that might corrupt valid remaining trees.
+
+    Will unmake a tree with possible `.f=None` links without error.
 
     Unmake exists for two reasons. First it breaks links to make garbage collection easier (which is not really a big
     deal in modern python). More importantly it marks `FST` nodes as invalid.
@@ -619,32 +621,22 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None, safe: bool =
 
     **Parameters:**
     - `stack`: Can unmake multiple trees by passing in this. Mostly used for deleted elements in slice operations.
-    - `safe`: If `True` then will unmake a tree with possible `None` `.f` links without error. Normally `False` because
-        we want the errors in case a tree is not valid as we expected.
     """
 
     if stack is None:
         stack = [self.a]
 
-    if safe:
-        while stack:
-            if a := stack.pop():
-                if f := getattr(a, 'f', None):
-                    f.a = a.f = None
+    while stack:  # make sure these bad ASTs can't hurt us anymore
+        if a := stack.pop():  # could be `None`s in there
+            if f := getattr(a, 'f', None):
+                f.a = a.f = None  # parent and pfield are still useful after node has been removed, we want this part to error if a.f is None
 
-                stack.extend(iter_child_nodes(a))
-
-    else:
-        while stack:  # make sure these bad ASTs can't hurt us anymore
-            if a := stack.pop():  # could be `None`s in there
-                a.f.a = a.f = None  # parent and pfield are still useful after node has been removed, we want this part to error if a.f is None
-
-                for field in a._fields:  # this is the normal path so we want it to be quick
-                    if child := getattr(a, field, None):
-                        if isinstance(child, AST):
-                            stack.append(child)
-                        elif isinstance(child, list) and not isinstance(child[0], str):
-                            stack.extend(child)
+            for field in a._fields:  # this is the normal path so we want it to be quick
+                if child := getattr(a, field, None):
+                    if isinstance(child, AST):
+                        stack.append(child)
+                    elif isinstance(child, list) and not isinstance(child[0], str):
+                        stack.extend(child)
 
     return self
 

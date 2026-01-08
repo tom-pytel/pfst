@@ -1763,14 +1763,14 @@ def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = 
     return is_par
 
 
-def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None) -> None:
-    """Parenthesize any arglike expressions in `self` which is assumed to be a `Tuple` according to `options` if not
-    `None`, otherwise always parenthesizes."""
+def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None, field: str = 'elts') -> None:
+    """Parenthesize any arglike expressions in `self` according to `options` if not `None`, otherwise always
+    parenthesizes."""
 
-    assert self.a.__class__ is Tuple
+    # assert self.a.__class__ is Tuple
 
     if options is None or get_option_overridable('pars', 'pars_arglike', options):
-        for e in self.a.elts:
+        for e in getattr(self.a, field):
             if (f := e.f)._is_expr_arglike_only():
                 f._parenthesize_grouping()
 

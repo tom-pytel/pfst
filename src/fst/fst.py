@@ -1583,7 +1583,7 @@ class FST:
 
         if cleanup:
             self._touch()  # delete marked copy
-            self._unmake_fst_tree(safe=True)  # clean up as best we can
+            self._unmake_fst_tree()  # clean up as best we can
 
         return reconcile.out
 

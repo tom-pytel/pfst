@@ -605,6 +605,74 @@ def _ast_coerce_to_expr(
     return ret, is_nonstd_tuple
 
 
+def _coerce_to__slice_with_commas(
+    code: Code,
+    parse_params: Mapping[str, Any],
+    parse: Callable[[Code, Mapping[str, Any]], AST],
+    to_cls: type[AST],
+    always_reparse: bool = False,
+) -> fst.FST | list[AST] | None:
+    """Attempt coerce given code if is sequence type to one of our own SPECIAL SLICE types that has commas: `_arglikes`,
+    `_aliases`, `_withitems` or _type_params`.
+
+    **Returns:**
+    - `FST`: Coerced tree ready for return.
+    - `list[AST]`: Came from an `FST` so wasn't parsed so may need to coerce the individual elements, they are all valid
+        `FST` `AST` nodes so need to unmake them if recreating nodes.
+    - `None`: Coercion doesn't apply, try others.
+    """
+
+    ast = code
+    ast_cls = code.__class__
+    is_FST = False
+
+    if not (ast_cls in _ASTS_LEAF_EXPRISH_SEQ
+        or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
+    ):
+        return None
+
+    if ast_cls not in (Tuple, List, Set):
+        if is_FST:
+            if ast_cls is _arglikes:
+                code._fix_arglikes(field='arglikes')
+            elif ast_cls is MatchSequence and code.is_delimited_matchseq():
+                code._trim_delimiters()
+
+        ast, _ = _ast_coerce_to_expr(ast, is_FST, parse_params, to_cls.__name__)
+
+    else:
+        if ast_cls is Tuple:
+            if any(e.__class__ is Slice for e in ast.elts):
+                raise NodeError(f'expecting {to_cls.__name__}, got Tuple with a Slice in it, could not coerce',
+                                rawable=True)
+
+        if is_FST:
+            if code.is_parenthesized_tuple() is not False:
+                code._trim_delimiters()
+
+            code._unmake_fst_parents(True)
+
+    if is_FST:
+        if not always_reparse:
+            return ast.elts
+
+        code._unmake_fst_tree(ast.elts)
+
+        ast = parse(code.src, parse_params)
+
+        assert ast.__class__ is to_cls  # sanity check
+
+        return fst.FST(ast, code._lines, None, lcopy=False)
+
+    src = unparse(ast)[1:-1]  # need to strip Tuple or List or Set unparsed delimiters
+    lines = src.split('\n')
+    ast = parse(src, parse_params)
+
+    assert ast.__class__ is to_cls  # sanity check
+
+    return fst.FST(ast, lines, None)
+
+
 # ......................................................................................................................
 
 def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -668,46 +736,16 @@ def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    ast = code
-    ast_cls = code.__class__
-    is_FST = False
-
-    if (ast_cls in _ASTS_LEAF_EXPRISH_SEQ
-        or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
-    ):  # coerce sequence to sequence
-        if ast_cls not in (Tuple, List, Set):
-            if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
-                code._trim_delimiters()
-
-            ast, _ = _ast_coerce_to_expr(ast, is_FST, parse_params, '_arglikes')
-
-        else:
-            if ast_cls is Tuple:
-                if any(e.__class__ is Slice for e in ast.elts):
-                    raise NodeError('expecting _arglikes, got Tuple with a Slice in it, could not coerce',
-                                    rawable=True)
-
-            if is_FST:
-                if code.is_parenthesized_tuple() is not False:
-                    code._trim_delimiters()
-
-                code._unmake_fst_parents(True)
-
-        if is_FST:
-            elts = ast.elts
+    if fst_ := _coerce_to__slice_with_commas(code, parse_params, parse__arglikes, _arglikes):  # sequence as sequence?
+        if fst_.__class__ is list:
             ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                             end_col_offset=ls[-1].lenbytes)
 
-            return fst.FST(ast, ls, None, from_=code, lcopy=False)._set_field(elts, 'arglikes', True, False)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)._set_field(fst_, 'arglikes', True, False)
 
-        src = unparse(ast)[1:-1]  # need to strip Tuple or List or Set unparsed delimiters
-        lines = src.split('\n')
+        return fst_._sanitize() if sanitize else fst_
 
-        ast = parse__arglikes(src, parse_params)
-
-        return fst.FST(ast, lines, None)
-
-    # coerce single element to single element sequence
+    # single element as sequence
 
     fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
 
@@ -899,7 +937,12 @@ def _coerce_to_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _coerce_to__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce aliases?
+    # TODO: coerce aliases specially for the "a as b" format?
+
+    if fst_ := _coerce_to__slice_with_commas(code, parse_params, parse__withitems, _withitems, True):  # sequence as sequence? always_reparse=True because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
+        return fst_._sanitize() if sanitize else fst_
+
+    # single element as sequence
 
     fst_ = code_as_withitem(code, parse_params, sanitize=sanitize, coerce=True)
 
@@ -1124,8 +1167,7 @@ def _code_as_expr(
 
         ast = parse(src, parse_params)
 
-        if is_ast and ast.__class__ is not code.__class__:  # sanity check
-            raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')  # pragma: no cover
+        assert not is_ast or (ast.__class__ is code.__class__)  # sanity check
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
