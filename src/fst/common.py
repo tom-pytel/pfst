@@ -36,6 +36,7 @@ __all__ = [
     'nspace',
     'pyver',
     'shortstr',
+    'lline_start',
     'next_frag',
     'prev_frag',
     'next_find',
@@ -56,15 +57,16 @@ PYGE12 = PYVER >= (3, 12)
 PYGE13 = PYVER >= (3, 13)
 PYGE14 = PYVER >= (3, 14)
 
-re_empty_line_start           = re.compile(r'[ \t]*')            # start of completely empty or space-filled line (from start pos, start of line indentation)
-re_empty_line                 = re.compile(r'[ \t]*$')           # completely empty or space-filled line (from start pos, start of line indentation)
-re_comment_line_start         = re.compile(r'[ \t]*#')           # empty line preceding a comment
-re_line_continuation          = re.compile(r'[^#]*\\$')          # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
-re_empty_space                = re.compile(r'\s*$')              # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
-re_empty_line_or_cont         = re.compile(r'[ \t]*(\\)?$')      # empty line or line continuation
-re_empty_line_cont_or_comment = re.compile(r'[ \t]*(\\|#.*)?$')  # empty line or line continuation or a pure comment line
+re_empty_line_start            = re.compile(r'[ \t]*')            # start of completely empty or space-filled line (from start pos, start of line indentation)
+re_empty_line                  = re.compile(r'[ \t]*$')           # completely empty or space-filled line (from start pos, start of line indentation)
+re_comment_line_start          = re.compile(r'[ \t]*#')           # empty line preceding a comment
+re_line_continuation           = re.compile(r'[^#]*\\$')          # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+re_empty_space                 = re.compile(r'\s*$')              # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
+re_empty_line_or_cont          = re.compile(r'[ \t]*(\\)?$')      # empty line or line continuation
+re_empty_line_cont_or_comment  = re.compile(r'[ \t]*(\\|#.*)?$')  # empty line or line continuation or a pure comment line
 
-re_line_end_cont_or_comment   = re.compile(r'(\\|#.*)?$')        # search: line end line continuation or a comment, the first part is mostly meant to skip closing parentheses and separators, not expression stuff
+re_line_end_cont_or_comment    = re.compile(r'(\\|#.*)?$')        # search: line end line continuation or a comment, the search mostly meant to skip closing parentheses and separators
+re_line_end_ws_cont_or_comment = re.compile(r'\s*(\\|#.*)?$')     # search: line end maybe whitespace and line continuation or a comment, the search mostly meant to skip closing parentheses and separators
 
 _re_next_frag                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 _re_next_frag_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
@@ -284,6 +286,30 @@ def shortstr(s: str, maxlen: int = 64) -> str:
     t = maxlen - 16 - (int(log10(l)) + 1)
 
     return f'{s[:(t+1)//2]} .. [{l} chars] .. {s[-(t//2):]}'
+
+
+def lline_start(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int]:
+    """Get start location of logical line going backwards from `(end_ln, end_col)`. Will return `(start_ln, 0)` if
+    logical line starts on a line after `ln`, otherwise `(ln, col)`. Ignores line continuation backslashes in comments,
+    obviously.
+
+    **WARNING!** Make sure the search span does not include any AST strings as those can cause false positives for
+    comment hash and line continuation backslashes.
+
+    @private
+    """
+
+    while end_ln > ln:
+        prev_ln = end_ln - 1
+
+        if (not (m := re_line_end_cont_or_comment.search(lines[prev_ln], col if prev_ln == ln else 0))
+            or not m.group().startswith('\\')
+        ):
+            return (end_ln, 0)
+
+        end_ln = prev_ln
+
+    return (ln, col)
 
 
 def next_frag(
