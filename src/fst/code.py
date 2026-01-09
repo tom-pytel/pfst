@@ -189,6 +189,9 @@ _EXPR_PARSE_FUNC_TO_NAME = {
 def _ast_coerce_to_ret_empty_str(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """These are the individual `AST` coerce functions.
 
+    These individual functions ARE allowed to change `FST` source as long as it wouldn't break any recursion going on,
+    for example a `pattern` changing source so that location of previouisly coerced `AST` in a `MatchSequence` changes.
+
     **Parameters:**
     - `ast`: The `AST` node to coerce, can be part of an `FST` tree.
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
@@ -242,20 +245,56 @@ def _ast_coerce_to_expr__Assign_targets(
 ) -> tuple[AST, bool, int]:
     """See `_ast_coerce_to_ret_empty_str()`."""
 
-    if is_FST:
-        return 'FST has incompatible source'
+    if not is_FST:
+        return Tuple(elts=ast.targets), False, 1
 
-    return Tuple(elts=ast.targets), False, 1
+    fst_ = ast.f
+    lines = fst_._lines  # fst_ must be root
+    targets = ast.targets
+    last_target = targets[-1]
+    _, _, fst_end_ln, fst_end_col = fst_.loc
+
+    for a in targets:
+        f = a.f
+        _, _, ln, col = f.pars()
+        eq = next_frag(lines, ln, col, fst_end_ln, fst_end_col)  # may or may not be there '=' for last target
+
+        if not (is_last := a is last_target) or eq:
+            end_ln, end_col, src = eq
+
+            assert src.startswith('=')
+
+            fst_._put_src(None if is_last else ',', ln, col, end_ln, end_col + 1, True)  # replace everything between end of expr and '=' with ',' or just remove for last element
+
+        f._set_ctx(Load)
+
+    return Tuple(elts=targets, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _ast_coerce_to_expr__decorator_list(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_ast_coerce_to_ret_empty_str()`."""
 
-    if is_FST:
-        return 'FST has incompatible source'
+    if not is_FST:
+        return Tuple(elts=ast.decorator_list), False, 1
 
-    return Tuple(elts=ast.decorator_list), False, 1
+    fst_ = ast.f
+    decorator_list = ast.decorator_list
+    last_deco = decorator_list[-1]
+
+    for i, a in enumerate(decorator_list):
+        f = a.f
+        ln, col, end_ln, end_col = f.pars()
+        deco_ln, deco_col, _, _ = fst_._loc_decorator(i)
+
+        if a is not last_deco:  # add comma after expression, unless last
+            fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
+
+        fst_._put_src(None, deco_ln, deco_col, ln, col, True)  # remove everything from the '@' up to the start of the parenthesized decorator expression, it would be insane to try to preserve any comments between these, so will probably do it at some point
+
+    return Tuple(elts=decorator_list, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _ast_coerce_to_expr__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_ast_coerce_to_ret_empty_str()`."""
@@ -273,10 +312,25 @@ def _ast_coerce_to_expr__comprehension_ifs(
 ) -> tuple[AST, bool, int]:
     """See `_ast_coerce_to_ret_empty_str()`."""
 
-    if is_FST:
-        return 'FST has incompatible source'
+    if not is_FST:
+        return Tuple(elts=ast.ifs), False, 1
 
-    return Tuple(elts=ast.ifs), False, 1
+    fst_ = ast.f
+    ifs = ast.ifs
+    last_if = ifs[-1]
+
+    for i, a in enumerate(ifs):
+        f = a.f
+        ln, col, end_ln, end_col = f.pars()
+        if_ln, if_col, _, _ = fst_._loc_comprehension_if(i)
+
+        if a is not last_if:  # add comma after expression, unless last
+            fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
+
+        fst_._put_src(None, if_ln, if_col, ln, col, True)  # remove everything from the 'if' up to the start of the parenthesized decorator expression, it would be insane to try to preserve any comments between these, so will probably do it at some point
+
+    return Tuple(elts=ifs, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _ast_coerce_to_expr_arg(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     if ast.annotation:
@@ -717,23 +771,22 @@ def _coerce_to__aliases_common(
                           end_col_offset=e.end_col_offset)
 
             elif e_cls is Attribute and allow_dotted:
-                lineno = e.lineno
-                col_offset = e.col_offset
-                end_lineno = e.end_lineno
-                end_col_offset = e.end_col_offset
                 attr = e.attr
+                ee = e
 
-                while (e_cls := (e := e.value).__class__) is Attribute:
-                    e.f._unparenthesize_grouping()
+                while (ee_cls := (ee := ee.value).__class__) is Attribute:
+                    ee.f._unparenthesize_grouping()
 
-                    attr = f'{e.attr}.{attr}'
+                    attr = f'{ee.attr}.{attr}'
 
-                if e_cls is not Name:
+                if ee_cls is not Name:
                     raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                    f', could not coerce, found {e_cls.__name__}')
+                                    f', could not coerce, found {ee_cls.__name__}')
 
-                a = alias(name=f'{e.id}.{attr}', lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
-                          end_col_offset=end_col_offset)
+                ee.f._unparenthesize_grouping()
+
+                a = alias(name=f'{ee.id}.{attr}', lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                          end_col_offset=e.end_col_offset)
 
             else:
                 raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'

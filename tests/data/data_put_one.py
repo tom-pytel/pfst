@@ -16249,23 +16249,57 @@ r'''i = v'''), ('MatchMapping',
 r'''{1: a as b}'''),
 r'''**NodeError('expecting expression (standard), got MatchMapping, could not coerce, MatchAs has pattern')**'''),
 
-('', None, None, 'value', {'_src': False}, (None,
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('_Assign_targets',
 r'''x = y = z ='''),
-r'''**NodeError('expecting expression (standard), got _Assign_targets, could not coerce, FST has incompatible source')**'''),
+r'''i = (x, y, z)''', r'''
+Assign - ROOT 0,0..0,13
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,13
+    .elts[3]
+     0] Name 'x' Load - 0,5..0,6
+     1] Name 'y' Load - 0,8..0,9
+     2] Name 'z' Load - 0,11..0,12
+    .ctx Load
+'''),
 
-('', None, None, 'value', {'_src': False}, (None,
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('_decorator_list', r'''
 @x
 @y
 @z
+'''), r'''
+i = (x,
+y,
+z)
+''',
+r'''i = (x, y, z)''', r'''
+Assign - ROOT 0,0..2,2
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..2,2
+    .elts[3]
+     0] Name 'x' Load - 0,5..0,6
+     1] Name 'y' Load - 1,0..1,1
+     2] Name 'z' Load - 2,0..2,1
+    .ctx Load
 '''),
-r'''**NodeError('expecting expression (standard), got _decorator_list, could not coerce, FST has incompatible source')**'''),
 
-('', None, None, 'value', {'_src': False}, (None,
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('_comprehension_ifs',
 r'''if x if y if z'''),
-r'''**NodeError('expecting expression (standard), got _comprehension_ifs, could not coerce, FST has incompatible source')**'''),
+r'''i = (x, y, z)''', r'''
+Assign - ROOT 0,0..0,13
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..0,13
+    .elts[3]
+     0] Name 'x' Load - 0,5..0,6
+     1] Name 'y' Load - 0,8..0,9
+     2] Name 'z' Load - 0,11..0,12
+    .ctx Load
+'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('_arglikes',

@@ -1036,7 +1036,7 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):
-        raise ValueError(f'expecting a list field, {ast.__class__.__name__}.{field} is not a list field')
+        raise ValueError(f'{ast.__class__.__name__}.{field} is not a list field')
 
     return field, body
 

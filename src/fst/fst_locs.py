@@ -496,13 +496,23 @@ def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
 
 
 def _loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
-    """Location `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `_decorator_list` decorator expression including the
-    leading `@` (which is not included in the location of the expression itself). We have a whole function for this
-    because the `@` may not be on the same line as the decorator expression.
+    r"""Location of `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `_decorator_list` specific decorator expression
+    including the leading `@` (which is not included in the location of the expression itself). We have a whole function
+    for this because the `@` may not be on the same line as the decorator expression.
 
     **Note:** This function is explicitly safe to use from `FST.bloc` only with `pars=False`.
 
     **WARNING:** `idx` must be non-negative.
+
+    **Examples:**
+    >>> FST(r'''
+    ... @deco1
+    ... @ \
+    ...  ( deco2 )
+    ... @deco3
+    ... class cls: pass
+    ... '''.strip())._loc_decorator(1)
+    fstloc(1, 0, 2, 10)
     """
 
     assert self.a.__class__ in _ASTS_LEAF_DEF_OR_DECO_LIST

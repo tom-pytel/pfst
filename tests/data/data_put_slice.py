@@ -38161,15 +38161,33 @@ Tuple - ROOT 0,0..2,1
 r'''a,'''), ('_Assign_targets', r'''
 x = \
 y =
+'''), r'''
+x, \
+y
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..1,1
+  .elts[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
 '''),
-r'''**NodeError('expecting expression (all types), got _Assign_targets, could not coerce, FST has incompatible source')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('expr',
 r'''a,'''), ('_decorator_list', r'''
 @x
 @y
+'''), r'''
+(x,
+y)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
 '''),
-r'''**NodeError('expecting expression (all types), got _decorator_list, could not coerce, FST has incompatible source')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('expr',
 r'''a,'''), ('_arglikes', r'''
@@ -38196,8 +38214,18 @@ r'''a,'''), ('_comprehension_ifs', r'''
 if x
 if y
 
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
 '''),
-r'''**NodeError('expecting expression (all types), got _comprehension_ifs, could not coerce, FST has incompatible source')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('expr',
 r'''a,'''), ('_aliases', r'''
@@ -38405,15 +38433,31 @@ _arglikes - ROOT 0,0..2,0
 r'''a,'''), ('_Assign_targets', r'''
 x = \
 y =
+'''), r'''
+x, \
+y
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..1,1
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
 '''),
-r'''**NodeError('expecting _arglikes, got _Assign_targets, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_arglikes',
 r'''a,'''), ('_decorator_list', r'''
 @x
 @y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..1,1
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
 '''),
-r'''**NodeError('expecting _arglikes, got _decorator_list, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_arglikes',
 r'''a,'''), ('_arglikes', r'''
@@ -38439,8 +38483,17 @@ r'''a,'''), ('_comprehension_ifs', r'''
 if x
 if y
 
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
 '''),
-r'''**NodeError('expecting _arglikes, got _comprehension_ifs, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_arglikes',
 r'''a,'''), ('_aliases', r'''
@@ -38646,15 +38699,35 @@ _aliases - ROOT 0,0..2,0
 r'''a'''), ('_Assign_targets', r'''
 x = \
 y =
+'''), r'''
+x, \
+y
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
 '''),
-r'''**NodeError('expecting _aliases, got _Assign_targets, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_aliases',
 r'''a'''), ('_decorator_list', r'''
 @x
 @y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
 '''),
-r'''**NodeError('expecting _aliases, got _decorator_list, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_aliases',
 r'''a'''), ('_arglikes', r'''
@@ -38682,8 +38755,19 @@ r'''a'''), ('_comprehension_ifs', r'''
 if x
 if y
 
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
 '''),
-r'''**NodeError('expecting _aliases, got _comprehension_ifs, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_aliases',
 r'''a'''), ('_aliases', r'''
@@ -38889,15 +38973,35 @@ _withitems - ROOT 0,0..2,0
 r'''a,'''), ('_Assign_targets', r'''
 x = \
 y =
+'''), r'''
+x, \
+y
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..1,1
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
 '''),
-r'''**NodeError('expecting _withitems, got _Assign_targets, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_withitems',
 r'''a,'''), ('_decorator_list', r'''
 @x
 @y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..1,1
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
 '''),
-r'''**NodeError('expecting _withitems, got _decorator_list, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_withitems',
 r'''a,'''), ('_withitems', r'''
@@ -38925,8 +39029,19 @@ r'''a,'''), ('_comprehension_ifs', r'''
 if x
 if y
 
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
 '''),
-r'''**NodeError('expecting _withitems, got _comprehension_ifs, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_withitems',
 r'''a,'''), ('_aliases', r'''
@@ -39135,15 +39250,35 @@ _type_params - ROOT 0,0..2,0
 r'''a,'''), ('_Assign_targets', r'''
 x = \
 y =
+'''), r'''
+x, \
+y
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..1,1
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
 '''),
-r'''**NodeError('expecting _type_params, got _Assign_targets, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
 r'''a,'''), ('_decorator_list', r'''
 @x
 @y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..1,1
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
 '''),
-r'''**NodeError('expecting _type_params, got _decorator_list, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
 r'''a,'''), ('_withitems', r'''
@@ -39171,8 +39306,19 @@ r'''a,'''), ('_comprehension_ifs', r'''
 if x
 if y
 
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
 '''),
-r'''**NodeError('expecting _type_params, got _comprehension_ifs, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
 r'''a,'''), ('_aliases', r'''
