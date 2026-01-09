@@ -77,7 +77,7 @@ from .astutil import (
     is_valid_target,
 )
 
-from .common import NodeError, pyver, shortstr, next_frag
+from .common import re_line_end_ws_cont_or_comment, NodeError, pyver, shortstr, lline_start, next_frag
 
 from .parsex import (
     _fixing_unparse,
@@ -861,7 +861,62 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
 def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This function can coerce source."""
 
+    if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
+        elts = _coerce_to__slice_with_commas(code, parse_params, None, _decorator_list, True)
+
+        if elts is not None:  # sequence as sequence?
+            elts, is_FST = elts
+
+            if not is_FST:
+                src = unparse(_decorator_list(decorator_list=elts))
+                ast = parse__decorator_list(src, parse_params)
+
+                return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+            ast = _decorator_list(decorator_list=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                  end_col_offset=ls[-1].lenbytes)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+            lines = fst_._lines
+            last_end_ln = last_end_col = 0
+
+            for e in elts:
+                f = e.f
+                end_ln, end_col, _, _ = f.pars()
+
+                ln, col = lline_start(lines, last_end_ln, last_end_col, end_ln, end_col)  # start of logical line because decorators must start at start of block indent
+                fst_._put_src('\n@' if col else '@', ln, col, end_ln, end_col, True)  # put element at line start right after '@'
+
+                _, _, last_end_ln, last_end_col = f.pars()
+
+                if frag := next_frag(lines, last_end_ln, last_end_col, len(lines) - 1, 0x7fffffffffffffff):
+                    comma_ln, comma_col, src = frag
+
+                    assert src.startswith(',')
+
+                    fst_._put_src(None, comma_ln, comma_col, comma_ln, comma_col + 1, True)  # remove comma
+
+            ast.col_offset = 0  # because could have been moved by first insert of '@' before first element, this is the simplest way to correct that
+
+            fst_._touch()
+
+            if (last_ln := len(lines) - 1) != last_end_ln:
+                last_end_col = 0
+
+            if ((m := re_line_end_ws_cont_or_comment.search(lines[-1], last_end_col))
+                and (g := m.group(1))
+                and g.startswith('\\')
+            ):  # last line can't end with a line continuation
+                fst_._put_src(None, last_ln, m.start(0), last_ln, 0x7fffffffffffffff, True)
+
+            return fst_._sanitize() if sanitize else fst_
+
+    # single element as sequence
+
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+
+    if fst_.is_parenthesized_tuple() is False:
+        fst_._delimit_node()
+
     ln = fst_.pars().ln
 
     fst_._put_src('@', ln, 0, ln, 0, False)  # prepend '@' to expression on line of expression at start to make it a _decorator_list slice
@@ -948,7 +1003,7 @@ def _coerce_to__comprehension_ifs(
                                      end_col_offset=ls[-1].lenbytes)
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
             lines = fst_._lines
-            last_ln = len(lines) - 1
+            last_ln = len(lines) - 1  # this never changes because the _put_src() calls are never multiline
             comma_ln = comma_col = -1
 
             for e in elts:
@@ -968,6 +1023,8 @@ def _coerce_to__comprehension_ifs(
                 fst_._put_src(if_src, ln, col, ln, col, False)  # add if
 
             ast.col_offset = 0  # because could have been moved by first insert of 'if ' before first element, this is the simplest way to correct that
+
+            fst_._touch()
 
             return fst_._sanitize() if sanitize else fst_
 

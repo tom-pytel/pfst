@@ -38373,6 +38373,273 @@ Tuple - ROOT 0,0..2,1
 '''),
 ],
 
+'coerce_to__decorator_list': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_Assign_targets', r'''
+x = \
+y =
+'''), r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,1..1,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_decorator_list', r'''
+@x
+@y
+'''), r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,1..1,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,1..1,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+@x
+@y.z
+''', r'''
+_decorator_list - ROOT 0,0..1,4
+  .decorator_list[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Attribute - 1,1..1,4
+     .value Name 'y' Load - 1,1..1,2
+     .attr 'z'
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,1..1,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,1..1,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_decorator_list',
+r'''@a'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_decorator_list',
+r'''@a'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+],
+
 'coerce_to__arglikes': [  # ................................................................................
 
 ('', 0, 'end', None, {'_src': False}, ('_arglikes',
