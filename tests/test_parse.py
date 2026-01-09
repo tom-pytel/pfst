@@ -1990,7 +1990,7 @@ match a:
                 r = (f.a.__class__, f.src)
 
             try:
-                self.assertEqual(res, r)
+                self.assertEqual(res, r)  # old, new
             except Exception:
                 print(f'\nold={res}\nnew={r}')
                 raise

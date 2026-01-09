@@ -301,8 +301,17 @@ def _ast_coerce_to_expr__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[
 
     arglikes = ast.arglikes
 
-    if any(a.__class__ is keyword for a in arglikes):
-        return '_arglikes has a keyword'
+    if not is_FST:
+        if any(a.__class__ is keyword for a in arglikes):
+            return '_arglikes has a keyword'
+
+    else:
+        for a in arglikes:
+            if a.__class__ is keyword:
+                return '_arglikes has a keyword'
+
+            if a.f._is_expr_arglike_only():
+                a.f._parenthesize_grouping()
 
     return Tuple(elts=arglikes, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                  end_col_offset=ast.end_col_offset), True, 1
@@ -697,11 +706,8 @@ def _coerce_to__slice_with_commas(
     #         code._put_src(None, ln, col, ln, col + 1, True)
 
     if ast_cls not in (Tuple, List, Set):
-        if is_FST:
-            if ast_cls is _arglikes:  # if this is true then we are coercing to something other than _arglikes which will need this fix
-                code._fix_arglikes(field='arglikes')
-            elif ast_cls is MatchSequence and code.is_delimited_matchseq():
-                code._trim_delimiters()
+        if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
+            code._trim_delimiters()
 
         ast, _ = _coerce_to_expr_ast(ast, is_FST, parse_params, to_cls.__name__)
 
@@ -1330,7 +1336,6 @@ def _code_as_expr(
                 raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {ast_cls.__name__}, coerce disabled',
                                 rawable=True)
 
-            old_ast = ast
             ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, parse_params, _EXPR_PARSE_FUNC_TO_NAME[parse])
             ast_cls = ast.__class__
 
@@ -1347,10 +1352,6 @@ def _code_as_expr(
 
             if fix_coerced_tuple:
                 code._fix_tuple(False)  # it is not be parenthesized
-
-                if old_ast.__class__ is _arglikes:  # these will need arglike-only expressions parenthesized to be a valid expr
-                    code._fix_arglikes()
-
             elif parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, doesn't happen organically but can be created with FST('*a', 'expr_slice'), should we bother? for now on the side of yes
                 code._maybe_add_singleton_tuple_comma()
 
