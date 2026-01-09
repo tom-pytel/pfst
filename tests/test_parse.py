@@ -1120,6 +1120,17 @@ class TestParse(unittest.TestCase):
         self.assertRaises(SyntaxError, px.parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_withitem, '')
 
+        # parenthesized elements of unparenthesized multiline tuple
+
+        a = px.parse_expr('(a),\n(b)')
+        self.assertEqual((1, 0, 2, 3), (a.lineno, a.col_offset, a.end_lineno, a.end_col_offset))
+
+        a = px.parse_expr('( a),\n(b )')
+        self.assertEqual((1, 0, 2, 4), (a.lineno, a.col_offset, a.end_lineno, a.end_col_offset))
+
+        a = px.parse_expr(' (a),\n(b) ')
+        self.assertEqual((1, 1, 2, 3), (a.lineno, a.col_offset, a.end_lineno, a.end_col_offset))
+
     def test_parse__BoolOp_dangling(self):
         # left
 

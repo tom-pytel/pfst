@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
 - delimit whole node at root when degenerate last line has line continuation without trailing newline
 - `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
 - fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized

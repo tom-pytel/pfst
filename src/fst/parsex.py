@@ -134,7 +134,7 @@ from .astutil import (
     merge_arglikes,
 )
 
-from .common import next_frag, shortstr
+from .common import next_frag, prev_frag, shortstr
 
 __all__ = [
     'Mode',
@@ -645,6 +645,7 @@ def _fix_undelimited_seq_parsed_delimited(
     e0 = elts[0]
     en = elts[-1]
     e0_ln = e0.lineno - lineno  # "- lineno" because of extra line introduced in parse, offset from start of lines
+    e0_col_offset = e0.col_offset
     en_end_ln = en.end_lineno - lineno
     ast_end_ln = ast.end_lineno - (lineno + 1)
     nlines = len(lines)
@@ -654,29 +655,30 @@ def _fix_undelimited_seq_parsed_delimited(
 
     if en is e0:  # len(elts) == 1
         end_ln = nlines - 1
-        end_col = len(lines[-1])
-
     else:
         e1 = elts[1]
         end_ln = e1.lineno - lineno
-        end_col = len(lines[end_ln].encode()[:e1.col_offset].decode())
 
-    _verify_no_close_delimiters(lines, e0_ln, e0.col_offset, e0.end_lineno - lineno, e0.end_col_offset, end_ln, delims)
+    _verify_no_close_delimiters(lines, e0_ln, e0_col_offset, e0.end_lineno - lineno, e0.end_col_offset, end_ln, delims)
 
-    ast.lineno = e0.lineno
-    ast.col_offset = e0.col_offset
+    e0_col = len(lines[e0_ln].encode()[:e0_col_offset].decode())
     en_end_col = len(lines[en_end_ln].encode()[:en.end_col_offset].decode())
 
-    if (not (frag := next_frag(lines, en_end_ln, en_end_col, ast_end_ln, 0x7fffffffffffffff))  # if nothing following then last element is ast end, "- (lineno + 1)" because end also had \n tacked on
-        or not frag.src.startswith(',')  # if no comma then last element is ast end
-    ):
-        ast.end_lineno = en.end_lineno
-        ast.end_col_offset = en.end_col_offset
+    if frag := next_frag(lines, 0, 0, e0_ln, e0_col):  # maybe there is opening parenthesis
+        e0_ln, e0_col, src = frag
 
-    else:
-        end_ln, end_col, _ = frag
-        ast.end_lineno = end_ln + lineno
-        ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
+        assert src.startswith('(')
+
+    if frag := prev_frag(lines, en_end_ln, en_end_col, nlines - 1, 0x7fffffffffffffff):  # maybe there is closing parenthesis or trailing comma
+        en_end_ln, en_end_col, src = frag
+        en_end_col += len(src)
+
+        assert src.endswith(',') or src.endswith(')')
+
+    ast.lineno = e0_ln + lineno
+    ast.col_offset = len(lines[e0_ln][:e0_col].encode())
+    ast.end_lineno = en_end_ln + lineno
+    ast.end_col_offset = len(lines[en_end_ln][:en_end_col].encode())
 
 
 def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
