@@ -6,7 +6,7 @@
 
 >>> def ct(code, op_side='left', op=None, is_first=False, is_last=False, is_ins=True):
 ...     f, os_side_left = _code_to_slice_Compare__all_maybe_dangling(self, code, False, dict(op_side=op_side, op=op), is_first, is_last, is_ins)
-...     d = f.dump('N', out=str).replace(' \n', ' <*END*\n')
+...     d = f.dump('N', out=str)  # .replace(' \n', ' <*END*\n')
 ...     print(f'{os_side_left = }')
 ...     print(d)
 
@@ -18,7 +18,7 @@ left
 os_side_left = True
 0: == x
 Compare - ROOT 0,0..0,4
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: ==
@@ -33,7 +33,7 @@ os_side_left = True
 0: not
 1: in x
 Compare - ROOT 0,0..1,4
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: not
@@ -48,7 +48,7 @@ Compare - ROOT 0,0..1,4
 os_side_left = True
 0: is not x
 Compare - ROOT 0,0..0,8
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: is not
@@ -62,7 +62,7 @@ Compare - ROOT 0,0..0,8
 os_side_left = True
 0: is x
 Compare - ROOT 0,0..0,4
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: is
@@ -76,7 +76,7 @@ Compare - ROOT 0,0..0,4
 os_side_left = True
 0: != x
 Compare - ROOT 0,0..0,4
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: !=
@@ -205,7 +205,7 @@ other
 os_side_left = True
 0: == x
 Compare - ROOT 0,0..0,4
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: ==
@@ -219,7 +219,7 @@ Compare - ROOT 0,0..0,4
 os_side_left = True
 0: == x
 Compare - ROOT 0,0..0,4
-0: <*END*
+0:
   .left Pass - 0,0..0,0
   .ops[1]
 0: ==
@@ -293,13 +293,13 @@ Compare - ROOT 0,0..2,3
 
 >>> ct('\n# comment\n \\\n == # line\n x # line\n \\\n', op_side='left')
 os_side_left = True
-0: <*END*
+0:
 1: # comment
 2:  \
 3:  == # line
 4:  x # line
 5:  \
-6: <*END*
+6:
 Compare - ROOT 0,0..6,0
 3:  <*END*
   .left Pass - 3,1..3,1
@@ -313,14 +313,14 @@ Compare - ROOT 0,0..6,0
 
 >>> ct('\n# comment\n \\\n x # comment\n \\\n == # line\n \\\n', op_side='right')
 os_side_left = False
-0: <*END*
+0:
 1: # comment
 2:  \
 3:  x # comment
 4:  \
 5:  == # line
 6:  \
-7: <*END*
+7:
 Compare - ROOT 0,0..7,0
 3:  x
   .left Name 'x' Load - 3,1..3,2
@@ -335,7 +335,7 @@ Compare - ROOT 0,0..7,0
 
 >>> ct('\n# comment\n \\\n  # line\n x # line\n \\\n', op_side='left', op='\n not # not \n in \\\n# end')
 os_side_left = True
-0 : <*END*
+0 :
 1 : # comment
 2 :  \
 3 :   # line
@@ -345,7 +345,7 @@ os_side_left = True
 7 : # end
 8 : x # line
 9 :  \
-10: <*END*
+10:
 Compare - ROOT 0,0..10,0
 5 :  <*END*
   .left Pass - 5,1..5,1
@@ -360,7 +360,7 @@ Compare - ROOT 0,0..10,0
 
 >>> ct('\n# comment\n \\\n x # comment\n \\\n  # line\n \\\n', op_side='right', op='\n not # not \n in \\\n# end')
 os_side_left = False
-0 : <*END*
+0 :
 1 : # comment
 2 :  \
 3 :  x
@@ -370,7 +370,7 @@ os_side_left = False
 7 :  \
 8 :   # line
 9 :  \
-10: <*END*
+10:
 Compare - ROOT 0,0..10,0
 3 :  x
   .left Name 'x' Load - 3,1..3,2

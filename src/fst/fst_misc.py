@@ -287,7 +287,10 @@ def _dump_lines(
                 l = lines[cln]
                 e = f'{c.clr_loc}<*END*{c.end_loc}' if l[-1:].isspace() else ''
 
-                linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{lines[cln]}{c.end_src}{e}{eol}')
+                if e or l:
+                    linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{l}{c.end_src}{e}{eol}')
+                else:
+                    linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc}{eol}')
 
         st.line_tails_dumped.update(range(src_ln, end_ln))
 
@@ -313,8 +316,8 @@ def _dump_lines(
 
     end = f'{c.clr_loc}<*END*{c.end_loc}'
     iter_lines = iter(lines)
-    l = next(iter_lines)
-    e = end if l[-1:].isspace() else ''
+    l = ol = next(iter_lines)
+    e = end if (not l and col) or l[-1:].isspace() else ''
 
     if not col:
         l = f'{c.end_loc}{c.clr_src}{l}{c.end_src}'
@@ -323,12 +326,18 @@ def _dump_lines(
     else:
         l = f'{" " * col}{c.end_loc}{c.clr_src}{l}{c.end_src}'
 
-    linefunc(f'{c.clr_loc}{ln:<{width}}: {l}{e}{eol}')
+    if e or ol:
+        linefunc(f'{c.clr_loc}{ln:<{width}}: {l}{e}{eol}')
+    else:
+        linefunc(f'{c.clr_loc}{ln:<{width}}:{eol}')
 
     for cln, l in zip(range(ln + 1, end_ln + 1), iter_lines, strict=True):
         e = end if l[-1:].isspace() else ''
 
-        linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{l}{c.end_src}{e}{eol}')
+        if e or l:
+            linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{l}{c.end_src}{e}{eol}')
+        else:
+            linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc}{eol}')
 
 
 def _dump_prim(prim: constant, c: nspace) -> str:

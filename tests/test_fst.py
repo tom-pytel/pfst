@@ -2882,7 +2882,7 @@ def f():
         ], f.dump('s', out=list))
         self.assertEqual([
             '0: #!/usr/bin/env python',
-            '1: ',
+            '1:',
             '2: i = 1',
             'Assign - ROOT 2,0..2,5',
             '  .targets[1]',
@@ -2900,7 +2900,7 @@ def f():
         ], f.dump('n', out=list))
         self.assertEqual([
             '0: #!/usr/bin/env python',
-            '1: ',
+            '1:',
             '2: i = 1',
             'Assign - ROOT 2,0..2,5',
             '  .targets[1]',

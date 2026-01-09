@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
 - fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized
 
 ### Added
