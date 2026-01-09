@@ -252,7 +252,7 @@ def _ast_coerce_to_expr__Assign_targets(
     lines = fst_._lines  # fst_ must be root
     targets = ast.targets
     last_target = targets[-1]
-    _, _, fst_end_ln, fst_end_col = fst_.loc
+    _, _, fst_end_ln, fst_end_col = fst_.loc  # fst_end_col will remain static as the actual fst_.end_col may get smaller but this is fine as long as fst_end_ln remains the same
 
     for a in targets:
         f = a.f
@@ -673,17 +673,31 @@ def _coerce_to_expr_ast(
 def _coerce_to__slice_with_commas(
     code: Code,
     parse_params: Mapping[str, Any],
-    parse: Callable[[Code, Mapping[str, Any]], AST],
+    parse: Callable[[Code, Mapping[str, Any]], AST] | None,
     to_cls: type[AST],
-    always_reparse: bool = False,
-) -> fst.FST | list[AST] | None:
+    ret_elts: bool | None = None,
+    allow_starred: bool = False,
+) -> fst.FST | list[AST] | tuple[list[AST], bool] | None:
     """Attempt coerce given code if is sequence type to one of our own SPECIAL SLICE types that has commas: `_arglikes`,
     `_aliases`, `_withitems` or _type_params`.
+
+    Contrary to the name, this is also used by the non-comma delimited custom `_slice` SPECIAL SLICEs as the first step
+    of their coercion.
+
+    **Prameters:**
+    - `parse`: Can be `None` if `ret_elts=True`.
+    - `ret_elts`: When to return just the elements and not make an `FST`.
+        - `True`: Always return just the elements. In this case returns a tuple of `(elts, is_FST)`.
+        - `False`: Never return just the elements. In case of an `FST`, will reparse the source to an `FST` using the
+            `parse` function. Returns the `FST` or `elts`.
+        - `None`: Return the elements in case of `FST` but do the parse in case of `AST`. Returns just the `FST`.
 
     **Returns:**
     - `FST`: Coerced tree ready for return.
     - `list[AST]`: Came from an `FST` so wasn't parsed so may need to coerce the individual elements, they are all valid
         `FST` `AST` nodes so need to unmake them if recreating nodes.
+    - `(list[AST], is_FST)`: Just the individual elements, which may or may not have come from an `FST`, as well as a
+        bool indicating this (if from `FST` or not).
     - `None`: Coercion doesn't apply, try others.
     """
 
@@ -695,15 +709,6 @@ def _coerce_to__slice_with_commas(
         or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
     ):
         return None
-
-    # if is_FST and (last_child := code.last_child()):  # remove trailing comma if present, needed for _aliases, preferred for the others
-    #     _, _, ln, col = last_child.pars()
-    #     _, _, end_ln, end_col = code.loc
-
-    #     if (frag := next_frag(code._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
-    #         ln, col, _ = frag
-
-    #         code._put_src(None, ln, col, ln, col + 1, True)
 
     if ast_cls not in (Tuple, List, Set):
         if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
@@ -723,8 +728,15 @@ def _coerce_to__slice_with_commas(
 
             code._unmake_fst_parents(True)
 
+    if not allow_starred and any(e.__class__ is Starred for e in ast.elts):
+        raise NodeError(f'expecting {to_cls.__name__}, got {ast_cls.__name__}, could not coerce, found Starred',
+                        rawable=True)
+
+    if ret_elts:
+        return ast.elts, is_FST
+
     if is_FST:
-        if not always_reparse:
+        if ret_elts is not False:
             return ast.elts
 
         code._unmake_fst_tree(ast.elts)
@@ -843,7 +855,7 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
     ast = _Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                           end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)  # _set_field() is alternative to putting ast_ in the ast.targets to begin with, this won't walk existing valid FST tree unnecessarily
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)  # _set_field() is alternative to putting ast_ in the ast.targets to begin with (only if it is known to be valid FST tree), this won't walk existing valid FST tree unnecessarily
 
 
 def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -881,7 +893,7 @@ def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__arglikes, _arglikes)
+    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__arglikes, _arglikes, None, True)
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
@@ -919,6 +931,47 @@ def _coerce_to__comprehension_ifs(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This function can coerce source."""
+
+    if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
+        elts = _coerce_to__slice_with_commas(code, parse_params, None, _comprehension_ifs, True)
+
+        if elts is not None:  # sequence as sequence?
+            elts, is_FST = elts
+
+            if not is_FST:
+                src = unparse(_comprehension_ifs(ifs=elts))
+                ast = parse__comprehension_ifs(src, parse_params)
+
+                return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+            ast = _comprehension_ifs(ifs=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                     end_col_offset=ls[-1].lenbytes)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+            lines = fst_._lines
+            last_ln = len(lines) - 1
+            comma_ln = comma_col = -1
+
+            for e in elts:
+                f = e.f
+                ln, col, end_ln, end_col = f.pars()
+                if_src = ' if ' if col == comma_col and ln == comma_ln else 'if '  # guard against joining alphanumerics of this if with previous expression, also leave a nice space if right after a par
+
+                if frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff):
+                    comma_ln, comma_col, src = frag
+
+                    assert src.startswith(',')
+
+                    fst_._put_src(None, comma_ln, comma_col, comma_ln, comma_col + 1, True)  # remove comma
+
+                    comma_col += len(if_src)
+
+                fst_._put_src(if_src, ln, col, ln, col, False)  # add if
+
+            ast.col_offset = 0  # because could have been moved by first insert of 'if ' before first element, this is the simplest way to correct that
+
+            return fst_._sanitize() if sanitize else fst_
+
+    # single element as sequence
 
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
 
@@ -1105,9 +1158,9 @@ def _coerce_to__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, s
 
     # TODO: coerce _aliases specially for the "a as b" format?
 
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__withitems, _withitems, always_reparse=True)  # list[AST] is never returned with always_reparse=True
+    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
 
-    if fst_ is not None:  # sequence as sequence? always_reparse=True because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
+    if fst_ is not None:  # sequence as sequence? ret_elts=False because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
         return fst_._sanitize() if sanitize else fst_
 
     # single element as sequence
@@ -1165,7 +1218,7 @@ def _coerce_to__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
     codea = getattr(code, 'a', None)
 
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__type_params, _type_params)  # sequence as sequence?
+    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
@@ -1258,7 +1311,7 @@ def _code_as(
 
             try:
                 return coerce_to(code, parse_params, sanitize=sanitize)
-            except Exception as exc:
+            except (NodeError, SyntaxError, NotImplementedError) as exc:
                 raise NodeError(f'expecting {name or ast_cls.__name__}, got {codea.__class__.__name__}, '
                                 'could not coerce', rawable=True) from exc
 
@@ -1271,7 +1324,7 @@ def _code_as(
 
                 try:
                     return coerce_to(code, parse_params, sanitize=sanitize)
-                except Exception as exc:
+                except (NodeError, SyntaxError, NotImplementedError) as exc:
                     raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}, '
                                     'could not coerce', rawable=True) from exc
 
@@ -1292,13 +1345,13 @@ def _code_as(
             try:
                 ast = parse(src, parse_params)
 
-            except Exception:
+            except (NodeError, SyntaxError, NotImplementedError):
                 if not (coerce_to and getattr(coerce_to, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense)
                     raise
 
                 try:
                     fst_ = coerce_to(code, parse_params, sanitize=sanitize)
-                except Exception as exc:
+                except (NodeError, SyntaxError, NotImplementedError) as exc:
                     raise ParseError(f'expecting {name or ast_cls.__name__}, could not parse or coerce') from exc
 
                 return fst_

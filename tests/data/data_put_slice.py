@@ -38633,6 +38633,255 @@ _arglikes - ROOT 0,0..2,0
 '''),
 ],
 
+'coerce_to__comprehension_ifs': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_Assign_targets', r'''
+x = \
+y =
+'''), r'''
+if x \
+if y
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..1,4
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_decorator_list', r'''
+@x
+@y
+'''), r'''
+if x
+if y
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..1,4
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+if x
+if y
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..1,4
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+if x
+if y.z
+''',
+r'''if x if y.z''', r'''
+_comprehension_ifs - ROOT 0,0..1,6
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Attribute - 1,3..1,6
+     .value Name 'y' Load - 1,3..1,4
+     .attr 'z'
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+if x
+if y
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..1,4
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+if x
+if y
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..1,4
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_comprehension_ifs',
+r'''if a'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_comprehension_ifs',
+r'''if a'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+],
+
 'coerce_to__aliases': [  # ................................................................................
 
 ('', 0, 'end', None, {'_src': False}, ('_aliases',
