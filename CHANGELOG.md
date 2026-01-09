@@ -7,9 +7,13 @@
 ### Added
 
 - a lot more coercion cases allowed for node puts (non-source)
+  - `pattern`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
+  - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`
+  - all sequence types, custom and standard, to custom slice types
 
 ### Updated
 
+- `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`
 
 ## 0.2.5 - alpha - 2026-01-06
 

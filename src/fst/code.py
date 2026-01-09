@@ -545,7 +545,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     _comprehension_ifs: _ast_coerce_to_expr__comprehension_ifs,
     arg:                _ast_coerce_to_expr_arg,
     alias:              _ast_coerce_to_expr_alias,  # can reparse in case of FST
-    _aliases:           _ast_coerce_to_expr__aliases,  # TODO? to Tuple, has Name or Attribute
+    _aliases:           _ast_coerce_to_expr__aliases,
     withitem:           _ast_coerce_to_expr_withitem,
     _withitems:         _ast_coerce_to_expr__withitems,
     MatchValue:         _ast_coerce_to_expr_value,
@@ -558,7 +558,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     # MatchOr:            _ast_coerce_to_expr_MatchOr,  # TODO?  need locations of kwd_attrs identifiers
     TypeVar:            _ast_coerce_to_expr_TypeVar,
     TypeVarTuple:       _ast_coerce_to_expr_TypeVarTuple,
-    _type_params:       _ast_coerce_to_expr__type_params,  # TODO? to Tuple, has Name or Starred
+    _type_params:       _ast_coerce_to_expr__type_params,
 }
 
 

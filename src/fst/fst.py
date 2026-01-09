@@ -1013,9 +1013,14 @@ class FST:
 
         **Parameters:**
         - `ast`: The root `AST` node.
-        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. Two special values are added:
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. Two special values are added,
+            `None` and `False`. The modes are:
+            - `specific mode`: The `ast` passed in will be unparsed and will attempt to reparse it with this mode. The
+                resulting node type will be of the `mode` type and if this is not the same as `ast` then this is fine,
+                its a way to convert one type of `AST` to another if the source representation is the same.
             - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
-                other values should be considered overrides for special cases.
+                other values should be considered as a coerce. If this mode is used then the resulting parsed node must
+                be of the same type as the `ast` passed in.
             - `False`: This will skip the reparse and just `ast.unparse()` the `AST` to generate source for the `FST`.
                 Use this only if you are absolutely certain that the `AST` unparsed source will correspond with the
                 locations already present in the `AST`. This is almost never the case unless the `AST` was
@@ -1040,6 +1045,13 @@ class FST:
         Assign - ROOT 0,0..0,9
           .targets[1]
            0] Name 'var' Store - 0,0..0,3
+          .value Constant 123 - 0,6..0,9
+
+        >>> FST.fromast(Assign(targets=[Name(id='var')],
+        ...                    value=Constant(value=123)), 'keyword').dump('stmt')
+        0: var = 123
+        keyword - ROOT 0,0..0,9
+          .arg 'var'
           .value Constant 123 - 0,6..0,9
 
         >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
@@ -1075,10 +1087,11 @@ class FST:
             org = ast
             ast = parsex.parse(src, ast.__class__ if mode is None else mode, parse_params)
 
-            try:
-                compare_asts(ast, org, type_comments=type_comments, ctx=ctx, raise_=True)
-            except WalkFail as exc:
-                raise ValueError('could not reparse ast identically') from exc
+            if mode is None:
+                try:
+                    compare_asts(ast, org, type_comments=type_comments, ctx=ctx, raise_=True)
+                except WalkFail as exc:
+                    raise ValueError('could not reparse ast identically') from exc
 
         return FST(ast, lines, None, parse_params=parse_params, indent='    ')
 
