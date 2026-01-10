@@ -174,8 +174,8 @@ __all__ = [
 Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 CodeAs = Callable[[Code, Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
 
-_ASTS_LEAF_EXPRISH_SEQ = frozenset([Tuple, List, Set, MatchSequence, _Assign_targets, _decorator_list, _arglikes,
-                                    _comprehension_ifs, _aliases, _withitems, _type_params])
+_ASTS_LEAF_EXPRISH_SEQ = frozenset([Tuple, List, Set, arguments, MatchSequence, _Assign_targets, _decorator_list,
+                                    _arglikes, _comprehension_ifs, _aliases, _withitems, _type_params])
 
 _EXPR_PARSE_FUNC_TO_NAME = {
     parse_Tuple:        'Tuple',
@@ -206,7 +206,7 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
 
 # ......................................................................................................................
 
-def _ast_coerce_to_ret_empty_str(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+def _coerce_to_expr_ast_ret_empty_str(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """These are the individual `AST` coerce functions.
 
     These individual functions ARE allowed to change `FST` source as long as it wouldn't break any recursion going on,
@@ -239,13 +239,13 @@ def _ast_coerce_to_ret_empty_str(ast: AST, is_FST: bool, parse_params: Mapping[s
 
     return ''
 
-def _ast_coerce_to_expr_value(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_value(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return ast.value, False, 0
 
-def _ast_coerce_to_expr_stmtmod(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_stmtmod(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if len(body := ast.body) != 1:
         return 'multiple statements'
@@ -255,15 +255,15 @@ def _ast_coerce_to_expr_stmtmod(ast: AST, is_FST: bool, parse_params: Mapping[st
 
     return ast.value, False, 0
 
-def _ast_coerce_to_expr_Expression(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_Expression(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return ast.body, False, 0
 
-def _ast_coerce_to_expr__Assign_targets(
+def _coerce_to_expr_ast__Assign_targets(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if not is_FST:
         return Tuple(elts=ast.targets), False, 1
@@ -291,10 +291,10 @@ def _ast_coerce_to_expr__Assign_targets(
     return Tuple(elts=targets, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
-def _ast_coerce_to_expr__decorator_list(
+def _coerce_to_expr_ast__decorator_list(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if not is_FST:
         return Tuple(elts=ast.decorator_list), False, 1
@@ -316,8 +316,8 @@ def _ast_coerce_to_expr__decorator_list(
     return Tuple(elts=decorator_list, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
-def _ast_coerce_to_expr__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     arglikes = ast.arglikes
 
@@ -336,10 +336,10 @@ def _ast_coerce_to_expr__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[
     return Tuple(elts=arglikes, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                  end_col_offset=ast.end_col_offset), True, 1
 
-def _ast_coerce_to_expr__comprehension_ifs(
+def _coerce_to_expr_ast__comprehension_ifs(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if not is_FST:
         return Tuple(elts=ast.ifs), False, 1
@@ -362,10 +362,10 @@ def _ast_coerce_to_expr__comprehension_ifs(
     return Tuple(elts=ifs, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
-def _ast_coerce_to_expr_arguments(
+def _coerce_to_expr_ast_arguments(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     vararg = ast.vararg
     elts = []
@@ -432,15 +432,15 @@ def _ast_coerce_to_expr_arguments(
     return Tuple(elts=elts, ctx=Load(), lineno=e0.lineno, col_offset=e0.col_offset, end_lineno=end_ln + 1,
                  end_col_offset=lines[end_ln].c2b(end_col)), False, 2
 
-def _ast_coerce_to_expr_arg(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+def _coerce_to_expr_ast_arg(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     if ast.annotation:
         return 'arg has annotation'
 
     return Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                 end_col_offset=ast.end_col_offset), False, 2
 
-def _ast_coerce_to_expr_alias(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_alias(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.asname:
         return 'alias has asname'
@@ -469,8 +469,8 @@ def _ast_coerce_to_expr_alias(ast: AST, is_FST: bool, parse_params: Mapping[str,
 
     return ast, False, 2
 
-def _ast_coerce_to_expr__aliases(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast__aliases(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     names = ast.names
     elts = []
@@ -484,7 +484,7 @@ def _ast_coerce_to_expr__aliases(ast: AST, is_FST: bool, parse_params: Mapping[s
 
         if not is_FST:
             for a in ast.names:
-                res = _ast_coerce_to_expr_alias(a, is_FST, parse_params)
+                res = _coerce_to_expr_ast_alias(a, is_FST, parse_params)
 
                 if res.__class__ is str:
                     return res  # pragma: no cover  # this cannot currently happen
@@ -507,18 +507,18 @@ def _ast_coerce_to_expr__aliases(ast: AST, is_FST: bool, parse_params: Mapping[s
     return Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                  end_col_offset=ast.end_col_offset), True, 2
 
-def _ast_coerce_to_expr_withitem(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_withitem(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.optional_vars:
         return 'withitem has optional_vars'
 
     return ast.context_expr, False, 1  # if coerce from withitem can reuse its AST
 
-def _ast_coerce_to_expr__withitems(
+def _coerce_to_expr_ast__withitems(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     elts = []
 
@@ -531,16 +531,16 @@ def _ast_coerce_to_expr__withitems(
     return Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                  end_col_offset=ast.end_col_offset), True, 2
 
-def _ast_coerce_to_expr_MatchSingleton(
+def _coerce_to_expr_ast_MatchSingleton(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return Constant(value=ast.value, lineno=ast.lineno, col_offset=ast.col_offset,
                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
 
-def _ast_coerce_to_expr_MatchStar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_MatchStar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     name = ast.name
     lineno = ast.lineno
@@ -553,8 +553,8 @@ def _ast_coerce_to_expr_MatchStar(ast: AST, is_FST: bool, parse_params: Mapping[
                    ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
                    end_col_offset=end_col_offset), False, 2
 
-def _ast_coerce_to_expr_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.pattern:
         return 'MatchAs has pattern'
@@ -562,8 +562,8 @@ def _ast_coerce_to_expr_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[st
     return Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
 
-def _ast_coerce_to_expr_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if not is_FST:
         ast_cls = List
@@ -575,7 +575,7 @@ def _ast_coerce_to_expr_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapp
                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     for pat in ast.patterns:
-        pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _ast_coerce_to_ret_empty_str)(pat, is_FST, parse_params)
+        pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
         if (pat_cls := pat.__class__) is str:
             return pat
@@ -586,8 +586,8 @@ def _ast_coerce_to_expr_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapp
 
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
-def _ast_coerce_to_expr_MatchMapping(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_MatchMapping(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     keys = []
     values = []
@@ -595,7 +595,7 @@ def _ast_coerce_to_expr_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     for key, pat in zip(ast.keys, ast.patterns, strict=True):
-        pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _ast_coerce_to_ret_empty_str)(pat, is_FST, parse_params)
+        pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
         if (pat_cls := pat.__class__) is str:
             return pat
@@ -621,8 +621,8 @@ def _ast_coerce_to_expr_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
 
     return ret, False, 2
 
-def _ast_coerce_to_expr_TypeVar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_TypeVar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.bound:
         return 'TypeVar has bound'
@@ -632,8 +632,8 @@ def _ast_coerce_to_expr_TypeVar(ast: AST, is_FST: bool, parse_params: Mapping[st
     return Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
 
-def _ast_coerce_to_expr_TypeVarTuple(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+def _coerce_to_expr_ast_TypeVarTuple(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if getattr(ast, 'default_value', None):
         return 'TypeVarTuple has default_value'
@@ -649,10 +649,10 @@ def _ast_coerce_to_expr_TypeVarTuple(ast: AST, is_FST: bool, parse_params: Mappi
                    ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
                    end_col_offset=end_col_offset), False, 2
 
-def _ast_coerce_to_expr__type_params(
+def _coerce_to_expr_ast__type_params(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_ast_coerce_to_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     elts = []
 
@@ -689,31 +689,31 @@ def _ast_coerce_to_expr__type_params(
                  end_col_offset=ast.end_col_offset), True, 2
 
 _AST_COERCE_TO_EXPR_FUNCS = {
-    Module:             _ast_coerce_to_expr_stmtmod,
-    Interactive:        _ast_coerce_to_expr_stmtmod,
-    Expression:         _ast_coerce_to_expr_Expression,
-    Expr:               _ast_coerce_to_expr_value,
-    _Assign_targets:    _ast_coerce_to_expr__Assign_targets,
-    _decorator_list:    _ast_coerce_to_expr__decorator_list,
-    _arglikes:          _ast_coerce_to_expr__arglikes,
-    _comprehension_ifs: _ast_coerce_to_expr__comprehension_ifs,
-    arguments:          _ast_coerce_to_expr_arguments,
-    arg:                _ast_coerce_to_expr_arg,
-    alias:              _ast_coerce_to_expr_alias,  # can reparse in case of FST
-    _aliases:           _ast_coerce_to_expr__aliases,
-    withitem:           _ast_coerce_to_expr_withitem,
-    _withitems:         _ast_coerce_to_expr__withitems,
-    MatchValue:         _ast_coerce_to_expr_value,
-    MatchSingleton:     _ast_coerce_to_expr_MatchSingleton,
-    MatchSequence:      _ast_coerce_to_expr_MatchSequence,
-    MatchMapping:       _ast_coerce_to_expr_MatchMapping,
-    # MatchClass:         _ast_coerce_to_expr_MatchClass,  # TODO?  how to handle parentheses for locations, "a | (b | c)", "(a | (b | c)) | d"
-    MatchStar:          _ast_coerce_to_expr_MatchStar,
-    MatchAs:            _ast_coerce_to_expr_MatchAs,
-    # MatchOr:            _ast_coerce_to_expr_MatchOr,  # TODO?  need locations of kwd_attrs identifiers
-    TypeVar:            _ast_coerce_to_expr_TypeVar,
-    TypeVarTuple:       _ast_coerce_to_expr_TypeVarTuple,
-    _type_params:       _ast_coerce_to_expr__type_params,
+    Module:             _coerce_to_expr_ast_stmtmod,
+    Interactive:        _coerce_to_expr_ast_stmtmod,
+    Expression:         _coerce_to_expr_ast_Expression,
+    Expr:               _coerce_to_expr_ast_value,
+    _Assign_targets:    _coerce_to_expr_ast__Assign_targets,
+    _decorator_list:    _coerce_to_expr_ast__decorator_list,
+    _arglikes:          _coerce_to_expr_ast__arglikes,
+    _comprehension_ifs: _coerce_to_expr_ast__comprehension_ifs,
+    arguments:          _coerce_to_expr_ast_arguments,
+    arg:                _coerce_to_expr_ast_arg,
+    alias:              _coerce_to_expr_ast_alias,  # can reparse in case of FST
+    _aliases:           _coerce_to_expr_ast__aliases,
+    withitem:           _coerce_to_expr_ast_withitem,
+    _withitems:         _coerce_to_expr_ast__withitems,
+    MatchValue:         _coerce_to_expr_ast_value,
+    MatchSingleton:     _coerce_to_expr_ast_MatchSingleton,
+    MatchSequence:      _coerce_to_expr_ast_MatchSequence,
+    MatchMapping:       _coerce_to_expr_ast_MatchMapping,
+    # MatchClass:         _coerce_to_expr_ast_MatchClass,  # TODO?  how to handle parentheses for locations, "a | (b | c)", "(a | (b | c)) | d"
+    MatchStar:          _coerce_to_expr_ast_MatchStar,
+    MatchAs:            _coerce_to_expr_ast_MatchAs,
+    # MatchOr:            _coerce_to_expr_ast_MatchOr,  # TODO?  need locations of kwd_attrs identifiers
+    TypeVar:            _coerce_to_expr_ast_TypeVar,
+    TypeVarTuple:       _coerce_to_expr_ast_TypeVarTuple,
+    _type_params:       _coerce_to_expr_ast__type_params,
 }
 
 
@@ -743,7 +743,7 @@ def _coerce_to_expr_ast(
         `FST`.
     """
 
-    ret = _AST_COERCE_TO_EXPR_FUNCS.get(ast.__class__, _ast_coerce_to_ret_empty_str)(ast, is_FST, parse_params)
+    ret = _AST_COERCE_TO_EXPR_FUNCS.get(ast.__class__, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params)
 
     if ret.__class__ is str:
         raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
