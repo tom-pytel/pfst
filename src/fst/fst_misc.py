@@ -1675,14 +1675,18 @@ def _fix_undelimited_seq(
         else:  # otherwise preserve comments by parenthesizing whole area
             ldelim, rdelim = delims
 
-            if end_col and (l := lines[end_ln]).endswith(' ', 0, end_col):
+            if ((m := re_line_end_ws_cont_or_comment.search(l := lines[end_ln], col if end_ln == ln else 0, end_col))
+                and m.group(1)
+            ):  # there is a comment or a line continuation on the last line, we need to insert a newline before the right delimiter, we are counting on this not being horribly malformed with the end of the sequence lying in the middle of a comment
+                self._put_src(['', rdelim], end_ln, end_col, end_ln, end_col, True)
+            elif l.endswith(' ', 0, end_col):  # if ends with a space then just replace it
                 lines[end_ln] = bistr(f'{l[:end_col - 1]}{rdelim}{l[end_col:]}')
-            else:
+            else:  # otherwise insert
                 self._put_src([rdelim], end_ln, end_col, end_ln, end_col, True)
 
-            if (l := lines[ln]).startswith(' ', col):
+            if (l := lines[ln]).startswith(' ', col):  # if starts with a space then replace it
                 lines[ln] = bistr(f'{l[:col]}{ldelim}{l[col + 1:]}')
-            else:
+            else:  # otherwise insert
                 self._put_src([ldelim], ln, col, ln, col, False, False)
 
         return True

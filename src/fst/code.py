@@ -78,7 +78,7 @@ from .astutil import (
     is_valid_target,
 )
 
-from .common import NodeError, pyver, shortstr, lline_start, next_frag
+from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag
 
 from .parsex import (
     _fixing_unparse,
@@ -362,6 +362,76 @@ def _ast_coerce_to_expr__comprehension_ifs(
     return Tuple(elts=ifs, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
+def _ast_coerce_to_expr_arguments(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_ast_coerce_to_ret_empty_str()`."""
+
+    vararg = ast.vararg
+    elts = []
+
+    if ast.posonlyargs:
+        return 'has position-only arguments'
+    if ast.defaults or any(a for a in ast.kw_defaults):
+        return 'has default values'
+    if ast.kwarg or any(a for a in ast.kw_defaults):
+        return 'has **kwargs'
+
+    if vararg:
+        if vararg.annotation:
+            return "vararg has annotation"
+    elif ast.kwonlyargs:
+        return "has empty vararg '*'"
+
+    for a in ast.args:
+        if a.annotation:
+            return 'arg has annotation'
+
+        elts.append(Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                         end_col_offset=a.end_col_offset))
+
+    if is_FST:
+        lines = ast.f._lines
+
+    if vararg:
+        if not is_FST:
+            elts.append(Starred(value=Name(id=vararg.arg)))
+
+        else:
+            lineno = vararg.lineno
+            col_offset = vararg.col_offset
+            end_col_offset = vararg.end_col_offset
+            ln = lineno - 1
+            col = lines[ln].b2c(col_offset)
+            star_ln, star_col, src = prev_frag(lines, 0, 0, ln, col)  # we can use (0, 0) as start bound because we are sure there are no strings anywhere here
+            star_lineno = star_ln + 1
+            star_col_offset = lines[star_ln].c2b(star_col)
+
+            elts.append(Starred(value=Name(id=vararg.arg, ctx=Load(), lineno=lineno, col_offset=col_offset,
+                                           end_lineno=lineno, end_col_offset=end_col_offset),
+                                ctx=Load(), lineno=star_lineno, col_offset=star_col_offset, end_lineno=lineno,
+                                end_col_offset=end_col_offset))
+
+    for a in ast.kwonlyargs:
+        if a.annotation:
+            return 'kwonlyarg has annotation'
+
+        elts.append(Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                         end_col_offset=a.end_col_offset))
+
+    if not is_FST:
+        return Tuple(elts=elts), False, 2
+
+    if not elts:  # if this then just return whole source as empty tuple
+        return Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(lines),
+                     end_col_offset=len(lines[-1])), True, 2
+
+    e0 = elts[0]
+    _, _, end_ln, end_col = ast.f.loc  # need to do this because of possible trailing comma
+
+    return Tuple(elts=elts, ctx=Load(), lineno=e0.lineno, col_offset=e0.col_offset, end_lineno=end_ln + 1,
+                 end_col_offset=lines[end_ln].c2b(end_col)), False, 2
+
 def _ast_coerce_to_expr_arg(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     if ast.annotation:
         return 'arg has annotation'
@@ -543,7 +613,7 @@ def _ast_coerce_to_expr_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
 
         else:
             f = ast.f
-            lines = f.root._lines
+            lines = f.root._lines  # ast may not be root here because patterns recurse
             ln, col, end_ln, end_col = f._loc_MatchMapping_rest()
 
             values.append(Name(id=rest, ctx=Load(), lineno=ln + 1, col_offset=lines[ln].c2b(col), end_lineno=end_ln + 1,
@@ -627,6 +697,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     _decorator_list:    _ast_coerce_to_expr__decorator_list,
     _arglikes:          _ast_coerce_to_expr__arglikes,
     _comprehension_ifs: _ast_coerce_to_expr__comprehension_ifs,
+    arguments:          _ast_coerce_to_expr_arguments,
     arg:                _ast_coerce_to_expr_arg,
     alias:              _ast_coerce_to_expr_alias,  # can reparse in case of FST
     _aliases:           _ast_coerce_to_expr__aliases,

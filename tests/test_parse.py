@@ -2029,6 +2029,30 @@ match a:
                 "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**"),  # AST
             (code_as_expr, (Expression, 'a'), (Name, 'a')),
             (code_as_expr, (Expr, 'a'), (Name, 'a')),
+            (code_as_expr, (arguments, 'a'),
+                (Name, 'a'),
+                (Tuple, 'a,'),
+                (Tuple, '(a,)')),
+            (code_as_expr, (arguments, 'a, *b, c'),
+                (Tuple, 'a, *b, c'),
+                (Tuple, 'a, *b, c'),
+                (Tuple, '(a, *b, c)')),
+            (code_as_expr, (arguments, '\n*\nb\n,\nc\n,\n'),
+                (Tuple, '\n*\nb\n,\nc\n,\n'),
+                (Tuple, '\n*\nb\n,\nc\n,\n'),
+                (Tuple, '(*b, c)')),
+            (code_as_expr, (arguments, '#0'),
+                "**SyntaxError**",  # src
+                (Tuple, '(#0\n)'),
+                (Tuple, '()')),
+            (code_as_expr, (arguments, '#0\n#1'),
+                "**SyntaxError**",  # src
+                (Tuple, '(#0\n#1\n)'),
+                (Tuple, '()')),
+            (code_as_expr, (arguments, '\\'),
+                "**SyntaxError**",  # src
+                (Tuple, '()'),
+                (Tuple, '()')),
             (code_as_expr, (arg, 'a'), (Name, 'a')),
             (code_as_expr, (arg, 'a: int'),
                 "**SyntaxError**",  # src
@@ -3148,6 +3172,7 @@ match a:
             # (_decorator_list, '@a'),  # incompatible src for FST
             (_arglikes, 'a'),
             (_comprehension_ifs, 'if a'),
+            (arguments, 'a'),
             (arg, 'a'),
             (alias, 'a'),
             (_aliases, 'a'),

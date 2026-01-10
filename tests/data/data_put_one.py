@@ -15872,6 +15872,47 @@ Assign - ROOT 0,0..0,5
   .value Name 'x' Load - 0,4..0,5
 '''),
 
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''#0'''), r'''
+i = (#0
+)
+''',
+r'''i = ()''', r'''
+Assign - ROOT 0,0..1,1
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..1,1
+    .ctx Load
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments', r'''
+*
+b
+,
+c
+,
+'''), r'''
+i = (*
+b
+,
+c
+,)
+''',
+r'''i = (*b, c)''', r'''
+Assign - ROOT 0,0..4,2
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..4,2
+    .elts[2]
+     0] Starred - 0,5..1,1
+       .value Name 'b' Load - 1,0..1,1
+       .ctx Load
+     1] Name 'c' Load - 3,0..3,1
+    .ctx Load
+'''),
+
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('arg',
 r'''x: int'''),
