@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""There is a special test which can be run:
+
+`python -m unittest discover -v tests -k doctests`
+
+This will run all the doctests from the doctests/ directory."""
+
 import doctest
 import os
 import sys

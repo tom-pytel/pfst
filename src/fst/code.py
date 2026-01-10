@@ -70,6 +70,7 @@ from .asttypes import (
 from .astutil import (
     constant,
     OPCLS2STR,
+    bistr,
     is_valid_identifier,
     is_valid_identifier_dotted,
     is_valid_identifier_star,
@@ -77,7 +78,7 @@ from .astutil import (
     is_valid_target,
 )
 
-from .common import re_line_end_ws_cont_or_comment, NodeError, pyver, shortstr, lline_start, next_frag
+from .common import NodeError, pyver, shortstr, lline_start, next_frag
 
 from .parsex import (
     _fixing_unparse,
@@ -185,6 +186,25 @@ _EXPR_PARSE_FUNC_TO_NAME = {
     parse_expr:         'expression (standard)',
 }
 
+
+def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln: int, end_col: int) -> None:
+    """Make sure there is no line continuation backslash on the last line of a known `_slice` SPECIAL SLICE node.
+
+    **Parameters:**
+    - `(end_ln, end_col)`: End location of last child, or `(0, 0)` if none (or anything really in that case).
+    """
+
+    if end_ln != len(lines) - 1:
+        end_col = 0
+
+    if (l := lines[-1]).endswith('\\') and l.find('#', end_col) == -1:
+        lines[-1] = l = bistr(l[:-1].rstrip())
+        self.a.end_col_offset = l.lenbytes
+
+        self._touch()
+
+
+# ......................................................................................................................
 
 def _ast_coerce_to_ret_empty_str(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """These are the individual `AST` coerce functions.
@@ -897,17 +917,9 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
         if sanitize:
             fst_ = fst_._sanitize()
 
-        if end_ln != last_ln:
-            end_col = 0
-
-        if ((m := re_line_end_ws_cont_or_comment.search(lines[-1], end_col))
-            and (g := m.group(1))
-            and g.startswith('\\')
-        ):  # last line can't end with a line continuation
-            fst_._put_src(None, last_ln, m.start(0), last_ln, 0x7fffffffffffffff, True)
+        _fix__slice_last_line_continuation(fst_, lines, end_ln, end_col)
 
         return fst_
-
 
     fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=True)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
     ast_ = fst_.a
@@ -969,14 +981,7 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
             if sanitize:
                 fst_ = fst_._sanitize()
 
-            if (last_ln := len(lines) - 1) != last_end_ln:
-                last_end_col = 0
-
-            if ((m := re_line_end_ws_cont_or_comment.search(lines[-1], last_end_col))
-                and (g := m.group(1))
-                and g.startswith('\\')
-            ):  # last line can't end with a line continuation
-                fst_._put_src(None, last_ln, m.start(0), last_ln, 0x7fffffffffffffff, True)
+            _fix__slice_last_line_continuation(fst_, lines, last_end_ln, last_end_col)
 
             return fst_
 

@@ -967,6 +967,26 @@ a =
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+r'''a,'''), r'''
+_Assign_targets - ROOT 0,0..0,2
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'a' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+r'''a, ='''), r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'a' Store - 0,0..0,1
+     .ctx Store
+'''),
+
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
 r'''f()'''),
 r'''**SyntaxError('cannot assign to function call')**'''),

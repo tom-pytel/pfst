@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fixed parse of naked tuple with trailing comma to `_Assign_targets`
 - fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
 - delimit whole node at root when degenerate last line has line continuation without trailing newline
 - `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
@@ -16,7 +17,7 @@
 
 ### Updated
 
-- `FST.dump()` returns `self` when not returning str or lines and those now specified with `out='str'` or `out='lines'`
+- `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
 - `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`
 
 ## 0.2.5 - alpha - 2026-01-06
