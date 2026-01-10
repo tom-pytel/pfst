@@ -16970,6 +16970,371 @@ Lambda - ROOT 0,0..0,14
 r'''lambda: None'''), ('arg',
 r'''x: int'''),
 r'''**NodeError('expecting lambda arguments, got arg, could not coerce')**'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_Assign_targets', r'''
+x = \
+y =
+'''), r'''
+def f(x, \
+y): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,8
+  .name 'f'
+  .args arguments - 0,6..1,1
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_decorator_list', r'''
+@x
+@y
+'''), r'''
+def f(x,
+y): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,8
+  .name 'f'
+  .args arguments - 0,6..1,1
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''), r'''
+def f(x,
+y): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,8
+  .name 'f'
+  .args arguments - 0,6..1,1
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('arguments', r'''
+
+x,
+*y,
+
+'''), r'''
+def f(x,
+*y,): pass
+''',
+r'''def f(x, *y): pass''', r'''
+FunctionDef - ROOT 0,0..1,10
+  .name 'f'
+  .args arguments - 0,6..1,3
+    .args[1]
+     0] arg - 0,6..0,7
+       .arg 'x'
+    .vararg arg - 1,1..1,2
+      .arg 'y'
+  .body[1]
+   0] Pass - 1,6..1,10
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+def f(x,
+y): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,8
+  .name 'f'
+  .args arguments - 0,6..1,1
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_aliases', r'''
+x,
+y.z
+'''),
+r'''**NodeError('expecting arguments, got _aliases, could not coerce')**'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
+r'''def f(): pass'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, '_ver': 12}, ('FunctionDef',
+r'''def f(): pass'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+def f(x,
+y,): pass
+''',
+r'''def f(x, y): pass''', r'''
+FunctionDef - ROOT 0,0..1,9
+  .name 'f'
+  .args arguments - 0,6..1,2
+    .args[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,0..1,1
+       .arg 'y'
+  .body[1]
+   0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False, '_ver': 12}, ('FunctionDef',
+r'''def f(): pass'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''), r'''
+def f(x,
+*y,): pass
+''',
+r'''def f(x, *y): pass''', r'''
+FunctionDef - ROOT 0,0..1,10
+  .name 'f'
+  .args arguments - 0,6..1,3
+    .args[1]
+     0] arg - 0,6..0,7
+       .arg 'x'
+    .vararg arg - 1,1..1,2
+      .arg 'y'
+  .body[1]
+   0] Pass - 1,6..1,10
+'''),
 ],
 
 'coerce_to_arg': [  # ................................................................................

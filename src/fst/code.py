@@ -762,7 +762,7 @@ def _coerce_to_expr_ast(
     return ret, is_nonstd_tuple
 
 
-def _coerce_to__slice_with_commas(
+def _coerce_to_seq(
     code: Code,
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST] | None,
@@ -770,11 +770,12 @@ def _coerce_to__slice_with_commas(
     ret_elts: bool | None = None,
     allow_starred: bool = False,
 ) -> fst.FST | list[AST] | tuple[list[AST], bool] | None:
-    """Attempt coerce given code if is sequence type to one of our own SPECIAL SLICE types that has commas: `_arglikes`,
-    `_aliases`, `_withitems` or _type_params`.
+    """Attempt coerce of given `code` if is sequence type to list of `AST` elements. Meant for conversion to one of our
+    own SPECIAL SLICE types that has commas like `_arglikes`, `_aliases`, `_withitems` or `_type_params` or other
+    non-expr "sequences" like `arguments`.
 
-    Contrary to the name, this is also used by the non-comma delimited custom `_slice` SPECIAL SLICEs as the first step
-    of their coercion.
+    Contrary to the name, this is also used by the non-comma delimited custom `_slice` SPECIAL SLICEs `_Assign_targets`,
+    `_decorator_list` and `_comprehension_ifs` as the first step of their coercion.
 
     **Prameters:**
     - `parse`: Can be `None` if `ret_elts=True`.
@@ -860,8 +861,7 @@ def _coerce_to__aliases_common(
     """Common to `_aliases`, `Import_names` and `ImportFrom_names`."""
 
     codea = getattr(code, 'a', None)
-
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse, _aliases)
+    fst_ = _coerce_to_seq(code, parse_params, parse, _aliases)
 
     if fst_ is None:  # sequence as sequence?
         return None
@@ -922,6 +922,68 @@ def _coerce_to__aliases_common(
     return fst_._sanitize() if sanitize else fst_
 
 
+def _coerce_to_arguments_common(
+    code: Code,
+    parse_params: Mapping[str, Any],
+    parse: Callable[[Code, Mapping[str, Any]], AST],
+    expecting: str,
+    sanitize: bool,
+) -> fst.FST | None:
+    """Common to `arguments`, both normal and lambda."""
+
+    codea = getattr(code, 'a', None)
+    elts = _coerce_to_seq(code, parse_params, parse, arguments, True, True)
+
+    if elts is None:  # sequence as sequence?
+        return None
+
+    elts, is_FST = elts
+
+    if not is_FST:
+        src = unparse(Tuple(elts=elts))[1:-1]
+        ast = parse(src, parse_params)
+
+        return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+    ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                end_col_offset=ls[-1].lenbytes)
+    tmp = fst.FST(ast, ls, None, from_=code, lcopy=False)  # temporary Tuple so that we can unparenthesize everything
+    args = []
+    ast = arguments(posonlyargs=[], args=args, vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
+
+    for e in elts:
+        e.f._unparenthesize_grouping()  # args can't have pars
+
+        if (e_cls := e.__class__) is Name:
+            args.append(arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                            end_col_offset=e.end_col_offset))
+
+        elif e_cls is Starred:
+            if ast.vararg:
+                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
+                                f', could not coerce, multiple Starred')
+
+            if (e := e.value).__class__ is not Name:
+                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
+                                f', could not coerce, Starred is {e.__class__.__name__}, must be Name')
+
+            ast.vararg = arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                             end_col_offset=e.end_col_offset)
+            args = ast.kwonlyargs
+
+        else:
+            raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
+                            f', could not coerce, found {e_cls.__name__}')
+
+    ast.kw_defaults = [None] * len(ast.kwonlyargs)
+
+    tmp._unmake_fst_tree()
+
+    fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+
+    return fst_._sanitize() if sanitize else fst_
+
+
 # ......................................................................................................................
 
 def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -937,8 +999,7 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
     """
 
     codea = getattr(code, 'a', None)
-
-    elts = _coerce_to__slice_with_commas(code, parse_params, None, _Assign_targets, True)
+    elts = _coerce_to_seq(code, parse_params, None, _Assign_targets, True)
 
     if elts is not None:  # sequence as sequence?
         elts, is_FST = elts
@@ -1010,7 +1071,7 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
     """See `_coerce_to__Assign_targets()`. This function can coerce source."""
 
     if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
-        elts = _coerce_to__slice_with_commas(code, parse_params, None, _decorator_list, True)
+        elts = _coerce_to_seq(code, parse_params, None, _decorator_list, True)
 
         if elts is not None:  # sequence as sequence?
             elts, is_FST = elts
@@ -1094,7 +1155,7 @@ def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__arglikes, _arglikes, None, True)
+    fst_ = _coerce_to_seq(code, parse_params, parse__arglikes, _arglikes, None, True)
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
@@ -1134,7 +1195,7 @@ def _coerce_to__comprehension_ifs(
     """See `_coerce_to__Assign_targets()`. This function can coerce source."""
 
     if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
-        elts = _coerce_to__slice_with_commas(code, parse_params, None, _comprehension_ifs, True)
+        elts = _coerce_to_seq(code, parse_params, None, _comprehension_ifs, True)
 
         if elts is not None:  # sequence as sequence?
             elts, is_FST = elts
@@ -1320,6 +1381,11 @@ def _coerce_to__ImportFrom_names(
 def _coerce_to_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
+    if fst_ := _coerce_to_arguments_common(code, parse_params, parse_arguments, 'arguments', sanitize):  # sequence as arguments?
+        return fst_
+
+    # single element as arguments
+
     fst_ = code_as_arg(code, parse_params, sanitize=sanitize, coerce=True)
 
     ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
@@ -1329,6 +1395,11 @@ def _coerce_to_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
 
 def _coerce_to_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
+
+    if fst_ := _coerce_to_arguments_common(code, parse_params, parse_arguments, 'lambda arguments', sanitize):  # sequence as arguments?
+        return fst_
+
+    # single element as arguments
 
     fst_ = code_as_arg(code, parse_params, sanitize=sanitize, coerce=True)
     ast_ = fst_.a
@@ -1361,7 +1432,7 @@ def _coerce_to__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, s
 
     # TODO: coerce _aliases specially for the "a as b" format?
 
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
+    fst_ = _coerce_to_seq(code, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
 
     if fst_ is not None:  # sequence as sequence? ret_elts=False because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
         return fst_._sanitize() if sanitize else fst_
@@ -1420,8 +1491,7 @@ def _coerce_to__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *,
     """See `_coerce_to__Assign_targets()`."""
 
     codea = getattr(code, 'a', None)
-
-    fst_ = _coerce_to__slice_with_commas(code, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
+    fst_ = _coerce_to_seq(code, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST

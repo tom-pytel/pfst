@@ -38228,6 +38228,46 @@ Tuple - ROOT 0,0..2,1
 '''),
 
 ('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+(x,
+y
+)
+''',
+r'''x, y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('arguments', r'''
+
+x,
+*y,
+
+'''), r'''
+(x,
+*y
+)
+''',
+r'''x, *y''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Starred - 1,0..1,2
+     .value Name 'y' Load - 1,1..1,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
 r'''a,'''), ('_aliases', r'''
 x,
 y
@@ -38509,6 +38549,36 @@ _decorator_list - ROOT 0,0..3,0
 '''),
 
 ('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+
+@x
+@y
+
+''', r'''
+@x
+@y
+''', r'''
+_decorator_list - ROOT 0,0..3,0
+  .decorator_list[2]
+   0] Name 'x' Load - 1,1..1,2
+   1] Name 'y' Load - 2,1..2,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('arguments', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
 r'''@a'''), ('_aliases', r'''
 x,
 y
@@ -38760,6 +38830,44 @@ _arglikes - ROOT 0,0..2,0
   .arglikes[2]
    0] Name 'x' Load - 0,0..0,1
    1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('arguments', r'''
+
+x,
+*y,
+
+'''), r'''
+x,
+*y
+
+''',
+r'''x, *y''', r'''
+_arglikes - ROOT 0,0..2,0
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Starred - 1,0..1,2
+     .value Name 'y' Load - 1,1..1,2
+     .ctx Load
 '''),
 
 ('', 0, 'end', None, {'_src': False}, ('_arglikes',
@@ -39023,6 +39131,33 @@ _comprehension_ifs - ROOT 0,0..2,0
 '''),
 
 ('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+if x
+if y
+
+''',
+r'''if x if y''', r'''
+_comprehension_ifs - ROOT 0,0..2,0
+  .ifs[2]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('arguments', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
 r'''if a'''), ('_aliases', r'''
 x,
 y
@@ -39284,6 +39419,35 @@ _aliases - ROOT 0,0..2,0
    1] alias - 1,0..1,1
      .name 'y'
 '''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_aliases - ROOT 0,0..2,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'x'
+   1] alias - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('arguments', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _aliases, got arguments, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False}, ('_aliases',
 r'''a'''), ('_aliases', r'''
@@ -39560,6 +39724,35 @@ _withitems - ROOT 0,0..2,0
 '''),
 
 ('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_withitems - ROOT 0,0..2,0
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'y' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('arguments', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
 r'''a,'''), ('_aliases', r'''
 x,
 y
@@ -39833,6 +40026,46 @@ _type_params - ROOT 0,0..2,0
    0] TypeVar - 0,0..0,1
      .name 'x'
    1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('arguments', r'''
+
+x,
+*y,
+
+'''), r'''
+x,
+*y
+
+''',
+r'''x, *y''', r'''
+_type_params - ROOT 0,0..2,0
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVarTuple - 1,0..1,2
      .name 'y'
 '''),
 
