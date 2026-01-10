@@ -1145,7 +1145,7 @@ ASTS_LEAF_IMPORT     = {Import, ImportFrom}
 Here we do a quick dump of the first three statements to show that all the locations of the nodes were offset properly.
 
 ```py
->>> fst.body[:3].copy().dump('stmt')
+>>> _ = fst.body[:3].copy().dump('stmt')
 Module - ROOT 0,0..2,22
   .body[3]
 0: a             = 1

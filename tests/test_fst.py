@@ -284,7 +284,7 @@ def regen_put_src():
             g = f.root.find_loc(ln, col, eln, ecol)
 
             tdst  = f.root.src
-            tdump = f.root.dump(out=list)
+            tdump = f.root.dump(out='lines')
 
             f.root.verify(raise_=True)
 
@@ -2680,7 +2680,7 @@ if 1:
     def test_dump(self):
         f = FST('a = b ; ')
         f.value.put_src(' b ', 0, 4, 0, 5, 'offset')
-        self.assertEqual(f.dump('node', list_indent=2, out=list), [
+        self.assertEqual(f.dump('node', list_indent=2, out='lines'), [
             '0: a =  b  ;',
             'Assign - ROOT 0,0..0,7',
             '  .targets[1]',
@@ -2691,7 +2691,7 @@ if 1:
         ])
 
         f = FST('call() ;', 'exec')
-        self.assertEqual(f.dump('node', loc=False, out=list), [
+        self.assertEqual(f.dump('node', loc=False, out='lines'), [
             'Module - ROOT',
             '  .body[1]',
             '0: call() ;',
@@ -2707,7 +2707,7 @@ if 1:  # 1
   b ;
   c ;  # 3
             '''.strip())
-        self.assertEqual(f.dump('stmt', out=list), [
+        self.assertEqual(f.dump('stmt', out='lines'), [
             "0: if 1:  # 1",
             "If - ROOT 0,0..3,5",
             "  .test Constant 1 - 0,3..0,4",
@@ -2726,7 +2726,7 @@ if 1:  # 1
         # src_plus
 
         f = FST('# 1\nif a:\n  # 2\n  pass\n  # 3\n# 4', 'exec')
-        self.assertEqual(f.dump('stmt', out=list), [
+        self.assertEqual(f.dump('stmt', out='lines'), [
             'Module - ROOT 0,0..5,3',
             '  .body[1]',
             '1: if a:',
@@ -2736,7 +2736,7 @@ if 1:  # 1
             '3:   pass',
             '      0] Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.dump('stmt+', out=list), [
+        self.assertEqual(f.dump('stmt+', out='lines'), [
             'Module - ROOT 0,0..5,3',
             '  .body[1]',
             '0: # 1',
@@ -2750,7 +2750,7 @@ if 1:  # 1
             '4:   # 3',
             '5: # 4'
         ])
-        self.assertEqual(f.body[0].dump('stmt', out=list), [
+        self.assertEqual(f.body[0].dump('stmt', out='lines'), [
             '1: if a:',
             'If - 1,0..3,6',
             "  .test Name 'a' Load - 1,3..1,4",
@@ -2758,7 +2758,7 @@ if 1:  # 1
             '3:   pass',
             '   0] Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.body[0].dump('stmt+', out=list), [
+        self.assertEqual(f.body[0].dump('stmt+', out='lines'), [
             '1: if a:',
             'If - 1,0..3,6',
             "  .test Name 'a' Load - 1,3..1,4",
@@ -2767,17 +2767,17 @@ if 1:  # 1
             '3:   pass',
             '   0] Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.body[0].body[0].dump('stmt', out=list), [
+        self.assertEqual(f.body[0].body[0].dump('stmt', out='lines'), [
             '3:   pass',
             'Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.body[0].body[0].dump('stmt+', out=list), [
+        self.assertEqual(f.body[0].body[0].dump('stmt+', out='lines'), [
             '3:   pass',
             'Pass - 3,2..3,6'
         ])
 
         f = FST('# 1\nif a:\n  # 2\n  pass\n  # 3\n# 4', 'exec')
-        self.assertEqual(f.dump('node', out=list), [
+        self.assertEqual(f.dump('node', out='lines'), [
             'Module - ROOT 0,0..5,3',
             '  .body[1]',
             '1: if a:',
@@ -2788,7 +2788,7 @@ if 1:  # 1
             '3:   pass',
             '      0] Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.dump('node+', out=list), [
+        self.assertEqual(f.dump('node+', out='lines'), [
             'Module - ROOT 0,0..5,3',
             '  .body[1]',
             '0: # 1',
@@ -2803,7 +2803,7 @@ if 1:  # 1
             '4:   # 3',
             '5: # 4'
         ])
-        self.assertEqual(f.body[0].dump('node', out=list), [
+        self.assertEqual(f.body[0].dump('node', out='lines'), [
             '1: if a:',
             'If - 1,0..3,6',
             '1:    a',
@@ -2812,7 +2812,7 @@ if 1:  # 1
             '3:   pass',
             '   0] Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.body[0].dump('node+', out=list), [
+        self.assertEqual(f.body[0].dump('node+', out='lines'), [
             '1: if a:',
             'If - 1,0..3,6',
             '1:    a',
@@ -2822,11 +2822,11 @@ if 1:  # 1
             '3:   pass',
             '   0] Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.body[0].body[0].dump('node', out=list), [
+        self.assertEqual(f.body[0].body[0].dump('node', out='lines'), [
             '3:   pass',
             'Pass - 3,2..3,6'
         ])
-        self.assertEqual(f.body[0].body[0].dump('node+', out=list), [
+        self.assertEqual(f.body[0].body[0].dump('node+', out='lines'), [
             '3:   pass',
             'Pass - 3,2..3,6'
         ])
@@ -2838,7 +2838,7 @@ def f():
     ................................................................................"""
     pass
 '''.strip())
-        self.assertEqual(f.dump(out=list), [
+        self.assertEqual(f.dump(out='lines'), [
             "FunctionDef - ROOT 0,0..4,8",
             "  .name 'f'",
             "  .body[2]",
@@ -2849,7 +2849,7 @@ def f():
             "       '    ................................................................................'",
             "   1] Pass - 4,4..4,8",
         ])
-        self.assertEqual(f.dump(expand=True, out=list), [
+        self.assertEqual(f.dump(expand=True, out='lines'), [
             "FunctionDef - ROOT 0,0..4,8",
             "  .name",
             "    'f'",
@@ -2872,14 +2872,14 @@ def f():
             '  .targets[1]',
             "   0] Name 'i' Store - 2,0..2,1",
             '  .value Constant 1 - 2,4..2,5',
-        ], f.dump(out=list))
+        ], f.dump(out='lines'))
         self.assertEqual([
             '2: i = 1',
             'Assign - ROOT 2,0..2,5',
             '  .targets[1]',
             "   0] Name 'i' Store - 2,0..2,1",
             '  .value Constant 1 - 2,4..2,5',
-        ], f.dump('s', out=list))
+        ], f.dump('s', out='lines'))
         self.assertEqual([
             '0: #!/usr/bin/env python',
             '1:',
@@ -2888,7 +2888,7 @@ def f():
             '  .targets[1]',
             "   0] Name 'i' Store - 2,0..2,1",
             '  .value Constant 1 - 2,4..2,5',
-        ], f.dump('S', out=list))
+        ], f.dump('S', out='lines'))
         self.assertEqual([
             '2: i = 1',
             'Assign - ROOT 2,0..2,5',
@@ -2897,7 +2897,7 @@ def f():
             "   0] Name 'i' Store - 2,0..2,1",
             '2:     1',
             '  .value Constant 1 - 2,4..2,5',
-        ], f.dump('n', out=list))
+        ], f.dump('n', out='lines'))
         self.assertEqual([
             '0: #!/usr/bin/env python',
             '1:',
@@ -2908,15 +2908,15 @@ def f():
             "   0] Name 'i' Store - 2,0..2,1",
             '2:     1',
             '  .value Constant 1 - 2,4..2,5',
-        ], f.dump('N', out=list))
+        ], f.dump('N', out='lines'))
 
         fp = StringIO()
         f.dump(out=fp)
         self.assertEqual("Assign - ROOT 2,0..2,5\n  .targets[1]\n   0] Name 'i' Store - 2,0..2,1\n  .value Constant 1 - 2,4..2,5\n", fp.getvalue())
 
         f = FST('None')
-        self.assertEqual('Constant None - ROOT 0,0..0,4', f.dump(color=False, out=str))
-        self.assertEqual('\x1b[1;34mConstant\x1b[0m \x1b[1;36mNone\x1b[0m \x1b[90m- ROOT 0,0..0,4\x1b[0m', f.dump(color=True, out=str))
+        self.assertEqual('Constant None - ROOT 0,0..0,4', f.dump(color=False, out='str'))
+        self.assertEqual('\x1b[1;34mConstant\x1b[0m \x1b[1;36mNone\x1b[0m \x1b[90m- ROOT 0,0..0,4\x1b[0m', f.dump(color=True, out='str'))
 
         # line tails
 
@@ -2932,7 +2932,7 @@ def f():
             '0:         c  # end',
             '   2] Expr - 0,8..0,9',
             "     .value Name 'c' Load - 0,8..0,9",
-        ], FST('a ; b ; c  # end').dump('s', out=list))
+        ], FST('a ; b ; c  # end').dump('s', out='lines'))
 
         self.assertEqual([
             'Module - ROOT 0,0..0,16',
@@ -2946,7 +2946,7 @@ def f():
             '0:         c  # end',
             '   2] Expr - 0,8..0,9',
             "     .value Name 'c' Load - 0,8..0,9",
-        ], FST('a ; b ; c  # end').dump('S', out=list))
+        ], FST('a ; b ; c  # end').dump('S', out='lines'))
 
         self.assertEqual([
             '0: if 1:',
@@ -2957,19 +2957,7 @@ def f():
             '   0] Pass - 0,6..0,10',
             '0:              pass  # end',
             '   1] Pass - 0,13..0,17',
-        ], FST('if 1: pass ; pass  # end').dump('s', out=list))
-
-        self.assertEqual([
-            '0: if 1:',
-            'If - ROOT 0,0..0,17',
-            '0:    1',
-            '  .test Constant 1 - 0,3..0,4',
-            '  .body[2]',
-            '0:       pass ;',
-            '   0] Pass - 0,6..0,10',
-            '0:              pass  # end',
-            '   1] Pass - 0,13..0,17',
-        ], FST('if 1: pass ; pass  # end').dump('n', out=list))
+        ], FST('if 1: pass ; pass  # end').dump('s', out='lines'))
 
         self.assertEqual([
             '0: if 1:',
@@ -2981,7 +2969,19 @@ def f():
             '   0] Pass - 0,6..0,10',
             '0:              pass  # end',
             '   1] Pass - 0,13..0,17',
-        ], FST('if 1: pass ; pass  # end').dump('N', out=list))
+        ], FST('if 1: pass ; pass  # end').dump('n', out='lines'))
+
+        self.assertEqual([
+            '0: if 1:',
+            'If - ROOT 0,0..0,17',
+            '0:    1',
+            '  .test Constant 1 - 0,3..0,4',
+            '  .body[2]',
+            '0:       pass ;',
+            '   0] Pass - 0,6..0,10',
+            '0:              pass  # end',
+            '   1] Pass - 0,13..0,17',
+        ], FST('if 1: pass ; pass  # end').dump('N', out='lines'))
 
         # `else` and `finally`
 
@@ -3009,7 +3009,7 @@ def f():
             '5:   d',
             '   0] Expr - 5,2..5,3',
             "     .value Name 'd' Load - 5,2..5,3",
-        ], FST('try: a\nexcept: b\nelse:\n  c\nfinally:\n  d').dump('S', out=list))
+        ], FST('try: a\nexcept: b\nelse:\n  c\nfinally:\n  d').dump('S', out='lines'))
 
         self.assertEqual([
             '0: try:',
@@ -3035,7 +3035,7 @@ def f():
             '3:          d',
             '   0] Expr - 3,9..3,10',
             "     .value Name 'd' Load - 3,9..3,10",
-        ], FST('try: a\nexcept: b\nelse: c\nfinally: d').dump('S', out=list))
+        ], FST('try: a\nexcept: b\nelse: c\nfinally: d').dump('S', out='lines'))
 
         self.assertEqual([
             '0: if 1:',
@@ -3051,7 +3051,7 @@ def f():
             '     .body[1]',
             '2:   pass',
             '      0] Pass - 2,2..2,6',
-        ], FST('if 1: pass\nelif 2:\n  pass').dump('S', out=list))
+        ], FST('if 1: pass\nelif 2:\n  pass').dump('S', out='lines'))
 
         self.assertEqual([
             '0: if 1:',
@@ -3067,7 +3067,7 @@ def f():
             '     .body[1]',
             '1:         pass',
             '      0] Pass - 1,8..1,12',
-        ], FST('if 1: pass\nelif 2: pass').dump('S', out=list))
+        ], FST('if 1: pass\nelif 2: pass').dump('S', out='lines'))
 
     def test_verify(self):
         ast = parse('i = 1')
@@ -3187,7 +3187,7 @@ def f():
         self.assertIsNot(f.body[2], old_fc)
         self.assertIsNot(f.body[2].a, old_ac)
 
-        self.assertEqual(f.dump('stmt', out=list), [
+        self.assertEqual(f.dump('stmt', out='lines'), [
             'Module - ROOT 0,0..2,5',
             '  .body[3]',
             '0: new_a',
@@ -3207,7 +3207,7 @@ def f():
             fb = old_fb = (old_ab := f.a.body[1]).f
             fc = old_fc = (old_ac := f.a.body[2]).f
 
-            self.assertEqual(f.dump('stmt', out=list), [
+            self.assertEqual(f.dump('stmt', out='lines'), [
                 'Module - ROOT 0,0..2,1',
                 '  .body[3]',
                 '0: a',
@@ -3249,7 +3249,7 @@ def f():
 
             fb.value.values[1].put_src('=', 1, 5, 1, 5, 'offset')
 
-            self.assertEqual(f.dump('stmt', out=list), [
+            self.assertEqual(f.dump('stmt', out='lines'), [
                 'Module - ROOT 0,0..2,5',
                 '  .body[3]',
                 '0: new_a',
@@ -3278,7 +3278,7 @@ def f():
             self.assertIs(fc.a, old_ac)
             old_ac = fb.a
 
-            self.assertEqual(f.dump('stmt', out=list), [
+            self.assertEqual(f.dump('stmt', out='lines'), [
                 'Module - ROOT 0,0..2,5',
                 '  .body[3]',
                 '0: new_a',
@@ -5452,7 +5452,7 @@ with a as b, c as d:
                 g = f.root.find_loc(ln, col, eln, ecol)
 
                 tdst  = f.root.src
-                tdump = f.root.dump(out=list)
+                tdump = f.root.dump(out='lines')
 
                 f.root.verify(raise_=True)
 

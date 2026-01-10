@@ -16,6 +16,7 @@
 
 ### Updated
 
+- `FST.dump()` returns `self` when not returning str or lines and those now specified with `out='str'` or `out='lines'`
 - `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`
 
 ## 0.2.5 - alpha - 2026-01-06

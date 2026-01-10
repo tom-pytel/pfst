@@ -324,7 +324,7 @@ class TestFSTPut(unittest.TestCase):
                 if f.root.src != rest[1]:
                     raise RuntimeError(f'put raw and put FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[1]}')
 
-                # if (root_dump := f.root.dump(out=str)) != rest[2]  # we don't do this because of trailing newline added with statement ops, need to fix
+                # if (root_dump := f.root.dump(out='str')) != rest[2]  # we don't do this because of trailing newline added with statement ops, need to fix
                 #     raise RuntimeError(f'put raw and put FST dump are not identical, {key = }, {idx = }\n{root_dump}\n...\n{rest[2]}')
 
     def test_get_one_constant(self):

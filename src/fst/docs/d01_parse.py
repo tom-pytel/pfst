@@ -27,7 +27,7 @@ Module(
 
 But it has an `FST` node at `.f`, we can `dump()` it to stdout (`fst.fst.FST.dump()`).
 
->>> a.f.dump()
+>>> _ = a.f.dump()
 Module - ROOT 0,0..0,22
   .body[1]
    0] If - 0,0..0,11
@@ -44,7 +44,7 @@ Module - ROOT 0,0..0,22
 Before anything else, some needed structure information. Every `AST` node in the tree gets an `.f` pointing to its own
 `FST` node.
 
->>> a.body[0].body[0].f.dump()
+>>> _ = a.body[0].body[0].f.dump()
 Assign - 0,6..0,11
   .targets[1]
    0] Name 'i' Store - 0,6..0,7
@@ -96,7 +96,7 @@ if 1: i = 2  # comment
 
 Quicker way to parse which gives the same thing but returns the `FST` node (`fst.fst.FST()`).
 
->>> FST('if 1: i = 2', 'exec').dump()
+>>> _ = FST('if 1: i = 2', 'exec').dump()
 Module - ROOT 0,0..0,11
   .body[1]
    0] If - 0,0..0,11
@@ -111,7 +111,7 @@ Note the `'exec'` mode parameter above, it specifies to parse to a `Module` just
 parameter to `ast.parse()`. If you leave it out you will get the minimal reduced `AST` possible, which in this case is
 just the `If`.
 
->>> FST('if 1: i = 2').dump()
+>>> _ = FST('if 1: i = 2').dump()
 If - ROOT 0,0..0,11
   .test Constant 1 - 0,3..0,4
   .body[1]
@@ -162,7 +162,7 @@ There are some special modes, like `'expr_arglike'`, which allow parsing some th
 their usual context. The below is not normally parsable in an expression context as it is special syntax for `Call`
 starred arguments. For a full list of parse modes see `fst.parsex.Mode`.
 
->>> FST('*a or b', 'expr_arglike').dump()
+>>> _ = FST('*a or b', 'expr_arglike').dump()
 Starred - ROOT 0,0..0,7
   .value BoolOp - 0,1..0,7
     .op Or
@@ -179,7 +179,7 @@ information in them). When used like this, the `AST` nodes are **NOT CONSUMED**.
 
 >>> f = FST(Assign(targets=[Name(id='x')], value=Constant(value=1)))
 
->>> f.dump()
+>>> _ = f.dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
    0] Name 'x' Store - 0,0..0,1
@@ -190,7 +190,7 @@ x = 1
 
 This also allows normally non-parsable nodes.
 
->>> FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump()
+>>> _ = FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump()
 Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
@@ -202,7 +202,7 @@ Slice - ROOT 0,0..0,5
 The `FST(...)` syntax used in the above examples is just a shortcut for the functions `fst.fst.FST.fromsrc()` and
 `fst.fst.FST.fromast()`.
 
->>> FST.fromsrc('i = 1').dump()
+>>> _ = FST.fromsrc('i = 1').dump()
 Module - ROOT 0,0..0,5
   .body[1]
    0] Assign - 0,0..0,5
@@ -212,7 +212,7 @@ Module - ROOT 0,0..0,5
 
 Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
 
->>> FST.fromsrc('i = 1', 'strict').dump()
+>>> _ = FST.fromsrc('i = 1', 'strict').dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
    0] Name 'i' Store - 0,0..0,1
@@ -220,7 +220,11 @@ Assign - ROOT 0,0..0,5
 
 `FST.fromast()` works the same as when passing an `AST` to `FST()`.
 
->>> FST.fromast(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump()
+>>> _ = FST.fromast(Slice(
+...     lower=Name(id='a'),
+...     upper=Name(id='b'),
+...     step=Name(id='c'),
+... )).dump()
 Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
@@ -276,7 +280,7 @@ else:
 
 The `FST.dump()` method can be useful in visualizing the source along with the actual nodes it corresponds to.
 
->>> f.dump(src='stmt')
+>>> _ = f.dump(src='stmt')
 0: def f(a):
 FunctionDef - ROOT 0,0..4,17
   .name 'f'

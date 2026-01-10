@@ -198,20 +198,20 @@ Or.
 
 >>> slc = FST('[i for a, b, c in j if a if b if c]').generators[0].get_slice('ifs')
 
->>> slc.dump()
+>>> _ = slc.dump()
 _comprehension_ifs - ROOT 0,0..0,14
   .ifs[3]
    0] Name 'a' Load - 0,3..0,4
    1] Name 'b' Load - 0,8..0,9
    2] Name 'c' Load - 0,13..0,14
 
->>> slc.get_slice(1, 3).dump()
+>>> _ = slc.get_slice(1, 3).dump()
 _comprehension_ifs - ROOT 0,0..0,9
   .ifs[2]
    0] Name 'b' Load - 0,3..0,4
    1] Name 'c' Load - 0,8..0,9
 
->>> slc.put_slice('if x if y', 1, 2).dump()
+>>> _ = slc.put_slice('if x if y', 1, 2).dump()
 _comprehension_ifs - ROOT 0,0..0,19
   .ifs[4]
    0] Name 'a' Load - 0,3..0,4
@@ -476,20 +476,20 @@ x = y = val
 
 For a `BoolOp` or `Compare` normalization will convert a single element "slice" to just the element that was left.
 
->>> FST('a or b').get_slice(0, 1).dump()  # invalid
+>>> _ = FST('a or b').get_slice(0, 1).dump()  # invalid
 BoolOp - ROOT 0,0..0,1
   .op Or
   .values[1]
    0] Name 'a' Load - 0,0..0,1
 
->>> FST('a or b').get_slice(0, 1, norm=True).dump()  # valid
+>>> _ = FST('a or b').get_slice(0, 1, norm=True).dump()  # valid
 Name 'a' Load - ROOT 0,0..0,1
 
->>> FST('a < b').get_slice(0, 1).dump()  # invalid
+>>> _ = FST('a < b').get_slice(0, 1).dump()  # invalid
 Compare - ROOT 0,0..0,1
   .left Name 'a' Load - 0,0..0,1
 
->>> FST('a < b').get_slice(0, 1, norm=True).dump()  # valid
+>>> _ = FST('a < b').get_slice(0, 1, norm=True).dump()  # valid
 Name 'a' Load - ROOT 0,0..0,1
 
 

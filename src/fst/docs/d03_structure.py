@@ -14,7 +14,7 @@ parent.
 
 >>> f = FST('i = 1')
 
->>> f.dump()
+>>> _ = f.dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
    0] Name 'i' Store - 0,0..0,1
@@ -76,7 +76,7 @@ Here is an example for a simple `Module` with a single `Expr` which is a `Name` 
 
 >>> a = parse('var')
 
->>> a.f.dump()
+>>> _ = a.f.dump()
 Module - ROOT 0,0..0,3
   .body[1]
    0] Expr - 0,0..0,3
@@ -451,7 +451,7 @@ You can get a path from any given node to any of its children using `fst.fst.FST
 
 >>> f = FST('i = [a * (b + c)]')
 
->>> f.dump()
+>>> _ = f.dump()
 Assign - ROOT 0,0..0,17
   .targets[1]
    0] Name 'i' Store - 0,0..0,1

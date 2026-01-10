@@ -1448,7 +1448,8 @@ def _has_Starred(self: fst.FST) -> bool:
 
 
 def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
-    """Check if `self` needs them and if so add line continuations to make parsable.
+    """Check if `self` needs them and if so add line continuations to make parsable. Can delete commnents which may
+    prevent line continuations.
 
     **Parameters:**
     - `whole`: Whether to check whole source (and add line continuations to, only if at root). Otherwise will just

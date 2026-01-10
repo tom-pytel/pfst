@@ -66,7 +66,7 @@ class TestFSTSlice(unittest.TestCase):
                 if f.root.src != rest[0]:
                     raise RuntimeError(f'del and cut FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[0]}')
 
-                if (root_dump := f.root.dump(out=str)) != rest[1]:
+                if (root_dump := f.root.dump(out='str')) != rest[1]:
                     raise RuntimeError(f'del and cut FST dump are not identical, {case.id()}\n{root_dump}\n...\n{rest[1]}')
 
     def test_put_slice_from_data(self):
@@ -100,7 +100,7 @@ class TestFSTSlice(unittest.TestCase):
             if f.root.src != rest[1]:
                 raise RuntimeError(f'put_src and put raw FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[1]}')
 
-            if (root_dump := f.root.dump(out=str)) != rest[2]:
+            if (root_dump := f.root.dump(out='str')) != rest[2]:
                 raise RuntimeError(f'put_src and put raw FST dump are not identical, {case.id()}\n{root_dump}\n...\n{rest[2]}')
 
     def test_cut_slice_neg_space(self):

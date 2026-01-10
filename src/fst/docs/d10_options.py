@@ -394,7 +394,7 @@ the global default value. If you pass an explicit `None` for any of these option
 the global default for that option and use the value of `norm`, either passed in or global.
 
 >>> _ = (f := FST('{a, b}')).get_slice(0, 2, cut=True, norm_self=None, norm=True)
->>> f.dump('stmt')
+>>> _ = f.dump('stmt')
 0: {*()}
 Set - ROOT 0,0..0,5
   .elts[1]
@@ -404,14 +404,14 @@ Set - ROOT 0,0..0,5
      .ctx Load
 
 >>> _ = (f := FST('{a, b}')).get_slice(0, 2, cut=True, norm_self=None, norm=False)
->>> f.dump('stmt')  # invalid empty set
+>>> _ = f.dump('stmt')  # invalid empty set
 0: {}
 Set - ROOT 0,0..0,2
 
 `norm_self=None` makes it use `norm`, otherwise if specified it overrides `norm`. Now that the relationship with `norm`
 has been demonstrated we can leave it out in the further examples.
 
->>> FST('{a, b}').get_slice(1, 1, norm_get=True).dump('stmt')
+>>> _ = FST('{a, b}').get_slice(1, 1, norm_get=True).dump('stmt')
 0: {*()}
 Set - ROOT 0,0..0,5
   .elts[1]
@@ -420,7 +420,7 @@ Set - ROOT 0,0..0,5
        .ctx Load
      .ctx Load
 
->>> FST('{a, b}').get_slice(1, 1, norm_get=False).dump('stmt')  # invalid
+>>> _ = FST('{a, b}').get_slice(1, 1, norm_get=False).dump('stmt')  # invalid
 0: {}
 Set - ROOT 0,0..0,2
 

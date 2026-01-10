@@ -459,7 +459,7 @@ Even a `Constant` is not safe from this, consider an implicit string normally en
 
 >>> g = f.value.copy(pars=False)
 
->>> g.dump('stmt')
+>>> _ = g.dump('stmt')
 0: 'oh'
 1: 'no'
 Constant 'ohno' - ROOT 0,0..1,4

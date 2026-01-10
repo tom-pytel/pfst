@@ -264,7 +264,7 @@ except ValueError:
 except RuntimeError:
     j = 2
 
->>> s.dump()
+>>> _ = s.dump()
 _ExceptHandlers - ROOT 0,0..3,9
   .handlers[2]
    0] ExceptHandler - 0,0..1,9
@@ -308,7 +308,7 @@ Getting slices from a primitive list does convert the primitives to their common
 
 >>> f = FST('global a, b, c')
 
->>> f.dump()
+>>> _ = f.dump()
 Global - ROOT 0,0..0,14
   .names[3]
    0] 'a'
@@ -317,7 +317,7 @@ Global - ROOT 0,0..0,14
 
 >>> g = f.get_slice()
 
->>> g.dump()
+>>> _ = g.dump()
 Tuple - ROOT 0,0..0,7
   .elts[3]
    0] Name 'a' Load - 0,0..0,1

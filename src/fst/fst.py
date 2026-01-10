@@ -278,7 +278,7 @@ def parse(
           orelse=[])],
       type_ignores=[])
 
-    >>> a.f.dump()
+    >>> _ = a.f.dump()
     Module - ROOT 0,0..1,7
       .body[1]
        0] If - 0,0..1,7
@@ -945,26 +945,26 @@ class FST:
 
         **Examples:**
 
-        >>> FST.fromsrc('var').dump()
+        >>> _ = FST.fromsrc('var').dump()
         Module - ROOT 0,0..0,3
           .body[1]
            0] Expr - 0,0..0,3
              .value Name 'var' Load - 0,0..0,3
 
-        >>> FST.fromsrc('var', mode='stmt').dump()
+        >>> _ = FST.fromsrc('var', mode='stmt').dump()
         Expr - ROOT 0,0..0,3
           .value Name 'var' Load - 0,0..0,3
 
-        >>> FST.fromsrc('var', mode='expr').dump()
+        >>> _ = FST.fromsrc('var', mode='expr').dump()
         Name 'var' Load - ROOT 0,0..0,3
 
-        >>> FST.fromsrc('except Exception: pass', 'ExceptHandler').dump()
+        >>> _ = FST.fromsrc('except Exception: pass', 'ExceptHandler').dump()
         ExceptHandler - ROOT 0,0..0,22
           .type Name 'Exception' Load - 0,7..0,16
           .body[1]
            0] Pass - 0,18..0,22
 
-        >>> FST.fromsrc('case f(a=1): pass', 'match_case').dump()
+        >>> _ = FST.fromsrc('case f(a=1): pass', 'match_case').dump()
         match_case - ROOT 0,0..0,17
           .pattern MatchClass - 0,5..0,11
             .cls Name 'f' Load - 0,5..0,6
@@ -977,7 +977,7 @@ class FST:
            0] Pass - 0,13..0,17
 
         >>> import ast
-        >>> FST.fromsrc('a:b', ast.Slice).dump()
+        >>> _ = FST.fromsrc('a:b', ast.Slice).dump()
         Slice - ROOT 0,0..0,3
           .lower Name 'a' Load - 0,0..0,1
           .upper Name 'b' Load - 0,2..0,3
@@ -1039,22 +1039,22 @@ class FST:
         >>> import ast
         >>> from ast import Assign, Slice, Constant
 
-        >>> FST.fromast(Assign(targets=[Name(id='var')],
-        ...                    value=Constant(value=123))).dump('stmt')
+        >>> _ = FST.fromast(Assign(targets=[Name(id='var')],
+        ...                        value=Constant(value=123))).dump('stmt')
         0: var = 123
         Assign - ROOT 0,0..0,9
           .targets[1]
            0] Name 'var' Store - 0,0..0,3
           .value Constant 123 - 0,6..0,9
 
-        >>> FST.fromast(Assign(targets=[Name(id='var')],
-        ...                    value=Constant(value=123)), 'keyword').dump('stmt')
+        >>> _ = FST.fromast(Assign(targets=[Name(id='var')],
+        ...                        value=Constant(value=123)), 'keyword').dump('stmt')
         0: var = 123
         keyword - ROOT 0,0..0,9
           .arg 'var'
           .value Constant 123 - 0,6..0,9
 
-        >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
+        >>> _ = FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
           .body[1]
         0: if 1:
@@ -1067,7 +1067,8 @@ class FST:
                  0] Name 'j' Store - 1,4..1,5
                 .value Constant 5 - 1,8..1,9
 
-        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('node')
+        >>> _ = FST.fromast(Slice(lower=Constant(value=1),
+        ...                       step=Name(id='step'))).dump('node')
         0: 1::step
         Slice - ROOT 0,0..0,7
         0: 1
@@ -1113,7 +1114,7 @@ class FST:
 
         >>> f = FST('f"{expr}"')
 
-        >>> f.dump('stmt', loc=False)  # loc=False because of py < 3.12
+        >>> _ = f.dump('stmt', loc=False)  # loc=False because of py < 3.12
         0: f"{expr}"
         JoinedStr - ROOT
           .values[1]
@@ -1124,7 +1125,7 @@ class FST:
         >>> f.put_src('=', 0, 7, 0, 7, 'offset')
         (0, 8)
 
-        >>> f.dump('stmt', loc=False)
+        >>> _ = f.dump('stmt', loc=False)
         0: f"{expr=}"
         JoinedStr - ROOT
           .values[1]
@@ -1134,7 +1135,7 @@ class FST:
 
         >>> f = f.reparse()
 
-        >>> f.dump('stmt', loc=False)
+        >>> _ = f.dump('stmt', loc=False)
         0: f"{expr=}"
         JoinedStr - ROOT
           .values[2]
@@ -1166,9 +1167,9 @@ class FST:
         list_indent: int | bool = 1,
         loc: bool = True,
         color: bool | None = None,
-        out: Callable | TextIO = print,
+        out: Literal['print', 'str', 'lines'] | Callable | TextIO = 'print',
         eol: builtins.str | None = None,
-    ) -> builtins.str | list[builtins.str] | None:
+    ) -> FST | builtins.str | list[builtins.str]:  # -> self if not returning str or lines
         r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
         call a provided function once with each line of the output.
 
@@ -1201,15 +1202,16 @@ class FST:
         - `loc`: Whether to dump locations of nodes or not.
         - `color`: `True` or `False` means whether to use ANSI color codes or not. If `None` then will autodetect, which
             can be overridden with environment variables `FORCE_COLOR` and `NO_COLOR`.
-        - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string. A
-            `TextIO` object here will use the `write` method for each line of output. Otherwise a
-            `Callable[[str], None]` which is called for each line of output individually.
+        - `out`: `'print'` means print to stdout, `'lines'` returns a list of lines and `'str'` returns a whole string.
+            A `TextIO` object here will use the `write` method for each line of output. Otherwise a
+            `Callable[[str], None]` which is called for each line of output individually. If `str` or `list` then that
+            is returned, otherwise `self` is returned.
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
 
         **Returns:**
-        - `str | list[str]`: If those were requested with `out=str` or `out=list` else `None` and the output is sent one
-            line at a time to `linefunc`, which by default is `print`.
-        - `None`: Otherwise.
+        - `str`: If was requested with `out='str'`, string of entire dump, lines ended with `eol`.
+        - `list[str]`: If was requested with `out='lines'`, list of lines ended wiith `eol`.
+        - `self`: If `out` is anything else, for convenience.
 
         **Examples:**
 
@@ -1218,7 +1220,7 @@ class FST:
         ...     call(a=b, **c)
         ... '''.strip())
 
-        >>> f.dump()
+        >>> _ = f.dump()
         If - ROOT 0,0..1,18
           .test Constant 1 - 0,3..0,4
           .body[1]
@@ -1232,7 +1234,7 @@ class FST:
                 1] keyword - 1,14..1,17
                   .value Name 'c' Load - 1,16..1,17
 
-        >>> f.dump(src='node', indent=3, list_indent=True)
+        >>> _ = f.dump(src='node', indent=3, list_indent=True)
         0: if 1:
         If - ROOT 0,0..1,18
         0:    1
@@ -1254,11 +1256,11 @@ class FST:
         1:                 c
                           .value Name 'c' Load - 1,16..1,17
 
-        >>> f.dump(out=str)[:64]
+        >>> f.dump(out='str')[:64]
         'If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n   '
 
         >>> from pprint import pp
-        >>> pp(f.dump('stmt', loc=False, out=list))
+        >>> pp(f.dump('stmt', loc=False, out='lines'))
         ['0: if 1:',
          'If - ROOT',
          '  .test Constant 1',
@@ -1299,14 +1301,17 @@ class FST:
                     src_plus = '+' in src
                     src = 'stmt' if 's' in src else 'node' if 'n' in src else None
 
-        if color is None and out is print and (color := DEFAULT_COLOR) is None:
-            if not hasattr(sys.stdout, 'fileno'):
-                color = False  # pragma: no cover
-            else:
-                try:
-                    color = os.isatty(sys.stdout.fileno()) or IPYTHON_COLOR
-                except io.UnsupportedOperation:
-                    color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or IPYTHON_COLOR)
+        if out == 'print':
+            out = print
+
+            if color is None and (color := DEFAULT_COLOR) is None:
+                if not hasattr(sys.stdout, 'fileno'):
+                    color = False  # pragma: no cover
+                else:
+                    try:
+                        color = os.isatty(sys.stdout.fileno()) or IPYTHON_COLOR
+                    except io.UnsupportedOperation:
+                        color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or IPYTHON_COLOR)
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -1325,17 +1330,19 @@ class FST:
         st = nspace(src=src, src_plus=src_plus, full=full, expand=expand, loc=loc, color=color,
                     eol=eol, sind=sind, lind=lind)
 
-        if out in (str, list):
+        if (is_lines := out == 'lines') or out == 'str':
             lines = []
             st.linefunc = lines.append
 
             self._dump(st, src_plus)
 
-            return lines if out is list else '\n'.join(lines)
+            return lines if is_lines else '\n'.join(lines)
 
         st.linefunc = out
 
-        return self._dump(st, src_plus)
+        self._dump(st, src_plus)
+
+        return self
 
     def verify(
         self,

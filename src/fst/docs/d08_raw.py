@@ -42,7 +42,7 @@ completely change their meaning and structure (invalidating any `FST` references
 
 >>> f = FST('i + 1')
 
->>> f.dump()
+>>> _ = f.dump()
 BinOp - ROOT 0,0..0,5
   .left Name 'i' Load - 0,0..0,1
   .op Add - 0,2..0,3
@@ -53,7 +53,7 @@ BinOp - ROOT 0,0..0,5
 >>> print(f.src)
 i = 1
 
->>> f.dump()
+>>> _ = f.dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
    0] Name 'i' Store - 0,0..0,1

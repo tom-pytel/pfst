@@ -16,7 +16,7 @@ Almost all `FST` nodes have a location attribute pointing to where they exist in
 ...     return x + 1
 ... '''.strip())
 
->>> f.dump()
+>>> _ = f.dump()
 FunctionDef - ROOT 1,0..2,16
   .name 'func'
   .args arguments - 1,9..1,10
@@ -202,7 +202,7 @@ Lets use this.
 ...     pass
 ... '''.strip())
 
->>> f.dump()
+>>> _ = f.dump()
 If - ROOT 0,0..1,8
   .test Compare - 0,3..0,8
     .left Name 'a' Load - 0,3..0,4

@@ -125,7 +125,7 @@ In this case, `None` is returned as the new node.
 
 >>> f = FST('"a" + "b"')
 
->>> f.dump()
+>>> _ = f.dump()
 BinOp - ROOT 0,0..0,9
   .left Constant 'a' - 0,0..0,3
   .op Add - 0,4..0,5
@@ -134,7 +134,7 @@ BinOp - ROOT 0,0..0,9
 >>> f.op.replace('\\\n', raw=True) is None
 True
 
->>> f.dump('stmt')
+>>> _ = f.dump('stmt')
 0: "a" \
 1:  "b"
 Constant 'ab' - ROOT 0,0..1,4
@@ -289,13 +289,13 @@ case False: pass
 
 >>> f = FST('b"bytes"')
 
->>> f.dump()
+>>> _ = f.dump()
 Constant b'bytes' - ROOT 0,0..0,8
 
 >>> f.put(2.5)
 <Constant ROOT 0,0..0,3>
 
->>> f.dump()
+>>> _ = f.dump()
 Constant 2.5 - ROOT 0,0..0,3
 
 >>> print(f.src)
@@ -548,7 +548,7 @@ Example using `'offset'` to change the spacing in a `Tuple`.
 
 >>> f = FST('(a, b, c)')
 
->>> f.dump()
+>>> _ = f.dump()
 Tuple - ROOT 0,0..0,9
   .elts[3]
    0] Name 'a' Load - 0,1..0,2
@@ -562,7 +562,7 @@ Tuple - ROOT 0,0..0,9
 >>> print(f.src)
 (a  , b, c)
 
->>> f.dump()
+>>> _ = f.dump()
 Tuple - ROOT 0,0..0,11
   .elts[3]
    0] Name 'a' Load - 0,1..0,2
@@ -584,7 +584,7 @@ the `a` child we would be increasing the size of that and wind up with an invali
 >>> print(f.src)
 (a  , b, c)
 
->>> f.dump()  # note the location of the Name 'a' node is wrong
+>>> _ = f.dump()  # note the location of the Name 'a' node is wrong
 Tuple - ROOT 0,0..0,11
   .elts[3]
    0] Name 'a' Load - 0,1..0,4
@@ -614,7 +614,7 @@ change).
 >>> print(f.src)
 (a  , b, c)
 
->>> f.dump()  # note the locations of everything except 'a' are wrong
+>>> _ = f.dump()  # note the locations of everything except 'a' are wrong
 Tuple - ROOT 0,0..0,9
   .elts[3]
    0] Name 'a' Load - 0,1..0,2

@@ -845,11 +845,75 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
     expect a prefix like `@` or `if` but we want to allow expressions without the prefixes as well.
     """
 
+    codea = getattr(code, 'a', None)
+
+    elts = _coerce_to__slice_with_commas(code, parse_params, None, _Assign_targets, True)
+
+    if elts is not None:  # sequence as sequence?
+        elts, is_FST = elts
+
+        if not is_FST:
+            src = unparse(_Assign_targets(targets=elts))
+            ast = parse__Assign_targets(src, parse_params)
+
+            return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+        # reformat expression(s) source as targets
+
+        ast = _Assign_targets(targets=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                              end_col_offset=ls[-1].lenbytes)
+        fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+        lines = fst_._lines
+        last_ln = len(lines) - 1  # this never changes because the _put_src() calls are never multiline
+        end_ln = end_col = 0
+
+        for e in elts:
+            if not is_valid_target(e):
+                raise NodeError(f'expecting _Assign_targets, got {codea.__class__.__name__}, could not coerce'
+                                f', found {e.__class__.__name__}')
+
+            f = e.f
+            _, _, end_ln, end_col = f.pars()
+
+            f._set_ctx(Store)
+
+            if frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff):
+                comma_ln, comma_col, src = frag
+
+                assert src.startswith(',')
+
+                if comma_ln == end_ln:
+                    fst_._put_src(' =', end_ln, end_col, end_ln, comma_col + 1, True)  # replace from end of expression to just past comma with ' ='
+                else:
+                    fst_._put_src(None, comma_ln, comma_col, comma_ln, comma_col + 1, True)  # remove just the comma
+
+                    frag = None
+
+            if not frag:  # need to add equals just to end of expr because no comma or comma on different line
+                fst_._put_src(' =', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)  # replace from end of expression to just past comma with ' ='
+
+        fst_._maybe_add_line_continuations()  # location is already whole so don't need to pass whole=True
+
+        if sanitize:
+            fst_ = fst_._sanitize()
+
+        if end_ln != last_ln:
+            end_col = 0
+
+        if ((m := re_line_end_ws_cont_or_comment.search(lines[-1], end_col))
+            and (g := m.group(1))
+            and g.startswith('\\')
+        ):  # last line can't end with a line continuation
+            fst_._put_src(None, last_ln, m.start(0), last_ln, 0x7fffffffffffffff, True)
+
+        return fst_
+
+
     fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=True)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
     ast_ = fst_.a
 
     if not is_valid_target(ast_):
-        raise NodeError(f'expecting Assign target, got {ast_.__class__.__name__}, could not coerce')
+        raise NodeError(f'expecting _Assign_targets, got {ast_.__class__.__name__}, could not coerce')
 
     fst_._set_ctx(Store)
 
@@ -902,6 +966,9 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
 
             fst_._touch()
 
+            if sanitize:
+                fst_ = fst_._sanitize()
+
             if (last_ln := len(lines) - 1) != last_end_ln:
                 last_end_col = 0
 
@@ -911,7 +978,7 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
             ):  # last line can't end with a line continuation
                 fst_._put_src(None, last_ln, m.start(0), last_ln, 0x7fffffffffffffff, True)
 
-            return fst_._sanitize() if sanitize else fst_
+            return fst_
 
     # single element as sequence
 

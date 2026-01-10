@@ -197,7 +197,7 @@ class ParseCases(BaseCases):
         except Exception as exc:
             rest = [f'**{_san_exc(exc)!r}**']
         else:
-            rest = [f.root.dump(out=str, loc=case.field != 'JoinedStr')]
+            rest = [f.root.dump(out='str', loc=case.field != 'JoinedStr')]
 
         if (r0 := rest[0]).startswith('**'):
             s = f'**{case.field}'
@@ -233,7 +233,7 @@ class GetCases(BaseCases):
                 rest = [f'**{_san_exc(exc)!r}**']
 
         if rest is None:
-            rest = [f.root.src, f.root.dump(out=str)]
+            rest = [f.root.src, f.root.dump(out='str')]
 
         if g is exec:  # exec is just a sentinel value here
             pass  # noop
@@ -254,13 +254,13 @@ class GetCases(BaseCases):
                 rest.extend([repr(g), f'{type(g)}'])
 
             else:
-                g_dump = g.dump(out=str)
+                g_dump = g.dump(out='str')
 
                 if h is not None:
                     if h.src != g.src:
                         raise RuntimeError(f'cut and copied FST src are not identical\n{h.src}\n...\n{g.src}')
 
-                    if (h_dump := h.dump(out=str)) != g_dump:
+                    if (h_dump := h.dump(out='str')) != g_dump:
                         raise RuntimeError(f'cut and copied FST dump are not identical\n{h_dump}\n...\n{g_dump}')
 
                 rest.extend([g.src, g_dump])
@@ -316,7 +316,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
 
             rest.append(f.root.src)
 
-            f_dump = f.root.dump(out=str)
+            f_dump = f.root.dump(out='str')
             tail   = [f_dump]
 
             if src is not None and not is_raw:
@@ -352,7 +352,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                             else:
                                 raise exc
 
-                        if (k_dump := k.root.dump(out=str)) != f_dump and _same:
+                        if (k_dump := k.root.dump(out='str')) != f_dump and _same:
                             exc = RuntimeError(f'FST put and src put dump are not identical\n{k_dump}\n...\n{f_dump}')
 
                             if is_raw:
@@ -375,7 +375,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                                     raise RuntimeError('FST returned from func AST put not identical to passed in')
 
                                 if cmp_asts and not compare_asts(l.root.a, f.root.a) and _same:
-                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out=str)}\n...\n{f.root.dump(out=str)}')  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
+                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out="str")}\n...\n{f.root.dump(out="str")}')  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
 
                                     if is_raw:
                                         rest.append(f'**{_san_exc(exc)!r}**')
