@@ -1719,6 +1719,7 @@ def _fix_undelimited_seq(
         self._set_end_pos(eend_ln + 1, lines[eend_ln].c2b(eend_col), (a := self.a).end_lineno, a.end_col_offset)
 
         # TODO: this is aesthetic stuff and could probably use some tweaking
+        # TODO: change _re_line_end_ws_maybe_cont use to re_line_end_ws_cont_or_comment? current one may get false positive from backslash in comment?
 
         if len(end_line := lines[end_ln]) == end_col and len(lines) - 1 == end_ln:  # seq ends exactly at end of source?
             if not end_line:  # if last line is trailing newline then we can delete it and remove trailing whitespace and maybe line continuation on line before

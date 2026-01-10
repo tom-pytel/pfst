@@ -248,25 +248,25 @@ def _ast_coerce_to_expr__Assign_targets(
     if not is_FST:
         return Tuple(elts=ast.targets), False, 1
 
-    fst_ = ast.f
-    lines = fst_._lines  # fst_ must be root
-    targets = ast.targets
-    last_target = targets[-1]
-    _, _, fst_end_ln, fst_end_col = fst_.loc  # fst_end_col will remain static as the actual fst_.end_col may get smaller but this is fine as long as fst_end_ln remains the same
+    if targets := ast.targets:
+        last_target = targets[-1]
+        fst_ = ast.f
+        lines = fst_._lines  # fst_ must be root
+        _, _, fst_end_ln, fst_end_col = fst_.loc  # fst_end_col will remain static as the actual fst_.end_col may get smaller but this is fine as long as fst_end_ln remains the same
 
-    for a in targets:
-        f = a.f
-        _, _, ln, col = f.pars()
-        eq = next_frag(lines, ln, col, fst_end_ln, fst_end_col)  # may or may not be there '=' for last target
+        for a in targets:
+            f = a.f
+            _, _, ln, col = f.pars()
+            eq = next_frag(lines, ln, col, fst_end_ln, fst_end_col)  # may or may not be there '=' for last target
 
-        if not (is_last := a is last_target) or eq:
-            end_ln, end_col, src = eq
+            if not (is_last := a is last_target) or eq:
+                end_ln, end_col, src = eq
 
-            assert src.startswith('=')
+                assert src.startswith('=')
 
-            fst_._put_src(None if is_last else ',', ln, col, end_ln, end_col + 1, True)  # replace everything between end of expr and '=' with ',' or just remove for last element
+                fst_._put_src(None if is_last else ',', ln, col, end_ln, end_col + 1, True)  # replace everything between end of expr and '=' with ',' or just remove for last element
 
-        f._set_ctx(Load)
+            f._set_ctx(Load)
 
     return Tuple(elts=targets, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
@@ -279,19 +279,19 @@ def _ast_coerce_to_expr__decorator_list(
     if not is_FST:
         return Tuple(elts=ast.decorator_list), False, 1
 
-    fst_ = ast.f
-    decorator_list = ast.decorator_list
-    last_deco = decorator_list[-1]
+    if decorator_list := ast.decorator_list:
+        last_deco = decorator_list[-1]
+        fst_ = ast.f
 
-    for i, a in enumerate(decorator_list):
-        f = a.f
-        ln, col, end_ln, end_col = f.pars()
-        deco_ln, deco_col, _, _ = fst_._loc_decorator(i)
+        for i, a in enumerate(decorator_list):
+            f = a.f
+            ln, col, end_ln, end_col = f.pars()
+            deco_ln, deco_col, _, _ = fst_._loc_decorator(i)
 
-        if a is not last_deco:  # add comma after expression, unless last
-            fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
+            if a is not last_deco:  # add comma after expression, unless last
+                fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
 
-        fst_._put_src(None, deco_ln, deco_col, ln, col, True)  # remove everything from the '@' up to the start of the parenthesized decorator expression, it would be insane to try to preserve any comments between these, so will probably do it at some point
+            fst_._put_src(None, deco_ln, deco_col, ln, col, True)  # remove everything from the '@' up to the start of the parenthesized decorator expression, it would be insane to try to preserve any comments between these, so will probably do it at some point
 
     return Tuple(elts=decorator_list, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
@@ -324,19 +324,20 @@ def _ast_coerce_to_expr__comprehension_ifs(
     if not is_FST:
         return Tuple(elts=ast.ifs), False, 1
 
-    fst_ = ast.f
-    ifs = ast.ifs
-    last_if = ifs[-1]
+    if ifs := ast.ifs:
+        last_if = ifs[-1]
+        fst_ = ast.f
+        ifs = ast.ifs
 
-    for i, a in enumerate(ifs):
-        f = a.f
-        ln, col, end_ln, end_col = f.pars()
-        if_ln, if_col, _, _ = fst_._loc_comprehension_if(i)
+        for i, a in enumerate(ifs):
+            f = a.f
+            ln, col, end_ln, end_col = f.pars()
+            if_ln, if_col, _, _ = fst_._loc_comprehension_if(i)
 
-        if a is not last_if:  # add comma after expression, unless last
-            fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
+            if a is not last_if:  # add comma after expression, unless last
+                fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
 
-        fst_._put_src(None, if_ln, if_col, ln, col, True)  # remove everything from the 'if' up to the start of the parenthesized decorator expression, it would be insane to try to preserve any comments between these, so will probably do it at some point
+            fst_._put_src(None, if_ln, if_col, ln, col, True)  # remove everything from the 'if' up to the start of the parenthesized decorator expression, it would be insane to try to preserve any comments between these, so will probably do it at some point
 
     return Tuple(elts=ifs, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
@@ -872,6 +873,8 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
                 ast = parse__decorator_list(src, parse_params)
 
                 return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+            # reformat expression(s) source as decorator_list
 
             ast = _decorator_list(decorator_list=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                   end_col_offset=ls[-1].lenbytes)
