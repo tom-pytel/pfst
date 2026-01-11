@@ -1867,7 +1867,7 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         raise SyntaxError('invalid syntax')
 
     if ast.keywords:
-        raise ParseError('expecting only argumnentlike expression(s), got keyword')
+        raise ParseError('expecting expression(s) (arglike), got keyword')
 
     ast = Tuple(elts=ast.args, ctx=Load(), **_astloc_from_src(src, 2))
 
@@ -1950,13 +1950,17 @@ def parse__BoolOp_dangling_right(src: str, parse_params: Mapping[str, Any] = {},
         pos = 0
 
         for _ in range(end_lineno - 1):  # find start of line of node
-            pos = src.index('\n', pos) + 1
+            if not (pos := src.find('\n', pos) + 1):
+                raise SyntaxError('invalid syntax')  # something wacky with source, '\r4or'
 
         op_len = 3 if ast.op.__class__ is And else 2
         end_col = len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())  # convert byte column to char column
         pos += end_col
 
         m = (_re_next_src_no_space.match(src, pos) or _re_first_src.search(src, pos))  # right dangling operator, needs to become end position of BoolOp
+
+        if not m:
+            raise SyntaxError('invalid syntax')  # something wacky with source
 
         if extra_lines := src.count('\n', pos, m.start()):
             ast.end_lineno = end_lineno + extra_lines
@@ -1994,7 +1998,6 @@ def parse__Compare_dangling_left(src: str, parse_params: Mapping[str, Any] = {},
     ast.left = None  # no need to offset this
 
     ast = _offset_linenos(ast, -1)
-
     m = _re_first_src.search(src)  # left dangling operator, needs to become start position of `left`
 
     if not m:
