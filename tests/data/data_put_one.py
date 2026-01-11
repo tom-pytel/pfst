@@ -16290,6 +16290,97 @@ r'''i = v'''), ('MatchMapping',
 r'''{1: a as b}'''),
 r'''**NodeError('expecting expression (standard), got MatchMapping, could not coerce, MatchAs has pattern')**'''),
 
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchClass',
+r'''cls(a, b=c)'''),
+r'''i = cls(a, b=c)''', r'''
+Assign - ROOT 0,0..0,15
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Call - 0,4..0,15
+    .func Name 'cls' Load - 0,4..0,7
+    .args[1]
+     0] Name 'a' Load - 0,8..0,9
+    .keywords[1]
+     0] keyword - 0,11..0,14
+       .arg 'b'
+       .value Name 'c' Load - 0,13..0,14
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchClass', r'''
+
+# -2
+( # -1
+cls #0
+( #1
+ a #2
+, #3
+ b #4
+ = #5
+ c #6
+) #7
+) #8
+# 9
+'''), r'''
+i = ( # -1
+cls #0
+( #1
+ a #2
+, #3
+ b #4
+ = #5
+ c #6
+) #7
+)
+''',
+r'''i = cls(a, b=c)''', r'''
+Assign - ROOT 0,0..9,1
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Call - 1,0..8,1
+    .func Name 'cls' Load - 1,0..1,3
+    .args[1]
+     0] Name 'a' Load - 3,1..3,2
+    .keywords[1]
+     0] keyword - 5,1..7,2
+       .arg 'b'
+       .value Name 'c' Load - 7,1..7,2
+'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('pattern',
+r'''[{1: a, **b}, cls(True, e = [*c])]'''),
+r'''i = [{1: a, **b}, cls(True, e = [*c])]''',
+r'''i = [{1: a, **b}, cls(True, e=[*c])]''', r'''
+Assign - ROOT 0,0..0,38
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value List - 0,4..0,38
+    .elts[2]
+     0] Dict - 0,5..0,16
+       .keys[2]
+        0] Constant 1 - 0,6..0,7
+        1] None
+       .values[2]
+        0] Name 'a' Load - 0,9..0,10
+        1] Name 'b' Load - 0,14..0,15
+     1] Call - 0,18..0,37
+       .func Name 'cls' Load - 0,18..0,21
+       .args[1]
+        0] Constant True - 0,22..0,26
+       .keywords[1]
+        0] keyword - 0,28..0,36
+          .arg 'e'
+          .value List - 0,32..0,36
+            .elts[1]
+             0] Starred - 0,33..0,35
+               .value Name 'c' Load - 0,34..0,35
+               .ctx Load
+            .ctx Load
+    .ctx Load
+'''),
+
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('_Assign_targets',
 r'''x = y = z ='''),

@@ -14,6 +14,7 @@ from .asttypes import (
     ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
     Attribute,
+    Call,
     Constant,
     Dict,
     ExceptHandler,
@@ -23,6 +24,7 @@ from .asttypes import (
     List,
     Load,
     MatchAs,
+    MatchClass,
     MatchMapping,
     MatchOr,
     MatchSequence,
@@ -69,6 +71,7 @@ from .asttypes import (
 
 from .astutil import (
     constant,
+    re_identifier,
     OPCLS2STR,
     bistr,
     is_valid_identifier,
@@ -78,7 +81,7 @@ from .astutil import (
     is_valid_target,
 )
 
-from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag
+from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re
 
 from .parsex import (
     _fixing_unparse,
@@ -207,7 +210,9 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
 # ......................................................................................................................
 
 def _coerce_to_expr_ast_ret_empty_str(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """These are the individual `AST` coerce functions.
+    """These are the individual `AST` coerce functions. The returned `AST` may or may not have location information. In
+    the case of `is_FST=False`. In the case of `is_FST=True`, it **MUST** have location information as the returned
+    `AST` is used as the actual `AST` node for the final `FST` node.
 
     These individual functions ARE allowed to change `FST` source as long as it wouldn't break any recursion going on,
     for example a `pattern` changing source so that location of previouisly coerced `AST` in a `MatchSequence` changes.
@@ -563,7 +568,7 @@ def _coerce_to_expr_ast_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[st
                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
 
 def _coerce_to_expr_ast_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_coerce_to_expr_ast_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
     if not is_FST:
         ast_cls = List
@@ -587,7 +592,7 @@ def _coerce_to_expr_ast_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapp
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchMapping(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
-    """See `_coerce_to_expr_ast_ret_empty_str()`."""
+    """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
     keys = []
     values = []
@@ -618,6 +623,52 @@ def _coerce_to_expr_ast_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
 
             values.append(Name(id=rest, ctx=Load(), lineno=ln + 1, col_offset=lines[ln].c2b(col), end_lineno=end_ln + 1,
                                end_col_offset=lines[end_ln].c2b(end_col)))
+
+    return ret, False, 2
+
+def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
+
+    args = []
+    keywords = []
+    ret = Call(func=ast.cls, args=args, keywords=keywords, lineno=ast.lineno, col_offset=ast.col_offset,
+               end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    for pat in ast.patterns:
+        arg = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
+
+        if (arg_cls := arg.__class__) is str:
+            return arg
+        elif arg_cls is tuple:
+            arg = arg[0]
+
+        args.append(arg)
+
+    if is_FST:
+        lines = ast.f.root._lines
+        _, _, end_ln, end_col = pat.f.loc if args else ast.cls.f.loc
+
+    for arg, pat in zip(ast.kwd_attrs, ast.kwd_patterns, strict=True):
+        value = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST,
+                                                                                                parse_params)
+
+        if (value_cls := value.__class__) is str:
+            return value
+        elif value_cls is tuple:
+            value = value[0]
+
+        if not is_FST:
+            keywords.append(keyword(arg=arg, value=value))
+
+        else:
+            loc = pat.f.loc
+            ln, col, _, _ = loc
+            ln, col, _ = next_find_re(lines, end_ln, end_col, ln, col, re_identifier)  # must be there
+
+            keywords.append(keyword(arg=arg, value=value, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                                    end_lineno=value.end_lineno, end_col_offset=value.end_col_offset))
+
+            _, _, end_ln, end_col = loc
 
     return ret, False, 2
 
@@ -707,10 +758,10 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     MatchSingleton:     _coerce_to_expr_ast_MatchSingleton,
     MatchSequence:      _coerce_to_expr_ast_MatchSequence,
     MatchMapping:       _coerce_to_expr_ast_MatchMapping,
-    # MatchClass:         _coerce_to_expr_ast_MatchClass,  # TODO?  how to handle parentheses for locations, "a | (b | c)", "(a | (b | c)) | d"
+    MatchClass:         _coerce_to_expr_ast_MatchClass,
     MatchStar:          _coerce_to_expr_ast_MatchStar,
     MatchAs:            _coerce_to_expr_ast_MatchAs,
-    # MatchOr:            _coerce_to_expr_ast_MatchOr,  # TODO?  need locations of kwd_attrs identifiers
+    # MatchOr:            _coerce_to_expr_ast_MatchOr,  # TODO?  how to handle parentheses for locations, "a | (b | c)", "(a | (b | c)) | d"
     TypeVar:            _coerce_to_expr_ast_TypeVar,
     TypeVarTuple:       _coerce_to_expr_ast_TypeVarTuple,
     _type_params:       _coerce_to_expr_ast__type_params,

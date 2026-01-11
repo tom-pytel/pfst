@@ -2116,6 +2116,7 @@ match a:
             (code_as_expr, (MatchSequence, '[x, 1, True, *y]'), (List, '[x, 1, True, *y]')),
             (code_as_expr, (MatchSequence, '[([x, 1, True, *y],)]'), (List, '[([x, 1, True, *y],)]'), (List, '[[[x, 1, True, *y]]]')),
             (code_as_expr, (MatchMapping, '{1: a, b.c: d, **e}'), (Dict, '{1: a, b.c: d, **e}')),
+            (code_as_expr, (MatchClass, 'cls(a, b=c)'), (Call, 'cls(a, b=c)')),
             # (code_as_expr, (MatchOr, 'a | b | c'), (BinOp, 'a | b | c')),
             (code_as_expr, (_Assign_targets, 'a = b = c ='),
                 "**SyntaxError**",  # src
