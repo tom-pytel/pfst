@@ -1751,7 +1751,7 @@ class FST:
 
         **WARNING!** With the exception of the `elif` fix, you get just the text that is there so you will get
         unparsable source if you get for example a string `Constant` from the `values` field of a `JoinedStr`, or a
-        'format_spec'.
+        `format_spec`.
 
         **Parameters:**
         - `whole`: If at root this determines whether to return the whole source or just the location of the node
@@ -1875,7 +1875,7 @@ class FST:
 
         **WARNING!** With the exception of the `elif` fix, you get just the text that is there so you will get
         unparsable source if you get for example a string `Constant` from the `values` field of a `JoinedStr`, or a
-        'format_spec'.
+        `format_spec`.
 
         **Parameters:**
         - `whole`: If at root this determines whether to return the whole source or just the location of the node

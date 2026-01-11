@@ -57,9 +57,9 @@ def check_options(options: Mapping[str, Any]) -> None:
 
 @staticmethod
 def get_options() -> dict[str, Any]:
-    """Get a dictionary of ALL global options. These are the same `options` that can be passed to operations and this
-    function returns their global defaults which are used when those options are not passed to operations or if they
-    are passed with a value of `None`
+    """Get a dictionary of **ALL** global options. These are the same `options` that can be passed to operations and
+    this function returns their global defaults which are used when those options are not passed to operations or if
+    they are passed with a value of `None`
 
     **Returns:**
     - `{option: value, ...}`: Dictionary of all global default options.
@@ -235,16 +235,16 @@ def options(**options) -> Iterator[dict[str, Any]]:
         - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
         - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions. **DEFAULT**
         - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
-    - `pars_arglike`: Whether to **ADD** parentheses to argumentlike expressions (`*not a`, `*b or c`) when cut /
+    - `pars_arglike`: Whether to **ADD** parentheses to argumentlike-only expressions (`*not a`, `*b or c`) when cut /
         copied either as single element or as part of a slice. If parentheses were already present then setting this
         to `False` will not remove them. Unlike `pars_walrus` this is not mostly an aesthetic option as unparenthesized
-        arglike expressions are invalid everywhere except in `Call.args`, `ClassDef.bases` or an unparenthesized
+        arglike-only expressions are invalid everywhere except in `Call.args`, `ClassDef.bases` or an unparenthesized
         `Subscript.slice` `Tuple`.
         - `True`: Parenthesize cut / copied argumentlike expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied argumentlike expressions.
         - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
     - `norm`: Default normalize option for puts, gets and self target. Determines how `AST`s which would otherwise
-        be invalid because of an operation are handled. Mostly how zero or sometimes one-length elements which
+        be invalid because of an operation are handled. Mostly how zero or sometimes one-length sequences which
         normally cannot be zero or one length are left / put / returned, e.g. zero-length `Set`. This option can be
         overridden individually for the three cases of `norm_self` (target), `norm_get` (return from any get operation)
         and `norm_put` (what is being put if it is an alternate representation).
@@ -252,7 +252,7 @@ def options(**options) -> Iterator[dict[str, Any]]:
             in empty curlies which reparse to a `Dict`. A `MatchOr` can go to 1 or zero length. Other `AST` types
             can also go to zero length. Useful for easier editing. **DEFAULT**
         - `True`: Do not allow the `AST` to go to an unsupported length or state. Can result in an exception being
-            thrown if no alternative exists. E.g. A `Set` which results in zero length gets converted to `{*()}`.
+            thrown if no alternative exists. A `Set` which results in zero length gets converted to `{*()}`.
         - `str`: In some cases an alternate representation can be specified instead of just `True`, e.g. `'call'`
             for `Set` operations.
     - `norm_self`: Override for `norm` which only applies to a target `self` on which an operation is being carried

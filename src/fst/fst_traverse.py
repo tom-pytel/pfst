@@ -680,7 +680,7 @@ def walk(
     `target` nodes are still returned even though everything else belongs to the Comprehension scope and is not returned
     (except for the first `comprehension.iter`, which also belongs to the enclosing scope). This remains true for
     whatever level of nesting of Comprehensions is recursed into. One quirk, if starting a scope walk on a
-    Comprehension, any walrus `targets` **WILL** be returned, the first iterator though will not. This is on purpose.
+    Comprehension, any walrus `target`s **WILL** be returned, the first iterator though will not. This is on purpose.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
