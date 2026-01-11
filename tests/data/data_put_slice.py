@@ -26569,10 +26569,11 @@ ClassDef - ROOT 0,0..0,18
    0] Pass - 0,14..0,18
 '''),
 
-('', 0, 0, 'bases', {'one': True}, (None,
+('', 0, 0, 'bases', {'one': True, '_same': False}, (None,
 r'''class cls(): pass'''), (None,
 r'''x,'''),
-r'''class cls((x,)): pass''', r'''
+r'''class cls((x,)): pass''',
+r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[1]
@@ -26584,11 +26585,11 @@ ClassDef - ROOT 0,0..0,21
    0] Pass - 0,17..0,21
 '''),
 
-('', 0, 0, 'bases', {'one': True}, (None,
+('', 0, 0, 'bases', {'one': True, '_same': False}, (None,
 r'''class cls(): pass'''), (None,
 r'''x, y,'''),
 r'''class cls((x, y,)): pass''',
-r'''class cls((x, y)): pass''', r'''
+r'''class cls(x, y): pass''', r'''
 ClassDef - ROOT 0,0..0,24
   .name 'cls'
   .bases[1]
@@ -27783,10 +27784,11 @@ ClassDef - ROOT 0,0..0,28
      .name 'V'
 '''),
 
-('', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
+('', 0, 0, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
 r'''class cls[T,*U,**V]: pass'''), (None,
 r'''x,'''),
-r'''class cls[T,*U,**V]((x,)): pass''', r'''
+r'''class cls[T,*U,**V]((x,)): pass''',
+r'''class cls[T,*U,**V](x): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[1]
@@ -27805,11 +27807,11 @@ ClassDef - ROOT 0,0..0,31
      .name 'V'
 '''),
 
-('', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
+('', 0, 0, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
 r'''class cls[T,*U,**V]: pass'''), (None,
 r'''x, y,'''),
 r'''class cls[T,*U,**V]((x, y,)): pass''',
-r'''class cls[T,*U,**V]((x, y)): pass''', r'''
+r'''class cls[T,*U,**V](x, y): pass''', r'''
 ClassDef - ROOT 0,0..0,34
   .name 'cls'
   .bases[1]
@@ -32663,10 +32665,11 @@ Call - ROOT 0,0..0,26
    2] Name 'b' Load - 0,24..0,25
 '''),
 
-('', 1, 2, 'args', {'one': True}, (None,
+('', 1, 2, 'args', {'one': True, '_same': False}, (None,
 r'''call(i for i in j)'''), (None,
 r'''a, b'''),
-r'''call((i for i in j), (a, b))''', r'''
+r'''call((i for i in j), (a, b))''',
+r'''call((i for i in j), a, b)''', r'''
 Call - ROOT 0,0..0,28
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -32694,10 +32697,11 @@ Call - ROOT 0,0..0,7
    0] Name 'x' Load - 0,5..0,6
 '''),
 
-('', 0, 0, 'args', {'one': True}, (None,
+('', 0, 0, 'args', {'one': True, '_same': False}, (None,
 r'''call()'''), (None,
 r'''x,'''),
-r'''call((x,))''', r'''
+r'''call((x,))''',
+r'''call(x)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[1]
@@ -32707,11 +32711,11 @@ Call - ROOT 0,0..0,10
      .ctx Load
 '''),
 
-('', 0, 0, 'args', {'one': True}, (None,
+('', 0, 0, 'args', {'one': True, '_same': False}, (None,
 r'''call()'''), (None,
 r'''x, y,'''),
 r'''call((x, y,))''',
-r'''call((x, y))''', r'''
+r'''call(x, y)''', r'''
 Call - ROOT 0,0..0,13
   .func Name 'call' Load - 0,0..0,4
   .args[1]
@@ -40205,6 +40209,332 @@ _type_params - ROOT 0,0..2,0
      .name 'x'
    1] TypeVarTuple - 1,0..1,2
      .name 'y'
+'''),
+],
+
+'coerce_to__expr_arglikes': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('List', r'''
+[
+x,
+y,
+]
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('Set', r'''
+{
+x,
+y,
+}
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_Assign_targets', r'''
+x = \
+y =
+'''), r'''
+call(x, \
+     y)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..1,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 1,5..1,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_decorator_list', r'''
+@x
+@y
+'''), r'''
+call(x,
+     y)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..1,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 1,5..1,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_arglikes', r'''
+
+x,
+y,
+
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('arguments', r'''
+
+x,
+*y,
+
+'''), r'''
+call(
+     x,
+     *y
+)
+''',
+r'''call(x, *y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Starred - 2,5..2,7
+     .value Name 'y' Load - 2,6..2,7
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+call(x,
+     y)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..1,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 1,5..1,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+call(x,
+     y.z)
+''',
+r'''call(x, y.z)''', r'''
+Call - ROOT 0,0..1,9
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Attribute - 1,5..1,8
+     .value Name 'y' Load - 1,5..1,6
+     .attr 'z'
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+call(x,
+     y)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..1,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 1,5..1,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+call(x,
+     y)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..1,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 1,5..1,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('Call',
+r'''call(a)'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('Call',
+r'''call(a)'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+call(
+     x,
+     y
+)
+''',
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('Call',
+r'''call(a)'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''), r'''
+call(
+     x,
+     *y
+)
+''',
+r'''call(x, *y)''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 1,5..1,6
+   1] Starred - 2,5..2,7
+     .value Name 'y' Load - 2,6..2,7
+     .ctx Load
 '''),
 ],
 

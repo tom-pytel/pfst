@@ -2587,10 +2587,10 @@ if 1:
         f.verify()
 
         if PYGE11:
-            # multiple arglikes as `one` to single arglike field
+            # multiple arglikes as `one` to single arglike field, TODO: `one` for these needs fixing
 
-            self.assertEqual('call((*not a, *b or c))', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), 'args', one=True).src)  # TODO this should be fixed on put?
-            self.assertFalse(f.verify(raise_=False))
+            self.assertEqual('call(*not a, *b or c)', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), 'args', one=True).src)
+            f.verify()
 
         # more unparenthesized tuple schenanigans
 
