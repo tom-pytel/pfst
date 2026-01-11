@@ -330,6 +330,8 @@ def _coerce_to_expr_ast__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[
         if any(a.__class__ is keyword for a in arglikes):
             return '_arglikes has a keyword'
 
+        ret = Tuple(elts=arglikes)
+
     else:
         for a in arglikes:
             if a.__class__ is keyword:
@@ -338,8 +340,10 @@ def _coerce_to_expr_ast__arglikes(ast: AST, is_FST: bool, parse_params: Mapping[
             if a.f._is_expr_arglike_only():
                 a.f._parenthesize_grouping()
 
-    return Tuple(elts=arglikes, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                 end_col_offset=ast.end_col_offset), True, 1
+        ret = Tuple(elts=arglikes, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                    end_col_offset=ast.end_col_offset)
+
+    return ret, True, 1
 
 def _coerce_to_expr_ast__comprehension_ifs(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
@@ -393,7 +397,9 @@ def _coerce_to_expr_ast_arguments(
             return 'arg has annotation'
 
         elts.append(Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
-                         end_col_offset=a.end_col_offset))
+                         end_col_offset=a.end_col_offset)
+                    if is_FST else  # may not have location attrs
+                    Name(id=a.arg))
 
     if is_FST:
         lines = ast.f._lines
@@ -422,7 +428,9 @@ def _coerce_to_expr_ast_arguments(
             return 'kwonlyarg has annotation'
 
         elts.append(Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
-                         end_col_offset=a.end_col_offset))
+                         end_col_offset=a.end_col_offset)
+                    if is_FST else  # may not have location attrs
+                    Name(id=a.arg))
 
     if not is_FST:
         return Tuple(elts=elts), False, 2
@@ -441,8 +449,11 @@ def _coerce_to_expr_ast_arg(ast: AST, is_FST: bool, parse_params: Mapping[str, A
     if ast.annotation:
         return 'arg has annotation'
 
-    return Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                end_col_offset=ast.end_col_offset), False, 2
+    return (Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                 end_col_offset=ast.end_col_offset)
+            if is_FST else  # may not have location attrs
+            Name(id=ast.arg)
+    ), False, 2
 
 def _coerce_to_expr_ast_alias(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
@@ -453,8 +464,10 @@ def _coerce_to_expr_ast_alias(ast: AST, is_FST: bool, parse_params: Mapping[str,
         return "star '*' alias"
 
     if '.' not in (name := ast.name):
-        ast = Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+        ast = (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+               if is_FST else  # may not have location attrs
+               Name(id=name))
 
     elif not is_FST:  # or (f := ast.f).end_ln != f.ln or f.end_col != f.col + len(name):  # NOTE: could calculate locations but parse_expr() is probably faster
         parts = name.split('.')[::-1]
@@ -509,8 +522,11 @@ def _coerce_to_expr_ast__aliases(ast: AST, is_FST: bool, parse_params: Mapping[s
             else:
                 return 'failed reparse to Attribute'  # pragma: no cover  # sanity
 
-    return Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                 end_col_offset=ast.end_col_offset), True, 2
+    return (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                  end_col_offset=ast.end_col_offset)
+            if is_FST else  # may not have location attrs
+            Tuple(elts=elts)
+    ), True, 2
 
 def _coerce_to_expr_ast_withitem(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
@@ -533,30 +549,43 @@ def _coerce_to_expr_ast__withitems(
 
         elts.append(a.context_expr)
 
-    return Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                 end_col_offset=ast.end_col_offset), True, 2
+    return (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                  end_col_offset=ast.end_col_offset)
+            if is_FST else  # may not have location attrs
+            Tuple(elts=elts)
+    ), True, 2
 
 def _coerce_to_expr_ast_MatchSingleton(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
-    return Constant(value=ast.value, lineno=ast.lineno, col_offset=ast.col_offset,
-                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
+    return (Constant(value=ast.value, lineno=ast.lineno, col_offset=ast.col_offset,
+                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+            if is_FST else  # may not have location attrs
+            Constant(value=ast.value)
+    ), False, 2
 
 def _coerce_to_expr_ast_MatchStar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     name = ast.name
-    lineno = ast.lineno
-    end_lineno = ast.end_lineno
-    col_offset = ast.col_offset
-    end_col_offset = ast.end_col_offset
 
-    return Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
-                              end_lineno=end_lineno, end_col_offset=end_col_offset),
-                   ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
-                   end_col_offset=end_col_offset), False, 2
+    if not is_FST:
+        ret = Starred(value=Name(id=name))
+
+    else:
+        lineno = ast.lineno
+        end_lineno = ast.end_lineno
+        col_offset = ast.col_offset
+        end_col_offset = ast.end_col_offset
+
+        ret = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
+                                 end_lineno=end_lineno, end_col_offset=end_col_offset),
+                      ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
+                      end_col_offset=end_col_offset)
+
+    return ret, False, 2
 
 def _coerce_to_expr_ast_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
@@ -564,8 +593,11 @@ def _coerce_to_expr_ast_MatchAs(ast: AST, is_FST: bool, parse_params: Mapping[st
     if ast.pattern:
         return 'MatchAs has pattern'
 
-    return Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
+    return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+            if is_FST else  # may not have location attrs
+            Name(id=ast.name)
+    ), False, 2
 
 def _coerce_to_expr_ast_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
@@ -576,8 +608,10 @@ def _coerce_to_expr_ast_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapp
         ast_cls = List if ast.f.is_delimited_matchseq() == '[]' else Tuple
 
     elts = []
-    ret = ast_cls(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+    ret = (ast_cls(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+           if is_FST else  # may not have location attrs
+           ast_cls(elts=elts))
 
     for pat in ast.patterns:
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
@@ -596,8 +630,10 @@ def _coerce_to_expr_ast_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
 
     keys = []
     values = []
-    ret = Dict(keys=keys, values=values, lineno=ast.lineno, col_offset=ast.col_offset,
-               end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+    ret = (Dict(keys=keys, values=values, lineno=ast.lineno, col_offset=ast.col_offset,
+                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+           if is_FST else  # may not have location attrs
+           Dict(keys=keys, values=values))
 
     for key, pat in zip(ast.keys, ast.patterns, strict=True):
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
@@ -631,8 +667,10 @@ def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping
 
     args = []
     keywords = []
-    ret = Call(func=ast.cls, args=args, keywords=keywords, lineno=ast.lineno, col_offset=ast.col_offset,
-               end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+    ret = (Call(func=ast.cls, args=args, keywords=keywords, lineno=ast.lineno, col_offset=ast.col_offset,
+                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+           if is_FST else  # may not have location attrs
+           Call(func=ast.cls, args=args, keywords=keywords))
 
     for pat in ast.patterns:
         arg = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
@@ -649,8 +687,8 @@ def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping
         _, _, end_ln, end_col = pat.f.loc if args else ast.cls.f.loc
 
     for arg, pat in zip(ast.kwd_attrs, ast.kwd_patterns, strict=True):
-        value = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST,
-                                                                                                parse_params)
+        value = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
+                                              _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
         if (value_cls := value.__class__) is str:
             return value
@@ -680,8 +718,11 @@ def _coerce_to_expr_ast_TypeVar(ast: AST, is_FST: bool, parse_params: Mapping[st
     if getattr(ast, 'default_value', None):
         return 'TypeVar has default_value'
 
-    return Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), False, 2
+    return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+            if is_FST else  # may not have location attrs
+            Name(id=ast.name)
+    ), False, 2
 
 def _coerce_to_expr_ast_TypeVarTuple(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
@@ -690,15 +731,22 @@ def _coerce_to_expr_ast_TypeVarTuple(ast: AST, is_FST: bool, parse_params: Mappi
         return 'TypeVarTuple has default_value'
 
     name = ast.name
-    lineno = ast.lineno
-    end_lineno = ast.end_lineno
-    col_offset = ast.col_offset
-    end_col_offset = ast.end_col_offset
 
-    return Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
-                              end_lineno=end_lineno, end_col_offset=end_col_offset),
-                   ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
-                   end_col_offset=end_col_offset), False, 2
+    if not is_FST:
+        ret = Starred(value=Name(id=name))
+
+    else:
+        lineno = ast.lineno
+        end_lineno = ast.end_lineno
+        col_offset = ast.col_offset
+        end_col_offset = ast.end_col_offset
+
+        ret = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
+                                 end_lineno=end_lineno, end_col_offset=end_col_offset),
+                      ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
+                      end_col_offset=end_col_offset)
+
+    return ret, False, 2
 
 def _coerce_to_expr_ast__type_params(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any]
@@ -716,28 +764,39 @@ def _coerce_to_expr_ast__type_params(
         ast_cls = a.__class__
 
         if ast_cls is TypeVar:
-            a = Name(id=a.name, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset,
-                     end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
+            a = (Name(id=a.name, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset,
+                      end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
+                 if is_FST else  # may not have location attrs
+                 Name(id=a.name))
 
         elif ast_cls is TypeVarTuple:
             name = a.name
-            lineno = a.lineno
-            end_lineno = a.end_lineno
-            col_offset = a.col_offset
-            end_col_offset = a.end_col_offset
 
-            a = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
-                                   end_lineno=end_lineno, end_col_offset=end_col_offset),
-                        ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
-                        end_col_offset=end_col_offset)
+            if not is_FST:  # may not have location attrs
+                a = Starred(value=Name(id=name))
+
+            else:
+                lineno = a.lineno
+                end_lineno = a.end_lineno
+                col_offset = a.col_offset
+                end_col_offset = a.end_col_offset
+
+                a = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
+                                       end_lineno=end_lineno, end_col_offset=end_col_offset),
+                            ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
+                            end_col_offset=end_col_offset)
 
         else:
             return f'incompatible type {ast_cls.__name__}'
 
         elts.append(a)
 
-    return Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                 end_col_offset=ast.end_col_offset), True, 2
+    ret = (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                 end_col_offset=ast.end_col_offset)
+           if is_FST else  # may not have location attrs
+           Tuple(elts=elts))
+
+    return ret, True, 2
 
 _AST_COERCE_TO_EXPR_FUNCS = {
     Module:             _coerce_to_expr_ast_stmtmod,
@@ -756,9 +815,9 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     _withitems:         _coerce_to_expr_ast__withitems,
     MatchValue:         _coerce_to_expr_ast_value,
     MatchSingleton:     _coerce_to_expr_ast_MatchSingleton,
-    MatchSequence:      _coerce_to_expr_ast_MatchSequence,
-    MatchMapping:       _coerce_to_expr_ast_MatchMapping,
-    MatchClass:         _coerce_to_expr_ast_MatchClass,
+    MatchSequence:      _coerce_to_expr_ast_MatchSequence,  # recurses
+    MatchMapping:       _coerce_to_expr_ast_MatchMapping,  # recurses
+    MatchClass:         _coerce_to_expr_ast_MatchClass,  # recurses
     MatchStar:          _coerce_to_expr_ast_MatchStar,
     MatchAs:            _coerce_to_expr_ast_MatchAs,
     # MatchOr:            _coerce_to_expr_ast_MatchOr,  # TODO?  how to handle parentheses for locations, "a | (b | c)", "(a | (b | c)) | d"

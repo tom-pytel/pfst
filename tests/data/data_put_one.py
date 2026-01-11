@@ -16307,7 +16307,7 @@ Assign - ROOT 0,0..0,15
        .value Name 'c' Load - 0,13..0,14
 '''),
 
-('', None, None, 'value', {'_src': False}, (None,
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('MatchClass', r'''
 
 # -2
