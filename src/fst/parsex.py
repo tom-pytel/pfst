@@ -589,6 +589,9 @@ def _verify_no_close_delimiters(
 
     # build lines outside of elements stripped of comments stopping at first comma
 
+    if e0_ln < 0 or end_ln >= len(lines):  # if this happens then something unexpected got parsed, definitely an error
+        raise SyntaxError('invalid syntax') from None  # this may be called from inside an except handler
+
     slines = [l[:i] if (i := l.find('#')) != -1 else l for l in lines[:e0_ln]]
 
     slines.append(lines[e0_ln][:len(lines[e0_ln].encode()[:e0_col_offset].decode())])
@@ -647,11 +650,10 @@ def _fix_undelimited_seq_parsed_delimited(
     e0_ln = e0.lineno - lineno  # "- lineno" because of extra line introduced in parse, offset from start of lines
     e0_col_offset = e0.col_offset
     en_end_ln = en.end_lineno - lineno
-    ast_end_ln = ast.end_lineno - (lineno + 1)
     nlines = len(lines)
 
-    if e0_ln < 0 or en_end_ln >= nlines or ast_end_ln >= nlines:  # if this happens then something unexpected got parsed, definitely an error
-        raise SyntaxError('invalid syntax') from None
+    if ast.end_lineno - (lineno + 1) >= nlines:  # if this happens then something unexpected got parsed, definitely an error
+        raise SyntaxError('invalid syntax') from None  # this may be called from inside an except handler
 
     if en is e0:  # len(elts) == 1
         end_ln = nlines - 1
@@ -659,7 +661,8 @@ def _fix_undelimited_seq_parsed_delimited(
         e1 = elts[1]
         end_ln = e1.lineno - lineno
 
-    _verify_no_close_delimiters(lines, e0_ln, e0_col_offset, e0.end_lineno - lineno, e0.end_col_offset, end_ln, delims)
+    _verify_no_close_delimiters(lines, e0_ln, e0_col_offset, e0.end_lineno - lineno, e0.end_col_offset, end_ln,
+                                delims)
 
     e0_col = len(lines[e0_ln].encode()[:e0_col_offset].decode())
     en_end_col = len(lines[en_end_ln].encode()[:en.end_col_offset].decode())
@@ -1126,7 +1129,7 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise SyntaxError('invalid expression (standard)') from None
 
         if len(elts) != 1:
-            raise RuntimeError('expecting single expression, should not get here') from wrapped_exc  # pragma: no cover
+            raise SyntaxError('invalid expression (standard)') from None  # '),(*a'
 
         ast = elts[0]
 
@@ -1795,7 +1798,7 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             ast = patterns[0]
 
             if ast.__class__ is not MatchStar:
-                raise RuntimeError(f'expecting MatchStar, got {ast.__class__.__name__}, should not get here') from wrapped_exc  # pragma: no cover
+                raise SyntaxError('invalid syntax') from None  # 'x]if['
 
         else:
             if ast.lineno < 3:  # if this is true then it can only be an unparenthesized MatchSequence
@@ -1994,6 +1997,9 @@ def parse__Compare_dangling_left(src: str, parse_params: Mapping[str, Any] = {},
 
     m = _re_first_src.search(src)  # left dangling operator, needs to become start position of `left`
 
+    if not m:
+        raise SyntaxError('invalid syntax')  # something wacky with source
+
     lineno = src.count('\n', 0, m.start()) + 1
     col_offset = len(m.group(1).encode())
 
@@ -2047,12 +2053,16 @@ def parse__Compare_dangling_right(src: str, parse_params: Mapping[str, Any] = {}
     pos = 0
 
     for _ in range(end_lineno - 1):  # find start of line of node
-        pos = src.index('\n', pos) + 1
+        if not (pos := src.find('\n', pos) + 1):
+            raise SyntaxError('invalid syntax')  # something wacky with source
 
     end_col = len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())  # convert byte column to char column
     pos += end_col
 
     m = (_re_next_src_no_space.match(src, pos) or _re_first_src.search(src, pos))  # right dangling operator, needs to become end position of placeholder AST and maybe Compare
+
+    if not m:
+        raise SyntaxError('invalid syntax')  # something wacky with source
 
     if (op_cls := ast.ops[-1].__class__) not in ASTS_LEAF_CMPOP_TWO_WORD:  # if not two-part operator then done searching
         op_len = len(OPCLS2STR[op_cls])
