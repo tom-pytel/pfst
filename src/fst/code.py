@@ -618,12 +618,10 @@ def _coerce_to_expr_ast_MatchSequence(ast: AST, is_FST: bool, parse_params: Mapp
     for pat in ast.patterns:
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
-        if (pat_cls := pat.__class__) is str:
+        if pat.__class__ is str:
             return pat
-        elif pat_cls is tuple:
-            pat = pat[0]
 
-        elts.append(pat)
+        elts.append(pat[0])
 
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
@@ -640,13 +638,11 @@ def _coerce_to_expr_ast_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
     for key, pat in zip(ast.keys, ast.patterns, strict=True):
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
-        if (pat_cls := pat.__class__) is str:
+        if pat.__class__ is str:
             return pat
-        elif pat_cls is tuple:
-            pat = pat[0]
 
         keys.append(key)
-        values.append(pat)
+        values.append(pat[0])
 
     if rest := ast.rest:
         keys.append(None)
@@ -677,12 +673,10 @@ def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping
     for pat in ast.patterns:
         arg = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
-        if (arg_cls := arg.__class__) is str:
+        if arg.__class__ is str:
             return arg
-        elif arg_cls is tuple:
-            arg = arg[0]
 
-        args.append(arg)
+        args.append(arg[0])
 
     if is_FST:
         lines = ast.f.root._lines
@@ -692,10 +686,10 @@ def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping
         value = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
                                               _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
-        if (value_cls := value.__class__) is str:
+        if value.__class__ is str:
             return value
-        elif value_cls is tuple:
-            value = value[0]
+
+        value = value[0]
 
         if not is_FST:
             keywords.append(keyword(arg=arg, value=value))
@@ -724,10 +718,10 @@ def _coerce_to_expr_ast_MatchOr(ast: AST, is_FST: bool, parse_params: Mapping[st
     if len(patterns) == 1:  # this is also only doable by us editing
         return ret
 
-    if (ret_cls := ret.__class__) is str:
+    if ret.__class__ is str:
         return ret
-    elif ret_cls is tuple:
-        ret = ret[0]
+
+    ret = ret[0]
 
     if is_FST:
         f = ast.f
@@ -738,10 +732,10 @@ def _coerce_to_expr_ast_MatchOr(ast: AST, is_FST: bool, parse_params: Mapping[st
         right = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
                                               _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
 
-        if (right_cls := right.__class__) is str:
+        if right.__class__ is str:
             return right
-        elif right_cls is tuple:
-            right = right[0]
+
+        right = right[0]
 
         if not is_FST:
             ret = BinOp(left=ret, op=BitOr(), right=right)
