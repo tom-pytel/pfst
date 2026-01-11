@@ -16348,6 +16348,191 @@ Assign - ROOT 0,0..9,1
        .value Name 'c' Load - 7,1..7,2
 '''),
 
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | b'''),
+r'''i = a | b''', r'''
+Assign - ROOT 0,0..0,9
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,9
+    .left Name 'a' Load - 0,4..0,5
+    .op BitOr - 0,6..0,7
+    .right Name 'b' Load - 0,8..0,9
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | b | c'''),
+r'''i = a | b | c''', r'''
+Assign - ROOT 0,0..0,13
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,13
+    .left BinOp - 0,4..0,9
+      .left Name 'a' Load - 0,4..0,5
+      .op BitOr - 0,6..0,7
+      .right Name 'b' Load - 0,8..0,9
+    .op BitOr - 0,10..0,11
+    .right Name 'c' Load - 0,12..0,13
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''(a | b) | c'''),
+r'''i = (a | b) | c''',
+r'''i = a | b | c''', r'''
+Assign - ROOT 0,0..0,15
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,15
+    .left BinOp - 0,5..0,10
+      .left Name 'a' Load - 0,5..0,6
+      .op BitOr - 0,7..0,8
+      .right Name 'b' Load - 0,9..0,10
+    .op BitOr - 0,12..0,13
+    .right Name 'c' Load - 0,14..0,15
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | (b | c)'''),
+r'''i = a | (b | c)''', r'''
+Assign - ROOT 0,0..0,15
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,15
+    .left Name 'a' Load - 0,4..0,5
+    .op BitOr - 0,6..0,7
+    .right BinOp - 0,9..0,14
+      .left Name 'b' Load - 0,9..0,10
+      .op BitOr - 0,11..0,12
+      .right Name 'c' Load - 0,13..0,14
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''(a | (b | c)) | d'''),
+r'''i = (a | (b | c)) | d''',
+r'''i = a | (b | c) | d''', r'''
+Assign - ROOT 0,0..0,21
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,21
+    .left BinOp - 0,5..0,16
+      .left Name 'a' Load - 0,5..0,6
+      .op BitOr - 0,7..0,8
+      .right BinOp - 0,10..0,15
+        .left Name 'b' Load - 0,10..0,11
+        .op BitOr - 0,12..0,13
+        .right Name 'c' Load - 0,14..0,15
+    .op BitOr - 0,18..0,19
+    .right Name 'd' Load - 0,20..0,21
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | ((b | c) | d)'''),
+r'''i = a | ((b | c) | d)''',
+r'''i = a | (b | c | d)''', r'''
+Assign - ROOT 0,0..0,21
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,21
+    .left Name 'a' Load - 0,4..0,5
+    .op BitOr - 0,6..0,7
+    .right BinOp - 0,9..0,20
+      .left BinOp - 0,10..0,15
+        .left Name 'b' Load - 0,10..0,11
+        .op BitOr - 0,12..0,13
+        .right Name 'c' Load - 0,14..0,15
+      .op BitOr - 0,17..0,18
+      .right Name 'd' Load - 0,19..0,20
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''(a | b | c) | d'''),
+r'''i = (a | b | c) | d''',
+r'''i = a | b | c | d''', r'''
+Assign - ROOT 0,0..0,19
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,19
+    .left BinOp - 0,5..0,14
+      .left BinOp - 0,5..0,10
+        .left Name 'a' Load - 0,5..0,6
+        .op BitOr - 0,7..0,8
+        .right Name 'b' Load - 0,9..0,10
+      .op BitOr - 0,11..0,12
+      .right Name 'c' Load - 0,13..0,14
+    .op BitOr - 0,16..0,17
+    .right Name 'd' Load - 0,18..0,19
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | (b | c | d)'''),
+r'''i = a | (b | c | d)''', r'''
+Assign - ROOT 0,0..0,19
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,19
+    .left Name 'a' Load - 0,4..0,5
+    .op BitOr - 0,6..0,7
+    .right BinOp - 0,9..0,18
+      .left BinOp - 0,9..0,14
+        .left Name 'b' Load - 0,9..0,10
+        .op BitOr - 0,11..0,12
+        .right Name 'c' Load - 0,13..0,14
+      .op BitOr - 0,15..0,16
+      .right Name 'd' Load - 0,17..0,18
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | (b | c) | d'''),
+r'''i = a | (b | c) | d''', r'''
+Assign - ROOT 0,0..0,19
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,19
+    .left BinOp - 0,4..0,15
+      .left Name 'a' Load - 0,4..0,5
+      .op BitOr - 0,6..0,7
+      .right BinOp - 0,9..0,14
+        .left Name 'b' Load - 0,9..0,10
+        .op BitOr - 0,11..0,12
+        .right Name 'c' Load - 0,13..0,14
+    .op BitOr - 0,16..0,17
+    .right Name 'd' Load - 0,18..0,19
+'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | (b | (c | d) | e) | f'''),
+r'''i = a | (b | (c | d) | e) | f''', r'''
+Assign - ROOT 0,0..0,29
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value BinOp - 0,4..0,29
+    .left BinOp - 0,4..0,25
+      .left Name 'a' Load - 0,4..0,5
+      .op BitOr - 0,6..0,7
+      .right BinOp - 0,9..0,24
+        .left BinOp - 0,9..0,20
+          .left Name 'b' Load - 0,9..0,10
+          .op BitOr - 0,11..0,12
+          .right BinOp - 0,14..0,19
+            .left Name 'c' Load - 0,14..0,15
+            .op BitOr - 0,16..0,17
+            .right Name 'd' Load - 0,18..0,19
+        .op BitOr - 0,21..0,22
+        .right Name 'e' Load - 0,23..0,24
+    .op BitOr - 0,26..0,27
+    .right Name 'f' Load - 0,28..0,29
+'''),
+
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('pattern',
 r'''[{1: a, **b}, cls(True, e = [*c])]'''),

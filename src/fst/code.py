@@ -1248,14 +1248,17 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
             lines = fst_._lines
             last_end_ln = last_end_col = 0
+            last_f = None
 
             for e in elts:
                 f = e.f
                 end_ln, end_col, _, _ = f.pars()
 
                 ln, col = lline_start(lines, last_end_ln, last_end_col, end_ln, end_col)  # start of logical line because decorators must start at start of block indent
-                fst_._put_src('\n@' if col else '@', ln, col, end_ln, end_col, True)  # put element at line start right after '@'
+                fst_._put_src('\n@' if col else '@', ln, col, end_ln, end_col, True,
+                              exclude=last_f, offset_excluded=False)  # put element at line start right after '@', exclude pprevious element from offset because could be pegger right before this one
 
+                last_f = f
                 _, _, last_end_ln, last_end_col = f.pars()
 
                 if frag := next_frag(lines, last_end_ln, last_end_col, len(lines) - 1, 0x7fffffffffffffff):

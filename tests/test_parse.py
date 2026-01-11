@@ -2002,9 +2002,8 @@ match a:
                 f = code_as(code, coerce=True)
             except Exception as exc:
                 r = f'**SyntaxError**' if exc.__class__ is SyntaxError else f'**{exc!r}**'
-
             else:
-                # f.verify()
+                f.verify()
                 r = (f.a.__class__, f.src)
 
             try:
