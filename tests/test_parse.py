@@ -2002,7 +2002,9 @@ match a:
                 f = code_as(code, coerce=True)
             except Exception as exc:
                 r = f'**SyntaxError**' if exc.__class__ is SyntaxError else f'**{exc!r}**'
+
             else:
+                # f.verify()
                 r = (f.a.__class__, f.src)
 
             try:
@@ -2117,7 +2119,28 @@ match a:
             (code_as_expr, (MatchSequence, '[([x, 1, True, *y],)]'), (List, '[([x, 1, True, *y],)]'), (List, '[[[x, 1, True, *y]]]')),
             (code_as_expr, (MatchMapping, '{1: a, b.c: d, **e}'), (Dict, '{1: a, b.c: d, **e}')),
             (code_as_expr, (MatchClass, 'cls(a, b=c)'), (Call, 'cls(a, b=c)')),
-            # (code_as_expr, (MatchOr, 'a | b | c'), (BinOp, 'a | b | c')),
+            (code_as_expr, (MatchOr, 'a | b'), (BinOp, 'a | b')),
+            (code_as_expr, (MatchOr, 'a | b | c'), (BinOp, 'a | b | c')),
+            (code_as_expr, (MatchOr, '(a | b) | c'),
+                (BinOp, '(a | b) | c'),
+                (BinOp, '(a | b) | c'),
+                (BinOp, 'a | b | c')),
+            (code_as_expr, (MatchOr, 'a | (b | c)'), (BinOp, 'a | (b | c)')),
+            (code_as_expr, (MatchOr, '(a | (b | c)) | d'),
+                (BinOp, '(a | (b | c)) | d'),
+                (BinOp, '(a | (b | c)) | d'),
+                (BinOp, 'a | (b | c) | d')),
+            (code_as_expr, (MatchOr, 'a | ((b | c) | d)'),
+                (BinOp, 'a | ((b | c) | d)'),
+                (BinOp, 'a | ((b | c) | d)'),
+                (BinOp, 'a | (b | c | d)')),
+            (code_as_expr, (MatchOr, '(a | b | c) | d'),
+                (BinOp, '(a | b | c) | d'),
+                (BinOp, '(a | b | c) | d'),
+                (BinOp, 'a | b | c | d')),
+            (code_as_expr, (MatchOr, 'a | (b | c | d)'), (BinOp, 'a | (b | c | d)')),
+            (code_as_expr, (MatchOr, 'a | (b | c) | d'), (BinOp, 'a | (b | c) | d')),
+            (code_as_expr, (MatchOr, 'a | (b | (c | d) | e) | f'), (BinOp, 'a | (b | (c | d) | e) | f')),
             (code_as_expr, (_Assign_targets, 'a = b = c ='),
                 "**SyntaxError**",  # src
                 (Tuple, 'a, b, c'),  # FST

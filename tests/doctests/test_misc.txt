@@ -1058,3 +1058,209 @@ arguments - ROOT 1,0..8,1
    0] None
 9:
 <arguments ROOT 1,0..8,1>
+
+>>> cd.code_as_expr(FST('a | b', pattern).put(None, 1), coerce=True).dump('N').verify()
+0: a
+Name 'a' Load - ROOT 0,0..0,1
+<Name ROOT 0,0..0,1>
+
+>>> cd.code_as_expr(FST('a | b | c', pattern), coerce=True).dump('N').verify()
+0: a | b | c
+BinOp - ROOT 0,0..0,9
+0: a | b
+  .left BinOp - 0,0..0,5
+0: a
+    .left Name 'a' Load - 0,0..0,1
+0:   |
+    .op BitOr - 0,2..0,3
+0:     b
+    .right Name 'b' Load - 0,4..0,5
+0:       |
+  .op BitOr - 0,6..0,7
+0:         c
+  .right Name 'c' Load - 0,8..0,9
+<BinOp ROOT 0,0..0,9>
+
+>>> cd.code_as_expr(FST('(a | b) | c', pattern), coerce=True).dump('N').verify()
+0: (a | b) | c
+BinOp - ROOT 0,0..0,11
+0:  a | b
+  .left BinOp - 0,1..0,6
+0:  a
+    .left Name 'a' Load - 0,1..0,2
+0:    |
+    .op BitOr - 0,3..0,4
+0:      b
+    .right Name 'b' Load - 0,5..0,6
+0:         |
+  .op BitOr - 0,8..0,9
+0:           c
+  .right Name 'c' Load - 0,10..0,11
+<BinOp ROOT 0,0..0,11>
+
+>>> cd.code_as_expr(FST('a | (b | c)', pattern), coerce=True).dump('N').verify()
+0: a | (b | c)
+BinOp - ROOT 0,0..0,11
+0: a
+  .left Name 'a' Load - 0,0..0,1
+0:   |
+  .op BitOr - 0,2..0,3
+0:      b | c
+  .right BinOp - 0,5..0,10
+0:      b
+    .left Name 'b' Load - 0,5..0,6
+0:        |
+    .op BitOr - 0,7..0,8
+0:          c
+    .right Name 'c' Load - 0,9..0,10
+<BinOp ROOT 0,0..0,11>
+
+>>> cd.code_as_expr(FST('(a | (b | c)) | d', pattern), coerce=True).dump('N').verify()
+0: (a | (b | c)) | d
+BinOp - ROOT 0,0..0,17
+0:  a | (b | c)
+  .left BinOp - 0,1..0,12
+0:  a
+    .left Name 'a' Load - 0,1..0,2
+0:    |
+    .op BitOr - 0,3..0,4
+0:       b | c
+    .right BinOp - 0,6..0,11
+0:       b
+      .left Name 'b' Load - 0,6..0,7
+0:         |
+      .op BitOr - 0,8..0,9
+0:           c
+      .right Name 'c' Load - 0,10..0,11
+0:               |
+  .op BitOr - 0,14..0,15
+0:                 d
+  .right Name 'd' Load - 0,16..0,17
+<BinOp ROOT 0,0..0,17>
+
+>>> cd.code_as_expr(FST('a | ((b | c) | d)', pattern), coerce=True).dump('N').verify()
+0: a | ((b | c) | d)
+BinOp - ROOT 0,0..0,17
+0: a
+  .left Name 'a' Load - 0,0..0,1
+0:   |
+  .op BitOr - 0,2..0,3
+0:      (b | c) | d
+  .right BinOp - 0,5..0,16
+0:       b | c
+    .left BinOp - 0,6..0,11
+0:       b
+      .left Name 'b' Load - 0,6..0,7
+0:         |
+      .op BitOr - 0,8..0,9
+0:           c
+      .right Name 'c' Load - 0,10..0,11
+0:              |
+    .op BitOr - 0,13..0,14
+0:                d
+    .right Name 'd' Load - 0,15..0,16
+<BinOp ROOT 0,0..0,17>
+
+>>> cd.code_as_expr(FST('(a | b | c) | d', pattern), coerce=True).dump('N').verify()
+0: (a | b | c) | d
+BinOp - ROOT 0,0..0,15
+0:  a | b | c
+  .left BinOp - 0,1..0,10
+0:  a | b
+    .left BinOp - 0,1..0,6
+0:  a
+      .left Name 'a' Load - 0,1..0,2
+0:    |
+      .op BitOr - 0,3..0,4
+0:      b
+      .right Name 'b' Load - 0,5..0,6
+0:        |
+    .op BitOr - 0,7..0,8
+0:          c
+    .right Name 'c' Load - 0,9..0,10
+0:             |
+  .op BitOr - 0,12..0,13
+0:               d
+  .right Name 'd' Load - 0,14..0,15
+<BinOp ROOT 0,0..0,15>
+
+>>> cd.code_as_expr(FST('a | (b | c | d)', pattern), coerce=True).dump('N').verify()
+0: a | (b | c | d)
+BinOp - ROOT 0,0..0,15
+0: a
+  .left Name 'a' Load - 0,0..0,1
+0:   |
+  .op BitOr - 0,2..0,3
+0:      b | c | d
+  .right BinOp - 0,5..0,14
+0:      b | c
+    .left BinOp - 0,5..0,10
+0:      b
+      .left Name 'b' Load - 0,5..0,6
+0:        |
+      .op BitOr - 0,7..0,8
+0:          c
+      .right Name 'c' Load - 0,9..0,10
+0:            |
+    .op BitOr - 0,11..0,12
+0:              d
+    .right Name 'd' Load - 0,13..0,14
+<BinOp ROOT 0,0..0,15>
+
+>>> cd.code_as_expr(FST('a | (b | c) | d', pattern), coerce=True).dump('N').verify()
+0: a | (b | c) | d
+BinOp - ROOT 0,0..0,15
+0: a | (b | c)
+  .left BinOp - 0,0..0,11
+0: a
+    .left Name 'a' Load - 0,0..0,1
+0:   |
+    .op BitOr - 0,2..0,3
+0:      b | c
+    .right BinOp - 0,5..0,10
+0:      b
+      .left Name 'b' Load - 0,5..0,6
+0:        |
+      .op BitOr - 0,7..0,8
+0:          c
+      .right Name 'c' Load - 0,9..0,10
+0:             |
+  .op BitOr - 0,12..0,13
+0:               d
+  .right Name 'd' Load - 0,14..0,15
+<BinOp ROOT 0,0..0,15>
+
+>>> cd.code_as_expr(FST('a | (b | (c | d) | e) | f', pattern), coerce=True).dump('N').verify()
+0: a | (b | (c | d) | e) | f
+BinOp - ROOT 0,0..0,25
+0: a | (b | (c | d) | e)
+  .left BinOp - 0,0..0,21
+0: a
+    .left Name 'a' Load - 0,0..0,1
+0:   |
+    .op BitOr - 0,2..0,3
+0:      b | (c | d) | e
+    .right BinOp - 0,5..0,20
+0:      b | (c | d)
+      .left BinOp - 0,5..0,16
+0:      b
+        .left Name 'b' Load - 0,5..0,6
+0:        |
+        .op BitOr - 0,7..0,8
+0:           c | d
+        .right BinOp - 0,10..0,15
+0:           c
+          .left Name 'c' Load - 0,10..0,11
+0:             |
+          .op BitOr - 0,12..0,13
+0:               d
+          .right Name 'd' Load - 0,14..0,15
+0:                  |
+      .op BitOr - 0,17..0,18
+0:                    e
+      .right Name 'e' Load - 0,19..0,20
+0:                       |
+  .op BitOr - 0,22..0,23
+0:                         f
+  .right Name 'f' Load - 0,24..0,25
+<BinOp ROOT 0,0..0,25>

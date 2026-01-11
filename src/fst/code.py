@@ -14,6 +14,8 @@ from .asttypes import (
     ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
     Attribute,
+    BinOp,
+    BitOr,
     Call,
     Constant,
     Dict,
@@ -81,7 +83,7 @@ from .astutil import (
     is_valid_target,
 )
 
-from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re
+from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re, next_delims
 
 from .parsex import (
     _fixing_unparse,
@@ -660,7 +662,7 @@ def _coerce_to_expr_ast_MatchMapping(ast: AST, is_FST: bool, parse_params: Mappi
             values.append(Name(id=rest, ctx=Load(), lineno=ln + 1, col_offset=lines[ln].c2b(col), end_lineno=end_ln + 1,
                                end_col_offset=lines[end_ln].c2b(end_col)))
 
-    return ret, False, 2
+    return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
@@ -708,7 +710,54 @@ def _coerce_to_expr_ast_MatchClass(ast: AST, is_FST: bool, parse_params: Mapping
 
             _, _, end_ln, end_col = loc
 
-    return ret, False, 2
+    return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
+
+def _coerce_to_expr_ast_MatchOr(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
+
+    if not (patterns := ast.patterns):  # we may have done this while editing
+        return 'no elements'
+
+    pat = patterns[0]
+    ret = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
+
+    if len(patterns) == 1:  # this is also only doable by us editing
+        return ret
+
+    if (ret_cls := ret.__class__) is str:
+        return ret
+    elif ret_cls is tuple:
+        ret = ret[0]
+
+    if is_FST:
+        f = ast.f
+        lines = f.root._lines
+        _, _, ast_end_ln, ast_end_col = f.loc
+
+    for pat in patterns[1:]:
+        right = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
+                                              _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params)
+
+        if (right_cls := right.__class__) is str:
+            return right
+        elif right_cls is tuple:
+            right = right[0]
+
+        if not is_FST:
+            ret = BinOp(left=ret, op=BitOr(), right=right)
+
+        else:  # need account for internal closing parentheses because that location info is not present in the MatchOr
+            _, _, ln, col = pat.f.loc
+            end_ln, end_col = next_delims(lines, ln, col, ast_end_ln, ast_end_col)[-1]
+
+            ret = BinOp(left=ret, op=BitOr(), right=right, lineno=ret.lineno, col_offset=ret.col_offset,
+                        end_lineno=end_ln + 1, end_col_offset=lines[end_ln].c2b(end_col))
+
+    if is_FST:  # because of parentheses
+        ret.lineno = ast.lineno
+        ret.col_offset = ast.col_offset
+
+    return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_TypeVar(ast: AST, is_FST: bool, parse_params: Mapping[str, Any]) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
@@ -820,7 +869,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     MatchClass:         _coerce_to_expr_ast_MatchClass,  # recurses
     MatchStar:          _coerce_to_expr_ast_MatchStar,
     MatchAs:            _coerce_to_expr_ast_MatchAs,
-    # MatchOr:            _coerce_to_expr_ast_MatchOr,  # TODO?  how to handle parentheses for locations, "a | (b | c)", "(a | (b | c)) | d"
+    MatchOr:            _coerce_to_expr_ast_MatchOr,  # recurses
     TypeVar:            _coerce_to_expr_ast_TypeVar,
     TypeVarTuple:       _coerce_to_expr_ast_TypeVarTuple,
     _type_params:       _coerce_to_expr_ast__type_params,
