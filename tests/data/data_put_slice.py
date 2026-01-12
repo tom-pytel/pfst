@@ -28696,7 +28696,8 @@ ClassDef - ROOT 0,0..0,22
 ('', 1, 3, '_bases', {'coerce': False, 'one': True}, (None,
 r'''class cls(a, b, c): pass'''), ('expr',
 r'''*s'''),
-r'''class cls(a, *s): pass''', r'''
+r'''class cls(a, *s): pass''',
+r'''**NodeError('expecting _arglikes, got Starred, coerce disabled')**''', r'''
 ClassDef - ROOT 0,0..0,22
   .name 'cls'
   .bases[2]
@@ -28744,7 +28745,8 @@ ClassDef - ROOT 0,0..0,23
 ('', 1, 3, '_bases', {'coerce': False, 'one': True}, (None,
 r'''class cls(a, b, c): pass'''), ('keyword',
 r'''k=w'''),
-r'''class cls(a, k=w): pass''', r'''
+r'''class cls(a, k=w): pass''',
+r'''**NodeError('expecting _arglikes, got keyword, coerce disabled')**''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
@@ -28760,17 +28762,20 @@ ClassDef - ROOT 0,0..0,23
 ('', 1, 2, '_bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), ('Tuple',
 r'''x, y, z'''),
-r'''class cls(a, x, y, z, c): pass''', r'''
-ClassDef - ROOT 0,0..0,30
+r'''class cls(a, (x, y, z), c): pass''', r'''
+ClassDef - ROOT 0,0..0,32
   .name 'cls'
-  .bases[5]
+  .bases[3]
    0] Name 'a' Load - 0,10..0,11
-   1] Name 'x' Load - 0,13..0,14
-   2] Name 'y' Load - 0,16..0,17
-   3] Name 'z' Load - 0,19..0,20
-   4] Name 'c' Load - 0,22..0,23
+   1] Tuple - 0,13..0,22
+     .elts[3]
+      0] Name 'x' Load - 0,14..0,15
+      1] Name 'y' Load - 0,17..0,18
+      2] Name 'z' Load - 0,20..0,21
+     .ctx Load
+   2] Name 'c' Load - 0,24..0,25
   .body[1]
-   0] Pass - 0,26..0,30
+   0] Pass - 0,28..0,32
 '''),
 ],
 
@@ -33488,7 +33493,8 @@ Call - ROOT 0,0..0,11
 ('', 1, 3, '_args', {'coerce': False, 'one': True}, (None,
 r'''call(a, b, c)'''), ('expr',
 r'''*s'''),
-r'''call(a, *s)''', r'''
+r'''call(a, *s)''',
+r'''**NodeError('expecting _arglikes, got Starred, coerce disabled')**''', r'''
 Call - ROOT 0,0..0,11
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -33530,7 +33536,8 @@ Call - ROOT 0,0..0,12
 ('', 1, 3, '_args', {'coerce': False, 'one': True}, (None,
 r'''call(a, b, c)'''), ('keyword',
 r'''k=w'''),
-r'''call(a, k=w)''', r'''
+r'''call(a, k=w)''',
+r'''**NodeError('expecting _arglikes, got keyword, coerce disabled')**''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
@@ -33544,15 +33551,18 @@ Call - ROOT 0,0..0,12
 ('', 1, 2, '_args', {'one': True}, (None,
 r'''call(a, b, c)'''), ('Tuple',
 r'''x, y, z'''),
-r'''call(a, x, y, z, c)''', r'''
-Call - ROOT 0,0..0,19
+r'''call(a, (x, y, z), c)''', r'''
+Call - ROOT 0,0..0,21
   .func Name 'call' Load - 0,0..0,4
-  .args[5]
+  .args[3]
    0] Name 'a' Load - 0,5..0,6
-   1] Name 'x' Load - 0,8..0,9
-   2] Name 'y' Load - 0,11..0,12
-   3] Name 'z' Load - 0,14..0,15
-   4] Name 'c' Load - 0,17..0,18
+   1] Tuple - 0,8..0,17
+     .elts[3]
+      0] Name 'x' Load - 0,9..0,10
+      1] Name 'y' Load - 0,12..0,13
+      2] Name 'z' Load - 0,15..0,16
+     .ctx Load
+   2] Name 'c' Load - 0,19..0,20
 '''),
 ],
 
@@ -40570,6 +40580,275 @@ Call - ROOT 0,0..3,1
    0] Name 'x' Load - 1,5..1,6
    1] Starred - 2,5..2,7
      .value Name 'y' Load - 2,6..2,7
+     .ctx Load
+'''),
+],
+
+'one_True_to__arglikes': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('Name',
+r'''x'''),
+r'''x''', r'''
+_arglikes - ROOT 0,0..0,1
+  .arglikes[1]
+   0] Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('Tuple', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('List', r'''
+[
+x
+]
+'''), r'''
+[
+x
+]
+''',
+r'''[x]''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] List - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('Set', r'''
+{
+x
+}
+'''), r'''
+{
+x
+}
+''',
+r'''{x}''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Set - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('Dict', r'''
+{
+x: y
+}
+'''), r'''
+{
+x: y
+}
+''',
+r'''{x: y}''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Dict - 0,0..2,1
+     .keys[1]
+      0] Name 'x' Load - 1,0..1,1
+     .values[1]
+      0] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_arglikes',
+r'''a'''), ('_Assign_targets',
+r'''x ='''),
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[1]
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_arglikes',
+r'''a'''), ('_decorator_list',
+r'''@x'''),
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[1]
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('_arglikes', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('_arglikes', r'''
+
+x,
+k=w,
+
+'''),
+r'''**NodeError('keyword cannot be put into a Tuple for put as `one=True`')**'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_arglikes',
+r'''a'''), ('_comprehension_ifs', r'''
+
+if x
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('arguments', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_same': False, 'one': True}, ('_arglikes',
+r'''a'''), ('_aliases',
+r'''x'''),
+r'''x''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..0,1
+  .arglikes[1]
+   0] Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('_withitems',
+r'''x,'''),
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[1]
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('MatchSequence',
+r'''x,'''),
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[1]
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_arglikes',
+r'''a'''), ('MatchSequence', r'''
+(
+x,
+)
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_same': False, 'one': True}, ('_arglikes',
+r'''a'''), ('MatchSequence', r'''
+[
+x
+]
+'''), r'''
+[
+x
+]
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] List - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_ver': 12, 'one': True}, ('_arglikes',
+r'''a'''), ('_type_params', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_arglikes - ROOT 0,0..2,1
+  .arglikes[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
      .ctx Load
 '''),
 ],

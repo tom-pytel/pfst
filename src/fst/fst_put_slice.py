@@ -67,6 +67,7 @@ from .asttypes import (
     Yield,
     YieldFrom,
     comprehension,
+    keyword,
     match_case,
     TryStar,
     TypeAlias,
@@ -243,7 +244,8 @@ from .fst_put_one import _fix_With_items
 #                  (TemplateStr, 'values'):                # Constant|Interpolation*    -> TemplateStr
 
 
-_ASTS_LEAF_EXPR_NO_TUPLE = ASTS_LEAF_EXPR - {Tuple}
+_ASTS_LEAF_EXPR_NO_TUPLE   = ASTS_LEAF_EXPR - {Tuple}
+_ASTS_LEAF_EXPR_OR_KEYWORD = ASTS_LEAF_EXPR | {keyword}
 
 
 class slicestatic(NamedTuple):
@@ -868,7 +870,76 @@ def _code_to_slice__decorator_list(
 def _code_to_slice__arglikes(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'arglikes', one, options, _arglikes, code_as__arglikes)
+    """All this mostly do deal with how to treat sequences when passed in as either source or nodes with various
+    combinations of `one` and `coerce` for the most common-sense interpretation."""
+
+    if code is None:
+        return None
+
+    codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
+    coerce = fst.FST.get_option('coerce', options)
+
+    if one and coerce and codea.__class__ in (Tuple, List, Set):  # if putting as one with coerce=True these would be coerced out of being Tuple, List or Set, but in this case we want to keep them as such
+        if codea is not code:  # is FST
+            fst_ = code
+            ast_ = codea
+
+            if fst_.is_parenthesized_tuple() is False:
+                fst_._delimit_node()
+
+        else:  # is AST, need to get FST
+            fst_ = code_as_expr(code, self.root.parse_params)
+            ast_ = fst_.a
+
+    else:
+        fst_ = code_as__arglikes(code, self.root.parse_params, coerce=coerce)
+        ast_ = fst_.a
+        arglikes = ast_.arglikes
+
+        if not one:
+            return fst_ if arglikes else None  # put empty sequence is same as delete
+
+        if len(arglikes) == 1:  # if is length 1 then maybe we put just this one element
+            a0 = arglikes[0]
+
+            if isinstance(code, (str, list)):
+                if not a0.f._has_separator():
+                    return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
+
+            elif (code_cls := code.__class__) is fst.FST:
+                if codea.__class__ in _ASTS_LEAF_EXPR_OR_KEYWORD:  # was already expression or keyword node passed in
+                    return fst_
+
+            elif code_cls in _ASTS_LEAF_EXPR_OR_KEYWORD:  # pure AST expression or keyword passed in? or if pure single keyword resulted
+                return fst_
+
+            if a0.__class__ is keyword:  # keywords cannot be put into Tuples
+                raise NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+
+        elif any(a.__class__ is keyword for a in arglikes):  # keywords cannot be put into a Tuple for Tuples
+            raise NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+
+        # we are putting whatever sequence was passed in as an singleton Tuple because one=True, is in _arglike container so first need to change that
+
+        fst_._unmake_fst_parents(True)
+
+        ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
+        fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field(arglikes, 'elts', True, False)
+        ast_ = fst_.a
+
+        fst_._fix_tuple()
+        fst_._fix_arglikes(options)  # because this is now a Tuple which can't have arglike-expressions inside
+
+        if fst_.is_parenthesized_tuple() is False:
+            fst_._delimit_node()
+
+    # container for single element we are putting
+
+    ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'arglikes', True, False)
 
 
 def _code_to_slice__comprehensions(
@@ -935,13 +1006,13 @@ def _code_to_slice__expr_arglikes(
                     return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
             elif (code_cls := code.__class__) is fst.FST:
-                if codea.__class__ in _ASTS_LEAF_EXPR_NO_TUPLE:  # was already expression node passed in, so don't treat as tuple if coerced
+                if codea.__class__ in _ASTS_LEAF_EXPR_NO_TUPLE:  # was already expression node passed in, so don't treat as Tuple if coerced
                     return fst_
 
             elif code_cls in ASTS_LEAF_EXPR:  # pure AST expression passed in? The one stuff was handled in code_as__expr_arglikes() because one passed in so here wo just check _EXPR and not _EXPR_NO_TUPLE
                 return fst_
 
-        # we are putting whatever sequence was passed in as an single tuple because one=True
+        # we are putting whatever sequence was passed in as an singleton Tuple because one=True
 
         fst_._fix_tuple()
         fst_._fix_arglikes(options)
