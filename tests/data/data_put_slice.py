@@ -20118,10 +20118,22 @@ Assign - ROOT 0,0..0,9
   .value Name 'd' Load - 0,8..0,9
 '''),
 
-('', 1, 3, 'targets', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'targets', {'one': True}, (None,
 r'''a = b = c = d'''), ('Name',
 r'''x'''),
 r'''a = x = d''', r'''
+Assign - ROOT 0,0..0,9
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'x' Store - 0,4..0,5
+  .value Name 'd' Load - 0,8..0,9
+'''),
+
+('', 1, 3, 'targets', {'coerce': False, 'one': True}, (None,
+r'''a = b = c = d'''), ('Name',
+r'''x'''),
+r'''a = x = d''',
+r'''**NodeError('expecting _Assign_targets, got Name, coerce disabled')**''', r'''
 Assign - ROOT 0,0..0,9
   .targets[2]
    0] Name 'a' Store - 0,0..0,1
@@ -20173,10 +20185,21 @@ _Assign_targets - ROOT 0,0..0,7
    1] Name 'x' Store - 0,4..0,5
 '''),
 
-('', 1, 3, 'targets', {'coerce': False, 'one': True}, ('_Assign_targets',
+('', 1, 3, 'targets', {'one': True}, ('_Assign_targets',
 r'''a = b = c ='''), ('Name',
 r'''x'''),
 r'''a = x =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'x' Store - 0,4..0,5
+'''),
+
+('', 1, 3, 'targets', {'coerce': False, 'one': True}, ('_Assign_targets',
+r'''a = b = c ='''), ('Name',
+r'''x'''),
+r'''a = x =''',
+r'''**NodeError('expecting _Assign_targets, got Name, coerce disabled')**''', r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
    0] Name 'a' Store - 0,0..0,1
@@ -20689,10 +20712,27 @@ With - ROOT 0,0..0,25
    0] Pass - 0,21..0,25
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'items', {'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('withitem',
 r'''x as x'''),
 r'''with a as a, x as x: pass''', r'''
+With - ROOT 0,0..0,25
+  .items[2]
+   0] withitem - 0,5..0,11
+     .context_expr Name 'a' Load - 0,5..0,6
+     .optional_vars Name 'a' Store - 0,10..0,11
+   1] withitem - 0,13..0,19
+     .context_expr Name 'x' Load - 0,13..0,14
+     .optional_vars Name 'x' Store - 0,18..0,19
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+r'''with a as a, b as b, c as c: pass'''), ('withitem',
+r'''x as x'''),
+r'''with a as a, x as x: pass''',
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 With - ROOT 0,0..0,25
   .items[2]
    0] withitem - 0,5..0,11
@@ -20736,10 +20776,26 @@ With - ROOT 0,0..0,20
    0] Pass - 0,16..0,20
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'items', {'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('Name',
 r'''x'''),
 r'''with a as a, x: pass''', r'''
+With - ROOT 0,0..0,20
+  .items[2]
+   0] withitem - 0,5..0,11
+     .context_expr Name 'a' Load - 0,5..0,6
+     .optional_vars Name 'a' Store - 0,10..0,11
+   1] withitem - 0,13..0,14
+     .context_expr Name 'x' Load - 0,13..0,14
+  .body[1]
+   0] Pass - 0,16..0,20
+'''),
+
+('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+r'''with a as a, b as b, c as c: pass'''), ('Name',
+r'''x'''),
+r'''with a as a, x: pass''',
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
 With - ROOT 0,0..0,20
   .items[2]
    0] withitem - 0,5..0,11
@@ -20815,10 +20871,25 @@ _withitems - ROOT 0,0..0,14
      .optional_vars Name 'x' Store - 0,13..0,14
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+('', 1, 3, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('withitem',
 r'''x as x'''),
 r'''a as a, x as x''', r'''
+_withitems - ROOT 0,0..0,14
+  .items[2]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'x' Load - 0,8..0,9
+     .optional_vars Name 'x' Store - 0,13..0,14
+'''),
+
+('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('withitem',
+r'''x as x'''),
+r'''a as a, x as x''',
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
    0] withitem - 0,0..0,6
@@ -20856,7 +20927,7 @@ _withitems - ROOT 0,0..0,9
      .context_expr Name 'x' Load - 0,8..0,9
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+('', 1, 3, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''', r'''
@@ -20869,7 +20940,21 @@ _withitems - ROOT 0,0..0,9
      .context_expr Name 'x' Load - 0,8..0,9
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('Name',
+r'''x'''),
+r'''a as a, x''',
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
+_withitems - ROOT 0,0..0,9
+  .items[2]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'x' Load - 0,8..0,9
+'''),
+
+('', 1, 2, 'items', {'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
 r'''with a as a, 1, 2, 3, c as c: pass''', r'''
@@ -20891,7 +20976,30 @@ With - ROOT 0,0..0,34
    0] Pass - 0,30..0,34
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True}, ('_withitems',
+('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
+r'''with a as a, b as b, c as c: pass'''), ('Tuple',
+r'''1, 2, 3'''),
+r'''with a as a, 1, 2, 3, c as c: pass''',
+r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
+With - ROOT 0,0..0,34
+  .items[5]
+   0] withitem - 0,5..0,11
+     .context_expr Name 'a' Load - 0,5..0,6
+     .optional_vars Name 'a' Store - 0,10..0,11
+   1] withitem - 0,13..0,14
+     .context_expr Constant 1 - 0,13..0,14
+   2] withitem - 0,16..0,17
+     .context_expr Constant 2 - 0,16..0,17
+   3] withitem - 0,19..0,20
+     .context_expr Constant 3 - 0,19..0,20
+   4] withitem - 0,22..0,28
+     .context_expr Name 'c' Load - 0,22..0,23
+     .optional_vars Name 'c' Store - 0,27..0,28
+  .body[1]
+   0] Pass - 0,30..0,34
+'''),
+
+('', 1, 2, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''1, 2, 3'''),
 r'''a as a, 1, 2, 3, c as c''', r'''
@@ -20911,7 +21019,50 @@ _withitems - ROOT 0,0..0,23
      .optional_vars Name 'c' Store - 0,22..0,23
 '''),
 
+('', 1, 2, 'items', {'coerce': False, 'one': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('Tuple',
+r'''1, 2, 3'''),
+r'''a as a, 1, 2, 3, c as c''',
+r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
+_withitems - ROOT 0,0..0,23
+  .items[5]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Constant 1 - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Constant 2 - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Constant 3 - 0,14..0,15
+   4] withitem - 0,17..0,23
+     .context_expr Name 'c' Load - 0,17..0,18
+     .optional_vars Name 'c' Store - 0,22..0,23
+'''),
+
 ('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('Tuple',
+r'''(1, 2, 3)'''),
+r'''a as a, (1, 2, 3), c as c''',
+r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
+_withitems - ROOT 0,0..0,25
+  .items[3]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,17
+     .context_expr Tuple - 0,8..0,17
+       .elts[3]
+        0] Constant 1 - 0,9..0,10
+        1] Constant 2 - 0,12..0,13
+        2] Constant 3 - 0,15..0,16
+       .ctx Load
+   2] withitem - 0,19..0,25
+     .context_expr Name 'c' Load - 0,19..0,20
+     .optional_vars Name 'c' Store - 0,24..0,25
+'''),
+
+('', 1, 2, 'items', {'one': True, '_same': False}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''(1, 2, 3)'''),
 r'''a as a, (1, 2, 3), c as c''',
@@ -21782,10 +21933,27 @@ AsyncWith - ROOT 0,0..0,31
    0] Pass - 0,27..0,31
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'items', {'one': True}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('withitem',
 r'''x as x'''),
 r'''async with a as a, x as x: pass''', r'''
+AsyncWith - ROOT 0,0..0,31
+  .items[2]
+   0] withitem - 0,11..0,17
+     .context_expr Name 'a' Load - 0,11..0,12
+     .optional_vars Name 'a' Store - 0,16..0,17
+   1] withitem - 0,19..0,25
+     .context_expr Name 'x' Load - 0,19..0,20
+     .optional_vars Name 'x' Store - 0,24..0,25
+  .body[1]
+   0] Pass - 0,27..0,31
+'''),
+
+('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+r'''async with a as a, b as b, c as c: pass'''), ('withitem',
+r'''x as x'''),
+r'''async with a as a, x as x: pass''',
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 AsyncWith - ROOT 0,0..0,31
   .items[2]
    0] withitem - 0,11..0,17
@@ -21829,10 +21997,26 @@ AsyncWith - ROOT 0,0..0,26
    0] Pass - 0,22..0,26
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'items', {'one': True}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('Name',
 r'''x'''),
 r'''async with a as a, x: pass''', r'''
+AsyncWith - ROOT 0,0..0,26
+  .items[2]
+   0] withitem - 0,11..0,17
+     .context_expr Name 'a' Load - 0,11..0,12
+     .optional_vars Name 'a' Store - 0,16..0,17
+   1] withitem - 0,19..0,20
+     .context_expr Name 'x' Load - 0,19..0,20
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('', 1, 3, 'items', {'coerce': False, 'one': True}, (None,
+r'''async with a as a, b as b, c as c: pass'''), ('Name',
+r'''x'''),
+r'''async with a as a, x: pass''',
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
 AsyncWith - ROOT 0,0..0,26
   .items[2]
    0] withitem - 0,11..0,17
@@ -21908,10 +22092,25 @@ _withitems - ROOT 0,0..0,14
      .optional_vars Name 'x' Store - 0,13..0,14
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+('', 1, 3, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('withitem',
 r'''x as x'''),
 r'''a as a, x as x''', r'''
+_withitems - ROOT 0,0..0,14
+  .items[2]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'x' Load - 0,8..0,9
+     .optional_vars Name 'x' Store - 0,13..0,14
+'''),
+
+('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('withitem',
+r'''x as x'''),
+r'''a as a, x as x''',
+r'''**NodeError('expecting _withitems, got withitem, coerce disabled')**''', r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
    0] withitem - 0,0..0,6
@@ -21949,7 +22148,7 @@ _withitems - ROOT 0,0..0,9
      .context_expr Name 'x' Load - 0,8..0,9
 '''),
 
-('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+('', 1, 3, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''', r'''
@@ -21962,10 +22161,47 @@ _withitems - ROOT 0,0..0,9
      .context_expr Name 'x' Load - 0,8..0,9
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'items', {'coerce': False, 'one': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), ('Name',
+r'''x'''),
+r'''a as a, x''',
+r'''**NodeError('expecting _withitems, got Name, coerce disabled')**''', r'''
+_withitems - ROOT 0,0..0,9
+  .items[2]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'x' Load - 0,8..0,9
+'''),
+
+('', 1, 2, 'items', {'one': True}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
 r'''async with a as a, 1, 2, 3, c as c: pass''', r'''
+AsyncWith - ROOT 0,0..0,40
+  .items[5]
+   0] withitem - 0,11..0,17
+     .context_expr Name 'a' Load - 0,11..0,12
+     .optional_vars Name 'a' Store - 0,16..0,17
+   1] withitem - 0,19..0,20
+     .context_expr Constant 1 - 0,19..0,20
+   2] withitem - 0,22..0,23
+     .context_expr Constant 2 - 0,22..0,23
+   3] withitem - 0,25..0,26
+     .context_expr Constant 3 - 0,25..0,26
+   4] withitem - 0,28..0,34
+     .context_expr Name 'c' Load - 0,28..0,29
+     .optional_vars Name 'c' Store - 0,33..0,34
+  .body[1]
+   0] Pass - 0,36..0,40
+'''),
+
+('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
+r'''async with a as a, b as b, c as c: pass'''), ('Tuple',
+r'''1, 2, 3'''),
+r'''async with a as a, 1, 2, 3, c as c: pass''',
+r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
 AsyncWith - ROOT 0,0..0,40
   .items[5]
    0] withitem - 0,11..0,17
@@ -22704,37 +22940,12 @@ r'''**SyntaxError('invalid syntax')**'''),
 ('', 1, 3, 'names', {'one': True}, (None,
 r'''import a.a as a, b.b as b, c.c as c'''), ('_aliases',
 r'''x.x as x, y.y as y'''),
-r'''import a.a as a, x.x as x, y.y as y''', r'''
-Import - ROOT 0,0..0,35
-  .names[3]
-   0] alias - 0,7..0,15
-     .name 'a.a'
-     .asname 'a'
-   1] alias - 0,17..0,25
-     .name 'x.x'
-     .asname 'x'
-   2] alias - 0,27..0,35
-     .name 'y.y'
-     .asname 'y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {'one': True, 'coerce': False}, (None,
 r'''import a.a as a, b.b as b, c.c as c'''), ('_aliases',
 r'''x.x as x, y.y as y'''),
-r'''import a.a as a, x.x as x, y.y as y''',
-r'''**ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**''', r'''
-Import - ROOT 0,0..0,35
-  .names[3]
-   0] alias - 0,7..0,15
-     .name 'a.a'
-     .asname 'a'
-   1] alias - 0,17..0,25
-     .name 'x.x'
-     .asname 'x'
-   2] alias - 0,27..0,35
-     .name 'y.y'
-     .asname 'y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {}, (None,
 r'''import a.a as a, b.b as b, c.c as c'''), ('alias',
@@ -22765,10 +22976,25 @@ Import - ROOT 0,0..0,25
      .asname 'x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'names', {'one': True}, (None,
 r'''import a.a as a, b.b as b, c.c as c'''), ('alias',
 r'''x.x as x'''),
 r'''import a.a as a, x.x as x''', r'''
+Import - ROOT 0,0..0,25
+  .names[2]
+   0] alias - 0,7..0,15
+     .name 'a.a'
+     .asname 'a'
+   1] alias - 0,17..0,25
+     .name 'x.x'
+     .asname 'x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+r'''import a.a as a, b.b as b, c.c as c'''), ('alias',
+r'''x.x as x'''),
+r'''import a.a as a, x.x as x''',
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 Import - ROOT 0,0..0,25
   .names[2]
    0] alias - 0,7..0,15
@@ -22806,10 +23032,24 @@ Import - ROOT 0,0..0,18
      .name 'x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'names', {'one': True}, (None,
 r'''import a.a as a, b.b as b, c.c as c'''), ('Name',
 r'''x'''),
 r'''import a.a as a, x''', r'''
+Import - ROOT 0,0..0,18
+  .names[2]
+   0] alias - 0,7..0,15
+     .name 'a.a'
+     .asname 'a'
+   1] alias - 0,17..0,18
+     .name 'x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+r'''import a.a as a, b.b as b, c.c as c'''), ('Name',
+r'''x'''),
+r'''import a.a as a, x''',
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 Import - ROOT 0,0..0,18
   .names[2]
    0] alias - 0,7..0,15
@@ -22846,7 +23086,7 @@ Import - ROOT 0,0..0,20
      .name 'x.x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'names', {'one': True}, (None,
 r'''import a.a as a, b.b as b, c.c as c'''), ('Attribute',
 r'''x.x'''),
 r'''import a.a as a, x.x''', r'''
@@ -22859,40 +23099,29 @@ Import - ROOT 0,0..0,20
      .name 'x.x'
 '''),
 
+('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+r'''import a.a as a, b.b as b, c.c as c'''), ('Attribute',
+r'''x.x'''),
+r'''import a.a as a, x.x''',
+r'''**NodeError('expecting _aliases, got Attribute, coerce disabled')**''', r'''
+Import - ROOT 0,0..0,20
+  .names[2]
+   0] alias - 0,7..0,15
+     .name 'a.a'
+     .asname 'a'
+   1] alias - 0,17..0,20
+     .name 'x.x'
+'''),
+
 ('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('_aliases',
 r'''x.x as x, y.y as y'''),
-r'''a as a, x.x as x, y.y as y''', r'''
-_aliases - ROOT 0,0..0,26
-  .names[3]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'a'
-   1] alias - 0,8..0,16
-     .name 'x.x'
-     .asname 'x'
-   2] alias - 0,18..0,26
-     .name 'y.y'
-     .asname 'y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {'one': True, 'coerce': False}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('_aliases',
 r'''x.x as x, y.y as y'''),
-r'''a as a, x.x as x, y.y as y''',
-r'''**ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**''', r'''
-_aliases - ROOT 0,0..0,26
-  .names[3]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'a'
-   1] alias - 0,8..0,16
-     .name 'x.x'
-     .asname 'x'
-   2] alias - 0,18..0,26
-     .name 'y.y'
-     .asname 'y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('alias',
@@ -22923,10 +23152,25 @@ _aliases - ROOT 0,0..0,16
      .asname 'x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('alias',
 r'''x.x as x'''),
 r'''a as a, x.x as x''', r'''
+_aliases - ROOT 0,0..0,16
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,8..0,16
+     .name 'x.x'
+     .asname 'x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), ('alias',
+r'''x.x as x'''),
+r'''a as a, x.x as x''',
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
    0] alias - 0,0..0,6
@@ -22964,10 +23208,24 @@ _aliases - ROOT 0,0..0,9
      .name 'x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,8..0,9
+     .name 'x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), ('Name',
+r'''x'''),
+r'''a as a, x''',
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,9
   .names[2]
    0] alias - 0,0..0,6
@@ -23004,10 +23262,24 @@ _aliases - ROOT 0,0..0,11
      .name 'x.x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('Attribute',
 r'''x.x'''),
 r'''a as a, x.x''', r'''
+_aliases - ROOT 0,0..0,11
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,8..0,11
+     .name 'x.x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), ('Attribute',
+r'''x.x'''),
+r'''a as a, x.x''',
+r'''**NodeError('expecting _aliases, got Attribute, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,11
   .names[2]
    0] alias - 0,0..0,6
@@ -23600,41 +23872,12 @@ r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 ('', 1, 3, 'names', {'one': True}, (None,
 r'''from _ import a as a, b as b, c as c'''), ('_aliases',
 r'''x as x, y as y'''),
-r'''from _ import a as a, x as x, y as y''', r'''
-ImportFrom - ROOT 0,0..0,36
-  .module '_'
-  .names[3]
-   0] alias - 0,14..0,20
-     .name 'a'
-     .asname 'a'
-   1] alias - 0,22..0,28
-     .name 'x'
-     .asname 'x'
-   2] alias - 0,30..0,36
-     .name 'y'
-     .asname 'y'
-  .level 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {'one': True, 'coerce': False}, (None,
 r'''from _ import a as a, b as b, c as c'''), ('_aliases',
 r'''x as x, y as y'''),
-r'''from _ import a as a, x as x, y as y''',
-r'''**ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**''', r'''
-ImportFrom - ROOT 0,0..0,36
-  .module '_'
-  .names[3]
-   0] alias - 0,14..0,20
-     .name 'a'
-     .asname 'a'
-   1] alias - 0,22..0,28
-     .name 'x'
-     .asname 'x'
-   2] alias - 0,30..0,36
-     .name 'y'
-     .asname 'y'
-  .level 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {}, (None,
 r'''from _ import a as a, b as b, c as c'''), ('alias',
@@ -23669,10 +23912,27 @@ ImportFrom - ROOT 0,0..0,28
   .level 0
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'names', {'one': True}, (None,
 r'''from _ import a as a, b as b, c as c'''), ('alias',
 r'''x as x'''),
 r'''from _ import a as a, x as x''', r'''
+ImportFrom - ROOT 0,0..0,28
+  .module '_'
+  .names[2]
+   0] alias - 0,14..0,20
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,22..0,28
+     .name 'x'
+     .asname 'x'
+  .level 0
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+r'''from _ import a as a, b as b, c as c'''), ('alias',
+r'''x as x'''),
+r'''from _ import a as a, x as x''',
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 ImportFrom - ROOT 0,0..0,28
   .module '_'
   .names[2]
@@ -23716,7 +23976,7 @@ ImportFrom - ROOT 0,0..0,23
   .level 0
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'names', {'one': True}, (None,
 r'''from _ import a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''from _ import a as a, x''', r'''
@@ -23731,40 +23991,31 @@ ImportFrom - ROOT 0,0..0,23
   .level 0
 '''),
 
+('', 1, 3, 'names', {'coerce': False, 'one': True}, (None,
+r'''from _ import a as a, b as b, c as c'''), ('Name',
+r'''x'''),
+r'''from _ import a as a, x''',
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
+ImportFrom - ROOT 0,0..0,23
+  .module '_'
+  .names[2]
+   0] alias - 0,14..0,20
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,22..0,23
+     .name 'x'
+  .level 0
+'''),
+
 ('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('_aliases',
 r'''x as x, y as y'''),
-r'''a as a, x as x, y as y''', r'''
-_aliases - ROOT 0,0..0,22
-  .names[3]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'a'
-   1] alias - 0,8..0,14
-     .name 'x'
-     .asname 'x'
-   2] alias - 0,16..0,22
-     .name 'y'
-     .asname 'y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {'one': True, 'coerce': False}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('_aliases',
 r'''x as x, y as y'''),
-r'''a as a, x as x, y as y''',
-r'''**ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**''', r'''
-_aliases - ROOT 0,0..0,22
-  .names[3]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'a'
-   1] alias - 0,8..0,14
-     .name 'x'
-     .asname 'x'
-   2] alias - 0,16..0,22
-     .name 'y'
-     .asname 'y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _aliases")**'''),
 
 ('', 1, 3, 'names', {}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('alias',
@@ -23795,10 +24046,25 @@ _aliases - ROOT 0,0..0,14
      .asname 'x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('alias',
 r'''x as x'''),
 r'''a as a, x as x''', r'''
+_aliases - ROOT 0,0..0,14
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,8..0,14
+     .name 'x'
+     .asname 'x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), ('alias',
+r'''x as x'''),
+r'''a as a, x as x''',
+r'''**NodeError('expecting _aliases, got alias, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
    0] alias - 0,0..0,6
@@ -23836,10 +24102,24 @@ _aliases - ROOT 0,0..0,9
      .name 'x'
 '''),
 
-('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+('', 1, 3, 'names', {'one': True}, ('_aliases',
 r'''a as a, b as b, c as c'''), ('Name',
 r'''x'''),
 r'''a as a, x''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,8..0,9
+     .name 'x'
+'''),
+
+('', 1, 3, 'names', {'coerce': False, 'one': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), ('Name',
+r'''x'''),
+r'''a as a, x''',
+r'''**NodeError('expecting _aliases, got Name, coerce disabled')**''', r'''
 _aliases - ROOT 0,0..0,9
   .names[2]
    0] alias - 0,0..0,6
@@ -34412,7 +34692,7 @@ def f(): pass
 r'''x'''),
 r'''**NodeError('expecting _decorator_list, got Name, coerce disabled')**'''),
 
-('', 1, 3, 'decorator_list', {'coerce': False, 'one': True}, (None, r'''
+('', 1, 3, 'decorator_list', {'one': True}, (None, r'''
 @a
 @b
 @c
@@ -34431,6 +34711,15 @@ FunctionDef - ROOT 2,0..2,13
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 1,1..1,2
 '''),
+
+('', 1, 3, 'decorator_list', {'coerce': False, 'one': True}, (None, r'''
+@a
+@b
+@c
+def f(): pass
+'''), ('Name',
+r'''x'''),
+r'''**SyntaxError('unexpected multiple statements')**'''),
 
 ('', 1, 3, 'decorator_list', {}, (None, r'''
 @a
@@ -34519,7 +34808,7 @@ _decorator_list - ROOT 0,0..1,2
 r'''x'''),
 r'''**SyntaxError('unexpected multiple statements')**'''),
 
-('', 1, 3, 'decorator_list', {'coerce': False, 'one': True}, ('_decorator_list', r'''
+('', 1, 3, 'decorator_list', {'one': True}, ('_decorator_list', r'''
 @a
 @b
 @c
@@ -34533,6 +34822,14 @@ _decorator_list - ROOT 0,0..1,2
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 1,1..1,2
 '''),
+
+('', 1, 3, 'decorator_list', {'coerce': False, 'one': True}, ('_decorator_list', r'''
+@a
+@b
+@c
+'''), ('Name',
+r'''x'''),
+r'''**SyntaxError('unexpected multiple statements')**'''),
 
 ('', 1, 3, 'decorator_list', {}, ('_decorator_list', r'''
 @a
@@ -35662,45 +35959,12 @@ _comprehensions - ROOT 0,0..4,0
 ('', 1, 3, 'generators', {'one': True}, (None,
 r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions',
 r'''for x in x for y in y'''),
-r'''[_ for a in a for x in x for y in y]''', r'''
-ListComp - ROOT 0,0..0,36
-  .elt Name '_' Load - 0,1..0,2
-  .generators[3]
-   0] comprehension - 0,3..0,13
-     .target Name 'a' Store - 0,7..0,8
-     .iter Name 'a' Load - 0,12..0,13
-     .is_async 0
-   1] comprehension - 0,14..0,24
-     .target Name 'x' Store - 0,18..0,19
-     .iter Name 'x' Load - 0,23..0,24
-     .is_async 0
-   2] comprehension - 0,25..0,35
-     .target Name 'y' Store - 0,29..0,30
-     .iter Name 'y' Load - 0,34..0,35
-     .is_async 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehensions")**'''),
 
 ('', 1, 3, 'generators', {'one': True, 'coerce': False}, (None,
 r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions',
 r'''for x in x for y in y'''),
-r'''[_ for a in a for x in x for y in y]''',
-r'''**ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")**''', r'''
-ListComp - ROOT 0,0..0,36
-  .elt Name '_' Load - 0,1..0,2
-  .generators[3]
-   0] comprehension - 0,3..0,13
-     .target Name 'a' Store - 0,7..0,8
-     .iter Name 'a' Load - 0,12..0,13
-     .is_async 0
-   1] comprehension - 0,14..0,24
-     .target Name 'x' Store - 0,18..0,19
-     .iter Name 'x' Load - 0,23..0,24
-     .is_async 0
-   2] comprehension - 0,25..0,35
-     .target Name 'y' Store - 0,29..0,30
-     .iter Name 'y' Load - 0,34..0,35
-     .is_async 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehensions")**'''),
 
 ('', 1, 3, 'generators', {}, (None,
 r'''[_ for a in a for b in b for c in c]'''), ('comprehension',
@@ -35737,7 +36001,7 @@ ListComp - ROOT 0,0..0,25
      .is_async 0
 '''),
 
-('', 1, 3, 'generators', {'coerce': False, 'one': True}, (None,
+('', 1, 3, 'generators', {'one': True}, (None,
 r'''[_ for a in a for b in b for c in c]'''), ('comprehension',
 r'''for x in x'''),
 r'''[_ for a in a for x in x]''', r'''
@@ -35754,46 +36018,33 @@ ListComp - ROOT 0,0..0,25
      .is_async 0
 '''),
 
+('', 1, 3, 'generators', {'coerce': False, 'one': True}, (None,
+r'''[_ for a in a for b in b for c in c]'''), ('comprehension',
+r'''for x in x'''),
+r'''[_ for a in a for x in x]''',
+r'''**NodeError('expecting _comprehensions, got comprehension, coerce disabled')**''', r'''
+ListComp - ROOT 0,0..0,25
+  .elt Name '_' Load - 0,1..0,2
+  .generators[2]
+   0] comprehension - 0,3..0,13
+     .target Name 'a' Store - 0,7..0,8
+     .iter Name 'a' Load - 0,12..0,13
+     .is_async 0
+   1] comprehension - 0,14..0,24
+     .target Name 'x' Store - 0,18..0,19
+     .iter Name 'x' Load - 0,23..0,24
+     .is_async 0
+'''),
+
 ('', 1, 3, 'generators', {'one': True}, ('_comprehensions',
 r'''for a in a for b in b for c in c'''), ('_comprehensions',
 r'''for x in x for y in y'''),
-r'''for a in a for x in x for y in y''', r'''
-_comprehensions - ROOT 0,0..0,32
-  .generators[3]
-   0] comprehension - 0,0..0,10
-     .target Name 'a' Store - 0,4..0,5
-     .iter Name 'a' Load - 0,9..0,10
-     .is_async 0
-   1] comprehension - 0,11..0,21
-     .target Name 'x' Store - 0,15..0,16
-     .iter Name 'x' Load - 0,20..0,21
-     .is_async 0
-   2] comprehension - 0,22..0,32
-     .target Name 'y' Store - 0,26..0,27
-     .iter Name 'y' Load - 0,31..0,32
-     .is_async 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehensions")**'''),
 
 ('', 1, 3, 'generators', {'one': True, 'coerce': False}, ('_comprehensions',
 r'''for a in a for b in b for c in c'''), ('_comprehensions',
 r'''for x in x for y in y'''),
-r'''for a in a for x in x for y in y''',
-r'''**ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")**''', r'''
-_comprehensions - ROOT 0,0..0,32
-  .generators[3]
-   0] comprehension - 0,0..0,10
-     .target Name 'a' Store - 0,4..0,5
-     .iter Name 'a' Load - 0,9..0,10
-     .is_async 0
-   1] comprehension - 0,11..0,21
-     .target Name 'x' Store - 0,15..0,16
-     .iter Name 'x' Load - 0,20..0,21
-     .is_async 0
-   2] comprehension - 0,22..0,32
-     .target Name 'y' Store - 0,26..0,27
-     .iter Name 'y' Load - 0,31..0,32
-     .is_async 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehensions")**'''),
 
 ('', 1, 3, 'generators', {}, ('_comprehensions',
 r'''for a in a for b in b for c in c'''), ('comprehension',
@@ -35828,10 +36079,27 @@ _comprehensions - ROOT 0,0..0,21
      .is_async 0
 '''),
 
-('', 1, 3, 'generators', {'coerce': False, 'one': True}, ('_comprehensions',
+('', 1, 3, 'generators', {'one': True}, ('_comprehensions',
 r'''for a in a for b in b for c in c'''), ('comprehension',
 r'''for x in x'''),
 r'''for a in a for x in x''', r'''
+_comprehensions - ROOT 0,0..0,21
+  .generators[2]
+   0] comprehension - 0,0..0,10
+     .target Name 'a' Store - 0,4..0,5
+     .iter Name 'a' Load - 0,9..0,10
+     .is_async 0
+   1] comprehension - 0,11..0,21
+     .target Name 'x' Store - 0,15..0,16
+     .iter Name 'x' Load - 0,20..0,21
+     .is_async 0
+'''),
+
+('', 1, 3, 'generators', {'coerce': False, 'one': True}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), ('comprehension',
+r'''for x in x'''),
+r'''for a in a for x in x''',
+r'''**NodeError('expecting _comprehensions, got comprehension, coerce disabled')**''', r'''
 _comprehensions - ROOT 0,0..0,21
   .generators[2]
    0] comprehension - 0,0..0,10
@@ -36252,7 +36520,7 @@ r'''for _ in _ if a if b if c'''), ('Name',
 r'''x'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-('', 1, 3, 'ifs', {'coerce': False, 'one': True}, ('comprehension',
+('', 1, 3, 'ifs', {'one': True}, ('comprehension',
 r'''for _ in _ if a if b if c'''), ('Name',
 r'''x'''),
 r'''for _ in _ if a if x''', r'''
@@ -36264,6 +36532,11 @@ comprehension - ROOT 0,0..0,20
    1] Name 'x' Load - 0,19..0,20
   .is_async 0
 '''),
+
+('', 1, 3, 'ifs', {'coerce': False, 'one': True}, ('comprehension',
+r'''for _ in _ if a if b if c'''), ('Name',
+r'''x'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 3, 'ifs', {'one': True}, ('_comprehension_ifs',
 r'''if a if b if c'''), ('_comprehension_ifs',
@@ -36303,7 +36576,7 @@ r'''if a if b if c'''), ('Name',
 r'''x'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-('', 1, 3, 'ifs', {'coerce': False, 'one': True}, ('_comprehension_ifs',
+('', 1, 3, 'ifs', {'one': True}, ('_comprehension_ifs',
 r'''if a if b if c'''), ('Name',
 r'''x'''),
 r'''if a if x''', r'''
@@ -36312,6 +36585,11 @@ _comprehension_ifs - ROOT 0,0..0,9
    0] Name 'a' Load - 0,3..0,4
    1] Name 'x' Load - 0,8..0,9
 '''),
+
+('', 1, 3, 'ifs', {'coerce': False, 'one': True}, ('_comprehension_ifs',
+r'''if a if b if c'''), ('Name',
+r'''x'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'MatchSequence': [  # ................................................................................
@@ -37926,18 +38204,7 @@ Module - ROOT 0,0..0,21
 ('body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, ('exec',
 r'''type t[T, *U, **V] = ...'''), (None,
 r'''X, *Y'''),
-r'''type t[X, *Y] = ...''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-   0] TypeAlias - 0,0..0,19
-     .name Name 't' Store - 0,5..0,6
-     .type_params[2]
-      0] TypeVar - 0,7..0,8
-        .name 'X'
-      1] TypeVarTuple - 0,10..0,12
-        .name 'Y'
-     .value Constant Ellipsis - 0,16..0,19
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _type_params")**'''),
 
 ('body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, ('exec',
 r'''type t[T, *U, **V] = ...'''), (None,
@@ -38008,35 +38275,12 @@ FunctionDef - ROOT 0,0..0,25
 ('', 1, 3, 'type_params', {'one': True, '_ver': 12}, (None,
 r'''type t[T, *U, **V] = ...'''), ('_type_params',
 r'''X, **Y'''),
-r'''type t[T, X, **Y] = ...''', r'''
-TypeAlias - ROOT 0,0..0,23
-  .name Name 't' Store - 0,5..0,6
-  .type_params[3]
-   0] TypeVar - 0,7..0,8
-     .name 'T'
-   1] TypeVar - 0,10..0,11
-     .name 'X'
-   2] ParamSpec - 0,13..0,16
-     .name 'Y'
-  .value Constant Ellipsis - 0,20..0,23
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _type_params")**'''),
 
 ('', 1, 3, 'type_params', {'one': True, 'coerce': False, '_ver': 12}, (None,
 r'''type t[T, *U, **V] = ...'''), ('_type_params',
 r'''X, **Y'''),
-r'''type t[T, X, **Y] = ...''',
-r'''**ValueError("cannot put _type_params node as 'one=True' without 'coerce=True'")**''', r'''
-TypeAlias - ROOT 0,0..0,23
-  .name Name 't' Store - 0,5..0,6
-  .type_params[3]
-   0] TypeVar - 0,7..0,8
-     .name 'T'
-   1] TypeVar - 0,10..0,11
-     .name 'X'
-   2] ParamSpec - 0,13..0,16
-     .name 'Y'
-  .value Constant Ellipsis - 0,20..0,23
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _type_params")**'''),
 
 ('', 1, 3, 'type_params', {'_ver': 12}, (None,
 r'''type t[T, *U, **V] = ...'''), ('type_param',
@@ -38067,7 +38311,7 @@ TypeAlias - ROOT 0,0..0,20
   .value Constant Ellipsis - 0,17..0,20
 '''),
 
-('', 1, 3, 'type_params', {'coerce': False, 'one': True, '_ver': 12}, (None,
+('', 1, 3, 'type_params', {'one': True, '_ver': 12}, (None,
 r'''type t[T, *U, **V] = ...'''), ('type_param',
 r'''**X'''),
 r'''type t[T, **X] = ...''', r'''
@@ -38081,34 +38325,30 @@ TypeAlias - ROOT 0,0..0,20
   .value Constant Ellipsis - 0,17..0,20
 '''),
 
+('', 1, 3, 'type_params', {'coerce': False, 'one': True, '_ver': 12}, (None,
+r'''type t[T, *U, **V] = ...'''), ('type_param',
+r'''**X'''),
+r'''type t[T, **X] = ...''',
+r'''**NodeError('expecting _type_params, got ParamSpec, coerce disabled')**''', r'''
+TypeAlias - ROOT 0,0..0,20
+  .name Name 't' Store - 0,5..0,6
+  .type_params[2]
+   0] TypeVar - 0,7..0,8
+     .name 'T'
+   1] ParamSpec - 0,10..0,13
+     .name 'X'
+  .value Constant Ellipsis - 0,17..0,20
+'''),
+
 ('', 1, 3, 'type_params', {'one': True, '_ver': 12}, ('_type_params',
 r'''T, *U, **V'''), ('_type_params',
 r'''X, **Y'''),
-r'''T, X, **Y''', r'''
-_type_params - ROOT 0,0..0,9
-  .type_params[3]
-   0] TypeVar - 0,0..0,1
-     .name 'T'
-   1] TypeVar - 0,3..0,4
-     .name 'X'
-   2] ParamSpec - 0,6..0,9
-     .name 'Y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _type_params")**'''),
 
 ('', 1, 3, 'type_params', {'one': True, 'coerce': False, '_ver': 12}, ('_type_params',
 r'''T, *U, **V'''), ('_type_params',
 r'''X, **Y'''),
-r'''T, X, **Y''',
-r'''**ValueError("cannot put _type_params node as 'one=True' without 'coerce=True'")**''', r'''
-_type_params - ROOT 0,0..0,9
-  .type_params[3]
-   0] TypeVar - 0,0..0,1
-     .name 'T'
-   1] TypeVar - 0,3..0,4
-     .name 'X'
-   2] ParamSpec - 0,6..0,9
-     .name 'Y'
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _type_params")**'''),
 
 ('', 1, 3, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T, *U, **V'''), ('type_param',
@@ -38135,10 +38375,23 @@ _type_params - ROOT 0,0..0,6
      .name 'X'
 '''),
 
-('', 1, 3, 'type_params', {'coerce': False, 'one': True, '_ver': 12}, ('_type_params',
+('', 1, 3, 'type_params', {'one': True, '_ver': 12}, ('_type_params',
 r'''T, *U, **V'''), ('type_param',
 r'''**X'''),
 r'''T, **X''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'T'
+   1] ParamSpec - 0,3..0,6
+     .name 'X'
+'''),
+
+('', 1, 3, 'type_params', {'coerce': False, 'one': True, '_ver': 12}, ('_type_params',
+r'''T, *U, **V'''), ('type_param',
+r'''**X'''),
+r'''T, **X''',
+r'''**NodeError('expecting _type_params, got ParamSpec, coerce disabled')**''', r'''
 _type_params - ROOT 0,0..0,6
   .type_params[2]
    0] TypeVar - 0,0..0,1

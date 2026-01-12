@@ -1,6 +1,39 @@
 Interaction of `one` with `coerce` for slice puts, complicated but needs to feel be common-sense.
 
+>>> import sys
 >>> from fst import *
+
+>>> _FILE_CACHE = {}  # {'fnm': list[str], ...}
+
+>>> def version_ok_else_print(version: int, start_marker: str, stop_marker: str) -> bool:
+...     """If python version high enough then do nothing, otherwise print what would have been printed."""
+...
+...     if sys.version_info[1] >= version:
+...         return True
+...
+...     if (lines := _FILE_CACHE.get(__file__)) is None:
+...         with open(__file__) as fp:
+...             lines = _FILE_CACHE[__file__] = fp.readlines()
+...
+...     start_marker += '\n'
+...     stop_marker += '\n'
+...     itr = iter(enumerate(lines))
+...
+...     for start, line in itr:
+...         if line.endswith(start_marker):
+...             break
+...     else:
+...         raise RuntimeError(f'start marker {start_marker[:-1]} not found')
+...
+...     for stop, line in itr:
+...         if line.endswith(stop_marker):
+...             break
+...     else:
+...         raise RuntimeError(f'stop marker {stop_marker[:-1]} not found')
+...
+...     print(''.join(lines[start + 1 : stop])[:-1], end='')
+...
+...     return False
 
 >>> def test_one_coerce_target_src(one: bool, coerce: bool, target: str, field: str, src: str, mode=None):
 ...     for name, code in [
@@ -9,7 +42,7 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 ...         ('AST', FST(src, mode).a),
 ...     ]:
 ...         try:
-...             text = f"{name}: {FST('call(a)').put_slice(code, field, one=one, coerce=coerce).verify().src}"
+...             text = f"{name}: {FST(target).put_slice(code, field, one=one, coerce=coerce).verify().src}"
 ...         except Exception as exc:
 ...             text = f'{name}: {exc!r}'
 ...
@@ -31,11 +64,11 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 
 
 ========================================================================================================================
-__arglikes
+_arglikes
 ========================================================================================================================
 
 ........................................................................................................................
->>> test_target_srcs('call(a)', '_args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}',])
+>>> test_target_srcs('call(a, b, c)', '_args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}',])
  
 one=False, coerce=True
 ----------------------
@@ -182,7 +215,7 @@ AST: NodeError('expecting _arglikes, got Dict, coerce disabled')
  
 
 ........................................................................................................................
->>> test_target_srcs('call(a)', '_args', ['x', '*x', 'k=w', '**kw'], '_arglikes')
+>>> test_target_srcs('call(a, b, c)', '_args', ['x', '*x', 'k=w', '**kw'], '_arglikes')
  
 one=False, coerce=True
 ----------------------
@@ -265,7 +298,7 @@ AST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
  
 
 ........................................................................................................................
->>> test_target_srcs('call(a)', '_args', ['k=w', '**kw'], 'keyword')
+>>> test_target_srcs('call(a, b, c)', '_args', ['k=w', '**kw'], 'keyword')
  
 one=False, coerce=True
 ----------------------
@@ -316,11 +349,238 @@ AST: NodeError('expecting _arglikes, got keyword, coerce disabled')
  
 
 
+
+========================================================================================================================
+_type_params
+========================================================================================================================
+
+........................................................................................................................
+>>> if version_ok_else_print(12, 'TYPE_PARAMS_1_START', 'TYPE_PARAMS_1_STOP'):
+...     test_target_srcs('type t[a, b, c] = ...', 'type_params', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}',])  # TYPE_PARAMS_1_START
+ 
+one=False, coerce=True
+----------------------
+ 
+src: type t[x] = ...  # src='x'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: type t[*x] = ...  # src='*x'
+FST: type t[*x] = ...
+AST: type t[*x] = ...
+ 
+src: type t[x] = ...  # src='x,'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: type t[*x] = ...  # src='*x,'
+FST: type t[*x] = ...
+AST: type t[*x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
+FST: NodeError('expecting _type_params, got Dict, could not coerce')
+AST: NodeError('expecting _type_params, got Dict, could not coerce')
+ 
+ 
+one=False, coerce=False
+-----------------------
+ 
+src: type t[x] = ...  # src='x'
+FST: NodeError('expecting _type_params, got Name, coerce disabled')
+AST: NodeError('expecting _type_params, got Name, coerce disabled')
+ 
+src: type t[*x] = ...  # src='*x'
+FST: NodeError('expecting _type_params, got Starred, coerce disabled')
+AST: NodeError('expecting _type_params, got Starred, coerce disabled')
+ 
+src: type t[x] = ...  # src='x,'
+FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+ 
+src: type t[*x] = ...  # src='*x,'
+FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
+FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
+FST: NodeError('expecting _type_params, got List, coerce disabled')
+AST: NodeError('expecting _type_params, got List, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
+FST: NodeError('expecting _type_params, got Set, coerce disabled')
+AST: NodeError('expecting _type_params, got Set, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
+FST: NodeError('expecting _type_params, got Dict, coerce disabled')
+AST: NodeError('expecting _type_params, got Dict, coerce disabled')
+ 
+ 
+one=True, coerce=True
+---------------------
+ 
+src: type t[x] = ...  # src='x'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: type t[*x] = ...  # src='*x'
+FST: type t[*x] = ...
+AST: type t[*x] = ...
+ 
+src: type t[x] = ...  # src='x,'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: type t[*x] = ...  # src='*x,'
+FST: type t[*x] = ...
+AST: type t[*x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
+FST: type t[x] = ...
+AST: type t[x] = ...
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
+FST: NodeError('expecting _type_params, got Dict, could not coerce')
+AST: NodeError('expecting _type_params, got Dict, could not coerce')
+ 
+ 
+one=True, coerce=False
+----------------------
+ 
+src: type t[x] = ...  # src='x'
+FST: NodeError('expecting _type_params, got Name, coerce disabled')
+AST: NodeError('expecting _type_params, got Name, coerce disabled')
+ 
+src: type t[*x] = ...  # src='*x'
+FST: NodeError('expecting _type_params, got Starred, coerce disabled')
+AST: NodeError('expecting _type_params, got Starred, coerce disabled')
+ 
+src: type t[x] = ...  # src='x,'
+FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+ 
+src: type t[*x] = ...  # src='*x,'
+FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
+FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
+FST: NodeError('expecting _type_params, got List, coerce disabled')
+AST: NodeError('expecting _type_params, got List, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
+FST: NodeError('expecting _type_params, got Set, coerce disabled')
+AST: NodeError('expecting _type_params, got Set, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
+FST: NodeError('expecting _type_params, got Dict, coerce disabled')
+AST: NodeError('expecting _type_params, got Dict, coerce disabled')
+ 
+
+# TYPE_PARAMS_1_STOP
+
+
+........................................................................................................................
+>>> if version_ok_else_print(12, 'TYPE_PARAMS_2_START', 'TYPE_PARAMS_2_STOP'):
+...     test_target_srcs('type t[a, b, c] = ...', 'type_params', ['T', '*U', '**V'], 'type_param')  # TYPE_PARAMS_2_START
+ 
+one=False, coerce=True
+----------------------
+ 
+src: type t[T] = ...  # src='T'
+FST: type t[T] = ...
+AST: type t[T] = ...
+ 
+src: type t[*U] = ...  # src='*U'
+FST: type t[*U] = ...
+AST: type t[*U] = ...
+ 
+src: type t[**V] = ...  # src='**V'
+FST: type t[**V] = ...
+AST: type t[**V] = ...
+ 
+ 
+one=False, coerce=False
+-----------------------
+ 
+src: type t[T] = ...  # src='T'
+FST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
+AST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
+ 
+src: type t[*U] = ...  # src='*U'
+FST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
+AST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
+ 
+src: type t[**V] = ...  # src='**V'
+FST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
+AST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
+ 
+ 
+one=True, coerce=True
+---------------------
+ 
+src: type t[T] = ...  # src='T'
+FST: type t[T] = ...
+AST: type t[T] = ...
+ 
+src: type t[*U] = ...  # src='*U'
+FST: type t[*U] = ...
+AST: type t[*U] = ...
+ 
+src: type t[**V] = ...  # src='**V'
+FST: type t[**V] = ...
+AST: type t[**V] = ...
+ 
+ 
+one=True, coerce=False
+----------------------
+ 
+src: type t[T] = ...  # src='T'
+FST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
+AST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
+ 
+src: type t[*U] = ...  # src='*U'
+FST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
+AST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
+ 
+src: type t[**V] = ...  # src='**V'
+FST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
+AST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
+ 
+
+# TYPE_PARAMS_2_STOP
+
+
 ========================================================================================================================
 _expr_arglikes
 ========================================================================================================================
 
->>> test_target_srcs('call(a)', 'args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}'])
+>>> test_target_srcs('call(a, b, c)', 'args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}'])
  
 one=False, coerce=True
 ----------------------

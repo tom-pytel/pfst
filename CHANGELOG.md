@@ -17,6 +17,7 @@
 
 ### Updated
 
+- concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode
 - `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
 - `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`
 
