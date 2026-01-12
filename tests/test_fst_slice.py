@@ -2587,10 +2587,13 @@ if 1:
         f.verify()
 
         if PYGE11:
-            # multiple arglikes as `one` to single arglike field, TODO: `one` for these needs fixing
+            # multiple arglikes as `one` to single arglike field
 
-            self.assertEqual('call(*not a, *b or c)', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), 'args', one=True).src)
+            self.assertEqual('call((*(not a), *(b or c)))', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), 'args', one=True).src)
             f.verify()
+
+            self.assertEqual('call((*not a, *b or c))', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), 'args', one=True, pars_arglike=False).src)
+            # f.verify()
 
         # more unparenthesized tuple schenanigans
 

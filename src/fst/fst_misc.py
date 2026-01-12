@@ -1447,50 +1447,57 @@ def _has_Starred(self: fst.FST) -> bool:
     ))
 
 
-def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
-    """Check if `self` needs them and if so add line continuations to make parsable. Can delete commnents which may
-    prevent line continuations.
+def _has_separator(
+    self: fst.FST,
+    ln: int | None = None,
+    col: int | None = None,
+    end_ln: int | None = None,
+    end_col: int | None = None,
+    sep: str = ',',
+) -> tuple[int, int] | None:
+    """Whether `self` has a separator (usually comma) following, after any possible closing parentheses. If so then
+    return the starting location of that separator. Will skip any closing parentheses so can be used with an end
+    location without having to call `pars()`.
 
     **Parameters:**
-    - `whole`: Whether to check whole source (and add line continuations to, only if at root). Otherwise will just
-        check and modify lines that this node lives on.
-    - `del_comments`: If `True` then will delete comments which prevent line continuations from making the source
-        parsable. If `False` then will raise an error if this is encountered.
+    - (`ln`, `col`): Location of start of span to search, otherwise gotten from end of `self`.
+    - (`end_ln`, `end_col`): Location of end of span to search, otherwise gotten from end of parent. Is fine to use this
+        even if there are other nodes that may follow because if we run into them then they will not be a closing par or
+        a separator so will return no separator found.
+    - `sep`: Separator to search for, usually comma.
 
     **Returns:**
-    - `bool`: Whether modification was made or not.
+    - `(ln, col)`: Location of found separator after any closing parentheses.
+    - `None`: Separator does not follow, there is something else or end of bound.
     """
 
-    lns = set()
-
-    if self._is_enclosed_or_line(whole=whole, out_lns=lns):
-        return False
-
     lines = self.root._lines
-    end_cols = {}  # {end_ln: end_col, ...} last expression columns for lines, needed for comment checks (so we don't get false comments from inside strings)
 
-    for a in walk(self.a):
-        if (loc := a.f.loc) is not None:
-            _, _, end_ln, end_col = loc
+    if end_ln is None:
+        if parent := self.parent:
+            _, _, end_ln, end_col = parent.loc
+        else:
+            end_ln = len(lines) - 1
+            end_col = len(lines[-1])
 
-            end_cols[end_ln] = max(end_cols.get(end_ln, 0), end_col)
+    if ln is None:
+        _, _, ln, col = self.loc
 
-    for ln in lns:
-        m = re_line_end_cont_or_comment.search(l := lines[ln], end_cols.get(ln, 0))
+    while frag := next_frag(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
+        cln, ccol, src = frag
 
-        if not (g := m.group(1)):
-            lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
+        if src.startswith(')'):
+            old_len = len(src)
+            src = src.lstrip(')')
+            ln = cln
+            col = ccol = ccol + old_len - len(src)
 
-        elif g.startswith('#'):
-            if not del_comments:
-                raise NodeError('cannot add line continuation to line that ends with comment')
+            if not src:
+                continue
 
-            # maybe just delete line if contains only comment?
+        return (cln, ccol) if src.startswith(sep) else None
 
-            c = c + 1 if (c := re_empty_space.search(l, 0, cc := m.start(1)).start()) else cc
-            lines[ln] = bistr(l[:c] + '\\')
-
-    return True
+    return None
 
 
 def _maybe_del_separator(
@@ -1590,13 +1597,14 @@ def _maybe_ins_separator(
     while frag := next_frag(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
         cln, ccol, src = frag
 
-        while src.startswith(')'):
+        if src.startswith(')'):
+            old_len = len(src)
+            src = src.lstrip(')')
             ln = cln
-            col = ccol = ccol + 1
-            src = src[1:]
+            col = ccol = ccol + old_len - len(src)
 
-        if not src:
-            continue
+            if not src:
+                continue
 
         if src.startswith(sep):  # TODO: maybe need to do regex check in future for separator like 'and' and 'or' to make sure they are not part of an identifier, but so far aren't checked in places where this may be the case
             ccol += len(sep)
@@ -1630,6 +1638,52 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) 
     if len(elts := self.a.elts) == 1:
         self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
+
+
+def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
+    """Check if `self` needs them and if so add line continuations to make parsable. Can delete commnents which may
+    prevent line continuations.
+
+    **Parameters:**
+    - `whole`: Whether to check whole source (and add line continuations to, only if at root). Otherwise will just
+        check and modify lines that this node lives on.
+    - `del_comments`: If `True` then will delete comments which prevent line continuations from making the source
+        parsable. If `False` then will raise an error if this is encountered.
+
+    **Returns:**
+    - `bool`: Whether modification was made or not.
+    """
+
+    lns = set()
+
+    if self._is_enclosed_or_line(whole=whole, out_lns=lns):
+        return False
+
+    lines = self.root._lines
+    end_cols = {}  # {end_ln: end_col, ...} last expression columns for lines, needed for comment checks (so we don't get false comments from inside strings)
+
+    for a in walk(self.a):
+        if (loc := a.f.loc) is not None:
+            _, _, end_ln, end_col = loc
+
+            end_cols[end_ln] = max(end_cols.get(end_ln, 0), end_col)
+
+    for ln in lns:
+        m = re_line_end_cont_or_comment.search(l := lines[ln], end_cols.get(ln, 0))
+
+        if not (g := m.group(1)):
+            lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
+
+        elif g.startswith('#'):
+            if not del_comments:
+                raise NodeError('cannot add line continuation to line that ends with comment')
+
+            # maybe just delete line if contains only comment?
+
+            c = c + 1 if (c := re_empty_space.search(l, 0, cc := m.start(1)).start()) else cc
+            lines[ln] = bistr(l[:c] + '\\')
+
+    return True
 
 
 def _fix_joined_alnum(
@@ -2081,7 +2135,7 @@ def _trim_delimiters(self: fst.FST) -> None:
     ast.col_offset += 1
     ast.end_col_offset -= 1
 
-    self._offset(ln, col, -ln, -lines[ln].c2b(col))
+    self._offset(ln, col, -ln, -lines[ln].c2b(col), True)  # tail=True for empty tuple '()', otherwise end would not be offset
 
     lines[end_ln] = bistr(lines[end_ln][:end_col])
     lines[ln] = bistr(lines[ln][col:])

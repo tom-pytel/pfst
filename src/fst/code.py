@@ -927,6 +927,9 @@ def _coerce_to_expr_ast(
     - `ast`: The `AST` node to coerce, can be part of an `FST` tree.
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
         should be done in that case to get the correct locations.
+    - `**kwargs`: Used to pass coerce-specific flags. Currently only `pars_arglike` to allow prevent of parenthesize
+        arglike-only in case being coerced to another type which can use then unparenthesized. Maybe in future will need
+        more like this.
 
     **Returns:**
     - `(AST, is_nonstandard_tuple)`: The coerced `AST` and a bool indicating whether it is a nonstandard tuple, which

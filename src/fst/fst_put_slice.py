@@ -132,7 +132,6 @@ from .code import (
     code_as_pattern,
     code_as__type_params,
     code_as__expr_arglikes,
-    _coerce_to__expr_arglikes,
 )
 
 from .fst_misc import get_option_overridable, fixup_slice_indices, validate_put_arglike
@@ -248,19 +247,6 @@ class slicestatic(NamedTuple):
     sep:           str
     self_tail_sep: bool | Literal[0, 1] | None
     ret_tail_sep:  bool | Literal[0, 1] | None
-
-
-def _set_loc_whole(self: fst.FST) -> fst.FST:  # self
-    """Set location of `self` (which must be root) to the location of the whole source."""
-
-    lines = self._lines
-    ast = self.a
-    ast.lineno = 1
-    ast.col_offset = 0
-    ast.end_lineno = len(lines)
-    ast.end_col_offset = lines[-1].lenbytes
-
-    return self._touch()
 
 
 def _code_to_slice_expr(
@@ -917,14 +903,40 @@ def _code_to_slice__expr_arglikes(
     if code is None:
         return None
 
-    coerce = fst.FST.get_option('coerce', options)
+    fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))  # we use this instead of code_as_expr() because this field normally takes arglike-only expressions like '*not a' so if we fail to do so here it might seem strange
+    ast_ = fst_.a
 
-    if one:
-        fst_ = _coerce_to__expr_arglikes(code, self.root.parse_params)
-    else:
-        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce)
+    if not one:
+        return fst_ if ast_.elts else None  # put empty sequence is same as delete
 
-    return fst_ if fst_.a.elts else None  # put empty sequence is same as delete
+    if isinstance(code, (str, list)) and len(elts := ast_.elts) == 1 and not elts[0].f._has_separator():  # if a sigle element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
+        return fst_  # its already in the format needed
+
+    fst_._fix_tuple()
+    fst_._fix_arglikes(options)
+
+    if fst_.is_parenthesized_tuple() is False:
+        fst_._delimit_node()
+
+    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'elts', True, False)
+
+
+# ......................................................................................................................
+
+def _set_loc_whole(self: fst.FST) -> fst.FST:  # self
+    """Set location of `self` (which must be root) to the location of the whole source."""
+
+    lines = self._lines
+    ast = self.a
+    ast.lineno = 1
+    ast.col_offset = 0
+    ast.end_lineno = len(lines)
+    ast.end_col_offset = lines[-1].lenbytes
+
+    return self._touch()
 
 
 def _put_slice_asts(

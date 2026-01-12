@@ -4994,11 +4994,12 @@ class FST:
         _is_delimited_seq,
         _has_Slice,
         _has_Starred,
+        _has_separator,
 
-        _maybe_add_line_continuations,
         _maybe_del_separator,
         _maybe_ins_separator,
         _maybe_add_singleton_tuple_comma,
+        _maybe_add_line_continuations,
         _fix_joined_alnum,
         _fix_undelimited_seq,
         _fix_tuple,
