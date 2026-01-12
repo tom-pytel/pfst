@@ -670,13 +670,15 @@ def _fix_undelimited_seq_parsed_delimited(
     if frag := next_frag(lines, 0, 0, e0_ln, e0_col):  # maybe there is opening parenthesis
         e0_ln, e0_col, src = frag
 
-        assert src.startswith('(')
+        if not src.startswith('('):
+            raise SyntaxError('invalid syntax') from None
 
     if frag := prev_frag(lines, en_end_ln, en_end_col, nlines - 1, 0x7fffffffffffffff):  # maybe there is closing parenthesis or trailing comma
         en_end_ln, en_end_col, src = frag
         en_end_col += len(src)
 
-        assert src.endswith(',') or src.endswith(')')
+        if not (src.endswith(',') or src.endswith(')')):  # 's,)if('
+            raise SyntaxError('invalid syntax') from None
 
     ast.lineno = e0_ln + lineno
     ast.col_offset = len(lines[e0_ln][:e0_col].encode())

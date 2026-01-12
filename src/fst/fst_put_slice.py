@@ -909,7 +909,7 @@ def _code_to_slice__expr_arglikes(
     if not one:
         return fst_ if ast_.elts else None  # put empty sequence is same as delete
 
-    if isinstance(code, (str, list)) and len(elts := ast_.elts) == 1 and not elts[0].f._has_separator():  # if a sigle element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
+    if isinstance(code, (str, list)) and len(elts := ast_.elts) == 1 and not elts[0].f._has_separator():  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
         return fst_  # its already in the format needed
 
     fst_._fix_tuple()

@@ -875,6 +875,7 @@ def parse_invalid_src_data():
         'a,),(b',
         'a,b)(b',
         'a)=(',
+        'a,)if(',
 
         ' #0 ) \\\n + \\\n (',
         ' #0 ) \\\n, \\\n (',
@@ -887,6 +888,7 @@ def parse_invalid_src_data():
         ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b',
         ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b',
         ' #0\n a #1\n ) \\\n = \\\n (',
+        ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b',
 
         ']+[',
         '],[',
@@ -897,6 +899,7 @@ def parse_invalid_src_data():
         'a,],[b',
         'a,b][b',
         'a]=[',
+        'a,]if[b',
 
         ' #0 ] \\\n + \\\n [',
         ' #0 ] \\\n, \\\n [',
@@ -909,6 +912,7 @@ def parse_invalid_src_data():
         ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b',
         ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b',
         ' #0\n a #1\n ] \\\n = \\\n [',
+        ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b',
     ]:
         for name, func in funcs:
             try:
@@ -3420,8 +3424,8 @@ match a:
             (Interactive, 'a'),
             (Expression, 'a'),
             (Expr, 'a'),
-            # (_Assign_targets, 'a ='),  # incompatible src for FST
-            # (_decorator_list, '@a'),  # incompatible src for FST
+            (_Assign_targets, 'a ='),
+            (_decorator_list, '@a'),
             (_arglikes, 'a'),
             (_comprehension_ifs, 'if a'),
             (arguments, 'a'),
@@ -3434,10 +3438,10 @@ match a:
             (MatchSingleton, 'True'),
             (MatchSequence, '[a]'),
             (MatchMapping, '{1: a}'),
-            # (MatchClass, ''),
+            (MatchClass, 'cls()'),
             (MatchStar, '*a'),
             (MatchAs, 'a'),
-            # (MatchOr, ''),
+            (MatchOr, 'a | b'),
         ]
 
         if PYGE12:
