@@ -11,6 +11,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR_STMT_OR_MOD,
+    ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
     Attribute,
@@ -1000,7 +1001,7 @@ def _coerce_to_seq(
     ):
         return None
 
-    if ast_cls not in (Tuple, List, Set):
+    if ast_cls not in ASTS_LEAF_TUPLE_LIST_OR_SET:
         if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
             code._trim_delimiters()
 

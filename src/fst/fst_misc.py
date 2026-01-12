@@ -19,6 +19,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_BLOCK,
+    ASTS_LEAF_TUPLE_LIST_OR_SET,
     AST,
     AnnAssign,
     Assert,
@@ -1442,7 +1443,7 @@ def _has_Starred(self: fst.FST) -> bool:
     return (
         (ast_cls := (ast := self.a).__class__) is Starred
         or (
-            ast_cls in (Tuple, List, Set)
+            ast_cls in ASTS_LEAF_TUPLE_LIST_OR_SET
             and any(e.__class__ is Starred for e in ast.elts)
     ))
 

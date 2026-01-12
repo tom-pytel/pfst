@@ -11,6 +11,8 @@ from . import fst
 
 from .asttypes import (
     ASTS_LEAF_EXPR,
+    ASTS_LEAF_TUPLE_LIST_OR_SET,
+    ASTS_LEAF_LIST_OR_SET,
     ASTS_LEAF_CMPOP,
     ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
@@ -273,7 +275,7 @@ def _code_to_slice_expr(
     fst_ = code_as(code, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
-    is_slice_type = ast__cls in (Tuple, List, Set)
+    is_slice_type = ast__cls in ASTS_LEAF_TUPLE_LIST_OR_SET
     put_norm = None  # cached
 
     if not one:
@@ -872,7 +874,7 @@ def _code_to_slice__arglikes(
     codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
     coerce = fst.FST.get_option('coerce', options)
 
-    if one and coerce and codea.__class__ in (Tuple, List, Set):  # if putting as one with coerce=True these would be coerced out of being Tuple, List or Set, but in this case we want to keep them as such
+    if one and coerce and codea.__class__ in ASTS_LEAF_TUPLE_LIST_OR_SET:  # if putting as one with coerce=True these would be coerced out of being Tuple, List or Set, but in this case we want to keep them as such
         if codea is not code:  # is FST
             fst_ = code
             ast_ = codea
@@ -991,7 +993,7 @@ def _code_to_slice__expr_arglikes(
     codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
     coerce = fst.FST.get_option('coerce', options)
 
-    if one and coerce and codea.__class__ in (List, Set):  # if putting as one with coerce=True these would be coerced out of being List or Set, but in this case we want to keep them as such
+    if one and coerce and codea.__class__ in ASTS_LEAF_LIST_OR_SET:  # if putting as one with coerce=True these would be coerced out of being List or Set, but in this case we want to keep them as such
         if codea is not code:  # is FST
             fst_ = code
             ast_ = codea
