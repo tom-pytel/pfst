@@ -2671,6 +2671,7 @@ def code_as__expr_arglikes(
     *,
     sanitize: bool = False,
     coerce: bool = False,
+    one: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
     `ClassDef.bases`. The `Tuple` will be unparenthesized and the location will be the entire source. We use a `Tuple`
@@ -2682,7 +2683,7 @@ def code_as__expr_arglikes(
     internal use only! May fail `verify()`.
     """
 
-    if code.__class__ is Tuple:  # strip parentheses
+    if not one and code.__class__ is Tuple:  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
     fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,

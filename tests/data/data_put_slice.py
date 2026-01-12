@@ -20869,7 +20869,7 @@ _withitems - ROOT 0,0..0,9
      .context_expr Name 'x' Load - 0,8..0,9
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, (None,
+('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
 r'''with a as a, 1, 2, 3, c as c: pass''', r'''
@@ -20891,7 +20891,7 @@ With - ROOT 0,0..0,34
    0] Pass - 0,30..0,34
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, ('_withitems',
+('', 1, 2, 'items', {'coerce': False, 'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''1, 2, 3'''),
 r'''a as a, 1, 2, 3, c as c''', r'''
@@ -21962,7 +21962,7 @@ _withitems - ROOT 0,0..0,9
      .context_expr Name 'x' Load - 0,8..0,9
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, (None,
+('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
 r'''async with a as a, 1, 2, 3, c as c: pass''', r'''
@@ -26557,11 +26557,10 @@ ClassDef - ROOT 0,0..0,21
    0] Pass - 0,17..0,21
 '''),
 
-('', 0, 0, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 0, 'bases', {'one': True}, (None,
 r'''class cls(): pass'''), (None,
 r'''x'''),
-r'''class cls(x): pass''',
-r'''class cls((x,)): pass''', r'''
+r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
@@ -26570,7 +26569,7 @@ ClassDef - ROOT 0,0..0,18
    0] Pass - 0,14..0,18
 '''),
 
-('', 0, 0, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 0, 'bases', {'one': True}, (None,
 r'''class cls(): pass'''), (None,
 r'''x,'''),
 r'''class cls((x,)): pass''', r'''
@@ -26585,7 +26584,7 @@ ClassDef - ROOT 0,0..0,21
    0] Pass - 0,17..0,21
 '''),
 
-('', 0, 0, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 0, 'bases', {'one': True}, (None,
 r'''class cls(): pass'''), (None,
 r'''x, y,'''),
 r'''class cls((x, y,)): pass''',
@@ -26602,11 +26601,10 @@ ClassDef - ROOT 0,0..0,24
    0] Pass - 0,20..0,24
 '''),
 
-('', 0, 2, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 2, 'bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), (None,
 r'''x'''),
-r'''class cls(x, c): pass''',
-r'''class cls((x,), c): pass''', r'''
+r'''class cls(x, c): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[2]
@@ -26616,11 +26614,10 @@ ClassDef - ROOT 0,0..0,21
    0] Pass - 0,17..0,21
 '''),
 
-('', 1, 3, 'bases', {'one': True, '_same': False}, (None,
+('', 1, 3, 'bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), (None,
 r'''x'''),
-r'''class cls(a, x): pass''',
-r'''class cls(a, (x,)): pass''', r'''
+r'''class cls(a, x): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[2]
@@ -26630,11 +26627,10 @@ ClassDef - ROOT 0,0..0,21
    0] Pass - 0,17..0,21
 '''),
 
-('', 0, 3, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 3, 'bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), (None,
 r'''x'''),
-r'''class cls(x): pass''',
-r'''class cls((x,)): pass''', r'''
+r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
@@ -26643,11 +26639,11 @@ ClassDef - ROOT 0,0..0,18
    0] Pass - 0,14..0,18
 '''),
 
-('', 0, 2, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 2, 'bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls(*not a, c): pass''',
-r'''class cls((*(not a),), c): pass''', r'''
+r'''class cls(*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
@@ -26661,11 +26657,11 @@ ClassDef - ROOT 0,0..0,26
    0] Pass - 0,22..0,26
 '''),
 
-('', 1, 3, 'bases', {'one': True, '_same': False}, (None,
+('', 1, 3, 'bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls(a, *not a): pass''',
-r'''class cls(a, (*(not a),)): pass''', r'''
+r'''class cls(a, *(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
@@ -26679,11 +26675,11 @@ ClassDef - ROOT 0,0..0,26
    0] Pass - 0,22..0,26
 '''),
 
-('', 0, 3, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 3, 'bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls(*not a): pass''',
-r'''class cls((*(not a),)): pass''', r'''
+r'''class cls(*(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
@@ -26767,11 +26763,11 @@ ClassDef - ROOT 0,0..0,31
    0] Pass - 0,27..0,31
 '''),
 
-('', 0, 2, 'bases', {'one': True, '_same': False}, (None,
+('', 0, 2, 'bases', {'one': True}, (None,
 r'''class cls(a, b, **c,): pass'''), (None,
 r'''*not a'''),
 r'''class cls(*not a, **c,): pass''',
-r'''class cls((*(not a),), **c,): pass''', r'''
+r'''class cls(*(not a), **c,): pass''', r'''
 ClassDef - ROOT 0,0..0,29
   .name 'cls'
   .bases[1]
@@ -27789,11 +27785,10 @@ ClassDef - ROOT 0,0..0,31
      .name 'V'
 '''),
 
-('', 0, 0, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](): pass'''), (None,
 r'''x'''),
-r'''class cls[T,*U,**V](x): pass''',
-r'''class cls[T,*U,**V]((x,)): pass''', r'''
+r'''class cls[T,*U,**V](x): pass''', r'''
 ClassDef - ROOT 0,0..0,28
   .name 'cls'
   .bases[1]
@@ -27809,7 +27804,7 @@ ClassDef - ROOT 0,0..0,28
      .name 'V'
 '''),
 
-('', 0, 0, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V]: pass'''), (None,
 r'''x,'''),
 r'''class cls[T,*U,**V]((x,)): pass''', r'''
@@ -27831,7 +27826,7 @@ ClassDef - ROOT 0,0..0,31
      .name 'V'
 '''),
 
-('', 0, 0, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V]: pass'''), (None,
 r'''x, y,'''),
 r'''class cls[T,*U,**V]((x, y,)): pass''',
@@ -27855,11 +27850,10 @@ ClassDef - ROOT 0,0..0,34
      .name 'V'
 '''),
 
-('', 0, 2, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 2, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, c): pass'''), (None,
 r'''x'''),
-r'''class cls[T,*U,**V](x, c): pass''',
-r'''class cls[T,*U,**V]((x,), c): pass''', r'''
+r'''class cls[T,*U,**V](x, c): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[2]
@@ -27876,11 +27870,10 @@ ClassDef - ROOT 0,0..0,31
      .name 'V'
 '''),
 
-('', 1, 3, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 1, 3, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, c): pass'''), (None,
 r'''x'''),
-r'''class cls[T,*U,**V](a, x): pass''',
-r'''class cls[T,*U,**V](a, (x,)): pass''', r'''
+r'''class cls[T,*U,**V](a, x): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[2]
@@ -27897,11 +27890,10 @@ ClassDef - ROOT 0,0..0,31
      .name 'V'
 '''),
 
-('', 0, 3, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 3, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, c): pass'''), (None,
 r'''x'''),
-r'''class cls[T,*U,**V](x): pass''',
-r'''class cls[T,*U,**V]((x,)): pass''', r'''
+r'''class cls[T,*U,**V](x): pass''', r'''
 ClassDef - ROOT 0,0..0,28
   .name 'cls'
   .bases[1]
@@ -27917,11 +27909,11 @@ ClassDef - ROOT 0,0..0,28
      .name 'V'
 '''),
 
-('', 0, 2, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 2, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls[T,*U,**V](*not a, c): pass''',
-r'''class cls[T,*U,**V]((*(not a),), c): pass''', r'''
+r'''class cls[T,*U,**V](*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,36
   .name 'cls'
   .bases[2]
@@ -27942,11 +27934,11 @@ ClassDef - ROOT 0,0..0,36
      .name 'V'
 '''),
 
-('', 1, 3, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 1, 3, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls[T,*U,**V](a, *not a): pass''',
-r'''class cls[T,*U,**V](a, (*(not a),)): pass''', r'''
+r'''class cls[T,*U,**V](a, *(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,36
   .name 'cls'
   .bases[2]
@@ -27967,11 +27959,11 @@ ClassDef - ROOT 0,0..0,36
      .name 'V'
 '''),
 
-('', 0, 3, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 3, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls[T,*U,**V](*not a): pass''',
-r'''class cls[T,*U,**V]((*(not a),)): pass''', r'''
+r'''class cls[T,*U,**V](*(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,33
   .name 'cls'
   .bases[1]
@@ -28090,11 +28082,11 @@ ClassDef - ROOT 0,0..0,41
      .name 'V'
 '''),
 
-('', 0, 2, 'bases', {'_ver': 12, 'one': True, '_same': False}, (None,
+('', 0, 2, 'bases', {'_ver': 12, 'one': True}, (None,
 r'''class cls[T,*U,**V](a, b, **c,): pass'''), (None,
 r'''*not a'''),
 r'''class cls[T,*U,**V](*not a, **c,): pass''',
-r'''class cls[T,*U,**V]((*(not a),), **c,): pass''', r'''
+r'''class cls[T,*U,**V](*(not a), **c,): pass''', r'''
 ClassDef - ROOT 0,0..0,39
   .name 'cls'
   .bases[1]
@@ -28765,7 +28757,7 @@ ClassDef - ROOT 0,0..0,23
    0] Pass - 0,19..0,23
 '''),
 
-('', 1, 2, '_bases', {'one': True, '_same': False}, (None,
+('', 1, 2, '_bases', {'one': True}, (None,
 r'''class cls(a, b, c): pass'''), ('Tuple',
 r'''x, y, z'''),
 r'''class cls(a, x, y, z, c): pass''', r'''
@@ -32692,7 +32684,7 @@ Call - ROOT 0,0..0,26
    2] Name 'b' Load - 0,24..0,25
 '''),
 
-('', 1, 2, 'args', {'one': True, '_same': False}, (None,
+('', 1, 2, 'args', {'one': True}, (None,
 r'''call(i for i in j)'''), (None,
 r'''a, b'''),
 r'''call((i for i in j), (a, b))''', r'''
@@ -32713,18 +32705,17 @@ Call - ROOT 0,0..0,28
      .ctx Load
 '''),
 
-('', 0, 0, 'args', {'one': True, '_same': False}, (None,
+('', 0, 0, 'args', {'one': True}, (None,
 r'''call()'''), (None,
 r'''x'''),
-r'''call(x)''',
-r'''call((x,))''', r'''
+r'''call(x)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
    0] Name 'x' Load - 0,5..0,6
 '''),
 
-('', 0, 0, 'args', {'one': True, '_same': False}, (None,
+('', 0, 0, 'args', {'one': True}, (None,
 r'''call()'''), (None,
 r'''x,'''),
 r'''call((x,))''', r'''
@@ -32737,7 +32728,7 @@ Call - ROOT 0,0..0,10
      .ctx Load
 '''),
 
-('', 0, 0, 'args', {'one': True, '_same': False}, (None,
+('', 0, 0, 'args', {'one': True}, (None,
 r'''call()'''), (None,
 r'''x, y,'''),
 r'''call((x, y,))''',
@@ -32752,11 +32743,10 @@ Call - ROOT 0,0..0,13
      .ctx Load
 '''),
 
-('', 0, 2, 'args', {'one': True, '_same': False}, (None,
+('', 0, 2, 'args', {'one': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''x'''),
-r'''call(x, c)''',
-r'''call((x,), c)''', r'''
+r'''call(x, c)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -32764,11 +32754,10 @@ Call - ROOT 0,0..0,10
    1] Name 'c' Load - 0,8..0,9
 '''),
 
-('', 1, 3, 'args', {'one': True, '_same': False}, (None,
+('', 1, 3, 'args', {'one': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''x'''),
-r'''call(a, x)''',
-r'''call(a, (x,))''', r'''
+r'''call(a, x)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -32776,22 +32765,21 @@ Call - ROOT 0,0..0,10
    1] Name 'x' Load - 0,8..0,9
 '''),
 
-('', 0, 3, 'args', {'one': True, '_same': False}, (None,
+('', 0, 3, 'args', {'one': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''x'''),
-r'''call(x)''',
-r'''call((x,))''', r'''
+r'''call(x)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
    0] Name 'x' Load - 0,5..0,6
 '''),
 
-('', 0, 2, 'args', {'one': True, '_same': False}, (None,
+('', 0, 2, 'args', {'one': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''*not a'''),
 r'''call(*not a, c)''',
-r'''call((*(not a),), c)''', r'''
+r'''call(*(not a), c)''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -32803,11 +32791,11 @@ Call - ROOT 0,0..0,15
    1] Name 'c' Load - 0,13..0,14
 '''),
 
-('', 1, 3, 'args', {'one': True, '_same': False}, (None,
+('', 1, 3, 'args', {'one': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''*not a'''),
 r'''call(a, *not a)''',
-r'''call(a, (*(not a),))''', r'''
+r'''call(a, *(not a))''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -32819,11 +32807,11 @@ Call - ROOT 0,0..0,15
      .ctx Load
 '''),
 
-('', 0, 3, 'args', {'one': True, '_same': False}, (None,
+('', 0, 3, 'args', {'one': True}, (None,
 r'''call(a, b, c)'''), (None,
 r'''*not a'''),
 r'''call(*not a)''',
-r'''call((*(not a),))''', r'''
+r'''call(*(not a))''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
@@ -32897,11 +32885,11 @@ Call - ROOT 0,0..0,20
    2] Name 'c' Load - 0,18..0,19
 '''),
 
-('', 0, 2, 'args', {'one': True, '_same': False}, (None,
+('', 0, 2, 'args', {'one': True}, (None,
 r'''call(a, b, **c,)'''), (None,
 r'''*not a'''),
 r'''call(*not a, **c,)''',
-r'''call((*(not a),), **c,)''', r'''
+r'''call(*(not a), **c,)''', r'''
 Call - ROOT 0,0..0,18
   .func Name 'call' Load - 0,0..0,4
   .args[1]
@@ -33553,7 +33541,7 @@ Call - ROOT 0,0..0,12
      .value Name 'w' Load - 0,10..0,11
 '''),
 
-('', 1, 2, '_args', {'one': True, '_same': False}, (None,
+('', 1, 2, '_args', {'one': True}, (None,
 r'''call(a, b, c)'''), ('Tuple',
 r'''x, y, z'''),
 r'''call(a, x, y, z, c)''', r'''
@@ -40262,7 +40250,7 @@ _type_params - ROOT 0,0..2,0
 
 'coerce_to__expr_arglikes': [  # ................................................................................
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('Tuple', r'''
 
 x,
@@ -40282,7 +40270,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('List', r'''
 [
 x,
@@ -40302,7 +40290,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('Set', r'''
 {
 x,
@@ -40322,7 +40310,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_Assign_targets', r'''
 x = \
 y =
@@ -40338,7 +40326,7 @@ Call - ROOT 0,0..1,7
    1] Name 'y' Load - 1,5..1,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_decorator_list', r'''
 @x
 @y
@@ -40354,7 +40342,7 @@ Call - ROOT 0,0..1,7
    1] Name 'y' Load - 1,5..1,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_arglikes', r'''
 
 x,
@@ -40374,7 +40362,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_comprehension_ifs', r'''
 
 if x
@@ -40394,7 +40382,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('arguments', r'''
 
 x,
@@ -40414,7 +40402,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('arguments', r'''
 
 x,
@@ -40436,7 +40424,7 @@ Call - ROOT 0,0..3,1
      .ctx Load
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_aliases', r'''
 x,
 y
@@ -40452,7 +40440,7 @@ Call - ROOT 0,0..1,7
    1] Name 'y' Load - 1,5..1,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_aliases', r'''
 x,
 y.z
@@ -40471,7 +40459,7 @@ Call - ROOT 0,0..1,9
      .ctx Load
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('_withitems', r'''
 x,
 y,
@@ -40487,7 +40475,7 @@ Call - ROOT 0,0..1,7
    1] Name 'y' Load - 1,5..1,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('MatchSequence', r'''
 x,
 y,
@@ -40503,7 +40491,7 @@ Call - ROOT 0,0..1,7
    1] Name 'y' Load - 1,5..1,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('MatchSequence', r'''
 (
 x,
@@ -40523,7 +40511,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False}, ('Call',
+('', 0, 'end', 'args', {'_src': False}, ('Call',
 r'''call(a)'''), ('MatchSequence', r'''
 [
 x,
@@ -40543,7 +40531,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False, '_ver': 12}, ('Call',
+('', 0, 'end', 'args', {'_src': False, '_ver': 12}, ('Call',
 r'''call(a)'''), ('_type_params', r'''
 
 x,
@@ -40563,7 +40551,7 @@ Call - ROOT 0,0..3,1
    1] Name 'y' Load - 2,5..2,6
 '''),
 
-('', 0, 'end', None, {'_src': False, '_ver': 12}, ('Call',
+('', 0, 'end', 'args', {'_src': False, '_ver': 12}, ('Call',
 r'''call(a)'''), ('_type_params', r'''
 
 x,
@@ -40582,6 +40570,282 @@ Call - ROOT 0,0..3,1
    0] Name 'x' Load - 1,5..1,6
    1] Starred - 2,5..2,7
      .value Name 'y' Load - 2,6..2,7
+     .ctx Load
+'''),
+],
+
+'one_True_to__expr_arglikes': [  # ................................................................................
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('Name',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('Tuple', r'''
+
+x,
+
+'''), r'''
+call((
+     x,
+     ))
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('List', r'''
+[
+x
+]
+'''), r'''
+call([
+     x
+     ])
+''',
+r'''call([x])''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] List - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('Set', r'''
+{
+x
+}
+'''), r'''
+call({
+     x
+     })
+''',
+r'''call({x})''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Set - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('Dict', r'''
+{
+x: y
+}
+'''), r'''
+call({
+     x: y
+     })
+''',
+r'''call({x: y})''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Dict - 0,5..2,6
+     .keys[1]
+      0] Name 'x' Load - 1,5..1,6
+     .values[1]
+      0] Name 'y' Load - 1,8..1,9
+'''),
+
+('', 0, 'end', 'args', {'_src': False, 'one': True}, ('Call',
+r'''call(a)'''), ('_Assign_targets',
+r'''x ='''),
+r'''call((x,))''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..0,9
+     .elts[1]
+      0] Name 'x' Load - 0,6..0,7
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'_src': False, 'one': True}, ('Call',
+r'''call(a)'''), ('_decorator_list',
+r'''@x'''),
+r'''call((x,))''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..0,9
+     .elts[1]
+      0] Name 'x' Load - 0,6..0,7
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('_arglikes', r'''
+
+x,
+
+'''), r'''
+call((
+     x,
+     ))
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'_src': False, 'one': True}, ('Call',
+r'''call(a)'''), ('_comprehension_ifs', r'''
+
+if x
+
+'''), r'''
+call((
+     x,
+     ))
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('arguments', r'''
+
+x,
+
+'''), r'''
+call((
+     x,
+     ))
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'_same': False, 'one': True}, ('Call',
+r'''call(a)'''), ('_aliases',
+r'''x'''),
+r'''call(x)''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('_withitems',
+r'''x,'''),
+r'''call((x,))''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..0,9
+     .elts[1]
+      0] Name 'x' Load - 0,6..0,7
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('MatchSequence',
+r'''x,'''),
+r'''call((x,))''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..0,9
+     .elts[1]
+      0] Name 'x' Load - 0,6..0,7
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'one': True}, ('Call',
+r'''call(a)'''), ('MatchSequence', r'''
+(
+x,
+)
+'''), r'''
+call((
+     x,
+     ))
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'_same': False, 'one': True}, ('Call',
+r'''call(a)'''), ('MatchSequence', r'''
+[
+x
+]
+'''), r'''
+call([
+     x
+     ])
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] List - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
+     .ctx Load
+'''),
+
+('', 0, 'end', 'args', {'_ver': 12, 'one': True}, ('Call',
+r'''call(a)'''), ('_type_params', r'''
+
+x,
+
+'''), r'''
+call((
+     x,
+     ))
+''',
+r'''call((x,))''', r'''
+Call - ROOT 0,0..2,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Tuple - 0,5..2,6
+     .elts[1]
+      0] Name 'x' Load - 1,5..1,6
      .ctx Load
 '''),
 ],

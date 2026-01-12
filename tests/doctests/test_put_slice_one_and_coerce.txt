@@ -1,0 +1,199 @@
+Interaction of `one` with `coerce` for slice puts, complicated but needs to feel be common-sense.
+
+>>> from fst import *
+
+>>> def test_one_coerce_target_src(one: bool, coerce: bool, target: str, field: str, src: str, mode=None):
+...     for name, code in [
+...         ('src', src),
+...         ('FST', FST(src, mode)),
+...         ('AST', FST(src, mode).a),
+...     ]:
+...         try:
+...             text = f"{name}: {FST('call(a)').put_slice(code, field, one=one, coerce=coerce).verify().src}"
+...         except Exception as exc:
+...             text = f'{name}: {exc!r}'
+...
+...         print(text if name != 'src' else f'{text}  # {src=}')
+...
+...     print('\xa0')
+
+>>> def test_target_srcs(target: str, field: str, srcs: list[str], mode=None):
+...     for one, coerce in ((False, True), (False, False), (True, True), (True, False)):
+...         print('\xa0')
+...
+...         print(text := f'{one=}, {coerce=}')
+...         print('-' * len(text))
+...         print('\xa0')
+...
+...         for src in srcs:
+...             test_one_coerce_target_src(one, coerce, target, field, src, mode)
+
+
+
+........................................................................................................................
+_expr_arglikes
+
+>>> test_target_srcs('call(a)', 'args', ['x', 'x,', '(x,)', '[x]', '{x}', '{x: y}'])
+ 
+one=False, coerce=True
+----------------------
+ 
+src: call(x)  # src='x'
+FST: call(x)
+AST: call(x)
+ 
+src: call(x)  # src='x,'
+FST: call(x)
+AST: call(x)
+ 
+src: call((x,))  # src='(x,)'
+FST: call(x)
+AST: call(x)
+ 
+src: call([x])  # src='[x]'
+FST: call(x)
+AST: call(x)
+ 
+src: call({x})  # src='{x}'
+FST: call(x)
+AST: call(x)
+ 
+src: call({x: y})  # src='{x: y}'
+FST: call({x: y})
+AST: call({x: y})
+ 
+ 
+one=False, coerce=False
+-----------------------
+ 
+src: call(x)  # src='x'
+FST: NodeError('expecting Tuple, got Name, coerce disabled')
+AST: NodeError('expecting Tuple, got Name, coerce disabled')
+ 
+src: call(x)  # src='x,'
+FST: call(x)
+AST: call(x)
+ 
+src: call((x,))  # src='(x,)'
+FST: call(x)
+AST: call(x)
+ 
+src: call([x])  # src='[x]'
+FST: NodeError('expecting Tuple, got List, coerce disabled')
+AST: NodeError('expecting Tuple, got List, coerce disabled')
+ 
+src: call({x})  # src='{x}'
+FST: NodeError('expecting Tuple, got Set, coerce disabled')
+AST: NodeError('expecting Tuple, got Set, coerce disabled')
+ 
+src: call({x: y})  # src='{x: y}'
+FST: NodeError('expecting Tuple, got Dict, coerce disabled')
+AST: NodeError('expecting Tuple, got Dict, coerce disabled')
+ 
+ 
+one=True, coerce=True
+---------------------
+ 
+src: call(x)  # src='x'
+FST: call(x)
+AST: call(x)
+ 
+src: call((x,))  # src='x,'
+FST: call((x,))
+AST: call((x,))
+ 
+src: call((x,))  # src='(x,)'
+FST: call((x,))
+AST: call((x,))
+ 
+src: call([x])  # src='[x]'
+FST: call([x])
+AST: call([x])
+ 
+src: call({x})  # src='{x}'
+FST: call({x})
+AST: call({x})
+ 
+src: call({x: y})  # src='{x: y}'
+FST: call({x: y})
+AST: call({x: y})
+ 
+ 
+one=True, coerce=False
+----------------------
+ 
+src: call(x)  # src='x'
+FST: NodeError('expecting Tuple, got Name, coerce disabled')
+AST: NodeError('expecting Tuple, got Name, coerce disabled')
+ 
+src: call((x,))  # src='x,'
+FST: call((x,))
+AST: call((x,))
+ 
+src: call((x,))  # src='(x,)'
+FST: call((x,))
+AST: call((x,))
+ 
+src: call([x])  # src='[x]'
+FST: NodeError('expecting Tuple, got List, coerce disabled')
+AST: NodeError('expecting Tuple, got List, coerce disabled')
+ 
+src: call({x})  # src='{x}'
+FST: NodeError('expecting Tuple, got Set, coerce disabled')
+AST: NodeError('expecting Tuple, got Set, coerce disabled')
+ 
+src: call({x: y})  # src='{x: y}'
+FST: NodeError('expecting Tuple, got Dict, coerce disabled')
+AST: NodeError('expecting Tuple, got Dict, coerce disabled')
+ 
+
+>>> test_target_srcs('call(a)', 'args', ['x', 'x,'], '_arglikes')
+ 
+one=False, coerce=True
+----------------------
+ 
+src: call(x)  # src='x'
+FST: call(x)
+AST: call(x)
+ 
+src: call(x)  # src='x,'
+FST: call(x)
+AST: call(x)
+ 
+ 
+one=False, coerce=False
+-----------------------
+ 
+src: call(x)  # src='x'
+FST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+AST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+ 
+src: call(x)  # src='x,'
+FST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+AST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+ 
+ 
+one=True, coerce=True
+---------------------
+ 
+src: call(x)  # src='x'
+FST: call((x,))
+AST: call((x,))
+ 
+src: call((x,))  # src='x,'
+FST: call((x,))
+AST: call((x,))
+ 
+ 
+one=True, coerce=False
+----------------------
+ 
+src: call(x)  # src='x'
+FST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+AST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+ 
+src: call((x,))  # src='x,'
+FST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+AST: NodeError('expecting Tuple, got _arglikes, coerce disabled')
+ 
+

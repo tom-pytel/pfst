@@ -10,6 +10,7 @@ from typing import Any, Callable, Literal, Mapping, NamedTuple
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_EXPR,
     ASTS_LEAF_CMPOP,
     ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
@@ -240,6 +241,9 @@ from .fst_put_one import _fix_With_items
 #                                                                                  .
 #                  (JoinedStr, 'values'):                  # Constant|FormattedValue*   -> JoinedStr
 #                  (TemplateStr, 'values'):                # Constant|Interpolation*    -> TemplateStr
+
+
+_ASTS_LEAF_EXPR_NO_TUPLE = ASTS_LEAF_EXPR - {Tuple}
 
 
 class slicestatic(NamedTuple):
@@ -900,23 +904,52 @@ def _code_to_slice__type_params(
 def _code_to_slice__expr_arglikes(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
+    """All this mostly do deal with how to treat sequences when passed in as either source or nodes with various
+    combinations of `one` and `coerce` for the most common-sense interpretation."""
+
     if code is None:
         return None
 
-    fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))  # we use this instead of code_as_expr() because this field normally takes arglike-only expressions like '*not a' so if we fail to do so here it might seem strange
-    ast_ = fst_.a
+    codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
+    coerce = fst.FST.get_option('coerce', options)
 
-    if not one:
-        return fst_ if ast_.elts else None  # put empty sequence is same as delete
+    if one and coerce and codea.__class__ in (List, Set):  # if putting as one with coerce=True these would be coerced out of being List or Set, but in this case we want to keep them as such
+        if codea is not code:  # is FST
+            fst_ = code
+            ast_ = codea
 
-    if isinstance(code, (str, list)) and len(elts := ast_.elts) == 1 and not elts[0].f._has_separator():  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
-        return fst_  # its already in the format needed
+        else:  # is AST, need to get FST
+            fst_ = code_as_expr(code, self.root.parse_params)
+            ast_ = fst_.a
 
-    fst_._fix_tuple()
-    fst_._fix_arglikes(options)
+    else:
+        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce, one=one)  # we use this instead of code_as_expr() because this field normally takes arglike-only expressions like '*not a' so if we fail to do so here it might seem strange
+        ast_ = fst_.a
 
-    if fst_.is_parenthesized_tuple() is False:
-        fst_._delimit_node()
+        if not one:
+            return fst_ if ast_.elts else None  # put empty sequence is same as delete
+
+        if len(elts := ast_.elts) == 1:  # if is length 1 then maybe we put just this one element and not singleton Tuple
+            if isinstance(code, (str, list)):
+                if not elts[0].f._has_separator():
+                    return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
+
+            elif (code_cls := code.__class__) is fst.FST:
+                if codea.__class__ in _ASTS_LEAF_EXPR_NO_TUPLE:  # was already expression node passed in, so don't treat as tuple if coerced
+                    return fst_
+
+            elif code_cls in ASTS_LEAF_EXPR:  # pure AST expression passed in? The one stuff was handled in code_as__expr_arglikes() because one passed in so here wo just check _EXPR and not _EXPR_NO_TUPLE
+                return fst_
+
+        # we are putting whatever sequence was passed in as an single tuple because one=True
+
+        fst_._fix_tuple()
+        fst_._fix_arglikes(options)
+
+        if fst_.is_parenthesized_tuple() is False:
+            fst_._delimit_node()
+
+    # container for single element we are putting
 
     ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                 end_col_offset=ls[-1].lenbytes)
@@ -1092,7 +1125,7 @@ def _put_slice_seq_and_asts(
     put_slice_sep_end(self, end_params)
 
 
-_SPECIAL_SLICE_STATICS = {
+_SPECIAL_SLICE_STATICS = {  # the other SPECIAL SLICEs have their own handlers so don't need an entry here, this is just for _put_slice__slice()
     _Assign_targets: slicestatic(_code_to_slice__Assign_targets, '=', True, True),
     _arglikes:       slicestatic(_code_to_slice__arglikes, ',', False, False),
     _aliases:        slicestatic(_code_to_slice__aliases, ',', False, False),
