@@ -855,7 +855,8 @@ def _code_to_slice__special(
 def _code_to_slice__Assign_targets(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets)
+    return _code_to_slice__special(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets,
+                                   'targets')
 
 
 def _code_to_slice__decorator_list(

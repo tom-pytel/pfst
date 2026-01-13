@@ -20073,27 +20073,12 @@ _Assign_targets - ROOT 0,0..1,0
 ('', 1, 3, 'targets', {'one': True}, (None,
 r'''a = b = c = d'''), ('_Assign_targets',
 r'''x = y ='''),
-r'''a = x = y = d''', r'''
-Assign - ROOT 0,0..0,13
-  .targets[3]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-   2] Name 'y' Store - 0,8..0,9
-  .value Name 'd' Load - 0,12..0,13
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _Assign_targets")**'''),
 
 ('', 1, 3, 'targets', {'one': True, 'coerce': False}, (None,
 r'''a = b = c = d'''), ('_Assign_targets',
 r'''x = y ='''),
-r'''a = x = y = d''',
-r'''**ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce=True'")**''', r'''
-Assign - ROOT 0,0..0,13
-  .targets[3]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-   2] Name 'y' Store - 0,8..0,9
-  .value Name 'd' Load - 0,12..0,13
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _Assign_targets")**'''),
 
 ('', 1, 3, 'targets', {}, (None,
 r'''a = b = c = d'''), ('Name',
@@ -20144,25 +20129,12 @@ Assign - ROOT 0,0..0,9
 ('', 1, 3, 'targets', {'one': True}, ('_Assign_targets',
 r'''a = b = c ='''), ('_Assign_targets',
 r'''x = y ='''),
-r'''a = x = y =''', r'''
-_Assign_targets - ROOT 0,0..0,11
-  .targets[3]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-   2] Name 'y' Store - 0,8..0,9
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _Assign_targets")**'''),
 
 ('', 1, 3, 'targets', {'one': True, 'coerce': False}, ('_Assign_targets',
 r'''a = b = c ='''), ('_Assign_targets',
 r'''x = y ='''),
-r'''a = x = y =''',
-r'''**ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce=True'")**''', r'''
-_Assign_targets - ROOT 0,0..0,11
-  .targets[3]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-   2] Name 'y' Store - 0,8..0,9
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _Assign_targets")**'''),
 
 ('', 1, 3, 'targets', {}, ('_Assign_targets',
 r'''a = b = c ='''), ('Name',

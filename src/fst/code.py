@@ -1197,7 +1197,7 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
     """
 
     codea = getattr(code, 'a', None)
-    elts = _coerce_to_seq(code, parse_params, None, _Assign_targets, True)
+    elts = _coerce_to_seq(code, parse_params, None, _Assign_targets, True, True)
 
     if elts is not None:  # sequence as sequence?
         elts, is_FST = elts

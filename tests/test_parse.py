@@ -1147,11 +1147,6 @@ class TestParse(unittest.TestCase):
         if PYGE13:
             self.assertIsInstance(px.parse_all('*T = (int,)'), TypeVarTuple)
 
-
-
-
-
-
     def test_parse__BoolOp_dangling(self):
         # left
 
@@ -2309,8 +2304,8 @@ match a:
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (_arglikes, '\na\n,\n*b\n'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**",
-                "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**"),
+                (_Assign_targets, '\\\na = \\\n\\\n*b = \\\n'),
+                (_Assign_targets, 'a = *b =')),
             (code_as__Assign_targets, (_arglikes, '\na\n,\n*not b\n'),
                 "**SyntaxError**",  # src
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**",

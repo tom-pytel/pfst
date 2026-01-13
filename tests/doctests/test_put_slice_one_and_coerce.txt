@@ -44,7 +44,7 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 ...         try:
 ...             text = f"{name}: {FST(target).put_slice(code, field, one=one, coerce=coerce).verify().src}"
 ...         except Exception as exc:
-...             text = f'{name}: {exc!r}'
+...             text = f'{name}: **SyntaxError**' if exc.__class__ is SyntaxError else f'{name}: **{exc!r}**'
 ...
 ...         print(text if name != 'src' else f'{text}  # {src=}')
 
@@ -70,205 +70,238 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 
 
 ========================================================================================================================
-_arglikes
+_Assign_targets
 ========================================================================================================================
 
 ........................................................................................................................
->>> test_target_srcs('for _ in _ if a', 'ifs', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}'])
+>>> test_target_srcs('a = b', 'targets', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', '@x\n@y'])
  
 one=False, coerce=True  (mode=None)
 -----------------------------------
  
-src: for _ in _ if x  # src='x'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: x = b  # src='x'
+FST: x = b
+AST: x = b
  
-src: ParseError('expecting _comprehension_ifs, could not parse or coerce')  # src='*x'
-FST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
-AST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
+src: *x = b  # src='*x'
+FST: *x = b
+AST: *x = b
  
-src: for _ in _ if (x,)  # src='x,'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: x, = b  # src='x,'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if (*x,)  # src='*x,'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
+src: *x, = b  # src='*x,'
+FST: *x = b
+AST: *x = b
  
-src: for _ in _ if (x,)  # src='(x,)'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: (x,) = b  # src='(x,)'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if [x]  # src='[x]'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: [x] = b  # src='[x]'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if {x}  # src='{x}'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: **SyntaxError**  # src='{x}'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if {x: y}  # src='{x: y}'
-FST: for _ in _ if {x: y}
-AST: for _ in _ if {x: y}
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _Assign_targets, got Dict, could not coerce')**
+AST: **NodeError('expecting _Assign_targets, got Dict, could not coerce')**
+ 
+src: x, y = b  # src='x, y'
+FST: x = y = b
+AST: x = y = b
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: x = \
+y = b
+AST: x = y = b
  
  
 one=False, coerce=False  (mode=None)
 ------------------------------------
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x\n', 2, 2))  # src='x'
-FST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
+src: x = b  # src='x'
+FST: **NodeError('expecting _Assign_targets, got Name, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Name, coerce disabled')**
  
-src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='*x'
-FST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
+src: *x = b  # src='*x'
+FST: **NodeError('expecting _Assign_targets, got Starred, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Starred, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x,\n', 2, 2))  # src='x,'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+src: x, = b  # src='x,'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 3, '*x,\n', 2, 4))  # src='*x,'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+src: *x, = b  # src='*x,'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='(x,)'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+src: (x,) = b  # src='(x,)'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='[x]'
-FST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
+src: [x] = b  # src='[x]'
+FST: **NodeError('expecting _Assign_targets, got List, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got List, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}\n', 2, 2))  # src='{x}'
-FST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _Assign_targets, got Set, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Set, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}\n', 2, 2))  # src='{x: y}'
-FST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _Assign_targets, got Dict, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Dict, coerce disabled')**
+ 
+src: x, y = b  # src='x, y'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _Assign_targets, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got _decorator_list, coerce disabled')**
  
  
 one=True, coerce=True  (mode=None)
 ----------------------------------
  
-src: for _ in _ if x  # src='x'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: x = b  # src='x'
+FST: x = b
+AST: x = b
  
-src: ParseError('expecting _comprehension_ifs, could not parse or coerce')  # src='*x'
-FST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
-AST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
+src: *x = b  # src='*x'
+FST: *x = b
+AST: *x = b
  
-src: for _ in _ if (x,)  # src='x,'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: x, = b  # src='x,'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if (*x,)  # src='*x,'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
+src: *x, = b  # src='*x,'
+FST: *x = b
+AST: *x = b
  
-src: for _ in _ if (x,)  # src='(x,)'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: (x,) = b  # src='(x,)'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if [x]  # src='[x]'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: [x] = b  # src='[x]'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if {x}  # src='{x}'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: **SyntaxError**  # src='{x}'
+FST: x = b
+AST: x = b
  
-src: for _ in _ if {x: y}  # src='{x: y}'
-FST: for _ in _ if {x: y}
-AST: for _ in _ if {x: y}
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _Assign_targets, got Dict, could not coerce')**
+AST: **NodeError('expecting _Assign_targets, got Dict, could not coerce')**
+ 
+src: x, y = b  # src='x, y'
+FST: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**
+AST: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**
+AST: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**
  
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x\n', 2, 2))  # src='x'
-FST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
+src: x = b  # src='x'
+FST: **NodeError('expecting _Assign_targets, got Name, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Name, coerce disabled')**
  
-src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='*x'
-FST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
+src: *x = b  # src='*x'
+FST: **NodeError('expecting _Assign_targets, got Starred, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Starred, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x,\n', 2, 2))  # src='x,'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+src: x, = b  # src='x,'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 3, '*x,\n', 2, 4))  # src='*x,'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+src: *x, = b  # src='*x,'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='(x,)'
-FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+src: (x,) = b  # src='(x,)'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='[x]'
-FST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
+src: [x] = b  # src='[x]'
+FST: **NodeError('expecting _Assign_targets, got List, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got List, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}\n', 2, 2))  # src='{x}'
-FST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _Assign_targets, got Set, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Set, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}\n', 2, 2))  # src='{x: y}'
-FST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
-AST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _Assign_targets, got Dict, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Dict, coerce disabled')**
+ 
+src: x, y = b  # src='x, y'
+FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _Assign_targets, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _Assign_targets, got _decorator_list, coerce disabled')**
 
 
 ........................................................................................................................
->>> test_target_srcs('for _ in _ if a', 'ifs', ['if x', 'if x if y'], '_comprehension_ifs')
+>>> test_target_srcs('a = b', 'targets', ['x =', 'x = y ='], '_Assign_targets')
  
-one=False, coerce=True  (mode='_comprehension_ifs')
----------------------------------------------------
+one=False, coerce=True  (mode='_Assign_targets')
+------------------------------------------------
  
-src: for _ in _ if x  # src='if x'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: x = b  # src='x ='
+FST: x = b
+AST: x = b
  
-src: for _ in _ if x if y  # src='if x if y'
-FST: for _ in _ if x if y
-AST: for _ in _ if x if y
- 
- 
-one=False, coerce=False  (mode='_comprehension_ifs')
-----------------------------------------------------
- 
-src: for _ in _ if x  # src='if x'
-FST: for _ in _ if x
-AST: for _ in _ if x
- 
-src: for _ in _ if x if y  # src='if x if y'
-FST: for _ in _ if x if y
-AST: for _ in _ if x if y
+src: x = y = b  # src='x = y ='
+FST: x = y = b
+AST: x = y = b
  
  
-one=True, coerce=True  (mode='_comprehension_ifs')
---------------------------------------------------
+one=False, coerce=False  (mode='_Assign_targets')
+-------------------------------------------------
  
-src: for _ in _ if x  # src='if x'
-FST: for _ in _ if x
-AST: for _ in _ if x
+src: x = b  # src='x ='
+FST: x = b
+AST: x = b
  
-src: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")  # src='if x if y'
-FST: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")
-AST: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")
+src: x = y = b  # src='x = y ='
+FST: x = y = b
+AST: x = y = b
  
  
-one=True, coerce=False  (mode='_comprehension_ifs')
----------------------------------------------------
+one=True, coerce=True  (mode='_Assign_targets')
+-----------------------------------------------
  
-src: for _ in _ if x  # src='if x'
-FST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
+src: x = b  # src='x ='
+FST: x = b
+AST: x = b
  
-src: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")  # src='if x if y'
-FST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
+src: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**  # src='x = y ='
+FST: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**
+AST: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**
+ 
+ 
+one=True, coerce=False  (mode='_Assign_targets')
+------------------------------------------------
+ 
+src: x = b  # src='x ='
+FST: **ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce=True'")**
+ 
+src: **NodeError("can only put single element as as 'one=True' to _Assign_targets")**  # src='x = y ='
+FST: **ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce=True'")**
 
 
 
@@ -278,7 +311,7 @@ _arglikes
 ========================================================================================================================
 
 ........................................................................................................................
->>> test_target_srcs('call(a, b, c)', '_args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}',])
+>>> test_target_srcs('call(a, b, c)', '_args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', '@x\n@y'])
  
 one=False, coerce=True  (mode=None)
 -----------------------------------
@@ -315,41 +348,58 @@ src: call({x: y})  # src='{x: y}'
 FST: call({x: y})
 AST: call({x: y})
  
+src: call(x, y)  # src='x, y'
+FST: call(x, y)
+AST: call(x, y)
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: call(x,
+     y)
+AST: call(x, y)
+ 
  
 one=False, coerce=False  (mode=None)
 ------------------------------------
  
 src: call(x)  # src='x'
-FST: NodeError('expecting _arglikes, got Name, coerce disabled')
-AST: NodeError('expecting _arglikes, got Name, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Name, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Name, coerce disabled')**
  
 src: call(*x)  # src='*x'
-FST: NodeError('expecting _arglikes, got Starred, coerce disabled')
-AST: NodeError('expecting _arglikes, got Starred, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Starred, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Starred, coerce disabled')**
  
 src: call(x)  # src='x,'
-FST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
-AST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
  
 src: call(*x)  # src='*x,'
-FST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
-AST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
  
 src: call((x,))  # src='(x,)'
-FST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
-AST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
  
 src: call([x])  # src='[x]'
-FST: NodeError('expecting _arglikes, got List, coerce disabled')
-AST: NodeError('expecting _arglikes, got List, coerce disabled')
+FST: **NodeError('expecting _arglikes, got List, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got List, coerce disabled')**
  
 src: call({x})  # src='{x}'
-FST: NodeError('expecting _arglikes, got Set, coerce disabled')
-AST: NodeError('expecting _arglikes, got Set, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Set, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Set, coerce disabled')**
  
 src: call({x: y})  # src='{x: y}'
-FST: NodeError('expecting _arglikes, got Dict, coerce disabled')
-AST: NodeError('expecting _arglikes, got Dict, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Dict, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Dict, coerce disabled')**
+ 
+src: call(x, y)  # src='x, y'
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _arglikes, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got _decorator_list, coerce disabled')**
  
  
 one=True, coerce=True  (mode=None)
@@ -387,41 +437,58 @@ src: call({x: y})  # src='{x: y}'
 FST: call({x: y})
 AST: call({x: y})
  
+src: call((x, y))  # src='x, y'
+FST: call((x, y))
+AST: call((x, y))
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: call((x,
+     y))
+AST: call((x, y))
+ 
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
 src: call(x)  # src='x'
-FST: NodeError('expecting _arglikes, got Name, coerce disabled')
-AST: NodeError('expecting _arglikes, got Name, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Name, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Name, coerce disabled')**
  
 src: call(*x)  # src='*x'
-FST: NodeError('expecting _arglikes, got Starred, coerce disabled')
-AST: NodeError('expecting _arglikes, got Starred, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Starred, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Starred, coerce disabled')**
  
 src: call((x,))  # src='x,'
-FST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
-AST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
  
 src: call((*x,))  # src='*x,'
-FST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
-AST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
  
 src: call((x,))  # src='(x,)'
-FST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
-AST: NodeError('expecting _arglikes, got Tuple, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
  
 src: call([x])  # src='[x]'
-FST: NodeError('expecting _arglikes, got List, coerce disabled')
-AST: NodeError('expecting _arglikes, got List, coerce disabled')
+FST: **NodeError('expecting _arglikes, got List, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got List, coerce disabled')**
  
 src: call({x})  # src='{x}'
-FST: NodeError('expecting _arglikes, got Set, coerce disabled')
-AST: NodeError('expecting _arglikes, got Set, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Set, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Set, coerce disabled')**
  
 src: call({x: y})  # src='{x: y}'
-FST: NodeError('expecting _arglikes, got Dict, coerce disabled')
-AST: NodeError('expecting _arglikes, got Dict, coerce disabled')
+FST: **NodeError('expecting _arglikes, got Dict, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Dict, coerce disabled')**
+ 
+src: call((x, y))  # src='x, y'
+FST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _arglikes, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got _decorator_list, coerce disabled')**
 
 
 ........................................................................................................................
@@ -479,12 +546,12 @@ FST: call((*x,))
 AST: call((*x,))
  
 src: call(k=w)  # src='k=w'
-FST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+FST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
  
 src: call(**kw)  # src='**kw'
-FST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+FST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
  
  
 one=True, coerce=False  (mode='_arglikes')
@@ -499,12 +566,12 @@ FST: call((*x,))
 AST: call((*x,))
  
 src: call(k=w)  # src='k=w'
-FST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+FST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
  
 src: call(**kw)  # src='**kw'
-FST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+FST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('keyword cannot be put into a Tuple for put as `one=True`')**
 
 
 ........................................................................................................................
@@ -526,12 +593,12 @@ one=False, coerce=False  (mode='keyword')
 -----------------------------------------
  
 src: call(k=w)  # src='k=w'
-FST: NodeError('expecting _arglikes, got keyword, coerce disabled')
-AST: NodeError('expecting _arglikes, got keyword, coerce disabled')
+FST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
  
 src: call(**kw)  # src='**kw'
-FST: NodeError('expecting _arglikes, got keyword, coerce disabled')
-AST: NodeError('expecting _arglikes, got keyword, coerce disabled')
+FST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
  
  
 one=True, coerce=True  (mode='keyword')
@@ -550,12 +617,12 @@ one=True, coerce=False  (mode='keyword')
 ----------------------------------------
  
 src: call(k=w)  # src='k=w'
-FST: NodeError('expecting _arglikes, got keyword, coerce disabled')
-AST: NodeError('expecting _arglikes, got keyword, coerce disabled')
+FST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
  
 src: call(**kw)  # src='**kw'
-FST: NodeError('expecting _arglikes, got keyword, coerce disabled')
-AST: NodeError('expecting _arglikes, got keyword, coerce disabled')
+FST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
+AST: **NodeError('expecting _arglikes, got keyword, coerce disabled')**
 
 
 
@@ -598,21 +665,258 @@ src: [a for x in x]  # src='for x in x'
 FST: [a for x in x]
 AST: [a for x in x]
  
-src: NodeError("can only put single element as as 'one=True' to _comprehensions")  # src='for x in x for y in y'
-FST: NodeError("can only put single element as as 'one=True' to _comprehensions")
-AST: NodeError("can only put single element as as 'one=True' to _comprehensions")
+src: **NodeError("can only put single element as as 'one=True' to _comprehensions")**  # src='for x in x for y in y'
+FST: **NodeError("can only put single element as as 'one=True' to _comprehensions")**
+AST: **NodeError("can only put single element as as 'one=True' to _comprehensions")**
  
  
 one=True, coerce=False  (mode='_comprehensions')
 ------------------------------------------------
  
 src: [a for x in x]  # src='for x in x'
-FST: ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")
+FST: **ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")**
  
-src: NodeError("can only put single element as as 'one=True' to _comprehensions")  # src='for x in x for y in y'
-FST: ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")
+src: **NodeError("can only put single element as as 'one=True' to _comprehensions")**  # src='for x in x for y in y'
+FST: **ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _comprehensions node as 'one=True' without 'coerce=True'")**
+
+
+
+
+========================================================================================================================
+_comprehension_ifs
+========================================================================================================================
+
+........................................................................................................................
+>>> test_target_srcs('for _ in _ if a', 'ifs', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', '@x\n@y'])
+ 
+one=False, coerce=True  (mode=None)
+-----------------------------------
+ 
+src: for _ in _ if x  # src='x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: **ParseError('expecting _comprehension_ifs, could not parse or coerce')**  # src='*x'
+FST: **NodeError('expecting _comprehension_ifs, got Starred, could not coerce')**
+AST: **NodeError('expecting _comprehension_ifs, got Starred, could not coerce')**
+ 
+src: for _ in _ if (x,)  # src='x,'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if (*x,)  # src='*x,'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')**
+ 
+src: for _ in _ if (x,)  # src='(x,)'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if [x]  # src='[x]'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x}  # src='{x}'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x: y}  # src='{x: y}'
+FST: for _ in _ if {x: y}
+AST: for _ in _ if {x: y}
+ 
+src: for _ in _ if (x, y)  # src='x, y'
+FST: for _ in _ if x if y
+AST: for _ in _ if x if y
+ 
+src: **ParseError('expecting _comprehension_ifs, could not parse or coerce')**  # src='@x\n@y'
+FST: for _ in _ if x
+           if y
+AST: for _ in _ if x if y
+ 
+ 
+one=False, coerce=False  (mode=None)
+------------------------------------
+ 
+src: **SyntaxError**  # src='x'
+FST: **NodeError('expecting _comprehension_ifs, got Name, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Name, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='*x'
+FST: **NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x,'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='(x,)'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='[x]'
+FST: **NodeError('expecting _comprehension_ifs, got List, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got List, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _comprehension_ifs, got Set, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Set, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x, y'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='@x\n@y'
+FST: **NodeError('expecting _comprehension_ifs, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got _decorator_list, coerce disabled')**
+ 
+ 
+one=True, coerce=True  (mode=None)
+----------------------------------
+ 
+src: for _ in _ if x  # src='x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: **ParseError('expecting _comprehension_ifs, could not parse or coerce')**  # src='*x'
+FST: **NodeError('expecting _comprehension_ifs, got Starred, could not coerce')**
+AST: **NodeError('expecting _comprehension_ifs, got Starred, could not coerce')**
+ 
+src: for _ in _ if (x,)  # src='x,'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if (*x,)  # src='*x,'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')**
+ 
+src: for _ in _ if (x,)  # src='(x,)'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if [x]  # src='[x]'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x}  # src='{x}'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x: y}  # src='{x: y}'
+FST: for _ in _ if {x: y}
+AST: for _ in _ if {x: y}
+ 
+src: for _ in _ if (x, y)  # src='x, y'
+FST: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**
+AST: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**
+ 
+src: **ParseError('expecting _comprehension_ifs, could not parse or coerce')**  # src='@x\n@y'
+FST: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**
+AST: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**
+ 
+ 
+one=True, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: **SyntaxError**  # src='x'
+FST: **NodeError('expecting _comprehension_ifs, got Name, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Name, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='*x'
+FST: **NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x,'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='(x,)'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='[x]'
+FST: **NodeError('expecting _comprehension_ifs, got List, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got List, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _comprehension_ifs, got Set, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Set, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x, y'
+FST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')**
+ 
+src: **ParseError("expecting comprehension ifs, does not start with 'if'")**  # src='@x\n@y'
+FST: **NodeError('expecting _comprehension_ifs, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _comprehension_ifs, got _decorator_list, coerce disabled')**
+
+
+........................................................................................................................
+>>> test_target_srcs('for _ in _ if a', 'ifs', ['if x', 'if x if y'], '_comprehension_ifs')
+ 
+one=False, coerce=True  (mode='_comprehension_ifs')
+---------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if x if y  # src='if x if y'
+FST: for _ in _ if x if y
+AST: for _ in _ if x if y
+ 
+ 
+one=False, coerce=False  (mode='_comprehension_ifs')
+----------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if x if y  # src='if x if y'
+FST: for _ in _ if x if y
+AST: for _ in _ if x if y
+ 
+ 
+one=True, coerce=True  (mode='_comprehension_ifs')
+--------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**  # src='if x if y'
+FST: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**
+AST: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**
+ 
+ 
+one=True, coerce=False  (mode='_comprehension_ifs')
+---------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: **ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")**
+ 
+src: **NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**  # src='if x if y'
+FST: **ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")**
 
 
 
@@ -644,16 +948,16 @@ one=False, coerce=False  (mode=None)
 ------------------------------------
  
 src: import x  # src='x'
-FST: NodeError('expecting _aliases, got Name, coerce disabled')
-AST: NodeError('expecting _aliases, got Name, coerce disabled')
+FST: **NodeError('expecting _aliases, got Name, coerce disabled')**
+AST: **NodeError('expecting _aliases, got Name, coerce disabled')**
  
 src: import x.y  # src='x.y'
-FST: NodeError('expecting _aliases, got Attribute, coerce disabled')
-AST: NodeError('expecting _aliases, got Attribute, coerce disabled')
+FST: **NodeError('expecting _aliases, got Attribute, coerce disabled')**
+AST: **NodeError('expecting _aliases, got Attribute, coerce disabled')**
  
 src: import x, y  # src='x, y'
-FST: NodeError('expecting _aliases, got Tuple, coerce disabled')
-AST: NodeError('expecting _aliases, got Tuple, coerce disabled')
+FST: **NodeError('expecting _aliases, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _aliases, got Tuple, coerce disabled')**
  
  
 one=True, coerce=True  (mode=None)
@@ -667,25 +971,25 @@ src: import x.y  # src='x.y'
 FST: import x.y
 AST: import x.y
  
-src: NodeError("can only put single element as as 'one=True' to _aliases")  # src='x, y'
-FST: NodeError("can only put single element as as 'one=True' to _aliases")
-AST: NodeError("can only put single element as as 'one=True' to _aliases")
+src: **NodeError("can only put single element as as 'one=True' to _aliases")**  # src='x, y'
+FST: **NodeError("can only put single element as as 'one=True' to _aliases")**
+AST: **NodeError("can only put single element as as 'one=True' to _aliases")**
  
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
 src: import x  # src='x'
-FST: NodeError('expecting _aliases, got Name, coerce disabled')
-AST: NodeError('expecting _aliases, got Name, coerce disabled')
+FST: **NodeError('expecting _aliases, got Name, coerce disabled')**
+AST: **NodeError('expecting _aliases, got Name, coerce disabled')**
  
 src: import x.y  # src='x.y'
-FST: NodeError('expecting _aliases, got Attribute, coerce disabled')
-AST: NodeError('expecting _aliases, got Attribute, coerce disabled')
+FST: **NodeError('expecting _aliases, got Attribute, coerce disabled')**
+AST: **NodeError('expecting _aliases, got Attribute, coerce disabled')**
  
-src: NodeError("can only put single element as as 'one=True' to _aliases")  # src='x, y'
-FST: NodeError('expecting _aliases, got Tuple, coerce disabled')
-AST: NodeError('expecting _aliases, got Tuple, coerce disabled')
+src: **NodeError("can only put single element as as 'one=True' to _aliases")**  # src='x, y'
+FST: **NodeError('expecting _aliases, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _aliases, got Tuple, coerce disabled')**
 
 
 ........................................................................................................................
@@ -734,25 +1038,25 @@ src: import x.y  # src='x.y'
 FST: import x.y
 AST: import x.y
  
-src: NodeError("can only put single element as as 'one=True' to _aliases")  # src='x, y'
-FST: NodeError("can only put single element as as 'one=True' to _aliases")
-AST: NodeError("can only put single element as as 'one=True' to _aliases")
+src: **NodeError("can only put single element as as 'one=True' to _aliases")**  # src='x, y'
+FST: **NodeError("can only put single element as as 'one=True' to _aliases")**
+AST: **NodeError("can only put single element as as 'one=True' to _aliases")**
  
  
 one=True, coerce=False  (mode='_aliases')
 -----------------------------------------
  
 src: import x  # src='x'
-FST: ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")
+FST: **ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**
  
 src: import x.y  # src='x.y'
-FST: ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")
+FST: **ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**
  
-src: NodeError("can only put single element as as 'one=True' to _aliases")  # src='x, y'
-FST: ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")
-AST: ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")
+src: **NodeError("can only put single element as as 'one=True' to _aliases")**  # src='x, y'
+FST: **ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _aliases node as 'one=True' without 'coerce=True'")**
 
 
 
@@ -762,7 +1066,7 @@ _withitems
 ========================================================================================================================
 
 ........................................................................................................................
->>> test_target_srcs('with a: pass', 'items', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}'])
+>>> test_target_srcs('with a: pass', 'items', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', '@x\n@y'])
  
 one=False, coerce=True  (mode=None)
 -----------------------------------
@@ -771,17 +1075,17 @@ src: with x: pass  # src='x'
 FST: with x: pass
 AST: with x: pass
  
-src: SyntaxError('cannot use starred expression here', ('<fst>', 2, 1, '*x', 2, 3))  # src='*x'
-FST: NodeError('expecting _withitems, got Starred, could not coerce')
-AST: NodeError('expecting _withitems, got Starred, could not coerce')
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _withitems, got Starred, could not coerce')**
+AST: **NodeError('expecting _withitems, got Starred, could not coerce')**
  
 src: with x: pass  # src='x,'
 FST: with x: pass
 AST: with x: pass
  
-src: SyntaxError('invalid syntax')  # src='*x,'
-FST: NodeError('expecting _withitems, got Tuple, could not coerce')
-AST: NodeError('expecting _withitems, got Tuple, could not coerce')
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _withitems, got Tuple, could not coerce')**
+AST: **NodeError('expecting _withitems, got Tuple, could not coerce')**
  
 src: with ((x,)): pass  # src='(x,)'
 FST: with x: pass
@@ -799,41 +1103,58 @@ src: with {x: y}: pass  # src='{x: y}'
 FST: with {x: y}: pass
 AST: with {x: y}: pass
  
+src: with x, y: pass  # src='x, y'
+FST: with x, y: pass
+AST: with x, y: pass
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: with (x,
+     y): pass
+AST: with x, y: pass
+ 
  
 one=False, coerce=False  (mode=None)
 ------------------------------------
  
 src: with x: pass  # src='x'
-FST: NodeError('expecting _withitems, got Name, coerce disabled')
-AST: NodeError('expecting _withitems, got Name, coerce disabled')
+FST: **NodeError('expecting _withitems, got Name, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Name, coerce disabled')**
  
-src: SyntaxError('cannot use starred expression here', ('<fst>', 2, 1, '*x', 2, 3))  # src='*x'
-FST: NodeError('expecting _withitems, got Starred, coerce disabled')
-AST: NodeError('expecting _withitems, got Starred, coerce disabled')
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _withitems, got Starred, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Starred, coerce disabled')**
  
 src: with x: pass  # src='x,'
-FST: NodeError('expecting _withitems, got Tuple, coerce disabled')
-AST: NodeError('expecting _withitems, got Tuple, coerce disabled')
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax')  # src='*x,'
-FST: NodeError('expecting _withitems, got Tuple, coerce disabled')
-AST: NodeError('expecting _withitems, got Tuple, coerce disabled')
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
  
 src: with ((x,)): pass  # src='(x,)'
-FST: NodeError('expecting _withitems, got Tuple, coerce disabled')
-AST: NodeError('expecting _withitems, got Tuple, coerce disabled')
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
  
 src: with [x]: pass  # src='[x]'
-FST: NodeError('expecting _withitems, got List, coerce disabled')
-AST: NodeError('expecting _withitems, got List, coerce disabled')
+FST: **NodeError('expecting _withitems, got List, coerce disabled')**
+AST: **NodeError('expecting _withitems, got List, coerce disabled')**
  
 src: with {x}: pass  # src='{x}'
-FST: NodeError('expecting _withitems, got Set, coerce disabled')
-AST: NodeError('expecting _withitems, got Set, coerce disabled')
+FST: **NodeError('expecting _withitems, got Set, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Set, coerce disabled')**
  
 src: with {x: y}: pass  # src='{x: y}'
-FST: NodeError('expecting _withitems, got Dict, coerce disabled')
-AST: NodeError('expecting _withitems, got Dict, coerce disabled')
+FST: **NodeError('expecting _withitems, got Dict, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Dict, coerce disabled')**
+ 
+src: with x, y: pass  # src='x, y'
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _withitems, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _withitems, got _decorator_list, coerce disabled')**
  
  
 one=True, coerce=True  (mode=None)
@@ -843,9 +1164,9 @@ src: with x: pass  # src='x'
 FST: with x: pass
 AST: with x: pass
  
-src: SyntaxError('cannot use starred expression here', ('<fst>', 2, 1, '*x', 2, 3))  # src='*x'
-FST: NodeError('expecting _withitems, got Starred, could not coerce')
-AST: NodeError('expecting _withitems, got Starred, could not coerce')
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _withitems, got Starred, could not coerce')**
+AST: **NodeError('expecting _withitems, got Starred, could not coerce')**
  
 src: with ((x,)): pass  # src='x,'
 FST: with ((x,)): pass
@@ -871,41 +1192,58 @@ src: with {x: y}: pass  # src='{x: y}'
 FST: with {x: y}: pass
 AST: with {x: y}: pass
  
+src: with ((x, y)): pass  # src='x, y'
+FST: with ((x, y)): pass
+AST: with ((x, y)): pass
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: with ((x,
+     y)): pass
+AST: with ((x, y)): pass
+ 
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
 src: with x: pass  # src='x'
-FST: NodeError('expecting _withitems, got Name, coerce disabled')
-AST: NodeError('expecting _withitems, got Name, coerce disabled')
+FST: **NodeError('expecting _withitems, got Name, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Name, coerce disabled')**
  
-src: SyntaxError('cannot use starred expression here', ('<fst>', 2, 1, '*x', 2, 3))  # src='*x'
-FST: NodeError('expecting _withitems, got Starred, coerce disabled')
-AST: NodeError('expecting _withitems, got Starred, coerce disabled')
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _withitems, got Starred, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Starred, coerce disabled')**
  
 src: with ((x,)): pass  # src='x,'
-FST: NodeError('expecting _withitems, got Tuple, coerce disabled')
-AST: NodeError('expecting _withitems, got Tuple, coerce disabled')
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
  
 src: with ((*x,)): pass  # src='*x,'
-FST: NodeError('expecting _withitems, got Tuple, coerce disabled')
-AST: NodeError('expecting _withitems, got Tuple, coerce disabled')
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
  
 src: with ((x,)): pass  # src='(x,)'
-FST: NodeError('expecting _withitems, got Tuple, coerce disabled')
-AST: NodeError('expecting _withitems, got Tuple, coerce disabled')
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
  
 src: with [x]: pass  # src='[x]'
-FST: NodeError('expecting _withitems, got List, coerce disabled')
-AST: NodeError('expecting _withitems, got List, coerce disabled')
+FST: **NodeError('expecting _withitems, got List, coerce disabled')**
+AST: **NodeError('expecting _withitems, got List, coerce disabled')**
  
 src: with {x}: pass  # src='{x}'
-FST: NodeError('expecting _withitems, got Set, coerce disabled')
-AST: NodeError('expecting _withitems, got Set, coerce disabled')
+FST: **NodeError('expecting _withitems, got Set, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Set, coerce disabled')**
  
 src: with {x: y}: pass  # src='{x: y}'
-FST: NodeError('expecting _withitems, got Dict, coerce disabled')
-AST: NodeError('expecting _withitems, got Dict, coerce disabled')
+FST: **NodeError('expecting _withitems, got Dict, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Dict, coerce disabled')**
+ 
+src: with ((x, y)): pass  # src='x, y'
+FST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _withitems, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _withitems, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _withitems, got _decorator_list, coerce disabled')**
 
 
 ........................................................................................................................
@@ -923,8 +1261,8 @@ one=False, coerce=False  (mode='withitem')
 ------------------------------------------
  
 src: with x as x: pass  # src='x as x'
-FST: NodeError('expecting _withitems, got withitem, coerce disabled')
-AST: NodeError('expecting _withitems, got withitem, coerce disabled')
+FST: **NodeError('expecting _withitems, got withitem, coerce disabled')**
+AST: **NodeError('expecting _withitems, got withitem, coerce disabled')**
  
  
 one=True, coerce=True  (mode='withitem')
@@ -939,8 +1277,8 @@ one=True, coerce=False  (mode='withitem')
 -----------------------------------------
  
 src: with x as x: pass  # src='x as x'
-FST: NodeError('expecting _withitems, got withitem, coerce disabled')
-AST: NodeError('expecting _withitems, got withitem, coerce disabled')
+FST: **NodeError('expecting _withitems, got withitem, coerce disabled')**
+AST: **NodeError('expecting _withitems, got withitem, coerce disabled')**
 
 
 ........................................................................................................................
@@ -982,32 +1320,32 @@ one=True, coerce=True  (mode='_withitems')
 ------------------------------------------
  
 src: with x as x: pass  # src='x as x'
-FST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+FST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
  
-src: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')  # src='x as x,'
-FST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+src: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**  # src='x as x,'
+FST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
  
-src: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')  # src='x as x, y as y'
-FST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+src: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**  # src='x as x, y as y'
+FST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
  
  
 one=True, coerce=False  (mode='_withitems')
 -------------------------------------------
  
 src: with x as x: pass  # src='x as x'
-FST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+FST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
  
-src: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')  # src='x as x,'
-FST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+src: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**  # src='x as x,'
+FST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
  
-src: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')  # src='x as x, y as y'
-FST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
-AST: NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+src: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**  # src='x as x, y as y'
+FST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
+AST: **NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**
 
 
 
@@ -1018,7 +1356,7 @@ _type_params
 
 ........................................................................................................................
 >>> if version_ok_else_print(12, 'TYPE_PARAMS_1_START', 'TYPE_PARAMS_1_STOP'):
-...     test_target_srcs('type t[a, b, c] = ...', 'type_params', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}',])  # TYPE_PARAMS_1_START
+...     test_target_srcs('type t[a, b, c] = ...', 'type_params', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', '@x\n@y'])  # TYPE_PARAMS_1_START
  
 one=False, coerce=True  (mode=None)
 -----------------------------------
@@ -1039,57 +1377,74 @@ src: type t[*x] = ...  # src='*x,'
 FST: type t[*x] = ...
 AST: type t[*x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
+src: **SyntaxError**  # src='(x,)'
 FST: type t[x] = ...
 AST: type t[x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
+src: **SyntaxError**  # src='[x]'
 FST: type t[x] = ...
 AST: type t[x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
+src: **SyntaxError**  # src='{x}'
 FST: type t[x] = ...
 AST: type t[x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
-FST: NodeError('expecting _type_params, got Dict, could not coerce')
-AST: NodeError('expecting _type_params, got Dict, could not coerce')
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _type_params, got Dict, could not coerce')**
+AST: **NodeError('expecting _type_params, got Dict, could not coerce')**
+ 
+src: type t[x, y] = ...  # src='x, y'
+FST: type t[x, y] = ...
+AST: type t[x, y] = ...
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: type t[x,
+       y] = ...
+AST: type t[x, y] = ...
  
  
 one=False, coerce=False  (mode=None)
 ------------------------------------
  
 src: type t[x] = ...  # src='x'
-FST: NodeError('expecting _type_params, got Name, coerce disabled')
-AST: NodeError('expecting _type_params, got Name, coerce disabled')
+FST: **NodeError('expecting _type_params, got Name, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Name, coerce disabled')**
  
 src: type t[*x] = ...  # src='*x'
-FST: NodeError('expecting _type_params, got Starred, coerce disabled')
-AST: NodeError('expecting _type_params, got Starred, coerce disabled')
+FST: **NodeError('expecting _type_params, got Starred, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Starred, coerce disabled')**
  
 src: type t[x] = ...  # src='x,'
-FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
-AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
  
 src: type t[*x] = ...  # src='*x,'
-FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
-AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
-FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
-AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+src: **SyntaxError**  # src='(x,)'
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
-FST: NodeError('expecting _type_params, got List, coerce disabled')
-AST: NodeError('expecting _type_params, got List, coerce disabled')
+src: **SyntaxError**  # src='[x]'
+FST: **NodeError('expecting _type_params, got List, coerce disabled')**
+AST: **NodeError('expecting _type_params, got List, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
-FST: NodeError('expecting _type_params, got Set, coerce disabled')
-AST: NodeError('expecting _type_params, got Set, coerce disabled')
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _type_params, got Set, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Set, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
-FST: NodeError('expecting _type_params, got Dict, coerce disabled')
-AST: NodeError('expecting _type_params, got Dict, coerce disabled')
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _type_params, got Dict, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Dict, coerce disabled')**
+ 
+src: type t[x, y] = ...  # src='x, y'
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _type_params, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _type_params, got _decorator_list, coerce disabled')**
  
  
 one=True, coerce=True  (mode=None)
@@ -1111,57 +1466,73 @@ src: type t[*x] = ...  # src='*x,'
 FST: type t[*x] = ...
 AST: type t[*x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
+src: **SyntaxError**  # src='(x,)'
 FST: type t[x] = ...
 AST: type t[x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
+src: **SyntaxError**  # src='[x]'
 FST: type t[x] = ...
 AST: type t[x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
+src: **SyntaxError**  # src='{x}'
 FST: type t[x] = ...
 AST: type t[x] = ...
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
-FST: NodeError('expecting _type_params, got Dict, could not coerce')
-AST: NodeError('expecting _type_params, got Dict, could not coerce')
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _type_params, got Dict, could not coerce')**
+AST: **NodeError('expecting _type_params, got Dict, could not coerce')**
+ 
+src: **NodeError("can only put single element as as 'one=True' to _type_params")**  # src='x, y'
+FST: **NodeError("can only put single element as as 'one=True' to _type_params")**
+AST: **NodeError("can only put single element as as 'one=True' to _type_params")**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError("can only put single element as as 'one=True' to _type_params")**
+AST: **NodeError("can only put single element as as 'one=True' to _type_params")**
  
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
 src: type t[x] = ...  # src='x'
-FST: NodeError('expecting _type_params, got Name, coerce disabled')
-AST: NodeError('expecting _type_params, got Name, coerce disabled')
+FST: **NodeError('expecting _type_params, got Name, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Name, coerce disabled')**
  
 src: type t[*x] = ...  # src='*x'
-FST: NodeError('expecting _type_params, got Starred, coerce disabled')
-AST: NodeError('expecting _type_params, got Starred, coerce disabled')
+FST: **NodeError('expecting _type_params, got Starred, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Starred, coerce disabled')**
  
 src: type t[x] = ...  # src='x,'
-FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
-AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
  
 src: type t[*x] = ...  # src='*x,'
-FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
-AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '(x,)', 2, 2))  # src='(x,)'
-FST: NodeError('expecting _type_params, got Tuple, coerce disabled')
-AST: NodeError('expecting _type_params, got Tuple, coerce disabled')
+src: **SyntaxError**  # src='(x,)'
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '[x]', 2, 2))  # src='[x]'
-FST: NodeError('expecting _type_params, got List, coerce disabled')
-AST: NodeError('expecting _type_params, got List, coerce disabled')
+src: **SyntaxError**  # src='[x]'
+FST: **NodeError('expecting _type_params, got List, coerce disabled')**
+AST: **NodeError('expecting _type_params, got List, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}', 2, 2))  # src='{x}'
-FST: NodeError('expecting _type_params, got Set, coerce disabled')
-AST: NodeError('expecting _type_params, got Set, coerce disabled')
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _type_params, got Set, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Set, coerce disabled')**
  
-src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}', 2, 2))  # src='{x: y}'
-FST: NodeError('expecting _type_params, got Dict, coerce disabled')
-AST: NodeError('expecting _type_params, got Dict, coerce disabled')
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _type_params, got Dict, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Dict, coerce disabled')**
+ 
+src: **NodeError("can only put single element as as 'one=True' to _type_params")**  # src='x, y'
+FST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _type_params, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _type_params, got _decorator_list, coerce disabled')**
 
 # TYPE_PARAMS_1_STOP
 
@@ -1190,16 +1561,16 @@ one=False, coerce=False  (mode='type_param')
 --------------------------------------------
  
 src: type t[T] = ...  # src='T'
-FST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
-AST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
+FST: **NodeError('expecting _type_params, got TypeVar, coerce disabled')**
+AST: **NodeError('expecting _type_params, got TypeVar, coerce disabled')**
  
 src: type t[*U] = ...  # src='*U'
-FST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
-AST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
+FST: **NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')**
  
 src: type t[**V] = ...  # src='**V'
-FST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
-AST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
+FST: **NodeError('expecting _type_params, got ParamSpec, coerce disabled')**
+AST: **NodeError('expecting _type_params, got ParamSpec, coerce disabled')**
  
  
 one=True, coerce=True  (mode='type_param')
@@ -1222,16 +1593,16 @@ one=True, coerce=False  (mode='type_param')
 -------------------------------------------
  
 src: type t[T] = ...  # src='T'
-FST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
-AST: NodeError('expecting _type_params, got TypeVar, coerce disabled')
+FST: **NodeError('expecting _type_params, got TypeVar, coerce disabled')**
+AST: **NodeError('expecting _type_params, got TypeVar, coerce disabled')**
  
 src: type t[*U] = ...  # src='*U'
-FST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
-AST: NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')
+FST: **NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')**
+AST: **NodeError('expecting _type_params, got TypeVarTuple, coerce disabled')**
  
 src: type t[**V] = ...  # src='**V'
-FST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
-AST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
+FST: **NodeError('expecting _type_params, got ParamSpec, coerce disabled')**
+AST: **NodeError('expecting _type_params, got ParamSpec, coerce disabled')**
 
 # TYPE_PARAMS_2_STOP
 
@@ -1240,7 +1611,7 @@ AST: NodeError('expecting _type_params, got ParamSpec, coerce disabled')
 _expr_arglikes
 ========================================================================================================================
 
->>> test_target_srcs('call(a, b, c)', 'args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}'])
+>>> test_target_srcs('call(a, b, c)', 'args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', '@x\n@y'])
  
 one=False, coerce=True  (mode=None)
 -----------------------------------
@@ -1277,17 +1648,26 @@ src: call({x: y})  # src='{x: y}'
 FST: call({x: y})
 AST: call({x: y})
  
+src: call(x, y)  # src='x, y'
+FST: call(x, y)
+AST: call(x, y)
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: call(x,
+     y)
+AST: call(x, y)
+ 
  
 one=False, coerce=False  (mode=None)
 ------------------------------------
  
 src: call(x)  # src='x'
-FST: NodeError('expecting Tuple, got Name, coerce disabled')
-AST: NodeError('expecting Tuple, got Name, coerce disabled')
+FST: **NodeError('expecting Tuple, got Name, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Name, coerce disabled')**
  
 src: call(*x)  # src='*x'
-FST: NodeError('expecting Tuple, got Starred, coerce disabled')
-AST: NodeError('expecting Tuple, got Starred, coerce disabled')
+FST: **NodeError('expecting Tuple, got Starred, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Starred, coerce disabled')**
  
 src: call(x)  # src='x,'
 FST: call(x)
@@ -1302,16 +1682,24 @@ FST: call(x)
 AST: call(x)
  
 src: call([x])  # src='[x]'
-FST: NodeError('expecting Tuple, got List, coerce disabled')
-AST: NodeError('expecting Tuple, got List, coerce disabled')
+FST: **NodeError('expecting Tuple, got List, coerce disabled')**
+AST: **NodeError('expecting Tuple, got List, coerce disabled')**
  
 src: call({x})  # src='{x}'
-FST: NodeError('expecting Tuple, got Set, coerce disabled')
-AST: NodeError('expecting Tuple, got Set, coerce disabled')
+FST: **NodeError('expecting Tuple, got Set, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Set, coerce disabled')**
  
 src: call({x: y})  # src='{x: y}'
-FST: NodeError('expecting Tuple, got Dict, coerce disabled')
-AST: NodeError('expecting Tuple, got Dict, coerce disabled')
+FST: **NodeError('expecting Tuple, got Dict, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Dict, coerce disabled')**
+ 
+src: call(x, y)  # src='x, y'
+FST: call(x, y)
+AST: call(x, y)
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting Tuple, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting Tuple, got _decorator_list, coerce disabled')**
  
  
 one=True, coerce=True  (mode=None)
@@ -1349,17 +1737,26 @@ src: call({x: y})  # src='{x: y}'
 FST: call({x: y})
 AST: call({x: y})
  
+src: call((x, y))  # src='x, y'
+FST: call((x, y))
+AST: call((x, y))
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: call((x,
+     y))
+AST: call((x, y))
+ 
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
 src: call(x)  # src='x'
-FST: NodeError('expecting Tuple, got Name, coerce disabled')
-AST: NodeError('expecting Tuple, got Name, coerce disabled')
+FST: **NodeError('expecting Tuple, got Name, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Name, coerce disabled')**
  
 src: call(*x)  # src='*x'
-FST: NodeError('expecting Tuple, got Starred, coerce disabled')
-AST: NodeError('expecting Tuple, got Starred, coerce disabled')
+FST: **NodeError('expecting Tuple, got Starred, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Starred, coerce disabled')**
  
 src: call((x,))  # src='x,'
 FST: call((x,))
@@ -1374,14 +1771,22 @@ FST: call((x,))
 AST: call((x,))
  
 src: call([x])  # src='[x]'
-FST: NodeError('expecting Tuple, got List, coerce disabled')
-AST: NodeError('expecting Tuple, got List, coerce disabled')
+FST: **NodeError('expecting Tuple, got List, coerce disabled')**
+AST: **NodeError('expecting Tuple, got List, coerce disabled')**
  
 src: call({x})  # src='{x}'
-FST: NodeError('expecting Tuple, got Set, coerce disabled')
-AST: NodeError('expecting Tuple, got Set, coerce disabled')
+FST: **NodeError('expecting Tuple, got Set, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Set, coerce disabled')**
  
 src: call({x: y})  # src='{x: y}'
-FST: NodeError('expecting Tuple, got Dict, coerce disabled')
-AST: NodeError('expecting Tuple, got Dict, coerce disabled')
+FST: **NodeError('expecting Tuple, got Dict, coerce disabled')**
+AST: **NodeError('expecting Tuple, got Dict, coerce disabled')**
+ 
+src: call((x, y))  # src='x, y'
+FST: call((x, y))
+AST: call((x, y))
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting Tuple, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting Tuple, got _decorator_list, coerce disabled')**
 
