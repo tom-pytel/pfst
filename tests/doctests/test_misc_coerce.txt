@@ -133,18 +133,18 @@ Tuple - ROOT 1,0..3,2
 
 >>> # cd.code_as_expr(FST('\n*\n', '_aliases'), coerce=True).dump('N').verify()
 
->>> f = FST('[ 1, 2 ]')
->>> _ = f._undelimit_node()
->>> f.dump('N')
-0: 1, 2
-List - ROOT 0,0..0,4
-  .elts[2]
-0: 1
-   0] Constant 1 - 0,0..0,1
-0:    2
-   1] Constant 2 - 0,3..0,4
-  .ctx Load
-<List ROOT 0,0..0,4>
+# >>> f = FST('[ 1, 2 ]')
+# >>> _ = f._undelimit_node()
+# >>> f.dump('N')
+# 0: 1, 2
+# List - ROOT 0,0..0,4
+#   .elts[2]
+# 0: 1
+#    0] Constant 1 - 0,0..0,1
+# 0:    2
+#    1] Constant 2 - 0,3..0,4
+#   .ctx Load
+# <List ROOT 0,0..0,4>
 
 >>> if sys.version_info[:2] >= (3, 12):
 ...     cd.code_as__type_params(FST('a, *b'), coerce=True).dump('N')

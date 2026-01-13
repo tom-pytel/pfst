@@ -20643,41 +20643,12 @@ With - ROOT 0,0..0,15
 ('', 1, 3, 'items', {'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''with a as a, x as x, y as y: pass''', r'''
-With - ROOT 0,0..0,33
-  .items[3]
-   0] withitem - 0,5..0,11
-     .context_expr Name 'a' Load - 0,5..0,6
-     .optional_vars Name 'a' Store - 0,10..0,11
-   1] withitem - 0,13..0,19
-     .context_expr Name 'x' Load - 0,13..0,14
-     .optional_vars Name 'x' Store - 0,18..0,19
-   2] withitem - 0,21..0,27
-     .context_expr Name 'y' Load - 0,21..0,22
-     .optional_vars Name 'y' Store - 0,26..0,27
-  .body[1]
-   0] Pass - 0,29..0,33
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {'one': True, 'coerce': False}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''with a as a, x as x, y as y: pass''',
-r'''**ValueError("cannot put _withitems node as 'one=True' without 'coerce=True'")**''', r'''
-With - ROOT 0,0..0,33
-  .items[3]
-   0] withitem - 0,5..0,11
-     .context_expr Name 'a' Load - 0,5..0,6
-     .optional_vars Name 'a' Store - 0,10..0,11
-   1] withitem - 0,13..0,19
-     .context_expr Name 'x' Load - 0,13..0,14
-     .optional_vars Name 'x' Store - 0,18..0,19
-   2] withitem - 0,21..0,27
-     .context_expr Name 'y' Load - 0,21..0,22
-     .optional_vars Name 'y' Store - 0,26..0,27
-  .body[1]
-   0] Pass - 0,29..0,33
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('withitem',
@@ -20810,37 +20781,12 @@ With - ROOT 0,0..0,20
 ('', 1, 3, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''a as a, x as x, y as y''', r'''
-_withitems - ROOT 0,0..0,22
-  .items[3]
-   0] withitem - 0,0..0,6
-     .context_expr Name 'a' Load - 0,0..0,1
-     .optional_vars Name 'a' Store - 0,5..0,6
-   1] withitem - 0,8..0,14
-     .context_expr Name 'x' Load - 0,8..0,9
-     .optional_vars Name 'x' Store - 0,13..0,14
-   2] withitem - 0,16..0,22
-     .context_expr Name 'y' Load - 0,16..0,17
-     .optional_vars Name 'y' Store - 0,21..0,22
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {'one': True, 'coerce': False}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''a as a, x as x, y as y''',
-r'''**ValueError("cannot put _withitems node as 'one=True' without 'coerce=True'")**''', r'''
-_withitems - ROOT 0,0..0,22
-  .items[3]
-   0] withitem - 0,0..0,6
-     .context_expr Name 'a' Load - 0,0..0,1
-     .optional_vars Name 'a' Store - 0,5..0,6
-   1] withitem - 0,8..0,14
-     .context_expr Name 'x' Load - 0,8..0,9
-     .optional_vars Name 'x' Store - 0,13..0,14
-   2] withitem - 0,16..0,22
-     .context_expr Name 'y' Load - 0,16..0,17
-     .optional_vars Name 'y' Store - 0,21..0,22
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('withitem',
@@ -20957,90 +20903,94 @@ _withitems - ROOT 0,0..0,9
 ('', 1, 2, 'items', {'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''with a as a, 1, 2, 3, c as c: pass''', r'''
-With - ROOT 0,0..0,34
-  .items[5]
+r'''with a as a, (1, 2, 3), c as c: pass''', r'''
+With - ROOT 0,0..0,36
+  .items[3]
    0] withitem - 0,5..0,11
      .context_expr Name 'a' Load - 0,5..0,6
      .optional_vars Name 'a' Store - 0,10..0,11
-   1] withitem - 0,13..0,14
-     .context_expr Constant 1 - 0,13..0,14
-   2] withitem - 0,16..0,17
-     .context_expr Constant 2 - 0,16..0,17
-   3] withitem - 0,19..0,20
-     .context_expr Constant 3 - 0,19..0,20
-   4] withitem - 0,22..0,28
-     .context_expr Name 'c' Load - 0,22..0,23
-     .optional_vars Name 'c' Store - 0,27..0,28
+   1] withitem - 0,13..0,22
+     .context_expr Tuple - 0,13..0,22
+       .elts[3]
+        0] Constant 1 - 0,14..0,15
+        1] Constant 2 - 0,17..0,18
+        2] Constant 3 - 0,20..0,21
+       .ctx Load
+   2] withitem - 0,24..0,30
+     .context_expr Name 'c' Load - 0,24..0,25
+     .optional_vars Name 'c' Store - 0,29..0,30
   .body[1]
-   0] Pass - 0,30..0,34
+   0] Pass - 0,32..0,36
 '''),
 
 ('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''with a as a, 1, 2, 3, c as c: pass''',
+r'''with a as a, (1, 2, 3), c as c: pass''',
 r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
-With - ROOT 0,0..0,34
-  .items[5]
+With - ROOT 0,0..0,36
+  .items[3]
    0] withitem - 0,5..0,11
      .context_expr Name 'a' Load - 0,5..0,6
      .optional_vars Name 'a' Store - 0,10..0,11
-   1] withitem - 0,13..0,14
-     .context_expr Constant 1 - 0,13..0,14
-   2] withitem - 0,16..0,17
-     .context_expr Constant 2 - 0,16..0,17
-   3] withitem - 0,19..0,20
-     .context_expr Constant 3 - 0,19..0,20
-   4] withitem - 0,22..0,28
-     .context_expr Name 'c' Load - 0,22..0,23
-     .optional_vars Name 'c' Store - 0,27..0,28
+   1] withitem - 0,13..0,22
+     .context_expr Tuple - 0,13..0,22
+       .elts[3]
+        0] Constant 1 - 0,14..0,15
+        1] Constant 2 - 0,17..0,18
+        2] Constant 3 - 0,20..0,21
+       .ctx Load
+   2] withitem - 0,24..0,30
+     .context_expr Name 'c' Load - 0,24..0,25
+     .optional_vars Name 'c' Store - 0,29..0,30
   .body[1]
-   0] Pass - 0,30..0,34
+   0] Pass - 0,32..0,36
 '''),
 
 ('', 1, 2, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''a as a, 1, 2, 3, c as c''', r'''
-_withitems - ROOT 0,0..0,23
-  .items[5]
+r'''a as a, (1, 2, 3), c as c''', r'''
+_withitems - ROOT 0,0..0,25
+  .items[3]
    0] withitem - 0,0..0,6
      .context_expr Name 'a' Load - 0,0..0,1
      .optional_vars Name 'a' Store - 0,5..0,6
-   1] withitem - 0,8..0,9
-     .context_expr Constant 1 - 0,8..0,9
-   2] withitem - 0,11..0,12
-     .context_expr Constant 2 - 0,11..0,12
-   3] withitem - 0,14..0,15
-     .context_expr Constant 3 - 0,14..0,15
-   4] withitem - 0,17..0,23
-     .context_expr Name 'c' Load - 0,17..0,18
-     .optional_vars Name 'c' Store - 0,22..0,23
+   1] withitem - 0,8..0,17
+     .context_expr Tuple - 0,8..0,17
+       .elts[3]
+        0] Constant 1 - 0,9..0,10
+        1] Constant 2 - 0,12..0,13
+        2] Constant 3 - 0,15..0,16
+       .ctx Load
+   2] withitem - 0,19..0,25
+     .context_expr Name 'c' Load - 0,19..0,20
+     .optional_vars Name 'c' Store - 0,24..0,25
 '''),
 
 ('', 1, 2, 'items', {'coerce': False, 'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''a as a, 1, 2, 3, c as c''',
+r'''a as a, (1, 2, 3), c as c''',
 r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
-_withitems - ROOT 0,0..0,23
-  .items[5]
+_withitems - ROOT 0,0..0,25
+  .items[3]
    0] withitem - 0,0..0,6
      .context_expr Name 'a' Load - 0,0..0,1
      .optional_vars Name 'a' Store - 0,5..0,6
-   1] withitem - 0,8..0,9
-     .context_expr Constant 1 - 0,8..0,9
-   2] withitem - 0,11..0,12
-     .context_expr Constant 2 - 0,11..0,12
-   3] withitem - 0,14..0,15
-     .context_expr Constant 3 - 0,14..0,15
-   4] withitem - 0,17..0,23
-     .context_expr Name 'c' Load - 0,17..0,18
-     .optional_vars Name 'c' Store - 0,22..0,23
+   1] withitem - 0,8..0,17
+     .context_expr Tuple - 0,8..0,17
+       .elts[3]
+        0] Constant 1 - 0,9..0,10
+        1] Constant 2 - 0,12..0,13
+        2] Constant 3 - 0,15..0,16
+       .ctx Load
+   2] withitem - 0,19..0,25
+     .context_expr Name 'c' Load - 0,19..0,20
+     .optional_vars Name 'c' Store - 0,24..0,25
 '''),
 
-('', 1, 2, 'items', {'coerce': False, 'one': True, '_same': False}, ('_withitems',
+('', 1, 2, 'items', {'coerce': False, 'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''(1, 2, 3)'''),
 r'''a as a, (1, 2, 3), c as c''',
@@ -21062,11 +21012,10 @@ _withitems - ROOT 0,0..0,25
      .optional_vars Name 'c' Store - 0,24..0,25
 '''),
 
-('', 1, 2, 'items', {'one': True, '_same': False}, ('_withitems',
+('', 1, 2, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('Tuple',
 r'''(1, 2, 3)'''),
-r'''a as a, (1, 2, 3), c as c''',
-r'''a as a, 1, 2, 3, c as c''', r'''
+r'''a as a, (1, 2, 3), c as c''', r'''
 _withitems - ROOT 0,0..0,25
   .items[3]
    0] withitem - 0,0..0,6
@@ -21864,41 +21813,12 @@ AsyncWith - ROOT 0,0..0,21
 ('', 1, 3, 'items', {'one': True}, (None,
 r'''with a as a, b as b, c as c: pass'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''with a as a, x as x, y as y: pass''', r'''
-With - ROOT 0,0..0,33
-  .items[3]
-   0] withitem - 0,5..0,11
-     .context_expr Name 'a' Load - 0,5..0,6
-     .optional_vars Name 'a' Store - 0,10..0,11
-   1] withitem - 0,13..0,19
-     .context_expr Name 'x' Load - 0,13..0,14
-     .optional_vars Name 'x' Store - 0,18..0,19
-   2] withitem - 0,21..0,27
-     .context_expr Name 'y' Load - 0,21..0,22
-     .optional_vars Name 'y' Store - 0,26..0,27
-  .body[1]
-   0] Pass - 0,29..0,33
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {'one': True, 'coerce': False}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''async with a as a, x as x, y as y: pass''',
-r'''**ValueError("cannot put _withitems node as 'one=True' without 'coerce=True'")**''', r'''
-AsyncWith - ROOT 0,0..0,39
-  .items[3]
-   0] withitem - 0,11..0,17
-     .context_expr Name 'a' Load - 0,11..0,12
-     .optional_vars Name 'a' Store - 0,16..0,17
-   1] withitem - 0,19..0,25
-     .context_expr Name 'x' Load - 0,19..0,20
-     .optional_vars Name 'x' Store - 0,24..0,25
-   2] withitem - 0,27..0,33
-     .context_expr Name 'y' Load - 0,27..0,28
-     .optional_vars Name 'y' Store - 0,32..0,33
-  .body[1]
-   0] Pass - 0,35..0,39
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('withitem',
@@ -22031,37 +21951,12 @@ AsyncWith - ROOT 0,0..0,26
 ('', 1, 3, 'items', {'one': True}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''a as a, x as x, y as y''', r'''
-_withitems - ROOT 0,0..0,22
-  .items[3]
-   0] withitem - 0,0..0,6
-     .context_expr Name 'a' Load - 0,0..0,1
-     .optional_vars Name 'a' Store - 0,5..0,6
-   1] withitem - 0,8..0,14
-     .context_expr Name 'x' Load - 0,8..0,9
-     .optional_vars Name 'x' Store - 0,13..0,14
-   2] withitem - 0,16..0,22
-     .context_expr Name 'y' Load - 0,16..0,17
-     .optional_vars Name 'y' Store - 0,21..0,22
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {'one': True, 'coerce': False}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('_withitems',
 r'''x as x, y as y'''),
-r'''a as a, x as x, y as y''',
-r'''**ValueError("cannot put _withitems node as 'one=True' without 'coerce=True'")**''', r'''
-_withitems - ROOT 0,0..0,22
-  .items[3]
-   0] withitem - 0,0..0,6
-     .context_expr Name 'a' Load - 0,0..0,1
-     .optional_vars Name 'a' Store - 0,5..0,6
-   1] withitem - 0,8..0,14
-     .context_expr Name 'x' Load - 0,8..0,9
-     .optional_vars Name 'x' Store - 0,13..0,14
-   2] withitem - 0,16..0,22
-     .context_expr Name 'y' Load - 0,16..0,17
-     .optional_vars Name 'y' Store - 0,21..0,22
-'''),
+r'''**NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')**'''),
 
 ('', 1, 3, 'items', {}, ('_withitems',
 r'''a as a, b as b, c as c'''), ('withitem',
@@ -22178,46 +22073,48 @@ _withitems - ROOT 0,0..0,9
 ('', 1, 2, 'items', {'one': True}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''async with a as a, 1, 2, 3, c as c: pass''', r'''
-AsyncWith - ROOT 0,0..0,40
-  .items[5]
+r'''async with a as a, (1, 2, 3), c as c: pass''', r'''
+AsyncWith - ROOT 0,0..0,42
+  .items[3]
    0] withitem - 0,11..0,17
      .context_expr Name 'a' Load - 0,11..0,12
      .optional_vars Name 'a' Store - 0,16..0,17
-   1] withitem - 0,19..0,20
-     .context_expr Constant 1 - 0,19..0,20
-   2] withitem - 0,22..0,23
-     .context_expr Constant 2 - 0,22..0,23
-   3] withitem - 0,25..0,26
-     .context_expr Constant 3 - 0,25..0,26
-   4] withitem - 0,28..0,34
-     .context_expr Name 'c' Load - 0,28..0,29
-     .optional_vars Name 'c' Store - 0,33..0,34
+   1] withitem - 0,19..0,28
+     .context_expr Tuple - 0,19..0,28
+       .elts[3]
+        0] Constant 1 - 0,20..0,21
+        1] Constant 2 - 0,23..0,24
+        2] Constant 3 - 0,26..0,27
+       .ctx Load
+   2] withitem - 0,30..0,36
+     .context_expr Name 'c' Load - 0,30..0,31
+     .optional_vars Name 'c' Store - 0,35..0,36
   .body[1]
-   0] Pass - 0,36..0,40
+   0] Pass - 0,38..0,42
 '''),
 
 ('', 1, 2, 'items', {'coerce': False, 'one': True}, (None,
 r'''async with a as a, b as b, c as c: pass'''), ('Tuple',
 r'''1, 2, 3'''),
-r'''async with a as a, 1, 2, 3, c as c: pass''',
+r'''async with a as a, (1, 2, 3), c as c: pass''',
 r'''**NodeError('expecting _withitems, got Tuple, coerce disabled')**''', r'''
-AsyncWith - ROOT 0,0..0,40
-  .items[5]
+AsyncWith - ROOT 0,0..0,42
+  .items[3]
    0] withitem - 0,11..0,17
      .context_expr Name 'a' Load - 0,11..0,12
      .optional_vars Name 'a' Store - 0,16..0,17
-   1] withitem - 0,19..0,20
-     .context_expr Constant 1 - 0,19..0,20
-   2] withitem - 0,22..0,23
-     .context_expr Constant 2 - 0,22..0,23
-   3] withitem - 0,25..0,26
-     .context_expr Constant 3 - 0,25..0,26
-   4] withitem - 0,28..0,34
-     .context_expr Name 'c' Load - 0,28..0,29
-     .optional_vars Name 'c' Store - 0,33..0,34
+   1] withitem - 0,19..0,28
+     .context_expr Tuple - 0,19..0,28
+       .elts[3]
+        0] Constant 1 - 0,20..0,21
+        1] Constant 2 - 0,23..0,24
+        2] Constant 3 - 0,26..0,27
+       .ctx Load
+   2] withitem - 0,30..0,36
+     .context_expr Name 'c' Load - 0,30..0,31
+     .optional_vars Name 'c' Store - 0,35..0,36
   .body[1]
-   0] Pass - 0,36..0,40
+   0] Pass - 0,38..0,42
 '''),
 ],
 

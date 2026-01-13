@@ -1707,9 +1707,18 @@ def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> A
 def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `withitem`, e.g. "something() as var". @private"""
 
-    items = _ast_parse1(f'with (\n{src}\n): pass', parse_params, With).items
+    try:
+        items = _ast_parse1(f'with ((\n{src}\n)): pass', parse_params, With).items  # we need to try double parentheses first to catch unparenthesized singleton tuples "x,"
 
-    if len(items) == 1:
+    except SyntaxError:
+        try:
+            items = _ast_parse1(f'with (\n{src}\n): pass', parse_params, With).items
+        except SyntaxError as exc:
+            raise exc from None
+
+        if len(items) != 1:
+            raise ParseError('expecting single withitem')
+
         ast = items[0].context_expr
         ast_cls = ast.__class__
 
@@ -1722,18 +1731,21 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
             raise SyntaxError('invalid syntax')
 
-    else:  # unparenthesized Tuple
-        if all(i.optional_vars is None for i in items):
-            items = _ast_parse1(f'with ((\n{src}\n)): pass', parse_params, With).items
-
+    else:
         if len(items) != 1:
             raise ParseError('expecting single withitem')
 
         ast = items[0].context_expr
 
-        assert ast.__class__ is Tuple
+        if ast.lineno == 1:  # unparenthesized Tuple or something merged with our grouping pars
+            if ast.__class__ is Tuple:
+                if not ast.elts:  # empty tuple created by our pars
+                    raise SyntaxError('expecting withitem, got nothing')
 
-        _fix_undelimited_seq_parsed_delimited(src, ast)
+                _fix_undelimited_seq_parsed_delimited(src, ast)
+
+            else:
+                raise SyntaxError('invalid syntax')
 
     return _offset_linenos(items[0], -1)
 

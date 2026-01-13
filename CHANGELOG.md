@@ -2,7 +2,8 @@
 
 ### Fixed
 
-- fixed parse of naked tuple with trailing comma to `_Assign_targets`
+- do not accept `Starred` node for a `withitem` or `_withitems`
+- fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
 - fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
 - delimit whole node at root when degenerate last line has line continuation without trailing newline
 - `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
@@ -17,6 +18,7 @@
 
 ### Updated
 
+- `parse_withitem('x,')` now parses to singleton `Tuple` withitem instead of single `withitem` `Name` with trailing comma, makes more sense
 - concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode
 - `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
 - `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`

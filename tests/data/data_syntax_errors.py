@@ -758,6 +758,12 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: expecting withitem, got nothing',
 ],
 
+('withitem', '*a'): [
+    '    *a',
+    '    ^^',
+    'SyntaxError: cannot use starred expression here',
+],
+
 ('withitem', '(a as b)'): [
     '    (a as b)',
     '       ^^',
@@ -780,6 +786,12 @@ DATA_SYNTAX_ERRORS = {
     '    ,',
     '    ^',
     'SyntaxError: invalid syntax',
+],
+
+('_withitems', '*a'): [
+    '    *a',
+    '    ^^',
+    'SyntaxError: cannot use starred expression here',
 ],
 
 ('_withitems', '(a as b)'): [

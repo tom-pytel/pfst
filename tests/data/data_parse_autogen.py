@@ -2611,6 +2611,10 @@ withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+r'''*a'''),
+r'''**SyntaxError('cannot use starred expression here')**'''),
+
 ('parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''a, b'''), r'''
 withitem - ROOT 0,0..0,4
@@ -2693,6 +2697,10 @@ _withitems - ROOT 0,0..0,1
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+r'''*a'''),
+r'''**SyntaxError('cannot use starred expression here')**'''),
 
 ('parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b'''), r'''

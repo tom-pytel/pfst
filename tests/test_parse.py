@@ -478,6 +478,7 @@ PARSE_TESTS = [
 
     ('withitem',           px.parse_withitem,           SyntaxError,              ''),
     ('withitem',           px.parse_withitem,           withitem,                 'a'),
+    ('withitem',           px.parse_withitem,           SyntaxError,              '*a'),
     ('withitem',           px.parse_withitem,           withitem,                 'a, b'),
     ('withitem',           px.parse_withitem,           withitem,                 '(a, b)'),
     ('withitem',           px.parse_withitem,           withitem,                 '()'),
@@ -493,6 +494,7 @@ PARSE_TESTS = [
 
     ('_withitems',         px.parse__withitems,         _withitems,               ''),
     ('_withitems',         px.parse__withitems,         _withitems,               'a'),
+    ('_withitems',         px.parse__withitems,         SyntaxError,              '*a'),
     ('_withitems',         px.parse__withitems,         _withitems,               'a, b'),
     ('_withitems',         px.parse__withitems,         _withitems,               '(a, b)'),
     ('_withitems',         px.parse__withitems,         _withitems,               '()'),
