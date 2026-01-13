@@ -74,6 +74,210 @@ _arglikes
 ========================================================================================================================
 
 ........................................................................................................................
+>>> test_target_srcs('for _ in _ if a', 'ifs', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}'])
+ 
+one=False, coerce=True  (mode=None)
+-----------------------------------
+ 
+src: for _ in _ if x  # src='x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: ParseError('expecting _comprehension_ifs, could not parse or coerce')  # src='*x'
+FST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
+AST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
+ 
+src: for _ in _ if (x,)  # src='x,'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if (*x,)  # src='*x,'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
+ 
+src: for _ in _ if (x,)  # src='(x,)'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if [x]  # src='[x]'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x}  # src='{x}'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x: y}  # src='{x: y}'
+FST: for _ in _ if {x: y}
+AST: for _ in _ if {x: y}
+ 
+ 
+one=False, coerce=False  (mode=None)
+------------------------------------
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x\n', 2, 2))  # src='x'
+FST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
+ 
+src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='*x'
+FST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x,\n', 2, 2))  # src='x,'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 3, '*x,\n', 2, 4))  # src='*x,'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+ 
+src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='(x,)'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+ 
+src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='[x]'
+FST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}\n', 2, 2))  # src='{x}'
+FST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}\n', 2, 2))  # src='{x: y}'
+FST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
+ 
+ 
+one=True, coerce=True  (mode=None)
+----------------------------------
+ 
+src: for _ in _ if x  # src='x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: ParseError('expecting _comprehension_ifs, could not parse or coerce')  # src='*x'
+FST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
+AST: NodeError('expecting _comprehension_ifs, got Starred, could not coerce')
+ 
+src: for _ in _ if (x,)  # src='x,'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if (*x,)  # src='*x,'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')
+ 
+src: for _ in _ if (x,)  # src='(x,)'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if [x]  # src='[x]'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x}  # src='{x}'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if {x: y}  # src='{x: y}'
+FST: for _ in _ if {x: y}
+AST: for _ in _ if {x: y}
+ 
+ 
+one=True, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x\n', 2, 2))  # src='x'
+FST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Name, coerce disabled')
+ 
+src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='*x'
+FST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Starred, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, 'x,\n', 2, 2))  # src='x,'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 3, '*x,\n', 2, 4))  # src='*x,'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+ 
+src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='(x,)'
+FST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Tuple, coerce disabled')
+ 
+src: ParseError("expecting comprehension ifs, does not start with 'if'")  # src='[x]'
+FST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got List, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x}\n', 2, 2))  # src='{x}'
+FST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Set, coerce disabled')
+ 
+src: SyntaxError('invalid syntax', ('<fst>', 2, 1, '{x: y}\n', 2, 2))  # src='{x: y}'
+FST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
+AST: NodeError('expecting _comprehension_ifs, got Dict, coerce disabled')
+
+
+........................................................................................................................
+>>> test_target_srcs('for _ in _ if a', 'ifs', ['if x', 'if x if y'], '_comprehension_ifs')
+ 
+one=False, coerce=True  (mode='_comprehension_ifs')
+---------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if x if y  # src='if x if y'
+FST: for _ in _ if x if y
+AST: for _ in _ if x if y
+ 
+ 
+one=False, coerce=False  (mode='_comprehension_ifs')
+----------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: for _ in _ if x if y  # src='if x if y'
+FST: for _ in _ if x if y
+AST: for _ in _ if x if y
+ 
+ 
+one=True, coerce=True  (mode='_comprehension_ifs')
+--------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: for _ in _ if x
+AST: for _ in _ if x
+ 
+src: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")  # src='if x if y'
+FST: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")
+AST: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")
+ 
+ 
+one=True, coerce=False  (mode='_comprehension_ifs')
+---------------------------------------------------
+ 
+src: for _ in _ if x  # src='if x'
+FST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
+AST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
+ 
+src: NodeError("can only put single element as as 'one=True' to _comprehension_ifs")  # src='if x if y'
+FST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
+AST: ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")
+
+
+
+
+========================================================================================================================
+_arglikes
+========================================================================================================================
+
+........................................................................................................................
 >>> test_target_srcs('call(a, b, c)', '_args', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}',])
  
 one=False, coerce=True  (mode=None)

@@ -36373,31 +36373,12 @@ comprehension - ROOT 0,0..2,12
 ('', 1, 3, 'ifs', {'one': True}, ('comprehension',
 r'''for _ in _ if a if b if c'''), ('_comprehension_ifs',
 r'''if x if y'''),
-r'''for _ in _ if a if x if y''', r'''
-comprehension - ROOT 0,0..0,25
-  .target Name '_' Store - 0,4..0,5
-  .iter Name '_' Load - 0,9..0,10
-  .ifs[3]
-   0] Name 'a' Load - 0,14..0,15
-   1] Name 'x' Load - 0,19..0,20
-   2] Name 'y' Load - 0,24..0,25
-  .is_async 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**'''),
 
 ('', 1, 3, 'ifs', {'one': True, 'coerce': False}, ('comprehension',
 r'''for _ in _ if a if b if c'''), ('_comprehension_ifs',
 r'''if x if y'''),
-r'''for _ in _ if a if x if y''',
-r'''**ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")**''', r'''
-comprehension - ROOT 0,0..0,25
-  .target Name '_' Store - 0,4..0,5
-  .iter Name '_' Load - 0,9..0,10
-  .ifs[3]
-   0] Name 'a' Load - 0,14..0,15
-   1] Name 'x' Load - 0,19..0,20
-   2] Name 'y' Load - 0,24..0,25
-  .is_async 0
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**'''),
 
 ('', 1, 3, 'ifs', {}, ('comprehension',
 r'''for _ in _ if a if b if c'''), ('Name',
@@ -36438,25 +36419,12 @@ r'''**SyntaxError('invalid syntax')**'''),
 ('', 1, 3, 'ifs', {'one': True}, ('_comprehension_ifs',
 r'''if a if b if c'''), ('_comprehension_ifs',
 r'''if x if y'''),
-r'''if a if x if y''', r'''
-_comprehension_ifs - ROOT 0,0..0,14
-  .ifs[3]
-   0] Name 'a' Load - 0,3..0,4
-   1] Name 'x' Load - 0,8..0,9
-   2] Name 'y' Load - 0,13..0,14
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**'''),
 
 ('', 1, 3, 'ifs', {'one': True, 'coerce': False}, ('_comprehension_ifs',
 r'''if a if b if c'''), ('_comprehension_ifs',
 r'''if x if y'''),
-r'''if a if x if y''',
-r'''**ValueError("cannot put _comprehension_ifs node as 'one=True' without 'coerce=True'")**''', r'''
-_comprehension_ifs - ROOT 0,0..0,14
-  .ifs[3]
-   0] Name 'a' Load - 0,3..0,4
-   1] Name 'x' Load - 0,8..0,9
-   2] Name 'y' Load - 0,13..0,14
-'''),
+r'''**NodeError("can only put single element as as 'one=True' to _comprehension_ifs")**'''),
 
 ('', 1, 3, 'ifs', {}, ('_comprehension_ifs',
 r'''if a if b if c'''), ('Name',

@@ -945,7 +945,8 @@ def _code_to_slice__comprehensions(
 def _code_to_slice__comprehensions_ifs(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs)
+    return _code_to_slice__special(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs,
+                                   'ifs')
 
 
 def _code_to_slice__aliases(

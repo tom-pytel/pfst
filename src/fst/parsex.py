@@ -1717,19 +1717,19 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise exc from None
 
         if len(items) != 1:
-            raise ParseError('expecting single withitem')
+            raise ParseError('expecting single withitem') from None
 
         ast = items[0].context_expr
         ast_cls = ast.__class__
 
         if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-            raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
+            raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp') from None
 
         if ast.lineno == 1:  # something merged with our grouping pars, maybe the user was screwing around and passed ')+('
             if ast_cls is Tuple and not ast.elts:  # empty tuple created by our pars
-                raise SyntaxError('expecting withitem, got nothing')
+                raise SyntaxError('expecting withitem, got nothing') from None
 
-            raise SyntaxError('invalid syntax')
+            raise SyntaxError('invalid syntax') from None
 
     else:
         if len(items) != 1:
