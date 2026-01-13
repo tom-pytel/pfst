@@ -1142,6 +1142,16 @@ class TestParse(unittest.TestCase):
         a = px.parse_expr(' (a),\n(b) ')
         self.assertEqual((1, 1, 2, 3), (a.lineno, a.col_offset, a.end_lineno, a.end_col_offset))
 
+        # prefer TypeVarTuple over invalid Assign
+
+        if PYGE13:
+            self.assertIsInstance(px.parse_all('*T = (int,)'), TypeVarTuple)
+
+
+
+
+
+
     def test_parse__BoolOp_dangling(self):
         # left
 

@@ -2,7 +2,8 @@
 
 ### Fixed
 
-- do not accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
+- don't try to parse `TypeVarTuple` in place of `Assign` "*starred = val" on py < 3.13
+- don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
 - fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
 - fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
 - delimit whole node at root when degenerate last line has line continuation without trailing newline
@@ -11,6 +12,7 @@
 
 ### Added
 
+- put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
 - a lot more coercion cases allowed for node puts (non-source)
   - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
   - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`
@@ -18,7 +20,7 @@
 
 ### Updated
 
-- `parse_withitem('x,')` now parses to singleton `Tuple` withitem instead of single `withitem` `Name` with trailing comma, makes more sense
+- `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
 - concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode
 - `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
 - `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`

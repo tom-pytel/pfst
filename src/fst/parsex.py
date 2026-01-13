@@ -134,7 +134,7 @@ from .astutil import (
     merge_arglikes,
 )
 
-from .common import next_frag, prev_frag, shortstr
+from .common import PYGE13, next_frag, prev_frag, shortstr
 
 __all__ = [
     'Mode',
@@ -899,8 +899,9 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
                                    _parse_all__type_params, parse__arglikes, parse_operator, parse__Assign_targets))
 
-        if ast.__class__ is Assign and len(targets := ast.targets) == 1 and targets[0].__class__ is Starred:  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
-            return _parse_all__type_params(src, parse_params)
+        if PYGE13:
+            if ast.__class__ is Assign and len(targets := ast.targets) == 1 and targets[0].__class__ is Starred:  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so we prefer that
+                return _parse_all__type_params(src, parse_params)
 
         return ast
 
