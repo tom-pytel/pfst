@@ -2,7 +2,8 @@
 
 ### Fixed
 
-- don't try to parse `TypeVarTuple` in place of `Assign` "*starred = val" on py < 3.13
+- allow put `Starred` to `TypeVarTuple.default_value`
+- don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
 - don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
 - fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
 - fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
@@ -20,6 +21,7 @@
 
 ### Updated
 
+- allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability
 - `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
 - concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode
 - `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`

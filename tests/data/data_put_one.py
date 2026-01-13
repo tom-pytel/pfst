@@ -15112,6 +15112,67 @@ _arglikes - ROOT 0,0..0,9
 '''),
 ],
 
+'put_Starred_to_various': [  # ................................................................................
+
+('', None, None, None, {}, ('Expr',
+r'''*a'''),
+r'''*x''',
+r'''*x''', r'''
+Expr - ROOT 0,0..0,2
+  .value Starred - 0,0..0,2
+    .value Name 'x' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', None, None, None, {}, ('Return',
+r'''return *a'''),
+r'''*x''',
+r'''return *x''', r'''
+Return - ROOT 0,0..0,9
+  .value Starred - 0,7..0,9
+    .value Name 'x' Load - 0,8..0,9
+    .ctx Load
+'''),
+
+('', None, None, None, {}, ('AnnAssign',
+r'''a: int = *b'''),
+r'''*x''',
+r'''a: int = *x''', r'''
+AnnAssign - ROOT 0,0..0,11
+  .target Name 'a' Store - 0,0..0,1
+  .annotation Name 'int' Load - 0,3..0,6
+  .value Starred - 0,9..0,11
+    .value Name 'x' Load - 0,10..0,11
+    .ctx Load
+  .simple 1
+'''),
+
+('', None, None, None, {}, ('Yield',
+r'''yield *a'''),
+r'''*x''',
+r'''yield *x''', r'''
+Yield - ROOT 0,0..0,8
+  .value Starred - 0,6..0,8
+    .value Name 'x' Load - 0,7..0,8
+    .ctx Load
+'''),
+
+('type_params[0]', None, None, 'default_value', {'_ver': 13}, ('TypeAlias',
+r'''type t[*T = *a] = ...'''),
+r'''*x''',
+r'''type t[*T = *x] = ...''', r'''
+TypeAlias - ROOT 0,0..0,21
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVarTuple - 0,7..0,14
+     .name 'T'
+     .default_value Starred - 0,12..0,14
+       .value Name 'x' Load - 0,13..0,14
+       .ctx Load
+  .value Constant Ellipsis - 0,18..0,21
+'''),
+],
+
 'raw': [  # ................................................................................
 
 ('', 1, None, None, {'raw': True, 'to': 'values[-1]'}, (None,

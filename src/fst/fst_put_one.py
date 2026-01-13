@@ -2494,7 +2494,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
     (ClassDef, 'body'):                   (True,  None, None),  # stmt*
     (ClassDef, '_bases'):                 (True,  _put_one_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
-    (Return, 'value'):                    (False, _put_one_exprlike_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
+    (Return, 'value'):                    (False, _put_one_exprlike_optional, onestatic(_one_info_Return_value, _restrict_fmtval_slice)),  # expr?
     (Delete, 'targets'):                  (True,  _put_one_exprlike_required, onestatic(_one_info_exprlike_required, is_valid_del_target, ctx_cls=Del)),  # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprlike_required, _onestatic_target),  # expr*
     (Assign, 'value'):                    (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr  - python technically allows Starred for parse but is not compilable, should we allow it as well for consistency?
@@ -2506,7 +2506,7 @@ _PUT_ONE_HANDLERS = {
     (AugAssign, 'value'):                 (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (AnnAssign, 'target'):                (False, _put_one_AnnAssign_target, _onestatic_target_single),  # expr
     (AnnAssign, 'annotation'):            (False, _put_one_exprlike_required, onestatic(_one_info_exprlike_required, _restrict_default)),  # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (AnnAssign, 'value'):                 (False, _put_one_exprlike_optional, onestatic(_one_info_AnnAssign_value, _restrict_default)),  # expr?
+    (AnnAssign, 'value'):                 (False, _put_one_exprlike_optional, onestatic(_one_info_AnnAssign_value, _restrict_fmtval_slice)),  # expr?
     (AnnAssign, 'simple'):                (False, _put_one_AnnAssign_simple, onestatic(None, int)),  # int
     (For, 'target'):                      (False, _put_one_exprlike_required, _onestatic_target),  # expr
     (For, 'iter'):                        (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
@@ -2546,7 +2546,7 @@ _PUT_ONE_HANDLERS = {
     (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None),  # int?
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
-    (Expr, 'value'):                      (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
+    (Expr, 'value'):                      (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred),  # expr
     (BoolOp, 'op'):                       (False, _put_one_BoolOp_op, onestatic(None)),  # boolop  - very special case gets handled entirely in _put_one_BoolOp_op
     (BoolOp, 'values'):                   (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
     (NamedExpr, 'target'):                (False, _put_one_exprlike_required, _onestatic_target_Name),  # expr
@@ -2575,7 +2575,7 @@ _PUT_ONE_HANDLERS = {
     (GeneratorExp, 'elt'):                (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (GeneratorExp, 'generators'):         (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (Await, 'value'):                     (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
-    (Yield, 'value'):                     (False, _put_one_exprlike_optional, onestatic(_one_info_Yield_value, _restrict_default)),  # expr?
+    (Yield, 'value'):                     (False, _put_one_exprlike_optional, onestatic(_one_info_Yield_value, _restrict_fmtval_slice)),  # expr?
     (YieldFrom, 'value'):                 (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Compare, 'left'):                    (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=code_as_cmpop)),  # cmpop*
@@ -2660,7 +2660,7 @@ _PUT_ONE_HANDLERS = {
     (ParamSpec, 'name'):                  (False, _put_one_identifier_required, onestatic(_one_info_ParamSpec_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (ParamSpec, 'default_value'):         (False, _put_one_exprlike_optional, onestatic(_one_info_ParamSpec_default_value, _restrict_default)),  # expr?
     (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
-    (TypeVarTuple, 'default_value'):      (False, _put_one_exprlike_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
+    (TypeVarTuple, 'default_value'):      (False, _put_one_exprlike_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_fmtval_slice)),  # expr?
 
     (Module, '_body'):                    (True,  None, None),  # stmt*  - without docstr
     (Interactive, '_body'):               (True,  None, None),  # stmt*
