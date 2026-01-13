@@ -2,7 +2,7 @@
 
 ### Fixed
 
-- do not accept `Starred` node for a `withitem` or `_withitems`
+- do not accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
 - fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
 - fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
 - delimit whole node at root when degenerate last line has line continuation without trailing newline

@@ -2002,6 +2002,13 @@ match a:
         self.assertRaises(NodeError, code_as__expr_arglikes, FST('a:b:c'))
         self.assertRaises(NodeError, code_as__expr_arglikes, FST('a:b:c,'))
 
+        # disallowed Starred
+
+        self.assertRaises(NodeError, code_as_withitem, FST('*a'))
+        self.assertRaises(NodeError, code_as__withitems, FST('*a'))
+        self.assertRaises(ParseError, code_as__comprehension_ifs, '*a', coerce=True)
+        self.assertRaises(NodeError, code_as__comprehension_ifs, FST('*a'), coerce=True)
+
     def test_code_as_coerce(self):
         def test(code, res):
             try:

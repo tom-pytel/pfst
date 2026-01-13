@@ -1440,6 +1440,9 @@ def _coerce_to__comprehension_ifs(
 
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
 
+    if fst_.a.__class__ is Starred:
+        raise NodeError('Starred not allowed in comprehension if')
+
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
 
