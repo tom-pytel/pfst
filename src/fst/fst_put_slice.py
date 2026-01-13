@@ -826,7 +826,6 @@ def _code_to_slice__special(
     options: Mapping[str, Any],
     ast_cls: type[AST],
     code_as: Callable,
-    one_only_field: str | None = None,
 ) -> fst.FST | None:
     if code is None:
         return None
@@ -845,9 +844,8 @@ def _code_to_slice__special(
 
     fst_ = code_as(code, self.root.parse_params, coerce=coerce)
 
-    if one and one_only_field:
-        if len(getattr(fst_.a, one_only_field)) != 1:
-            raise NodeError(f"can only put single element as as 'one=True' to {ast_cls.__name__}")
+    if one and len(getattr(fst_.a, field)) != 1:
+        raise NodeError(f"can only put single element as as 'one=True' to {ast_cls.__name__}")
 
     return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
@@ -855,8 +853,7 @@ def _code_to_slice__special(
 def _code_to_slice__Assign_targets(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets,
-                                   'targets')
+    return _code_to_slice__special(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets)
 
 
 def _code_to_slice__decorator_list(
@@ -939,33 +936,31 @@ def _code_to_slice__arglikes(
 def _code_to_slice__comprehensions(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'generators', one, options, _comprehensions, code_as__comprehensions,
-                                   'generators')
+    return _code_to_slice__special(self, code, 'generators', one, options, _comprehensions, code_as__comprehensions)
 
 
 def _code_to_slice__comprehensions_ifs(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs,
-                                   'ifs')
+    return _code_to_slice__special(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs)
 
 
 def _code_to_slice__aliases(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__aliases, 'names')
+    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__aliases)
 
 
 def _code_to_slice_Import_names(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__Import_names, 'names')
+    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__Import_names)
 
 
 def _code_to_slice_ImportFrom_names(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__ImportFrom_names, 'names')
+    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__ImportFrom_names)
 
 
 def _code_to_slice__withitems(
@@ -1080,8 +1075,7 @@ def _code_to_slice__withitems(
 def _code_to_slice__type_params(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'type_params', one, options, _type_params, code_as__type_params,
-                                   'type_params')
+    return _code_to_slice__special(self, code, 'type_params', one, options, _type_params, code_as__type_params)
 
 
 def _code_to_slice__expr_arglikes(

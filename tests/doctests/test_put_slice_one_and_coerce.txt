@@ -307,6 +307,312 @@ AST: **ValueError("cannot put _Assign_targets node as 'one=True' without 'coerce
 
 
 ========================================================================================================================
+_decorator_list
+========================================================================================================================
+
+........................................................................................................................
+>>> test_target_srcs('@a\nclass cls: pass', 'decorator_list', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', 'if x if y'])
+ 
+one=False, coerce=True  (mode=None)
+-----------------------------------
+ 
+src: @x
+class cls: pass  # src='x'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: **SyntaxError**  # src='*x'
+FST: **SyntaxError**
+AST: **SyntaxError**
+ 
+src: @(x,)
+class cls: pass  # src='x,'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @(*x,)
+class cls: pass  # src='*x,'
+FST: **NodeError('expecting _decorator_list, got Tuple, could not coerce')**
+AST: **NodeError('expecting _decorator_list, got Tuple, could not coerce')**
+ 
+src: @(x,)
+class cls: pass  # src='(x,)'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @[x]
+class cls: pass  # src='[x]'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @{x}
+class cls: pass  # src='{x}'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @{x: y}
+class cls: pass  # src='{x: y}'
+FST: @{x: y}
+class cls: pass
+AST: @{x: y}
+class cls: pass
+ 
+src: @(x, y)
+class cls: pass  # src='x, y'
+FST: @x
+@y
+class cls: pass
+AST: @x
+@y
+class cls: pass
+ 
+src: **ParseError('expecting _decorator_list, could not parse or coerce')**  # src='if x if y'
+FST: @x
+@y
+class cls: pass
+AST: @x
+@y
+class cls: pass
+ 
+ 
+one=False, coerce=False  (mode=None)
+------------------------------------
+ 
+src: **SyntaxError**  # src='x'
+FST: **NodeError('expecting _decorator_list, got Name, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Name, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _decorator_list, got Starred, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Starred, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x,'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='(x,)'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='[x]'
+FST: **NodeError('expecting _decorator_list, got List, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got List, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _decorator_list, got Set, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Set, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _decorator_list, got Dict, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Dict, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x, y'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('expecting _decorator_list, got _comprehension_ifs, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got _comprehension_ifs, coerce disabled')**
+ 
+ 
+one=True, coerce=True  (mode=None)
+----------------------------------
+ 
+src: @x
+class cls: pass  # src='x'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: **SyntaxError**  # src='*x'
+FST: **SyntaxError**
+AST: **SyntaxError**
+ 
+src: @(x,)
+class cls: pass  # src='x,'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @(*x,)
+class cls: pass  # src='*x,'
+FST: **NodeError('expecting _decorator_list, got Tuple, could not coerce')**
+AST: **NodeError('expecting _decorator_list, got Tuple, could not coerce')**
+ 
+src: @(x,)
+class cls: pass  # src='(x,)'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @[x]
+class cls: pass  # src='[x]'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @{x}
+class cls: pass  # src='{x}'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @{x: y}
+class cls: pass  # src='{x: y}'
+FST: @{x: y}
+class cls: pass
+AST: @{x: y}
+class cls: pass
+ 
+src: @(x, y)
+class cls: pass  # src='x, y'
+FST: **NodeError("can only put single element as as 'one=True' to _decorator_list")**
+AST: **NodeError("can only put single element as as 'one=True' to _decorator_list")**
+ 
+src: **ParseError('expecting _decorator_list, could not parse or coerce')**  # src='if x if y'
+FST: **NodeError("can only put single element as as 'one=True' to _decorator_list")**
+AST: **NodeError("can only put single element as as 'one=True' to _decorator_list")**
+ 
+ 
+one=True, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: **SyntaxError**  # src='x'
+FST: **NodeError('expecting _decorator_list, got Name, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Name, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _decorator_list, got Starred, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Starred, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x,'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='(x,)'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='[x]'
+FST: **NodeError('expecting _decorator_list, got List, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got List, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _decorator_list, got Set, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Set, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _decorator_list, got Dict, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Dict, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x, y'
+FST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('expecting _decorator_list, got _comprehension_ifs, coerce disabled')**
+AST: **NodeError('expecting _decorator_list, got _comprehension_ifs, coerce disabled')**
+
+
+........................................................................................................................
+>>> test_target_srcs('@a\nclass cls: pass', 'decorator_list', ['@x', '@x\n@y'], '_decorator_list')
+ 
+one=False, coerce=True  (mode='_decorator_list')
+------------------------------------------------
+ 
+src: @x
+class cls: pass  # src='@x'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @x
+@y
+class cls: pass  # src='@x\n@y'
+FST: @x
+@y
+class cls: pass
+AST: @x
+@y
+class cls: pass
+ 
+ 
+one=False, coerce=False  (mode='_decorator_list')
+-------------------------------------------------
+ 
+src: @x
+class cls: pass  # src='@x'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: @x
+@y
+class cls: pass  # src='@x\n@y'
+FST: @x
+@y
+class cls: pass
+AST: @x
+@y
+class cls: pass
+ 
+ 
+one=True, coerce=True  (mode='_decorator_list')
+-----------------------------------------------
+ 
+src: @x
+class cls: pass  # src='@x'
+FST: @x
+class cls: pass
+AST: @x
+class cls: pass
+ 
+src: **NodeError("can only put single element as as 'one=True' to _decorator_list")**  # src='@x\n@y'
+FST: **NodeError("can only put single element as as 'one=True' to _decorator_list")**
+AST: **NodeError("can only put single element as as 'one=True' to _decorator_list")**
+ 
+ 
+one=True, coerce=False  (mode='_decorator_list')
+------------------------------------------------
+ 
+src: @x
+class cls: pass  # src='@x'
+FST: **ValueError("cannot put _decorator_list node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _decorator_list node as 'one=True' without 'coerce=True'")**
+ 
+src: **NodeError("can only put single element as as 'one=True' to _decorator_list")**  # src='@x\n@y'
+FST: **ValueError("cannot put _decorator_list node as 'one=True' without 'coerce=True'")**
+AST: **ValueError("cannot put _decorator_list node as 'one=True' without 'coerce=True'")**
+
+
+
+
+========================================================================================================================
 _arglikes
 ========================================================================================================================
 
