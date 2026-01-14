@@ -1,4 +1,12 @@
-# Overview
+# pfst
+
+[![PyPI version](https://img.shields.io/badge/pypi-0.2.5-orange.svg)](https://pypi.org/project/pfst/)
+[![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+**High-level Python AST/CST manipulation that preserves formatting**
+
+## Overview
 
 This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal with the details of:
 
@@ -38,13 +46,13 @@ if a:
 
 Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs no implicit normalization or stylistic rewriting.
 
-# Links
+## Links
 
 - [Repository](https://github.com/tom-pytel/pfst)
 - [Documentation](https://tom-pytel.github.io/pfst/)
 - [PyPI](https://pypi.org/project/pfst/)
 
-# Install
+## Install
 
 From PyPI:
 
@@ -58,110 +66,63 @@ From GitHub, after cloning for development:
 
     pip install -e .[dev]
 
-# Example
+## Example
 
-Maybe you need to convert modern Python type annotations into older style type comments for something which doesn't
-understand annotations?
+A simple example to give an idea of the API. This function adds a `correlation_id=CID` keyword argument to all
+`logger.info()` calls, but only if it's not already there.
 
 ```py
->>> from fst import *
+>>> import fst
 
->>> def type_annotations_to_type_comments(src: str) -> str:
-...     fst_ = FST(src, 'exec')  # same as "fst.parse(src).f"
+>>> def inject_logging_metadata(src: str) -> str:
+...     tree = fst.FST(src)
 ...
-...     # walk the whole tree but only yield AnnAssign nodes
-...     for f in fst_.walk(AnnAssign):
-...         # if just an annotation then skip it, alternatively could
-...         # clean and store for later addition to __init__() assign in class
-...         if not f.value:
-...             continue
+...     for call in tree.walk(fst.Call):
+...         if (call.func.is_Attribute
+...             and call.func.attr == 'info'
+...             and call.func.value.is_Name
+...             and call.func.value.id == 'logger'
+...             and not any(kw.arg == 'correlation_id' for kw in call.keywords)
+...         ):
+...             call.append('correlation_id=CID', trivia=(False, False))
 ...
-...         # own_src() gives us the original source exactly as written but dedented
-...         target = f.target.own_src()
-...         value = f.value.own_src()
-...
-...         # we use ast_src() for the annotation to get a clean type string
-...         annotation = f.annotation.ast_src()
-...
-...         # preserve any existing end-of-line comment
-...         comment = ' # ' + comment if (comment := f.get_line_comment()) else ''
-...
-...         # reconstruct the line using the PEP 484 type comment style
-...         new_src = f'{target} = {value}  # type: {annotation}{comment}'
-...
-...         # replace the node, trivia=False preserves any leading comments
-...         f.replace(new_src, trivia=False)
-...
-...     return fst_.src  # same as fst.unparse(fst_.a)
+...     return tree.src
 ```
 
 ```py
 >>> src = """
-... def func():
-...     normal = assign
+... logger.info('Hello world...')  # ok
+... logger.info('Already have id', correlation_id=other_cid)  # ok
+... logger.info()  # yes, no logger message, too bad
 ...
-...     x: int = 1
-...
-...     # y is such and such
-...     y: float = 2.0  # more about y
-...     # y was a good variable...
-...
-...     structure: tuple[
-...         tuple[int, int],  # extraneous comment
-...         dict[str, Any],   # could break stuff
-...     ] | None = None# blah
-...
-...     call(  # invalid but just for demonstration purposes
-...         some_arg,          # non-extraneous comment
-...         some_kw=kw_value,  # will not break stuff
-...     )[start : stop].attr: SomeClass = getthis()
+... class cls:
+...     def method(self, thing, extra):
+...         if not thing:
+...             (logger).info(  # just checking
+...                 f'not a {thing}',  # this is fine
+...                 extra=extra,       # also this
+...             )
 ... """.strip()
 ```
 
 ```py
->>> print(src)
-def func():
-    normal = assign
+>>> print(inject_logging_metadata(src))
+logger.info('Hello world...', correlation_id=CID)  # ok
+logger.info('Already have id', correlation_id=other_cid)  # ok
+logger.info(correlation_id=CID)  # yes, no logger message, too bad
 
-    x: int = 1
-
-    # y is such and such
-    y: float = 2.0  # more about y
-    # y was a good variable...
-
-    structure: tuple[
-        tuple[int, int],  # extraneous comment
-        dict[str, Any],   # could break stuff
-    ] | None = None# blah
-
-    call(  # invalid but just for demonstration purposes
-        some_arg,          # non-extraneous comment
-        some_kw=kw_value,  # will not break stuff
-    )[start : stop].attr: SomeClass = getthis()
+class cls:
+    def method(self, thing, extra):
+        if not thing:
+            (logger).info(  # just checking
+                f'not a {thing}',  # this is fine
+                extra=extra, correlation_id=CID # also this
+            )
 ```
 
-```py
->>> print(type_annotations_to_type_comments(src))
-def func():
-    normal = assign
+## Robust
 
-    x = 1  # type: int
-
-    # y is such and such
-    y = 2.0  # type: float # more about y
-    # y was a good variable...
-
-    structure = None  # type: tuple[tuple[int, int], dict[str, Any]] | None # blah
-
-    call(  # invalid but just for demonstration purposes
-        some_arg,          # non-extraneous comment
-        some_kw=kw_value,  # will not break stuff
-    )[start : stop].attr = getthis()  # type: SomeClass
-```
-
-# Robust
-
-Crazy syntax is handled correctly (which is a main goal of this module).
+Crazy syntax is handled correctly, which is a main goal of this module.
 
 ```py
 >>> f = FST(r'''
@@ -247,7 +208,7 @@ if True:
     pass
 ```
 
-# Misc
+## Misc
 
 Familiar AST structure and pythonic operations.
 
@@ -381,7 +342,7 @@ Assign - ROOT 0,0..0,5
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the
 tests in the `tests/` directory.
 
-## TODO
+### TODO
 
 This module is not finished but functional enough that it can be useful.
 
@@ -411,6 +372,6 @@ optimization, testing, bughunting, etc...
 preserve more formatting.
 
 
-## Trivia
+### Trivia
 
 The "F" in FST stands for "Fun".
