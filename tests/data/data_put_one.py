@@ -12995,7 +12995,7 @@ r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 ('', 0, None, 'names', {}, (None,
 r'''from . import _'''), (None,
 r'''(a, b)'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('', 0, None, 'names', {'coerce': False}, (None,
 r'''from . import _'''), (None,
@@ -13005,7 +13005,7 @@ r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 ('', 0, None, 'names', {'coerce': False}, (None,
 r'''from . import _'''), (None,
 r'''(a, b)'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 ],
 
 'Global_names': [  # ................................................................................

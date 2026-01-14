@@ -1617,7 +1617,7 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise exc from None
 
     if len(names) != 1:
-        raise ParseError('expecting single name')
+        raise ParseError('expecting single alias')
 
     return _offset_linenos(names[0], -1)
 
@@ -1662,7 +1662,7 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     names = import_.names
 
     if len(names) != 1:
-        raise ParseError('expecting single name')
+        raise ParseError('expecting single alias')
 
     nn = names[-1]
 

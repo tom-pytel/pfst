@@ -2555,7 +2555,7 @@ if 1:
 
         # make sure we can't put '* to Import.names
 
-        self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', '_ImportFrom_names'), 1, 2)
+        self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', alias), 1, 2)
 
         # from import with import in modules
 

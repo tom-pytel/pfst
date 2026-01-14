@@ -122,19 +122,28 @@ from .parsex import (
 )
 
 from .code import (
+    _code_as_one__Assign_targets,
+    _code_as_one__decorator_list,
+    _code_as_one__comprehension_ifs,
     Code,
     code_as_expr,
     code_as_expr_all,
     code_as__Assign_targets,
     code_as__decorator_list,
     code_as__arglikes,
+    code_as_comprehension,
     code_as__comprehensions,
     code_as__comprehension_ifs,
+    code_as_keyword,
+    code_as_alias,
     code_as__aliases,
+    code_as_Import_name,
     code_as__Import_names,
+    code_as_ImportFrom_name,
     code_as__ImportFrom_names,
     code_as__withitems,
     code_as_pattern,
+    code_as_type_param,
     code_as__type_params,
     code_as__expr_arglikes,
 )
@@ -247,9 +256,7 @@ from .fst_put_one import _fix_With_items
 #                  (TemplateStr, 'values'):                # Constant|Interpolation*    -> TemplateStr
 
 
-_ASTS_LEAF_EXPR_NO_TUPLE    = ASTS_LEAF_EXPR - {Tuple}
-_ASTS_LEAF_EXPR_OR_KEYWORD  = ASTS_LEAF_EXPR | {keyword}
-_ASTS_LEAF_EXPR_OR_WITHITEM = ASTS_LEAF_EXPR | {withitem}
+_ASTS_LEAF_EXPR_NO_TUPLE = ASTS_LEAF_EXPR - {Tuple}
 
 
 class slicestatic(NamedTuple):
@@ -258,6 +265,13 @@ class slicestatic(NamedTuple):
     self_tail_sep: bool | Literal[0, 1] | None
     ret_tail_sep:  bool | Literal[0, 1] | None
 
+# ......................................................................................................................
+
+# The _code_to_slice_*() functions mostly deal with the `one` parameter, which is tricky because it can mean one of two
+# things:
+# - Put slice as a single element.
+# - Put one element as single-element slice.
+# It is also tricky because the nodes which are slices can also be elements of those slices.
 
 def _code_to_slice_expr(
     self: fst.FST,
@@ -845,21 +859,110 @@ def _code_to_slice__special(
     fst_ = code_as(code, self.root.parse_params, coerce=coerce)
 
     if one and len(getattr(fst_.a, field)) != 1:
-        raise NodeError(f"can only put single element as as 'one=True' to {ast_cls.__name__}")
+        raise NodeError(f"can only put single element as 'one=True' to {ast_cls.__name__}")
 
     return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
+
+
+def _code_to_slice__special1(
+    self: fst.FST,
+    code: Code | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+    ast_cls: type[AST],
+    code_as: Callable,
+    code_as_one: Callable,
+) -> fst.FST | None:
+    """Special slice which cannot convert multiple elements into one, `_type_params`, `_comprehensions` and
+    `_aliases`."""
+
+    if code is None:
+        return None
+
+    coerce = fst.FST.get_option('coerce', options)
+
+    if not one:
+        fst_ = code_as(code, self.root.parse_params, coerce=coerce)
+
+        return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
+
+    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea_cls = codea.__class__
+
+    if codea_cls is ast_cls:
+        raise ValueError(f"cannot put {ast_cls.__name__} node as 'one=True'")
+
+    fst_ = code_as_one(code, self.root.parse_params, coerce=coerce)
+
+    ast = ast_cls([], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                  end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], field, True, False)
+
+
+def _code_to_slice__special2(
+    self: fst.FST,
+    code: Code | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+    ast_cls: type[AST],
+    code_as: Callable,
+    code_as_one: Callable,
+) -> fst.FST | None:
+    """Very special slice with unique syntax, `_Assign_targets`, `_decorator_list` and `_comprehension_ifs`."""
+
+    if code is None:
+        return None
+
+    coerce = fst.FST.get_option('coerce', options)
+    parse_params = self.root.parse_params
+
+    if not one:
+        fst_ = code_as(code, parse_params, coerce=coerce)
+
+        return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
+
+    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea_cls = codea.__class__
+
+    if codea_cls is ast_cls:  # if is already the wanted class and has a single element then don't convert to singleton sequence, makes more sense to use it as-is for these very special slices
+        if len(getattr(codea, field)) == 1:
+            if codea is code:  # is AST, make FST
+                code = code_as(code, parse_params)
+
+            return code
+
+        # field not length 1 so fall through to either coerce to Tuple or error
+
+    elif isinstance(code, (str, list)):  # maybe a single element in format of this slice, need to try here because will be SyntaxError in code_as_one()
+        try:
+            fst_ = code_as(code, parse_params, coerce=False)
+        except (SyntaxError, NodeError):
+            pass
+
+        else:
+            if len(getattr(fst_.a, field)) != 1:
+                raise NodeError(f'expecting single {ast_cls.__name__} element for put as `one=True`')
+
+            return fst_
+
+    return code_as_one(code, parse_params, coerce=coerce or codea.__class__ is ast_cls)  # `codea.__class__ is ast_cls` because our own type should be accepted
 
 
 def _code_to_slice__Assign_targets(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets)
+    return _code_to_slice__special2(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets,
+                                    _code_as_one__Assign_targets)
 
 
 def _code_to_slice__decorator_list(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'decorator_list', one, options, _decorator_list, code_as__decorator_list)
+    return _code_to_slice__special2(self, code, 'decorator_list', one, options, _decorator_list,
+                                    code_as__decorator_list, _code_as_one__decorator_list)
 
 
 def _code_to_slice__arglikes(
@@ -871,10 +974,17 @@ def _code_to_slice__arglikes(
     if code is None:
         return None
 
-    codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
     coerce = fst.FST.get_option('coerce', options)
 
-    if one and coerce and codea.__class__ in ASTS_LEAF_TUPLE_LIST_OR_SET:  # if putting as one with coerce=True these would be coerced out of being Tuple, List or Set, but for one=True want to keep them as such
+    if not one:
+        fst_ = code_as__arglikes(code, self.root.parse_params, coerce=coerce)
+
+        return fst_ if fst_.a.arglikes else None  # put empty sequence is same as delete
+
+    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea_cls = codea.__class__
+
+    if codea_cls in ASTS_LEAF_EXPR:  # if putting expr as one then should be passed through as such
         if codea is not code:  # is FST
             fst_ = code
             ast_ = codea
@@ -882,17 +992,23 @@ def _code_to_slice__arglikes(
             if fst_.is_parenthesized_tuple() is False:
                 fst_._delimit_node()
 
-        else:  # is AST, need to get FST
+        else:  # is AST, make FST
             fst_ = code_as_expr(code, self.root.parse_params)
+            ast_ = fst_.a
+
+    elif codea_cls is keyword:  # if putting keyword as one then should be passed through as such, could do as one below with code_as__arglikes(coerce=True) but this is more optimal
+        if codea is not code:  # is FST
+            fst_ = code
+            ast_ = codea
+
+        else:  # is AST, make FST
+            fst_ = code_as_keyword(code, self.root.parse_params)
             ast_ = fst_.a
 
     else:
         fst_ = code_as__arglikes(code, self.root.parse_params, coerce=coerce)
         ast_ = fst_.a
         arglikes = ast_.arglikes
-
-        if not one:
-            return fst_ if arglikes else None  # put empty sequence is same as delete
 
         if len(arglikes) == 1:  # if is length 1 then maybe we put just this one element
             arglike0 = arglikes[0]
@@ -901,14 +1017,11 @@ def _code_to_slice__arglikes(
                 if not arglike0.f._has_separator():
                     return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
-            elif codea.__class__ in _ASTS_LEAF_EXPR_OR_KEYWORD:  # was already expression or keyword node passed in
-                return fst_
-
             if arglike0.__class__ is keyword:
-                raise NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+                raise NodeError('cannot put keyword into a Tuple for put as `one=True`')
 
         elif any(a.__class__ is keyword for a in arglikes):
-            raise NodeError('keyword cannot be put into a Tuple for put as `one=True`')
+            raise NodeError('cannot put keyword into a Tuple for put as `one=True`')
 
         # we are putting whatever sequence was passed in as a Tuple because one=True, is in _arglike container so first need to change that
 
@@ -936,31 +1049,35 @@ def _code_to_slice__arglikes(
 def _code_to_slice__comprehensions(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'generators', one, options, _comprehensions, code_as__comprehensions)
+    return _code_to_slice__special1(self, code, 'generators', one, options, _comprehensions, code_as__comprehensions,
+                                    code_as_comprehension)
 
 
 def _code_to_slice__comprehensions_ifs(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs)
+    return _code_to_slice__special2(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs,
+                                    _code_as_one__comprehension_ifs)
 
 
 def _code_to_slice__aliases(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__aliases)
+    return _code_to_slice__special1(self, code, 'names', one, options, _aliases, code_as__aliases, code_as_alias)
 
 
 def _code_to_slice_Import_names(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__Import_names)
+    return _code_to_slice__special1(self, code, 'names', one, options, _aliases, code_as__Import_names,
+                                   code_as_Import_name)
 
 
 def _code_to_slice_ImportFrom_names(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__ImportFrom_names)
+    return _code_to_slice__special1(self, code, 'names', one, options, _aliases, code_as__ImportFrom_names,
+                                   code_as_ImportFrom_name)
 
 
 def _code_to_slice__withitems(
@@ -979,10 +1096,10 @@ def _code_to_slice__withitems(
 
         return fst_ if fst_.a.items else None  # put empty sequence is same as delete
 
-    codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
+    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
     codea_cls = codea.__class__
 
-    if coerce and codea_cls in ASTS_LEAF_TUPLE_LIST_OR_SET:  # if putting as one with coerce=True these would be coerced out of being Tuple, List or Set, but for one=True want to keep them as such
+    if codea_cls in ASTS_LEAF_EXPR:  # if putting expr as one then should be passed through as such
         if codea is not code:  # is FST
             fst_ = code
             ast_ = codea
@@ -990,37 +1107,29 @@ def _code_to_slice__withitems(
             if fst_.is_parenthesized_tuple() is False:
                 fst_._delimit_node()
 
-        else:  # is AST, need to get FST
+        else:  # is AST, make FST
             fst_ = code_as_expr(code, self.root.parse_params)
             ast_ = fst_.a
 
     else:
-        if is_tuple := coerce and codea_cls is Tuple:  # need to explicitly handle unparenthesized Tuples because Starred not allowed by code_as__withitems()
-            if codea is code:  # is AST
-                fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)  # get FST for AST
-            else:
-                fst_ = code
+        try:
+            fst_ = code_as__withitems(code, self.root.parse_params, coerce=coerce or codea_cls is withitem)
 
-        else:
+        except (SyntaxError, NodeError) as exc:  # may be `*Starred,` source
+            if not isinstance(code, (str, list)):
+                raise
+
             try:
-                fst_ = code_as__withitems(code, self.root.parse_params, coerce=coerce)
+                fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)  # source that may parse to a Tuple
+            except Exception:
+                raise exc from None
 
-            except (SyntaxError, NodeError) as exc:  # may be `*Starred,` source
-                if not isinstance(code, (str, list)):
-                    raise
+            if fst_.a.__class__ is not Tuple:
+                raise
 
-                try:
-                    fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)  # source that may parse to a Tuple
-                except Exception:
-                    raise exc from None
-
-                if not (is_tuple := fst_.a.__class__ is Tuple):
-                    raise
-
-        if is_tuple:
             ast_ = fst_.a
 
-            if fst_.is_parenthesized_tuple() is False:
+            if not fst_._is_delimited_seq():  # we know is Tuple
                 fst_._delimit_node()
 
         else:
@@ -1032,7 +1141,7 @@ def _code_to_slice__withitems(
                     if not items[0].f._has_separator():
                         return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
-                elif codea_cls in _ASTS_LEAF_EXPR_OR_WITHITEM:  # was already expression or withitem node passed in
+                elif codea_cls is withitem:  # was already expression or withitem node passed in
                     return fst_
 
             # we are putting whatever sequence was passed in as a Tuple because one=True, is in _withitems container so first need to change that
@@ -1041,7 +1150,7 @@ def _code_to_slice__withitems(
 
             for item in items:
                 if item.optional_vars:
-                    raise NodeError('withitem with optional_vars cannot be put into a Tuple for put as `one=True`')
+                    raise NodeError('cannot put withitem with optional_vars into a Tuple for put as `one=True`')
 
                 elts.append(item.context_expr)
 
@@ -1057,7 +1166,7 @@ def _code_to_slice__withitems(
             fst_._fix_tuple()
             fst_._fix_arglikes(options)  # because this is now a Tuple which can't have arglike-expressions inside
 
-            if fst_.is_parenthesized_tuple() is False:
+            if not fst_._is_delimited_seq():  # we know is Tuple
                 fst_._delimit_node()
 
     # container for single element we are putting
@@ -1075,27 +1184,38 @@ def _code_to_slice__withitems(
 def _code_to_slice__type_params(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    return _code_to_slice__special(self, code, 'type_params', one, options, _type_params, code_as__type_params)
+    return _code_to_slice__special1(self, code, 'type_params', one, options, _type_params, code_as__type_params,
+                                    code_as_type_param)
 
 
 def _code_to_slice__expr_arglikes(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
     """All this mostly do deal with how to treat sequences when passed in as either source or nodes with various
-    combinations of `one` and `coerce` for the most common-sense interpretation."""
+    combinations of `one` and `coerce` for the most common-sense interpretation.
+
+    **Returns**:
+    - `Tuple | List | Set`: For the functions which call this it doesn't matter the type, all they want is the `elts`.
+    """
 
     if code is None:
         return None
 
-    codea = getattr(code, 'a', None) or code  # make sure it is the actual AST, even if not from the FST
     coerce = fst.FST.get_option('coerce', options)
+    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea_cls = codea.__class__
 
-    if one and coerce and codea.__class__ in ASTS_LEAF_LIST_OR_SET:  # if putting as one with coerce=True these would be coerced out of being List or Set, but for one=True want to keep them as such
+    if not one:
+        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce or codea_cls in ASTS_LEAF_LIST_OR_SET)  # the codea_cls sets coerce because we always want to accept List and Set as valid slices
+
+        return fst_ if fst_.a.elts else None  # put empty sequence is same as delete
+
+    if codea_cls in _ASTS_LEAF_EXPR_NO_TUPLE:  # if putting expr as one then most should be passed through as such except for Tuple, which may need arglike expressions inside it fixed
         if codea is not code:  # is FST
             fst_ = code
             ast_ = codea
 
-        else:  # is AST, need to get FST
+        else:  # is AST, make FST
             fst_ = code_as_expr(code, self.root.parse_params)
             ast_ = fst_.a
 
@@ -1103,15 +1223,12 @@ def _code_to_slice__expr_arglikes(
         fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce, one=one)  # we use this instead of code_as_expr() because this field normally takes arglike-only expressions like '*not a' so if we fail to do so here it might seem strange
         ast_ = fst_.a
 
-        if not one:
-            return fst_ if ast_.elts else None  # put empty sequence is same as delete
-
         if len(elts := ast_.elts) == 1:  # if is length 1 then maybe we put just this one element and not singleton Tuple
             if isinstance(code, (str, list)):
                 if not elts[0].f._has_separator():
                     return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
-            if codea.__class__ in (ASTS_LEAF_EXPR if codea is code else _ASTS_LEAF_EXPR_NO_TUPLE):  # was already expression node passed in, so don't treat as Tuple if coerced, for AST the one stuff was handled in code_as__expr_arglikes() because `one=True` passed so for that we just check _EXPR and not _EXPR_NO_TUPLE
+            if codea_cls is Tuple and codea is code:  # AST Tuple passed in, proper representation was figured out in code_as__expr_arglikes(..., one=one)
                 return fst_
 
         # we are putting whatever sequence was passed in as an singleton Tuple because one=True

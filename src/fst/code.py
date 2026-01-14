@@ -338,7 +338,7 @@ def _coerce_to_expr_ast__arglikes(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     arglikes = ast.arglikes
-    pars_arglike = kwargs.get('pars_arglike', True)  # this is a definitive yes / no, not None and global option not checked here
+    pars_arglike = kwargs.get('pars_arglike', True)  # this is a definitive yes / no, not None, and global option not checked here
 
     if not is_FST:
         if any(a.__class__ is keyword for a in arglikes):
@@ -1211,7 +1211,7 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
         # reformat expression(s) source as targets
 
         ast = _Assign_targets(targets=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
-                              end_col_offset=ls[-1].lenbytes)
+                            end_col_offset=ls[-1].lenbytes)
         fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
         lines = fst_._lines
         last_ln = len(lines) - 1  # this never changes because the _put_src() calls are never multiline
@@ -1251,11 +1251,20 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
 
         return fst_
 
-    fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=True)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
+    # single element as sequence
+
+    return _code_as_one__Assign_targets(code, parse_params, coerce=True)
+
+
+def _code_as_one__Assign_targets(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=coerce)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
     ast_ = fst_.a
 
     if not is_valid_target(ast_):
-        raise NodeError(f'expecting _Assign_targets, got {ast_.__class__.__name__}, could not coerce')
+        raise NodeError(f'expecting _Assign_targets expression, got {ast_.__class__.__name__}'
+                        f'{", could not coerce" if coerce else ", coerce disabled"}')
 
     fst_._set_ctx(Store)
 
@@ -1320,7 +1329,18 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
 
     # single element as sequence
 
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+    return _code_as_one__decorator_list(code, parse_params, sanitize=sanitize, coerce=True)
+
+_coerce_to__decorator_list.coerce_src = True
+
+
+def _code_as_one__decorator_list(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=coerce)
+
+    if fst_.a.__class__ is Starred:
+        raise NodeError('decorator cannot be Starred')
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
@@ -1333,8 +1353,6 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
                           end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'decorator_list', True, False)
-
-_coerce_to__decorator_list.coerce_src = True
 
 
 def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -1438,10 +1456,18 @@ def _coerce_to__comprehension_ifs(
 
     # single element as sequence
 
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+    return _code_as_one__comprehension_ifs(code, parse_params, sanitize=sanitize, coerce=True)
+
+_coerce_to__comprehension_ifs.coerce_src = True
+
+
+def _code_as_one__comprehension_ifs(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=coerce)
 
     if fst_.a.__class__ is Starred:
-        raise NodeError('Starred not allowed in comprehension if')
+        raise NodeError('comprehension if cannot be Starred')
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
@@ -1454,8 +1480,6 @@ def _coerce_to__comprehension_ifs(
                              end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'ifs', True, False)
-
-_coerce_to__comprehension_ifs.coerce_src = True
 
 
 def _coerce_to_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -2678,7 +2702,7 @@ def code_as__expr_arglikes(
     *,
     sanitize: bool = False,
     coerce: bool = False,
-    one: bool = False,
+    one: bool = False,  # HACK, if used more then standardize
 ) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
     `ClassDef.bases`. The `Tuple` will be unparenthesized and the location will be the entire source. We use a `Tuple`

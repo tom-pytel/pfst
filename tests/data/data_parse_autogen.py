@@ -2173,7 +2173,7 @@ alias - ROOT 0,0..0,1
 
 ('parse_alias', 0, 0, 'ParseError', {}, ('alias',
 r'''a, b'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_alias', 0, 0, 'alias', {}, ('alias',
 r'''a as c'''), r'''
@@ -2195,11 +2195,11 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_alias', 0, 0, 'ParseError', {}, ('alias',
 r'''a as x, b as y'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_alias', 0, 0, 'ParseError', {}, ('alias',
 r'''a as x, a.b as y'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r''''''),
@@ -2307,7 +2307,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
 r'''a, b'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
 r'''a as c'''), r'''
@@ -2329,11 +2329,11 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
 r'''a as x, b as y'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
 r'''a as x, a.b as y'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
 r'''(a)'''),
@@ -2473,7 +2473,7 @@ alias - ROOT 0,0..0,1
 
 ('parse_ImportFrom_name', 0, 0, 'ParseError', {}, ('ImportFrom_name',
 r'''a, b'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
 r'''a as c'''), r'''
@@ -2492,7 +2492,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_ImportFrom_name', 0, 0, 'ParseError', {}, ('ImportFrom_name',
 r'''a as x, b as y'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
 r'''a as x, a.b as y'''),
@@ -4262,7 +4262,7 @@ alias - ROOT 0,0..0,1
 
 ('parse_alias', 0, 0, 'ParseError', {}, (alias,
 r'''a, b'''),
-r'''**ParseError('expecting single name')**'''),
+r'''**ParseError('expecting single alias')**'''),
 
 ('parse_alias', 0, 0, 'alias', {}, (alias,
 r'''a as c'''), r'''
