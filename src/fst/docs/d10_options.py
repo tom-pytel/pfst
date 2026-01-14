@@ -39,8 +39,7 @@ To get a list of all global options defaults do.
  'norm': False,
  'norm_self': None,
  'norm_get': None,
- 'norm_put': None,
- 'set_norm': 'both',
+ 'set_norm': 'star',
  'op_side': 'left'}
 
 For example the option `pars` defaults to `'auto'` which will (among other things) strip parentheses when copying from a
@@ -382,16 +381,16 @@ the value of `pars`, either passed in or global.
 *(a or b)
 
 
-## `norm`, `norm_self`, `norm_get` and `norm_put` options
+## `norm`, `norm_self` and `norm_get` options
 
 These options specify whether normalization should take place for operations or not. Normalization ensures that the
 resulting `AST` trees are valid. `fst` allows you to create invalid trees during editing by deleting all or most
 elements from nodes which don't normally allow it for the sake of simplifying editing. For more information on
 normalization see `fst.docs.d06_slices`.
 
-**Note:** The `norm_self`, `norm_get` and `norm_put` options break the convention that passing `None` to a function uses
-the global default value. If you pass an explicit `None` for any of these options to a function it really means ignore
-the global default for that option and use the value of `norm`, either passed in or global.
+**Note:** The `norm_self` and `norm_get` options break the convention that passing `None` to a function uses the global
+default value. If you pass an explicit `None` for any of these options to a function it really means ignore the global
+default for that option and use the value of `norm`, either passed in or global.
 
 >>> _ = (f := FST('{a, b}')).get_slice(0, 2, cut=True, norm_self=None, norm=True)
 >>> _ = f.dump('stmt')
@@ -424,22 +423,13 @@ Set - ROOT 0,0..0,5
 0: {}
 Set - ROOT 0,0..0,2
 
-`norm_put` currently only applies to putting a semantically empty set.
-
->>> print(FST('[a, b]').put_slice('{*()}', 1, 1, norm_put=True).src)
-[a, b]
-
->>> print(FST('[a, b]').put_slice('{*()}', 1, 1, norm_put=False).src)
-[a, *(), b]
-
-`norm_self`, `norm_get` and `norm_put` exist for fine-grained control. `norm` exists as a convenience to set these all
-at once.
+`norm_self` and `norm_get` exist for fine-grained control. `norm` exists as a convenience to set both of these at once.
 
 
 ## `set_norm` option
 
-This options specifies what the empty set representation for the normalization should be (both to create for `self` or
-`get` and to recognize on `put`).
+This options specifies what the empty set representation for the normalization should be, both to create for `self` and
+return for `get`.
 
 >>> print(FST('{a, b}').get_slice(0, 0, norm=True, set_norm='call').src)
 set()
@@ -450,21 +440,6 @@ set()
 >>> _ = (f := FST('{a, b}')).get_slice(0, 2, cut=True, norm=True, set_norm='call')
 >>> print(f.src)
 set()
-
->>> print(FST('[a, b]').put_slice('set()', 1, 1, norm=True, set_norm='call').src)
-[a, b]
-
->>> print(FST('[a, b]').put_slice('{*()}', 1, 1, norm=True, set_norm='call').src)
-[a, *(), b]
-
->>> print(FST('[a, b]').put_slice('set()', 1, 1, norm=True, set_norm='star').src)
-[a, set(), b]
-
->>> print(FST('[a, b]').put_slice('{*()}', 1, 1, norm=True, set_norm='both').src)
-[a, b]
-
->>> print(FST('[a, b]').put_slice('set()', 1, 1, norm=True, set_norm='both').src)
-[a, b]
 
 
 ## `op_side` option

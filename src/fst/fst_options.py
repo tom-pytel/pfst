@@ -33,8 +33,7 @@ _DEFAULT_OPTIONS = {
     'norm':          False,   # True | False
     'norm_self':     None,    # True | False | None
     'norm_get':      None,    # True | False | None
-    'norm_put':      None,    # True | False | None
-    'set_norm':     'both',   # False | 'star' | 'call' | 'both'
+    'set_norm':     'star',   # False | 'star' | 'call'
     'op_side':      'left',   # 'left' | 'right'
 }
 
@@ -80,8 +79,7 @@ def get_options() -> dict[str, Any]:
      'norm': False,
      'norm_self': None,
      'norm_get': None,
-     'norm_put': None,
-     'set_norm': 'both',
+     'set_norm': 'star',
      'op_side': 'left'}
     """
 
@@ -243,11 +241,11 @@ def options(**options) -> Iterator[dict[str, Any]]:
         - `True`: Parenthesize cut / copied argumentlike expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied argumentlike expressions.
         - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
-    - `norm`: Default normalize option for puts, gets and self target. Determines how `AST`s which would otherwise
-        be invalid because of an operation are handled. Mostly how zero or sometimes one-length sequences which
-        normally cannot be zero or one length are left / put / returned, e.g. zero-length `Set`. This option can be
-        overridden individually for the three cases of `norm_self` (target), `norm_get` (return from any get operation)
-        and `norm_put` (what is being put if it is an alternate representation).
+    - `norm`: Default normalize option for return from `get()` functions and `self` target. Determines how `AST`s which
+        would otherwise be invalid because of an operation are handled. Mostly how zero or sometimes one-length
+        sequences which normally cannot be zero or one length are left or returned, e.g. zero-length `Set`. This option
+        can be overridden individually for the two cases of `norm_self` (target) and `norm_get` (return from any get
+        operation).
         - `False`: Allow the `AST` to go to an unsupported length or state and become invalid. A `Set` will result
             in empty curlies which reparse to a `Dict`. A `MatchOr` can go to 1 or zero length. Other `AST` types
             can also go to zero length. Useful for easier editing. **DEFAULT**
@@ -259,16 +257,11 @@ def options(**options) -> Iterator[dict[str, Any]]:
         out. If this is `None` then `norm` is used.
     - `norm_get`: Override for `norm` which only applies to the return value from any get operation. If this is `None`
         then `norm` is used.
-    - `norm_put`: Override for `norm` which only applies to the value to put for any put operation. If this is `None`
-        then `norm` is used.
     - `set_norm`: The alternate representation for an empty `Set` normalization by `norm`. This can also be set to
         `False` to disable normalization for all operations on a `Set` (unless one of the `norm` options is set to
         one of these string modes).
-        - `'star'`: Starred sequence `{*()}` returned, this or other starred sequences `{*[]}` and `{*{}}` accepted
-            to mean empty set on put operations. **DEFAULT**
-        - `'call'`: `set()` call returned and recognized as empty.
-        - `'both'`: Both `'star'` and `'call'` recognized on put as empty, `'star'` used for return from get
-            operation and normalization of `self`.
+        - `'star'`: Starred sequence `{*()}` returned or used for empty `self`. **DEFAULT**
+        - `'call'`: `set()` call returned and used for empty `self`.
         - `False`: No `Set` normalization regardless of `norm` or `norm_*` options, just leave or return an invalid
             `Set` object.
     - `op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side

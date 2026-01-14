@@ -681,7 +681,7 @@ def _fix_Set(self: fst.FST, norm: bool | str = True) -> None:
     if norm and not ast.elts:
         if norm == 'call':
             new_ast, new_src = new_empty_set_call(ast.lineno, ast.col_offset, as_fst=False)
-        else:  # True, 'star', 'both'
+        else:  # True, 'star'
             new_ast, new_src = new_empty_set_star(ast.lineno, ast.col_offset, as_fst=False)
 
         ln, col, end_ln, end_col = self.loc
@@ -953,7 +953,7 @@ def _get_slice_Set_elts(
         return (
             new_empty_set_curlies(from_=self) if not get_norm else
             new_empty_set_call(from_=self) if get_norm == 'call' else
-            new_empty_set_star(from_=self)  # True, 'star', 'both'
+            new_empty_set_star(from_=self)  # True, 'star'
         )
 
     locs = _locs_and_bounds_get(self, start, stop, body, body, 1)

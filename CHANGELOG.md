@@ -21,6 +21,7 @@
 
 ### Updated
 
+- REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain and will not be removed
 - allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability
 - `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
 - concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode

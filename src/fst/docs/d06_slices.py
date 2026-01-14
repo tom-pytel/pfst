@@ -423,28 +423,22 @@ Likewise getting an empty slice from a `Set` will also give you a "normalized" s
 >>> print(FST('{a, b, c}').get_slice(0, 0, norm=True).src)  # empty slice from a set
 {*()}
 
-The standard `norm` option applies to three cases of normalization. The normalization of the target object (what you are
-putting to or cutting from), the returned object and a possible object which may be being put. The `norm` option sets
-all of these to the same value, but you can set them individually as `norm_self`, `norm_get` or `norm_put`.
+The standard `norm` option applies to two cases of normalization. The normalization of the target node (what you are
+putting to or cutting from) and the returned node. The `norm` option sets both of these to the same value, but you can
+set them individually as `norm_self` or `norm_get`.
 
 In general, invalid `AST` slices like an empty `Set` from `norm=False` are accepted and processed correctly as sources
-to a slice put. But for "normalized" slices there may be cases where you need to specify whether the special rules
-should apply or not. When putting an "empty" `Set` of the form `{*()}`, it will be treated as empty with normalization
-on.
+to a slice put and will result in nothing being put. However, there is no "denormalization" applied on put operations.
+If you get a normalized empty set as `{*()}` and you put this as a sequence, the `*()` element will be put just like any
+other element.
 
 >>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1, norm=True).src)
-[a, b, c]
-
-If you want it to be treated literally and not interpreted as an empty `Set` then pass either `norm=False` or
-`norm_put=False` (`norm=False` is the default if not passing `norm` at all).
-
->>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1).src)
 [a, *(), b, c]
 
-To finish off the `Set` normalization, there is an option `set_norm` which may be `True`, `False`, `'star'`, `'call'` or
-`'both'`. This specifies what should be used for `Set` normalization with the options allowing empty starred immediate
-objects `*()`, `*[]`, `*{}` or the `set()` function call (which you may not use if it is shadowed in the code being
-worked on).
+To finish off the `Set` normalization, there is an option `set_norm` which may be `'star'`, `'call'` or `False`. This
+specifies what should be used for `Set` normalization with the options allowing empty `Starred` immediate node `*()` or
+the `set()` function call (which you may not use if it is shadowed in the code being worked on). If this is `False` then
+no normalization is done regardless of the `norm` options.
 
 
 ## Normalization of other nodes

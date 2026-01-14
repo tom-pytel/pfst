@@ -282,7 +282,7 @@ def _code_to_slice_expr(
 ) -> fst.FST | None:
     """Convert code to sequence of expressions slice. Will accept `Tuple`, `List` and `Set` as sequences and will coerce
     any other expressions to a singleton `Tuple` sequence for use as a slice if allowed by `one` and / or `coerce`
-    options. Will apply `norm_put` to recognize empty sets as empty slices according to options."""
+    options."""
 
     if code is None:
         return None
@@ -295,13 +295,6 @@ def _code_to_slice_expr(
     put_norm = None  # cached
 
     if not one:
-        if put_norm := _get_option_norm('norm_put', 'set_norm', options):  # recognize put-normalized empty set
-            if (fst_._is_empty_set_star() if put_norm == 'star' else
-                fst_._is_empty_set_call() if put_norm == 'call' else
-                fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
-            ):
-                return None
-
         if is_slice_type:
             if not ast_.elts:  # put empty sequence is same as delete
                 return None
@@ -322,9 +315,6 @@ def _code_to_slice_expr(
     if (is_par := fst_.is_parenthesized_tuple()) is not None:
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
-
-    elif ast__cls is Set:
-        _fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
     elif ast__cls is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
         if not fst_.pars().n and self.is_parenthesized_tuple() is False:

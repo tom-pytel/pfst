@@ -8733,7 +8733,6 @@ if 1:
         self.assertRaises(ValueError, FST('i').reconcile, norm=None)
         self.assertRaises(ValueError, FST('i').reconcile, norm_self=None)
         self.assertRaises(ValueError, FST('i').reconcile, norm_get=None)
-        self.assertRaises(ValueError, FST('i').reconcile, norm_put=None)
 
         # unmarked error
 

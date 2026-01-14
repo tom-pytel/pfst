@@ -1567,7 +1567,6 @@ class FST:
             'norm',
             'norm_self',
             'norm_get',
-            'norm_put',
         ) for o in options):
             raise ValueError(f'option {bad!r} not allowed in reconcile()')
 
@@ -1597,7 +1596,6 @@ class FST:
             norm = False,
             norm_self = False,
             norm_get = False,
-            norm_put = False,
         ):
             reconcile.recurse_node(self.a)
 

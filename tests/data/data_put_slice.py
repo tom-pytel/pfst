@@ -8998,37 +8998,50 @@ Module - ROOT 0,0..0,2
 ('body[0].value', 1, 2, None, {'norm': True}, ('exec',
 r'''(1, 2)'''), (None,
 r'''{*()}'''),
-r'''(1,)''', r'''
-Module - ROOT 0,0..0,4
+r'''(1, *())''', r'''
+Module - ROOT 0,0..0,8
   .body[1]
-   0] Expr - 0,0..0,4
-     .value Tuple - 0,0..0,4
-       .elts[1]
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[2]
         0] Constant 1 - 0,1..0,2
+        1] Starred - 0,4..0,7
+          .value Tuple - 0,5..0,7
+            .ctx Load
+          .ctx Load
        .ctx Load
 '''),
 
 ('body[0].value', 1, 2, None, {'norm': True}, ('exec',
 r'''1, 2'''), (None,
 r'''{*()}'''),
-r'''1,''', r'''
-Module - ROOT 0,0..0,2
+r'''1, *()''', r'''
+Module - ROOT 0,0..0,6
   .body[1]
-   0] Expr - 0,0..0,2
-     .value Tuple - 0,0..0,2
-       .elts[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
         0] Constant 1 - 0,0..0,1
+        1] Starred - 0,3..0,6
+          .value Tuple - 0,4..0,6
+            .ctx Load
+          .ctx Load
        .ctx Load
 '''),
 
 ('body[0].value', 0, 2, None, {'norm': True}, ('exec',
 r'''1, 2'''), (None,
 r'''{*()}'''),
-r'''()''', r'''
-Module - ROOT 0,0..0,2
+r'''*(),''', r'''
+Module - ROOT 0,0..0,4
   .body[1]
-   0] Expr - 0,0..0,2
-     .value Tuple - 0,0..0,2
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[1]
+        0] Starred - 0,0..0,3
+          .value Tuple - 0,1..0,3
+            .ctx Load
+          .ctx Load
        .ctx Load
 '''),
 
@@ -14935,30 +14948,6 @@ Module - ROOT 0,0..1,13
           .name 'z'
         .body[1]
          0] Pass - 1,9..1,13
-'''),
-
-('body[0].cases[0].pattern', 0, 1, None, {'norm_put': False, 'norm': True, '_verify': False}, ('exec', r'''
-match a:
- case a | b: pass
-'''), ('pattern',
-r'''z'''), r'''
-match a:
- case z | b: pass
-''', r'''
-Module - ROOT 0,0..1,17
-  .body[1]
-   0] Match - 0,0..1,17
-     .subject Name 'a' Load - 0,6..0,7
-     .cases[1]
-      0] match_case - 1,1..1,17
-        .pattern MatchOr - 1,6..1,11
-          .patterns[2]
-           0] MatchAs - 1,6..1,7
-             .name 'z'
-           1] MatchAs - 1,10..1,11
-             .name 'b'
-        .body[1]
-         0] Pass - 1,13..1,17
 '''),
 
 ('body[0].body[0].value', 'end', 'end', None, {'one': True}, ('exec', r'''
@@ -25007,14 +24996,7 @@ Module - ROOT 0,0..0,25
 ('body[0]', 1, 2, None, {'norm': True}, ('exec',
 r'''global a, b, c  # comment'''), (None,
 r'''{*()}'''),
-r'''global a, c  # comment''', r'''
-Module - ROOT 0,0..0,22
-  .body[1]
-   0] Global - 0,0..0,11
-     .names[2]
-      0] 'a'
-      1] 'c'
-'''),
+r'''**NodeError('cannot put Starred to Global.names')**'''),
 
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''global a, b, c  # comment'''), (None,
@@ -25700,14 +25682,7 @@ Module - ROOT 0,0..0,27
 ('body[0]', 1, 2, None, {'norm': True}, ('exec',
 r'''nonlocal a, b, c  # comment'''), (None,
 r'''{*()}'''),
-r'''nonlocal a, c  # comment''', r'''
-Module - ROOT 0,0..0,24
-  .body[1]
-   0] Nonlocal - 0,0..0,13
-     .names[2]
-      0] 'a'
-      1] 'c'
-'''),
+r'''**NodeError('cannot put Starred to Nonlocal.names')**'''),
 
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''), (None,
