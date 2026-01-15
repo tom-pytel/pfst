@@ -686,7 +686,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         locfunc = lambda body, idx: body[idx].f.pars()
         locfunc_maybe_key = lambda body, idx: self._loc_maybe_key(idx, True, body)
 
-    # maybe redent fst_ elements to match self element indentation
+    # maybe redent fst_ elements to match self element indentation (FOR FUTURE TWEAKS: this can be relocated belo call to _locs_slice())
 
     if not is_del and len(fst_._lines) > 1 and allow_redent:
         if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self

@@ -292,7 +292,6 @@ def _code_to_slice_expr(
     ast_ = fst_.a
     ast__cls = ast_.__class__
     is_slice_type = ast__cls in ASTS_LEAF_TUPLE_LIST_OR_SET
-    put_norm = None  # cached
 
     if not one:
         if is_slice_type:
@@ -820,38 +819,6 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
                    end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
-
-
-def _code_to_slice__special(
-    self: fst.FST,
-    code: Code | None,
-    field: str,
-    one: bool,
-    options: Mapping[str, Any],
-    ast_cls: type[AST],
-    code_as: Callable,
-) -> fst.FST | None:
-    if code is None:
-        return None
-
-    coerce = fst.FST.get_option('coerce', options)
-
-    if (one
-        and not coerce
-        and (
-            code.__class__ is ast_cls
-            or (
-                isinstance(code, fst.FST)
-                and code.a.__class__ is ast_cls
-    ))):
-        raise ValueError(f"cannot put {ast_cls.__name__} node as 'one=True' without 'coerce=True'")
-
-    fst_ = code_as(code, self.root.parse_params, coerce=coerce)
-
-    if one and len(getattr(fst_.a, field)) != 1:
-        raise NodeError(f"can only put single element as 'one=True' to {ast_cls.__name__}")
-
-    return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
 
 def _code_to_slice__special1(

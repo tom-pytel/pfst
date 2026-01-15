@@ -15856,7 +15856,7 @@ r'''**NodeError('expecting expression (standard), got Module, could not coerce, 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Module',
 r'''x = y'''),
-r'''**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**'''),
+r'''**NodeError('expecting expression (standard), got Module, could not coerce, uncoercible type Assign')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Interactive',

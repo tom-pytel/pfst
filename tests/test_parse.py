@@ -2041,8 +2041,8 @@ match a:
                 "**NodeError('expecting expression (standard), got Module, could not coerce, multiple statements')**"),  # AST
             (code_as_expr, (Module, 'a = b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**",  # FST
-                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercable type Assign')**"),  # AST
+                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercible type Assign')**",  # FST
+                "**NodeError('expecting expression (standard), got Module, could not coerce, uncoercible type Assign')**"),  # AST
             (code_as_expr, (Interactive, 'a'), (Name, 'a')),
             (code_as_expr, (Interactive, 'a; b'),
                 "**SyntaxError**",  # src
@@ -2050,8 +2050,8 @@ match a:
                 "**NodeError('expecting expression (standard), got Interactive, could not coerce, multiple statements')**"),  # AST
             (code_as_expr, (Interactive, 'a = b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**",  # FST
-                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercable type Assign')**"),  # AST
+                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercible type Assign')**",  # FST
+                "**NodeError('expecting expression (standard), got Interactive, could not coerce, uncoercible type Assign')**"),  # AST
             (code_as_expr, (Expression, 'a'), (Name, 'a')),
             (code_as_expr, (Expr, 'a'), (Name, 'a')),
             (code_as_expr, (arguments, 'a'),
@@ -3477,6 +3477,34 @@ match a:
             fst_ = FST(src, mode)
 
             code._coerce_to_expr_ast(fst_.a, True, {}, 'test')
+
+            self.assertIsNone(fst_.a)
+
+    def test_unmake__ast_coerce_to_pattern(self):
+        mode_and_src = [
+            (Module, 'a'),
+            (Interactive, 'a'),
+            (Expression, 'a'),
+            (Expr, 'a'),
+            (Constant, '1'),
+            (Starred, '*a'),
+            (Name, 'a'),
+            (arg, 'a'),
+            (alias, 'a'),
+            (withitem, 'a'),
+        ]
+
+        if PYGE12:
+            mode_and_src.extend([
+                (TypeVar, 'a'),
+                (TypeVarTuple, '*a'),
+                # (_type_params, 'a'),
+            ])
+
+        for mode, src in mode_and_src:
+            fst_ = FST(src, mode)
+
+            code._coerce_to_pattern(fst_, {})
 
             self.assertIsNone(fst_.a)
 

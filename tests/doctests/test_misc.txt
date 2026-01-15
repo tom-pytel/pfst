@@ -278,3 +278,363 @@ ValueError: cannot use 'one=False' in non-slice put()
 >>> f.body[-1].replace('', one=False)
 >>> f.src
 'a\nx\ny\nz\n'
+
+
+........................................................................................................................
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+
+>>> FST('with a: pass').put_slice(FST('([x])'), 'items', one=True).dump('N').verify()
+0: with ([x]):
+With - ROOT 0,0..0,16
+  .items[1]
+0:      ([x])
+   0] withitem - 0,5..0,10
+0:       [x]
+     .context_expr List - 0,6..0,9
+       .elts[1]
+0:        x
+        0] Name 'x' Load - 0,7..0,8
+       .ctx Load
+  .body[1]
+0:             pass
+   0] Pass - 0,12..0,16
+<With ROOT 0,0..0,16>
+
+>>> cd.code_as_withitem('(x,)', coerce=True).dump('N').verify()
+0: (x,)
+withitem - ROOT 0,0..0,4
+0: (x,)
+  .context_expr Tuple - 0,0..0,4
+    .elts[1]
+0:  x
+     0] Name 'x' Load - 0,1..0,2
+    .ctx Load
+<withitem ROOT 0,0..0,4>
+
+>>> cd.code_as_withitem('x,', coerce=True).dump('N').verify()
+0: x,
+withitem - ROOT 0,0..0,2
+0: x,
+  .context_expr Tuple - 0,0..0,2
+    .elts[1]
+0: x
+     0] Name 'x' Load - 0,0..0,1
+    .ctx Load
+<withitem ROOT 0,0..0,2>
+
+>>> print(dump(px.parse_withitem('x,'), include_attributes=2, indent=2))
+withitem(
+  context_expr=Tuple(
+    elts=[
+      Name(
+        id='x',
+        ctx=Load(),
+        lineno=1,
+        col_offset=0,
+        end_lineno=1,
+        end_col_offset=1)],
+    ctx=Load(),
+    lineno=1,
+    col_offset=0,
+    end_lineno=1,
+    end_col_offset=2))
+
+>>> dump(px.parse_withitem('x as y'))
+"withitem(context_expr=Name(id='x', ctx=Load()), optional_vars=Name(id='y', ctx=Store()))"
+
+>>> FST('x', withitem).dump('N')
+0: x
+withitem - ROOT 0,0..0,1
+0: x
+  .context_expr Name 'x' Load - 0,0..0,1
+<withitem ROOT 0,0..0,1>
+
+>>> print(dump(px.parse_withitem('x'), include_attributes=2, indent=2))
+withitem(
+  context_expr=Name(
+    id='x',
+    ctx=Load(),
+    lineno=1,
+    col_offset=0,
+    end_lineno=1,
+    end_col_offset=1))
+
+>>> FST('with a: pass').put_slice(FST('x,'), 'items', one=True).dump('N').verify()
+0: with ((x,)):
+With - ROOT 0,0..0,17
+  .items[1]
+0:      ((x,))
+   0] withitem - 0,5..0,11
+0:       (x,)
+     .context_expr Tuple - 0,6..0,10
+       .elts[1]
+0:        x
+        0] Name 'x' Load - 0,7..0,8
+       .ctx Load
+  .body[1]
+0:              pass
+   0] Pass - 0,13..0,17
+<With ROOT 0,0..0,17>
+
+>>> FST('with a: pass').put_slice(FST('x, y'), 'items', one=True).dump('N').verify()
+0: with ((x, y)):
+With - ROOT 0,0..0,19
+  .items[1]
+0:      ((x, y))
+   0] withitem - 0,5..0,13
+0:       (x, y)
+     .context_expr Tuple - 0,6..0,12
+       .elts[2]
+0:        x
+        0] Name 'x' Load - 0,7..0,8
+0:           y
+        1] Name 'y' Load - 0,10..0,11
+       .ctx Load
+  .body[1]
+0:                pass
+   0] Pass - 0,15..0,19
+<With ROOT 0,0..0,19>
+
+>>> FST('with a: pass').put_slice(FST('*a,', 'withitem'), 'items').dump('N').verify()
+0: with ((*a,)):
+With - ROOT 0,0..0,18
+  .items[1]
+0:      ((*a,))
+   0] withitem - 0,5..0,12
+0:       (*a,)
+     .context_expr Tuple - 0,6..0,11
+       .elts[1]
+0:        *a
+        0] Starred - 0,7..0,9
+0:         a
+          .value Name 'a' Load - 0,8..0,9
+          .ctx Load
+       .ctx Load
+  .body[1]
+0:               pass
+   0] Pass - 0,14..0,18
+<With ROOT 0,0..0,18>
+
+>>> FST('w,', '_withitems').dump('N').items[0]._has_separator()
+0: w,
+_withitems - ROOT 0,0..0,2
+  .items[1]
+0: w
+   0] withitem - 0,0..0,1
+0: w
+     .context_expr Name 'w' Load - 0,0..0,1
+(0, 1)
+
+>>> print(dump(px.parse_withitem('x,'), indent=2))
+withitem(
+  context_expr=Tuple(
+    elts=[
+      Name(id='x', ctx=Load())],
+    ctx=Load()))
+
+>>> # cd.code_as_withitem(FST('*a'), coerce=True).dump('N').verify()
+
+>>> # cd.code_as__withitems(FST('*a'), coerce=True).dump('N').verify()
+
+>>> # cd.code_as__withitems(FST('*a,'), coerce=True).dump('N').verify()
+
+>>> # px.parse__withitems('*a,')
+
+>>> cd.code_as__withitems('x,').dump('N').verify()
+0: x,
+_withitems - ROOT 0,0..0,2
+  .items[1]
+0: x
+   0] withitem - 0,0..0,1
+0: x
+     .context_expr Name 'x' Load - 0,0..0,1
+<_withitems ROOT 0,0..0,2>
+
+>>> # cd.code_as__withitems('*x,').dump('N').verify()
+
+>>> cd.code_as__withitems('(*x,)').dump('N').verify()
+0: (*x,)
+_withitems - ROOT 0,0..0,5
+  .items[1]
+0: (*x,)
+   0] withitem - 0,0..0,5
+0: (*x,)
+     .context_expr Tuple - 0,0..0,5
+       .elts[1]
+0:  *x
+        0] Starred - 0,1..0,3
+0:   x
+          .value Name 'x' Load - 0,2..0,3
+          .ctx Load
+       .ctx Load
+<_withitems ROOT 0,0..0,5>
+
+>>> # cd.code_as__comprehension_ifs('*a', coerce=True).dump('N').verify()
+
+>>> # cd.code_as_withitem('*x', coerce=True).dump('N').verify()
+
+>>> FST('call(a)').put_slice(FST('@x\n@y'), 'args', coerce=True).dump('N').verify()
+0: call(x,
+1:      y)
+Call - ROOT 0,0..1,7
+0: call
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+0:      x
+   0] Name 'x' Load - 0,5..0,6
+1:      y
+   1] Name 'y' Load - 1,5..1,6
+<Call ROOT 0,0..1,7>
+
+>>> FST('call(a, b, c)').put_slice(FST('@x\n@y')).src
+'call(x,\n     y)'
+
+>>> FST('return').value = '*a'
+
+>>> FST('a = b =').put_slice(FST('d ='), one=True).dump('N')
+0: d =
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+0: d
+   0] Name 'd' Store - 0,0..0,1
+<_Assign_targets ROOT 0,0..0,3>
+
+>>> FST('x', withitem).dump('N')
+0: x
+withitem - ROOT 0,0..0,1
+0: x
+  .context_expr Name 'x' Load - 0,0..0,1
+<withitem ROOT 0,0..0,1>
+
+>>> FST('with a: pass').put_slice(FST('x', withitem), 'items', one=True).dump('N')
+0: with x:
+With - ROOT 0,0..0,12
+  .items[1]
+0:      x
+   0] withitem - 0,5..0,6
+0:      x
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+0:         pass
+   0] Pass - 0,8..0,12
+<With ROOT 0,0..0,12>
+
+>>> print(FST('\\\n 1,\n2,').put_slice(None, 0, 1).root.src)
+\
+ 2,
+
+>>> FST('a, b, c').put_slice(FST('x, y, z', pattern), 1, 2, coerce=True).dump('N').verify()
+0: a, x, y, z, c
+Tuple - ROOT 0,0..0,13
+  .elts[5]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    x
+   1] Name 'x' Load - 0,3..0,4
+0:       y
+   2] Name 'y' Load - 0,6..0,7
+0:          z
+   3] Name 'z' Load - 0,9..0,10
+0:             c
+   4] Name 'c' Load - 0,12..0,13
+  .ctx Load
+<Tuple ROOT 0,0..0,13>
+
+>>> FST('a, b, c').put_slice(FST('x, y, z', pattern), 1, 2, one=True, coerce=True).dump('N').verify()
+0: a, (x, y, z), c
+Tuple - ROOT 0,0..0,15
+  .elts[3]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    (x, y, z)
+   1] Tuple - 0,3..0,12
+     .elts[3]
+0:     x
+      0] Name 'x' Load - 0,4..0,5
+0:        y
+      1] Name 'y' Load - 0,7..0,8
+0:           z
+      2] Name 'z' Load - 0,10..0,11
+     .ctx Load
+0:               c
+   2] Name 'c' Load - 0,14..0,15
+  .ctx Load
+<Tuple ROOT 0,0..0,15>
+
+>>> FST('a, b, c').put_slice(FST('[x, y, z]', pattern), 1, 2, coerce=True).dump('N').verify()
+0: a, x, y, z, c
+Tuple - ROOT 0,0..0,13
+  .elts[5]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    x
+   1] Name 'x' Load - 0,3..0,4
+0:       y
+   2] Name 'y' Load - 0,6..0,7
+0:          z
+   3] Name 'z' Load - 0,9..0,10
+0:             c
+   4] Name 'c' Load - 0,12..0,13
+  .ctx Load
+<Tuple ROOT 0,0..0,13>
+
+>>> FST('a, b, c').put_slice(FST('[x, y, z]', pattern), 1, 2, one=True, coerce=True).dump('N').verify()
+0: a, [x, y, z], c
+Tuple - ROOT 0,0..0,15
+  .elts[3]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    [x, y, z]
+   1] List - 0,3..0,12
+     .elts[3]
+0:     x
+      0] Name 'x' Load - 0,4..0,5
+0:        y
+      1] Name 'y' Load - 0,7..0,8
+0:           z
+      2] Name 'z' Load - 0,10..0,11
+     .ctx Load
+0:               c
+   2] Name 'c' Load - 0,14..0,15
+  .ctx Load
+<Tuple ROOT 0,0..0,15>
+
+>>> FST('a, b, c').put_slice(FST('(x, y, z)', pattern), 1, 2, coerce=True).dump('N').verify()
+0: a, x, y, z, c
+Tuple - ROOT 0,0..0,13
+  .elts[5]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    x
+   1] Name 'x' Load - 0,3..0,4
+0:       y
+   2] Name 'y' Load - 0,6..0,7
+0:          z
+   3] Name 'z' Load - 0,9..0,10
+0:             c
+   4] Name 'c' Load - 0,12..0,13
+  .ctx Load
+<Tuple ROOT 0,0..0,13>
+
+>>> FST('a, b, c').put_slice(FST('(x, y, z)', pattern), 1, 2, one=True, coerce=True).dump('N').verify()
+0: a, (x, y, z), c
+Tuple - ROOT 0,0..0,15
+  .elts[3]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    (x, y, z)
+   1] Tuple - 0,3..0,12
+     .elts[3]
+0:     x
+      0] Name 'x' Load - 0,4..0,5
+0:        y
+      1] Name 'y' Load - 0,7..0,8
+0:           z
+      2] Name 'z' Load - 0,10..0,11
+     .ctx Load
+0:               c
+   2] Name 'c' Load - 0,14..0,15
+  .ctx Load
+<Tuple ROOT 0,0..0,15>
