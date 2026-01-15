@@ -4982,8 +4982,6 @@ class FST:
         _cached_arglikes,
 
         _is_expr_arglike_only,
-        _is_empty_set_call,
-        _is_empty_set_star,
         _is_solo_class_base,
         _is_solo_call_arg,
         _is_solo_call_arg_genexp,
@@ -4996,7 +4994,7 @@ class FST:
 
         _maybe_del_separator,
         _maybe_ins_separator,
-        _maybe_add_singleton_tuple_comma,
+        _maybe_add_singleton_comma,
         _maybe_add_line_continuations,
         _fix_joined_alnum,
         _fix_undelimited_seq,

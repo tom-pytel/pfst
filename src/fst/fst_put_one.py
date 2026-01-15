@@ -1454,7 +1454,7 @@ def _put_one_Tuple_elts(
                                         arglike=is_slice and not is_par)
 
         if self_is_solo_star_in_slice:
-            self._maybe_add_singleton_tuple_comma(is_par)
+            self._maybe_add_singleton_comma(is_par)
 
     return ret
 

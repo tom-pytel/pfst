@@ -21,6 +21,7 @@ from .asttypes import (
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_WITH,
+    ASTS_LEAF_TUPLE_OR_LIST,
     ASTS_LEAF_CMPOP_TWO_WORD,
     ASTS_LEAF_CMPOP_ONE_WORD,
     ASTS_LEAF_MAYBE_DOCSTR,
@@ -783,7 +784,7 @@ def _set_ctx(self: fst.FST, ctx_cls: type[expr_context], stack: list[AST] | None
         a = stack.pop()
         a_cls = a.__class__
 
-        if ((is_seq := (a_cls in (Tuple, List)))
+        if ((is_seq := (a_cls in ASTS_LEAF_TUPLE_OR_LIST))
             or (is_single := (a_cls in (Name, Subscript, Attribute)))
             or a_cls is Starred
         ) and (ctx := a.ctx).__class__ is not ctx_cls:

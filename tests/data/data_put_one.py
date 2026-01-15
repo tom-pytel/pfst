@@ -16700,7 +16700,7 @@ Assign - ROOT 0,0..0,8
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('_arglikes',
 r'''a, b=c'''),
-r'''**NodeError('expecting expression (standard), got _arglikes, could not coerce, _arglikes has a keyword')**'''),
+r'''**NodeError('expecting expression (standard), got _arglikes, could not coerce, found keyword')**'''),
 
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('_arglikes',

@@ -13,6 +13,7 @@ from .asttypes import (
     ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR_STMT_OR_MOD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
+    ASTS_LEAF_TUPLE_OR_LIST,
     ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
     Attribute,
@@ -286,6 +287,9 @@ def _coerce_to_pattern_ast_Constant(
                 MatchSingleton(value=value)
         )
 
+    elif value is ...:
+        return 'Ellipsis cannot be in pattern'
+
     return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
             if is_FST else
@@ -395,7 +399,86 @@ def _coerce_to_pattern_ast_TypeVarTuple(
     return MatchStar(name=ast.name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                      end_col_offset=ast.end_col_offset)
 
+def _coerce_to_pattern_ast_seq(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
+    ast_cls = ast.__class__
+
+    if is_FST:
+        fst_ = ast.f
+        lines = fst_.root._lines
+
+    if ast_cls in ASTS_LEAF_TUPLE_OR_LIST:
+        elts = ast.elts  # whatever delimiters and commas present they are compatible with MatchSequence
+
+    elif ast_cls is Set:
+        if is_FST:
+            ln, col, end_ln, end_col = fst_.loc
+            lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}]{l[end_col:]}')
+            lines[ln] = bistr(f'{(l := lines[ln])[:col]}[{l[col + 1:]}')
+
+        elts = ast.elts
+
+    elif ast_cls is _arglikes:
+        elts = ast.arglikes
+
+        if any(e.__class__ is keyword for e in elts):
+            return 'found keyword'
+
+        if is_FST:
+            if not fst_._fix_undelimited_seq(elts, '[]'):
+                fst_._maybe_add_singleton_comma(False, elts)  # we know it is not parenthesized
+
+    elif ast_cls in (_Assign_targets, _decorator_list, _comprehension_ifs):
+        elts = getattr(ast, ast._fields[0])
+
+        if is_FST:
+            res = _AST_COERCE_TO_EXPR_FUNCS.get(ast_cls,
+                                                _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)  # just need to convert their special syntax to comma-delimited sequence
+
+            if res.__class__ is str:
+                return res
+
+            if not fst_._fix_undelimited_seq(elts, '[]'):
+                fst_._maybe_add_singleton_comma(False, elts)
+
+    elif ast_cls in (arguments, _aliases, _withitems, _type_params):
+        res = _AST_COERCE_TO_EXPR_FUNCS.get(ast_cls,
+                                            _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)  # need to convert their elements to expressions, container will be Tuple
+
+        if res.__class__ is str:
+            return res
+
+        ast, fix_coerced_tuple, _ = res
+        elts = ast.elts
+
+        if is_FST:
+            fst_ = fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
+
+            if not fix_coerced_tuple or not fst_._fix_undelimited_seq(elts, '[]'):  # yes its a Tuple and we are adding brackets, deal with it
+                fst_._maybe_add_singleton_comma(False)
+
+    else:
+        raise RuntimeError('should not get here')  # pragma: no cover
+
+    patterns = []
+
+    for e in elts:
+        e = _AST_COERCE_TO_PATTERN_FUNCS.get(e.__class__,
+                                             _coerce_to_pattern_ast_ret_empty_str)(e, is_FST, parse_params, kwargs)
+
+        if e.__class__ is str:
+            return e
+
+        patterns.append(e)
+
+    if not is_FST:
+        return MatchSequence(patterns=patterns)
+
+    return MatchSequence(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                         end_col_offset=ast.end_col_offset)
 
 
 
@@ -417,19 +500,21 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     TypeVar:            _coerce_to_pattern_ast_TypeVar,
     TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
 
-    # Set:                _coerce_to_pattern_ast_Set,
-    # List:               _coerce_to_pattern_ast_List,
-    # Tuple:              _coerce_to_pattern_ast_Tuple,
-    # _arglikes:          _coerce_to_pattern_ast__arglikes,
+    Set:                _coerce_to_pattern_ast_seq,
+    List:               _coerce_to_pattern_ast_seq,
+    Tuple:              _coerce_to_pattern_ast_seq,
+    _Assign_targets:    _coerce_to_pattern_ast_seq,
+    _decorator_list:    _coerce_to_pattern_ast_seq,
+    _arglikes:          _coerce_to_pattern_ast_seq,
+    _comprehension_ifs: _coerce_to_pattern_ast_seq,
+    arguments:          _coerce_to_pattern_ast_seq,
+    _aliases:           _coerce_to_pattern_ast_seq,
+    _withitems:         _coerce_to_pattern_ast_seq,
+    _type_params:       _coerce_to_pattern_ast_seq,
 
-    # arguments:          _coerce_to_pattern_ast_arguments,
-
-    # _Assign_targets:    _coerce_to_pattern_ast__Assign_targets,
-    # _decorator_list:    _coerce_to_pattern_ast__decorator_list,
-    # _comprehension_ifs: _coerce_to_pattern_ast__comprehension_ifs,
-    # _aliases:           _coerce_to_pattern_ast__aliases,
-    # _withitems:         _coerce_to_pattern_ast__withitems,
-    # _type_params:       _coerce_to_pattern_ast__type_params,
+    # Dict   -> MatchMapping
+    # Call   -> MatchClass
+    # BinOp  -> MatchOr
 }
 
 
@@ -511,12 +596,20 @@ def _coerce_to_expr_ast__Assign_targets(
         last_target = targets[-1]
         fst_ = ast.f
         lines = fst_._lines  # fst_ must be root
-        _, _, fst_end_ln, fst_end_col = fst_.loc  # fst_end_col will remain static as the actual fst_.end_col may get smaller but this is fine as long as fst_end_ln remains the same
 
         for a in targets:
             f = a.f
-            _, _, ln, col = f.pars()
-            eq = next_frag(lines, ln, col, fst_end_ln, fst_end_col)  # may or may not be there '=' for last target
+
+            if (is_pard := f.is_parenthesized_tuple()) is None:
+                _, _, ln, col = f.pars()
+
+            else:
+                if is_pard is False:
+                    f._delimit_node()
+
+                _, _, ln, col = f.loc
+
+            eq = next_frag(lines, ln, col, len(lines), 0x7fffffffffffffff)  # may or may not be there '=' for last target
 
             if not (is_last := a is last_target) or eq:
                 end_ln, end_col, src = eq
@@ -565,14 +658,14 @@ def _coerce_to_expr_ast__arglikes(
 
     if not is_FST:
         if any(a.__class__ is keyword for a in arglikes):
-            return '_arglikes has a keyword'
+            return 'found keyword'
 
         ret = Tuple(elts=arglikes)
 
     else:
         for a in arglikes:
             if a.__class__ is keyword:
-                return '_arglikes has a keyword'
+                return 'found keyword'
 
             if pars_arglike and a.f._is_expr_arglike_only():
                 a.f._parenthesize_grouping()
@@ -1525,7 +1618,15 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
 
             for e in elts:
                 f = e.f
-                end_ln, end_col, _, _ = f.pars()
+
+                if (is_pard := f.is_parenthesized_tuple()) is None:
+                    end_ln, end_col, _, _ = f.pars()
+
+                else:
+                    if is_pard is False:
+                        f._delimit_node()
+
+                    end_ln, end_col, _, _ = f.loc
 
                 ln, col = lline_start(lines, last_end_ln, last_end_col, end_ln, end_col)  # start of logical line because decorators must start at start of block indent
                 fst_._put_src('\n@' if col else '@', ln, col, end_ln, end_col, True,
@@ -2186,9 +2287,9 @@ def _code_as_expr(
                                 rawable=True)
 
             if fix_coerced_tuple:
-                code._fix_tuple(False)  # it is not be parenthesized
+                code._fix_tuple(False)  # it is not parenthesized
             elif parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, doesn't happen organically but can be created with FST('*a', 'expr_slice'), should we bother? for now on the side of yes
-                code._maybe_add_singleton_tuple_comma()
+                code._maybe_add_singleton_comma()
 
     else:
         if is_ast := isinstance(code, AST):

@@ -20,6 +20,7 @@ from .asttypes import (
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_BLOCK,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
+    ASTS_LEAF_TUPLE_OR_LIST,
     AST,
     AnnAssign,
     Assert,
@@ -1154,60 +1155,6 @@ def _is_expr_arglike_only(self: fst.FST) -> bool | None:
     return not child.f.pars().n
 
 
-def _is_empty_set_call(self: fst.FST) -> bool:
-    """Whether `self` is an empty `set()` call.
-
-    **Examples:**
-
-    >>> FST('{1}')._is_empty_set_call()
-    False
-
-    >>> FST('set()')._is_empty_set_call()
-    True
-
-    >>> FST('frozenset()')._is_empty_set_call()
-    False
-
-    >>> FST('{*()}')._is_empty_set_call()
-    False
-    """
-
-    return (
-        (ast := self.a).__class__ is Call
-        and not ast.args
-        and not ast.keywords
-        and (func := ast.func).__class__ is Name
-        and func.id == 'set'
-        and func.ctx.__class__ is Load
-    )
-
-
-def _is_empty_set_star(self: fst.FST) -> bool:
-    """Whether `self` is an empty `Set` from an empty `Starred` `Constant` sequence, recognized are `{*()}`, `{*[]}`
-    and `{*{}}`.
-
-    **Examples:**
-
-    >>> FST('{1}')._is_empty_set_star()
-    False
-
-    >>> FST('{*()}')._is_empty_set_star()
-    True
-
-    >>> FST('set()')._is_empty_set_star()
-    False
-    """
-
-    return (
-        (ast := self.a).__class__ is Set
-        and len(elts := ast.elts) == 1
-        and (e0 := elts[0]).__class__ is Starred
-        and (
-            ((v := e0.value).__class__ in (Tuple, List) and not v.elts)
-            or (v.__class__ is Dict and not v.keys)
-    ))
-
-
 def _is_solo_class_base(self: fst.FST) -> bool | None:
     """Whether `self` is a solo `ClassDef` base in list without any keywords, or not a class base at all.
 
@@ -1630,13 +1577,16 @@ def _maybe_ins_separator(
     return srcwpos(ln, col, sep)
 
 
-def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) -> None:
+def _maybe_add_singleton_comma(self: fst.FST, is_par: bool | None = None, elts: list[AST] | None = None) -> None:
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
-    into account. `self.a` must be a `Tuple`."""
+    into account. `self.a` must be a `Tuple`. Can also be used on other comma-delimited sequences."""
 
-    assert self.a.__class__ is Tuple
+    # assert self.a.__class__ is Tuple
 
-    if len(elts := self.a.elts) == 1:
+    if elts is None:
+        elts = self.a.elts
+
+    if len(elts) == 1:
         self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
@@ -1711,14 +1661,17 @@ def _fix_undelimited_seq(
     self: fst.FST, body: list[AST], delims: str = '()', demlim_if_needed: bool = True
 ) -> bool:
     """Fix undelimited `Tuple` or `MatchSequence` if needed. Don't call on delimited sequence. Fixes locations as well
-    as delimiting.
+    as delimiting. Can also be used on other comma-delimited sequences.
 
     **Parameters:**
     - `delim_if_needed`: Whether to add delimiters to **NON-EMPTY** sequences if they are needed for parsability or not.
         Delimiters are always added to empty sequences irrespective of this parameter.
+
+    **Returns:**
+    - `bool`: Whether the sequence was delimited or not.
     """
 
-    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
+    # assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
 
     if not body:  # if is empty then just need to delimit
         lines = self.root._lines
@@ -1826,7 +1779,7 @@ def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = 
         is_par = self._is_delimited_seq()
 
     if body := self.a.elts:
-        self._maybe_add_singleton_tuple_comma(is_par)
+        self._maybe_add_singleton_comma(is_par)
 
     if not is_par:
         return self._fix_undelimited_seq(body, '()', par_if_needed)
@@ -1900,7 +1853,7 @@ def _fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
             elif need_pars is None:  # unparenthesized walrus in naked tuple?
                 need_pars = any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts)
 
-            self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
+            self._maybe_add_singleton_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
 
             if need_pars:
                 self._delimit_node()
@@ -2031,7 +1984,8 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
 
 def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None:
     """Delimit (parenthesize or bracket) a node (`Tuple` or `MatchSequence`, but could be others) with appropriate
-    delimiters which are passed in and extend the range of the node to include those delimiters.
+    delimiters which are passed in and extend the range of the node to include those delimiters. Can also be used on
+    other comma-delimited sequences.
 
     **WARNING!** No checks are done so make sure to call where it is appropriate!
 
@@ -2039,7 +1993,7 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
     - `whole`: If at root then delimit whole source instead of just node.
     """
 
-    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
+    # assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ
 
     lines = self.root._lines
     ast = self.a
