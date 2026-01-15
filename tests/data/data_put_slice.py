@@ -40429,21 +40429,29 @@ MatchSequence - ROOT 0,0..1,7
 r'''[a]'''), ('_arglikes', r'''
 
 *x,
-y,
+cls(a, b=c),
 
 '''), r'''
 [
  *x,
- y
+ cls(a, b=c)
 ]
 ''',
-r'''[*x, y]''', r'''
+r'''[*x, cls(a, b=c)]''', r'''
 MatchSequence - ROOT 0,0..3,1
   .patterns[2]
    0] MatchStar - 1,1..1,3
      .name 'x'
-   1] MatchAs - 2,1..2,2
-     .name 'y'
+   1] MatchClass - 2,1..2,12
+     .cls Name 'cls' Load - 2,1..2,4
+     .patterns[1]
+      0] MatchAs - 2,5..2,6
+        .name 'a'
+     .kwd_attrs[1]
+      0] 'b'
+     .kwd_patterns[1]
+      0] MatchAs - 2,10..2,11
+        .name 'c'
 '''),
 
 ('', 0, 'end', None, {'_src': False}, ('MatchSequence',
@@ -40991,6 +40999,454 @@ Call - ROOT 0,0..3,1
 '''),
 ],
 
+'one_True_to__Assign_targets': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('Name',
+r'''x'''),
+r'''x =''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'x' Store - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('Tuple', r'''
+
+x,
+
+'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('List', r'''
+[
+x
+]
+'''), r'''
+[
+x
+] =
+''',
+r'''[x] =''', r'''
+_Assign_targets - ROOT 0,0..2,3
+  .targets[1]
+   0] List - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Store - 1,0..1,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('Set', r'''
+{
+x
+}
+'''),
+r'''**NodeError('expecting _Assign_targets expression, got Set, could not coerce')**'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('Dict', r'''
+{
+x: y
+}
+'''),
+r'''**NodeError('expecting _Assign_targets expression, got Dict, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_Assign_targets',
+r'''a ='''), ('_Assign_targets',
+r'''x ='''),
+r'''x =''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'x' Store - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_Assign_targets',
+r'''a ='''), ('_decorator_list',
+r'''@x'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'_same': False, 'one': True}, ('_Assign_targets',
+r'''a ='''), ('_arglikes', r'''
+
+x,
+
+'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('_arglikes', r'''
+
+x,
+k=w,
+
+'''),
+r'''**SyntaxError("invalid syntax. Maybe you meant '==' or ':=' instead of '='?")**'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_Assign_targets',
+r'''a ='''), ('_comprehension_ifs', r'''
+
+if x
+
+'''), r'''
+(
+x,
+) =
+''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..2,3
+  .targets[1]
+   0] Tuple - 0,0..2,1
+     .elts[1]
+      0] Name 'x' Store - 1,0..1,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('arguments', r'''
+
+x,
+
+'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'_src': False, '_same': False, 'one': True}, ('_Assign_targets',
+r'''a ='''), ('_aliases',
+r'''x'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('_withitems',
+r'''x,'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+r'''a ='''), ('MatchSequence',
+r'''[x]'''),
+r'''[x] =''', r'''
+_Assign_targets - ROOT 0,0..0,5
+  .targets[1]
+   0] List - 0,0..0,3
+     .elts[1]
+      0] Name 'x' Store - 0,1..0,2
+     .ctx Store
+'''),
+
+('', 0, 'end', None, {'_ver': 12, 'one': True, '_same': False}, ('_Assign_targets',
+r'''a ='''), ('_type_params', r'''
+
+x,
+
+'''),
+r'''x, =''',
+r'''(x,) =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Tuple - 0,0..0,2
+     .elts[1]
+      0] Name 'x' Store - 0,0..0,1
+     .ctx Store
+'''),
+],
+
+'one_True_to__decorator_list': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('Name',
+r'''x'''),
+r'''@x''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('Tuple', r'''
+
+x,
+
+'''), r'''
+@(
+x,
+)
+''',
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Tuple - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('List', r'''
+[
+x
+]
+'''), r'''
+@[
+x
+]
+''',
+r'''@[x]''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] List - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('Set', r'''
+{
+x
+}
+'''), r'''
+@{
+x
+}
+''',
+r'''@{x}''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Set - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('Dict', r'''
+{
+x: y
+}
+'''), r'''
+@{
+x: y
+}
+''',
+r'''@{x: y}''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Dict - 0,1..2,1
+     .keys[1]
+      0] Name 'x' Load - 1,0..1,1
+     .values[1]
+      0] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_decorator_list',
+r'''@a'''), ('_Assign_targets',
+r'''x ='''),
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..0,5
+  .decorator_list[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_decorator_list',
+r'''@a'''), ('_decorator_list',
+r'''@x'''),
+r'''@x''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('_arglikes', r'''
+
+x,
+
+'''), r'''
+@(
+x,
+)
+''',
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Tuple - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('_arglikes', r'''
+
+x,
+k=w,
+
+'''),
+r'''**SyntaxError("invalid syntax. Maybe you meant '==' or ':=' instead of '='?")**'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_decorator_list',
+r'''@a'''), ('_comprehension_ifs', r'''
+
+if x
+
+'''), r'''
+@(
+x,
+)
+''',
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Tuple - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('arguments', r'''
+
+x,
+
+'''), r'''
+@(
+x,
+)
+''',
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Tuple - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, '_same': False, 'one': True}, ('_decorator_list',
+r'''@a'''), ('_aliases',
+r'''x'''),
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..0,5
+  .decorator_list[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('_withitems',
+r'''x,'''),
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..0,5
+  .decorator_list[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('MatchSequence',
+r'''[x]'''),
+r'''@[x]''', r'''
+_decorator_list - ROOT 0,0..0,4
+  .decorator_list[1]
+   0] List - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_decorator_list',
+r'''@a'''), ('MatchSequence', r'''
+[
+x,
+]
+'''), r'''
+@[
+x,
+]
+''',
+r'''@[x]''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] List - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_ver': 12, 'one': True}, ('_decorator_list',
+r'''@a'''), ('_type_params', r'''
+
+x,
+
+'''), r'''
+@(
+x,
+)
+''',
+r'''@(x,)''', r'''
+_decorator_list - ROOT 0,0..2,1
+  .decorator_list[1]
+   0] Tuple - 0,1..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+],
+
 'one_True_to__arglikes': [  # ................................................................................
 
 ('', 0, 'end', None, {'one': True}, ('_arglikes',
@@ -41168,14 +41624,16 @@ _arglikes - ROOT 0,0..2,1
      .ctx Load
 '''),
 
-('', 0, 'end', None, {'_same': False, 'one': True}, ('_arglikes',
+('', 0, 'end', None, {'_src': False, '_same': False, 'one': True}, ('_arglikes',
 r'''a'''), ('_aliases',
 r'''x'''),
-r'''x''',
 r'''(x,)''', r'''
-_arglikes - ROOT 0,0..0,1
+_arglikes - ROOT 0,0..0,4
   .arglikes[1]
-   0] Name 'x' Load - 0,0..0,1
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
 '''),
 
 ('', 0, 'end', None, {'one': True}, ('_arglikes',
@@ -41257,6 +41715,483 @@ _arglikes - ROOT 0,0..2,1
      .elts[1]
       0] Name 'x' Load - 1,0..1,1
      .ctx Load
+'''),
+],
+
+'one_True_to__comprehension_ifs': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('Name',
+r'''x'''),
+r'''if x''', r'''
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+   0] Name 'x' Load - 0,3..0,4
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('Tuple', r'''
+
+x,
+
+'''), r'''
+if (
+x,
+)
+''',
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] Tuple - 0,3..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('List', r'''
+[
+x
+]
+'''), r'''
+if [
+x
+]
+''',
+r'''if [x]''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] List - 0,3..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('Set', r'''
+{
+x
+}
+'''), r'''
+if {
+x
+}
+''',
+r'''if {x}''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] Set - 0,3..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('Dict', r'''
+{
+x: y
+}
+'''), r'''
+if {
+x: y
+}
+''',
+r'''if {x: y}''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] Dict - 0,3..2,1
+     .keys[1]
+      0] Name 'x' Load - 1,0..1,1
+     .values[1]
+      0] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_Assign_targets',
+r'''x ='''),
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..0,7
+  .ifs[1]
+   0] Tuple - 0,3..0,7
+     .elts[1]
+      0] Name 'x' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_decorator_list',
+r'''@x'''),
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..0,7
+  .ifs[1]
+   0] Tuple - 0,3..0,7
+     .elts[1]
+      0] Name 'x' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_arglikes', r'''
+
+x,
+
+'''), r'''
+if (
+x,
+)
+''',
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] Tuple - 0,3..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_arglikes', r'''
+
+x,
+k=w,
+
+'''),
+r'''**SyntaxError("invalid syntax. Maybe you meant '==' or ':=' instead of '='?")**'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_comprehension_ifs', r'''
+
+if x
+
+'''), r'''
+if x
+
+''',
+r'''if x''', r'''
+_comprehension_ifs - ROOT 0,0..1,0
+  .ifs[1]
+   0] Name 'x' Load - 0,3..0,4
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('arguments', r'''
+
+x,
+
+'''), r'''
+if (
+x,
+)
+''',
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] Tuple - 0,3..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, '_same': False, 'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_aliases',
+r'''x'''),
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..0,7
+  .ifs[1]
+   0] Tuple - 0,3..0,7
+     .elts[1]
+      0] Name 'x' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_withitems',
+r'''x,'''),
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..0,7
+  .ifs[1]
+   0] Tuple - 0,3..0,7
+     .elts[1]
+      0] Name 'x' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('MatchSequence',
+r'''[x]'''),
+r'''if [x]''', r'''
+_comprehension_ifs - ROOT 0,0..0,6
+  .ifs[1]
+   0] List - 0,3..0,6
+     .elts[1]
+      0] Name 'x' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 'end', None, {'_ver': 12, 'one': True}, ('_comprehension_ifs',
+r'''if a'''), ('_type_params', r'''
+
+x,
+
+'''), r'''
+if (
+x,
+)
+''',
+r'''if (x,)''', r'''
+_comprehension_ifs - ROOT 0,0..2,1
+  .ifs[1]
+   0] Tuple - 0,3..2,1
+     .elts[1]
+      0] Name 'x' Load - 1,0..1,1
+     .ctx Load
+'''),
+],
+
+'one_True_to__withitems': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('Name',
+r'''x'''),
+r'''x''', r'''
+_withitems - ROOT 0,0..0,1
+  .items[1]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('Tuple', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Tuple - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('List', r'''
+[
+x
+]
+'''), r'''
+[
+x
+]
+''',
+r'''[x]''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr List - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('Set', r'''
+{
+x
+}
+'''), r'''
+{
+x
+}
+''',
+r'''{x}''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Set - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('Dict', r'''
+{
+x: y
+}
+'''), r'''
+{
+x: y
+}
+''',
+r'''{x: y}''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Dict - 0,0..2,1
+       .keys[1]
+        0] Name 'x' Load - 1,0..1,1
+       .values[1]
+        0] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_withitems',
+r'''a'''), ('_Assign_targets',
+r'''x ='''),
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[1]
+   0] withitem - 0,0..0,4
+     .context_expr Tuple - 0,0..0,4
+       .elts[1]
+        0] Name 'x' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_withitems',
+r'''a'''), ('_decorator_list',
+r'''@x'''),
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[1]
+   0] withitem - 0,0..0,4
+     .context_expr Tuple - 0,0..0,4
+       .elts[1]
+        0] Name 'x' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('_arglikes', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Tuple - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('_arglikes', r'''
+
+x,
+k=w,
+
+'''),
+r'''**SyntaxError("invalid syntax. Maybe you meant '==' or ':=' instead of '='?")**'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_withitems',
+r'''a'''), ('_comprehension_ifs', r'''
+
+if x
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Tuple - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('arguments', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Tuple - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False, 'one': True}, ('_withitems',
+r'''a'''), ('_aliases',
+r'''x'''),
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[1]
+   0] withitem - 0,0..0,4
+     .context_expr Tuple - 0,0..0,4
+       .elts[1]
+        0] Name 'x' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_withitems',
+r'''a'''), ('_withitems',
+r'''x,'''),
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[1]
+   0] withitem - 0,0..0,4
+     .context_expr Tuple - 0,0..0,4
+       .elts[1]
+        0] Name 'x' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_same': False, 'one': True}, ('_withitems',
+r'''a'''), ('MatchSequence',
+r'''[x]'''),
+r'''[x]''',
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..0,3
+  .items[1]
+   0] withitem - 0,0..0,3
+     .context_expr List - 0,0..0,3
+       .elts[1]
+        0] Name 'x' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_ver': 12, 'one': True}, ('_withitems',
+r'''a'''), ('_type_params', r'''
+
+x,
+
+'''), r'''
+(
+x,
+)
+''',
+r'''(x,)''', r'''
+_withitems - ROOT 0,0..2,1
+  .items[1]
+   0] withitem - 0,0..2,1
+     .context_expr Tuple - 0,0..2,1
+       .elts[1]
+        0] Name 'x' Load - 1,0..1,1
+       .ctx Load
 '''),
 ],
 
@@ -41438,15 +42373,17 @@ Call - ROOT 0,0..2,7
      .ctx Load
 '''),
 
-('', 0, 'end', 'args', {'_same': False, 'one': True}, ('Call',
+('', 0, 'end', 'args', {'_src': False, '_same': False, 'one': True}, ('Call',
 r'''call(a)'''), ('_aliases',
 r'''x'''),
-r'''call(x)''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..0,7
+Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Name 'x' Load - 0,5..0,6
+   0] Tuple - 0,5..0,9
+     .elts[1]
+      0] Name 'x' Load - 0,6..0,7
+     .ctx Load
 '''),
 
 ('', 0, 'end', 'args', {'one': True}, ('Call',

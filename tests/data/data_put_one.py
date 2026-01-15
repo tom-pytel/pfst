@@ -15977,7 +15977,7 @@ Assign - ROOT 0,0..4,2
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('arg',
 r'''x: int'''),
-r'''**NodeError('expecting expression (standard), got arg, could not coerce, arg has annotation')**'''),
+r'''**NodeError('expecting expression (standard), got arg, could not coerce, has annotation')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
@@ -16008,7 +16008,7 @@ Assign - ROOT 0,0..0,9
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
 r'''x as y'''),
-r'''**NodeError('expecting expression (standard), got alias, could not coerce, alias has asname')**'''),
+r'''**NodeError('expecting expression (standard), got alias, could not coerce, has asname')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('alias',
@@ -16038,7 +16038,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('withitem',
 r'''x as y'''),
-r'''**NodeError('expecting expression (standard), got withitem, could not coerce, withitem has optional_vars')**'''),
+r'''**NodeError('expecting expression (standard), got withitem, could not coerce, has optional_vars')**'''),
 
 ('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
 r'''i = v'''), ('TypeVar',
@@ -16053,12 +16053,12 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
 r'''i = v'''), ('TypeVar',
 r'''T: int'''),
-r'''**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has bound')**'''),
+r'''**NodeError('expecting expression (standard), got TypeVar, could not coerce, has bound')**'''),
 
 ('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
 r'''i = v'''), ('TypeVar',
 r'''T = int'''),
-r'''**NodeError('expecting expression (standard), got TypeVar, could not coerce, TypeVar has default_value')**'''),
+r'''**NodeError('expecting expression (standard), got TypeVar, could not coerce, has default_value')**'''),
 
 ('', 0, None, None, {'_src': False, '_ver': 12}, (None,
 r'''[v]'''), ('TypeVarTuple',
@@ -16075,7 +16075,7 @@ List - ROOT 0,0..0,4
 ('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
 r'''i = v'''), ('TypeVarTuple',
 r'''*T = ()'''),
-r'''**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, TypeVarTuple has default_value')**'''),
+r'''**NodeError('expecting expression (standard), got TypeVarTuple, could not coerce, has default_value')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchValue',
@@ -16198,7 +16198,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchAs',
 r'''x as y'''),
-r'''**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**'''),
+r'''**NodeError('expecting expression (standard), got MatchAs, could not coerce, has pattern')**'''),
 
 ('', None, None, 'value', {'_src': False, '_same': False, 'raw': False}, (None,
 r'''i = v'''), ('MatchSequence',
@@ -16302,7 +16302,7 @@ Assign - ROOT 0,0..0,20
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('MatchSequence',
 r'''[x as y]'''),
-r'''**NodeError('expecting expression (standard), got MatchSequence, could not coerce, MatchAs has pattern')**'''),
+r'''**NodeError('expecting expression (standard), got MatchSequence, could not coerce, has pattern')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchMapping',
@@ -16349,7 +16349,7 @@ Assign - ROOT 0,0..0,23
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchMapping',
 r'''{1: a as b}'''),
-r'''**NodeError('expecting expression (standard), got MatchMapping, could not coerce, MatchAs has pattern')**'''),
+r'''**NodeError('expecting expression (standard), got MatchMapping, could not coerce, has pattern')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('MatchClass',
@@ -16779,12 +16779,12 @@ r'''**NodeError('expecting expression (standard), got _type_params, could not co
 ('', None, None, 'value', {'_src': False, '_ver': 12}, (None,
 r'''i = v'''), ('_type_params',
 r'''T: int, *U'''),
-r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has bound')**'''),
+r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**'''),
 
 ('', None, None, 'value', {'_src': False, '_ver': 13}, (None,
 r'''i = v'''), ('_type_params',
 r'''T = int, *U'''),
-r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, type_param has default_value')**'''),
+r'''**NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has default_value')**'''),
 ],
 
 'coerce_to__arglike': [  # ................................................................................
@@ -18902,7 +18902,7 @@ MatchAs - ROOT 0,0..0,11
   .name 'b'
 '''),
 
-('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+('', None, None, 'pattern', {'_src': False, 'raw': False}, ('MatchAs',
 r'''a as b'''), ('Call', r'''
 (
 (a)

@@ -1,0 +1,556 @@
+Miscellaneous console sessions mostly meant to screen for random errors. Feel free to nuke any of these should they
+become annoying.
+
+>>> from fst import *
+
+
+........................................................................................................................
+sequence coercion
+
+>>> import sys
+>>> from fst import code as cd
+
+>>> cd.code_as_pattern(FST(' ( a ) '), coerce=True).dump('N').verify().src
+0:    a
+MatchAs - ROOT 0,3..0,4
+  .name 'a'
+' ( a ) '
+
+>>> cd.code_as_pattern(FST(' ( a ) ').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST(' ( 1 ) '), coerce=True).dump('N').verify().src
+0:    1
+MatchValue - ROOT 0,3..0,4
+0:    1
+  .value Constant 1 - 0,3..0,4
+' ( 1 ) '
+
+>>> cd.code_as_pattern(FST(' ( 1 ) ').a, coerce=True).dump('N').verify().src
+0: 1
+MatchValue - ROOT 0,0..0,1
+0: 1
+  .value Constant 1 - 0,0..0,1
+'1'
+
+>>> cd.code_as_pattern(FST(' ( ( a )\n.\nb ) '), coerce=True).dump('N').verify().src
+0:    a
+1: .
+2: b
+MatchValue - ROOT 0,3..2,1
+0:    a
+1: .
+2: b
+  .value Attribute - 0,3..2,1
+0:    a
+    .value Name 'a' Load - 0,3..0,4
+    .attr 'b'
+    .ctx Load
+' ( a\n.\nb ) '
+
+>>> cd.code_as_pattern(FST(' ( ( a )\n.\nb ) ').a, coerce=True).dump('N').verify().src
+0: a.b
+MatchValue - ROOT 0,0..0,3
+0: a.b
+  .value Attribute - 0,0..0,3
+0: a
+    .value Name 'a' Load - 0,0..0,1
+    .attr 'b'
+    .ctx Load
+'a.b'
+
+>>> cd.code_as_pattern(FST(' ( None ) '), coerce=True).dump('N').verify().src
+0:    None
+MatchSingleton None - ROOT 0,3..0,7
+' ( None ) '
+
+>>> cd.code_as_pattern(FST(' ( None ) ').a, coerce=True).dump('N').verify().src
+0: None
+MatchSingleton None - ROOT 0,0..0,4
+'None'
+
+>>> cd.code_as_pattern(FST(' *a '), coerce=True).dump('N').verify().src
+0:  *a
+MatchStar - ROOT 0,1..0,3
+  .name 'a'
+' *a '
+
+>>> cd.code_as_pattern(FST(' *a ').a, coerce=True).dump('N').verify().src
+0: *a
+MatchStar - ROOT 0,0..0,2
+  .name 'a'
+'*a'
+
+>>> cd.code_as_pattern(FST(' *(a) '), coerce=True).dump('N').verify().src
+0:  *a
+MatchStar - ROOT 0,1..0,3
+  .name 'a'
+' *a '
+
+>>> cd.code_as_pattern(FST(' *(a) ').a, coerce=True).dump('N').verify().src
+0: *a
+MatchStar - ROOT 0,0..0,2
+  .name 'a'
+'*a'
+
+>>> cd.code_as_pattern(FST(' a ', 'arg'), coerce=True).dump('N').verify().src
+0:  a
+MatchAs - ROOT 0,1..0,2
+  .name 'a'
+' a '
+
+>>> cd.code_as_pattern(FST(' a ', 'arg').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST(' a ', 'alias'), coerce=True).dump('N').verify().src
+0:  a
+MatchAs - ROOT 0,1..0,2
+  .name 'a'
+' a '
+
+>>> cd.code_as_pattern(FST(' a ', 'alias').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST(' ( a ) ', 'withitem'), coerce=True).dump('N').verify().src
+0:    a
+MatchAs - ROOT 0,3..0,4
+  .name 'a'
+' ( a ) '
+
+>>> cd.code_as_pattern(FST(' ( 1 ) ', 'withitem').a, coerce=True).dump('N').verify().src
+0: 1
+MatchValue - ROOT 0,0..0,1
+0: 1
+  .value Constant 1 - 0,0..0,1
+'1'
+
+>>> if sys.version_info[:2] >= (3, 12):
+...     cd.code_as_pattern(FST(' T ', 'TypeVar'), coerce=True).dump('N').verify().src
+... else:
+...     print('''
+... 0:  T
+... MatchAs - ROOT 0,1..0,2
+...   .name 'T'
+... ' T '
+... '''[1:-1])
+0:  T
+MatchAs - ROOT 0,1..0,2
+  .name 'T'
+' T '
+
+>>> if sys.version_info[:2] >= (3, 12):
+...     cd.code_as_pattern(FST(' T ', 'TypeVar').a, coerce=True).dump('N').verify().src
+... else:
+...     print('''
+... 0: T
+... MatchAs - ROOT 0,0..0,1
+...   .name 'T'
+... 'T'
+... '''[1:-1])
+0: T
+MatchAs - ROOT 0,0..0,1
+  .name 'T'
+'T'
+
+>>> if sys.version_info[:2] >= (3, 12):
+...     cd.code_as_pattern(FST(' * T ', 'TypeVarTuple'), coerce=True).dump('N').verify().src
+... else:
+...     print('''
+... 0:  * T
+... MatchStar - ROOT 0,1..0,4
+...   .name 'T'
+... ' * T '
+... '''[1:-1])
+0:  * T
+MatchStar - ROOT 0,1..0,4
+  .name 'T'
+' * T '
+
+>>> if sys.version_info[:2] >= (3, 12):
+...     cd.code_as_pattern(FST(' * T ', 'TypeVarTuple').a, coerce=True).dump('N').verify().src
+... else:
+...     print('''
+... 0: *T
+... MatchStar - ROOT 0,0..0,2
+...   .name 'T'
+... '*T'
+... '''[1:-1])
+0: *T
+MatchStar - ROOT 0,0..0,2
+  .name 'T'
+'*T'
+
+>>> cd.code_as_pattern(FST('( a )', 'Module'), coerce=True).dump('N').verify().src
+0:   a
+MatchAs - ROOT 0,2..0,3
+  .name 'a'
+'( a )'
+
+>>> cd.code_as_pattern(FST('( a )', 'Module').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST('( a )', 'Interactive'), coerce=True).dump('N').verify().src
+0:   a
+MatchAs - ROOT 0,2..0,3
+  .name 'a'
+'( a )'
+
+>>> cd.code_as_pattern(FST('( a )', 'Interactive').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST('( a )', 'Expression'), coerce=True).dump('N').verify().src
+0:   a
+MatchAs - ROOT 0,2..0,3
+  .name 'a'
+'( a )'
+
+>>> cd.code_as_pattern(FST('( a )', 'Expression').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST('( a )', 'Expr'), coerce=True).dump('N').verify().src
+0:   a
+MatchAs - ROOT 0,2..0,3
+  .name 'a'
+'( a )'
+
+>>> cd.code_as_pattern(FST('( a )', 'Expr').a, coerce=True).dump('N').verify().src
+0: a
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'a'
+
+>>> cd.code_as_pattern(FST('{((a).b): [c, d], **r}'), coerce=True).dump('N').verify().src
+0: {a.b: [c, d], **r}
+MatchMapping - ROOT 0,0..0,18
+  .keys[1]
+0:  a.b
+   0] Attribute - 0,1..0,4
+0:  a
+     .value Name 'a' Load - 0,1..0,2
+     .attr 'b'
+     .ctx Load
+  .patterns[1]
+0:       [c, d]
+   0] MatchSequence - 0,6..0,12
+     .patterns[2]
+0:        c
+      0] MatchAs - 0,7..0,8
+        .name 'c'
+0:           d
+      1] MatchAs - 0,10..0,11
+        .name 'd'
+  .rest 'r'
+'{a.b: [c, d], **r}'
+
+>>> cd.code_as_pattern(FST('{((a).b): [c, d], **r}').a, coerce=True).dump('N').verify().src
+0: {a.b: [c, d], **r}
+MatchMapping - ROOT 0,0..0,18
+  .keys[1]
+0:  a.b
+   0] Attribute - 0,1..0,4
+0:  a
+     .value Name 'a' Load - 0,1..0,2
+     .attr 'b'
+     .ctx Load
+  .patterns[1]
+0:       [c, d]
+   0] MatchSequence - 0,6..0,12
+     .patterns[2]
+0:        c
+      0] MatchAs - 0,7..0,8
+        .name 'c'
+0:           d
+      1] MatchAs - 0,10..0,11
+        .name 'd'
+  .rest 'r'
+'{a.b: [c, d], **r}'
+
+>>> cd.code_as_pattern(FST('((u).v)((a), b=(c))'), coerce=True).dump('N').verify()
+0: u.v((a), b=(c))
+MatchClass - ROOT 0,0..0,15
+0: u.v
+  .cls Attribute - 0,0..0,3
+0: u
+    .value Name 'u' Load - 0,0..0,1
+    .attr 'v'
+    .ctx Load
+  .patterns[1]
+0:      a
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+0:             c
+   0] MatchAs - 0,12..0,13
+     .name 'c'
+<MatchClass ROOT 0,0..0,15>
+
+>>> cd.code_as_pattern(FST('((u).v)((a), b=(c))').a, coerce=True).dump('N').verify()
+0: u.v(a, b=c)
+MatchClass - ROOT 0,0..0,11
+0: u.v
+  .cls Attribute - 0,0..0,3
+0: u
+    .value Name 'u' Load - 0,0..0,1
+    .attr 'v'
+    .ctx Load
+  .patterns[1]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+0:          c
+   0] MatchAs - 0,9..0,10
+     .name 'c'
+<MatchClass ROOT 0,0..0,11>
+
+>>> cd.code_as_pattern(FST(' a\n, ', 'Tuple'), coerce=True).dump('N').verify().src
+0:  a
+1: ,
+MatchSequence - ROOT 0,1..1,1
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+' a\n, '
+
+>>> cd.code_as_pattern(FST(' a\n, ', 'Tuple').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST(' ( [ a ] ) ', 'List'), coerce=True).dump('N').verify().src
+0:    [ a ]
+MatchSequence - ROOT 0,3..0,8
+  .patterns[1]
+0:      a
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+' ( [ a ] ) '
+
+>>> cd.code_as_pattern(FST(' ( [ a ] ) ', 'List').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST(' ( { a } ) ', 'Set'), coerce=True).dump('N').verify().src
+0:    [ a ]
+MatchSequence - ROOT 0,3..0,8
+  .patterns[1]
+0:      a
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+' ( [ a ] ) '
+
+>>> cd.code_as_pattern(FST(' ( { a } ) ', 'Set').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST(' a \\\n= ', '_Assign_targets'), coerce=True).dump('N').verify().src
+0: [ a ]
+MatchSequence - ROOT 0,0..0,5
+  .patterns[1]
+0:   a
+   0] MatchAs - 0,2..0,3
+     .name 'a'
+'[ a ]'
+
+>>> cd.code_as_pattern(FST(' a \\\n= ', '_Assign_targets').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST('@ \\\n a ', '_decorator_list'), coerce=True).dump('N').verify().src
+0: [a ]
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a ]'
+
+>>> cd.code_as_pattern(FST('@ \\\n a ', '_decorator_list').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST(' \nif\n a ', '_comprehension_ifs'), coerce=True).dump('N').verify().src
+0: [ <*END*
+1: a ]
+MatchSequence - ROOT 0,0..1,3
+  .patterns[1]
+1: a
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+'[ \na ]'
+
+>>> cd.code_as_pattern(FST(' \nif\n a ', '_comprehension_ifs').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST(' \n*\n a ', 'arguments'), coerce=True).dump('N').verify().src
+0: [ <*END*
+1: *
+2:  a ]
+MatchSequence - ROOT 0,0..2,4
+  .patterns[1]
+1: *
+2:  a
+   0] MatchStar - 1,0..2,2
+     .name 'a'
+'[ \n*\n a ]'
+
+>>> cd.code_as_pattern(FST(' \n*\n a ', 'arguments').a, coerce=True).dump('N').verify().src
+0: [*a]
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+0:  *a
+   0] MatchStar - 0,1..0,3
+     .name 'a'
+'[*a]'
+
+>>> cd.code_as_pattern(FST(' \n a\n ', '_aliases'), coerce=True).dump('N').verify().src
+0: [ <*END*
+1:  a
+2:  ]
+MatchSequence - ROOT 0,0..2,2
+  .patterns[1]
+1:  a
+   0] MatchAs - 1,1..1,2
+     .name 'a'
+'[ \n a\n ]'
+
+>>> cd.code_as_pattern(FST(' \n a\n ', '_aliases').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST(' \n a\n ', '_withitems'), coerce=True).dump('N').verify().src
+0: [ <*END*
+1:  a
+2:  ]
+MatchSequence - ROOT 0,0..2,2
+  .patterns[1]
+1:  a
+   0] MatchAs - 1,1..1,2
+     .name 'a'
+'[ \n a\n ]'
+
+>>> cd.code_as_pattern(FST(' \n a\n ', '_withitems').a, coerce=True).dump('N').verify().src
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> if sys.version_info[:2] >= (3, 12):
+...     cd.code_as_pattern(FST(' \n a\n ', '_type_params'), coerce=True).dump('N').verify().src
+... else:
+...     print('''
+... 0: [ <*END*
+... 1:  a
+... 2:  ]
+... MatchSequence - ROOT 0,0..2,2
+...   .patterns[1]
+... 1:  a
+...    0] MatchAs - 1,1..1,2
+...      .name 'a'
+... '[ \\n a\\n ]'
+... '''[1:-1])
+0: [ <*END*
+1:  a
+2:  ]
+MatchSequence - ROOT 0,0..2,2
+  .patterns[1]
+1:  a
+   0] MatchAs - 1,1..1,2
+     .name 'a'
+'[ \n a\n ]'
+
+>>> if sys.version_info[:2] >= (3, 12):
+...     cd.code_as_pattern(FST(' \n a\n ', '_type_params').a, coerce=True).dump('N').verify().src
+... else:
+...     print('''
+... 0: [a]
+... MatchSequence - ROOT 0,0..0,3
+...   .patterns[1]
+... 0:  a
+...    0] MatchAs - 0,1..0,2
+...      .name 'a'
+... '[a]'
+... '''[1:-1])
+0: [a]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'[a]'
+
+>>> cd.code_as_pattern(FST('x', '_arglikes'), coerce=True).dump('N').verify()
+0: [x]
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+0:  x
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+<MatchSequence ROOT 0,0..0,3>
+
+>>> cd.code_as_pattern(FST('(x)'), coerce=True).dump('N').verify().src
+0:  x
+MatchAs - ROOT 0,1..0,2
+  .name 'x'
+'(x)'

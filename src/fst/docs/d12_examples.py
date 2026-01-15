@@ -131,9 +131,6 @@ def func():
 
 You want to add a `correlation_id=CID` keyword argument to all `logger.info()` calls, but only if its not already there.
 
-**Note:** The aesthetics of the formatting are not finalized yet so eventually the `correlation_id` will go onto its own
-line when adding to arguments which are on their own lines. Also should inherit the trailing comma.
-
 ```py
 >>> def inject_logging_metadata(src: str) -> str:
 ...     fst = FST(src, 'exec')

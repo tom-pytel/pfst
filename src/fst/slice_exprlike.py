@@ -799,9 +799,9 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
             if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
                 ast_ = fst_.a
                 fst_indent = _get_element_indent(fst_,
-                                                getattr(ast_, fst_first.pfield.name if fst_first else 'keys'),
-                                                getattr(ast_, fst_last.pfield.name),
-                                                0, locfunc)
+                                                 getattr(ast_, fst_first.pfield.name if fst_first else 'keys'),
+                                                 getattr(ast_, fst_last.pfield.name),
+                                                 0, locfunc)
 
                 fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):], docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring  # fst_._dedent_lns(fst_indent or ''), fst_._indent_lns(elts_indent[len(self_indent):])
 

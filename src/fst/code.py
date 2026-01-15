@@ -330,7 +330,7 @@ def _coerce_to_pattern_ast_Starred(
     value = ast.value
 
     if value.__class__ is not Name:
-        return 'Starred.value must be Name'
+        return f'value must be Name, not {value.__class__.__name__}'
 
     if not is_FST:
         return MatchStar(name=value.id)
@@ -388,7 +388,7 @@ def _coerce_to_pattern_ast_withitem(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if ast.optional_vars:
-        return 'withitem has optional_vars'
+        return 'has optional_vars'
 
     ast = ast.context_expr
 
@@ -401,9 +401,9 @@ def _coerce_to_pattern_ast_TypeVar(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if ast.bound:
-        return 'TypeVar has bound'
+        return 'has bound'
     if getattr(ast, 'default_value', None):
-        return 'TypeVar has default_value'
+        return 'has default_value'
 
     return (MatchAs(name=ast.name, lineno=ast.lineno, col_offset=ast.col_offset,
                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -417,7 +417,7 @@ def _coerce_to_pattern_ast_TypeVarTuple(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if getattr(ast, 'default_value', None):
-        return 'TypeVarTuple has default_value'
+        return 'has default_value'
 
     if not is_FST:
         return MatchStar(name=ast.name)
@@ -500,7 +500,7 @@ def _coerce_to_pattern_ast_Call(
     kwd_attrs = []
     kwd_patterns = []
 
-    for arg in ast.args:
+    for arg in ast.args:  # noqa: F402
         if arg.__class__ is Starred:
             return 'cannot have Starred'
 
@@ -533,18 +533,6 @@ def _coerce_to_pattern_ast_Call(
 
     return MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-
-
-
-
-
-
-
-
-
-
-
-
 
 def _coerce_to_pattern_ast_seq(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
@@ -641,8 +629,7 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
 
     Dict:               _coerce_to_pattern_ast_Dict,
     Call:               _coerce_to_pattern_ast_Call,
-
-    # BinOp  -> MatchOr
+    # BinOp:              _coerce_to_pattern_ast_BinOp,  # BitOr -> MatchOr
 
     Set:                _coerce_to_pattern_ast_seq,
     List:               _coerce_to_pattern_ast_seq,
@@ -921,7 +908,7 @@ def _coerce_to_expr_ast_arg(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.annotation:
-        return 'arg has annotation'
+        return 'has annotation'
 
     return (Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                  end_col_offset=ast.end_col_offset)
@@ -935,7 +922,7 @@ def _coerce_to_expr_ast_alias(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.asname:
-        return 'alias has asname'
+        return 'has asname'
     if ast.name == '*':
         return "star '*' alias"
 
@@ -1012,7 +999,7 @@ def _coerce_to_expr_ast_withitem(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.optional_vars:
-        return 'withitem has optional_vars'
+        return 'has optional_vars'
 
     return ast.context_expr, False, 1  # if coerce from withitem can reuse its AST
 
@@ -1075,7 +1062,7 @@ def _coerce_to_expr_ast_MatchAs(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.pattern:
-        return 'MatchAs has pattern'
+        return 'has pattern'
 
     return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -1253,9 +1240,9 @@ def _coerce_to_expr_ast_TypeVar(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.bound:
-        return 'TypeVar has bound'
+        return 'has bound'
     if getattr(ast, 'default_value', None):
-        return 'TypeVar has default_value'
+        return 'has default_value'
 
     return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -1269,7 +1256,7 @@ def _coerce_to_expr_ast_TypeVarTuple(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if getattr(ast, 'default_value', None):
-        return 'TypeVarTuple has default_value'
+        return 'has default_value'
 
     name = ast.name
 
@@ -1298,9 +1285,9 @@ def _coerce_to_expr_ast__type_params(
 
     for a in ast.type_params:
         if getattr(a, 'bound', None):
-            return 'type_param has bound'
+            return f'{a.__class__.__name__} has bound'
         if getattr(a, 'default_value', None):
-            return 'type_param has default_value'
+            return f'{a.__class__.__name__} has default_value'
 
         ast_cls = a.__class__
 
