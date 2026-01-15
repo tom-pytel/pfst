@@ -2183,8 +2183,8 @@ match a:
                 (Tuple, '(a,)')),  # AST
             (code_as_expr, (_arglikes, 'a, b=c'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, found keyword')**",  # FST
-                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, found keyword')**"),  # AST
+                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**",  # FST
+                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**"),  # AST
             (code_as_expr, (_arglikes, 'a, *b'),
                 (Tuple, 'a, *b'),  # src
                 (Tuple, 'a, *b'),  # FST
@@ -3202,6 +3202,10 @@ match a:
                 "**SyntaxError**",
                 (MatchMapping, '{a.b: c, **r}'),
                 (MatchMapping, '{a.b: c, **r}')),
+            (code_as_pattern, (Call, '((u).v)((a), b=(c))'),
+                "**SyntaxError**",
+                (MatchClass, 'u.v((a), b=(c))'),
+                (MatchClass, 'u.v(a, b=c)')),
             (code_as_pattern, (Tuple, ' a\n, '),
                 (MatchSequence, ' a\n, '),
                 (MatchSequence, '[a]')),

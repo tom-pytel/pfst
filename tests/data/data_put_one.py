@@ -16700,7 +16700,7 @@ Assign - ROOT 0,0..0,8
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('_arglikes',
 r'''a, b=c'''),
-r'''**NodeError('expecting expression (standard), got _arglikes, could not coerce, found keyword')**'''),
+r'''**NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('_arglikes',
@@ -18830,6 +18830,16 @@ MatchAs - ROOT 0,0..0,6
   .name 'b'
 '''),
 
+('', None, None, 'pattern', {'_src': False, 'raw': False}, ('MatchAs',
+r'''a as b'''), ('Expr',
+r'''(x)'''),
+r'''x as b''', r'''
+MatchAs - ROOT 0,0..0,6
+  .pattern MatchAs - 0,0..0,1
+    .name 'x'
+  .name 'b'
+'''),
+
 ('', None, None, 'pattern', {'_src': False}, ('MatchAs',
 r'''a as b'''), ('Dict',
 r'''{}'''),
@@ -18882,13 +18892,52 @@ MatchAs - ROOT 0,0..1,22
   .name 'b'
 '''),
 
-('', None, None, 'pattern', {'_src': False, 'raw': False}, ('MatchAs',
-r'''a as b'''), ('Expr',
-r'''(x)'''),
-r'''x as b''', r'''
-MatchAs - ROOT 0,0..0,6
-  .pattern MatchAs - 0,0..0,1
-    .name 'x'
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''call()'''),
+r'''call() as b''', r'''
+MatchAs - ROOT 0,0..0,11
+  .pattern MatchClass - 0,0..0,6
+    .cls Name 'call' Load - 0,0..0,4
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call', r'''
+(
+(a)
+.
+b)((
+c
+), d
+=
+[e])
+'''), r'''
+(a
+.
+b((
+c
+), d
+=
+[e])) as b
+''',
+r'''a.b(c, d=[e]) as b''', r'''
+MatchAs - ROOT 0,0..6,10
+  .pattern MatchClass - 0,1..6,4
+    .cls Attribute - 0,1..2,1
+      .value Name 'a' Load - 0,1..0,2
+      .attr 'b'
+      .ctx Load
+    .patterns[1]
+     0] MatchAs - 3,0..3,1
+       .name 'c'
+    .kwd_attrs[1]
+     0] 'd'
+    .kwd_patterns[1]
+     0] MatchSequence - 6,0..6,3
+       .patterns[1]
+        0] MatchAs - 6,1..6,2
+          .name 'e'
   .name 'b'
 '''),
 

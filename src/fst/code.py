@@ -288,7 +288,7 @@ def _coerce_to_pattern_ast_Constant(
         )
 
     elif value is ...:
-        return 'found Ellipsis'
+        return 'cannot be Ellipsis'
 
     return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -475,35 +475,64 @@ def _coerce_to_pattern_ast_Dict(
     return MatchMapping(keys=keys, patterns=patterns, rest=rest, lineno=ast.lineno, col_offset=ast.col_offset,
                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
-# def _coerce_to_pattern_ast_Call(
-#     ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
-# ) -> tuple[AST, bool, int]:
-#     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+def _coerce_to_pattern_ast_Call(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
+    func = ast.func
+    func_cls = func.__class__
 
+    if func_cls is Attribute:
+        if is_FST:
+            func.f._unparenthesize_grouping(False)  # cannot have pars
 
+        res = _AST_COERCE_TO_PATTERN_FUNCS.get(func_cls,
+                                               _coerce_to_expr_ast_ret_empty_str)(func, is_FST, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
 
+        if res.__class__ is str:
+            return res
 
+    elif func_cls is not Name:
+        return f"func must be Name or Attribute, not {func_cls.__name__}"
 
+    patterns = []
+    kwd_attrs = []
+    kwd_patterns = []
 
-#     patterns = []
-#     kwd_attrs = []
-#     kwd_patterns = []
+    for arg in ast.args:
+        if arg.__class__ is Starred:
+            return 'cannot have Starred'
 
+        pat = _AST_COERCE_TO_PATTERN_FUNCS.get(arg.__class__,
+                                               _coerce_to_expr_ast_ret_empty_str)(arg, is_FST, parse_params, kwargs)
 
+        if pat.__class__ is str:
+            return pat
 
+        patterns.append(pat)
 
+    for kw in ast.keywords:
+        arg = kw.arg
+        value = kw.value
 
+        if not arg:
+            return "cannot have '**' keyword"
 
+        pat = _AST_COERCE_TO_PATTERN_FUNCS.get(value.__class__,
+                                               _coerce_to_expr_ast_ret_empty_str)(value, is_FST, parse_params, kwargs)
 
+        if value.__class__ is str:
+            return value
 
+        kwd_attrs.append(arg)
+        kwd_patterns.append(pat)
 
+    if not is_FST:
+        return MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns)
 
-#     if not is_FST:
-#         return MatchClass(cls=cls, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns)
-
-#     return MatchClass(cls=cls, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
-#                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+    return MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
+                      col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 
 
@@ -543,7 +572,7 @@ def _coerce_to_pattern_ast_seq(
         elts = ast.arglikes
 
         if any(e.__class__ is keyword for e in elts):
-            return 'found keyword'
+            return 'cannot have keyword'
 
         if is_FST:
             fst_._fix_undelimited_seq(elts, '[]', True)
@@ -611,7 +640,7 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
 
     Dict:               _coerce_to_pattern_ast_Dict,
-    # Call:               _coerce_to_pattern_ast_Call,
+    Call:               _coerce_to_pattern_ast_Call,
 
     # BinOp  -> MatchOr
 
@@ -769,14 +798,14 @@ def _coerce_to_expr_ast__arglikes(
 
     if not is_FST:
         if any(a.__class__ is keyword for a in arglikes):
-            return 'found keyword'
+            return 'cannot have keyword'
 
         ret = Tuple(elts=arglikes)
 
     else:
         for a in arglikes:
             if a.__class__ is keyword:
-                return 'found keyword'
+                return 'cannot have keyword'
 
             if pars_arglike and a.f._is_expr_arglike_only():
                 a.f._parenthesize_grouping()
