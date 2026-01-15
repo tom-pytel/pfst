@@ -399,6 +399,15 @@ def _coerce_to_pattern_ast_TypeVarTuple(
     return MatchStar(name=ast.name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                      end_col_offset=ast.end_col_offset)
 
+
+
+
+
+
+
+
+
+
 def _coerce_to_pattern_ast_seq(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
@@ -480,12 +489,6 @@ def _coerce_to_pattern_ast_seq(
     return MatchSequence(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                          end_col_offset=ast.end_col_offset)
 
-
-
-
-
-
-
 _AST_COERCE_TO_PATTERN_FUNCS = {
     Module:             _coerce_to_pattern_ast_stmtmod,
     Interactive:        _coerce_to_pattern_ast_stmtmod,
@@ -500,6 +503,10 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     TypeVar:            _coerce_to_pattern_ast_TypeVar,
     TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
 
+    # Dict   -> MatchMapping
+    # Call   -> MatchClass
+    # BinOp  -> MatchOr
+
     Set:                _coerce_to_pattern_ast_seq,
     List:               _coerce_to_pattern_ast_seq,
     Tuple:              _coerce_to_pattern_ast_seq,
@@ -511,10 +518,6 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     _aliases:           _coerce_to_pattern_ast_seq,
     _withitems:         _coerce_to_pattern_ast_seq,
     _type_params:       _coerce_to_pattern_ast_seq,
-
-    # Dict   -> MatchMapping
-    # Call   -> MatchClass
-    # BinOp  -> MatchOr
 }
 
 

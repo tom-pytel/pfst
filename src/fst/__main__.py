@@ -19,8 +19,12 @@ def main() -> None:
                         help="expanded view")
     parser.add_argument('-s', '--stmt', default=False, action='store_true',
                         help="show statmenent source lines")
+    parser.add_argument('-S', '--stmt-plus', default=False, action='store_true',
+                        help="show statmenent and non-coding source lines")
     parser.add_argument('-n', '--node', default=False, action='store_true',
                         help="show all node source lines")
+    parser.add_argument('-N', '--node-plus', default=False, action='store_true',
+                        help="show all node and non-coding source lines")
     parser.add_argument('-+', dest='src_plus', default=False, action='store_true',
                         help="show all non-coding source lines")
     parser.add_argument('--type-comments', default=False, action='store_true',
@@ -33,6 +37,12 @@ def main() -> None:
                         help="don't verify parsed AST")
 
     args = parser.parse_args()
+
+    if args.stmt_plus:
+        args.stmt = args.src_plus = True
+
+    if args.node_plus:
+        args.node = args.src_plus = True
 
     if args.infile == '-':
         name = '<stdin>'
