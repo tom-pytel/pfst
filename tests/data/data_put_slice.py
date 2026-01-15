@@ -40317,6 +40317,354 @@ _type_params - ROOT 0,0..2,0
 '''),
 ],
 
+'coerce_to_MatchSequence': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+[
+ x,
+ y
+]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('List', r'''
+[
+1,
+True,
+]
+'''), r'''
+[
+ 1,
+ True
+]
+''',
+r'''[1, True]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchValue - 1,1..1,2
+     .value Constant 1 - 1,1..1,2
+   1] MatchSingleton True - 2,1..2,5
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('Set', r'''
+{
+'b',
+False,
+}
+'''), r'''
+[
+ 'b',
+ False
+]
+''',
+r'''['b', False]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchValue - 1,1..1,4
+     .value Constant 'b' - 1,1..1,4
+   1] MatchSingleton False - 2,1..2,6
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_Assign_targets', r'''
+(x, z) = \
+y.z =
+'''), r'''
+[(x, z), \
+ y.z]
+''',
+r'''[[x, z], y.z]''', r'''
+MatchSequence - ROOT 0,0..1,5
+  .patterns[2]
+   0] MatchSequence - 0,1..0,7
+     .patterns[2]
+      0] MatchAs - 0,2..0,3
+        .name 'x'
+      1] MatchAs - 0,5..0,6
+        .name 'z'
+   1] MatchValue - 1,1..1,4
+     .value Attribute - 1,1..1,4
+       .value Name 'y' Load - 1,1..1,2
+       .attr 'z'
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_decorator_list', r'''
+@{1: b}
+@{**c}
+'''), r'''
+[{1: b},
+ {**c}]
+''',
+r'''[{1: b}, {**c}]''', r'''
+MatchSequence - ROOT 0,0..1,7
+  .patterns[2]
+   0] MatchMapping - 0,1..0,7
+     .keys[1]
+      0] Constant 1 - 0,2..0,3
+     .patterns[1]
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+   1] MatchMapping - 1,1..1,6
+     .rest 'c'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_arglikes', r'''
+
+*x,
+y,
+
+'''), r'''
+[
+ *x,
+ y
+]
+''',
+r'''[*x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchStar - 1,1..1,3
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''), r'''
+[
+ x,
+ y
+]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+[
+ x,
+ y
+]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('arguments', r'''
+
+x,
+*y,
+
+'''), r'''
+[
+ x,
+ *y
+]
+''',
+r'''[x, *y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchStar - 2,1..2,3
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+[x,
+ y]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..1,3
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchAs - 1,1..1,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+[x,
+ y.z]
+''',
+r'''[x, y.z]''', r'''
+MatchSequence - ROOT 0,0..1,5
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchValue - 1,1..1,4
+     .value Attribute - 1,1..1,4
+       .value Name 'y' Load - 1,1..1,2
+       .attr 'z'
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+[x,
+ y]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..1,3
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchAs - 1,1..1,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+[x,
+ y]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..1,3
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchAs - 1,1..1,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+[
+ x,
+ y
+]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+[
+ x,
+ y
+]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('MatchSequence',
+r'''[a]'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+[
+ x,
+ y
+]
+''',
+r'''[x, y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchAs - 2,1..2,2
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('MatchSequence',
+r'''[a]'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''), r'''
+[
+ x,
+ *y
+]
+''',
+r'''[x, *y]''', r'''
+MatchSequence - ROOT 0,0..3,1
+  .patterns[2]
+   0] MatchAs - 1,1..1,2
+     .name 'x'
+   1] MatchStar - 2,1..2,3
+     .name 'y'
+'''),
+],
+
 'coerce_to__expr_arglikes': [  # ................................................................................
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',

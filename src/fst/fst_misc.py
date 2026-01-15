@@ -20,7 +20,7 @@ from .asttypes import (
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_BLOCK,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
-    ASTS_LEAF_TUPLE_OR_LIST,
+    # ASTS_LEAF_TUPLE_OR_LIST,
     AST,
     AnnAssign,
     Assert,
@@ -1658,14 +1658,17 @@ def _fix_joined_alnum(
 
 
 def _fix_undelimited_seq(
-    self: fst.FST, body: list[AST], delims: str = '()', demlim_if_needed: bool = True
+    self: fst.FST, body: list[AST], delims: str = '()', delim: bool | None = None
 ) -> bool:
     """Fix undelimited `Tuple` or `MatchSequence` if needed. Don't call on delimited sequence. Fixes locations as well
     as delimiting. Can also be used on other comma-delimited sequences.
 
     **Parameters:**
-    - `delim_if_needed`: Whether to add delimiters to **NON-EMPTY** sequences if they are needed for parsability or not.
-        Delimiters are always added to empty sequences irrespective of this parameter.
+    - `delim`: When to delimit **NON-EMPTY** sequences whether it is needed for parsability or not. Delimiters are
+        always added to empty sequences irrespective of this parameter.
+        - `False`: Never add (unless empty).
+        - `None`: Only add if needed for parsability.
+        - `True`: Always add.
 
     **Returns:**
     - `bool`: Whether the sequence was delimited or not.
@@ -1701,15 +1704,17 @@ def _fix_undelimited_seq(
 
     ln, col, end_ln, end_col = self.loc
 
-    if (demlim_if_needed
-        and (
-            not (
-                end_ln == ln
-                or self._is_enclosed_or_line(pars=False)
-                or self._is_enclosed_in_parents()
-            )  # could have line continuations
-            or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
-    )):
+    if (delim is True
+        or (
+            delim is None
+            and (
+                not (
+                    end_ln == ln
+                    or self._is_enclosed_or_line(pars=False)
+                    or self._is_enclosed_in_parents()
+                )  # could have line continuations
+                or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
+    ))):
         self._delimit_node(delims=delims)
 
         return True
@@ -1782,7 +1787,7 @@ def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = 
         self._maybe_add_singleton_comma(is_par)
 
     if not is_par:
-        return self._fix_undelimited_seq(body, '()', par_if_needed)
+        return self._fix_undelimited_seq(body, '()', par_if_needed and None)
 
     return is_par
 

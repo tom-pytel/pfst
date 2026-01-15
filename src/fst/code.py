@@ -288,7 +288,33 @@ def _coerce_to_pattern_ast_Constant(
         )
 
     elif value is ...:
-        return 'Ellipsis cannot be in pattern'
+        return 'found Ellipsis'
+
+    return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+            if is_FST else
+            MatchValue(value=ast)
+    )
+
+def _coerce_to_pattern_ast_Attribute(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+) -> AST | str:
+    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+
+    value = ast
+
+    while True:
+        value = value.value
+        value_cls = value.__class__
+
+        if is_FST:
+            value.f._unparenthesize_grouping(False)
+
+        if value_cls is not Attribute:
+            break
+
+    if value_cls is not Name:
+        return f'base value must be Name, not {value_cls.__name__}'
 
     return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -399,6 +425,89 @@ def _coerce_to_pattern_ast_TypeVarTuple(
     return MatchStar(name=ast.name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                      end_col_offset=ast.end_col_offset)
 
+def _coerce_to_pattern_ast_Dict(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+
+    keys = []
+    patterns = []
+    rest = None
+
+    for key, value in zip(ast.keys, ast.values, strict=True):
+        if not key:
+            if rest is not None:
+                return "multiple '**' values found"
+            if value.__class__ is not Name:
+                return f"'**' value must be Name, not {value.__class__.__name__}"
+
+            rest = value.id
+
+            continue
+
+        key_cls = key.__class__
+
+        if key_cls not in (Constant, Attribute):
+            return f"key must be Constant or Attribute, not {key_cls.__name__}"
+
+        if is_FST:
+            key.f._unparenthesize_grouping(False)  # cannot have pars
+
+        key = _AST_COERCE_TO_PATTERN_FUNCS.get(key_cls,
+                                               _coerce_to_expr_ast_ret_empty_str)(key, is_FST, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+
+        if key.__class__ is str:
+            return key
+
+        keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression
+
+        value = _AST_COERCE_TO_PATTERN_FUNCS.get(value.__class__,
+                                                 _coerce_to_expr_ast_ret_empty_str)(value, is_FST, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+
+        if value.__class__ is str:
+            return value
+
+        patterns.append(value)  # here we do want the actual pattern
+
+    if not is_FST:
+        return MatchMapping(keys=keys, patterns=patterns, rest=rest)
+
+    return MatchMapping(keys=keys, patterns=patterns, rest=rest, lineno=ast.lineno, col_offset=ast.col_offset,
+                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+# def _coerce_to_pattern_ast_Call(
+#     ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+# ) -> tuple[AST, bool, int]:
+#     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+
+
+
+
+
+
+
+#     patterns = []
+#     kwd_attrs = []
+#     kwd_patterns = []
+
+
+
+
+
+
+
+
+
+
+#     if not is_FST:
+#         return MatchClass(cls=cls, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns)
+
+#     return MatchClass(cls=cls, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
+#                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+
+
+
 
 
 
@@ -437,8 +546,7 @@ def _coerce_to_pattern_ast_seq(
             return 'found keyword'
 
         if is_FST:
-            if not fst_._fix_undelimited_seq(elts, '[]'):
-                fst_._maybe_add_singleton_comma(False, elts)  # we know it is not parenthesized
+            fst_._fix_undelimited_seq(elts, '[]', True)
 
     elif ast_cls in (_Assign_targets, _decorator_list, _comprehension_ifs):
         elts = getattr(ast, ast._fields[0])
@@ -450,8 +558,7 @@ def _coerce_to_pattern_ast_seq(
             if res.__class__ is str:
                 return res
 
-            if not fst_._fix_undelimited_seq(elts, '[]'):
-                fst_._maybe_add_singleton_comma(False, elts)
+            fst_._fix_undelimited_seq(elts, '[]', True)
 
     elif ast_cls in (arguments, _aliases, _withitems, _type_params):
         res = _AST_COERCE_TO_EXPR_FUNCS.get(ast_cls,
@@ -460,14 +567,13 @@ def _coerce_to_pattern_ast_seq(
         if res.__class__ is str:
             return res
 
-        ast, fix_coerced_tuple, _ = res
+        ast = res[0]
         elts = ast.elts
 
         if is_FST:
             fst_ = fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
-            if not fix_coerced_tuple or not fst_._fix_undelimited_seq(elts, '[]'):  # yes its a Tuple and we are adding brackets, deal with it
-                fst_._maybe_add_singleton_comma(False)
+            fst_._fix_undelimited_seq(elts, '[]', True)  # yes its a Tuple and we are adding brackets, deal with it
 
     else:
         raise RuntimeError('should not get here')  # pragma: no cover
@@ -495,6 +601,7 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     Expression:         _coerce_to_pattern_ast_Expression,
     Expr:               _coerce_to_pattern_ast_Expr,
     Constant:           _coerce_to_pattern_ast_Constant,
+    Attribute:          _coerce_to_pattern_ast_Attribute,
     Starred:            _coerce_to_pattern_ast_Starred,
     Name:               _coerce_to_pattern_ast_Name,
     arg:                _coerce_to_pattern_ast_arg,
@@ -503,8 +610,9 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     TypeVar:            _coerce_to_pattern_ast_TypeVar,
     TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
 
-    # Dict   -> MatchMapping
-    # Call   -> MatchClass
+    Dict:               _coerce_to_pattern_ast_Dict,
+    # Call:               _coerce_to_pattern_ast_Call,
+
     # BinOp  -> MatchOr
 
     Set:                _coerce_to_pattern_ast_seq,
