@@ -196,7 +196,8 @@ class cls:
         if not thing:
             (logger).info(  # just checking
                 f'not a {thing}',  # this is fine
-                extra=extra, correlation_id=CID # also this
+                extra=extra,       # also this
+                correlation_id=CID
             )
 ```
 
@@ -788,7 +789,8 @@ Processed:
 # with comment
 with (open(a) as f,
      lock1,  # first lock
-     func() as lock2, ctx() # this gets preserved
+     func() as lock2,  # this gets preserved
+     ctx()
      ):
     # body comment
     pass

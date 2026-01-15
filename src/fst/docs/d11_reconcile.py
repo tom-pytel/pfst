@@ -70,11 +70,13 @@ True
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'another_ast' # 3
+       g(), # 3
+       'another_ast'
       ]
   ast_assign = 3
   j = [pure_ast, # 2
-       g(), 'another_ast' # 3
+       g(), # 3
+       'another_ast'
       ]
 ```
 
@@ -88,7 +90,7 @@ You can add in `AST` nodes from other `FST` trees and they will retain their for
 original tree that was marked.
 
 >>> f.mark()
-<If ROOT 0,0..7,7>
+<If ROOT 0,0..9,7>
 
 >>> a = f.a
 >>> a.body.append(FST('l="formatting"  # stays').a)
@@ -101,11 +103,13 @@ original tree that was marked.
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'another_ast' # 3
+       g(), # 3
+       'another_ast'
       ]
   ast_assign = 3
   j = [pure_ast, # 2
-       g(), 'another_ast' # 3
+       g(), # 3
+       'another_ast'
       ]
   l="formatting"  # stays
   m = 'not formatted'

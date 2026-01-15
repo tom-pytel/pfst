@@ -37,6 +37,8 @@ _LocFunc = Callable[[list[AST], int], fstloc]  # location function for child wit
 
 _re_open_delim_or_space = re.compile(r'[({\s[]')  # this is a special set of delimiter openers which are considered to not need an aesthetic space after
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a special set of terminations which are considered to not need an aesthetic space before if a slice put ends with a non-space right before them
+_re_line_end_ws_comment = re.compile(r'\s*#.*$')     # search: line end maybe whitespace and definitely comment
+
 
 # _re_sep_starts = {  # match separator at start of fragment, needs to be a pattern to recognize 'and\b' and 'or\b' so they are not recognized as part of an identifier like 'origin'
 #     ',':   re.compile(r','),
@@ -680,23 +682,13 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     elts_indent_cached = ...  # cached value, ... means not present
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
-    if locfunc:
-        locfunc_maybe_key = locfunc  # locfunc will never be provided for a two-element sequence so no keys means loc_maybe_key is just normal locfunc
+    if locfunc:  # locfunc will never be provided for a two-element sequence so no keys means loc_maybe_key is just normal locfunc
+        locfunc_maybe_key = locfunc
+    elif body2 is body:  # if single body then don't waste time on a _loc_maybe_key()
+        locfunc = locfunc_maybe_key = lambda body, idx: body[idx].f.pars()
     else:
         locfunc = lambda body, idx: body[idx].f.pars()
         locfunc_maybe_key = lambda body, idx: self._loc_maybe_key(idx, True, body)
-
-    # maybe redent fst_ elements to match self element indentation (FOR FUTURE TWEAKS: this can be relocated belo call to _locs_slice())
-
-    if not is_del and len(fst_._lines) > 1 and allow_redent:
-        if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
-            ast_ = fst_.a
-            fst_indent = _get_element_indent(fst_,
-                                             getattr(ast_, fst_first.pfield.name if fst_first else 'keys'),
-                                             getattr(ast_, fst_last.pfield.name),
-                                             0, locfunc)
-
-            fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):], docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring  # fst_._dedent_lns(fst_indent or ''), fst_._indent_lns(elts_indent[len(self_indent):])
 
     # locations
 
@@ -780,6 +772,38 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         if re_line_end_cont_or_comment.search(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one (don't need to check pars for last line)
                                               0 if l > fst_last.end_ln else fst_last.end_col).group(1):
             put_lines.append(bistr(''))
+
+        # adjust line interface between target previous element and slice first element, specifically if there is a line comment on put start line AESTHETIC
+
+        if start and sep == ',':  # there is a previous element, only do this for comma-separated sequences (this last one is a quick HACK condition, TODO: figure out better)
+            if body2 is body:
+                prev_ln, prev_col, prev_end_ln, _ = locfunc(body, start - 1)
+            else:
+                prev_ln, prev_col, _, _ = locfunc_maybe_key(body, start - 1)
+                _, _, prev_end_ln, _ = locfunc(body2, start - 1)
+
+            if (put_ln == put_end_ln == prev_end_ln  # put starts and ends on previous element end line?
+                and (len(put_lines) > 1 or re_empty_line.match(lines[prev_ln], 0, prev_col))  # slice being put is not single non-newlined line or previous element starts its own line?
+                and (l := lines[put_end_ln]).startswith('#', put_end_col)  # comment at end of put line?
+                and bound_end_ln > put_end_ln  # and the edit is within bounds
+            ):
+                comment = _re_line_end_ws_comment.search(l, put_col).group()  # get whole comment including leading space because get trivia location ate that
+                put_end_ln += 1  # overwrite comment on put because we copy it into slice body
+                put_end_col = 0
+
+                fst_._put_src([comment, ''], 0, 0, not put_lines[0], 0, True)  # either overwrite first newline or insert before non-newlined body
+
+        # maybe redent fst_ elements to match self element indentation
+
+        if not is_del and len(fst_._lines) > 1 and allow_redent:
+            if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
+                ast_ = fst_.a
+                fst_indent = _get_element_indent(fst_,
+                                                getattr(ast_, fst_first.pfield.name if fst_first else 'keys'),
+                                                getattr(ast_, fst_last.pfield.name),
+                                                0, locfunc)
+
+                fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):], docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring  # fst_._dedent_lns(fst_indent or ''), fst_._indent_lns(elts_indent[len(self_indent):])
 
         # newlines and indentation
 

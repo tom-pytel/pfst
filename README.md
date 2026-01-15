@@ -116,7 +116,8 @@ class cls:
         if not thing:
             (logger).info(  # just checking
                 f'not a {thing}',  # this is fine
-                extra=extra, correlation_id=CID # also this
+                extra=extra,       # also this
+                correlation_id=CID
             )
 ```
 
