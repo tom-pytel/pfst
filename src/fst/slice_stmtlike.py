@@ -1095,23 +1095,23 @@ def _put_slice_stmtlike_old(
     else:
         if is_handlers := (field == 'handlers'):
             if len_slice == len_body and not isinstance(code, AST):  # if replacing all handlers then can change Try <-> TryStar according to what is being put (if we know, we don't know if code is AST)
-                is_trystar = None
+                star = None
             elif ast_cls is Try:
-                is_trystar = False
+                star = False
             elif ast_cls is TryStar:
-                is_trystar = True
+                star = True
             else:  # isinstance(ast, _ExceptHandlers)
-                is_trystar = body[0].f.is_except_star() if body else None
+                star = body[0].f.is_except_star() if body else None
 
-            put_fst = code_as__ExceptHandlers(code, root.parse_params, is_trystar=is_trystar)
+            put_fst = code_as__ExceptHandlers(code, root.parse_params, coerce=True, star=star)
             put_body = put_fst.a.handlers
 
         elif field == 'cases':
-            put_fst = code_as__match_cases(code, root.parse_params)
+            put_fst = code_as__match_cases(code, root.parse_params, coerce=True)
             put_body = put_fst.a.cases
 
         else:  # 'body', 'orelse', 'finalbody'
-            put_fst = code_as_stmts(code, root.parse_params)
+            put_fst = code_as_stmts(code, root.parse_params, coerce=True)
             put_body = put_fst.a.body
 
         # NOTE: we do not convert an empty put_body to put_fst=None because we may be putting just comments and/or empty space
@@ -1317,7 +1317,7 @@ def _put_slice_stmtlike_old(
 
         self._make_fst_tree(stack)
 
-        if is_handlers and is_trystar is None and ast_cls is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
+        if is_handlers and star is None and ast_cls is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
             is_except_star = body[0].f.is_except_star()
 
             if is_except_star != (ast_cls is TryStar):  # need to swap?

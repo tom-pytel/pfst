@@ -1324,23 +1324,23 @@ if 1:
 call(a)
 '''.strip(), 'exec')
 
-        h = code_as_stmts(f.copy())
+        h = code_as_stmts(f.copy(), coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.src)
+        h = code_as_stmts(f.src, coerce=True)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.a)
+        h = code_as_stmts(f.a, coerce=True)
         self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
 
         f0 = f.body[0].copy()
-        h = code_as_stmts(f0.a)
+        h = code_as_stmts(f0.a, coerce=True)
         self.assertEqual(ast_unparse(f0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
 
         f1 = f.body[1].copy()
-        h = code_as_stmts(f1.a)
+        h = code_as_stmts(f1.a, coerce=True)
         self.assertEqual(ast_unparse(f1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
 
@@ -1351,15 +1351,15 @@ call(a)
         self.assertRaises(SyntaxError, code_as_stmts, 'except Exception: pass')
 
         f = FST('f(a)', 'exec')
-        h = code_as_stmts(f.body[0].value.copy())
+        h = code_as_stmts(f.body[0].value.copy(), coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.src)
+        h = code_as_stmts(f.src, coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.a)
+        h = code_as_stmts(f.a, coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
@@ -1429,26 +1429,26 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = code_as__ExceptHandlers(g.copy())
+        h = code_as__ExceptHandlers(g.copy(), coerce=True)
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as__ExceptHandlers(g.src)
+        h = code_as__ExceptHandlers(g.src, coerce=True)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.handlers[0].copy()
-        h = code_as__ExceptHandlers(g0.a)
+        h = code_as__ExceptHandlers(g0.a, coerce=True)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.handlers[1].copy()
-        h = code_as__ExceptHandlers(g1.a)
+        h = code_as__ExceptHandlers(g1.a, coerce=True)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, code_as__ExceptHandlers, f.body[0].handlers[0])
 
-        self.assertEqual(0, len(code_as__ExceptHandlers('').handlers))  # make sure we can parse zero ExceptHandlers
+        self.assertEqual(0, len(code_as__ExceptHandlers('', coerce=True).handlers))  # make sure we can parse zero ExceptHandlers
 
         # match_cases
 
@@ -1475,26 +1475,26 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = code_as__match_cases(g.copy())
+        h = code_as__match_cases(g.copy(), coerce=True)
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as__match_cases(g.src)
+        h = code_as__match_cases(g.src, coerce=True)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.cases[0].copy()
-        h = code_as__match_cases(g0.a)
+        h = code_as__match_cases(g0.a, coerce=True)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.cases[1].copy()
-        h = code_as__match_cases(g1.a)
+        h = code_as__match_cases(g1.a, coerce=True)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, code_as__match_cases, f.body[0].cases[0])
 
-        self.assertEqual(0, len(code_as__match_cases('').cases))  # make sure we can parse zero match_cases
+        self.assertEqual(0, len(code_as__match_cases('', coerce=True).cases))  # make sure we can parse zero match_cases
 
         # boolop
 
@@ -1609,23 +1609,23 @@ if 1:
 call(a)
 '''.strip(), 'exec')
 
-        h = code_as_stmts(f.copy())
+        h = code_as_stmts(f.copy(), coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.src)
+        h = code_as_stmts(f.src, coerce=True)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.a)
+        h = code_as_stmts(f.a, coerce=True)
         self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
 
         f0 = f.body[0].copy()
-        h = code_as_stmts(f0.a)
+        h = code_as_stmts(f0.a, coerce=True)
         self.assertEqual(ast_unparse(f0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
 
         f1 = f.body[1].copy()
-        h = code_as_stmts(f1.a)
+        h = code_as_stmts(f1.a, coerce=True)
         self.assertEqual(ast_unparse(f1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
 
@@ -1635,15 +1635,15 @@ call(a)
         self.assertRaises(NodeError, code_as_stmts, g.a)
 
         f = FST('f(a)', 'exec')
-        h = code_as_stmts(f.body[0].value.copy())
+        h = code_as_stmts(f.body[0].value.copy(), coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.src)
+        h = code_as_stmts(f.src, coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = code_as_stmts(f.a)
+        h = code_as_stmts(f.a, coerce=True)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
@@ -1671,20 +1671,20 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = code_as__ExceptHandlers(g.copy())
+        h = code_as__ExceptHandlers(g.copy(), coerce=True)
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as__ExceptHandlers(g.src)
+        h = code_as__ExceptHandlers(g.src, coerce=True)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.handlers[0].copy()
-        h = code_as__ExceptHandlers(g0.a)
+        h = code_as__ExceptHandlers(g0.a, coerce=True)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.handlers[1].copy()
-        h = code_as__ExceptHandlers(g1.a)
+        h = code_as__ExceptHandlers(g1.a, coerce=True)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g1.a, locs=False, raise_=True))
 
@@ -1714,20 +1714,20 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = code_as__match_cases(g.copy())
+        h = code_as__match_cases(g.copy(), coerce=True)
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as__match_cases(g.src)
+        h = code_as__match_cases(g.src, coerce=True)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.cases[0].copy()
-        h = code_as__match_cases(g0.a)
+        h = code_as__match_cases(g0.a, coerce=True)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.cases[1].copy()
-        h = code_as__match_cases(g1.a)
+        h = code_as__match_cases(g1.a, coerce=True)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g1.a, locs=False, raise_=True))
 
@@ -1735,7 +1735,7 @@ match a:
 
         # special 'case' non-keyword
 
-        self.assertIsInstance(code_as__match_cases('case 1: pass').cases[0].a, match_case)
+        self.assertIsInstance(code_as__match_cases('case 1: pass', coerce=True).cases[0].a, match_case)
         self.assertRaises(SyntaxError, code_as__match_cases, 'case = 1')
         self.assertRaises(SyntaxError, code_as__match_cases, 'case.b = 1')
 
@@ -3699,13 +3699,13 @@ match a:
         self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('a'))
         self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('a').a)
 
-        self.assertEqual('except:\n    pass', code.code_as__ExceptHandlers(FST('except: pass', '_ExceptHandlers').a).src)
-        self.assertEqual('except:\n  pass', code.code_as__ExceptHandlers(['except:', '  pass']).src)
+        self.assertEqual('except:\n    pass', code.code_as__ExceptHandlers(FST('except: pass', '_ExceptHandlers', coerce=True).a).src)
+        self.assertEqual('except:\n  pass', code.code_as__ExceptHandlers(['except:', '  pass'], coerce=True).src)
 
         self.assertRaises(NodeError, code.code_as__match_cases, FST('a'))
         self.assertRaises(NodeError, code.code_as__match_cases, FST('a').a)
 
-        self.assertEqual('case _:\n  pass', code.code_as__match_cases(['case _:', '  pass']).src)
+        self.assertEqual('case _:\n  pass', code.code_as__match_cases(['case _:', '  pass'], coerce=True).src)
 
         self.assertRaises(NodeError, code.code_as_Tuple, FST('a'))
 

@@ -21,11 +21,15 @@ from .asttypes import (
     BitOr,
     Call,
     Constant,
+    Del,
     Dict,
     ExceptHandler,
     Expr,
     Expression,
+    FormattedValue,
+    FunctionType,
     Interactive,
+    Interpolation,
     List,
     Load,
     MatchAs,
@@ -45,6 +49,7 @@ from .asttypes import (
     Store,
     Try,
     TryStar,
+    TypeIgnore,
     TypeVar,
     TypeVarTuple,
     Tuple,
@@ -57,6 +62,7 @@ from .asttypes import (
     expr,
     keyword,
     match_case,
+    mod,
     operator,
     pattern,
     unaryop,
@@ -77,6 +83,7 @@ from .asttypes import (
 from .astutil import (
     constant,
     re_identifier,
+    FIELDS,
     OPCLS2STR,
     bistr,
     is_valid_identifier,
@@ -89,7 +96,9 @@ from .astutil import (
 from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re, next_delims
 
 from .parsex import (
+    _AST_TYPE_BY_NAME_OR_TYPE,
     _fixing_unparse,
+    Mode,
     ParseError,
     unparse,
     parse,
@@ -134,6 +143,7 @@ from .parsex import (
 __all__ = [
     'Code',
     'code_as_lines',
+    'code_as',
     'code_as_all',
     'code_as_stmts',
     'code_as__ExceptHandlers',
@@ -1668,6 +1678,68 @@ def _coerce_to_arguments_common(
 
 # ......................................................................................................................
 
+def _coerce_to_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    code_cls = code.__class__
+
+    if code_cls is fst.FST:
+        codea = code.a
+
+        if codea.__class__ is Expression:  # coerce Expression to expr
+            codea = codea.body
+
+            code._unmake_fst_parents(True)
+
+        if codea.__class__ in ASTS_LEAF_EXPR:  # coerce expr to Expr stmt
+            codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
+                         end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
+
+        codea_cls = codea.__class__
+
+        if codea_cls in ASTS_LEAF_STMT:
+            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
+
+        if codea_cls is Interactive:
+            code._unmake_fst_parents(True)
+
+            return fst.FST(Module(body=codea.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
+
+        raise NodeError(f'expecting zero or more stmts, got {codea_cls.__name__}, could not coerce', rawable=True)
+
+    elif code_cls in ASTS_LEAF_EXPR_STMT_OR_MOD:  # all these ASTs can be coerced into stmts
+        code = _fixing_unparse(code)
+        lines = code.split('\n')
+
+        return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
+
+    raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}, could not coerce')
+
+
+def _coerce_to__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    code_cls = code.__class__
+
+    if code_cls is fst.FST:
+        codea = code.a
+        codea_cls = codea.__class__
+
+        if codea_cls is match_case:
+            return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                        end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
+
+        raise NodeError(f'expecting _match_cases, got {codea_cls.__name__}, could not coerce')
+
+    elif code_cls is match_case:
+        code = _fixing_unparse(code)
+        lines = code.split('\n')
+
+        return fst.FST(parse__match_cases(code, parse_params), lines, None, parse_params=parse_params)
+
+    raise NodeError(f'expecting _match_cases, got {code.__class__.__name__}, could not coerce')
+
+
 def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """These are coerce functions which attempt to convert to a specific type of node. For the most part and unless
     explicitly permitted, they only guarantee attempted coercion from an `AST` of `FST`, not source, even if that might
@@ -1983,8 +2055,6 @@ def _coerce_to_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
     if ast_.__class__ is not Name:
         raise NodeError(f'cannot coerce {ast_.__class__.__name__} to arg, must be Name')
 
-    # if fst_.pars().n:  # args can't have pars
-    #     fst_._unparenthesize_grouping(False)
     fst_._unparenthesize_grouping(False)  # args can't have pars
 
     ast = arg(arg=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
@@ -2006,15 +2076,11 @@ def _coerce_to_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
         name = f'.{a.attr}{name}'  # we build it up like this because there can be whitespace, line continuations and newlines in the source
         a = a.value
 
-        # if a.f.pars().n:  # aliases can't have pars
-        #     a.f._unparenthesize_grouping(False)
         a.f._unparenthesize_grouping(False)  # aliases can't have pars
 
     if a.__class__ is not Name:
         raise NodeError(f'cannot coerce {a.__class__.__name__} to alias, must be Name or Attribute')
 
-    # if fst_.pars().n:  # aliases can't have pars
-    #     fst_._unparenthesize_grouping(False)
     fst_._unparenthesize_grouping(False)  # aliases can't have pars
 
     ast = alias(name=a.id + name, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
@@ -2071,8 +2137,6 @@ def _coerce_to__ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}
     if ast_.__class__ is not Name:
         raise NodeError(f'cannot coerce {ast_.__class__.__name__} to ImportFrom.names alias, must be Name')
 
-    # if fst_.pars().n:  # aliases can't have pars
-    #     fst_._unparenthesize_grouping(False)
     fst_._unparenthesize_grouping(False)  # aliases can't have pars
 
     ast = alias(name=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
@@ -2226,8 +2290,6 @@ def _coerce_to_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, s
     ast_ = fst_.a
 
     if ast_.__class__ is Name:
-        # if fst_.pars().n:  # type_params can't have pars
-        #     fst_._unparenthesize_grouping(False)
         fst_._unparenthesize_grouping(False)  # type_params can't have pars
 
         ast = TypeVar(name=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
@@ -2237,8 +2299,6 @@ def _coerce_to_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, s
         if (value := fst_.a.value).__class__ is not Name:
             raise NodeError(f'cannot coerce {value.__class__.__name__} to TypeVarTuple name, must be Name')
 
-        # if (valuef := value.f).pars().n:  # type_params can't have pars
-        #     valuef._unparenthesize_grouping(False)
         value.f._unparenthesize_grouping(False)  # type_params can't have pars
 
         ast = TypeVarTuple(name=value.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
@@ -2339,7 +2399,7 @@ def _code_as(
     code: Code,
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
-    ast_cls: type[AST] | tuple[type[AST], ...],
+    ast_type: type[AST] | tuple[type[AST], ...],
     sanitize: bool,
     coerce_to: CodeAs | Literal[False] | None = None,
     *,
@@ -2353,28 +2413,28 @@ def _code_as(
 
         codea = code.a
 
-        if not isinstance(codea, ast_cls):
+        if not isinstance(codea, ast_type):
             if not coerce_to:
-                raise NodeError(f'expecting {name or ast_cls.__name__}, got {codea.__class__.__name__}'
+                raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}'
                                 f'{", coerce disabled" if coerce_to is False else ""}', rawable=True)
 
             try:
                 return coerce_to(code, parse_params, sanitize=sanitize)
             except (NodeError, SyntaxError, NotImplementedError) as exc:
-                raise NodeError(f'expecting {name or ast_cls.__name__}, got {codea.__class__.__name__}, '
+                raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}, '
                                 'could not coerce', rawable=True) from exc
 
     else:
         if isinstance(code, AST):
-            if not isinstance(code, ast_cls):
+            if not isinstance(code, ast_type):
                 if not coerce_to:
-                    raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}'
+                    raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}'
                                     f'{", coerce disabled" if coerce_to is False else ""}', rawable=True)
 
                 try:
                     return coerce_to(code, parse_params, sanitize=sanitize)
                 except (NodeError, SyntaxError, NotImplementedError) as exc:
-                    raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}, '
+                    raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}, '
                                     'could not coerce', rawable=True) from exc
 
             src = unparse(code)
@@ -2401,12 +2461,12 @@ def _code_as(
                 try:
                     fst_ = coerce_to(code, parse_params, sanitize=sanitize)
                 except (NodeError, SyntaxError, NotImplementedError) as exc:
-                    raise ParseError(f'expecting {name or ast_cls.__name__}, could not parse or coerce') from exc
+                    raise ParseError(f'expecting {name or ast_type.__name__}, could not parse or coerce') from exc
 
                 return fst_
 
-            if not isinstance(ast, ast_cls):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
-                raise ParseError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}')  # pragma: no cover
+            if not isinstance(ast, ast_type):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
+                raise ParseError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}')  # pragma: no cover
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -2538,6 +2598,26 @@ def code_as_lines(code: Code | None) -> list[str]:
         return code._lines
 
 
+def code_as(
+    code: Code,
+    mode: Mode = 'all',
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+) -> fst.FST:
+    """Convert `code` to any specified parsable `FST` if possible. If `FST` passed matches then it is returned as
+    itself, otherwise may be coerced if that is allowed."""
+
+    if code_as := _CODE_AS_MODE_FUNCS.get(mode):
+        return code_as(code, parse_params, sanitize=sanitize, coerce=coerce)
+
+    if not isinstance(mode, type) or not issubclass(mode, AST):
+        raise ValueError(f'invalid mode {mode!r}')
+
+    raise NodeError(f'cannot get code as {mode.__name__}')
+
+
 def code_as_all(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
@@ -2574,49 +2654,8 @@ def code_as_stmts(
     **Note:** `sanitize` does nothing since the return is a `Module` which always includes the whole source.
     """
 
-    if isinstance(code, fst.FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        codea = code.a
-
-        if codea.__class__ is Expression:  # coerce Expression to expr
-            codea = codea.body
-
-            code._unmake_fst_parents(True)
-
-        if codea.__class__ in ASTS_LEAF_EXPR:  # coerce expr to Expr stmt
-            codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
-                         end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
-
-        codea_cls = codea.__class__
-
-        if codea_cls in ASTS_LEAF_STMT:
-            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
-
-        if codea_cls is Module:
-            return code
-
-        if codea_cls is Interactive:
-            code._unmake_fst_parents(True)
-
-            return fst.FST(Module(body=codea.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
-
-        raise NodeError(f'expecting zero or more stmts, got {codea_cls.__name__}', rawable=True)
-
-    if isinstance(code, AST):
-        if code.__class__ not in ASTS_LEAF_EXPR_STMT_OR_MOD:  # all these can be coerced into stmts
-            raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}', rawable=True)
-
-        code = _fixing_unparse(code)
-        lines = code.split('\n')
-
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
-
-    return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
+    return _code_as(code, parse_params, parse_stmts, Module, False, _coerce_to_stmts if coerce else False,
+                    name='zero or more stmts')
 
 
 def code_as__ExceptHandlers(
@@ -2625,14 +2664,14 @@ def code_as__ExceptHandlers(
     *,
     sanitize: bool = False,
     coerce: bool = False,
-    is_trystar: bool | None = None,
+    star: bool | None = None,
 ) -> fst.FST:
     """Convert `code` to zero or more `ExceptHandler`s and return in an `_ExceptHandlers` SPECIAL SLICE if possible.
 
     **Note:** `sanitize` does nothing since the return is an `_ExceptHandlers` which always includes the whole source.
 
     **Parameters:**
-    - `is_trystar`: What kind of except handler to accept:
+    - `star`: What kind of except handler to accept:
         - `False`: Plain only, no `except*`.
         - `True`: Star only, no plain.
         - `None`: Accept either as `FST` or source, if `AST` passed then default to plain.
@@ -2646,32 +2685,37 @@ def code_as__ExceptHandlers(
         codea_cls = codea.__class__
 
         if codea_cls is ExceptHandler:
+            if not coerce:
+                raise NodeError('expecting _ExceptHandlers, got ExceptHandler, coerce disabled')
+
             code = fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                            end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
         elif codea_cls is not _ExceptHandlers:
-            raise NodeError(f'expecting zero or more ExceptHandlers, got {codea_cls.__name__}')#, rawable=True)
+            raise NodeError(f'expecting _ExceptHandlers, got {codea_cls.__name__}, could not coerce')
 
         error = NodeError
 
     else:
-        error = ParseError
-
         if isinstance(code, AST):
             code_cls = code.__class__
 
             if code_cls is ExceptHandler:
+                if not coerce:
+                    raise NodeError('expecting _ExceptHandlers, got ExceptHandler, coerce disabled')
+
                 handlers = [code]
+
             elif code_cls is _ExceptHandlers:
                 handlers = code.handlers
             else:
-                raise NodeError(f'expecting zero or more ExceptHandlers, got {code_cls.__name__}')#, rawable=True)
+                raise NodeError(f'expecting _ExceptHandlers, got {code_cls.__name__}, could not coerce')
 
-            code = _fixing_unparse((TryStar if is_trystar else Try)(body=[Pass()],
-                                                                    handlers=handlers, orelse=[], finalbody=[]))
+            code = _fixing_unparse((TryStar if star else Try)(body=[Pass()],
+                                                              handlers=handlers, orelse=[], finalbody=[]))
             code = code[code.index('except'):]
             lines = code.split('\n')
-            is_trystar = None  # so that unnecessary check is not done below
+            star = None  # so that unnecessary check is not done below
 
         elif isinstance(code, list):
             code = '\n'.join(lines := code)
@@ -2680,9 +2724,12 @@ def code_as__ExceptHandlers(
 
         code = fst.FST(parse__ExceptHandlers(code, parse_params), lines, None, parse_params=parse_params)
 
-    if (handlers := code.a.handlers) and is_trystar is not None:
-        if is_trystar != handlers[0].f.is_except_star():
-            raise error("expecting star 'except*' handler, got plain 'except'" if is_trystar else
+        error = ParseError
+
+    if (handlers := code.a.handlers) and star is not None:
+        if star != handlers[0].f.is_except_star():
+            raise error("expecting star 'except*' handler, got plain 'except'"
+                        if star else
                         "expecting plain 'except' handler, got star 'except*'")
 
     return code
@@ -2696,35 +2743,8 @@ def code_as__match_cases(
     **Note:** `sanitize` does nothing since the return is a `_match_cases` which always includes the whole source.
     """
 
-    if isinstance(code, fst.FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        codea = code.a
-        codea_cls = codea.__class__
-
-        if codea_cls is match_case:
-            return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
-                                        end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
-
-        if codea_cls is not _match_cases:
-            raise NodeError(f'expecting zero or more match_cases, got {codea_cls.__name__}', rawable=True)
-
-        return code
-
-    if isinstance(code, AST):
-        if code.__class__ not in (match_case, _match_cases):
-            raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}', rawable=True)
-
-        code = unparse(code)
-        lines = code.split('\n')
-
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
-
-    return fst.FST(parse__match_cases(code, parse_params), lines, None, parse_params=parse_params)
+    return _code_as(code, parse_params, parse__match_cases, _match_cases, False,
+                    _coerce_to__match_cases if coerce else False)
 
 
 def code_as_expr(
@@ -3262,3 +3282,111 @@ def code_as__expr_arglikes(
             fst_._trim_delimiters()
 
     return fst_
+
+
+# ......................................................................................................................
+
+_CODE_AS_MODE_FUNCS = {
+    'all':                    code_as_all,
+    # 'strict':                 code_as_strict,
+    'exec':                   code_as_stmts,
+    'eval':                   None,  # why do we even support these at all?
+    'single':                 None,
+    'stmts':                  code_as_stmts,
+    # 'stmt':                   code_as_stmt,
+    # 'ExceptHandler':          code_as_ExceptHandler,
+    '_ExceptHandlers':        code_as__ExceptHandlers,
+    # 'match_case':             code_as_match_case,
+    '_match_cases':           code_as__match_cases,
+    'expr':                   code_as_expr,
+    'expr_all':               code_as_expr_all,
+    'expr_arglike':           code_as_expr_arglike,
+    'expr_slice':             code_as_expr_slice,
+    'Tuple_elt':              code_as_Tuple_elt,
+    'Tuple':                  code_as_Tuple,
+    '_Assign_targets':        code_as__Assign_targets,
+    '_decorator_list':        code_as__decorator_list,
+    '_arglike':               code_as__arglike,
+    '_arglikes':              code_as__arglikes,
+    'boolop':                 code_as_boolop,
+    'operator':               code_as_operator,
+    'unaryop':                code_as_unaryop,
+    'cmpop':                  code_as_cmpop,
+    'comprehension':          code_as_comprehension,
+    '_comprehensions':        code_as__comprehensions,
+    '_comprehension_ifs':     code_as__comprehension_ifs,
+    'arguments':              code_as_arguments,
+    'arguments_lambda':       code_as_arguments_lambda,
+    'arg':                    code_as_arg,
+    'keyword':                code_as_keyword,
+    'alias':                  code_as_alias,
+    '_aliases':               code_as__aliases,
+    'Import_name':            code_as_Import_name,
+    '_Import_names':          code_as__Import_names,
+    'ImportFrom_name':        code_as_ImportFrom_name,
+    '_ImportFrom_names':      code_as__ImportFrom_names,
+    'withitem':               code_as_withitem,
+    '_withitems':             code_as__withitems,
+    'pattern':                code_as_pattern,
+    'type_param':             code_as_type_param,
+    '_type_params':           code_as__type_params,
+    mod:                      code_as_stmts,
+    Expression:               None,
+    Interactive:              None,
+    # stmt:                     code_as_stmt,
+    # ExceptHandler:            code_as_ExceptHandler,
+    # match_case:               code_as_match_case,
+    expr:                     code_as_expr,
+    Starred:                  code_as_expr_arglike,
+    Slice:                    code_as_expr_slice,
+    Tuple:                    code_as_Tuple,
+    boolop:                   code_as_boolop,
+    operator:                 code_as_operator,
+    unaryop:                  code_as_unaryop,
+    cmpop:                    code_as_cmpop,
+    comprehension:            code_as_comprehension,
+    arguments:                code_as_arguments,
+    arg:                      code_as_arg,
+    keyword:                  code_as_keyword,
+    alias:                    code_as_alias,
+    withitem:                 code_as_withitem,
+    pattern:                  code_as_pattern,
+    type_param:               code_as_type_param,
+    # Load:                     lambda src, parse_params = {}: Load(),  # HACKS
+    # Store:                    lambda src, parse_params = {}: Store(),
+    # Del:                      lambda src, parse_params = {}: Del(),
+    FunctionType:             None,  # explicitly prohibit from parse
+    FormattedValue:           None,
+    Interpolation:            None,
+    TypeIgnore:               None,
+    _ExceptHandlers:          code_as__ExceptHandlers,
+    _match_cases:             code_as__match_cases,
+    _Assign_targets:          code_as__Assign_targets,
+    _decorator_list:          code_as__decorator_list,
+    _arglikes:                code_as__arglikes,
+    _comprehensions:          code_as__comprehensions,
+    _comprehension_ifs:       code_as__comprehension_ifs,
+    _aliases:                 code_as__aliases,
+    _withitems:               code_as__withitems,
+    _type_params:             code_as__type_params,
+    '_expr_arglikes':         code_as__expr_arglikes,
+}  # automatically filled out with all AST types and their names derived from these
+
+
+for ast_cls in FIELDS:  # fill out _CODE_AS_MODE_FUNCS with all supported AST types and their class names as parse modes
+    ast_name = ast_cls.__name__
+
+    _AST_TYPE_BY_NAME_OR_TYPE[ast_cls] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_cls
+
+    if (parse_func := _CODE_AS_MODE_FUNCS.get(ast_cls, ...)) is not ...:
+        if ast_name not in _CODE_AS_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)
+            _CODE_AS_MODE_FUNCS[ast_name] = parse_func
+
+    else:
+        base = ast_cls
+
+        while (base := base.__bases__[0]) is not AST:
+            if parse_func := _CODE_AS_MODE_FUNCS.get(base):
+                _CODE_AS_MODE_FUNCS[ast_cls] = _CODE_AS_MODE_FUNCS[ast_name] = parse_func  # base ASTs not in table will not have name in table either
+
+                break

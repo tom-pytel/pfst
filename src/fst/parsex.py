@@ -957,7 +957,7 @@ def parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'. @private"""
 
-    return _ast_parse(src, {**parse_params, 'mode': 'exec'})
+    return _ast_parse(src, parse_params)
 
 
 def parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -975,7 +975,7 @@ def parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _ast_parse(src, {**parse_params, 'mode': 'single'})
 
 
-def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module() but I want the IDE context coloring
+def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module()
     """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically). @private"""
 
     return _ast_parse(src, parse_params)
