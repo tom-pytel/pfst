@@ -325,6 +325,207 @@ MatchClass - ROOT 0,0..0,11
      .name 'c'
 <MatchClass ROOT 0,0..0,11>
 
+>>> cd.code_as_pattern(FST('(a | b | c)'), coerce=True).dump('N').verify().src
+0:  a | b | c
+MatchOr - ROOT 0,1..0,10
+  .patterns[3]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+0:      b
+   1] MatchAs - 0,5..0,6
+     .name 'b'
+0:          c
+   2] MatchAs - 0,9..0,10
+     .name 'c'
+'(a | b | c)'
+
+>>> cd.code_as_pattern(FST('(a | b | c)').a, coerce=True).dump('N').verify().src
+0: a | b | c
+MatchOr - ROOT 0,0..0,9
+  .patterns[3]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:     b
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+0:         c
+   2] MatchAs - 0,8..0,9
+     .name 'c'
+'a | b | c'
+
+>>> cd.code_as_pattern(FST('(a | b) | c'), coerce=True).dump('N').verify().src
+0: (a | b) | c
+MatchOr - ROOT 0,0..0,11
+  .patterns[2]
+0:  a | b
+   0] MatchOr - 0,1..0,6
+     .patterns[2]
+0:  a
+      0] MatchAs - 0,1..0,2
+        .name 'a'
+0:      b
+      1] MatchAs - 0,5..0,6
+        .name 'b'
+0:           c
+   1] MatchAs - 0,10..0,11
+     .name 'c'
+'(a | b) | c'
+
+>>> cd.code_as_pattern(FST('(a | b) | c').a, coerce=True).dump('N').verify().src
+0: a | b | c
+MatchOr - ROOT 0,0..0,9
+  .patterns[3]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:     b
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+0:         c
+   2] MatchAs - 0,8..0,9
+     .name 'c'
+'a | b | c'
+
+>>> cd.code_as_pattern(FST('a | (b | c)'), coerce=True).dump('N').verify().src
+0: a | (b | c)
+MatchOr - ROOT 0,0..0,11
+  .patterns[2]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:      b | c
+   1] MatchOr - 0,5..0,10
+     .patterns[2]
+0:      b
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+0:          c
+      1] MatchAs - 0,9..0,10
+        .name 'c'
+'a | (b | c)'
+
+>>> cd.code_as_pattern(FST('a | (b | c)').a, coerce=True).dump('N').verify().src
+0: a | (b | c)
+MatchOr - ROOT 0,0..0,11
+  .patterns[2]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:      b | c
+   1] MatchOr - 0,5..0,10
+     .patterns[2]
+0:      b
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+0:          c
+      1] MatchAs - 0,9..0,10
+        .name 'c'
+'a | (b | c)'
+
+>>> cd.code_as_pattern(FST('a | (b | c) | d'), coerce=True).dump('N').verify().src
+0: a | (b | c) | d
+MatchOr - ROOT 0,0..0,15
+  .patterns[3]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:      b | c
+   1] MatchOr - 0,5..0,10
+     .patterns[2]
+0:      b
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+0:          c
+      1] MatchAs - 0,9..0,10
+        .name 'c'
+0:               d
+   2] MatchAs - 0,14..0,15
+     .name 'd'
+'a | (b | c) | d'
+
+>>> cd.code_as_pattern(FST('a | (b | c) | d').a, coerce=True).dump('N').verify().src
+0: a | (b | c) | d
+MatchOr - ROOT 0,0..0,15
+  .patterns[3]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:      b | c
+   1] MatchOr - 0,5..0,10
+     .patterns[2]
+0:      b
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+0:          c
+      1] MatchAs - 0,9..0,10
+        .name 'c'
+0:               d
+   2] MatchAs - 0,14..0,15
+     .name 'd'
+'a | (b | c) | d'
+
+>>> cd.code_as_pattern(FST('a | (b | (c | d) | e) | f'), coerce=True).dump('N').verify().src
+0: a | (b | (c | d) | e) | f
+MatchOr - ROOT 0,0..0,25
+  .patterns[3]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:      b | (c | d) | e
+   1] MatchOr - 0,5..0,20
+     .patterns[3]
+0:      b
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+0:           c | d
+      1] MatchOr - 0,10..0,15
+        .patterns[2]
+0:           c
+         0] MatchAs - 0,10..0,11
+           .name 'c'
+0:               d
+         1] MatchAs - 0,14..0,15
+           .name 'd'
+0:                    e
+      2] MatchAs - 0,19..0,20
+        .name 'e'
+0:                         f
+   2] MatchAs - 0,24..0,25
+     .name 'f'
+'a | (b | (c | d) | e) | f'
+
+>>> cd.code_as_pattern(FST('a | (b | (c | d) | e) | f').a, coerce=True).dump('N').verify().src
+0: a | (b | (c | d) | e) | f
+MatchOr - ROOT 0,0..0,25
+  .patterns[3]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:      b | (c | d) | e
+   1] MatchOr - 0,5..0,20
+     .patterns[3]
+0:      b
+      0] MatchAs - 0,5..0,6
+        .name 'b'
+0:           c | d
+      1] MatchOr - 0,10..0,15
+        .patterns[2]
+0:           c
+         0] MatchAs - 0,10..0,11
+           .name 'c'
+0:               d
+         1] MatchAs - 0,14..0,15
+           .name 'd'
+0:                    e
+      2] MatchAs - 0,19..0,20
+        .name 'e'
+0:                         f
+   2] MatchAs - 0,24..0,25
+     .name 'f'
+'a | (b | (c | d) | e) | f'
+
 >>> cd.code_as_pattern(FST(' a\n, ', 'Tuple'), coerce=True).dump('N').verify().src
 0:  a
 1: ,

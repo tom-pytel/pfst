@@ -534,6 +534,48 @@ def _coerce_to_pattern_ast_Call(
     return MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
+def _coerce_to_pattern_ast_BinOp(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+
+    if ast.op.__class__ is not BitOr:
+        return f"op must be '|' BitOr, not {ast.op.__class__.__name__}"
+
+    right = ast.right
+
+    if right.__class__ is Starred:
+        return 'cannot have Starred'
+
+    pat_right = _AST_COERCE_TO_PATTERN_FUNCS.get(right.__class__,
+                                                 _coerce_to_expr_ast_ret_empty_str)(right, is_FST, parse_params, kwargs)
+
+    if pat_right.__class__ is str:
+        return pat_right
+
+    left = ast.left
+
+    if left.__class__ is Starred:
+        return 'cannot have Starred'
+
+    pat_left = _AST_COERCE_TO_PATTERN_FUNCS.get(left.__class__,
+                                                _coerce_to_expr_ast_ret_empty_str)(left, is_FST, parse_params, kwargs)
+    pat_left_cls = pat_left.__class__
+
+    if pat_left_cls is str:
+        return pat_left
+
+    if pat_left_cls is MatchOr and not (is_FST and left.f.pars().n):
+        patterns = [*pat_left.patterns, pat_right]
+    else:
+        patterns = [pat_left, pat_right]
+
+    if not is_FST:
+        return MatchOr(patterns=patterns)
+
+    return MatchOr(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                   end_col_offset=ast.end_col_offset)
+
 def _coerce_to_pattern_ast_seq(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
@@ -617,33 +659,30 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     Interactive:        _coerce_to_pattern_ast_stmtmod,
     Expression:         _coerce_to_pattern_ast_Expression,
     Expr:               _coerce_to_pattern_ast_Expr,
+    _Assign_targets:    _coerce_to_pattern_ast_seq,
+    _decorator_list:    _coerce_to_pattern_ast_seq,
+    _arglikes:          _coerce_to_pattern_ast_seq,
+    BinOp:              _coerce_to_pattern_ast_BinOp,  # MatchOr (only from BitOr)
+    Dict:               _coerce_to_pattern_ast_Dict,  # MatchMapping
+    Set:                _coerce_to_pattern_ast_seq,
+    Call:               _coerce_to_pattern_ast_Call,  # MatchClass
     Constant:           _coerce_to_pattern_ast_Constant,
     Attribute:          _coerce_to_pattern_ast_Attribute,
     Starred:            _coerce_to_pattern_ast_Starred,
     Name:               _coerce_to_pattern_ast_Name,
-    arg:                _coerce_to_pattern_ast_arg,
-    alias:              _coerce_to_pattern_ast_alias,
-    withitem:           _coerce_to_pattern_ast_withitem,
-    TypeVar:            _coerce_to_pattern_ast_TypeVar,
-    TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
-
-    Dict:               _coerce_to_pattern_ast_Dict,
-    Call:               _coerce_to_pattern_ast_Call,
-    # BinOp:              _coerce_to_pattern_ast_BinOp,  # BitOr -> MatchOr
-
-    Set:                _coerce_to_pattern_ast_seq,
     List:               _coerce_to_pattern_ast_seq,
     Tuple:              _coerce_to_pattern_ast_seq,
-    _Assign_targets:    _coerce_to_pattern_ast_seq,
-    _decorator_list:    _coerce_to_pattern_ast_seq,
-    _arglikes:          _coerce_to_pattern_ast_seq,
     _comprehension_ifs: _coerce_to_pattern_ast_seq,
     arguments:          _coerce_to_pattern_ast_seq,
+    arg:                _coerce_to_pattern_ast_arg,
+    alias:              _coerce_to_pattern_ast_alias,
     _aliases:           _coerce_to_pattern_ast_seq,
+    withitem:           _coerce_to_pattern_ast_withitem,
     _withitems:         _coerce_to_pattern_ast_seq,
+    TypeVar:            _coerce_to_pattern_ast_TypeVar,
+    TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
     _type_params:       _coerce_to_pattern_ast_seq,
 }
-
 
 # ......................................................................................................................
 

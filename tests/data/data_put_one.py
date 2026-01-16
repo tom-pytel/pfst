@@ -19234,6 +19234,211 @@ MatchAs - ROOT 0,0..0,11
   .name 'b'
 '''),
 
+('', None, None, 'pattern', {'_src': False, 'raw': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''(a | b)'''),
+r'''a | b as y''', r'''
+MatchAs - ROOT 0,0..0,10
+  .pattern MatchOr - 0,0..0,5
+    .patterns[2]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchAs - 0,4..0,5
+       .name 'b'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False, 'raw': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''(a | b | c)'''),
+r'''a | b | c as y''', r'''
+MatchAs - ROOT 0,0..0,14
+  .pattern MatchOr - 0,0..0,9
+    .patterns[3]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchAs - 0,4..0,5
+       .name 'b'
+     2] MatchAs - 0,8..0,9
+       .name 'c'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False, '_same': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''(a | b) | c'''),
+r'''(a | b) | c as y''',
+r'''a | b | c as y''', r'''
+MatchAs - ROOT 0,0..0,16
+  .pattern MatchOr - 0,0..0,11
+    .patterns[2]
+     0] MatchOr - 0,1..0,6
+       .patterns[2]
+        0] MatchAs - 0,1..0,2
+          .name 'a'
+        1] MatchAs - 0,5..0,6
+          .name 'b'
+     1] MatchAs - 0,10..0,11
+       .name 'c'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''a | (b | c)'''),
+r'''a | (b | c) as y''', r'''
+MatchAs - ROOT 0,0..0,16
+  .pattern MatchOr - 0,0..0,11
+    .patterns[2]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchOr - 0,5..0,10
+       .patterns[2]
+        0] MatchAs - 0,5..0,6
+          .name 'b'
+        1] MatchAs - 0,9..0,10
+          .name 'c'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False, '_same': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''(a | (b | c)) | d'''),
+r'''(a | (b | c)) | d as y''',
+r'''a | (b | c) | d as y''', r'''
+MatchAs - ROOT 0,0..0,22
+  .pattern MatchOr - 0,0..0,17
+    .patterns[2]
+     0] MatchOr - 0,1..0,12
+       .patterns[2]
+        0] MatchAs - 0,1..0,2
+          .name 'a'
+        1] MatchOr - 0,6..0,11
+          .patterns[2]
+           0] MatchAs - 0,6..0,7
+             .name 'b'
+           1] MatchAs - 0,10..0,11
+             .name 'c'
+     1] MatchAs - 0,16..0,17
+       .name 'd'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False, '_same': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''a | ((b | c) | d)'''),
+r'''a | ((b | c) | d) as y''',
+r'''a | (b | c | d) as y''', r'''
+MatchAs - ROOT 0,0..0,22
+  .pattern MatchOr - 0,0..0,17
+    .patterns[2]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchOr - 0,5..0,16
+       .patterns[2]
+        0] MatchOr - 0,6..0,11
+          .patterns[2]
+           0] MatchAs - 0,6..0,7
+             .name 'b'
+           1] MatchAs - 0,10..0,11
+             .name 'c'
+        1] MatchAs - 0,15..0,16
+          .name 'd'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False, '_same': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''(a | b | c) | d'''),
+r'''(a | b | c) | d as y''',
+r'''a | b | c | d as y''', r'''
+MatchAs - ROOT 0,0..0,20
+  .pattern MatchOr - 0,0..0,15
+    .patterns[2]
+     0] MatchOr - 0,1..0,10
+       .patterns[3]
+        0] MatchAs - 0,1..0,2
+          .name 'a'
+        1] MatchAs - 0,5..0,6
+          .name 'b'
+        2] MatchAs - 0,9..0,10
+          .name 'c'
+     1] MatchAs - 0,14..0,15
+       .name 'd'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''a | (b | c | d)'''),
+r'''a | (b | c | d) as y''', r'''
+MatchAs - ROOT 0,0..0,20
+  .pattern MatchOr - 0,0..0,15
+    .patterns[2]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchOr - 0,5..0,14
+       .patterns[3]
+        0] MatchAs - 0,5..0,6
+          .name 'b'
+        1] MatchAs - 0,9..0,10
+          .name 'c'
+        2] MatchAs - 0,13..0,14
+          .name 'd'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''a | (b | c) | d'''),
+r'''a | (b | c) | d as y''', r'''
+MatchAs - ROOT 0,0..0,20
+  .pattern MatchOr - 0,0..0,15
+    .patterns[3]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchOr - 0,5..0,10
+       .patterns[2]
+        0] MatchAs - 0,5..0,6
+          .name 'b'
+        1] MatchAs - 0,9..0,10
+          .name 'c'
+     2] MatchAs - 0,14..0,15
+       .name 'd'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''a | (b | (c | d) | e) | f'''),
+r'''a | (b | (c | d) | e) | f as y''', r'''
+MatchAs - ROOT 0,0..0,30
+  .pattern MatchOr - 0,0..0,25
+    .patterns[3]
+     0] MatchAs - 0,0..0,1
+       .name 'a'
+     1] MatchOr - 0,5..0,20
+       .patterns[3]
+        0] MatchAs - 0,5..0,6
+          .name 'b'
+        1] MatchOr - 0,10..0,15
+          .patterns[2]
+           0] MatchAs - 0,10..0,11
+             .name 'c'
+           1] MatchAs - 0,14..0,15
+             .name 'd'
+        2] MatchAs - 0,19..0,20
+          .name 'e'
+     2] MatchAs - 0,24..0,25
+       .name 'f'
+  .name 'y'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''x as y'''), ('BinOp',
+r'''(a & b)'''),
+r'''**NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
 ('', None, None, 'pattern', {'_src': False}, ('MatchAs',
 r'''a as b'''), ('arg',
 r'''x'''),
