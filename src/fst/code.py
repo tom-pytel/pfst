@@ -65,6 +65,7 @@ from .asttypes import (
     mod,
     operator,
     pattern,
+    stmt,
     unaryop,
     withitem,
     type_param,
@@ -102,8 +103,11 @@ from .parsex import (
     ParseError,
     unparse,
     parse,
+    parse_stmt,
     parse_stmts,
+    parse_ExceptHandler,
     parse__ExceptHandlers,
+    parse_match_case,
     parse__match_cases,
     parse_expr,
     parse_expr_all,
@@ -1678,6 +1682,26 @@ def _coerce_to_arguments_common(
 
 # ......................................................................................................................
 
+def _coerce_to_stmt(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+
+    lines = fst_._lines
+    ln, col, end_ln, end_col = fst_.pars()
+
+    if col:  # Expr MUST start at column 0
+        fst_._put_src(None, ln, 0, ln, col, True)
+
+        if end_ln == ln:
+            end_col -= col
+
+    ast = Expr(value=None, lineno=ln + 1, col_offset=0, end_lineno=end_ln + 1,
+               end_col_offset=lines[end_ln].c2b(end_col))
+
+    return fst.FST(ast, lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'value', True, False)
+
+
 def _coerce_to_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
@@ -1714,6 +1738,14 @@ def _coerce_to_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
         return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
 
     raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}, could not coerce')
+
+
+def _coerce_to_match_case(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    codea = getattr(code, 'a', code)
+
+    raise NodeError(f'expecting match_case, got {codea.__class__.__name__}, could not coerce')  # if got here then is not match_case and we do not coerce down from _match_cases, so automatically fail
 
 
 def _coerce_to__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -2646,6 +2678,14 @@ def code_as_all(
     return code._sanitize() if sanitize else code
 
 
+def code_as_stmt(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    """Convert `code` to a single more `stmt` `FST` if possible."""
+
+    return _code_as(code, parse_params, parse_stmt, stmt, sanitize, _coerce_to_stmt if coerce else False)
+
+
 def code_as_stmts(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
@@ -2654,8 +2694,67 @@ def code_as_stmts(
     **Note:** `sanitize` does nothing since the return is a `Module` which always includes the whole source.
     """
 
-    return _code_as(code, parse_params, parse_stmts, Module, False, _coerce_to_stmts if coerce else False,
+    return _code_as(code, parse_params, parse_stmts, Module, sanitize, _coerce_to_stmts if coerce else False,
                     name='zero or more stmts')
+
+
+def code_as_ExceptHandler(
+    code: Code,
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+    star: bool | None = None,
+) -> fst.FST:
+    """Convert `code` a single `ExceptHandler`s if possible.
+
+    **Note:** `coerce` does nothing since nothing can coerce to a single `ExceptHandler`.
+
+    **Parameters:**
+    - `star`: What kind of except handler to accept:
+        - `False`: Plain only, no `except*`.
+        - `True`: Star only, no plain.
+        - `None`: Accept either as `FST` or source, if `AST` passed then default to plain.
+    """
+
+    if isinstance(code, fst.FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
+
+        if code.a.__class__ is not ExceptHandler:
+            raise NodeError(f'expecting ExceptHandler, got {code.a.__class__}')
+
+        error = NodeError
+
+    else:
+        if isinstance(code, AST):
+            code_cls = code.__class__
+
+            if code_cls is not ExceptHandler:
+                raise NodeError(f'expecting ExceptHandler, got {code.__class__}')
+
+            code = _fixing_unparse((TryStar if star else Try)(body=[Pass()],
+                                                              handlers=[code], orelse=[], finalbody=[]))
+            code = code[code.index('except'):]
+            lines = code.split('\n')
+            star = None  # so that unnecessary check is not done below
+
+        elif isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:  # str
+            lines = code.split('\n')
+
+        code = fst.FST(parse_ExceptHandler(code, parse_params), lines, None, parse_params=parse_params)
+
+        error = ParseError
+
+    if star is not None:
+        if star != code.is_except_star():
+            raise error("expecting star 'except*' handler, got plain 'except'"
+                        if star else
+                        "expecting plain 'except' handler, got star 'except*'")
+
+    return code
 
 
 def code_as__ExceptHandlers(
@@ -2671,7 +2770,7 @@ def code_as__ExceptHandlers(
     **Note:** `sanitize` does nothing since the return is an `_ExceptHandlers` which always includes the whole source.
 
     **Parameters:**
-    - `star`: What kind of except handler to accept:
+    - `star`: What kind of except handlers to accept:
         - `False`: Plain only, no `except*`.
         - `True`: Star only, no plain.
         - `None`: Accept either as `FST` or source, if `AST` passed then default to plain.
@@ -2728,11 +2827,23 @@ def code_as__ExceptHandlers(
 
     if (handlers := code.a.handlers) and star is not None:
         if star != handlers[0].f.is_except_star():
-            raise error("expecting star 'except*' handler, got plain 'except'"
+            raise error("expecting star 'except*' handler(s), got plain 'except'"
                         if star else
-                        "expecting plain 'except' handler, got star 'except*'")
+                        "expecting plain 'except' handler(s), got star 'except*'")
 
     return code
+
+
+def code_as_match_case(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    """Convert `code` to a single `match_case` if possible.
+
+    **Note:** `coerce` does nothing since nothing can coerce to a single `match_case`.
+    """
+
+    return _code_as(code, parse_params, parse_match_case, match_case, sanitize,
+                    _coerce_to_match_case if coerce else False)
 
 
 def code_as__match_cases(
@@ -2743,7 +2854,7 @@ def code_as__match_cases(
     **Note:** `sanitize` does nothing since the return is a `_match_cases` which always includes the whole source.
     """
 
-    return _code_as(code, parse_params, parse__match_cases, _match_cases, False,
+    return _code_as(code, parse_params, parse__match_cases, _match_cases, sanitize,
                     _coerce_to__match_cases if coerce else False)
 
 
@@ -3292,11 +3403,11 @@ _CODE_AS_MODE_FUNCS = {
     'exec':                   code_as_stmts,
     'eval':                   None,  # why do we even support these at all?
     'single':                 None,
+    'stmt':                   code_as_stmt,
     'stmts':                  code_as_stmts,
-    # 'stmt':                   code_as_stmt,
-    # 'ExceptHandler':          code_as_ExceptHandler,
+    'ExceptHandler':          code_as_ExceptHandler,
     '_ExceptHandlers':        code_as__ExceptHandlers,
-    # 'match_case':             code_as_match_case,
+    'match_case':             code_as_match_case,
     '_match_cases':           code_as__match_cases,
     'expr':                   code_as_expr,
     'expr_all':               code_as_expr_all,
@@ -3333,9 +3444,9 @@ _CODE_AS_MODE_FUNCS = {
     mod:                      code_as_stmts,
     Expression:               None,
     Interactive:              None,
-    # stmt:                     code_as_stmt,
-    # ExceptHandler:            code_as_ExceptHandler,
-    # match_case:               code_as_match_case,
+    stmt:                     code_as_stmt,
+    ExceptHandler:            code_as_ExceptHandler,
+    match_case:               code_as_match_case,
     expr:                     code_as_expr,
     Starred:                  code_as_expr_arglike,
     Slice:                    code_as_expr_slice,

@@ -17881,7 +17881,7 @@ try: pass
 except Exception: pass
 '''), (None,
 r'''except* Exception: pass'''),
-r'''**ParseError("expecting plain 'except' handler, got star 'except*'")**'''),
+r'''**ParseError("expecting plain 'except' handler(s), got star 'except*'")**'''),
 
 ('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
 try: pass
@@ -17954,7 +17954,7 @@ try: pass
 except* Exception: pass
 '''), (None,
 r'''except Exception: pass'''),
-r'''**ParseError("expecting star 'except*' handler, got plain 'except'")**'''),
+r'''**ParseError("expecting star 'except*' handler(s), got plain 'except'")**'''),
 
 ('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
 try: pass
@@ -18025,7 +18025,7 @@ Module - ROOT 0,0..1,22
 ('', 1, 1, None, {'_ver': 11}, ('_ExceptHandlers',
 r'''except Exception: pass'''), (None,
 r'''except* Exception: pass'''),
-r'''**ParseError("expecting plain 'except' handler, got star 'except*'")**'''),
+r'''**ParseError("expecting plain 'except' handler(s), got star 'except*'")**'''),
 
 ('', 0, 1, None, {'_ver': 11}, ('_ExceptHandlers',
 r'''except Exception: pass'''), (None,
@@ -18045,7 +18045,7 @@ _ExceptHandlers - ROOT 0,0..0,23
 ('', 1, 1, None, {'_ver': 11}, ('_ExceptHandlers',
 r'''except* Exception: pass'''), (None,
 r'''except Exception: pass'''),
-r'''**ParseError("expecting star 'except*' handler, got plain 'except'")**'''),
+r'''**ParseError("expecting star 'except*' handler(s), got plain 'except'")**'''),
 
 ('', 0, 1, None, {'_ver': 11}, ('_ExceptHandlers',
 r'''except* Exception: pass'''), (None,

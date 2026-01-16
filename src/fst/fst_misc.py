@@ -2005,33 +2005,41 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
     is_last_line_comment = False
 
     if not (whole and self.is_root):
-        ln, col, end_ln, end_col = self.loc
-        to_col = end_col
+        ln, col, end_ln, end_to_col = self.loc
+        end_from_col = end_to_col
 
     else:  # need to make sure last line doesn't end with a comment or line continuation
-        ln, col, end_ln, end_col = self.whole_loc
-        _, _, self_end_ln, search_col = self.loc
-        to_col = end_col
+        ln, col, end_ln, end_to_col = self.whole_loc
+        end_from_col = end_to_col
 
-        if ((m := re_line_end_ws_cont_or_comment.search(lines[end_ln], 0 if self_end_ln < end_ln else search_col))
+        if not (last_child := self.last_child('loc')):
+            search_col = 0
+
+        else:
+            _, _, child_end_ln, search_col = last_child.loc
+
+            if child_end_ln < end_ln:
+                search_col = 0
+
+        if ((m := re_line_end_ws_cont_or_comment.search(lines[end_ln], search_col))
             and (g := m.group(1))
         ):
             if g.startswith('#'):
                 is_last_line_comment = True
-            else:  # g.startswith('\\'), is a line continuation, so we delete it and any preceding whitespace after end_col
-                end_col = m.start(0)
+            else:  # g.startswith('\\'), is a line continuation, so we delete it and any preceding whitespace after end_from_col
+                end_from_col = m.start(0)
 
     if is_last_line_comment:
-        self._put_src(['', delims[1]], end_ln, end_col, end_ln, to_col, True, False, self)
+        self._put_src(['', delims[1]], end_ln, end_from_col, end_ln, end_to_col, True, False, self)
 
         ast.end_lineno = end_ln + 2  # yes this can change
         ast.end_col_offset = 1  # can't count on this being set by put_src() because end of `whole` could be past end of sequence
 
     else:
-        self._put_src([delims[1]], end_ln, end_col, end_ln, to_col, True, False, self)
+        self._put_src([delims[1]], end_ln, end_from_col, end_ln, end_to_col, True, False, self)
 
         ast.end_lineno = end_ln + 1
-        ast.end_col_offset = lines[end_ln].c2b(end_col + 1)
+        ast.end_col_offset = lines[end_ln].c2b(end_from_col + 1)
 
     self._offset(*self._put_src([delims[0]], ln, col, ln, col, False, False, self), self_=False)
 

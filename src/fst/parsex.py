@@ -975,12 +975,6 @@ def parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _ast_parse(src, {**parse_params, 'mode': 'single'})
 
 
-def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module()
-    """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically). @private"""
-
-    return _ast_parse(src, parse_params)
-
-
 def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `stmt` and return as itself. @private"""
 
@@ -990,6 +984,12 @@ def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         raise ParseError('expecting single stmt')
 
     return body[0]
+
+
+def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module()
+    """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically). @private"""
+
+    return _ast_parse(src, parse_params)
 
 
 def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -2123,8 +2123,8 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'exec':                   parse_Module,
     'eval':                   parse_Expression,
     'single':                 parse_Interactive,
-    'stmts':                  parse_stmts,
     'stmt':                   parse_stmt,
+    'stmts':                  parse_stmts,
     'ExceptHandler':          parse_ExceptHandler,
     '_ExceptHandlers':        parse__ExceptHandlers,
     'match_case':             parse_match_case,

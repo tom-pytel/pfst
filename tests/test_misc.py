@@ -1330,6 +1330,11 @@ d  # comment3''', f.src)
         f._delimit_node(delims='[]')
         self.assertEqual('[a, # 0\nb, # 1\n# 2\n]', f.src)
 
+        # misc tricky
+
+        (f := FST('#0\n if x\nif y\n#1', '_comprehension_ifs'))._delimit_node()
+        self.assertEqual('(#0\n if x\nif y\n#1\n)', f.src)
+
     def test__undelimit_node(self):
         # Tuple
 
