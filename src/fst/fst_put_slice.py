@@ -3321,6 +3321,8 @@ def _put_slice(
 
     if code is self.root:  # don't allow own root to be put to self
         raise ValueError('circular put detected')
+    if code.__class__ is fst.FST and not code.a:
+        raise ValueError('this FST has already been consumed or deleted')
 
     if options.get('to') is not None:
         raise ValueError("cannot put slice with 'to' option")

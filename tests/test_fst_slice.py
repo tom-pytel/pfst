@@ -1573,6 +1573,10 @@ def func():
         f = FST('if (x, y)', '_comprehension_ifs').ifs[0].unpar(True).root  # force a normally impossible case
         self.assertEqual('@(x, y)', cd.code_as__decorator_list(f, sanitize=True, coerce=True).src)  # do sanitize at the same time
 
+        f = FST('x, y')
+        f.a = None
+        self.assertRaises(ValueError, FST('a, b').put_slice, f)  # this FST has already been consumed or deleted
+
     def test_slice_special(self):
         # Global.names preserves trailing commas and locations
 

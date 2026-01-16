@@ -3395,6 +3395,10 @@ f'd{t"e{f=!s:0.1f<1}"=}'
         from fst.fst_get_one import _get_one_default
         self.assertRaises(ValueError, _get_one_default, FST('i'), None, 'ctx', False, {})
 
+        f = FST('x')
+        f.a = None
+        self.assertRaises(ValueError, FST('a = b').put, f)  # this FST has already been consumed or deleted
+
     def test_unmake_on_put_one_and_other_misc(self):
         srcs_and_modes_and_fields = [
             (('a', 'Module'), [('body', 'x', 'Expr')]),

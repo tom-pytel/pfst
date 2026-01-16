@@ -798,7 +798,7 @@ class FST:
             the source. If `False` then this is a shortcut for `FST.fromsrc()` or `FST.fromast()`.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
-                allows to copy parse parameters and already determined default indentation.
+                allows to copy parse parameters and already determined default indentation. Does not have to be root.
             - `parse_params`: A `dict` with values for `filename`, `type_comments` and `feature_version` which will be
                 used for any `AST` reparse done on this tree. Only valid when creating a root node.
             - `indent`: Indentation string to use as default indentation. If not provided and not gotten from `from_`

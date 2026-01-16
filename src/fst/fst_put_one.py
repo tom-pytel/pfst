@@ -2900,6 +2900,8 @@ def _put_one(
 
     if code is self.root:  # don't allow own root to be put to self
         raise ValueError('circular put detected')
+    if code.__class__ is fst.FST and not code.a:
+        raise ValueError('this FST has already been consumed or deleted')
 
     ast = self.a
     child = getattr(self.a, field, None)
@@ -2909,6 +2911,8 @@ def _put_one(
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementlikes and virtual fields (which have handler=None)
         start_at = 0
+
+        # TODO; convert this logic to own func
 
         if not (is_virtual_field := field.startswith('_')):
             len_ = len(child)
