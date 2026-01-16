@@ -44657,6 +44657,11 @@ if 1: pass
 r'''**DEL**''',
 r'''''',
 r'''Module - ROOT 0,0..0,0'''),
+
+('', 0, 1, None, {'_src': False}, (None,
+r'''import a'''), ('_aliases',
+r'''*'''),
+r'''**NodeError("'*' star alias not allowed")**'''),
 ],
 
 }

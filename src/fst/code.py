@@ -522,8 +522,8 @@ def _coerce_to_pattern_ast_Call(
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(value.__class__,
                                                _coerce_to_expr_ast_ret_empty_str)(value, is_FST, parse_params, kwargs)
 
-        if value.__class__ is str:
-            return value
+        if pat.__class__ is str:
+            return pat
 
         kwd_attrs.append(arg)
         kwd_patterns.append(pat)
@@ -573,7 +573,7 @@ def _coerce_to_pattern_ast_seq(
                                                 _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)  # just need to convert their special syntax to comma-delimited sequence
 
             if res.__class__ is str:
-                return res
+                return res  # pragma: no cover  # not currently returned for these types
 
             fst_._fix_undelimited_seq(elts, '[]', True)
 
@@ -1689,7 +1689,7 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
 
         fst_._maybe_add_line_continuations()  # location is already whole so don't need to pass whole=True
 
-        if sanitize:
+        if sanitize:  # won't really do much after adding line continuations but we must do that first to make sure locations are good
             fst_ = fst_._sanitize()
 
         _fix__slice_last_line_continuation(fst_, lines, end_ln, end_col)
@@ -1750,7 +1750,7 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
                     end_ln, end_col, _, _ = f.pars()
 
                 else:
-                    if is_pard is False:
+                    if is_pard is False:  # this doesn't really make sense to happen, but cover it anyway
                         f._delimit_node()
 
                     end_ln, end_col, _, _ = f.loc
@@ -2285,8 +2285,8 @@ def _coerce_to__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, 
 
     fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize, coerce=True)
 
-    if fst_.is_parenthesized_tuple() is False:  # can't have unparenthesized tuple as sole element, will look like multiple elements
-        fst_._delimit_node()
+    if fst_.is_parenthesized_tuple() is False:  # this shouldn't ever happen and can't even be forced since a Tuple is already the slice type for _expr_arglikes, but juuust in case
+        fst_._delimit_node()  # pragma: no cover
 
     ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                 end_col_offset=ls[-1].lenbytes)

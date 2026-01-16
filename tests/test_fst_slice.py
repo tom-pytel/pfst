@@ -7,6 +7,7 @@ from ast import parse as ast_parse
 from random import seed, shuffle
 
 from fst import *
+from fst import code as cd
 
 from fst.asttypes import ASTS_LEAF_STMTLIKE
 from fst.astutil import compare_asts
@@ -1564,6 +1565,13 @@ def func():
 
         self.assertRaises(ValueError, FST('a = 1', 'exec').put_slice, 'x', 0, 1, pep8space=3)
         self.assertRaises(ValueError, FST('a = 1', 'exec').put_slice, 'x', 0, 0, pep8space=3)
+
+        self.assertRaises(NodeError, cd.code_as_expr, FST('a | b', 'MatchOr').put_slice(None), coerce=True)  # empty MatchOr coerce
+
+        self.assertEqual('\\\nx = \\\n', cd.code_as__Assign_targets(FST('\nif\nx\n', '_comprehension_ifs'), sanitize=True, coerce=True).src)  # doesn't do much but force this sanitize path
+
+        f = FST('if (x, y)', '_comprehension_ifs').ifs[0].unpar(True).root  # force a normally impossible case
+        self.assertEqual('@(x, y)', cd.code_as__decorator_list(f, sanitize=True, coerce=True).src)  # do sanitize at the same time
 
     def test_slice_special(self):
         # Global.names preserves trailing commas and locations

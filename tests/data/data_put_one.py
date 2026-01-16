@@ -15827,6 +15827,11 @@ TemplateStr - ROOT 0,0..0,12
 'coerce_to_expr': [  # ................................................................................
 
 ('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('Return',
+r'''return fail'''),
+r'''**NodeError('expecting expression (standard), got Return, could not coerce')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('Module',
 r'''x'''),
 r'''i = x''', r'''
@@ -15973,6 +15978,41 @@ Assign - ROOT 0,0..4,2
      1] Name 'c' Load - 3,0..3,1
     .ctx Load
 '''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''x, /'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has position-only arguments')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''x=1'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''**x'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''*x: int'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, vararg has annotation')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''*, x'''),
+r'''**NodeError("expecting expression (standard), got arguments, could not coerce, has empty vararg '*'")**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('arguments',
+r'''x: int'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, arg has annotation')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('arguments',
+r'''*x, y: int'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, kwonlyarg has annotation')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('arg',
@@ -16409,6 +16449,16 @@ Assign - ROOT 0,0..9,1
        .value Name 'c' Load - 7,1..7,2
 '''),
 
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchClass',
+r'''cls(a as b)'''),
+r'''**NodeError('expecting expression (standard), got MatchClass, could not coerce, has pattern')**'''),
+
+('', None, None, 'value', {'_src': False}, (None,
+r'''i = v'''), ('MatchClass',
+r'''cls(a=b as c)'''),
+r'''**NodeError('expecting expression (standard), got MatchClass, could not coerce, has pattern')**'''),
+
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('MatchOr',
 r'''a | b'''),
@@ -16593,6 +16643,16 @@ Assign - ROOT 0,0..0,29
     .op BitOr - 0,26..0,27
     .right Name 'f' Load - 0,28..0,29
 '''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''(a as b) | c'''),
+r'''**NodeError('expecting expression (standard), got MatchOr, could not coerce, has pattern')**'''),
+
+('', None, None, 'value', {'_src': False, 'raw': False}, (None,
+r'''i = v'''), ('MatchOr',
+r'''a | (b as c)'''),
+r'''**NodeError('expecting expression (standard), got MatchOr, could not coerce, has pattern')**'''),
 
 ('', None, None, 'value', {'_src': False}, (None,
 r'''i = v'''), ('pattern',
@@ -17375,6 +17435,25 @@ FunctionDef - ROOT 0,0..1,9
        .arg 'y'
   .body[1]
    0] Pass - 1,5..1,9
+'''),
+
+('', None, None, 'args', {'_src': False}, ('FunctionDef',
+r'''def f(): pass'''), ('Tuple',
+r'''*a, *b'''),
+r'''**NodeError('expecting arguments, got Tuple, could not coerce')**'''),
+
+('', None, None, 'args', {'_src': False}, ('Lambda',
+r'''lambda: None'''), ('Tuple',
+r'''a, b'''),
+r'''lambda a, b: None''', r'''
+Lambda - ROOT 0,0..0,17
+  .args arguments - 0,7..0,11
+    .args[2]
+     0] arg - 0,7..0,8
+       .arg 'a'
+     1] arg - 0,10..0,11
+       .arg 'b'
+  .body Constant None - 0,13..0,17
 '''),
 
 ('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
@@ -18744,6 +18823,11 @@ r'''**NodeError('expecting withitem, got Slice, could not coerce')**'''),
 'coerce_to_pattern': [  # ................................................................................
 
 ('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Return',
+r'''return fail'''),
+r'''**NodeError('expecting pattern, got Return, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
 r'''a as b'''), ('Module',
 r'''x'''),
 r'''x as b''', r'''
@@ -18841,6 +18925,155 @@ MatchAs - ROOT 0,0..0,6
 '''),
 
 ('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''...'''),
+r'''**NodeError('expecting pattern, got Constant, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''1'''),
+r'''1 as b''', r'''
+MatchAs - ROOT 0,0..0,6
+  .pattern MatchValue - 0,0..0,1
+    .value Constant 1 - 0,0..0,1
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''1.0'''),
+r'''1.0 as b''', r'''
+MatchAs - ROOT 0,0..0,8
+  .pattern MatchValue - 0,0..0,3
+    .value Constant 1.0 - 0,0..0,3
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''1j'''),
+r'''1j as b''', r'''
+MatchAs - ROOT 0,0..0,7
+  .pattern MatchValue - 0,0..0,2
+    .value Constant 1j - 0,0..0,2
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''"st" "r"'''),
+r'''"st" "r" as b''',
+r''''str' as b''', r'''
+MatchAs - ROOT 0,0..0,13
+  .pattern MatchValue - 0,0..0,8
+    .value Constant 'str' - 0,0..0,8
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''b"byt" b"es"'''),
+r'''b"byt" b"es" as b''',
+r'''b'bytes' as b''', r'''
+MatchAs - ROOT 0,0..0,17
+  .pattern MatchValue - 0,0..0,12
+    .value Constant b'bytes' - 0,0..0,12
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''True'''),
+r'''True as b''', r'''
+MatchAs - ROOT 0,0..0,9
+  .pattern MatchSingleton True - 0,0..0,4
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''False'''),
+r'''False as b''', r'''
+MatchAs - ROOT 0,0..0,10
+  .pattern MatchSingleton False - 0,0..0,5
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''None'''),
+r'''None as b''', r'''
+MatchAs - ROOT 0,0..0,9
+  .pattern MatchSingleton None - 0,0..0,4
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Constant',
+r'''False'''),
+r'''False as b''', r'''
+MatchAs - ROOT 0,0..0,10
+  .pattern MatchSingleton False - 0,0..0,5
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Attribute',
+r'''a.b.c'''),
+r'''a.b.c as b''', r'''
+MatchAs - ROOT 0,0..0,10
+  .pattern MatchValue - 0,0..0,5
+    .value Attribute - 0,0..0,5
+      .value Attribute - 0,0..0,3
+        .value Name 'a' Load - 0,0..0,1
+        .attr 'b'
+        .ctx Load
+      .attr 'c'
+      .ctx Load
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Attribute',
+r'''f().b.c'''),
+r'''**NodeError('expecting pattern, got Attribute, could not coerce')**'''),
+
+('', 0, None, 'patterns', {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('Starred',
+r'''*a'''),
+r'''[*a]''', r'''
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+   0] MatchStar - 0,1..0,3
+     .name 'a'
+'''),
+
+('', 0, None, 'patterns', {'_src': False, 'raw': False}, ('MatchSequence',
+r'''[a]'''), ('Starred',
+r'''*(a)'''),
+r'''[*a]''', r'''
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+   0] MatchStar - 0,1..0,3
+     .name 'a'
+'''),
+
+('', 0, None, 'patterns', {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('Starred',
+r'''*a.b'''),
+r'''**NodeError('expecting pattern, got Starred, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False, 'raw': False}, ('MatchAs',
+r'''a as b'''), ('Name',
+r'''(x)'''),
+r'''x as b''', r'''
+MatchAs - ROOT 0,0..0,6
+  .pattern MatchAs - 0,0..0,1
+    .name 'x'
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
 r'''a as b'''), ('Dict',
 r'''{}'''),
 r'''{} as b''', r'''
@@ -18893,6 +19126,26 @@ MatchAs - ROOT 0,0..1,22
 '''),
 
 ('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Dict',
+r'''{**f()}'''),
+r'''**NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Dict',
+r'''{x: y}'''),
+r'''**NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Dict',
+r'''{f().y: z}'''),
+r'''**NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Dict',
+r'''{1: f().x}'''),
+r'''**NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
 r'''a as b'''), ('Call',
 r'''call()'''),
 r'''call() as b''', r'''
@@ -18938,6 +19191,46 @@ MatchAs - ROOT 0,0..6,10
        .patterns[1]
         0] MatchAs - 6,1..6,2
           .name 'e'
+  .name 'b'
+'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''f().b()'''),
+r'''**NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''f()()'''),
+r'''**NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''call(*s)'''),
+r'''**NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''call(f().b)'''),
+r'''**NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''call(**kw)'''),
+r'''**NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''call(k=f().b)'''),
+r'''**NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('Call',
+r'''call()'''),
+r'''call() as b''', r'''
+MatchAs - ROOT 0,0..0,11
+  .pattern MatchClass - 0,0..0,6
+    .cls Name 'call' Load - 0,0..0,4
   .name 'b'
 '''),
 
@@ -19235,6 +19528,11 @@ r'''**NodeError('expecting pattern, got _type_params, could not coerce')**'''),
 r'''a as b'''), ('_type_params',
 r'''T = int, *U'''),
 r'''**NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+
+('', None, None, 'pattern', {'_src': False}, ('MatchAs',
+r'''a as b'''), ('_comprehension_ifs',
+r'''if f().b'''),
+r'''**NodeError('expecting pattern, got _comprehension_ifs, could not coerce')**'''),
 ],
 
 'coerce_to_type_param': [  # ................................................................................
