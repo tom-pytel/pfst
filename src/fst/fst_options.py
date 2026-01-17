@@ -12,7 +12,7 @@ from typing import Any, Iterator, Mapping
 
 from . import fst
 
-__all__ = ['check_options', 'only_options']
+__all__ = ['check_options', 'filter_options']
 
 
 class _ThreadOptions(threading.local):
@@ -53,7 +53,7 @@ def check_options(options: Mapping[str, Any]) -> None:
             raise ValueError(f'invalid option {o!r}')
 
 
-def only_options(options: Mapping[str, Any]) -> dict[str, Any]:
+def filter_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Copy just actual options from `options` and return."""
 
     return {o: v for o, v in options.items() if o in _ALL_OPTIONS}

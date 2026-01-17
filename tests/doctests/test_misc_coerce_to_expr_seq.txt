@@ -1,0 +1,467 @@
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+
+>>> cd.code_as_stmt(FST('#0\n if x\nif y\n#1'), sanitize=True, coerce=True).dump('N').verify()
+0: (#0
+1:  x,
+2: y
+3: #1
+4: )
+Expr - ROOT 0,0..4,1
+  .value Tuple - 0,0..4,1
+    .elts[2]
+1:  x
+     0] Name 'x' Load - 1,1..1,2
+2: y
+     1] Name 'y' Load - 2,0..2,1
+    .ctx Load
+<Expr ROOT 0,0..4,1>
+
+>>> cd.code_as_stmt(FST('#0\n ( \ni\n ) #1'), sanitize=True, coerce=True).dump('N').verify()
+0: ( <*END*
+1: i
+2:  )
+Expr - ROOT 0,0..2,2
+  .value Name 'i' Load - 1,0..1,1
+<Expr ROOT 0,0..2,2>
+
+>>> cd.code_as__ExceptHandlers(FST('#0\nexcept: pass\n#1'), sanitize=True, coerce=True).dump('N').verify()
+_ExceptHandlers - ROOT 0,0..2,2
+  .handlers[1]
+0: #0
+1: except:
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+1:         pass
+      0] Pass - 1,8..1,12
+2: #1
+<_ExceptHandlers ROOT 0,0..2,2>
+
+>>> cd.code_as__match_cases(FST('#0\ncase _: pass\n#1', 'match_case'), sanitize=True, coerce=True).dump('N').verify()
+_match_cases - ROOT 0,0..2,2
+  .cases[1]
+0: #0
+1: case _:
+   0] match_case - 1,0..1,12
+1:      _
+     .pattern MatchAs - 1,5..1,6
+     .body[1]
+1:         pass
+      0] Pass - 1,8..1,12
+2: #1
+<_match_cases ROOT 0,0..2,2>
+
+>>> FST('a: int', arg).as_(arguments).dump('N').verify()
+0: a: int
+arguments - ROOT 0,0..0,6
+  .args[1]
+0: a: int
+   0] arg - 0,0..0,6
+     .arg 'a'
+0:    int
+     .annotation Name 'int' Load - 0,3..0,6
+<arguments ROOT 0,0..0,6>
+
+>>> FST('', arguments)
+<arguments ROOT>
+
+>>> f = FST('a = b')
+>>> g = f.as_(stmt)
+>>> g is f
+True
+
+>>> f = FST('a + b')
+>>> g = f.as_(expr)
+>>> g is f
+True
+
+>>> f = FST('a + b')
+>>> g = cd.code_as_expr(f)
+>>> g is f
+True
+
+>>> f = FST('a, b', arguments)
+>>> g = f.as_(arguments)
+>>> g is f
+True
+
+>>> f = FST('i = a + b').value
+>>> g = f.as_(expr)
+>>> g is f
+False
+
+>>> FST('[1, 2, 3]').as_('_decorator_list').dump('N')
+0: @1
+1: @2
+2: @3
+_decorator_list - ROOT 0,0..2,2
+  .decorator_list[3]
+0:  1
+   0] Constant 1 - 0,1..0,2
+1:  2
+   1] Constant 2 - 1,1..1,2
+2:  3
+   2] Constant 3 - 2,1..2,2
+<_decorator_list ROOT 0,0..2,2>
+
+>>> FST('{1, 2, 3}').as_('_decorator_list').dump('N')
+0: @1
+1: @2
+2: @3
+_decorator_list - ROOT 0,0..2,2
+  .decorator_list[3]
+0:  1
+   0] Constant 1 - 0,1..0,2
+1:  2
+   1] Constant 2 - 1,1..1,2
+2:  3
+   2] Constant 3 - 2,1..2,2
+<_decorator_list ROOT 0,0..2,2>
+
+>>> FST('[a, b]').as_(Tuple).dump('N').verify()
+0: (a, b)
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+<Tuple ROOT 0,0..0,6>
+
+>>> FST('[a]').as_(Tuple).dump('N').verify()
+0: (a,)
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+<Tuple ROOT 0,0..0,4>
+
+>>> FST('[]').as_(Tuple).dump('N').verify()
+0: ()
+Tuple - ROOT 0,0..0,2
+  .ctx Load
+<Tuple ROOT 0,0..0,2>
+
+>>> FST('{a, b}').as_(Tuple).dump('N').verify()
+0: (a, b)
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+<Tuple ROOT 0,0..0,6>
+
+>>> FST('{a}').as_(Tuple).dump('N').verify()
+0: (a,)
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+<Tuple ROOT 0,0..0,4>
+
+>>> FST('[a, b]', 'Expr').as_(Tuple).src
+'(a, b)'
+
+>>> FST('[a, b]').as_(Tuple).src
+'(a, b)'
+
+>>> cd.code_as__Assign_targets(FST('(a, b)', 'Expr'), coerce=True).dump('N').verify()
+0: (a, b)
+_Assign_targets - ROOT 0,0..0,6
+  .targets[1]
+0: (a, b)
+   0] Tuple - 0,0..0,6
+     .elts[2]
+0:  a
+      0] Name 'a' Store - 0,1..0,2
+0:     b
+      1] Name 'b' Store - 0,4..0,5
+     .ctx Store
+<_Assign_targets ROOT 0,0..0,6>
+
+>>> # cd.code_as__Assign_targets(FST('{a, b}', 'Expr'), coerce=True).dump('N').verify()
+
+>>> cd.code_as_Tuple(FST('*not a,', '_arglikes'), coerce=True).src
+'*(not a),'
+
+>>> cd.code_as__Assign_targets(FST('[a, b]', 'Expr'), coerce=True).dump('N').verify()
+0: [a, b]
+_Assign_targets - ROOT 0,0..0,6
+  .targets[1]
+0: [a, b]
+   0] List - 0,0..0,6
+     .elts[2]
+0:  a
+      0] Name 'a' Store - 0,1..0,2
+0:     b
+      1] Name 'b' Store - 0,4..0,5
+     .ctx Store
+<_Assign_targets ROOT 0,0..0,6>
+
+>>> cd.code_as__Assign_targets(FST('[a, b]'), coerce=True).dump('N').verify()
+0: a = b =
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+0: a
+   0] Name 'a' Store - 0,0..0,1
+0:     b
+   1] Name 'b' Store - 0,4..0,5
+<_Assign_targets ROOT 0,0..0,7>
+
+>>> cd.code_as_Tuple(FST('[a, b]', 'MatchSequence'), coerce=True).dump('N')
+0: (a, b)
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+<Tuple ROOT 0,0..0,6>
+
+>>> FST('a, b', 'MatchSequence').as_(Tuple).src
+'a, b'
+
+>>> FST('(a, b)', 'MatchSequence').as_(Tuple).src
+'(a, b)'
+
+>>> FST('[a, b]', 'MatchSequence').as_(Tuple).src
+'(a, b)'
+
+>>> FST('[a, b]', 'Expr').as_(Tuple).src
+'(a, b)'
+
+>>> FST('[a, b]', 'Expr').as_(List).dump('N').verify().src
+0: [a, b]
+List - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'[a, b]'
+
+>>> FST('{a, b}', 'Expr').as_(List).dump('N').verify().src
+0: [a, b]
+List - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'[a, b]'
+
+>>> FST('@x\n@y').as_(List).dump('N').verify().src
+0: [x,
+1: y]
+List - ROOT 0,0..1,2
+  .elts[2]
+0:  x
+   0] Name 'x' Load - 0,1..0,2
+1: y
+   1] Name 'y' Load - 1,0..1,1
+  .ctx Load
+'[x,\ny]'
+
+>>> cd.code_as_List(FST('[a, b]', 'MatchSequence'), coerce=True).dump('N')
+0: [a, b]
+List - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+<List ROOT 0,0..0,6>
+
+>>> cd.code_as_List(FST('[a, b]', 'Expr'), coerce=True).dump('N')
+0: [a, b]
+List - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+<List ROOT 0,0..0,6>
+
+>>> FST('[a, b]', 'MatchSequence').as_(Set).src
+'{a, b}'
+
+>>> cd.code_as_Set(FST('[a, b]', 'Expr'), coerce=True).dump('N')
+0: {a, b}
+Set - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+<Set ROOT 0,0..0,6>
+
+>>> FST('[a, b]', 'Expr').as_(Set).dump('N').verify().src
+0: {a, b}
+Set - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+'{a, b}'
+
+>>> FST('{a, b}', 'Expr').as_('_decorator_list').dump('N').verify().src
+0: @{a, b}
+_decorator_list - ROOT 0,0..0,7
+  .decorator_list[1]
+0:  {a, b}
+   0] Set - 0,1..0,7
+     .elts[2]
+0:   a
+      0] Name 'a' Load - 0,2..0,3
+0:      b
+      1] Name 'b' Load - 0,5..0,6
+'@{a, b}'
+
+>>> FST('{a, b}').as_('_decorator_list').dump('N').verify().src
+0: @a
+1: @b
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+1:  b
+   1] Name 'b' Load - 1,1..1,2
+'@a\n@b'
+
+>>> FST('[]').as_(Set).dump('N')
+0: {}
+Set - ROOT 0,0..0,2
+<Set ROOT 0,0..0,2>
+
+>>> FST('call(a, b, c)').put_slice(cd.code_as__expr_arglikes(FST('*not a, *b or c', '_arglikes'), coerce=True), 'args').dump('N').verify()
+0: call(*not a, *b or c)
+Call - ROOT 0,0..0,21
+0: call
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+0:      *not a
+   0] Starred - 0,5..0,11
+0:       not a
+     .value UnaryOp - 0,6..0,11
+0:       not
+       .op Not - 0,6..0,9
+0:           a
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
+0:              *b or c
+   1] Starred - 0,13..0,20
+0:               b or c
+     .value BoolOp - 0,14..0,20
+       .op Or
+       .values[2]
+0:               b
+        0] Name 'b' Load - 0,14..0,15
+0:                    c
+        1] Name 'c' Load - 0,19..0,20
+     .ctx Load
+<Call ROOT 0,0..0,21>
+
+>>> FST('call(a, b, c)').put_slice(cd.code_as_expr(FST('*not a, *b or c', '_arglikes'), coerce=True), 'args', pars_arglike=False).dump('N').verify()
+0: call(*(not a), *(b or c))
+Call - ROOT 0,0..0,25
+0: call
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+0:      *(not a)
+   0] Starred - 0,5..0,13
+0:        not a
+     .value UnaryOp - 0,7..0,12
+0:        not
+       .op Not - 0,7..0,10
+0:            a
+       .operand Name 'a' Load - 0,11..0,12
+     .ctx Load
+0:                *(b or c)
+   1] Starred - 0,15..0,24
+0:                  b or c
+     .value BoolOp - 0,17..0,23
+       .op Or
+       .values[2]
+0:                  b
+        0] Name 'b' Load - 0,17..0,18
+0:                       c
+        1] Name 'c' Load - 0,22..0,23
+     .ctx Load
+<Call ROOT 0,0..0,25>
+
+>>> cd.code_as_expr(FST('*not a, *b or c', '_arglikes'), dict(pars_arglike=False), coerce=True).dump('N')
+0: *not a, *b or c
+Tuple - ROOT 0,0..0,15
+  .elts[2]
+0: *not a
+   0] Starred - 0,0..0,6
+0:  not a
+     .value UnaryOp - 0,1..0,6
+0:  not
+       .op Not - 0,1..0,4
+0:      a
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+0:         *b or c
+   1] Starred - 0,8..0,15
+0:          b or c
+     .value BoolOp - 0,9..0,15
+       .op Or
+       .values[2]
+0:          b
+        0] Name 'b' Load - 0,9..0,10
+0:               c
+        1] Name 'c' Load - 0,14..0,15
+     .ctx Load
+  .ctx Load
+<Tuple ROOT 0,0..0,15>
+
+>>> cd.code_as_Set(FST('[]'), dict(norm=False, norm_get='call'), coerce=True).dump('N').src
+0: set()
+Call - ROOT 0,0..0,5
+0: set
+  .func Name 'set' Load - 0,0..0,3
+'set()'
+
+>>> cd.code_as_List(FST('a, b', Tuple), coerce=True).dump('N')
+0: [a, b]
+List - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+<List ROOT 0,0..0,6>
+
+>>> cd.code_as_Set(FST('a, b', Tuple), coerce=True).dump('N')
+0: {a, b}
+Set - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+<Set ROOT 0,0..0,6>
+
+>>> cd.code_as_Set(FST('a, b', Tuple).a, coerce=True).dump('N')
+0: {a, b}
+Set - ROOT 0,0..0,6
+  .elts[2]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+0:     b
+   1] Name 'b' Load - 0,4..0,5
+<Set ROOT 0,0..0,6>

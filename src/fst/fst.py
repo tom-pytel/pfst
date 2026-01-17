@@ -146,7 +146,7 @@ from .reconcile import Reconcile
 from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
 from .fst_traverse import next_bound, prev_bound
-from .fst_options import check_options
+from .fst_options import check_options, filter_options
 
 
 __all__ = [
@@ -709,7 +709,7 @@ class FST:
     def __new__(
         cls,
         src_or_ast_or_fst: FST | AST | builtins.str | list[builtins.str] = '',
-        mode: FST | list[builtins.str] | Mode | None = None,
+        mode: FST | list[builtins.str] | Mode | Literal[False] | None = None,
         pfield: astfield | Literal[False] | None = False,
         /,
         **kwargs,
@@ -722,13 +722,29 @@ class FST:
         This will create an `FST` from either an `AST` or source code in the form of a string or list of lines, or it
         will attempt to coerce an existing `FST` to the type you want specified by `mode`.
 
-        TODO: update for `as_()`
+        **WARNING!** In normal usage, you should always leave `pfield` at its default as anything else will select other
+        modes of opertation for this constructor.
 
         **Parameters:**
         - `src_or_ast_or_fst`: Source code or an `AST` or `FST` node.
-        - `mode`: See `fst.parsex.Mode`. If this is `None` then if `src_or_ast_or_fst` is an `AST` the mode defaults to
-            the type of the `AST`. Otherwise if the `src_or_ast_or_fst` is actual source code then `mode` used is
+        - `mode`: See `fst.parsex.Mode`. Has the following meanings when the `src_or_ast_or_fst` parameter is:
+            - `src`: If `mode` is `None` then we will try to guess what the source is and parse it accordingly. If
+                specified then will attempt to parse this type and if fails then the exception will propagate. If
+                guessing then it may take more than one attempt so it is always better to specify what you expect to get
+                if you know it.
+            - `AST`: If `mode` this is `None` then the mode defaults to the type of the `AST`, which will always succeed
+                in generating valid source unless the `AST` itself is in an invalid state (like an empty `Set`).
+                Anything else you pass here will be passed on as the `mode` to `fromast()`, but it really doesn't make
+                much sense to specify anything else (except if you will be splitting hairs on what TYPE of expression
+                you want to allow).
+            - `FST`: `mode` should be specified and will be the type of node you want to coerce the `FST` you pass in
+                to. If you leave it at default then you will just get either the same `FST` or a copy of it.
             `'all'` to allow parsing anything.
+        - `kwargs`: `options` if coercing from another `FST` or extra parameters, mostly for internal use documented
+            below. One extra parameter relevant to this use case is:
+            - `copy`: If coercing from another `FST`, this parameter is what will be passed to `as_()`. It defaults to
+                `True` here so that `FST(other_FST)` works in the same way as `list(other_list)`, meaning it doesn't
+                alter the source object, which is the opposite of what the default for the `as_()` function is.
 
         **Examples:**
 
@@ -782,6 +798,40 @@ class FST:
         >>> print(_.src)
         1:2:3
 
+        Coercion is straightforward.
+
+        >>> f = FST('expr')
+        >>> f, f.src
+        (<Name ROOT 0,0..0,4>, 'expr')
+
+        >>> g = FST(f, 'stmt')
+        >>> g, g.src
+        (<Expr ROOT 0,0..0,4>, 'expr')
+
+        >>> g = FST(f, 'Name')
+        >>> g, g.src, g is f
+        (<Name ROOT 0,0..0,4>, 'expr', False)
+
+        Turn off `copy` to return the same node if it is the type you are requesting.
+
+        >>> g = FST(f, 'Name', copy=False)
+        >>> g, g.src, g is f
+        (<Name ROOT 0,0..0,4>, 'expr', True)
+
+        But still coerces if is not.
+
+        >>> g = FST(f, 'arg', copy=False)
+        >>> g, g.src, g is f
+        (<arg ROOT 0,0..0,4>, 'expr', False)
+
+        Same `options` apply as to all other operations.
+
+        >>> FST(FST('[]'), 'Set').src  # will give invalid empty Set node
+        '{}'
+
+        >>> FST(FST('[]'), 'Set', norm=True).src
+        '{*()}'
+
         The other forms of this function are meant for internal use, their parameters are below for reference just in
         case:
 
@@ -815,7 +865,7 @@ class FST:
 
         if pfield is False:  # top level shortcut
             if src_or_ast_or_fst.__class__ is FST:
-                return src_or_ast_or_fst.as_(mode or 'all', kwargs.get('copy', True), coerce=kwargs.get('coerce', True))
+                return src_or_ast_or_fst.as_(mode or 'all', kwargs.get('copy', True), **filter_options(kwargs))
 
             parse_params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                             if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
@@ -1105,7 +1155,7 @@ class FST:
     set_options = fst_options.set_options
     options = fst_options.options
 
-    def as_(self, mode: Mode = 'all', copy: bool = False, *, coerce: bool = True) -> FST:
+    def as_(self, mode: Mode = 'all', copy: bool = False, **options) -> FST:
         """Attempt to coerce `self` to the type of node given my `mode`. If `self` is already the requested type of node
         at root level then will do nothing and return `self`. If is not at root level then will copy the node first and
         then attempt to coerce.
@@ -1127,9 +1177,7 @@ class FST:
         - `mode`: The type of node you want, see `fst.parsex.Mode`.
         - `copy`: This only matters if you are calling this function on a root node, in which case a copy is made before
             coerce is attempted in order to make sure the node you are calling remains valid.
-        - `coerce`: This allows you to turn **OFF** coerce. This doesn't really make much sense except in maybe niche
-            scenarios as the whole purpose of this function is to coerce. By turning off coerce you will get an error
-            if `self` is not already the type of node you are requesting.
+        - `options`: See `options()`. These same options will be used for both a possible copy and for coercion.
 
         **Returns:**
         - `FST`: Coerced node.
@@ -1164,10 +1212,12 @@ class FST:
           .ctx Load
         """
 
-        if copy or self.parent:
-            self = self.copy()
+        check_options(options)
 
-        return code.code_as(self, mode, {}, self.parse_params, coerce=coerce)
+        if copy or self.parent:
+            self = self.copy(**options)
+
+        return code.code_as(self, mode, options, self.parse_params, coerce=True)
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed
