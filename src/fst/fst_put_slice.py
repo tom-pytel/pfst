@@ -170,7 +170,6 @@ from .fst_get_slice import (
     _fix_Assign_target0,
     _fix_decorator_list_trailing_newline,
     _fix_decorator_list_del,
-    _fix_Set,
     _fix_MatchSequence,
     _fix_MatchOr,
     _fix_stmt_end,
@@ -1522,7 +1521,7 @@ def _put_slice_Set_elts(
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
-    _fix_Set(self, fst.FST._get_opt_eff_set_norm_self(options))
+    self._fix_Set(fst.FST._get_opt_eff_set_norm_self(options))
 
 
 def _put_slice_Dict__all(

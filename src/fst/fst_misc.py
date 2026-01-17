@@ -1772,6 +1772,30 @@ def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = 
     return is_par
 
 
+def _fix_Set(self: fst.FST, norm: bool | Literal['star', 'call'] = True) -> None:
+    """Fix `Set` if is empty to be parsable according to `norm`. If `norm` is `False` then no fix is done.
+
+    **Parameters:**
+    - `norm`: Determines if a fix is done for an empty set and if so what kind it is.
+        - `False`: Don't fix, leave as invalid node.
+        - `True`: Fix with `star`.
+        - `'star' | 'call'`: Fix by adding a single `*()` element or changing the type of node to a call `set()`.
+    """
+
+    assert self.a.__class__ is Set
+
+    if norm and not (ast := self.a).elts:
+        if norm == 'call':
+            new_ast, new_src = new_empty_set_call(ast.lineno, ast.col_offset, as_fst=False)
+        else:  # True, 'star'
+            new_ast, new_src = new_empty_set_star(ast.lineno, ast.col_offset, as_fst=False)
+
+        ln, col, end_ln, end_col = self.loc
+
+        self._put_src(new_src, ln, col, end_ln, end_col, True)
+        self._set_ast(new_ast)
+
+
 def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None, field: str = 'elts') -> None:
     """Parenthesize any arglike expressions in `self` according to `options` if not `None`, otherwise always
     parenthesizes."""

@@ -666,23 +666,6 @@ def _fix_decorator_list_del(
             root._offset(bound_ln, 0, 1, 0)
 
 
-def _fix_Set(self: fst.FST, norm: bool | Literal['star', 'call'] = True) -> None:
-    assert self.a.__class__ is Set
-
-    ast = self.a
-
-    if norm and not ast.elts:
-        if norm == 'call':
-            new_ast, new_src = new_empty_set_call(ast.lineno, ast.col_offset, as_fst=False)
-        else:  # True, 'star'
-            new_ast, new_src = new_empty_set_star(ast.lineno, ast.col_offset, as_fst=False)
-
-        ln, col, end_ln, end_col = self.loc
-
-        self._put_src(new_src, ln, col, end_ln, end_col, True)
-        self._set_ast(new_ast)
-
-
 def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
     assert self.a.__class__ is MatchSequence
 
@@ -957,7 +940,7 @@ def _get_slice_Set_elts(
                          options, 'elts', '{', '}', ',', 0, 0)
 
     if cut:
-        _fix_Set(self, fst.FST._get_opt_eff_set_norm_self(options))
+        self._fix_Set(fst.FST._get_opt_eff_set_norm_self(options))
 
     return fst_
 

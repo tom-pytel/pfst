@@ -1855,9 +1855,10 @@ def _coerce_to_Set(
                       end_col_offset=ast.end_col_offset)
             lines = code._lines
             code = fst.FST(ast, lines, None, from_=code, lcopy=False)  # first we convert to tuple for fixes
+            elts = ast.elts
 
             if fix_coerced_tuple:
-                code._fix_undelimited_seq(ast.elts, '{}', True)
+                code._fix_undelimited_seq(elts, '{}', True)
             elif not code._is_delimited_seq():
                 code._delimit_node(True, '{}')
 
@@ -1866,6 +1867,9 @@ def _coerce_to_Set(
 
                 lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}}}{l[end_col:]}')  # just replace the '()' delimiters with '[]'
                 lines[ln] = bistr(f'{(l := lines[ln])[:col]}{{{l[col + 1:]}')
+
+            if not elts:
+                code._fix_Set(fst.FST._get_opt_eff_set_norm_get(options))
 
     else:  # is AST
         ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, 'Set', Set)
