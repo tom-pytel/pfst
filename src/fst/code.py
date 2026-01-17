@@ -1872,93 +1872,73 @@ def _coerce_to_Set(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
+    return _coerce_to_List(code, options, parse_params, sanitize=sanitize, to_cls=Set)
+
+
+def _coerce_to_List(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    to_cls: type[AST] = List,
+) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`.
+
+    This function handles both `List` and `Set` which is selected by the `to_cls` parameter.
+    """
+
+    if to_cls is List:
+        delims = '[]'
+    else:
+        delims = '{}'
+        assert to_cls is Set
+
     if isinstance(code, fst.FST):
-        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, 'Set', Set)
+        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, to_cls.__name__, to_cls)
         ast_cls = ast.__class__
 
-        if ast_cls is Set:
-            code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a Set
+        if ast_cls is to_cls:
+            code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a to_cls
 
         elif ast_cls is not Tuple:
             raise NodeError(f'expecting Set, got {code.a.__class__}, could not coerce')
 
         else:
-            ast = Set(elts=ast.elts, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                      end_col_offset=ast.end_col_offset)
+            if to_cls is List:
+                ast = List(elts=ast.elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                           end_col_offset=ast.end_col_offset)
+            else:
+                ast = Set(elts=ast.elts, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                          end_col_offset=ast.end_col_offset)
+
             lines = code._lines
             code = fst.FST(ast, lines, None, from_=code, lcopy=False)  # first we convert to tuple for fixes
             elts = ast.elts
 
             if fix_coerced_tuple:
-                code._fix_undelimited_seq(elts, '{}', True)
+                code._fix_undelimited_seq(elts, delims, True)
             elif not code._is_delimited_seq():
-                code._delimit_node(True, '{}')
+                code._delimit_node(True, delims)
 
             else:
                 ln, col, end_ln, end_col = code.loc
 
-                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}}}{l[end_col:]}')  # just replace the '()' delimiters with '[]'
-                lines[ln] = bistr(f'{(l := lines[ln])[:col]}{{{l[col + 1:]}')
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}{delims[1]}{l[end_col:]}')  # just replace the '()' delimiters
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}{delims[0]}{l[col + 1:]}')
 
-            if not elts:
+            if not elts and to_cls is Set:
                 code._fix_Set(fst.FST._get_opt_eff_set_norm_get(options))
 
     else:  # is AST
-        ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, 'Set', Set)
+        ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, to_cls.__name__, to_cls)
 
-        if ast.__class__ is not Set:
-            ast = Set(elts=ast.elts)
-
-        src = unparse(ast)
-        lines = src.split('\n')
-        ast = parse_Set(src, parse_params)
-
-        code = fst.FST(ast, lines, None, parse_params=parse_params)
-
-    return code._sanitize() if sanitize else code
-
-
-def _coerce_to_List(
-    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
-) -> fst.FST:
-    """See `_coerce_to__Assign_targets()`."""
-
-    if isinstance(code, fst.FST):
-        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, 'List', List)
-        ast_cls = ast.__class__
-
-        if ast_cls is List:
-            code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a List
-
-        elif ast_cls is not Tuple:
-            raise NodeError(f'expecting List, got {code.a.__class__}, could not coerce')
-
-        else:
-            ast = List(elts=ast.elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            lines = code._lines
-            code = fst.FST(ast, lines, None, from_=code, lcopy=False)  # first we convert to tuple for fixes
-
-            if fix_coerced_tuple:
-                code._fix_undelimited_seq(ast.elts, '[]', True)
-            elif not code._is_delimited_seq():
-                code._delimit_node(True, '[]')
-
-            else:
-                ln, col, end_ln, end_col = code.loc
-
-                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}]{l[end_col:]}')  # just replace the '()' delimiters with '[]'
-                lines[ln] = bistr(f'{(l := lines[ln])[:col]}[{l[col + 1:]}')
-
-    else:  # is AST
-        ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, 'List', List)
-
-        if ast.__class__ is not List:
-            ast = List(elts=ast.elts)
+        if ast.__class__ is not to_cls:
+            ast = to_cls(elts=ast.elts)
 
         src = unparse(ast)
         lines = src.split('\n')
-        ast = parse_List(src, parse_params)
+        ast = (parse_List if to_cls is List else parse_Set)(src, parse_params)
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
