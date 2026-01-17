@@ -37,6 +37,7 @@ from .asttypes import (
     Call,
     ClassDef,
     Compare,
+    Constant,
     Del,
     Div,
     Eq,
@@ -79,6 +80,7 @@ from .asttypes import (
     Pass,
     Pow,
     RShift,
+    Set,
     Slice,
     Starred,
     Store,
@@ -158,6 +160,8 @@ __all__ = [
     'parse_expr_slice',
     'parse_Tuple_elt',
     'parse_Tuple',
+    'parse_List',
+    'parse_Set',
     'parse__Assign_targets',
     'parse__decorator_list',
     'parse__arglike',
@@ -500,8 +504,8 @@ def _ast_parse1(
 
     if ((stmt_types and not isinstance(ast, stmt_types))
         or (child_types and not isinstance(getattr(ast, child_field), child_types))
-    ):  # this exists juuuuust in case to catch source which may parse to something valid but unexpected
-        raise SyntaxError('invalid syntax')  # we use the fact that we don't send location to differentiate between our SyntaxError and one from the python parser
+    ):  # this exists juuuuust in case to catch source which may parse to something valid but unexpected, we use the fact that we don't send location to differentiate between our SyntaxError and one from the python parser
+        raise SyntaxError('invalid syntax')
 
     return ast
 
@@ -1334,6 +1338,22 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast
 
 
+def parse_List(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `List`. @private"""
+
+    ast = _ast_parse1(f'(\n{src}\n)', parse_params, Expr, List).value
+
+    return _offset_linenos(ast, -1)
+
+
+def parse_Set(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `List`. @private"""
+
+    ast = _ast_parse1(f'(\n{src}\n)', parse_params, Expr, Set).value
+
+    return _offset_linenos(ast, -1)
+
+
 def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `Assign` targets and return them in a `_Assign_targets` SPECIAL SLICE. Takes `=` as separators
     and accepts an optional trailing `=`. @private"""
@@ -1507,17 +1527,23 @@ def parse__comprehension_ifs(src: str, parse_params: Mapping[str, Any] = {}) -> 
 def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e". @private"""
 
-    ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params, FunctionDef).args
+    ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params, FunctionDef)
 
-    return _offset_linenos(ast, -1)
+    if ast.returns:  # guard against ')->('
+        raise SyntaxError('invalid syntax')
+
+    return _offset_linenos(ast.args, -1)
 
 
 def parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e". @private"""
 
-    ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params, Expr, Lambda).value.args
+    ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params, Expr, Lambda).value
 
-    return _offset_linenos(ast, -1)
+    if ast.body.__class__ is not Constant:  # guard against ': lambda'
+        raise SyntaxError('invalid syntax')
+
+    return _offset_linenos(ast.args, -1)
 
 
 def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -2171,6 +2197,8 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Starred:                  parse_expr_arglike,  # because could have form '*a or b' and we want to parse any form of Starred here
     Slice:                    parse_expr_slice,    # because otherwise would be parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
     Tuple:                    parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
+    Set:                      parse_Set,
+    List:                     parse_List,
     boolop:                   parse_boolop,
     operator:                 parse_operator,
     unaryop:                  parse_unaryop,

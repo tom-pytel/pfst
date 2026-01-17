@@ -13,6 +13,7 @@ from io import TextIOBase
 from typing import Any, Callable, Generator, Literal, Mapping, TextIO
 
 from . import parsex
+from . import code
 from . import fst_traverse
 from . import fst_options
 from . import fst_type_predicates
@@ -431,8 +432,8 @@ class FST:
     _cache:       dict
 
     # ROOT ONLY
-    parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
-    indent:       builtins.str                ; """The default single level block indentation string for this tree when not available from context, root node only."""
+    parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` (filename, type_comments, feature_version). Exists mostly for passing filename and future-proofing."""
+    indent:       builtins.str                ; """The default single level block indentation string for this tree when not available from context."""
     _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
 
     # class attributes
@@ -707,27 +708,27 @@ class FST:
 
     def __new__(
         cls,
-        ast_or_src: AST | builtins.str | list[builtins.str] = '',
+        src_or_ast_or_fst: FST | AST | builtins.str | list[builtins.str] = '',
         mode: FST | list[builtins.str] | Mode | None = None,
         pfield: astfield | Literal[False] | None = False,
         /,
         **kwargs,
     ) -> 'FST':
         r"""Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
-        `FST.fromsrc()` or `FST.fromast()`, the usage is:
+        `FST.fromsrc()`, `FST.fromast()` or `FST.as_()`, the usage is:
 
-        **`FST(ast_or_src, mode=None)`**
+        **`FST(src_or_ast_or_fst, mode=None)`**
 
-        This will create an `FST` from either an `AST` or source code in the form of a string or list of lines. The
-        first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of the three
-        types `'exec'`, `'eval'` or `'single'`. Otherwise if there is `source` or an `AST` then `mode` specifies how it
-        will be parsed / reparsed and it can take any of the values from `fst.parsex.Mode`.
+        This will create an `FST` from either an `AST` or source code in the form of a string or list of lines, or it
+        will attempt to coerce an existing `FST` to the type you want specified by `mode`.
+
+        TODO: update for `as_()`
 
         **Parameters:**
-        - `ast_or_src`: Source code or an `AST` node.
-        - `mode`: See `fst.parsex.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
-            type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'` to allow
-            parsing anything.
+        - `src_or_ast_or_fst`: Source code or an `AST` or `FST` node.
+        - `mode`: See `fst.parsex.Mode`. If this is `None` then if `src_or_ast_or_fst` is an `AST` the mode defaults to
+            the type of the `AST`. Otherwise if the `src_or_ast_or_fst` is actual source code then `mode` used is
+            `'all'` to allow parsing anything.
 
         **Examples:**
 
@@ -785,13 +786,13 @@ class FST:
         case:
 
         **Parameters:**
-        - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str` or a list of lines. If an `AST` then
+        - `src_or_ast_or_fst`: `AST` node for `FST` or source code in the form of a `str` or a list of lines. If an `AST` then
             will be processed differently depending on if creating child node, top level node or using this as a
             shortcut for a full `fromsrc()` or `fromast()`. If left as empty default then just creates a new empty
             `Module`.
         - `mode`: Is really `mode_or_lines_or_parent`. Parent node for this child node or lines for a root node creating
             a new tree. If `pfield` is `False` then this is a shortcut to create a full tree from an `AST` node or
-            source provided in `ast_or_src`.
+            source provided in `src_or_ast_or_fst`.
         - `pfield`: `fst.common.astfield` indication position in parent of this node. If provided then creating a simple
             child node and it is created with the `self.parent` set to `mode` node and `self.pfield` set to this. If
             `None` then it means the creation of a full new `FST` tree and this is the root node with `mode` providing
@@ -813,6 +814,9 @@ class FST:
         """
 
         if pfield is False:  # top level shortcut
+            if src_or_ast_or_fst.__class__ is FST:
+                return src_or_ast_or_fst.as_(mode or 'all', kwargs.get('copy', True), coerce=kwargs.get('coerce', True))
+
             parse_params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                             if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
             indent = None
@@ -822,10 +826,10 @@ class FST:
                 parse_params = {**from_root.parse_params, **parse_params}
                 indent = from_root.indent
 
-            if isinstance(ast_or_src, AST):
-                f = FST.fromast(ast_or_src, mode, **parse_params)
-            else:  # str | list[str]
-                f = FST.fromsrc(ast_or_src, 'all' if mode is None else mode, **parse_params)
+            if isinstance(src_or_ast_or_fst, (str, list)):
+                f = FST.fromsrc(src_or_ast_or_fst, mode or 'all', **parse_params)
+            else:  # isinstance(src_or_ast_or_fst, AST)
+                f = FST.fromast(src_or_ast_or_fst, mode, **parse_params)
 
             if indent is not None or (indent := kwargs.get('indent')) is not None:
                 f.indent = indent
@@ -834,13 +838,13 @@ class FST:
 
         # creating actual node
 
-        if not (self := getattr(ast_or_src, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
-            self = ast_or_src.f = object.__new__(cls)
+        if not (self := getattr(src_or_ast_or_fst, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
+            self = src_or_ast_or_fst.f = object.__new__(cls)
 
         elif not self.parent:  # if was previously root then clear out root attributes
             del self.parse_params, self.indent, self._lines
 
-        self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if even if `.f` exists, it should always be but juuuuust in case
+        self.a = src_or_ast_or_fst  # we don't assume `self.a` is `src_or_ast_or_fst` if even if `.f` exists, it should always be but juuuuust in case
         self.pfield = pfield
         self._cache = {}  # this is same a self._touch() if .f already existed in AST
 
@@ -865,8 +869,8 @@ class FST:
             if (indent := kwargs.get('indent')) is not None:
                 self.indent = indent
             elif (
-                (is_modlike := (ast_or_src.__class__ in (Module, _ExceptHandlers, _match_cases)))
-                or ast_or_src.__class__ in ASTS_LEAF_BLOCK
+                (is_modlike := (src_or_ast_or_fst.__class__ in (Module, _ExceptHandlers, _match_cases)))
+                or src_or_ast_or_fst.__class__ in ASTS_LEAF_BLOCK
             ):
                 self.indent = '?'
             else:
@@ -877,11 +881,11 @@ class FST:
 
         if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that, note that self.indent = '?' is used for checking
             if is_modlike:
-                asts = (getattr(ast_or_src, 'body', None) or
-                        getattr(ast_or_src, 'handlers', None) or
-                        getattr(ast_or_src, 'cases', None) or ())
+                asts = (getattr(src_or_ast_or_fst, 'body', None) or
+                        getattr(src_or_ast_or_fst, 'handlers', None) or
+                        getattr(src_or_ast_or_fst, 'cases', None) or ())
             else:
-                asts = (ast_or_src,)
+                asts = (src_or_ast_or_fst,)
 
             for a in asts:
                 a_cls = a.__class__
@@ -1100,6 +1104,70 @@ class FST:
     get_option = fst_options.get_option
     set_options = fst_options.set_options
     options = fst_options.options
+
+    def as_(self, mode: Mode = 'all', copy: bool = False, *, coerce: bool = True) -> FST:
+        """Attempt to coerce `self` to the type of node given my `mode`. If `self` is already the requested type of node
+        at root level then will do nothing and return `self`. If is not at root level then will copy the node first and
+        then attempt to coerce.
+
+        If `self` is not the type requested then will attempt to coerce, which is a destructive operation to the
+        original node (`self`) even if it fails, rendering `self` unusable. For this reason the `copy` parameter allows
+        you to specify that `self` must be copied first before coerce is attempted, leaving the original node intact.
+        Note that a copy is always made regardless if `self` is not a root node so the original node will be unharmed in
+        that case.
+
+        Not all possible coercions are covered currently, mostly to and from `expr` and `pattern`. A `MatchSequence` for
+        example always coerces to a `List`, so if you request that or and `expr` you are fine, but if you request a
+        `Tuple` you will get an error.
+
+        **Note:** If `self` is a subclass of the type you request then it counts as a match and `self` is returned
+        unchanged, e.g. `Assign` and you request a `stmt`.
+
+        **Parameters:**
+        - `mode`: The type of node you want, see `fst.parsex.Mode`.
+        - `copy`: This only matters if you are calling this function on a root node, in which case a copy is made before
+            coerce is attempted in order to make sure the node you are calling remains valid.
+        - `coerce`: This allows you to turn **OFF** coerce. This doesn't really make much sense except in maybe niche
+            scenarios as the whole purpose of this function is to coerce. By turning off coerce you will get an error
+            if `self` is not already the type of node you are requesting.
+
+        **Returns:**
+        - `FST`: Coerced node.
+
+        **Examples:**
+
+        >>> f = FST('expr')
+        >>> f
+        <Name ROOT 0,0..0,4>
+
+        >>> (f := f.as_('stmt'))  # remember that you can't count on original node remaining
+        <Expr ROOT 0,0..0,4>
+
+        >>> f.as_('exec')
+        <Module ROOT 0,0..0,4>
+
+        >>> _ = FST('if a if b', '_comprehension_ifs').as_(expr).dump()
+        Tuple - ROOT 0,0..0,4
+          .elts[2]
+           0] Name 'a' Load - 0,0..0,1
+           1] Name 'b' Load - 0,3..0,4
+          .ctx Load
+
+        >>> _ = FST('case [a, cls(b)]: pass').pattern.as_(expr).dump()
+        List - ROOT 0,0..0,11
+          .elts[2]
+           0] Name 'a' Load - 0,1..0,2
+           1] Call - 0,4..0,10
+             .func Name 'cls' Load - 0,4..0,7
+             .args[1]
+              0] Name 'b' Load - 0,8..0,9
+          .ctx Load
+        """
+
+        if copy or self.parent:
+            self = self.copy()
+
+        return code.code_as(self, mode, self.parse_params, coerce=coerce)
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed

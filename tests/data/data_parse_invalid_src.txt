@@ -3,7 +3,9 @@
 ')+('        parse_ImportFrom_name            **SyntaxError**
 ')+('        parse_Import_name                **SyntaxError**
 ')+('        parse_Interactive                **SyntaxError**
+')+('        parse_List                       **SyntaxError('invalid syntax')**
 ')+('        parse_Module                     **SyntaxError**
+')+('        parse_Set                        **SyntaxError('invalid syntax')**
 ')+('        parse_Tuple                      **SyntaxError('invalid tuple')**
 ')+('        parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ')+('        parse__Assign_targets            **SyntaxError**
@@ -52,7 +54,9 @@
 '),('        parse_ImportFrom_name            **SyntaxError**
 '),('        parse_Import_name                **SyntaxError**
 '),('        parse_Interactive                **SyntaxError**
+'),('        parse_List                       **SyntaxError('invalid syntax')**
 '),('        parse_Module                     **SyntaxError**
+'),('        parse_Set                        **SyntaxError('invalid syntax')**
 '),('        parse_Tuple                      **SyntaxError('invalid tuple')**
 '),('        parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 '),('        parse__Assign_targets            **SyntaxError**
@@ -101,7 +105,9 @@
 'a)('        parse_ImportFrom_name            **SyntaxError**
 'a)('        parse_Import_name                **SyntaxError**
 'a)('        parse_Interactive                **SyntaxError**
+'a)('        parse_List                       **SyntaxError('invalid syntax')**
 'a)('        parse_Module                     **SyntaxError**
+'a)('        parse_Set                        **SyntaxError('invalid syntax')**
 'a)('        parse_Tuple                      **SyntaxError('invalid tuple')**
 'a)('        parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a)('        parse__Assign_targets            **SyntaxError**
@@ -150,7 +156,9 @@
 'a)(b'       parse_ImportFrom_name            **SyntaxError**
 'a)(b'       parse_Import_name                **SyntaxError**
 'a)(b'       parse_Interactive                **SyntaxError**
+'a)(b'       parse_List                       **SyntaxError('invalid syntax')**
 'a)(b'       parse_Module                     **SyntaxError**
+'a)(b'       parse_Set                        **SyntaxError('invalid syntax')**
 'a)(b'       parse_Tuple                      **SyntaxError('invalid tuple')**
 'a)(b'       parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a)(b'       parse__Assign_targets            **SyntaxError**
@@ -199,7 +207,9 @@
 'a),(b'      parse_ImportFrom_name            **SyntaxError**
 'a),(b'      parse_Import_name                **SyntaxError**
 'a),(b'      parse_Interactive                **SyntaxError**
+'a),(b'      parse_List                       **SyntaxError('invalid syntax')**
 'a),(b'      parse_Module                     **SyntaxError**
+'a),(b'      parse_Set                        **SyntaxError('invalid syntax')**
 'a),(b'      parse_Tuple                      **SyntaxError('invalid tuple')**
 'a),(b'      parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a),(b'      parse__Assign_targets            **SyntaxError**
@@ -248,7 +258,9 @@
 'a),(*b'     parse_ImportFrom_name            **SyntaxError**
 'a),(*b'     parse_Import_name                **SyntaxError**
 'a),(*b'     parse_Interactive                **SyntaxError**
+'a),(*b'     parse_List                       **SyntaxError**
 'a),(*b'     parse_Module                     **SyntaxError**
+'a),(*b'     parse_Set                        **SyntaxError**
 'a),(*b'     parse_Tuple                      **SyntaxError**
 'a),(*b'     parse_Tuple_elt                  **SyntaxError('invalid expression (standard)')**
 'a),(*b'     parse__Assign_targets            **SyntaxError**
@@ -297,7 +309,9 @@
 'a,)(b'      parse_ImportFrom_name            **SyntaxError**
 'a,)(b'      parse_Import_name                **SyntaxError**
 'a,)(b'      parse_Interactive                **SyntaxError**
+'a,)(b'      parse_List                       **SyntaxError('invalid syntax')**
 'a,)(b'      parse_Module                     **SyntaxError**
+'a,)(b'      parse_Set                        **SyntaxError('invalid syntax')**
 'a,)(b'      parse_Tuple                      **SyntaxError('invalid tuple')**
 'a,)(b'      parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a,)(b'      parse__Assign_targets            **SyntaxError**
@@ -346,7 +360,9 @@
 'a,),(b'     parse_ImportFrom_name            **SyntaxError**
 'a,),(b'     parse_Import_name                **SyntaxError**
 'a,),(b'     parse_Interactive                **SyntaxError**
+'a,),(b'     parse_List                       **SyntaxError('invalid syntax')**
 'a,),(b'     parse_Module                     **SyntaxError**
+'a,),(b'     parse_Set                        **SyntaxError('invalid syntax')**
 'a,),(b'     parse_Tuple                      **SyntaxError('invalid tuple')**
 'a,),(b'     parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a,),(b'     parse__Assign_targets            **SyntaxError**
@@ -395,7 +411,9 @@
 'a,b)(b'     parse_ImportFrom_name            **SyntaxError**
 'a,b)(b'     parse_Import_name                **SyntaxError**
 'a,b)(b'     parse_Interactive                **SyntaxError**
+'a,b)(b'     parse_List                       **SyntaxError('invalid syntax')**
 'a,b)(b'     parse_Module                     **SyntaxError**
+'a,b)(b'     parse_Set                        **SyntaxError('invalid syntax')**
 'a,b)(b'     parse_Tuple                      **SyntaxError('invalid tuple')**
 'a,b)(b'     parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a,b)(b'     parse__Assign_targets            **SyntaxError**
@@ -444,7 +462,9 @@
 'a)=('       parse_ImportFrom_name            **SyntaxError**
 'a)=('       parse_Import_name                **SyntaxError**
 'a)=('       parse_Interactive                **SyntaxError**
+'a)=('       parse_List                       **SyntaxError('invalid syntax')**
 'a)=('       parse_Module                     **SyntaxError**
+'a)=('       parse_Set                        **SyntaxError('invalid syntax')**
 'a)=('       parse_Tuple                      **SyntaxError**
 'a)=('       parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 'a)=('       parse__Assign_targets            **SyntaxError**
@@ -493,7 +513,9 @@
 'a,)if('     parse_ImportFrom_name            **SyntaxError**
 'a,)if('     parse_Import_name                **SyntaxError**
 'a,)if('     parse_Interactive                **SyntaxError**
+'a,)if('     parse_List                       **SyntaxError**
 'a,)if('     parse_Module                     **SyntaxError**
+'a,)if('     parse_Set                        **SyntaxError**
 'a,)if('     parse_Tuple                      **SyntaxError**
 'a,)if('     parse_Tuple_elt                  **SyntaxError**
 'a,)if('     parse__Assign_targets            **SyntaxError**
@@ -542,7 +564,9 @@
 ' #0 ) \\\n + \\\n (' parse_ImportFrom_name            **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_Import_name                **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_Interactive                **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_List                       **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_Module                     **SyntaxError**
+' #0 ) \\\n + \\\n (' parse_Set                        **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_Tuple                      **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_Tuple_elt                  **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse__Assign_targets            **SyntaxError**
@@ -591,7 +615,9 @@
 ' #0 ) \\\n, \\\n (' parse_ImportFrom_name            **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse_Import_name                **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse_Interactive                **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_List                       **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse_Module                     **SyntaxError**
+' #0 ) \\\n, \\\n (' parse_Set                        **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse_Tuple                      **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse_Tuple_elt                  **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse__Assign_targets            **SyntaxError**
@@ -640,7 +666,9 @@
 ' #0\n a #1\n ) \\\n(' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ) \\\n(' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ) \\\n(' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n(' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n(' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n ) \\\n(' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n(' parse__Assign_targets            **SyntaxError**
@@ -689,7 +717,9 @@
 ' #0\n a #1\n ) \\\n( #2\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ) \\\n( #2\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ) \\\n( #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n( #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n( #2\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n ) \\\n( #2\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n( #2\n b' parse__Assign_targets            **SyntaxError**
@@ -738,7 +768,9 @@
 ' #0\n a #1\n ) \\\n ,( \n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n ,( \n b' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n ,( \n b' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse__Assign_targets            **SyntaxError**
@@ -787,7 +819,9 @@
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n ,( \n * \n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n ,( \n * \n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_Tuple_elt                  **SyntaxError('invalid expression (standard)')**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse__Assign_targets            **SyntaxError**
@@ -836,7 +870,9 @@
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__Assign_targets            **SyntaxError**
@@ -885,7 +921,9 @@
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__Assign_targets            **SyntaxError**
@@ -934,7 +972,9 @@
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__Assign_targets            **SyntaxError**
@@ -983,7 +1023,9 @@
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Tuple                      **SyntaxError('invalid tuple')**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__Assign_targets            **SyntaxError**
@@ -1032,7 +1074,9 @@
 ' #0\n a #1\n ) \\\n = \\\n (' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_List                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n = \\\n (' parse_Module                     **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse_Set                        **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n = \\\n (' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse_Tuple_elt                  **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n = \\\n (' parse__Assign_targets            **SyntaxError**
@@ -1081,7 +1125,9 @@
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__Assign_targets            **SyntaxError**
@@ -1130,7 +1176,9 @@
 ']+['        parse_ImportFrom_name            **SyntaxError**
 ']+['        parse_Import_name                **SyntaxError**
 ']+['        parse_Interactive                **SyntaxError**
+']+['        parse_List                       **SyntaxError**
 ']+['        parse_Module                     **SyntaxError**
+']+['        parse_Set                        **SyntaxError**
 ']+['        parse_Tuple                      **SyntaxError**
 ']+['        parse_Tuple_elt                  **SyntaxError**
 ']+['        parse__Assign_targets            **SyntaxError**
@@ -1179,7 +1227,9 @@
 '],['        parse_ImportFrom_name            **SyntaxError**
 '],['        parse_Import_name                **SyntaxError**
 '],['        parse_Interactive                **SyntaxError**
+'],['        parse_List                       **SyntaxError**
 '],['        parse_Module                     **SyntaxError**
+'],['        parse_Set                        **SyntaxError**
 '],['        parse_Tuple                      **SyntaxError**
 '],['        parse_Tuple_elt                  **SyntaxError**
 '],['        parse__Assign_targets            **SyntaxError**
@@ -1228,7 +1278,9 @@
 'a]['        parse_ImportFrom_name            **SyntaxError**
 'a]['        parse_Import_name                **SyntaxError**
 'a]['        parse_Interactive                **SyntaxError**
+'a]['        parse_List                       **SyntaxError**
 'a]['        parse_Module                     **SyntaxError**
+'a]['        parse_Set                        **SyntaxError**
 'a]['        parse_Tuple                      **SyntaxError**
 'a]['        parse_Tuple_elt                  **SyntaxError**
 'a]['        parse__Assign_targets            **SyntaxError**
@@ -1277,7 +1329,9 @@
 'a][b'       parse_ImportFrom_name            **SyntaxError**
 'a][b'       parse_Import_name                **SyntaxError**
 'a][b'       parse_Interactive                **SyntaxError**
+'a][b'       parse_List                       **SyntaxError**
 'a][b'       parse_Module                     **SyntaxError**
+'a][b'       parse_Set                        **SyntaxError**
 'a][b'       parse_Tuple                      **SyntaxError**
 'a][b'       parse_Tuple_elt                  **SyntaxError**
 'a][b'       parse__Assign_targets            **SyntaxError**
@@ -1326,7 +1380,9 @@
 'a],[b'      parse_ImportFrom_name            **SyntaxError**
 'a],[b'      parse_Import_name                **SyntaxError**
 'a],[b'      parse_Interactive                **SyntaxError**
+'a],[b'      parse_List                       **SyntaxError**
 'a],[b'      parse_Module                     **SyntaxError**
+'a],[b'      parse_Set                        **SyntaxError**
 'a],[b'      parse_Tuple                      **SyntaxError**
 'a],[b'      parse_Tuple_elt                  **SyntaxError**
 'a],[b'      parse__Assign_targets            **SyntaxError**
@@ -1375,7 +1431,9 @@
 'a,][b'      parse_ImportFrom_name            **SyntaxError**
 'a,][b'      parse_Import_name                **SyntaxError**
 'a,][b'      parse_Interactive                **SyntaxError**
+'a,][b'      parse_List                       **SyntaxError**
 'a,][b'      parse_Module                     **SyntaxError**
+'a,][b'      parse_Set                        **SyntaxError**
 'a,][b'      parse_Tuple                      **SyntaxError**
 'a,][b'      parse_Tuple_elt                  **SyntaxError**
 'a,][b'      parse__Assign_targets            **SyntaxError**
@@ -1424,7 +1482,9 @@
 'a,],[b'     parse_ImportFrom_name            **SyntaxError**
 'a,],[b'     parse_Import_name                **SyntaxError**
 'a,],[b'     parse_Interactive                **SyntaxError**
+'a,],[b'     parse_List                       **SyntaxError**
 'a,],[b'     parse_Module                     **SyntaxError**
+'a,],[b'     parse_Set                        **SyntaxError**
 'a,],[b'     parse_Tuple                      **SyntaxError**
 'a,],[b'     parse_Tuple_elt                  **SyntaxError**
 'a,],[b'     parse__Assign_targets            **SyntaxError**
@@ -1473,7 +1533,9 @@
 'a,b][b'     parse_ImportFrom_name            **SyntaxError**
 'a,b][b'     parse_Import_name                **SyntaxError**
 'a,b][b'     parse_Interactive                **SyntaxError**
+'a,b][b'     parse_List                       **SyntaxError**
 'a,b][b'     parse_Module                     **SyntaxError**
+'a,b][b'     parse_Set                        **SyntaxError**
 'a,b][b'     parse_Tuple                      **SyntaxError**
 'a,b][b'     parse_Tuple_elt                  **SyntaxError**
 'a,b][b'     parse__Assign_targets            **SyntaxError**
@@ -1522,7 +1584,9 @@
 'a]=['       parse_ImportFrom_name            **SyntaxError**
 'a]=['       parse_Import_name                **SyntaxError**
 'a]=['       parse_Interactive                **SyntaxError**
+'a]=['       parse_List                       **SyntaxError**
 'a]=['       parse_Module                     **SyntaxError**
+'a]=['       parse_Set                        **SyntaxError**
 'a]=['       parse_Tuple                      **SyntaxError**
 'a]=['       parse_Tuple_elt                  **SyntaxError**
 'a]=['       parse__Assign_targets            **SyntaxError**
@@ -1571,7 +1635,9 @@
 'a,]if[b'    parse_ImportFrom_name            **SyntaxError**
 'a,]if[b'    parse_Import_name                **SyntaxError**
 'a,]if[b'    parse_Interactive                **SyntaxError**
+'a,]if[b'    parse_List                       **SyntaxError**
 'a,]if[b'    parse_Module                     **SyntaxError**
+'a,]if[b'    parse_Set                        **SyntaxError**
 'a,]if[b'    parse_Tuple                      **SyntaxError**
 'a,]if[b'    parse_Tuple_elt                  **SyntaxError**
 'a,]if[b'    parse__Assign_targets            **SyntaxError**
@@ -1620,7 +1686,9 @@
 ' #0 ] \\\n + \\\n [' parse_ImportFrom_name            **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse_Import_name                **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse_Interactive                **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_List                       **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse_Module                     **SyntaxError**
+' #0 ] \\\n + \\\n [' parse_Set                        **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse_Tuple                      **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse_Tuple_elt                  **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse__Assign_targets            **SyntaxError**
@@ -1669,7 +1737,9 @@
 ' #0 ] \\\n, \\\n [' parse_ImportFrom_name            **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse_Import_name                **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse_Interactive                **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_List                       **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse_Module                     **SyntaxError**
+' #0 ] \\\n, \\\n [' parse_Set                        **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse_Tuple                      **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse_Tuple_elt                  **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse__Assign_targets            **SyntaxError**
@@ -1718,7 +1788,9 @@
 ' #0\n a #1\n ] \\\n[' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_List                       **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse__Assign_targets            **SyntaxError**
@@ -1767,7 +1839,9 @@
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse__Assign_targets            **SyntaxError**
@@ -1816,7 +1890,9 @@
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ \n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ \n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse__Assign_targets            **SyntaxError**
@@ -1865,7 +1941,9 @@
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__Assign_targets            **SyntaxError**
@@ -1914,7 +1992,9 @@
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__Assign_targets            **SyntaxError**
@@ -1963,7 +2043,9 @@
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__Assign_targets            **SyntaxError**
@@ -2012,7 +2094,9 @@
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__Assign_targets            **SyntaxError**
@@ -2061,7 +2145,9 @@
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__Assign_targets            **SyntaxError**
@@ -2110,7 +2196,9 @@
 ' #0\n a #1\n ] \\\n = \\\n [' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse_Interactive                **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_List                       **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse_Module                     **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse_Set                        **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse__Assign_targets            **SyntaxError**
@@ -2159,7 +2247,9 @@
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_ImportFrom_name            **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_Import_name                **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_Interactive                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_List                       **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_Module                     **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_Set                        **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_Tuple                      **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_Tuple_elt                  **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__Assign_targets            **SyntaxError**

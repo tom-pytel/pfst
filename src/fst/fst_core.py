@@ -649,10 +649,12 @@ def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> fst.FST:  # -> se
     """
 
     if self_:
-        self.a.f = self.a = None
+        if a := getattr(self, 'a', None):
+            a.f = self.a = None
 
     while self := self.parent:
-        self.a.f = self.a = None
+        if a := getattr(self, 'a', None):
+            a.f = self.a = None
 
     return self
 

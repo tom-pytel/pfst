@@ -14,6 +14,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR_STMT_OR_MOD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_TUPLE_OR_LIST,
+    ASTS_LEAF_LIST_OR_SET,
     ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
     Attribute,
@@ -94,7 +95,7 @@ from .astutil import (
     is_valid_target,
 )
 
-from .common import NodeError, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re, next_delims
+from .common import NodeError, nspace, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re, next_delims
 
 from .parsex import (
     _AST_TYPE_BY_NAME_OR_TYPE,
@@ -115,6 +116,8 @@ from .parsex import (
     parse_expr_slice,
     parse_Tuple_elt,
     parse_Tuple,
+    parse_Set,
+    parse_List,
     parse__Assign_targets,
     parse__decorator_list,
     parse__arglike,
@@ -834,7 +837,6 @@ def _coerce_to_expr_ast__arglikes(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     arglikes = ast.arglikes
-    pars_arglike = kwargs.get('pars_arglike', True)  # this is a definitive yes / no, not None, and global option not checked here
 
     if not is_FST:
         if any(a.__class__ is keyword for a in arglikes):
@@ -843,6 +845,8 @@ def _coerce_to_expr_ast__arglikes(
         ret = Tuple(elts=arglikes)
 
     else:
+        pars_arglike = kwargs.get('pars_arglike', True)  # this is a definitive yes / no, not None, and global option not checked here
+
         for a in arglikes:
             if a.__class__ is keyword:
                 return 'cannot have keyword'
@@ -880,6 +884,28 @@ def _coerce_to_expr_ast__comprehension_ifs(
 
     return Tuple(elts=ifs, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
+
+def _coerce_to_expr_ast_List_or_Set(
+    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`. This function is meant for inter-expression coercion from a `List` or
+    `Set` to a specifically requested `Tuple`."""
+
+    if not is_FST:
+        ret = Tuple(elts=ast.elts)
+
+    else:
+        fst_ = ast.f
+        lines = fst_.root._lines  # we do not know for sure we are root, could be recursed from an Expr containing a List being coerced to Tuple
+        ln, col, end_ln, end_col = fst_.loc
+
+        lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}){l[end_col:]}')  # just replace the '[]' or '{}' delimiters with '()', any needed singleton comma will be added by the caller
+        lines[ln] = bistr(f'{(l := lines[ln])[:col]}({l[col + 1:]}')
+
+        ret = Tuple(elts=ast.elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                    end_col_offset=ast.end_col_offset)
+
+    return ret, False, 1
 
 def _coerce_to_expr_ast_arguments(
     ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
@@ -1388,6 +1414,8 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     _decorator_list:    _coerce_to_expr_ast__decorator_list,
     _arglikes:          _coerce_to_expr_ast__arglikes,
     _comprehension_ifs: _coerce_to_expr_ast__comprehension_ifs,
+    Set:                _coerce_to_expr_ast_List_or_Set,  # inter-expression coerce
+    List:               _coerce_to_expr_ast_List_or_Set,  # inter-expression coerce
     arguments:          _coerce_to_expr_ast_arguments,
     arg:                _coerce_to_expr_ast_arg,
     alias:              _coerce_to_expr_ast_alias,  # can reparse in case of FST
@@ -1409,7 +1437,12 @@ _AST_COERCE_TO_EXPR_FUNCS = {
 
 
 def _coerce_to_expr_ast(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], expecting: str, **kwargs
+    ast: AST,
+    is_FST: bool,
+    parse_params: Mapping[str, Any],
+    expecting: str,
+    two_step: bool | type[AST] = False,
+    **kwargs
 ) -> tuple[AST, bool]:
     """This is not like the `_coerce_to_?()` functions below, it just tries to coerce an `AST` to an expression `AST`,
     mostly by taking a contained expression `AST` but maybe by creating a new one from a string. Parsing is a possible
@@ -1426,6 +1459,10 @@ def _coerce_to_expr_ast(
     - `ast`: The `AST` node to coerce, can be part of an `FST` tree.
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
         should be done in that case to get the correct locations.
+    - `expecting`: Text for error messages.
+    - `two_step`: This enables two-step coercion like `Expr` -> `Set` -> `Tuple` or `MatchSequence` -> `List` ->
+        `Tuple`. If this is an `AST` type instead of a bool then two-step is enabled but the target is specified by the
+        type so if the first step arrives at it the second step is not taken to `Tuple`.
     - `**kwargs`: Used to pass coerce-specific flags. Currently only `pars_arglike` to allow prevent of parenthesize
         arglike-only in case being coerced to another type which can use then unparenthesized. Maybe in future will need
         more like this.
@@ -1446,11 +1483,24 @@ def _coerce_to_expr_ast(
 
     ret, is_nonstd_tuple, unmake_which = ret
 
+    if two_step and (ret_cls := ret.__class__) is not two_step and ret_cls in ASTS_LEAF_LIST_OR_SET:
+        if not hasattr(ret, 'f'):  # HACK HACK HACK HAAAAAAAACK!!!
+            ret.f = nspace(root=nspace(_lines=(f := ast.f)._lines), loc=f.loc)  # only for the location and lines because we KNOW thats all _coerce_to_expr_ast_List_or_Set() uses it for
+
+        ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, parse_params, kwargs)
+
+        if ret.__class__ is str:
+            raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
+                            f', could not coerce{", " + ret if ret else ""}', rawable=True)  # ret here is reason str
+
+        ret = ret[0]  # don't even check for is_nonstd_tuple because wasn't tuple and this one isn't either
+        unmake_which = 2  # at this point its just safer and easier
+
     if is_FST:
         if not unmake_which:  # WARNING! make sure ast is only child of parent and whole parent chain is only-children if coerced!!!
             ret.f._unmake_fst_parents()
-        elif unmake_which == 1:  # just the root node
-            ast.f._unmake_fst_parents(self_=True)
+        elif unmake_which == 1:  # just the root node (and ctx if it has one)
+            getattr(ast, 'ctx', ast).f._unmake_fst_parents(True)
         else:  # node was completely regenerated, unmake whole original (e.g. arg.arg coerced to new Name node, or complicated MatchSequence with nested stuff)
             ast.f._unmake_fst_tree()
 
@@ -1472,6 +1522,9 @@ def _coerce_to_seq(
 
     Contrary to the name, this is also used by the non-comma delimited custom `_slice` SPECIAL SLICEs `_Assign_targets`,
     `_decorator_list` and `_comprehension_ifs` as the first step of their coercion.
+
+    We don't deal with possible arglike-only `Starred` elements here explicitly, except in the case of passing through
+    `kwargs` in case `_expr_arglikes` doesn't want them parenthesized when coming from `_arglikes`.
 
     **Prameters:**
     - `parse`: Can be `None` if `ret_elts=True`.
@@ -1497,7 +1550,7 @@ def _coerce_to_seq(
     if not (ast_cls in _ASTS_LEAF_EXPRISH_SEQ
         or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
     ):
-        return None
+        return None  # TODO: add ceorce from Expr Tuple / List / Set?
 
     if ast_cls not in ASTS_LEAF_TUPLE_LIST_OR_SET:
         if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
@@ -1515,7 +1568,7 @@ def _coerce_to_seq(
             if code.is_parenthesized_tuple() is not False:
                 code._trim_delimiters()
 
-            code._unmake_fst_parents(True)
+            getattr(codea := code.a, 'ctx', codea).f._unmake_fst_parents(True)  # if there is a ctx then make sure to unmake that as well
 
     if not allow_starred and any(e.__class__ is Starred for e in ast.elts):
         raise NodeError(f'expecting {to_cls.__name__}, got {ast_cls.__name__}, could not coerce, found Starred',
@@ -1770,6 +1823,98 @@ def _coerce_to__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *,
         return fst.FST(parse__match_cases(code, parse_params), lines, None, parse_params=parse_params)
 
     raise NodeError(f'expecting _match_cases, got {code.__class__.__name__}, could not coerce')
+
+
+def _coerce_to_Set(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    # TODO: empty set
+
+    if isinstance(code, fst.FST):
+        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, parse_params, 'Set', Set)
+        ast_cls = ast.__class__
+
+        if ast_cls is Set:
+            code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a Set
+
+        elif ast_cls is not Tuple:
+            raise NodeError(f'expecting Set, got {code.a.__class__}, could not coerce')
+
+        else:
+            ast = Set(elts=ast.elts, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                      end_col_offset=ast.end_col_offset)
+            lines = code._lines
+            code = fst.FST(ast, lines, None, from_=code, lcopy=False)  # first we convert to tuple for fixes
+
+            if fix_coerced_tuple:
+                code._fix_undelimited_seq(ast.elts, '{}', True)
+            elif not code._is_delimited_seq():
+                code._delimit_node(True, '{}')
+
+            else:
+                ln, col, end_ln, end_col = code.loc
+
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}}}{l[end_col:]}')  # just replace the '()' delimiters with '[]'
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}{{{l[col + 1:]}')
+
+    else:  # is AST
+        ast, _ = _coerce_to_expr_ast(code, False, parse_params, 'Set', Set)
+
+        if ast.__class__ is not Set:
+            ast = Set(elts=ast.elts)
+
+        src = unparse(ast)
+        lines = src.split('\n')
+        ast = parse_Set(src, parse_params)
+
+        code = fst.FST(ast, lines, None, parse_params=parse_params)
+
+    return code._sanitize() if sanitize else code
+
+
+def _coerce_to_List(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    if isinstance(code, fst.FST):
+        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, parse_params, 'List', List)
+        ast_cls = ast.__class__
+
+        if ast_cls is List:
+            code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a List
+
+        elif ast_cls is not Tuple:
+            raise NodeError(f'expecting List, got {code.a.__class__}, could not coerce')
+
+        else:
+            ast = List(elts=ast.elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+            lines = code._lines
+            code = fst.FST(ast, lines, None, from_=code, lcopy=False)  # first we convert to tuple for fixes
+
+            if fix_coerced_tuple:
+                code._fix_undelimited_seq(ast.elts, '[]', True)
+            elif not code._is_delimited_seq():
+                code._delimit_node(True, '[]')
+
+            else:
+                ln, col, end_ln, end_col = code.loc
+
+                lines[end_ln] = bistr(f'{(l := lines[end_ln])[:end_col - 1]}]{l[end_col:]}')  # just replace the '()' delimiters with '[]'
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}[{l[col + 1:]}')
+
+    else:  # is AST
+        ast, _ = _coerce_to_expr_ast(code, False, parse_params, 'List', List)
+
+        if ast.__class__ is not List:
+            ast = List(elts=ast.elts)
+
+        src = unparse(ast)
+        lines = src.split('\n')
+        ast = parse_List(src, parse_params)
+
+        code = fst.FST(ast, lines, None, parse_params=parse_params)
+
+    return code._sanitize() if sanitize else code
 
 
 def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
@@ -2440,7 +2585,7 @@ def _code_as(
     """Generic handler for this."""
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         codea = code.a
@@ -2517,32 +2662,37 @@ def _code_as_expr(
     """General convert `code` to `expr`. Meant to handle any type of expression including `Slice`, `Tuple` of `Slice`s,
     `Tuple` of `Slice` elements and arglikes."""
 
+    expecting = _EXPR_PARSE_FUNC_TO_NAME[parse]
+
+    if to_tuple := parse is parse_Tuple:  # special handling for code as Tuple
+        no_coerce_clss = (Tuple,)
+    else:
+        no_coerce_clss = ASTS_LEAF_EXPR
+
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         ast = code.a
         ast_cls = ast.__class__
         fix_coerced_tuple = False  # coerced tuples from the likes of _arglikes FST source may not be in standard source format
 
-        if ast_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
+        if ast_cls not in no_coerce_clss:  # if not an expr then try coerce if allowed
             if not coerce:
-                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {ast_cls.__name__}, coerce disabled',
-                                rawable=True)
+                raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled', rawable=True)
 
-            ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, parse_params, _EXPR_PARSE_FUNC_TO_NAME[parse])
+            ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, parse_params, expecting, to_tuple)
             ast_cls = ast.__class__
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 
         if ast_cls is Slice:
             if not allow_Slice:
-                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got Slice', rawable=True)
+                raise NodeError(f'expecting {expecting}, got Slice', rawable=True)
 
         elif ast_cls is Tuple:
             if not allow_Tuple_of_Slice and any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got Tuple with a Slice in it',
-                                rawable=True)
+                raise NodeError(f'expecting {expecting}, got Tuple with a Slice in it', rawable=True)
 
             if fix_coerced_tuple:
                 code._fix_tuple(False)  # it is not parenthesized
@@ -2551,12 +2701,12 @@ def _code_as_expr(
 
     else:
         if is_ast := isinstance(code, AST):
-            if code.__class__ not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
+            if code.__class__ not in no_coerce_clss:  # if not an expr then try coerce if allowed
                 if not coerce:
-                    raise NodeError(f'expecting {_EXPR_PARSE_FUNC_TO_NAME[parse]}, got {code.__class__.__name__}'
+                    raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}'
                                     ', coerce disabled', rawable=True)
 
-                code, _ = _coerce_to_expr_ast(code, False, parse_params, _EXPR_PARSE_FUNC_TO_NAME[parse])
+                code, _ = _coerce_to_expr_ast(code, False, parse_params, expecting, to_tuple)
 
             src = unparse(code)
             lines = src.split('\n')
@@ -2585,7 +2735,7 @@ def _code_as_op(
     """Convert `code` to an op `FST` if possible."""
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, op_type):
@@ -2624,7 +2774,7 @@ def code_as_lines(code: Code | None) -> list[str]:
         return code
     elif isinstance(code, AST):
         return unparse(code).split('\n')
-    elif not code.is_root:  # isinstance(code, fst.FST)
+    elif code.parent:  # not code.is_root:  # isinstance(code, fst.FST
         raise ValueError('expecting root node')
     else:
         return code._lines
@@ -2642,7 +2792,15 @@ def code_as(
     itself, otherwise may be coerced if that is allowed."""
 
     if code_as := _CODE_AS_MODE_FUNCS.get(mode):
-        return code_as(code, parse_params, sanitize=sanitize, coerce=coerce)
+        fst_ = code_as(code, parse_params, sanitize=sanitize, coerce=coerce)
+
+        mode_type = _AST_TYPE_BY_NAME_OR_TYPE.get(mode)  # `expr` or expr -> expr, etc...
+
+        if mode_type and not isinstance(fst_.a, mode_type):
+            raise NodeError(f'expecting {mode_type.__name__}, got {fst_.a.__class__.__name__}'
+                            f'{", could not coerce" if coerce else ", coerce disabled"}')
+
+        return fst_
 
     if not isinstance(mode, type) or not issubclass(mode, AST):
         raise ValueError(f'invalid mode {mode!r}')
@@ -2656,7 +2814,7 @@ def code_as_all(
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
     else:
@@ -2718,7 +2876,7 @@ def code_as_ExceptHandler(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         if code.a.__class__ is not ExceptHandler:
@@ -2777,7 +2935,7 @@ def code_as__ExceptHandlers(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         codea = code.a
@@ -2911,6 +3069,22 @@ def code_as_Tuple(
         raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
 
     return fst_
+
+
+def code_as_Set(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    """Convert `code` to a `Set` using `parse_Set()`"""
+
+    return _code_as(code, parse_params, parse_Set, Set, sanitize, _coerce_to_Set if coerce else False)
+
+
+def code_as_List(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    """Convert `code` to a `List` using `parse_List()`"""
+
+    return _code_as(code, parse_params, parse_List, List, sanitize, _coerce_to_List if coerce else False)
 
 
 def code_as__Assign_targets(
@@ -3219,7 +3393,7 @@ def code_as_identifier(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
@@ -3246,7 +3420,7 @@ def code_as_identifier_dotted(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
@@ -3273,7 +3447,7 @@ def code_as_identifier_star(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
@@ -3300,7 +3474,7 @@ def code_as_identifier_alias(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
@@ -3329,7 +3503,7 @@ def code_as_constant(
     """
 
     if isinstance(code, fst.FST):
-        if not code.is_root:
+        if code.parent:  # not code.is_root
             raise ValueError('expecting root node')
 
         code = code.a
@@ -3451,6 +3625,8 @@ _CODE_AS_MODE_FUNCS = {
     Starred:                  code_as_expr_arglike,
     Slice:                    code_as_expr_slice,
     Tuple:                    code_as_Tuple,
+    Set:                      code_as_Set,
+    List:                     code_as_List,
     boolop:                   code_as_boolop,
     operator:                 code_as_operator,
     unaryop:                  code_as_unaryop,
@@ -3486,8 +3662,6 @@ _CODE_AS_MODE_FUNCS = {
 
 for ast_cls in FIELDS:  # fill out _CODE_AS_MODE_FUNCS with all supported AST types and their class names as parse modes
     ast_name = ast_cls.__name__
-
-    _AST_TYPE_BY_NAME_OR_TYPE[ast_cls] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_cls
 
     if (parse_func := _CODE_AS_MODE_FUNCS.get(ast_cls, ...)) is not ...:
         if ast_name not in _CODE_AS_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)

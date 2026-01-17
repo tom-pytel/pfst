@@ -13,17 +13,20 @@
 
 ### Added
 
-- put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
-- a lot more coercion cases allowed for node puts (non-source)
-  - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
-  - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`
-  - all sequence types, custom and standard, to custom slice types
-  - all expressions and custom slice types to `pattern`
+- coercion expanded greatly
+  - `FST.as_(type)` for explicit coercion directly to type
+  - `FST(FST, type)` for constructor default non-destructive coerce copy from other `FST` node, a-la `list(other_list) is not other_list`
+  - a lot more coercion cases allowed
+    - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
+    - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`, `List` or `Set`
+    - all sequence types, custom and standard, to custom slice types
+    - all expressions and custom slice types to `pattern`
+  - put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
 
 ### Updated
 
 - improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
-- REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain and will not be removed
+- REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
 - allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability
 - `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
 - concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode
