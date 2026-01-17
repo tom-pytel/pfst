@@ -1695,8 +1695,9 @@ def precedence_require_parens_by_type(
             if `field` is `'value'`, otherwise no effect.
         - `matchas_pat_None`: Child is `MatchAs` and the `pattern` is `None` (just a name).
         - `attr_val_int`: Parent is `Attribute` and child `value` is a `Constant` integer.
-        - `star_arglike`: Parent is `Starred` in a place where arglike expressions are allowed (`Call.args`,
-            `ClassDef.bases` or unaprenthesized slice `Tuple`).
+        - `arglike`: Node or parent node (for Starred) is in a place where arglike expressions are allowed (`Call.args`,
+            `ClassDef.bases` or unprenthesized slice `Tuple`). Currently only matters when parent is `Starred` in one of
+            these.
 
     **Returns:**
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.
@@ -1736,7 +1737,7 @@ def precedence_require_parens_by_type(
             parent_precedence = _Precedence.OR
 
         elif parent_type is Starred:
-            parent_precedence = _Precedence.TEST if flags.get('star_arglike') else _Precedence.EXPR
+            parent_precedence = _Precedence.TEST if flags.get('arglike') else _Precedence.EXPR
 
         else:
             raise ValueError("type of 'op' should be passed")
@@ -1756,7 +1757,7 @@ def precedence_require_parens(
     - `parent`: Parent `AST` node.
     - `field`: The name of the field in the parent where the child resides.
     - `idx`: The optional index of the child in the parent field, or `None` if does not apply.
-    - `flags`: Used to passed in some flags that cannot be determined here, specifically `star_arglike`.
+    - `flags`: Used to passed in some flags that cannot be determined here, specifically `arglike`.
 
     **Returns:**
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.

@@ -4,11 +4,12 @@ from typing import Any, Generator, Literal, NamedTuple
 
 from fst import FST
 from fst.astutil import copy_ast, compare_asts
+from fst.code import code_as
 from fst.fst_options import _ALL_OPTIONS
 
 from ast import AST
 
-__all__ = ['ParseCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases']
+__all__ = ['ParseCases', 'CoerceCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases']
 
 
 _PYVER = sys.version_info[1]
@@ -205,6 +206,55 @@ class ParseCases(BaseCases):
             s = case.field
 
         assert s == r0[:len(s)], f"expected node type or error doesn't match, {case.field}"
+
+        return rest
+
+
+class CoerceCases(BaseCases):
+    def __init__(self, fnm) -> None:
+        super().__init__(fnm, None)
+
+    def exec(self, case) -> list[str | tuple[str, str]]:  # rest
+        rest = []
+        h    = None
+        g    = None
+        f    = _make_fst(case.code, case.attr)
+        a    = f.copy_ast()
+        opts = _clean_options(case.options)
+
+        if 'coerce' not in opts:
+            opts['coerce'] = True
+
+        try:
+            g = code_as(f.copy(), case.field, **opts)
+        except Exception as exc:
+            rest.append(f'FST: **{_san_exc(exc)!r}**')
+        else:
+            g.verify()
+
+        try:
+            h = code_as(a, case.field, **opts)
+        except Exception as exc:
+            rest.append(f'AST: **{_san_exc(exc)!r}**')
+        else:
+            h.verify()
+
+        same = True
+
+        if g and h and not (same := compare_asts(g.a, h.a)):
+            exc = RuntimeError(f'FST and AST node structure not equal!')
+
+        if g:
+            rest.append(g.src)
+
+        if h and (not g or h.src != f.src):
+            rest.append(h.src)
+
+        if g:
+            rest.append(g.root.dump(out='str'))
+
+        if h and (not g or not same):
+            rest.append(h.root.dump(out='str'))
 
         return rest
 

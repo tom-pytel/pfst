@@ -297,6 +297,7 @@ __all__ = [
     'ASTS_LEAF_STMTMOD',
     'ASTS_LEAF_STMT',
     'ASTS_LEAF_EXPR',
+    'ASTS_LEAF_EXPR_STD',
     'ASTS_LEAF_EXPR_CONTEXT',
     'ASTS_LEAF_BOOLOP',
     'ASTS_LEAF_OPERATOR',
@@ -356,6 +357,8 @@ ASTS_LEAF_EXPR               = frozenset([BoolOp, NamedExpr, BinOp, UnaryOp, Lam
                                           SetComp, DictComp, GeneratorExp, Await, Yield, YieldFrom, Compare, Call,
                                           FormattedValue, Interpolation, JoinedStr, TemplateStr, Constant, Attribute,
                                           Subscript, Starred, Name, List, Tuple, Slice])
+
+ASTS_LEAF_EXPR_STD           = ASTS_LEAF_EXPR - frozenset([FormattedValue, Interpolation, Slice])
 
 ASTS_LEAF_EXPR_CONTEXT       = frozenset([Load, Store, Del])
 ASTS_LEAF_BOOLOP             = frozenset([And, Or])

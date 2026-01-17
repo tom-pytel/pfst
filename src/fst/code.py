@@ -1778,14 +1778,17 @@ def _coerce_to_stmt(
 
     lines = fst_._lines
     ln, col, end_ln, end_col = fst_.pars()
+    new_ln, _ = lline_start(lines, 0, 0, ln, col)  # new_col will be at 0, guaranteed
 
-    if col:  # Expr MUST start at column 0
-        fst_._put_src(None, ln, 0, ln, col, True)
+    if col or new_ln != ln:
+        fst_._put_src(None, new_ln, 0, ln, col, True)
 
         if end_ln == ln:
             end_col -= col
+        else:
+            end_ln -= (ln - new_ln)
 
-    ast = Expr(value=None, lineno=ln + 1, col_offset=0, end_lineno=end_ln + 1,
+    ast = Expr(value=None, lineno=new_ln + 1, col_offset=0, end_lineno=end_ln + 1,
                end_col_offset=lines[end_ln].c2b(end_col))
 
     return fst.FST(ast, lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'value', True, False)
@@ -1800,27 +1803,19 @@ def _coerce_to_stmts(
 
     if code_cls is fst.FST:
         codea = code.a
-
-        if codea.__class__ is Expression:  # coerce Expression to expr
-            codea = codea.body
-
-            code._unmake_fst_parents(True)
-
-        if codea.__class__ in ASTS_LEAF_EXPR:  # coerce expr to Expr stmt
-            codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
-                         end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
-
         codea_cls = codea.__class__
 
         if codea_cls in ASTS_LEAF_STMT:
-            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
+            ast = Module(body=[], type_ignores=[])
+
+            return fst.FST(ast, code.lines, None, from_=code, lcopy=False)._set_field([codea], 'body', True, False)
 
         if codea_cls is Interactive:
             code._unmake_fst_parents(True)
 
-            return fst.FST(Module(body=codea.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
+            ast = Module(body=[], type_ignores=[])
 
-        raise NodeError(f'expecting zero or more stmts, got {codea_cls.__name__}, could not coerce', rawable=True)
+            return fst.FST(ast, code.lines, None, from_=code, lcopy=False)._set_field(codea.body, 'body', True, False)
 
     elif code_cls in ASTS_LEAF_EXPR_STMT_OR_MOD:  # all these ASTs can be coerced into stmts
         code = _fixing_unparse(code)
@@ -1828,7 +1823,11 @@ def _coerce_to_stmts(
 
         return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
 
-    raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}, could not coerce')
+    fst_ = _coerce_to_stmt(code, options, parse_params, sanitize=sanitize)
+
+    ast = Module(body=[], type_ignores=[])
+
+    return fst.FST(ast, fst_.lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'body', True, False)
 
 
 def _coerce_to_match_case(

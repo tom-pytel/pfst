@@ -760,7 +760,7 @@ def _make_exprlike_fst(
                 star_child = put_ast.value
 
                 if (star_child.__class__ is not Tuple  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
-                    and precedence_require_parens(star_child, put_ast, 'value', star_arglike=arglike)
+                    and precedence_require_parens(star_child, put_ast, 'value', arglike=arglike)
                     and (not adding or not star_child.f.pars().n)  # `not adding` to make sure we don't remove existing needed pars
                 ):
                     return True

@@ -18,7 +18,17 @@ from types import NoneType
 from typing import Any, Callable, Generator, Iterable, Literal, NamedTuple
 from unicodedata import normalize
 
-from .asttypes import TypeAlias, TemplateStr, Interpolation, _ExceptHandlers
+# from .asttypes import (
+#     ASTS_LEAF_EXPR_STD,
+#     ASTS_LEAF_PATTERN,
+#     ASTS_LEAF_TYPE_PARAM,
+#     TypeAlias,
+#     TemplateStr,
+#     Interpolation,
+#     _ExceptHandlers
+# )
+
+from .asttypes import *
 from .astutil import *
 from .astutil import re_alnumdot_alnum
 from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
@@ -2578,6 +2588,90 @@ class SliceExprlike(Fuzzy):
                         bucket.fst._unmake_fst_tree()
                 except Exception:
                     pass
+
+
+# class SliceCoerce(Fuzzy):
+#     """Test coercion between different types of nodes."""
+
+#     name = 'coerce'
+#     forever = True
+
+#     ASTS_LEAF = ASTS_LEAF_EXPR_STD | ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | {Expr}
+#     MODES = [*ASTS_LEAF,
+#         'exec',
+#         'expr',
+#         'expr_all',
+#         'expr_arglike',
+#         'expr_slice',
+#         'Tuple_elt',
+#         'Tuple',
+#         '_Assign_targets',
+#         '_decorator_list',
+#         '_arglike',
+#         '_arglikes',
+#         '_comprehension_ifs',
+#         'arguments',
+#         'arguments_lambda',
+#         'arg',
+#         'keyword',
+#         'alias',
+#         '_aliases',
+#         'Import_name',
+#         '_Import_names',
+#         'ImportFrom_name',
+#         '_ImportFrom_names',
+#         'withitem',
+#         '_withitems',
+#         'pattern',
+#         'type_param',
+#         '_type_params',
+#     ]
+
+#     def fuzz_one(self, fst, fnm) -> bool:
+#         count = 0
+
+#         try:
+#             for f in fst.walk(self.ASTS_LEAF, self_=False):
+#                 if self.check_abort():
+#                     break
+
+#                 if not ((count := count + 1) % 20):
+#                     sys.stdout.write('.'); sys.stdout.flush()
+
+#                 mode = choice(self.MODES)
+#                 g = None
+
+#                 try:
+#                     g = f.as_(mode, norm_get=True)  # norm_get for no invalid empty Sets
+
+#                 except NodeError as exc:
+#                     if not str(exc).startswith('expecting '):
+#                         raise
+
+#                     continue
+
+#                 try:
+#                     g.verify()
+
+#                 except Exception as exc:
+#                     if self.debug:
+#                         print()
+#                         print(f'{mode=}')
+#                         print(f'{f=}')
+#                         print('\n'.join(repr(l) for l in f.lines))
+#                         print(f'{g=}')
+#                         print('\n'.join(repr(l) for l in g.lines))
+#                         fc = f.copy()
+#                         print(f'{fc=}')
+#                         print('\n'.join(repr(l) for l in fc.lines))
+
+#                     raise
+
+#         finally:
+#             print()
+
+#             if self.verbose:
+#                 print(fst.src)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
