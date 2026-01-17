@@ -143,7 +143,6 @@ __all__ = [
     'leading_trivia',
     'trailing_trivia',
     'get_trivia_params',
-    'get_option_overridable',
     'clip_src_loc',
     'fixup_one_index',
     'fixup_slice_indices',
@@ -912,25 +911,6 @@ def get_trivia_params(trivia: Trivia = None, neg: bool = False) -> _Trivia:
     return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
 
 
-def get_option_overridable(overridable_option: str, override_option: str, options: Mapping[str, Any] = {}) -> object:
-    """Get an option value which can be overridden with another option, unless that option is `None`.
-
-    This is a bit tricky because in this case if `override_option` is explicitly passed in `options` with a value of
-    `None` then its value will NOT be gotten from the globals options and instead `overridable_option` will be returned
-    from `options` or global. If it is not present but `None` in global options then `overridable_option` is returned
-    again.
-    """
-
-    if (o := options.get(override_option, get_option_overridable)) is not None:  # get_option_overridable is just a sentinel value here
-        if o is not get_option_overridable:
-            return o
-
-        if (o := fst.FST.get_option(override_option)) is not None:
-            return o
-
-    return fst.FST.get_option(overridable_option, options)
-
-
 def clip_src_loc(
     self: fst.FST,
     ln: int | Literal['end'],
@@ -1086,7 +1066,7 @@ def validate_put_arglike(body: list[AST], start: int, stop: int, ast_or_list: AS
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _repr_tail(self: fst.FST, loc: bool = True) -> str:
     if loc:
@@ -1798,7 +1778,7 @@ def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None, field
 
     # assert self.a.__class__ is Tuple
 
-    if options is None or get_option_overridable('pars', 'pars_arglike', options):
+    if options is None or fst.FST._get_opt_eff_pars_arglike(options):
         for e in getattr(self.a, field):
             if (f := e.f)._is_expr_arglike_only():
                 f._parenthesize_grouping()

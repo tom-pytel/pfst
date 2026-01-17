@@ -12,7 +12,7 @@ from typing import Any, Iterator, Mapping
 
 from . import fst
 
-__all__ = ['check_options']
+__all__ = ['check_options', 'only_options']
 
 
 class _ThreadOptions(threading.local):
@@ -41,6 +41,8 @@ _ALL_OPTIONS = {*_DEFAULT_OPTIONS, 'to', 'op', 'ins_ln'}  # including dynamic no
 
 _OPTIONS = _ThreadOptions()
 
+_SENTINEL = object()
+
 
 def check_options(options: Mapping[str, Any]) -> None:
     """Make sure all options are actual options. Does not validate their actual values, just that there are no unknown
@@ -51,8 +53,137 @@ def check_options(options: Mapping[str, Any]) -> None:
             raise ValueError(f'invalid option {o!r}')
 
 
+def only_options(options: Mapping[str, Any]) -> dict[str, Any]:
+    """Copy just actual options from `options` and return."""
+
+    return {o: v for o, v in options.items() if o in _ALL_OPTIONS}
+
+
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
+
+@staticmethod
+def _get_opt_eff_pars_arglike(options: Mapping[str, Any] = {}) -> object:
+    """Get a the effective `pars_arglike` option if present from `options` dict or global default if option not in dict.
+    Otherwise use the `pars` option, again from `options` or global default if not in `options`.
+
+    **Parameters:**
+    - `options`: Dictionary which may or may not contain the requested option.
+
+    **Returns:**
+    - `object`: The effective `pars_arglike` option. Will intentionally return the `'auto'` value from `pars` if is that
+        and `pars_arglike` is `None`, so make sure to check for truthy value and not `is True`.
+    """
+
+    if (o := options.get('pars_arglike', _SENTINEL)) is not _SENTINEL:
+        if o is not None:
+            return o
+
+    elif (o := _OPTIONS.pars_arglike) is not None:
+        return o
+
+    if (o := options.get('pars', _SENTINEL)) is not _SENTINEL:
+        return o
+
+    return _OPTIONS.pars
+
+
+@staticmethod
+def _get_opt_eff_norm_self(options: Mapping[str, Any] = {}) -> object:
+    """Get a the effective `norm_self` option if present from `options` dict or global default if option not in dict.
+    Otherwise use the `norm` option, again from `options` or global default if not in `options`.
+
+    **Parameters:**
+    - `options`: Dictionary which may or may not contain the requested option.
+
+    **Returns:**
+    - `object`: The effective `norm_self` option.
+    """
+
+    if (o := options.get('norm_self', _SENTINEL)) is not _SENTINEL:
+        if o is not None:
+            return o
+
+    elif (o := _OPTIONS.norm_self) is not None:
+        return o
+
+    if (o := options.get('norm', _SENTINEL)) is not _SENTINEL:
+        return o
+
+    return _OPTIONS.norm
+
+
+@staticmethod
+def _get_opt_eff_norm_get(options: Mapping[str, Any] = {}) -> object:
+    """Get a the effective `norm_get` option if present from `options` dict or global default if option not in dict.
+    Otherwise use the `norm` option, again from `options` or global default if not in `options`.
+
+    **Parameters:**
+    - `options`: Dictionary which may or may not contain the requested option.
+
+    **Returns:**
+    - `object`: The effective `norm_get` option.
+    """
+
+    if (o := options.get('norm_get', _SENTINEL)) is not _SENTINEL:
+        if o is not None:
+            return o
+
+    elif (o := _OPTIONS.norm_get) is not None:
+        return o
+
+    if (o := options.get('norm', _SENTINEL)) is not _SENTINEL:
+        return o
+
+    return _OPTIONS.norm
+
+
+@staticmethod
+def _get_opt_eff_set_norm_self(options: Mapping[str, Any] = {}) -> object:
+    """Same as `_get_opt_eff_norm_self()` but if `True` then will return the value of the `set_norm` option, again from
+    `options` first and global if not in `options`. A non-`True` truthy value in any of the `norm` options will prevent
+    the `set_norm` value from being returned to allow override of this directly by the `norm` options.
+
+    **Parameters:**
+    - `options`: Dictionary which may or may not contain the requested option.
+
+    **Returns:**
+    - `object`: The effective `set_norm` if effective `norm_self` is `True`.
+    """
+
+    if (o := _get_opt_eff_norm_self(options)) is not True:
+        return o
+
+    if (o := options.get('set_norm', _SENTINEL)) is not _SENTINEL:
+        return o
+
+    return _OPTIONS.set_norm
+
+
+@staticmethod
+def _get_opt_eff_set_norm_get(options: Mapping[str, Any] = {}) -> object:
+    """Same as `_get_opt_eff_norm_get()` but if `True` then will return the value of the `set_norm` option, again from
+    `options` first and global if not in `options`. A non-`True` truthy value in any of the `norm` options will prevent
+    the `set_norm` value from being returned to allow override of this directly by the `norm` options.
+
+    **Parameters:**
+    - `options`: Dictionary which may or may not contain the requested option.
+
+    **Returns:**
+    - `object`: The effective `set_norm` if effective `norm_get` is `True`.
+    """
+
+    if (o := _get_opt_eff_norm_get(options)) is not True:
+        return o
+
+    if (o := options.get('set_norm', _SENTINEL)) is not _SENTINEL:
+        return o
+
+    return _OPTIONS.set_norm
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# public FST class methods
 
 @staticmethod
 def get_options() -> dict[str, Any]:
@@ -106,12 +237,9 @@ def get_option(option: str, options: Mapping[str, Any] = {}) -> object:
 
     >>> FST.get_option('pars', {'pars': True})
     True
-
-    >>> FST.get_option('pars', {'pars': None})
-    'auto'
     """
 
-    return _OPTIONS.__dict__.get(option) if (o := options.get(option)) is None else o
+    return _OPTIONS.__dict__.get(option) if (o := options.get(option, _SENTINEL)) is _SENTINEL else o
 
 
 @staticmethod

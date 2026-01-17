@@ -35,7 +35,7 @@ from .asttypes import (
 from .astutil import copy_ast
 from .common import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as__ExceptHandlers, code_as__match_cases
-from .fst_misc import get_trivia_params, get_option_overridable, fixup_slice_indices
+from .fst_misc import get_trivia_params, fixup_slice_indices
 from .fst_traverse import next_bound_step, prev_bound_step
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -962,7 +962,7 @@ def _elif_to_else_if(self: fst.FST, docstr: bool | Literal['strict'] = True) -> 
 def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
     """Whether can delete all elements of af a body list of children according to options or not."""
 
-    if field == 'orelse' or not get_option_overridable('norm', 'norm_self', options):
+    if field == 'orelse' or not fst.FST._get_opt_eff_norm_self(options):
         return True
 
     ast = self.a

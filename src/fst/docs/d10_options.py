@@ -319,10 +319,6 @@ expressions that are copied out to root level or not (`fst` does not need this b
 expression source). This is apart from the `pars` option and any explicit `par()` or walrus expressions explicitly
 created with parentheses.
 
-**Note:** This option breaks the convention that passing `None` to a function uses the global default value. If you pass
-an explicit `None` for this option to a function it really means ignore the global default for `pars_walrus` and use the
-value of `pars`, either passed in or global.
-
 >>> f = FST('b, c := d, e')
 
 >>> print(f.elts[1].copy(pars_walrus=True, pars=True).src)  # default
@@ -352,10 +348,6 @@ c := d
 This option specifies whether to parenthesize "argumentlike" expressions copied out of `Call.args`, `ClassDef.bases`
 or `Subscript.slice`. The behavior is identical to the `pars_walrus` option but for these otherwise
 invalid-if-not-parenthesized expressions instead of walruses.
-
-**Note:** This option breaks the convention that passing `None` to a function uses the global default value. If you pass
-an explicit `None` for this option to a function it really means ignore the global default for `pars_arglike` and use
-the value of `pars`, either passed in or global.
 
 >>> f = FST('call(*a or b)')
 
@@ -387,10 +379,6 @@ These options specify whether normalization should take place for operations or 
 resulting `AST` trees are valid. `fst` allows you to create invalid trees during editing by deleting all or most
 elements from nodes which don't normally allow it for the sake of simplifying editing. For more information on
 normalization see `fst.docs.d06_slices`.
-
-**Note:** The `norm_self` and `norm_get` options break the convention that passing `None` to a function uses the global
-default value. If you pass an explicit `None` for any of these options to a function it really means ignore the global
-default for that option and use the value of `norm`, either passed in or global.
 
 >>> _ = (f := FST('{a, b}')).get_slice(0, 2, cut=True, norm_self=None, norm=True)
 >>> _ = f.dump('stmt')
@@ -424,6 +412,9 @@ Set - ROOT 0,0..0,5
 Set - ROOT 0,0..0,2
 
 `norm_self` and `norm_get` exist for fine-grained control. `norm` exists as a convenience to set both of these at once.
+
+When using for an operation on a `Set`, a `set_norm` option value from below can be passed directly in any of the `norm`
+options as a truthy value and will override current `set_norm`.
 
 
 ## `set_norm` option

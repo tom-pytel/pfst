@@ -663,7 +663,7 @@ _GET_ONE_HANDLERS = {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""

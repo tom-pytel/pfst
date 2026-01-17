@@ -561,7 +561,7 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> fst.FST:  # -> self
     """Create tree of `FST` nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes

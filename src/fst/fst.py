@@ -5107,6 +5107,14 @@ class FST:
         _loc_Global_Nonlocal_names,
     )
 
+    from .fst_options import (
+        _get_opt_eff_pars_arglike,
+        _get_opt_eff_norm_self,
+        _get_opt_eff_norm_get,
+        _get_opt_eff_set_norm_self,
+        _get_opt_eff_set_norm_get,
+    )
+
     from .fst_raw import _reparse_raw
     from .fst_get_slice import _get_slice
     from .fst_put_slice import _put_slice

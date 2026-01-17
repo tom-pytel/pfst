@@ -124,7 +124,7 @@ def prev_bound_step(self: fst.FST) -> tuple[int, int]:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# public FST class methods
 
 def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False) -> fst.FST | None:
     """Get next sibling of `self` in syntactic order, only within parent.

@@ -82,7 +82,6 @@ from .fst_misc import (
     new_empty_set_star,
     new_empty_set_call,
     new_empty_set_curlies,
-    get_option_overridable,
     fixup_slice_indices,
 )
 
@@ -96,12 +95,6 @@ _re_empty_line_start_maybe_cont_1 = re.compile(r'[ \t]+\\?')  # empty line start
 
 # ......................................................................................................................
 # shared with fst_put_slice
-
-def _get_option_norm(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
-    norm_value = get_option_overridable('norm', override_option, options)
-
-    return fst.FST.get_option(norm_option, options) if norm_value is True else norm_value
-
 
 def _get_option_op_side(is_first: bool, is_last: bool, options: Mapping[str, Any]) -> bool | None:
     """Get concrete `op_side_left` from `op_side` option hint and actual location of slice (if at start or end).
@@ -673,7 +666,7 @@ def _fix_decorator_list_del(
             root._offset(bound_ln, 0, 1, 0)
 
 
-def _fix_Set(self: fst.FST, norm: bool | str = True) -> None:
+def _fix_Set(self: fst.FST, norm: bool | Literal['star', 'call'] = True) -> None:
     assert self.a.__class__ is Set
 
     ast = self.a
@@ -948,7 +941,7 @@ def _get_slice_Set_elts(
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        get_norm = _get_option_norm('norm_get', 'set_norm', options)
+        get_norm = fst.FST._get_opt_eff_set_norm_get(options)
 
         return (
             new_empty_set_curlies(from_=self) if not get_norm else
@@ -964,7 +957,7 @@ def _get_slice_Set_elts(
                          options, 'elts', '{', '}', ',', 0, 0)
 
     if cut:
-        _fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
+        _fix_Set(self, fst.FST._get_opt_eff_set_norm_self(options))
 
     return fst_
 
@@ -1017,7 +1010,7 @@ def _get_slice_Delete_targets(
     if not len_slice:
         return new_empty_tuple(from_=self)
 
-    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError("cannot cut all Delete.targets without norm_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
@@ -1065,7 +1058,7 @@ def _get_slice_Assign_targets(
         return fst.FST(_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError("cannot cut all Assign.targets without norm_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
@@ -1104,7 +1097,7 @@ def _get_slice_With_AsyncWith_items(
         return fst.FST(_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without norm_self=False')
 
     loc_first = body[start].f.loc
@@ -1159,7 +1152,7 @@ def _get_slice_Import_names(
         return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError('cannot cut all Import.names without norm_self=False')
 
     loc_first = body[start].f.loc
@@ -1207,7 +1200,7 @@ def _get_slice_ImportFrom_names(
         return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError('cannot cut all ImportFrom.names without norm_self=False')
 
     loc_first = body[start].f.loc
@@ -1260,7 +1253,7 @@ def _get_slice_Global_Nonlocal_names(
     if not len_slice:
         return new_empty_tuple(from_=self)
 
-    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without norm_self=False')
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
@@ -1335,8 +1328,8 @@ def _get_slice_Boolop_values(
     len_slice = stop - start
     is_first = not start
     is_last = stop == len_body
-    norm_get = get_option_overridable('norm', 'norm_get', options)
-    norm_self = get_option_overridable('norm', 'norm_self', options)
+    norm_get = fst.FST._get_opt_eff_norm_get(options)
+    norm_self = fst.FST._get_opt_eff_norm_self(options)
 
     if not len_slice:
         if norm_get:
@@ -1443,8 +1436,8 @@ def _get_slice_Compare__all(
     len_slice = stop - start
     is_first = not start
     is_last = stop == len_body
-    norm_get = get_option_overridable('norm', 'norm_get', options)
-    norm_self = get_option_overridable('norm', 'norm_self', options)
+    norm_get = fst.FST._get_opt_eff_norm_get(options)
+    norm_self = fst.FST._get_opt_eff_norm_self(options)
 
     if not len_slice:
         raise ValueError("cannot get empty slice from Compare")
@@ -1776,7 +1769,7 @@ def _get_slice_generators(
                        [''], None, from_=self)
 
     if ast.__class__ is not _comprehensions:
-        if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError(f'cannot cut all {ast.__class__.__name__}.generators without norm_self=False')
 
     loc_first = body[start].f.loc
@@ -1930,8 +1923,8 @@ def _get_slice_MatchOr_patterns(
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    norm_get = get_option_overridable('norm', 'norm_get', options)
-    norm_self = get_option_overridable('norm', 'norm_self', options)
+    norm_get = fst.FST._get_opt_eff_norm_get(options)
+    norm_self = fst.FST._get_opt_eff_norm_self(options)
 
     if not len_slice:
         if norm_get:
@@ -2168,7 +2161,7 @@ _GET_SLICE_HANDLERS = {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _get_slice(
     self: fst.FST,

@@ -148,12 +148,11 @@ from .code import (
     code_as__expr_arglikes,
 )
 
-from .fst_misc import get_option_overridable, fixup_slice_indices, validate_put_arglike
+from .fst_misc import fixup_slice_indices, validate_put_arglike
 from .slice_stmtlike import put_slice_stmtlike
 from .slice_exprlike import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
 
 from .fst_get_slice import (
-    _get_option_norm,
     _get_option_op_side,
     _bounds_Delete_targets,
     _bounds_Assign_targets,
@@ -1523,7 +1522,7 @@ def _put_slice_Set_elts(
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
-    _fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
+    _fix_Set(self, fst.FST._get_opt_eff_set_norm_self(options))
 
 
 def _put_slice_Dict__all(
@@ -1602,7 +1601,7 @@ def _put_slice_Delete_targets(
         if not len_slice:
             return
 
-        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError("cannot delete all Delete.targets without norm_self=False")
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
@@ -1645,7 +1644,7 @@ def _put_slice_Assign_targets(
         if not len_slice:
             return
 
-        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError("cannot delete all Assign.targets without norm_self=False")
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_Assign_targets(self)
@@ -1678,7 +1677,7 @@ def _put_slice_With_AsyncWith_items(
         if not len_slice:
             return
 
-        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError(f'cannot delete all {ast.__class__.__name__}.items without norm_self=False')
 
     pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header `:`
@@ -1725,7 +1724,7 @@ def _put_slice_Import_names(
         if not len_slice:
             return
 
-        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError('cannot delete all Import.names without norm_self=False')
 
     _, _, bound_end_ln, bound_end_col = self.loc
@@ -1774,7 +1773,7 @@ def _put_slice_ImportFrom_names(
         if not len_slice:
             return
 
-        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError('cannot delete all ImportFrom.names without norm_self=False')
 
     else:
@@ -1842,7 +1841,7 @@ def _put_slice_Global_Nonlocal_names(
         if not len_slice:
             return
 
-        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
             raise ValueError(f'cannot delete all {ast.__class__.__name__}.names without norm_self=False')
 
     else:
@@ -2107,7 +2106,7 @@ def _put_slice_generators(
             return
 
         if ast.__class__ is not _comprehensions:
-            if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
                 raise ValueError(f'cannot delete all {ast.__class__.__name__}.generators without norm_self=False')
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_generators(self)
@@ -2202,7 +2201,7 @@ def _put_slice_BoolOp_values(
     is_first = not start
     is_last = stop == len_body
     is_ins = not len_slice if len_body else False  # put to empty body is not considereed insert but replace for the purposes of dangling operators, could still be delete if code is None or empty BoolOp so is_del after code_to overrides this
-    norm_self = get_option_overridable('norm', 'norm_self', options)
+    norm_self = fst.FST._get_opt_eff_norm_self(options)
 
     fst_, op_side_left = (
         _code_to_slice_BoolOp_values_maybe_dangling(self, code, one, options, is_first, is_last, is_ins))
@@ -2396,7 +2395,7 @@ def _put_slice_Compare__all(
         body[i].f.pfield = astfield('comparators', i)
         ops[i].f.pfield = astfield('ops', i)
 
-    _fix_Compare(self, start, is_del, is_last, options, get_option_overridable('norm', 'norm_self', options))
+    _fix_Compare(self, start, is_del, is_last, options, fst.FST._get_opt_eff_norm_self(options))
 
 
 def _put_slice_Call_args(
@@ -2659,7 +2658,7 @@ def _put_slice_MatchOr_patterns(
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    self_norm = get_option_overridable('norm', 'norm_self', options)
+    self_norm = fst.FST._get_opt_eff_norm_self(options)
 
     fst_ = _code_to_slice_MatchOr(self, code, one, options)
 
@@ -3306,7 +3305,7 @@ def _put_slice_raw(
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _put_slice(
     self: fst.FST,

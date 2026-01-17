@@ -2870,7 +2870,7 @@ def _put_one_raw(
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _put_one(
     self: fst.FST,

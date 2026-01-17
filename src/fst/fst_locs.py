@@ -95,7 +95,7 @@ def _prev_bound_step_own_loc(self: fst.FST) -> tuple[int, int]:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class methods
+# private FST class methods
 
 def _loc_maybe_key(
     self: fst.FST, idx: int, pars: bool = True, body: list[AST] | None = None, body2: list[AST] | None = None
