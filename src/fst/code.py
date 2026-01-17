@@ -420,12 +420,15 @@ def _coerce_to_pattern_ast_Starred(
     if value.__class__ is not Name:
         return f'value must be Name, not {value.__class__.__name__}'
 
+    if (name := value.id) == '_':
+        name = None
+
     if not is_FST:
-        return MatchStar(name=value.id)
+        return MatchStar(name=name)
 
     value.f._unparenthesize_grouping(False)
 
-    return MatchStar(name=value.id, lineno=ast.lineno, col_offset=ast.col_offset,
+    return MatchStar(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Name(
@@ -433,10 +436,13 @@ def _coerce_to_pattern_ast_Name(
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
-    return (MatchAs(name=ast.id, lineno=ast.lineno, col_offset=ast.col_offset,
+    if (name := ast.id) == '_':
+        name = None
+
+    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
             if is_FST else  # may not have location attrs
-            MatchAs(name=ast.id)
+            MatchAs(name=name)
     )
 
 def _coerce_to_pattern_ast_arg(
@@ -447,10 +453,13 @@ def _coerce_to_pattern_ast_arg(
     if ast.annotation:
         return 'arg has annotation'
 
-    return (MatchAs(name=ast.arg, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+    if (name := ast.arg) == '_':
+        name = None
+
+    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                     end_col_offset=ast.end_col_offset)
             if is_FST else  # may not have location attrs
-            MatchAs(name=ast.arg)
+            MatchAs(name=name)
     )
 
 def _coerce_to_pattern_ast_alias(
@@ -464,6 +473,9 @@ def _coerce_to_pattern_ast_alias(
         return "star '*' alias"
     if '.' in name:
         return "dotted alias"
+
+    if (name := name) == '_':
+        name = None
 
     return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -493,10 +505,13 @@ def _coerce_to_pattern_ast_TypeVar(
     if getattr(ast, 'default_value', None):
         return 'has default_value'
 
-    return (MatchAs(name=ast.name, lineno=ast.lineno, col_offset=ast.col_offset,
+    if (name := ast.name) == '_':
+        name = None
+
+    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
             if is_FST else  # may not have location attrs
-            MatchAs(name=ast.name)
+            MatchAs(name=name)
     )
 
 def _coerce_to_pattern_ast_TypeVarTuple(
@@ -507,10 +522,13 @@ def _coerce_to_pattern_ast_TypeVarTuple(
     if getattr(ast, 'default_value', None):
         return 'has default_value'
 
-    if not is_FST:
-        return MatchStar(name=ast.name)
+    if (name := ast.name) == '_':
+        name = None
 
-    return MatchStar(name=ast.name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+    if not is_FST:
+        return MatchStar(name=name)
+
+    return MatchStar(name=name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                      end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Dict(
@@ -1220,7 +1238,7 @@ def _coerce_to_expr_ast_MatchStar(
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
-    name = ast.name
+    name = ast.name or '_'
 
     if not is_FST:
         ret = Starred(value=Name(id=name))
@@ -1246,10 +1264,12 @@ def _coerce_to_expr_ast_MatchAs(
     if ast.pattern:
         return 'has pattern'
 
-    return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+    name = ast.name or '_'
+
+    return (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
             if is_FST else  # may not have location attrs
-            Name(id=ast.name)
+            Name(id=name)
     ), False, 2
 
 def _coerce_to_expr_ast_MatchSequence(
