@@ -93,6 +93,7 @@ from .astutil import (
     is_valid_identifier_star,
     is_valid_identifier_alias,
     is_valid_target,
+    precedence_require_parens,
 )
 
 from .common import NodeError, nspace, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re, next_delims
@@ -229,6 +230,74 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
         self.a.end_col_offset = l.lenbytes
 
         self._touch()
+
+
+def _par_if_needed(
+    self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False
+) -> bool:
+    """Parenthesize node if needed for precedence or parsability (this one optional). We expect this to be called on
+    stuff that can actually be parenthesized.
+
+    **Parameters:**
+    - `has_pars`: Whether has grouping parentheses or not. Actions for `True` and `False` are asymmetric.
+        - `True`: There are grouping parentheses so the function will just return.
+        - `False`: There are not grouping parentheses, but atomicity will still be checked and the function may not
+            parenthesize.
+        - `None`: Unknown if there are grouping parentheses or not, will be checked and action taken based on this.
+    - `parsability`: Whether to parenthesize for parsability or not.
+    - `arglike`: Whether `self` is in a container which allows arglike-only expressions (`Call.args`, etc...).
+
+    **Returns:**
+    - `bool`: Whether parentheses were added or not.
+    """
+
+    if has_pars:  # convenience early out
+        return False
+
+    ast_cls = self.a.__class__
+
+    if ast_cls is Tuple:
+        has_pars = bool(self._is_delimited_seq())
+    elif ast_cls is MatchSequence:
+        has_pars = bool(self._is_delimited_seq('patterns'))
+    elif has_pars is None:
+        has_pars = self.pars().n
+
+    if has_pars:
+        return False
+
+    child = self.a
+
+    if child.__class__ is Starred:
+        parent = child
+        child = child.value
+        field = 'value'
+        idx = None
+
+    elif parent := self.parent:
+        parent = parent.a
+        field, idx = self.pfield
+
+    else:
+        field = None
+
+    if parent:  # if there is a parent then we can check for precedence
+        need_pars = precedence_require_parens(child, parent, field, idx, arglike=arglike)
+    else:
+        need_pars = False
+
+    if not need_pars:  # if not needed for precedence then check if needed for parsability
+        need_pars = not self._is_enclosed_in_parents(field) and not self._is_enclosed_or_line(pars=False)
+
+    if need_pars:
+        if ast_cls is Tuple:
+            self._delimit_node(False)
+        elif ast_cls is MatchSequence:
+            self._delimit_node(False, '[]')
+        else:
+            self.par(whole=False)
+
+    return need_pars
 
 
 # ......................................................................................................................
@@ -1775,9 +1844,11 @@ def _coerce_to_stmt(
     """See `_coerce_to__Assign_targets()`."""
 
     fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
+    ast_ = fst_.a
 
     lines = fst_._lines
-    ln, col, end_ln, end_col = fst_.pars()
+    pars = fst_.pars()
+    ln, col, end_ln, end_col = pars
     new_ln, _ = lline_start(lines, 0, 0, ln, col)  # new_col will be at 0, guaranteed
 
     if col or new_ln != ln:
@@ -1791,7 +1862,11 @@ def _coerce_to_stmt(
     ast = Expr(value=None, lineno=new_ln + 1, col_offset=0, end_lineno=end_ln + 1,
                end_col_offset=lines[end_ln].c2b(end_col))
 
-    return fst.FST(ast, lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'value', True, False)
+    fst_ = fst.FST(ast, lines, None, from_=fst_, lcopy=False)._set_field(ast_, 'value', True, False)
+
+    _par_if_needed(ast_.f, bool(pars.n))
+
+    return fst_
 
 
 def _coerce_to_stmts(
@@ -2219,10 +2294,16 @@ def _coerce_to__comprehension_ifs(
             lines = fst_._lines
             last_ln = len(lines) - 1  # this never changes because the _put_src() calls are never multiline
             comma_ln = comma_col = -1
+            maybe_par = []
 
             for e in elts:
                 f = e.f
-                ln, col, end_ln, end_col = f.pars()
+                pars = f.pars()
+                ln, col, end_ln, end_col = pars
+
+                if not pars.n:
+                    maybe_par.append(f)
+
                 if_src = ' if ' if col == comma_col and ln == comma_ln else 'if '  # guard against joining alphanumerics of this if with previous expression, also leave a nice space if right after a par
 
                 if frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff):
@@ -2239,6 +2320,9 @@ def _coerce_to__comprehension_ifs(
             ast.col_offset = 0  # because could have been moved by first insert of 'if ' before first element, this is the simplest way to correct that
 
             fst_._touch()
+
+            for f in maybe_par:
+                _par_if_needed(f, False)
 
             return fst_._sanitize() if sanitize else fst_
 
@@ -2258,21 +2342,30 @@ def _code_as_one__comprehension_ifs(
     coerce: bool = False,
 ) -> fst.FST:
     fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=coerce)
+    ast_ = fst_.a
 
-    if fst_.a.__class__ is Starred:
+    if ast_.__class__ is Starred:
         raise NodeError('comprehension if cannot be Starred')
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
+        ln, col, _, _ = fst_.loc
+        has_pars = True
 
-    ln, col, _, _ = fst_.pars()
+    else:
+        pars = fst_.pars()
+        ln, col, _, _ = pars
+        has_pars = bool(pars.n)
 
     fst_._put_src('if ', ln, col, ln, col, False)  # prepend 'if' to expression to make it a _comprehension_ifs slice, we do it before the container because the container will have to start at 0, 0
 
     ast = _comprehension_ifs(ifs=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                              end_col_offset=ls[-1].lenbytes)
+    fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'ifs', True, False)
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'ifs', True, False)
+    _par_if_needed(ast_.f, has_pars)
+
+    return fst_
 
 
 def _coerce_to_arg(

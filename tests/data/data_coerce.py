@@ -10,6 +10,34 @@ from fst.asttypes import *
 DATA_COERCE = {
 'stmt': [  # ................................................................................
 
+('', 0, 0, 'stmt', {}, ('NamedExpr',
+r'''a := b'''),
+r'''(a := b)''',
+r'''(a := b)''', r'''
+Expr - ROOT 0,0..0,8
+  .value NamedExpr - 0,1..0,7
+    .target Name 'a' Store - 0,1..0,2
+    .value Name 'b' Load - 0,6..0,7
+'''),
+
+('', 0, 0, 'stmt', {}, ('Yield',
+r'''yield'''),
+r'''yield''',
+r'''(yield)''', r'''
+Expr - ROOT 0,0..0,5
+  .value Yield - 0,0..0,5
+'''),
+
+('', 0, 0, 'stmt', {}, ('IfExp',
+r'''a if b else c'''),
+r'''a if b else c''', r'''
+Expr - ROOT 0,0..0,13
+  .value IfExp - 0,0..0,13
+    .test Name 'b' Load - 0,5..0,6
+    .body Name 'a' Load - 0,0..0,1
+    .orelse Name 'c' Load - 0,12..0,13
+'''),
+
 ('', 0, 0, 'stmt', {}, ('Module', r'''
 # 0
 a # 1
@@ -72,6 +100,40 @@ Expr - ROOT 0,0..2,3
 ],
 
 'stmts': [  # ................................................................................
+
+('', 0, 0, 'stmts', {}, ('NamedExpr',
+r'''a := b'''),
+r'''(a := b)''',
+r'''(a := b)''', r'''
+Module - ROOT 0,0..0,8
+  .body[1]
+   0] Expr - 0,0..0,8
+     .value NamedExpr - 0,1..0,7
+       .target Name 'a' Store - 0,1..0,2
+       .value Name 'b' Load - 0,6..0,7
+'''),
+
+('', 0, 0, 'stmts', {}, ('Yield',
+r'''yield'''),
+r'''yield''',
+r'''(yield)''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Expr - 0,0..0,5
+     .value Yield - 0,0..0,5
+'''),
+
+('', 0, 0, 'stmts', {}, ('IfExp',
+r'''a if b else c'''),
+r'''a if b else c''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+   0] Expr - 0,0..0,13
+     .value IfExp - 0,0..0,13
+       .test Name 'b' Load - 0,5..0,6
+       .body Name 'a' Load - 0,0..0,1
+       .orelse Name 'c' Load - 0,12..0,13
+'''),
 
 ('', 0, 0, 'stmts', {}, ('Interactive',
 r'''a; b'''),
