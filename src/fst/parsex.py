@@ -1788,10 +1788,10 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         ast = items[0].context_expr
         ast_cls = ast.__class__
 
-        if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-            raise SyntaxError('expecting withitems, got unparenthesized GeneratorExp')
-
         if ast.lineno == 1:  # something merged with our grouping pars, maybe the user was screwing around and passed ')+('
+            if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+                raise SyntaxError('expecting withitems, got unparenthesized GeneratorExp')
+
             if ast_cls is Tuple and not ast.elts:  # empty tuple created by our pars
                 items = []
             else:

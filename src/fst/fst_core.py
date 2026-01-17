@@ -83,6 +83,8 @@ from .asttypes import (
     type_param,
     TemplateStr,
     Interpolation,
+    _arglikes,
+    _comprehension_ifs,
 )
 
 from .astutil import bistr, syntax_ordered_children
@@ -1254,7 +1256,8 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
 
         if parent_cls in (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
                           FormattedValue, Interpolation, JoinedStr, TemplateStr,
-                          MatchMapping):
+                          MatchMapping,
+                          _arglikes, _comprehension_ifs):  # _arglikes and _comprehension_ifs are considered functionally enclosed because their contents are always used enclosed
             return True
 
         if parent_cls in ASTS_LEAF_FUNCDEF:

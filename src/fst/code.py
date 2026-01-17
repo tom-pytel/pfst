@@ -233,7 +233,7 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
 
 
 def _par_if_needed(
-    self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False
+    self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False, whole: bool = False
 ) -> bool:
     """Parenthesize node if needed for precedence or parsability (this one optional). We expect this to be called on
     stuff that can actually be parenthesized.
@@ -286,16 +286,16 @@ def _par_if_needed(
     else:
         need_pars = False
 
-    if not need_pars:  # if not needed for precedence then check if needed for parsability
-        need_pars = not self._is_enclosed_in_parents(field) and not self._is_enclosed_or_line(pars=False)
+    if not need_pars and parsability:  # if not needed for precedence then check if needed for parsability
+        need_pars = not self._is_enclosed_in_parents(field) and not self._is_enclosed_or_line(pars=False, whole=whole)
 
     if need_pars:
         if ast_cls is Tuple:
-            self._delimit_node(False)
+            self._delimit_node(whole)
         elif ast_cls is MatchSequence:
-            self._delimit_node(False, '[]')
+            self._delimit_node(whole, '[]')
         else:
-            self.par(whole=False)
+            self.par(whole=whole)
 
     return need_pars
 
@@ -2141,12 +2141,15 @@ def _coerce_to__decorator_list(
             lines = fst_._lines
             last_end_ln = last_end_col = 0
             last_f = None
+            maybe_par = []
 
             for e in elts:
                 f = e.f
 
                 if (is_pard := f.is_parenthesized_tuple()) is None:
                     end_ln, end_col, _, _ = f.pars()
+
+                    maybe_par.append(f)
 
                 else:
                     if is_pard is False:  # this doesn't really make sense to happen, but cover it anyway
@@ -2175,6 +2178,9 @@ def _coerce_to__decorator_list(
             if sanitize:
                 fst_ = fst_._sanitize()
 
+            for f in maybe_par:
+                _par_if_needed(f, False)
+
             _fix__slice_last_line_continuation(fst_, lines, last_end_ln, last_end_col)
 
             return fst_
@@ -2195,21 +2201,30 @@ def _code_as_one__decorator_list(
     coerce: bool = False,
 ) -> fst.FST:
     fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=coerce)
+    ast_ = fst_.a
 
-    if fst_.a.__class__ is Starred:
+    if ast_.__class__ is Starred:
         raise NodeError('decorator cannot be Starred')
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
+        ln = fst_.ln
+        has_pars = True
 
-    ln = fst_.pars().ln
+    else:
+        pars = fst_.pars()
+        ln = pars.ln
+        has_pars = bool(pars.n)
 
     fst_._put_src('@', ln, 0, ln, 0, False)  # prepend '@' to expression on line of expression at start to make it a _decorator_list slice
 
     ast = _decorator_list(decorator_list=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                           end_col_offset=ls[-1].lenbytes)
+    fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'decorator_list', True, False)
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'decorator_list', True, False)
+    _par_if_needed(ast_.f, has_pars)
+
+    return fst_
 
 
 def _coerce_to__arglike(
@@ -2243,19 +2258,24 @@ def _coerce_to__arglikes(
                             end_col_offset=ls[-1].lenbytes)
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
-        return fst_._sanitize() if sanitize else fst_
+        if sanitize:
+            fst_ = fst_._sanitize()
 
-    # single element as sequence
+    else:  # single element as sequence
+        fst_ = code_as__arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
 
-    fst_ = code_as__arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
+        # if fst_.is_parenthesized_tuple() is False:  # doesn't currently happen, but could in the future, tuple is caught above and tuple str fails in parse
+        #     fst_._delimit_node()
 
-    # if fst_.is_parenthesized_tuple() is False:  # doesn't currently happen, but could in the future, tuple is caught above and tuple str fails in parse
-    #     fst_._delimit_node()
+        ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                        end_col_offset=ls[-1].lenbytes)
 
-    ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                    end_col_offset=ls[-1].lenbytes)
+        fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'arglikes', True, False)
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'arglikes', True, False)
+    for a in fst_.a.arglikes:
+        _par_if_needed(a.f, None, False, True)
+
+    return fst_
 
 
 def _coerce_to__comprehensions(
@@ -2322,7 +2342,7 @@ def _coerce_to__comprehension_ifs(
             fst_._touch()
 
             for f in maybe_par:
-                _par_if_needed(f, False)
+                _par_if_needed(f, False, False)
 
             return fst_._sanitize() if sanitize else fst_
 
@@ -2349,6 +2369,7 @@ def _code_as_one__comprehension_ifs(
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
+
         ln, col, _, _ = fst_.loc
         has_pars = True
 

@@ -135,7 +135,7 @@ Module - ROOT 0,0..0,13
        .orelse Name 'c' Load - 0,12..0,13
 '''),
 
-('', 0, 0, 'stmts', {}, ('Interactive',
+('', 0, 0, 'stmts', {'_ver': 14}, ('Interactive',
 r'''a; b'''),
 r'''a; b''', r'''
 Module - ROOT 0,0..0,4
