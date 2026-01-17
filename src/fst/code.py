@@ -232,7 +232,7 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
 # ......................................................................................................................
 
 def _coerce_to_pattern_ast_ret_empty_str(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """These are the individual `AST` coerce functions. The returned `AST` may or may not have location information. In
     the case of `is_FST=False`. In the case of `is_FST=True`, it **MUST** have location information as the returned
@@ -254,7 +254,7 @@ def _coerce_to_pattern_ast_ret_empty_str(
     return ''
 
 def _coerce_to_pattern_ast_stmtmod(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -267,30 +267,30 @@ def _coerce_to_pattern_ast_stmtmod(
     ast = ast.value
 
     return _AST_COERCE_TO_PATTERN_FUNCS.get(
-        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
 def _coerce_to_pattern_ast_Expression(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     ast = ast.body
 
     return _AST_COERCE_TO_PATTERN_FUNCS.get(
-        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
 def _coerce_to_pattern_ast_Expr(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     ast = ast.value
 
     return _AST_COERCE_TO_PATTERN_FUNCS.get(
-        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
 def _coerce_to_pattern_ast_Constant(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -314,7 +314,7 @@ def _coerce_to_pattern_ast_Constant(
     )
 
 def _coerce_to_pattern_ast_Attribute(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -340,7 +340,7 @@ def _coerce_to_pattern_ast_Attribute(
     )
 
 def _coerce_to_pattern_ast_Starred(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -358,7 +358,7 @@ def _coerce_to_pattern_ast_Starred(
                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Name(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -369,7 +369,7 @@ def _coerce_to_pattern_ast_Name(
     )
 
 def _coerce_to_pattern_ast_arg(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -383,7 +383,7 @@ def _coerce_to_pattern_ast_arg(
     )
 
 def _coerce_to_pattern_ast_alias(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -400,7 +400,7 @@ def _coerce_to_pattern_ast_alias(
             MatchAs(name=name))
 
 def _coerce_to_pattern_ast_withitem(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -410,10 +410,10 @@ def _coerce_to_pattern_ast_withitem(
     ast = ast.context_expr
 
     return _AST_COERCE_TO_PATTERN_FUNCS.get(
-        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
 def _coerce_to_pattern_ast_TypeVar(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -429,7 +429,7 @@ def _coerce_to_pattern_ast_TypeVar(
     )
 
 def _coerce_to_pattern_ast_TypeVarTuple(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -443,7 +443,7 @@ def _coerce_to_pattern_ast_TypeVarTuple(
                      end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Dict(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -471,7 +471,7 @@ def _coerce_to_pattern_ast_Dict(
             key.f._unparenthesize_grouping(False)  # cannot have pars
 
         key = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            key_cls, _coerce_to_expr_ast_ret_empty_str)(key, is_FST, options, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+            key_cls, _coerce_to_expr_ast_ret_empty_str)(key, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
         if key.__class__ is str:
             return key
@@ -479,7 +479,7 @@ def _coerce_to_pattern_ast_Dict(
         keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression
 
         value = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
         if value.__class__ is str:
             return value
@@ -493,7 +493,7 @@ def _coerce_to_pattern_ast_Dict(
                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Call(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -505,7 +505,7 @@ def _coerce_to_pattern_ast_Call(
             func.f._unparenthesize_grouping(False)  # cannot have pars
 
         res = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            func_cls, _coerce_to_expr_ast_ret_empty_str)(func, is_FST, options, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+            func_cls, _coerce_to_expr_ast_ret_empty_str)(func, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
         if res.__class__ is str:
             return res
@@ -522,7 +522,7 @@ def _coerce_to_pattern_ast_Call(
             return 'cannot have Starred'
 
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            arg.__class__, _coerce_to_expr_ast_ret_empty_str)(arg, is_FST, options, parse_params, kwargs)
+            arg.__class__, _coerce_to_expr_ast_ret_empty_str)(arg, is_FST, options, parse_params)
 
         if pat.__class__ is str:
             return pat
@@ -537,7 +537,7 @@ def _coerce_to_pattern_ast_Call(
             return "cannot have '**' keyword"
 
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params, kwargs)
+            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params)
 
         if pat.__class__ is str:
             return pat
@@ -552,7 +552,7 @@ def _coerce_to_pattern_ast_Call(
                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_BinOp(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -565,7 +565,7 @@ def _coerce_to_pattern_ast_BinOp(
         return 'cannot have Starred'
 
     pat_right = _AST_COERCE_TO_PATTERN_FUNCS.get(
-        right.__class__, _coerce_to_expr_ast_ret_empty_str)(right, is_FST, options, parse_params, kwargs)
+        right.__class__, _coerce_to_expr_ast_ret_empty_str)(right, is_FST, options, parse_params)
 
     if pat_right.__class__ is str:
         return pat_right
@@ -576,7 +576,7 @@ def _coerce_to_pattern_ast_BinOp(
         return 'cannot have Starred'
 
     pat_left = _AST_COERCE_TO_PATTERN_FUNCS.get(
-        left.__class__, _coerce_to_expr_ast_ret_empty_str)(left, is_FST, options, parse_params, kwargs)
+        left.__class__, _coerce_to_expr_ast_ret_empty_str)(left, is_FST, options, parse_params)
 
     pat_left_cls = pat_left.__class__
 
@@ -595,7 +595,7 @@ def _coerce_to_pattern_ast_BinOp(
                    end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_seq(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -630,7 +630,7 @@ def _coerce_to_pattern_ast_seq(
 
         if is_FST:
             res = _AST_COERCE_TO_EXPR_FUNCS.get(
-                ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)  # just need to convert their special syntax to comma-delimited sequence
+                ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # just need to convert their special syntax to comma-delimited sequence
 
             if res.__class__ is str:
                 return res  # pragma: no cover  # not currently returned for these types
@@ -639,7 +639,7 @@ def _coerce_to_pattern_ast_seq(
 
     elif ast_cls in (arguments, _aliases, _withitems, _type_params):
         res = _AST_COERCE_TO_EXPR_FUNCS.get(
-            ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)  # need to convert their elements to expressions, container will be Tuple
+            ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # need to convert their elements to expressions, container will be Tuple
 
         if res.__class__ is str:
             return res
@@ -659,7 +659,7 @@ def _coerce_to_pattern_ast_seq(
 
     for e in elts:
         e = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            e.__class__, _coerce_to_pattern_ast_ret_empty_str)(e, is_FST, options, parse_params, kwargs)
+            e.__class__, _coerce_to_pattern_ast_ret_empty_str)(e, is_FST, options, parse_params)
 
         if e.__class__ is str:
             return e
@@ -705,7 +705,7 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
 # ......................................................................................................................
 
 def _coerce_to_expr_ast_ret_empty_str(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """These are the individual `AST` coerce functions. The returned `AST` may or may not have location information. In
     the case of `is_FST=False`. In the case of `is_FST=True`, it **MUST** have location information as the returned
@@ -742,7 +742,7 @@ def _coerce_to_expr_ast_ret_empty_str(
     return ''
 
 def _coerce_to_expr_ast_stmtmod(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -755,21 +755,21 @@ def _coerce_to_expr_ast_stmtmod(
     return ast.value, False, 0
 
 def _coerce_to_expr_ast_Expression(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return ast.body, False, 0
 
 def _coerce_to_expr_ast_value(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return ast.value, False, 0
 
 def _coerce_to_expr_ast__Assign_targets(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -808,7 +808,7 @@ def _coerce_to_expr_ast__Assign_targets(
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _coerce_to_expr_ast__decorator_list(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -833,7 +833,7 @@ def _coerce_to_expr_ast__decorator_list(
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _coerce_to_expr_ast__arglikes(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -846,7 +846,7 @@ def _coerce_to_expr_ast__arglikes(
         ret = Tuple(elts=arglikes)
 
     else:
-        pars_arglike = kwargs.get('pars_arglike', True)  # this is a definitive yes / no, not None, and global option not checked here
+        pars_arglike = fst.FST._get_opt_eff_pars_arglike(options)
 
         for a in arglikes:
             if a.__class__ is keyword:
@@ -861,7 +861,7 @@ def _coerce_to_expr_ast__arglikes(
     return ret, True, 1
 
 def _coerce_to_expr_ast__comprehension_ifs(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -887,7 +887,7 @@ def _coerce_to_expr_ast__comprehension_ifs(
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _coerce_to_expr_ast_List_or_Set(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This function is meant for inter-expression coercion from a `List` or
     `Set` to a specifically requested `Tuple`."""
@@ -909,7 +909,7 @@ def _coerce_to_expr_ast_List_or_Set(
     return ret, False, 1
 
 def _coerce_to_expr_ast_arguments(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -983,7 +983,7 @@ def _coerce_to_expr_ast_arguments(
                  end_col_offset=lines[end_ln].c2b(end_col)), False, 2
 
 def _coerce_to_expr_ast_arg(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -997,7 +997,7 @@ def _coerce_to_expr_ast_arg(
     ), False, 2
 
 def _coerce_to_expr_ast_alias(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1031,7 +1031,7 @@ def _coerce_to_expr_ast_alias(
     return ast, False, 2
 
 def _coerce_to_expr_ast__aliases(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1047,7 +1047,7 @@ def _coerce_to_expr_ast__aliases(
 
         if not is_FST:
             for a in ast.names:
-                res = _coerce_to_expr_ast_alias(a, is_FST, options, parse_params, kwargs)
+                res = _coerce_to_expr_ast_alias(a, is_FST, options, parse_params)
 
                 if res.__class__ is str:
                     return res  # pragma: no cover  # this cannot currently happen
@@ -1074,7 +1074,7 @@ def _coerce_to_expr_ast__aliases(
     ), True, 2
 
 def _coerce_to_expr_ast_withitem(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1084,7 +1084,7 @@ def _coerce_to_expr_ast_withitem(
     return ast.context_expr, False, 1  # if coerce from withitem can reuse its AST
 
 def _coerce_to_expr_ast__withitems(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1103,7 +1103,7 @@ def _coerce_to_expr_ast__withitems(
     ), True, 2
 
 def _coerce_to_expr_ast_MatchSingleton(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1114,7 +1114,7 @@ def _coerce_to_expr_ast_MatchSingleton(
     ), False, 2
 
 def _coerce_to_expr_ast_MatchStar(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1137,7 +1137,7 @@ def _coerce_to_expr_ast_MatchStar(
     return ret, False, 2
 
 def _coerce_to_expr_ast_MatchAs(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1151,7 +1151,7 @@ def _coerce_to_expr_ast_MatchAs(
     ), False, 2
 
 def _coerce_to_expr_ast_MatchSequence(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1168,7 +1168,7 @@ def _coerce_to_expr_ast_MatchSequence(
 
     for pat in ast.patterns:
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(
-            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
         if pat.__class__ is str:
             return pat
@@ -1178,7 +1178,7 @@ def _coerce_to_expr_ast_MatchSequence(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchMapping(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1191,7 +1191,7 @@ def _coerce_to_expr_ast_MatchMapping(
 
     for key, pat in zip(ast.keys, ast.patterns, strict=True):
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(
-            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
         if pat.__class__ is str:
             return pat
@@ -1216,7 +1216,7 @@ def _coerce_to_expr_ast_MatchMapping(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchClass(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1229,7 +1229,7 @@ def _coerce_to_expr_ast_MatchClass(
 
     for pat in ast.patterns:
         arg = _AST_COERCE_TO_EXPR_FUNCS.get(
-            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
         if arg.__class__ is str:
             return arg
@@ -1242,7 +1242,7 @@ def _coerce_to_expr_ast_MatchClass(
 
     for arg, pat in zip(ast.kwd_attrs, ast.kwd_patterns, strict=True):
         value = _AST_COERCE_TO_EXPR_FUNCS.get(
-            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
         if value.__class__ is str:
             return value
@@ -1265,7 +1265,7 @@ def _coerce_to_expr_ast_MatchClass(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchOr(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1274,7 +1274,7 @@ def _coerce_to_expr_ast_MatchOr(
 
     pat = patterns[0]
     ret = _AST_COERCE_TO_EXPR_FUNCS.get(
-        pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
+        pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
     if len(patterns) == 1:  # this is also only doable by us editing
         return ret
@@ -1291,7 +1291,7 @@ def _coerce_to_expr_ast_MatchOr(
 
     for pat in patterns[1:]:
         right = _AST_COERCE_TO_EXPR_FUNCS.get(
-            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
         if right.__class__ is str:
             return right
@@ -1315,7 +1315,7 @@ def _coerce_to_expr_ast_MatchOr(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_TypeVar(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1331,7 +1331,7 @@ def _coerce_to_expr_ast_TypeVar(
     ), False, 2
 
 def _coerce_to_expr_ast_TypeVarTuple(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1357,7 +1357,7 @@ def _coerce_to_expr_ast_TypeVarTuple(
     return ret, False, 2
 
 def _coerce_to_expr_ast__type_params(
-    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1444,7 +1444,6 @@ def _coerce_to_expr_ast(
     parse_params: Mapping[str, Any],
     expecting: str,
     two_step: bool | type[AST] = False,
-    **kwargs
 ) -> tuple[AST, bool]:
     """This is not like the `_coerce_to_?()` functions below, it just tries to coerce an `AST` to an expression `AST`,
     mostly by taking a contained expression `AST` but maybe by creating a new one from a string. Parsing is a possible
@@ -1465,9 +1464,6 @@ def _coerce_to_expr_ast(
     - `two_step`: This enables two-step coercion like `Expr` -> `Set` -> `Tuple` or `MatchSequence` -> `List` ->
         `Tuple`. If this is an `AST` type instead of a bool then two-step is enabled but the target is specified by the
         type so if the first step arrives at it the second step is not taken to `Tuple`.
-    - `**kwargs`: Used to pass coerce-specific flags. Currently only `pars_arglike` to allow prevent of parenthesize
-        arglike-only in case being coerced to another type which can use then unparenthesized. Maybe in future will need
-        more like this.
 
     **Returns:**
     - `(AST, is_nonstandard_tuple)`: The coerced `AST` and a bool indicating whether it is a nonstandard tuple, which
@@ -1477,7 +1473,7 @@ def _coerce_to_expr_ast(
     """
 
     ret = _AST_COERCE_TO_EXPR_FUNCS.get(
-        ast.__class__, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
+        ast.__class__, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
     if ret.__class__ is str:
         raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
@@ -1489,7 +1485,7 @@ def _coerce_to_expr_ast(
         if not hasattr(ret, 'f'):  # HACK HACK HACK HAAAAAAAACK!!!
             ret.f = nspace(root=nspace(_lines=(f := ast.f)._lines), loc=f.loc)  # only for the location and lines because we KNOW thats all _coerce_to_expr_ast_List_or_Set() uses it for
 
-        ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, options, parse_params, kwargs)
+        ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, options, parse_params)
 
         if ret.__class__ is str:
             raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
@@ -1517,7 +1513,6 @@ def _coerce_to_seq(
     to_cls: type[AST],
     ret_elts: bool | None = None,
     allow_starred: bool = False,
-    **kwargs,
 ) -> fst.FST | list[AST] | tuple[list[AST], bool] | None:
     """Attempt coerce of given `code` if is sequence type to list of `AST` elements. Meant for conversion to one of our
     own SPECIAL SLICE types that has commas like `_arglikes`, `_aliases`, `_withitems` or `_type_params` or other
@@ -1527,7 +1522,7 @@ def _coerce_to_seq(
     `_decorator_list` and `_comprehension_ifs` as the first step of their coercion.
 
     We don't deal with possible arglike-only `Starred` elements here explicitly, except in the case of passing through
-    `kwargs` in case `_expr_arglikes` doesn't want them parenthesized when coming from `_arglikes`.
+    `options` in case `_expr_arglikes` doesn't want them parenthesized when coming from `_arglikes`.
 
     **Prameters:**
     - `parse`: Can be `None` if `ret_elts=True`.
@@ -1559,7 +1554,7 @@ def _coerce_to_seq(
         if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
             code._trim_delimiters()
 
-        ast, _ = _coerce_to_expr_ast(ast, is_FST, options, parse_params, to_cls.__name__, **kwargs)
+        ast, _ = _coerce_to_expr_ast(ast, is_FST, options, parse_params, to_cls.__name__)
 
     else:
         if ast_cls is Tuple:
@@ -2486,7 +2481,7 @@ def _coerce_to_pattern(
         ast = code
 
     ast = _AST_COERCE_TO_PATTERN_FUNCS.get(
-        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, {})
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
     if ast.__class__ is str:
         raise NodeError(f'expecting pattern, got {ast.__class__.__name__}'
@@ -2617,7 +2612,8 @@ def _coerce_to__expr_arglikes(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = _coerce_to_seq(code, options, parse_params, parse__expr_arglikes, Tuple, None, True, pars_arglike=False)
+    fst_ = _coerce_to_seq(code, dict(options, pars_arglike=False),  # _expr_arglikes can handle unparenthesized arglike-only expressions (its in the name)
+                          parse_params, parse__expr_arglikes, Tuple, None, True)
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
