@@ -1746,7 +1746,7 @@ def _fix_undelimited_seq(
     return False
 
 
-def _fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = True) -> bool:
+def _fix_Tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = True) -> bool:
     """Add a missing trailing comma to a singleton tuple without one and parenthesize an empty tuple if it is not
     parenthesized or requires it for parsability (and is allowed by `pars` option).
 

@@ -725,7 +725,7 @@ def _coerce_to_expr_ast_ret_empty_str(
         - `AST`: The `AST` is the new node to use. It is either a child of the original node passed in or a completely
             new node created based on the node passed in.
         - `is_nonstandard_tuple`: This only has meaning if the node is an `FST`. Indicates that the `AST` it is a
-            nonstandard `Tuple` which needs to be fixed with `_fix_tuple()` for `is_FST=True` because is unparenthesized
+            nonstandard `Tuple` which needs to be fixed with `_fix_Tuple()` for `is_FST=True` because is unparenthesized
             and may be empty and may not have trailing comma on singleton, also start and stop locations may be
             incorrect. **WARNING!** This can only be used for top-level nodes like `_arglikes` because it is not handled
             recursively.
@@ -1467,7 +1467,7 @@ def _coerce_to_expr_ast(
 
     **Returns:**
     - `(AST, is_nonstandard_tuple)`: The coerced `AST` and a bool indicating whether it is a nonstandard tuple, which
-        means it needs to be fixed with `_fix_tuple()` because is unparenthesized and may be empty and may not have
+        means it needs to be fixed with `_fix_Tuple()` because is unparenthesized and may be empty and may not have
         trailing comma on singleton, also start and stop locations may be incorrect. Ignore nonstandard bool if is not
         `FST`.
     """
@@ -1837,8 +1837,6 @@ def _coerce_to_Set(
     code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
-
-    # TODO: empty set
 
     if isinstance(code, fst.FST):
         ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, 'Set', Set)
@@ -2767,7 +2765,7 @@ def _code_as_expr(
                 raise NodeError(f'expecting {expecting}, got Tuple with a Slice in it', rawable=True)
 
             if fix_coerced_tuple:
-                code._fix_tuple(False)  # it is not parenthesized
+                code._fix_Tuple(False)  # it is not parenthesized
             elif parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, doesn't happen organically but can be created with FST('*a', 'expr_slice'), should we bother? for now on the side of yes
                 code._maybe_add_singleton_comma()
 

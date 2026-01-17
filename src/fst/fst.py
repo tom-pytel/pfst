@@ -5066,7 +5066,7 @@ class FST:
         _maybe_add_line_continuations,
         _fix_joined_alnum,
         _fix_undelimited_seq,
-        _fix_tuple,
+        _fix_Tuple,
         _fix_Set,
         _fix_arglikes,
         _fix_elif,

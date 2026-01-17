@@ -987,7 +987,7 @@ def _code_to_slice__arglikes(
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field(arglikes, 'elts', True, False)
         ast_ = fst_.a
 
-        fst_._fix_tuple()
+        fst_._fix_Tuple()
         fst_._fix_arglikes(options)  # because this is now a Tuple which can't have arglike-expressions inside
 
         if fst_.is_parenthesized_tuple() is False:
@@ -1118,7 +1118,7 @@ def _code_to_slice__withitems(
             fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field(elts, 'elts', True, False)
             ast_ = fst_.a
 
-            fst_._fix_tuple()
+            fst_._fix_Tuple()
             fst_._fix_arglikes(options)  # because this is now a Tuple which can't have arglike-expressions inside
 
             if not fst_._is_delimited_seq():  # we know is Tuple
@@ -1188,7 +1188,7 @@ def _code_to_slice__expr_arglikes(
 
         # we are putting whatever sequence was passed in as an singleton Tuple because one=True
 
-        fst_._fix_tuple()
+        fst_._fix_Tuple()
         fst_._fix_arglikes(options)
 
         if fst_.is_parenthesized_tuple() is False:
@@ -1459,7 +1459,7 @@ def _put_slice_Tuple_elts(
     else:  # for a delete we use the same rule as for a cut
         par_if_needed = pars is True if self.is_root else pars is not False
 
-    is_par = self._fix_tuple(is_par, par_if_needed)
+    is_par = self._fix_Tuple(is_par, par_if_needed)
 
     if need_par and not is_par and par_if_needed:
         self._delimit_node()

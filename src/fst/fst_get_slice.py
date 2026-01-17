@@ -866,12 +866,12 @@ def _get_slice_Tuple_elts(
     par_if_needed = pars is True if self.is_root else pars is not False
 
     if not is_par:
-        fst_._fix_tuple(False, par_if_needed)  # cutting from unparenthesized tuple defaults to different parenthesization if needed depending if cutting from root or not
+        fst_._fix_Tuple(False, par_if_needed)  # cutting from unparenthesized tuple defaults to different parenthesization if needed depending if cutting from root or not
 
     fst_._fix_arglikes(options)  # parenthesize any arglike expressions (could have come from a slice)
 
     if cut:
-        self._fix_tuple(is_par, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
+        self._fix_Tuple(is_par, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
 
     return fst_
 
@@ -1009,7 +1009,7 @@ def _get_slice_Delete_targets(
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'targets', '', '', ',', False, 1)
 
-    fst_._fix_tuple(False)
+    fst_._fix_Tuple(False)
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
@@ -1282,7 +1282,7 @@ def _get_slice_Global_Nonlocal_names(
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'names', '', '', ',', False, 1)
 
-    fst_._fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
+    fst_._fix_Tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia

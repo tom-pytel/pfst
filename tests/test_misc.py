@@ -883,17 +883,17 @@ d  # comment3''', f.src)
         # parenthesize naked tuple preserve comments if present
 
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['# comment', ''], None)
-        f._fix_tuple()
+        f._fix_Tuple()
         self.assertEqual('(# comment\n)', f.src)
         f.verify()
 
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=1), [' # comment', ' '], None)
-        f._fix_tuple()
+        f._fix_Tuple()
         self.assertEqual('(# comment\n)', f.src)
         f.verify()
 
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['         ', ''], None)
-        f._fix_tuple()
+        f._fix_Tuple()
         self.assertEqual('()', f.src)
         f.verify()
 
@@ -903,7 +903,7 @@ d  # comment3''', f.src)
         f.value.put_src(None, 0, 7, 0, 8, 'offset')
         del f.a.value.elts[-1]  # specifically just the AST
         self.assertEqual((0, 4, 0, 7), f.value.loc)
-        f.value._fix_tuple()
+        f.value._fix_Tuple()
         self.assertEqual('a = b,', f.src)
         f.verify()
 
@@ -911,7 +911,7 @@ d  # comment3''', f.src)
         f.value.put_src(None, 0, 10, 0, 11, 'offset')
         del f.a.value.elts[-1]  # specifically just the AST
         self.assertEqual((0, 7, 0, 10), f.value.loc)
-        f.value._fix_tuple()
+        f.value._fix_Tuple()
         self.assertEqual('(yield a,)', f.src)
         f.verify()
 
