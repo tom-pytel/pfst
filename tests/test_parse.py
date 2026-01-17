@@ -878,6 +878,7 @@ def parse_invalid_src_data():
         'a,b)(b',
         'a)=(',
         'a,)if(',
+        ')->(',
 
         ' #0 ) \\\n + \\\n (',
         ' #0 ) \\\n, \\\n (',
@@ -1127,6 +1128,8 @@ class TestParse(unittest.TestCase):
         self.assertRaises(SyntaxError, px.parse_expr, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_expr_slice, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_expr_arglike, 'i for i in j')
+
+        self.assertRaises(SyntaxError, px.parse_arguments_lambda, ': lambda')
 
         self.assertRaises(SyntaxError, px.parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_withitem, '')

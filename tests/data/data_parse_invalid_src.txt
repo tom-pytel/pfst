@@ -559,6 +559,57 @@
 'a,)if('     parse_type_param                 **SyntaxError**
 'a,)if('     parse_unaryop                    **SyntaxError("expecting unaryop, got 'a,)if('")**
 'a,)if('     parse_withitem                   **SyntaxError**
+')->('       parse_ExceptHandler              **SyntaxError**
+')->('       parse_Expression                 **SyntaxError**
+')->('       parse_ImportFrom_name            **SyntaxError**
+')->('       parse_Import_name                **SyntaxError**
+')->('       parse_Interactive                **SyntaxError**
+')->('       parse_List                       **SyntaxError**
+')->('       parse_Module                     **SyntaxError**
+')->('       parse_Set                        **SyntaxError**
+')->('       parse_Tuple                      **SyntaxError**
+')->('       parse_Tuple_elt                  **SyntaxError**
+')->('       parse__Assign_targets            **SyntaxError**
+')->('       parse__BoolOp_dangling_left      **SyntaxError('expecting BoolOp with dangling operator on left side')**
+')->('       parse__BoolOp_dangling_right     **SyntaxError('expecting BoolOp with dangling operator on right side')**
+')->('       parse__Compare_dangling_left     **SyntaxError('expecting Compare with dangling operator on left side')**
+')->('       parse__Compare_dangling_right    **SyntaxError('expecting Compare with dangling operator on right side')**
+')->('       parse__ExceptHandlers            **SyntaxError**
+')->('       parse__ImportFrom_names          **SyntaxError**
+')->('       parse__Import_names              **SyntaxError**
+')->('       parse__aliases                   **SyntaxError**
+')->('       parse__arglike                   **SyntaxError**
+')->('       parse__arglikes                  **SyntaxError**
+')->('       parse__comprehension_ifs         **SyntaxError**
+')->('       parse__comprehensions            **SyntaxError**
+')->('       parse__decorator_list            **SyntaxError**
+')->('       parse__expr_arglikes             **SyntaxError('invalid expression(s) (arglike)')**
+')->('       parse__match_cases               **SyntaxError**
+')->('       parse__type_params               **SyntaxError**
+')->('       parse__withitems                 **SyntaxError**
+')->('       parse_alias                      **SyntaxError**
+')->('       parse_all                        **SyntaxError**
+')->('       parse_arg                        **ParseError('expecting single argument without default')**
+')->('       parse_arguments                  **SyntaxError('invalid syntax')**
+')->('       parse_arguments_lambda           **SyntaxError**
+')->('       parse_boolop                     **SyntaxError("expecting boolop, got ')->('")**
+')->('       parse_cmpop                      **SyntaxError("expecting cmpop, got ')->('")**
+')->('       parse_comprehension              **SyntaxError**
+')->('       parse_expr                       **SyntaxError**
+')->('       parse_expr_all                   **SyntaxError**
+')->('       parse_expr_arglike               **SyntaxError**
+')->('       parse_expr_slice                 **SyntaxError**
+')->('       parse_func                       **SyntaxError**
+')->('       parse_keyword                    **SyntaxError**
+')->('       parse_match_case                 **SyntaxError**
+')->('       parse_operator                   **SyntaxError("expecting operator, got ')->('")**
+')->('       parse_pattern                    **SyntaxError**
+')->('       parse_stmt                       **SyntaxError**
+')->('       parse_stmts                      **SyntaxError**
+')->('       parse_strict                     **SyntaxError**
+')->('       parse_type_param                 **SyntaxError**
+')->('       parse_unaryop                    **SyntaxError("expecting unaryop, got ')->('")**
+')->('       parse_withitem                   **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_ExceptHandler              **IndentationError('unexpected indent')**
 ' #0 ) \\\n + \\\n (' parse_Expression                 **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_ImportFrom_name            **SyntaxError**
