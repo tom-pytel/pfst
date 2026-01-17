@@ -161,6 +161,8 @@ __all__ = [
     'code_as_expr_slice',
     'code_as_Tuple_elt',
     'code_as_Tuple',
+    'code_as_Set',
+    'code_as_List',
     'code_as__Assign_targets',
     'code_as__decorator_list',
     'code_as__arglike',
@@ -906,7 +908,38 @@ def _coerce_to_expr_ast_List_or_Set(
         ret = Tuple(elts=ast.elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                     end_col_offset=ast.end_col_offset)
 
-    return ret, False, 1
+    return ret, False, 1  # 1 will unmake the ctx as well
+
+def _coerce_to_expr_ast_Tuple(
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`. This is a very special case that will only be called for coercion from
+    a `Tuple` to a `List` or `Set` (or possibly other things in the future). It exists to sanitize the `Tuple` elements
+    for the more normal containers since a `Tuple` can contain `Slice` nodes and we also use it for arglike-only
+    expressions for `Call.args` and friends."""
+
+    elts = ast.elts
+
+    if not is_FST:
+        if any(a.__class__ is Slice for a in elts):
+            return 'cannot have Slice'
+
+        ret = Tuple(elts=elts)
+
+    else:
+        pars_arglike = fst.FST._get_opt_eff_pars_arglike(options)
+
+        for a in elts:
+            if a.__class__ is Slice:
+                return 'cannot have Slice'
+
+            if pars_arglike and a.f._is_expr_arglike_only():
+                a.f._parenthesize_grouping()
+
+        ret = Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                    end_col_offset=ast.end_col_offset)
+
+    return ret, False, 1  # 1 will unmake the ctx as well
 
 def _coerce_to_expr_ast_arguments(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1417,6 +1450,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     _comprehension_ifs: _coerce_to_expr_ast__comprehension_ifs,
     Set:                _coerce_to_expr_ast_List_or_Set,  # inter-expression coerce
     List:               _coerce_to_expr_ast_List_or_Set,  # inter-expression coerce
+    Tuple:              _coerce_to_expr_ast_Tuple,
     arguments:          _coerce_to_expr_ast_arguments,
     arg:                _coerce_to_expr_ast_arg,
     alias:              _coerce_to_expr_ast_alias,  # can reparse in case of FST
