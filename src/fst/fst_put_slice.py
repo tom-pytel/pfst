@@ -287,7 +287,7 @@ def _code_to_slice_expr(
         return None
 
     coerce = fst.FST.get_option('coerce', options)
-    fst_ = code_as(code, self.root.parse_params, coerce=coerce)
+    fst_ = code_as(code, options, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
     is_slice_type = ast__cls in ASTS_LEAF_TUPLE_LIST_OR_SET
@@ -339,7 +339,7 @@ def _code_to_slice_key_and_other(
     if one:
         raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice", rawable=True)
 
-    fst_ = code_as(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
+    fst_ = code_as(code, options, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
@@ -361,7 +361,7 @@ def _code_to_slice_BoolOp_values(
         return None
 
     coerce = fst.FST.get_option('coerce', options)
-    fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)
+    fst_ = code_as_expr(code, options, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
     op_cls = self.a.op.__class__
@@ -503,7 +503,7 @@ def _code_to_slice_Compare__all(
         return None
 
     coerce = fst.FST.get_option('coerce', options)
-    fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)
+    fst_ = code_as_expr(code, options, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
     is_slice_type = ast__cls is Compare
@@ -728,7 +728,7 @@ def _code_to_slice_MatchSequence(
         return None
 
     coerce = fst.FST.get_option('coerce', options)
-    fst_ = code_as_pattern(code, self.root.parse_params, coerce=coerce)
+    fst_ = code_as_pattern(code, options, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
 
     if not one and ast_.__class__ is not MatchSequence:
@@ -765,7 +765,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     coerce = fst.FST.get_option('coerce', options)
 
     try:
-        fst_ = code_as_pattern(code, self.root.parse_params, coerce=coerce, allow_invalid_matchor=True)
+        fst_ = code_as_pattern(code, options, self.root.parse_params, coerce=coerce, allow_invalid_matchor=True)
 
     except SyntaxError:
         if isinstance(code, str):
@@ -839,7 +839,7 @@ def _code_to_slice__special1(
     coerce = fst.FST.get_option('coerce', options)
 
     if not one:
-        fst_ = code_as(code, self.root.parse_params, coerce=coerce)
+        fst_ = code_as(code, options, self.root.parse_params, coerce=coerce)
 
         return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
@@ -849,7 +849,7 @@ def _code_to_slice__special1(
     if codea_cls is ast_cls:
         raise ValueError(f"cannot put {ast_cls.__name__} node as 'one=True'")
 
-    fst_ = code_as_one(code, self.root.parse_params, coerce=coerce)
+    fst_ = code_as_one(code, options, self.root.parse_params, coerce=coerce)
 
     ast = ast_cls([], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                   end_col_offset=ls[-1].lenbytes)
@@ -876,7 +876,7 @@ def _code_to_slice__special2(
     parse_params = self.root.parse_params
 
     if not one:
-        fst_ = code_as(code, parse_params, coerce=coerce)
+        fst_ = code_as(code, options, parse_params, coerce=coerce)
 
         return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
@@ -886,7 +886,7 @@ def _code_to_slice__special2(
     if codea_cls is ast_cls:  # if is already the wanted class and has a single element then don't convert to singleton sequence, makes more sense to use it as-is for these very special slices
         if len(getattr(codea, field)) == 1:
             if codea is code:  # is AST, make FST
-                code = code_as(code, parse_params)
+                code = code_as(code, options, parse_params)
 
             return code
 
@@ -894,7 +894,7 @@ def _code_to_slice__special2(
 
     elif isinstance(code, (str, list)):  # maybe a single element in format of this slice, need to try here because will be SyntaxError in code_as_one()
         try:
-            fst_ = code_as(code, parse_params, coerce=False)
+            fst_ = code_as(code, options, parse_params, coerce=False)
         except (SyntaxError, NodeError):
             pass
 
@@ -904,7 +904,7 @@ def _code_to_slice__special2(
 
             return fst_
 
-    return code_as_one(code, parse_params, coerce=coerce or codea.__class__ is ast_cls)  # `codea.__class__ is ast_cls` because our own type should be accepted
+    return code_as_one(code, options, parse_params, coerce=coerce or codea.__class__ is ast_cls)  # `codea.__class__ is ast_cls` because our own type should be accepted
 
 
 def _code_to_slice__Assign_targets(
@@ -933,7 +933,7 @@ def _code_to_slice__arglikes(
     coerce = fst.FST.get_option('coerce', options)
 
     if not one:
-        fst_ = code_as__arglikes(code, self.root.parse_params, coerce=coerce)
+        fst_ = code_as__arglikes(code, options, self.root.parse_params, coerce=coerce)
 
         return fst_ if fst_.a.arglikes else None  # put empty sequence is same as delete
 
@@ -949,7 +949,7 @@ def _code_to_slice__arglikes(
                 fst_._delimit_node()
 
         else:  # is AST, make FST
-            fst_ = code_as_expr(code, self.root.parse_params)
+            fst_ = code_as_expr(code, options, self.root.parse_params)
             ast_ = fst_.a
 
     elif codea_cls is keyword:  # if putting keyword as one then should be passed through as such, could do as one below with code_as__arglikes(coerce=True) but this is more optimal
@@ -958,11 +958,11 @@ def _code_to_slice__arglikes(
             ast_ = codea
 
         else:  # is AST, make FST
-            fst_ = code_as_keyword(code, self.root.parse_params)
+            fst_ = code_as_keyword(code, options, self.root.parse_params)
             ast_ = fst_.a
 
     else:
-        fst_ = code_as__arglikes(code, self.root.parse_params, coerce=coerce)
+        fst_ = code_as__arglikes(code, options, self.root.parse_params, coerce=coerce)
         ast_ = fst_.a
         arglikes = ast_.arglikes
 
@@ -1048,7 +1048,7 @@ def _code_to_slice__withitems(
     coerce = fst.FST.get_option('coerce', options)
 
     if not one:
-        fst_ = code_as__withitems(code, self.root.parse_params, coerce=coerce)
+        fst_ = code_as__withitems(code, options, self.root.parse_params, coerce=coerce)
 
         return fst_ if fst_.a.items else None  # put empty sequence is same as delete
 
@@ -1064,19 +1064,19 @@ def _code_to_slice__withitems(
                 fst_._delimit_node()
 
         else:  # is AST, make FST
-            fst_ = code_as_expr(code, self.root.parse_params)
+            fst_ = code_as_expr(code, options, self.root.parse_params)
             ast_ = fst_.a
 
     else:
         try:
-            fst_ = code_as__withitems(code, self.root.parse_params, coerce=coerce or codea_cls is withitem)
+            fst_ = code_as__withitems(code, options, self.root.parse_params, coerce=coerce or codea_cls is withitem)
 
         except (SyntaxError, NodeError) as exc:  # may be `*Starred,` source
             if not isinstance(code, (str, list)):
                 raise
 
             try:
-                fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)  # source that may parse to a Tuple
+                fst_ = code_as_expr(code, options, self.root.parse_params, coerce=coerce)  # source that may parse to a Tuple
             except Exception:
                 raise exc from None
 
@@ -1162,7 +1162,7 @@ def _code_to_slice__expr_arglikes(
     codea_cls = codea.__class__
 
     if not one:
-        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce or codea_cls in ASTS_LEAF_LIST_OR_SET)  # the codea_cls sets coerce because we always want to accept List and Set as valid slices
+        fst_ = code_as__expr_arglikes(code, options, self.root.parse_params, coerce=coerce or codea_cls in ASTS_LEAF_LIST_OR_SET)  # the codea_cls sets coerce because we always want to accept List and Set as valid slices
 
         return fst_ if fst_.a.elts else None  # put empty sequence is same as delete
 
@@ -1172,11 +1172,11 @@ def _code_to_slice__expr_arglikes(
             ast_ = codea
 
         else:  # is AST, make FST
-            fst_ = code_as_expr(code, self.root.parse_params)
+            fst_ = code_as_expr(code, options, self.root.parse_params)
             ast_ = fst_.a
 
     else:
-        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce, one=one)  # we use this instead of code_as_expr() because this field normally takes arglike-only expressions like '*not a' so if we fail to do so here it might seem strange
+        fst_ = code_as__expr_arglikes(code, options, self.root.parse_params, coerce=coerce, one=one)  # we use this instead of code_as_expr() because this field normally takes arglike-only expressions like '*not a' so if we fail to do so here it might seem strange
         ast_ = fst_.a
 
         if len(elts := ast_.elts) == 1:  # if is length 1 then maybe we put just this one element and not singleton Tuple

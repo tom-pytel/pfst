@@ -197,7 +197,7 @@ __all__ = [
 
 
 Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
-CodeAs = Callable[[Code, Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
+CodeAs = Callable[[Code, Mapping[str, Any], Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
 
 _ASTS_LEAF_EXPRISH_SEQ = frozenset([Tuple, List, Set, arguments, MatchSequence, _Assign_targets, _decorator_list,
                                     _arglikes, _comprehension_ifs, _aliases, _withitems, _type_params])
@@ -232,7 +232,7 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
 # ......................................................................................................................
 
 def _coerce_to_pattern_ast_ret_empty_str(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """These are the individual `AST` coerce functions. The returned `AST` may or may not have location information. In
     the case of `is_FST=False`. In the case of `is_FST=True`, it **MUST** have location information as the returned
@@ -254,7 +254,7 @@ def _coerce_to_pattern_ast_ret_empty_str(
     return ''
 
 def _coerce_to_pattern_ast_stmtmod(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -266,31 +266,31 @@ def _coerce_to_pattern_ast_stmtmod(
 
     ast = ast.value
 
-    return _AST_COERCE_TO_PATTERN_FUNCS.get(ast.__class__,
-                                            _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)
+    return _AST_COERCE_TO_PATTERN_FUNCS.get(
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
 
 def _coerce_to_pattern_ast_Expression(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     ast = ast.body
 
-    return _AST_COERCE_TO_PATTERN_FUNCS.get(ast.__class__,
-                                            _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)
+    return _AST_COERCE_TO_PATTERN_FUNCS.get(
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
 
 def _coerce_to_pattern_ast_Expr(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     ast = ast.value
 
-    return _AST_COERCE_TO_PATTERN_FUNCS.get(ast.__class__,
-                                            _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)
+    return _AST_COERCE_TO_PATTERN_FUNCS.get(
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
 
 def _coerce_to_pattern_ast_Constant(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -314,7 +314,7 @@ def _coerce_to_pattern_ast_Constant(
     )
 
 def _coerce_to_pattern_ast_Attribute(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -340,7 +340,7 @@ def _coerce_to_pattern_ast_Attribute(
     )
 
 def _coerce_to_pattern_ast_Starred(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -358,7 +358,7 @@ def _coerce_to_pattern_ast_Starred(
                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Name(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -369,7 +369,7 @@ def _coerce_to_pattern_ast_Name(
     )
 
 def _coerce_to_pattern_ast_arg(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -383,7 +383,7 @@ def _coerce_to_pattern_ast_arg(
     )
 
 def _coerce_to_pattern_ast_alias(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -400,7 +400,7 @@ def _coerce_to_pattern_ast_alias(
             MatchAs(name=name))
 
 def _coerce_to_pattern_ast_withitem(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> AST | str:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -409,11 +409,11 @@ def _coerce_to_pattern_ast_withitem(
 
     ast = ast.context_expr
 
-    return _AST_COERCE_TO_PATTERN_FUNCS.get(ast.__class__,
-                                            _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)
+    return _AST_COERCE_TO_PATTERN_FUNCS.get(
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
 
 def _coerce_to_pattern_ast_TypeVar(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -429,7 +429,7 @@ def _coerce_to_pattern_ast_TypeVar(
     )
 
 def _coerce_to_pattern_ast_TypeVarTuple(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -443,7 +443,7 @@ def _coerce_to_pattern_ast_TypeVarTuple(
                      end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Dict(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -470,16 +470,16 @@ def _coerce_to_pattern_ast_Dict(
         if is_FST:
             key.f._unparenthesize_grouping(False)  # cannot have pars
 
-        key = _AST_COERCE_TO_PATTERN_FUNCS.get(key_cls,
-                                               _coerce_to_expr_ast_ret_empty_str)(key, is_FST, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+        key = _AST_COERCE_TO_PATTERN_FUNCS.get(
+            key_cls, _coerce_to_expr_ast_ret_empty_str)(key, is_FST, options, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
 
         if key.__class__ is str:
             return key
 
         keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression
 
-        value = _AST_COERCE_TO_PATTERN_FUNCS.get(value.__class__,
-                                                 _coerce_to_expr_ast_ret_empty_str)(value, is_FST, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+        value = _AST_COERCE_TO_PATTERN_FUNCS.get(
+            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
 
         if value.__class__ is str:
             return value
@@ -493,7 +493,7 @@ def _coerce_to_pattern_ast_Dict(
                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_Call(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -504,8 +504,8 @@ def _coerce_to_pattern_ast_Call(
         if is_FST:
             func.f._unparenthesize_grouping(False)  # cannot have pars
 
-        res = _AST_COERCE_TO_PATTERN_FUNCS.get(func_cls,
-                                               _coerce_to_expr_ast_ret_empty_str)(func, is_FST, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
+        res = _AST_COERCE_TO_PATTERN_FUNCS.get(
+            func_cls, _coerce_to_expr_ast_ret_empty_str)(func, is_FST, options, parse_params, kwargs)  # we call this just to validate and remove parentheses if present
 
         if res.__class__ is str:
             return res
@@ -521,8 +521,8 @@ def _coerce_to_pattern_ast_Call(
         if arg.__class__ is Starred:
             return 'cannot have Starred'
 
-        pat = _AST_COERCE_TO_PATTERN_FUNCS.get(arg.__class__,
-                                               _coerce_to_expr_ast_ret_empty_str)(arg, is_FST, parse_params, kwargs)
+        pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
+            arg.__class__, _coerce_to_expr_ast_ret_empty_str)(arg, is_FST, options, parse_params, kwargs)
 
         if pat.__class__ is str:
             return pat
@@ -536,8 +536,8 @@ def _coerce_to_pattern_ast_Call(
         if not arg:
             return "cannot have '**' keyword"
 
-        pat = _AST_COERCE_TO_PATTERN_FUNCS.get(value.__class__,
-                                               _coerce_to_expr_ast_ret_empty_str)(value, is_FST, parse_params, kwargs)
+        pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
+            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params, kwargs)
 
         if pat.__class__ is str:
             return pat
@@ -552,7 +552,7 @@ def _coerce_to_pattern_ast_Call(
                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_BinOp(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -564,8 +564,8 @@ def _coerce_to_pattern_ast_BinOp(
     if right.__class__ is Starred:
         return 'cannot have Starred'
 
-    pat_right = _AST_COERCE_TO_PATTERN_FUNCS.get(right.__class__,
-                                                 _coerce_to_expr_ast_ret_empty_str)(right, is_FST, parse_params, kwargs)
+    pat_right = _AST_COERCE_TO_PATTERN_FUNCS.get(
+        right.__class__, _coerce_to_expr_ast_ret_empty_str)(right, is_FST, options, parse_params, kwargs)
 
     if pat_right.__class__ is str:
         return pat_right
@@ -575,8 +575,9 @@ def _coerce_to_pattern_ast_BinOp(
     if left.__class__ is Starred:
         return 'cannot have Starred'
 
-    pat_left = _AST_COERCE_TO_PATTERN_FUNCS.get(left.__class__,
-                                                _coerce_to_expr_ast_ret_empty_str)(left, is_FST, parse_params, kwargs)
+    pat_left = _AST_COERCE_TO_PATTERN_FUNCS.get(
+        left.__class__, _coerce_to_expr_ast_ret_empty_str)(left, is_FST, options, parse_params, kwargs)
+
     pat_left_cls = pat_left.__class__
 
     if pat_left_cls is str:
@@ -594,7 +595,7 @@ def _coerce_to_pattern_ast_BinOp(
                    end_col_offset=ast.end_col_offset)
 
 def _coerce_to_pattern_ast_seq(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
@@ -628,8 +629,8 @@ def _coerce_to_pattern_ast_seq(
         elts = getattr(ast, ast._fields[0])
 
         if is_FST:
-            res = _AST_COERCE_TO_EXPR_FUNCS.get(ast_cls,
-                                                _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)  # just need to convert their special syntax to comma-delimited sequence
+            res = _AST_COERCE_TO_EXPR_FUNCS.get(
+                ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)  # just need to convert their special syntax to comma-delimited sequence
 
             if res.__class__ is str:
                 return res  # pragma: no cover  # not currently returned for these types
@@ -637,8 +638,8 @@ def _coerce_to_pattern_ast_seq(
             fst_._fix_undelimited_seq(elts, '[]', True)
 
     elif ast_cls in (arguments, _aliases, _withitems, _type_params):
-        res = _AST_COERCE_TO_EXPR_FUNCS.get(ast_cls,
-                                            _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)  # need to convert their elements to expressions, container will be Tuple
+        res = _AST_COERCE_TO_EXPR_FUNCS.get(
+            ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)  # need to convert their elements to expressions, container will be Tuple
 
         if res.__class__ is str:
             return res
@@ -657,8 +658,8 @@ def _coerce_to_pattern_ast_seq(
     patterns = []
 
     for e in elts:
-        e = _AST_COERCE_TO_PATTERN_FUNCS.get(e.__class__,
-                                             _coerce_to_pattern_ast_ret_empty_str)(e, is_FST, parse_params, kwargs)
+        e = _AST_COERCE_TO_PATTERN_FUNCS.get(
+            e.__class__, _coerce_to_pattern_ast_ret_empty_str)(e, is_FST, options, parse_params, kwargs)
 
         if e.__class__ is str:
             return e
@@ -704,7 +705,7 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
 # ......................................................................................................................
 
 def _coerce_to_expr_ast_ret_empty_str(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """These are the individual `AST` coerce functions. The returned `AST` may or may not have location information. In
     the case of `is_FST=False`. In the case of `is_FST=True`, it **MUST** have location information as the returned
@@ -741,7 +742,7 @@ def _coerce_to_expr_ast_ret_empty_str(
     return ''
 
 def _coerce_to_expr_ast_stmtmod(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -754,21 +755,21 @@ def _coerce_to_expr_ast_stmtmod(
     return ast.value, False, 0
 
 def _coerce_to_expr_ast_Expression(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return ast.body, False, 0
 
 def _coerce_to_expr_ast_value(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     return ast.value, False, 0
 
 def _coerce_to_expr_ast__Assign_targets(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -807,7 +808,7 @@ def _coerce_to_expr_ast__Assign_targets(
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _coerce_to_expr_ast__decorator_list(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -832,7 +833,7 @@ def _coerce_to_expr_ast__decorator_list(
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _coerce_to_expr_ast__arglikes(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -860,7 +861,7 @@ def _coerce_to_expr_ast__arglikes(
     return ret, True, 1
 
 def _coerce_to_expr_ast__comprehension_ifs(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -886,7 +887,7 @@ def _coerce_to_expr_ast__comprehension_ifs(
                  end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset), True, 1
 
 def _coerce_to_expr_ast_List_or_Set(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This function is meant for inter-expression coercion from a `List` or
     `Set` to a specifically requested `Tuple`."""
@@ -908,7 +909,7 @@ def _coerce_to_expr_ast_List_or_Set(
     return ret, False, 1
 
 def _coerce_to_expr_ast_arguments(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -982,7 +983,7 @@ def _coerce_to_expr_ast_arguments(
                  end_col_offset=lines[end_ln].c2b(end_col)), False, 2
 
 def _coerce_to_expr_ast_arg(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -996,7 +997,7 @@ def _coerce_to_expr_ast_arg(
     ), False, 2
 
 def _coerce_to_expr_ast_alias(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1030,7 +1031,7 @@ def _coerce_to_expr_ast_alias(
     return ast, False, 2
 
 def _coerce_to_expr_ast__aliases(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1046,7 +1047,7 @@ def _coerce_to_expr_ast__aliases(
 
         if not is_FST:
             for a in ast.names:
-                res = _coerce_to_expr_ast_alias(a, is_FST, parse_params, kwargs)
+                res = _coerce_to_expr_ast_alias(a, is_FST, options, parse_params, kwargs)
 
                 if res.__class__ is str:
                     return res  # pragma: no cover  # this cannot currently happen
@@ -1073,7 +1074,7 @@ def _coerce_to_expr_ast__aliases(
     ), True, 2
 
 def _coerce_to_expr_ast_withitem(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1083,7 +1084,7 @@ def _coerce_to_expr_ast_withitem(
     return ast.context_expr, False, 1  # if coerce from withitem can reuse its AST
 
 def _coerce_to_expr_ast__withitems(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1102,7 +1103,7 @@ def _coerce_to_expr_ast__withitems(
     ), True, 2
 
 def _coerce_to_expr_ast_MatchSingleton(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1113,7 +1114,7 @@ def _coerce_to_expr_ast_MatchSingleton(
     ), False, 2
 
 def _coerce_to_expr_ast_MatchStar(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1136,7 +1137,7 @@ def _coerce_to_expr_ast_MatchStar(
     return ret, False, 2
 
 def _coerce_to_expr_ast_MatchAs(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1150,7 +1151,7 @@ def _coerce_to_expr_ast_MatchAs(
     ), False, 2
 
 def _coerce_to_expr_ast_MatchSequence(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1166,8 +1167,8 @@ def _coerce_to_expr_ast_MatchSequence(
            ast_cls(elts=elts))
 
     for pat in ast.patterns:
-        pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
-                                            _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params, kwargs)
+        pat = _AST_COERCE_TO_EXPR_FUNCS.get(
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
 
         if pat.__class__ is str:
             return pat
@@ -1177,7 +1178,7 @@ def _coerce_to_expr_ast_MatchSequence(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchMapping(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1189,8 +1190,8 @@ def _coerce_to_expr_ast_MatchMapping(
            Dict(keys=keys, values=values))
 
     for key, pat in zip(ast.keys, ast.patterns, strict=True):
-        pat = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
-                                            _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params, kwargs)
+        pat = _AST_COERCE_TO_EXPR_FUNCS.get(
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
 
         if pat.__class__ is str:
             return pat
@@ -1215,7 +1216,7 @@ def _coerce_to_expr_ast_MatchMapping(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchClass(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1227,8 +1228,8 @@ def _coerce_to_expr_ast_MatchClass(
            Call(func=ast.cls, args=args, keywords=keywords))
 
     for pat in ast.patterns:
-        arg = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
-                                            _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params, kwargs)
+        arg = _AST_COERCE_TO_EXPR_FUNCS.get(
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
 
         if arg.__class__ is str:
             return arg
@@ -1240,8 +1241,8 @@ def _coerce_to_expr_ast_MatchClass(
         _, _, end_ln, end_col = pat.f.loc if args else ast.cls.f.loc
 
     for arg, pat in zip(ast.kwd_attrs, ast.kwd_patterns, strict=True):
-        value = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
-                                              _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params, kwargs)
+        value = _AST_COERCE_TO_EXPR_FUNCS.get(
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
 
         if value.__class__ is str:
             return value
@@ -1264,7 +1265,7 @@ def _coerce_to_expr_ast_MatchClass(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_MatchOr(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
@@ -1272,8 +1273,8 @@ def _coerce_to_expr_ast_MatchOr(
         return 'no elements'
 
     pat = patterns[0]
-    ret = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
-                                        _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params, kwargs)
+    ret = _AST_COERCE_TO_EXPR_FUNCS.get(
+        pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
 
     if len(patterns) == 1:  # this is also only doable by us editing
         return ret
@@ -1289,8 +1290,8 @@ def _coerce_to_expr_ast_MatchOr(
         _, _, ast_end_ln, ast_end_col = f.loc
 
     for pat in patterns[1:]:
-        right = _AST_COERCE_TO_EXPR_FUNCS.get(pat.__class__,
-                                              _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, parse_params, kwargs)
+        right = _AST_COERCE_TO_EXPR_FUNCS.get(
+            pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params, kwargs)
 
         if right.__class__ is str:
             return right
@@ -1314,7 +1315,7 @@ def _coerce_to_expr_ast_MatchOr(
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_TypeVar(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1330,7 +1331,7 @@ def _coerce_to_expr_ast_TypeVar(
     ), False, 2
 
 def _coerce_to_expr_ast_TypeVarTuple(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1356,7 +1357,7 @@ def _coerce_to_expr_ast_TypeVarTuple(
     return ret, False, 2
 
 def _coerce_to_expr_ast__type_params(
-    ast: AST, is_FST: bool, parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any], kwargs: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
@@ -1439,6 +1440,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
 def _coerce_to_expr_ast(
     ast: AST,
     is_FST: bool,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     expecting: str,
     two_step: bool | type[AST] = False,
@@ -1474,8 +1476,8 @@ def _coerce_to_expr_ast(
         `FST`.
     """
 
-    ret = _AST_COERCE_TO_EXPR_FUNCS.get(ast.__class__,
-                                        _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, parse_params, kwargs)
+    ret = _AST_COERCE_TO_EXPR_FUNCS.get(
+        ast.__class__, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params, kwargs)
 
     if ret.__class__ is str:
         raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
@@ -1487,7 +1489,7 @@ def _coerce_to_expr_ast(
         if not hasattr(ret, 'f'):  # HACK HACK HACK HAAAAAAAACK!!!
             ret.f = nspace(root=nspace(_lines=(f := ast.f)._lines), loc=f.loc)  # only for the location and lines because we KNOW thats all _coerce_to_expr_ast_List_or_Set() uses it for
 
-        ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, parse_params, kwargs)
+        ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, options, parse_params, kwargs)
 
         if ret.__class__ is str:
             raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
@@ -1509,6 +1511,7 @@ def _coerce_to_expr_ast(
 
 def _coerce_to_seq(
     code: Code,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST] | None,
     to_cls: type[AST],
@@ -1556,7 +1559,7 @@ def _coerce_to_seq(
         if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
             code._trim_delimiters()
 
-        ast, _ = _coerce_to_expr_ast(ast, is_FST, parse_params, to_cls.__name__, **kwargs)
+        ast, _ = _coerce_to_expr_ast(ast, is_FST, options, parse_params, to_cls.__name__, **kwargs)
 
     else:
         if ast_cls is Tuple:
@@ -1601,6 +1604,7 @@ def _coerce_to_seq(
 
 def _coerce_to__aliases_common(
     code: Code,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
     expecting: str,
@@ -1610,7 +1614,7 @@ def _coerce_to__aliases_common(
     """Common to `_aliases`, `Import_names` and `ImportFrom_names`."""
 
     codea = getattr(code, 'a', None)
-    fst_ = _coerce_to_seq(code, parse_params, parse, _aliases)
+    fst_ = _coerce_to_seq(code, options, parse_params, parse, _aliases)
 
     if fst_ is None:  # sequence as sequence?
         return None
@@ -1673,6 +1677,7 @@ def _coerce_to__aliases_common(
 
 def _coerce_to_arguments_common(
     code: Code,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
     expecting: str,
@@ -1681,7 +1686,7 @@ def _coerce_to_arguments_common(
     """Common to `arguments`, both normal and lambda."""
 
     codea = getattr(code, 'a', None)
-    elts = _coerce_to_seq(code, parse_params, parse, arguments, True, True)
+    elts = _coerce_to_seq(code, options, parse_params, parse, arguments, True, True)
 
     if elts is None:  # sequence as sequence?
         return None
@@ -1735,10 +1740,12 @@ def _coerce_to_arguments_common(
 
 # ......................................................................................................................
 
-def _coerce_to_stmt(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_stmt(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     lines = fst_._lines
     ln, col, end_ln, end_col = fst_.pars()
@@ -1755,7 +1762,9 @@ def _coerce_to_stmt(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitiz
     return fst.FST(ast, lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'value', True, False)
 
 
-def _coerce_to_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_stmts(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     code_cls = code.__class__
@@ -1793,7 +1802,9 @@ def _coerce_to_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
     raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}, could not coerce')
 
 
-def _coerce_to_match_case(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_match_case(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     codea = getattr(code, 'a', code)
@@ -1801,7 +1812,9 @@ def _coerce_to_match_case(code: Code, parse_params: Mapping[str, Any] = {}, *, s
     raise NodeError(f'expecting match_case, got {codea.__class__.__name__}, could not coerce')  # if got here then is not match_case and we do not coerce down from _match_cases, so automatically fail
 
 
-def _coerce_to__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__match_cases(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     code_cls = code.__class__
@@ -1825,13 +1838,15 @@ def _coerce_to__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *,
     raise NodeError(f'expecting _match_cases, got {code.__class__.__name__}, could not coerce')
 
 
-def _coerce_to_Set(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_Set(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: empty set
 
     if isinstance(code, fst.FST):
-        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, parse_params, 'Set', Set)
+        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, 'Set', Set)
         ast_cls = ast.__class__
 
         if ast_cls is Set:
@@ -1858,7 +1873,7 @@ def _coerce_to_Set(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
                 lines[ln] = bistr(f'{(l := lines[ln])[:col]}{{{l[col + 1:]}')
 
     else:  # is AST
-        ast, _ = _coerce_to_expr_ast(code, False, parse_params, 'Set', Set)
+        ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, 'Set', Set)
 
         if ast.__class__ is not Set:
             ast = Set(elts=ast.elts)
@@ -1872,11 +1887,13 @@ def _coerce_to_Set(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
     return code._sanitize() if sanitize else code
 
 
-def _coerce_to_List(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_List(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     if isinstance(code, fst.FST):
-        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, parse_params, 'List', List)
+        ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, 'List', List)
         ast_cls = ast.__class__
 
         if ast_cls is List:
@@ -1903,7 +1920,7 @@ def _coerce_to_List(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitiz
                 lines[ln] = bistr(f'{(l := lines[ln])[:col]}[{l[col + 1:]}')
 
     else:  # is AST
-        ast, _ = _coerce_to_expr_ast(code, False, parse_params, 'List', List)
+        ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, 'List', List)
 
         if ast.__class__ is not List:
             ast = List(elts=ast.elts)
@@ -1917,7 +1934,9 @@ def _coerce_to_List(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitiz
     return code._sanitize() if sanitize else code
 
 
-def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__Assign_targets(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """These are coerce functions which attempt to convert to a specific type of node. For the most part and unless
     explicitly permitted, they only guarantee attempted coercion from an `AST` of `FST`, not source, even if that might
     work as a side-effect of how they coerce.
@@ -1930,7 +1949,7 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
     """
 
     codea = getattr(code, 'a', None)
-    elts = _coerce_to_seq(code, parse_params, None, _Assign_targets, True, True)
+    elts = _coerce_to_seq(code, options, parse_params, None, _Assign_targets, True, True)
 
     if elts is not None:  # sequence as sequence?
         elts, is_FST = elts
@@ -1986,13 +2005,18 @@ def _coerce_to__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {},
 
     # single element as sequence
 
-    return _code_as_one__Assign_targets(code, parse_params, coerce=True)
+    return _code_as_one__Assign_targets(code, options, parse_params, coerce=True)
 
 
 def _code_as_one__Assign_targets(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
-    fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=coerce)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
+    fst_ = code_as_expr(code, options, parse_params, sanitize=True, coerce=coerce)  # sanitize=True because Assign.targets can't have comments or other things that may break a logical line
     ast_ = fst_.a
 
     if not is_valid_target(ast_):
@@ -2007,11 +2031,13 @@ def _code_as_one__Assign_targets(
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)  # _set_field() is alternative to putting ast_ in the ast.targets to begin with (only if it is known to be valid FST tree), this won't walk existing valid FST tree unnecessarily
 
 
-def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__decorator_list(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This function can coerce source."""
 
     if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
-        elts = _coerce_to_seq(code, parse_params, None, _decorator_list, True)
+        elts = _coerce_to_seq(code, options, parse_params, None, _decorator_list, True)
 
         if elts is not None:  # sequence as sequence?
             elts, is_FST = elts
@@ -2070,15 +2096,20 @@ def _coerce_to__decorator_list(code: Code, parse_params: Mapping[str, Any] = {},
 
     # single element as sequence
 
-    return _code_as_one__decorator_list(code, parse_params, sanitize=sanitize, coerce=True)
+    return _code_as_one__decorator_list(code, options, parse_params, sanitize=sanitize, coerce=True)
 
 _coerce_to__decorator_list.coerce_src = True
 
 
 def _code_as_one__decorator_list(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=coerce)
+    fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=coerce)
 
     if fst_.a.__class__ is Starred:
         raise NodeError('decorator cannot be Starred')
@@ -2096,15 +2127,17 @@ def _code_as_one__decorator_list(
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'decorator_list', True, False)
 
 
-def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__arglike(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     code_cls = code.__class__
 
     if code_cls is keyword or (code_cls is fst.FST and code.a.__class__ is keyword):
-        return code_as_keyword(code, parse_params, sanitize=sanitize)  # pragma: no cover  # can't get here normally because _code_as() will see the keyword first and accept it
+        return code_as_keyword(code, options, parse_params, sanitize=sanitize)  # pragma: no cover  # can't get here normally because _code_as() will see the keyword first and accept it
 
-    fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_expr_arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
@@ -2112,10 +2145,12 @@ def _coerce_to__arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, san
     return fst_
 
 
-def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__arglikes(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = _coerce_to_seq(code, parse_params, parse__arglikes, _arglikes, None, True)
+    fst_ = _coerce_to_seq(code, options, parse_params, parse__arglikes, _arglikes, None, True)
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
@@ -2127,7 +2162,7 @@ def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
 
     # single element as sequence
 
-    fst_ = code_as__arglike(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as__arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     # if fst_.is_parenthesized_tuple() is False:  # doesn't currently happen, but could in the future, tuple is caught above and tuple str fails in parse
     #     fst_._delimit_node()
@@ -2138,10 +2173,12 @@ def _coerce_to__arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'arglikes', True, False)
 
 
-def _coerce_to__comprehensions(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__comprehensions(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = code_as_comprehension(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_comprehension(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = _comprehensions(generators=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                           end_col_offset=ls[-1].lenbytes)
@@ -2150,12 +2187,12 @@ def _coerce_to__comprehensions(code: Code, parse_params: Mapping[str, Any] = {},
 
 
 def _coerce_to__comprehension_ifs(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This function can coerce source."""
 
     if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
-        elts = _coerce_to_seq(code, parse_params, None, _comprehension_ifs, True)
+        elts = _coerce_to_seq(code, options, parse_params, None, _comprehension_ifs, True)
 
         if elts is not None:  # sequence as sequence?
             elts, is_FST = elts
@@ -2197,15 +2234,20 @@ def _coerce_to__comprehension_ifs(
 
     # single element as sequence
 
-    return _code_as_one__comprehension_ifs(code, parse_params, sanitize=sanitize, coerce=True)
+    return _code_as_one__comprehension_ifs(code, options, parse_params, sanitize=sanitize, coerce=True)
 
 _coerce_to__comprehension_ifs.coerce_src = True
 
 
 def _code_as_one__comprehension_ifs(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=coerce)
+    fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=coerce)
 
     if fst_.a.__class__ is Starred:
         raise NodeError('comprehension if cannot be Starred')
@@ -2223,10 +2265,12 @@ def _code_as_one__comprehension_ifs(
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'ifs', True, False)
 
 
-def _coerce_to_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_arg(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
     ast_ = fst_.a
 
     if ast_.__class__ is not Name:
@@ -2240,12 +2284,14 @@ def _coerce_to_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_to_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_alias(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce "with a as b" items[0] -> "import a as b"?
 
-    fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
+    fst_ = code_as_expr(code, options, parse_params, sanitize=True, coerce=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = a = fst_.a
     name = ''
 
@@ -2266,17 +2312,19 @@ def _coerce_to_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
 
-def _coerce_to__aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__aliases(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce _withitems specially for the "a as b" format?
 
-    if fst_ := _coerce_to__aliases_common(code, parse_params, parse__aliases, '_aliases', sanitize, True):  # sequence as sequence?
+    if fst_ := _coerce_to__aliases_common(code, options, parse_params, parse__aliases, '_aliases', sanitize, True):  # sequence as sequence?
         return fst_
 
     # single element as sequence
 
-    fst_ = code_as_alias(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_alias(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                    end_col_offset=ls[-1].lenbytes)
@@ -2287,17 +2335,19 @@ def _coerce_to__aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 _coerce_to__Import_name = _coerce_to_alias
 
 
-def _coerce_to__Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__Import_names(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce _withitems specially for the "a as b" format?
 
-    if fst_ := _coerce_to__aliases_common(code, parse_params, parse__Import_names, 'Import names', sanitize, True):  # sequence as sequence?
+    if fst_ := _coerce_to__aliases_common(code, options, parse_params, parse__Import_names, 'Import names', sanitize, True):  # sequence as sequence?
         return fst_
 
     # single element as sequence
 
-    fst_ = code_as_Import_name(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_Import_name(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                    end_col_offset=ls[-1].lenbytes)
@@ -2305,10 +2355,12 @@ def _coerce_to__Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
 
-def _coerce_to__ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__ImportFrom_name(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = code_as_expr(code, parse_params, sanitize=True, coerce=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
+    fst_ = code_as_expr(code, options, parse_params, sanitize=True, coerce=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = fst_.a
 
     if ast_.__class__ is not Name:
@@ -2323,19 +2375,19 @@ def _coerce_to__ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}
 
 
 def _coerce_to__ImportFrom_names(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce _withitems specially for the "a as b" format?
 
-    if fst_ := _coerce_to__aliases_common(code, parse_params, parse__ImportFrom_names, 'ImportFrom names', sanitize,
-                                          False):  # sequence as sequence?
+    if fst_ := _coerce_to__aliases_common(code, options, parse_params, parse__ImportFrom_names, 'ImportFrom names',
+                                          sanitize, False):  # sequence as sequence?
         return fst_
 
     # single element as sequence
 
-    fst_ = code_as_ImportFrom_name(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_ImportFrom_name(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                    end_col_offset=ls[-1].lenbytes)
@@ -2343,30 +2395,34 @@ def _coerce_to__ImportFrom_names(
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
 
-def _coerce_to_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_arguments(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    if fst_ := _coerce_to_arguments_common(code, parse_params, parse_arguments, 'arguments', sanitize):  # sequence as arguments?
+    if fst_ := _coerce_to_arguments_common(code, options, parse_params, parse_arguments, 'arguments', sanitize):  # sequence as arguments?
         return fst_
 
     # single element as arguments
 
-    fst_ = code_as_arg(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_arg(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
 
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'args', True, False)
 
 
-def _coerce_to_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_arguments_lambda(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    if fst_ := _coerce_to_arguments_common(code, parse_params, parse_arguments, 'lambda arguments', sanitize):  # sequence as arguments?
+    if fst_ := _coerce_to_arguments_common(code, options, parse_params, parse_arguments, 'lambda arguments', sanitize):  # sequence as arguments?
         return fst_
 
     # single element as arguments
 
-    fst_ = code_as_arg(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_arg(code, options, parse_params, sanitize=sanitize, coerce=True)
     ast_ = fst_.a
 
     if ast_.annotation:
@@ -2377,12 +2433,14 @@ def _coerce_to_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'args', True, False)
 
 
-def _coerce_to_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_withitem(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce "import a as b" names[0] -> "with a as b"?
 
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     if fst_.a.__class__ is Starred:
         raise NodeError('Starred not allowed in withitem')
@@ -2395,19 +2453,21 @@ def _coerce_to_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, san
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'context_expr', True, False)
 
 
-def _coerce_to__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__withitems(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce _aliases specially for the "a as b" format?
 
-    fst_ = _coerce_to_seq(code, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
+    fst_ = _coerce_to_seq(code, options, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
 
     if fst_ is not None:  # sequence as sequence? ret_elts=False because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
         return fst_._sanitize() if sanitize else fst_
 
     # single element as sequence
 
-    fst_ = code_as_withitem(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_withitem(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = _withitems(items=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                      end_col_offset=ls[-1].lenbytes)
@@ -2415,7 +2475,9 @@ def _coerce_to__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, s
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'items', True, False)
 
 
-def _coerce_to_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_pattern(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This is essentially the pattern version of `_coerce_to_expr_ast()`."""
 
     if is_FST := code.__class__ is fst.FST:
@@ -2423,8 +2485,8 @@ def _coerce_to_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sani
     else:
         ast = code
 
-    ast = _AST_COERCE_TO_PATTERN_FUNCS.get(ast.__class__,
-                                           _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, parse_params, {})
+    ast = _AST_COERCE_TO_PATTERN_FUNCS.get(
+        ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params, {})
 
     if ast.__class__ is str:
         raise NodeError(f'expecting pattern, got {ast.__class__.__name__}'
@@ -2451,19 +2513,23 @@ def _coerce_to_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sani
 
 
 @pyver(lt=12)
-def _coerce_to_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_type_param(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     raise RuntimeError('type_params do not exist on python < 3.12')
 
 
 @pyver(ge=12)
-def _coerce_to_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to_type_param(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     # TODO: coerce keyword (default value)? AnnAssign (bound and maybe default value)? Assign (default value)?
 
-    fst_ = code_as_expr(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
     ast_ = fst_.a
 
     if ast_.__class__ is Name:
@@ -2488,11 +2554,13 @@ def _coerce_to_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, s
 
 
 @pyver(ge=12, else_=_coerce_to_type_param)
-def _coerce_to__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__type_params(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
     codea = getattr(code, 'a', None)
-    fst_ = _coerce_to_seq(code, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
+    fst_ = _coerce_to_seq(code, options, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
@@ -2536,7 +2604,7 @@ def _coerce_to__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
     # single element as sequence
 
-    fst_ = code_as_type_param(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_type_param(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     ast = _type_params(type_params=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                        end_col_offset=ls[-1].lenbytes)
@@ -2544,10 +2612,12 @@ def _coerce_to__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *,
     return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'type_params', True, False)
 
 
-def _coerce_to__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def _coerce_to__expr_arglikes(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
+) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    fst_ = _coerce_to_seq(code, parse_params, parse__expr_arglikes, Tuple, None, True, pars_arglike=False)
+    fst_ = _coerce_to_seq(code, options, parse_params, parse__expr_arglikes, Tuple, None, True, pars_arglike=False)
 
     if fst_ is not None:  # sequence as sequence?
         if fst_.__class__ is list:  # this means code is an FST
@@ -2559,7 +2629,7 @@ def _coerce_to__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, 
 
     # single element as sequence
 
-    fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize, coerce=True)
+    fst_ = code_as_expr_arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
 
     if fst_.is_parenthesized_tuple() is False:  # this shouldn't ever happen and can't even be forced since a Tuple is already the slice type for _expr_arglikes, but juuust in case
         fst_._delimit_node()  # pragma: no cover
@@ -2574,6 +2644,7 @@ def _coerce_to__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, 
 
 def _code_as(
     code: Code,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
     ast_type: type[AST] | tuple[type[AST], ...],
@@ -2596,7 +2667,7 @@ def _code_as(
                                 f'{", coerce disabled" if coerce_to is False else ""}', rawable=True)
 
             try:
-                return coerce_to(code, parse_params, sanitize=sanitize)
+                return coerce_to(code, options, parse_params, sanitize=sanitize)
             except (NodeError, SyntaxError, NotImplementedError) as exc:
                 raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}, '
                                 'could not coerce', rawable=True) from exc
@@ -2609,7 +2680,7 @@ def _code_as(
                                     f'{", coerce disabled" if coerce_to is False else ""}', rawable=True)
 
                 try:
-                    return coerce_to(code, parse_params, sanitize=sanitize)
+                    return coerce_to(code, options, parse_params, sanitize=sanitize)
                 except (NodeError, SyntaxError, NotImplementedError) as exc:
                     raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}, '
                                     'could not coerce', rawable=True) from exc
@@ -2636,7 +2707,7 @@ def _code_as(
                     raise
 
                 try:
-                    fst_ = coerce_to(code, parse_params, sanitize=sanitize)
+                    fst_ = coerce_to(code, options, parse_params, sanitize=sanitize)
                 except (NodeError, SyntaxError, NotImplementedError) as exc:
                     raise ParseError(f'expecting {name or ast_type.__name__}, could not parse or coerce') from exc
 
@@ -2652,6 +2723,7 @@ def _code_as(
 
 def _code_as_expr(
     code: Code,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
     allow_Slice: bool,
@@ -2681,7 +2753,7 @@ def _code_as_expr(
             if not coerce:
                 raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled', rawable=True)
 
-            ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, parse_params, expecting, to_tuple)
+            ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, options, parse_params, expecting, to_tuple)
             ast_cls = ast.__class__
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
@@ -2706,7 +2778,7 @@ def _code_as_expr(
                     raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}'
                                     ', coerce disabled', rawable=True)
 
-                code, _ = _coerce_to_expr_ast(code, False, parse_params, expecting, to_tuple)
+                code, _ = _coerce_to_expr_ast(code, False, options, parse_params, expecting, to_tuple)
 
             src = unparse(code)
             lines = src.split('\n')
@@ -2727,6 +2799,7 @@ def _code_as_expr(
 
 def _code_as_op(
     code: Code,
+    options: Mapping[str, Any],
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
     op_type: type[boolop | operator | unaryop | cmpop],  # only one of these, not subclasses
@@ -2783,6 +2856,7 @@ def code_as_lines(code: Code | None) -> list[str]:
 def code_as(
     code: Code,
     mode: Mode = 'all',
+    options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
     *,
     sanitize: bool = False,
@@ -2792,7 +2866,7 @@ def code_as(
     itself, otherwise may be coerced if that is allowed."""
 
     if code_as := _CODE_AS_MODE_FUNCS.get(mode):
-        fst_ = code_as(code, parse_params, sanitize=sanitize, coerce=coerce)
+        fst_ = code_as(code, options, parse_params, sanitize=sanitize, coerce=coerce)
 
         mode_type = _AST_TYPE_BY_NAME_OR_TYPE.get(mode)  # `expr` or expr -> expr, etc...
 
@@ -2809,7 +2883,12 @@ def code_as(
 
 
 def code_as_all(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
 
@@ -2837,27 +2916,38 @@ def code_as_all(
 
 
 def code_as_stmt(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a single more `stmt` `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_stmt, stmt, sanitize, _coerce_to_stmt if coerce else False)
+    return _code_as(code, options, parse_params, parse_stmt, stmt, sanitize, _coerce_to_stmt if coerce else False)
 
 
 def code_as_stmts(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible.
 
     **Note:** `sanitize` does nothing since the return is a `Module` which always includes the whole source.
     """
 
-    return _code_as(code, parse_params, parse_stmts, Module, sanitize, _coerce_to_stmts if coerce else False,
+    return _code_as(code, options, parse_params, parse_stmts, Module, sanitize, _coerce_to_stmts if coerce else False,
                     name='zero or more stmts')
 
 
 def code_as_ExceptHandler(
     code: Code,
+    options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
     *,
     sanitize: bool = False,
@@ -2917,6 +3007,7 @@ def code_as_ExceptHandler(
 
 def code_as__ExceptHandlers(
     code: Code,
+    options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
     *,
     sanitize: bool = False,
@@ -2993,77 +3084,117 @@ def code_as__ExceptHandlers(
 
 
 def code_as_match_case(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a single `match_case` if possible.
 
     **Note:** `coerce` does nothing since nothing can coerce to a single `match_case`.
     """
 
-    return _code_as(code, parse_params, parse_match_case, match_case, sanitize,
+    return _code_as(code, options, parse_params, parse_match_case, match_case, sanitize,
                     _coerce_to_match_case if coerce else False)
 
 
 def code_as__match_cases(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to zero or more `match_case`s and return in a `_match_cases` SPECIAL SLICE if possible.
 
     **Note:** `sanitize` does nothing since the return is a `_match_cases` which always includes the whole source.
     """
 
-    return _code_as(code, parse_params, parse__match_cases, _match_cases, sanitize,
+    return _code_as(code, options, parse_params, parse__match_cases, _match_cases, sanitize,
                     _coerce_to__match_cases if coerce else False)
 
 
 def code_as_expr(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `expr` using `parse_expr()`."""
 
-    return _code_as_expr(code, parse_params, parse_expr, False, False, sanitize, coerce)
+    return _code_as_expr(code, options, parse_params, parse_expr, False, False, sanitize, coerce)
 
 
 def code_as_expr_all(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `expr` using `parse_expr_all()`."""
 
-    return _code_as_expr(code, parse_params, parse_expr_all, True, True, sanitize, coerce)
+    return _code_as_expr(code, options, parse_params, parse_expr_all, True, True, sanitize, coerce)
 
 
 def code_as_expr_arglike(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, parse_expr_arglike, False, False, sanitize, coerce)
+    return _code_as_expr(code, options, parse_params, parse_expr_arglike, False, False, sanitize, coerce)
 
 
 def code_as_expr_slice(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a any `expr` `FST` that can go into a `Subscript.slice` if possible."""
 
-    return _code_as_expr(code, parse_params, parse_expr_slice, True, True, sanitize, coerce)
+    return _code_as_expr(code, options, parse_params, parse_expr_slice, True, True, sanitize, coerce)
 
 
 def code_as_Tuple_elt(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `expr` which can be an element of a `Tuple` anywhere, including `Slice` and arglike
     expressions like `*not a` on py 3.11+ (both in a `Tuple` in `Subscript.slice`)."""
 
-    return _code_as_expr(code, parse_params, parse_Tuple_elt, True, False, sanitize, coerce)
+    return _code_as_expr(code, options, parse_params, parse_Tuple_elt, True, False, sanitize, coerce)
 
 
 def code_as_Tuple(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `Tuple` using `parse_Tuple()`. The `Tuple` can contain any other kind of expression,
     including `Slice` and arglike (if py version supports it in `Subscript.slice`)."""
 
-    fst_ = _code_as_expr(code, parse_params, parse_Tuple, False, True, sanitize, coerce)
+    fst_ = _code_as_expr(code, options, parse_params, parse_Tuple, False, True, sanitize, coerce)
 
     if fst_ is code and fst_.a.__class__ is not Tuple:  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
         raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
@@ -3072,45 +3203,70 @@ def code_as_Tuple(
 
 
 def code_as_Set(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `Set` using `parse_Set()`"""
 
-    return _code_as(code, parse_params, parse_Set, Set, sanitize, _coerce_to_Set if coerce else False)
+    return _code_as(code, options, parse_params, parse_Set, Set, sanitize, _coerce_to_Set if coerce else False)
 
 
 def code_as_List(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `List` using `parse_List()`"""
 
-    return _code_as(code, parse_params, parse_List, List, sanitize, _coerce_to_List if coerce else False)
+    return _code_as(code, options, parse_params, parse_List, List, sanitize, _coerce_to_List if coerce else False)
 
 
 def code_as__Assign_targets(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `_Assign_targets` SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__Assign_targets, _Assign_targets, sanitize,
+    return _code_as(code, options, parse_params, parse__Assign_targets, _Assign_targets, sanitize,
                     _coerce_to__Assign_targets if coerce else False)
 
 
 def code_as__decorator_list(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `_decorator_list` SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__decorator_list, _decorator_list, sanitize,
+    return _code_as(code, options, parse_params, parse__decorator_list, _decorator_list, sanitize,
                     _coerce_to__decorator_list if coerce else False)
 
 
 def code_as__arglike(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a single `expr_arglike` or `keyword` if possible."""
 
-    fst_ = _code_as(code, parse_params, parse__arglike, (expr, keyword), sanitize,
+    fst_ = _code_as(code, options, parse_params, parse__arglike, (expr, keyword), sanitize,
                     _coerce_to__arglike if coerce else False,
                     name='expression (arglike)')
 
@@ -3121,87 +3277,137 @@ def code_as__arglike(
 
 
 def code_as__arglikes(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `_arglikes` of `expr`s and `keyword`s SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__arglikes, _arglikes, sanitize,
+    return _code_as(code, options, parse_params, parse__arglikes, _arglikes, sanitize,
                     _coerce_to__arglikes if coerce else False)
 
 
 def code_as_boolop(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
-    return _code_as_op(code, parse_params, parse_boolop, boolop, sanitize)
+    return _code_as_op(code, options, parse_params, parse_boolop, boolop, sanitize)
 
 
 def code_as_operator(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(code, parse_params, parse_operator, operator, sanitize)
+    return _code_as_op(code, options, parse_params, parse_operator, operator, sanitize)
 
 
 def code_as_unaryop(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `unaryop` `FST` if possible."""
 
-    return _code_as_op(code, parse_params, parse_unaryop, unaryop, sanitize)
+    return _code_as_op(code, options, parse_params, parse_unaryop, unaryop, sanitize)
 
 
 def code_as_cmpop(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `cmpop` `FST` if possible."""
 
-    return _code_as_op(code, parse_params, parse_cmpop, cmpop, sanitize)
+    return _code_as_op(code, options, parse_params, parse_cmpop, cmpop, sanitize)
 
 
 def code_as_comprehension(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a comprehension `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_comprehension, comprehension, sanitize)
+    return _code_as(code, options, parse_params, parse_comprehension, comprehension, sanitize)
 
 
 def code_as__comprehensions(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `_comprehensions` of `comprehensions` SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__comprehensions, _comprehensions, sanitize,
+    return _code_as(code, options, parse_params, parse__comprehensions, _comprehensions, sanitize,
                     _coerce_to__comprehensions if coerce else False)
 
 
 def code_as__comprehension_ifs(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `_comprehension_ifs` of `if` prepended `expr`s SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__comprehension_ifs, _comprehension_ifs, sanitize,
+    return _code_as(code, options, parse_params, parse__comprehension_ifs, _comprehension_ifs, sanitize,
                     _coerce_to__comprehension_ifs if coerce else False)
 
 
 def code_as_arguments(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_arguments, arguments, sanitize,
+    return _code_as(code, options, parse_params, parse_arguments, arguments, sanitize,
                     _coerce_to_arguments if coerce else False)
 
 
 def code_as_arguments_lambda(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
-    fst_ = _code_as(code, parse_params, parse_arguments_lambda, arguments, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse_arguments_lambda, arguments, sanitize,
                     _coerce_to_arguments_lambda if coerce else False,
                     name='lambda arguments')
 
@@ -3220,46 +3426,69 @@ def code_as_arguments_lambda(
 
 
 def code_as_arg(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an arg `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_arg, arg, sanitize,
-                    _coerce_to_arg if coerce else False)
+    return _code_as(code, options, parse_params, parse_arg, arg, sanitize, _coerce_to_arg if coerce else False)
 
 
 def code_as_keyword(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_keyword, keyword, sanitize)
+    return _code_as(code, options, parse_params, parse_keyword, keyword, sanitize)
 
 
 def code_as_alias(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `alias` `FST` if possible, star or dotted."""
 
-    return _code_as(code, parse_params, parse_alias, alias, sanitize,
-                    _coerce_to_alias if coerce else False)
+    return _code_as(code, options, parse_params, parse_alias, alias, sanitize, _coerce_to_alias if coerce else False)
 
 
 def code_as__aliases(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, star or dotted."""
 
-    return _code_as(code, parse_params, parse__aliases, _aliases, sanitize,
+    return _code_as(code, options, parse_params, parse__aliases, _aliases, sanitize,
                     _coerce_to__aliases if coerce else False)
 
 
 def code_as_Import_name(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `alias` `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    fst_ = _code_as(code, parse_params, parse_Import_name, alias, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse_Import_name, alias, sanitize,
                     _coerce_to__Import_name if coerce else False)
 
     if fst_ is code:  # validation if returning same FST that was passed in
@@ -3270,11 +3499,16 @@ def code_as_Import_name(
 
 
 def code_as__Import_names(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, dotted as in `alias` for `Import.names`."""
 
-    fst_ = _code_as(code, parse_params, parse__Import_names, _aliases, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse__Import_names, _aliases, sanitize,
                     _coerce_to__Import_names if coerce else False)
 
     if fst_ is code:  # validation if returning same FST that was passed in
@@ -3285,11 +3519,16 @@ def code_as__Import_names(
 
 
 def code_as_ImportFrom_name(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `alias` `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    fst_ = _code_as(code, parse_params, parse_ImportFrom_name, alias, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse_ImportFrom_name, alias, sanitize,
                     _coerce_to__ImportFrom_name if coerce else False)
 
     if fst_ is code:  # validation if returning same FST that was passed in
@@ -3300,12 +3539,17 @@ def code_as_ImportFrom_name(
 
 
 def code_as__ImportFrom_names(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, possibly star as in `alias` for
     `FromImport.names`."""
 
-    fst_ = _code_as(code, parse_params, parse__ImportFrom_names, _aliases, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse__ImportFrom_names, _aliases, sanitize,
                     _coerce_to__ImportFrom_names if coerce else False)
 
     if fst_ is code:  # validation if returning same FST that was passed in
@@ -3323,25 +3567,36 @@ def code_as__ImportFrom_names(
 
 
 def code_as_withitem(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a withitem `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_withitem, withitem, sanitize,
+    return _code_as(code, options, parse_params, parse_withitem, withitem, sanitize,
                     _coerce_to_withitem if coerce else False)
 
 
 def code_as__withitems(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `_withitems` of `withitem` SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__withitems, _withitems, sanitize,
+    return _code_as(code, options, parse_params, parse__withitems, _withitems, sanitize,
                     _coerce_to__withitems if coerce else False)
 
 
 def code_as_pattern(
     code: Code,
+    options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
     *,
     sanitize: bool = False,
@@ -3350,7 +3605,7 @@ def code_as_pattern(
 ) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
-    fst_ = _code_as(code, parse_params, parse_pattern, pattern, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse_pattern, pattern, sanitize,
                     _coerce_to_pattern if coerce else False)
 
     if fst_ is code:  # validation if returning same FST that was passed in
@@ -3367,25 +3622,40 @@ def code_as_pattern(
 
 
 def code_as_type_param(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a type_param `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_type_param, type_param, sanitize,
+    return _code_as(code, options, parse_params, parse_type_param, type_param, sanitize,
                     _coerce_to_type_param if coerce else False)
 
 
 def code_as__type_params(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `_type_params` of `type_param` SPECIAL SLICE if possible."""
 
-    return _code_as(code, parse_params, parse__type_params, _type_params, sanitize,
+    return _code_as(code, options, parse_params, parse__type_params, _type_params, sanitize,
                     _coerce_to__type_params if coerce else False)
 
 
 def code_as_identifier(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> str:
     """Convert `code` to valid identifier string if possible.
 
@@ -3412,7 +3682,12 @@ def code_as_identifier(
 
 
 def code_as_identifier_dotted(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> str:
     """Convert `code` to valid dotted identifier string if possible (for Import module).
 
@@ -3439,7 +3714,12 @@ def code_as_identifier_dotted(
 
 
 def code_as_identifier_star(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> str:
     """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names).
 
@@ -3466,7 +3746,12 @@ def code_as_identifier_star(
 
 
 def code_as_identifier_alias(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> str:
     """Convert `code` to valid dotted identifier string or star '*' if possible (for any alias).
 
@@ -3493,7 +3778,12 @@ def code_as_identifier_alias(
 
 
 def code_as_constant(
-    code: Code | constant, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code | constant,  # yes this breaks convention, its for documentation purposes and there is no static analyzer to complain
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
 ) -> constant:
     """Convert `code` to valid constant if possible. If `code` is a `str` then it is treated as the constant value and
     not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is
@@ -3537,6 +3827,7 @@ def code_as_constant(
 
 def code_as__expr_arglikes(
     code: Code,
+    options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
     *,
     sanitize: bool = False,
@@ -3556,7 +3847,7 @@ def code_as__expr_arglikes(
     if not one and code.__class__ is Tuple:  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
-    fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,
+    fst_ = _code_as(code, options, parse_params, parse__expr_arglikes, Tuple, sanitize,
                     _coerce_to__expr_arglikes if coerce else False)
 
     if fst_ is code:  # validation if returning same FST that was passed in

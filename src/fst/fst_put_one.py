@@ -365,7 +365,7 @@ def _put_one_constant(
 
     _validate_put(self, code, idx, field, child, can_del=True)  # can_del so that None is accepted
 
-    value = code_as_constant(code, self.root.parse_params)
+    value = code_as_constant(code, options, self.root.parse_params)
     restrict = static.restrict
 
     if not isinstance(value, restrict):
@@ -399,7 +399,7 @@ def _put_one_op(
 
     root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, root.parse_params, sanitize=True)
+    code = static.code_as(code, options, root.parse_params, sanitize=True)
     codea = code.a
     childf = child.f
 
@@ -484,7 +484,7 @@ def _put_one_AnnAssign_simple(
 
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    value = code_as_constant(code, self.root.parse_params)
+    value = code_as_constant(code, options, self.root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError('expection 0 or 1')
@@ -520,7 +520,7 @@ def _put_one_ImportFrom_level(
     ast = self.a
     root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    value = code_as_constant(code, root.parse_params)
+    value = code_as_constant(code, options, root.parse_params)
 
     if value.__class__ is not int or value < 0:
         raise ValueError(f'expection int >= 0, got {value!r}')
@@ -565,7 +565,7 @@ def _put_one_BoolOp_op(
     lines = root._lines
     child, idx = _validate_put(self, code, idx, field, child)
     childf = child.f
-    code = code_as_boolop(code, root.parse_params)
+    code = code_as_boolop(code, options, root.parse_params)
     codea = code.a
     src = 'and' if codea.__class__ is And else 'or'
     tgt = 'and' if child.__class__ is And else 'or'
@@ -606,7 +606,7 @@ def _put_one_Constant_kind(
     ast = self.a
     root = self.root
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
-    value = code_as_constant(code, root.parse_params)
+    value = code_as_constant(code, options, root.parse_params)
 
     if not isinstance(ast.value, str):
         raise ValueError('cannot set kind of non-str Constant')
@@ -644,7 +644,7 @@ def _put_one_comprehension_is_async(
 
     root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    value = code_as_constant(code, root.parse_params)
+    value = code_as_constant(code, options, root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError(f'expection 0 or 1, got {value!r}')
@@ -732,7 +732,7 @@ def _make_exprlike_fst(
     root = self.root
 
     if validated < 2:
-        put_fst = static.code_as(code, root.parse_params, sanitize=True,
+        put_fst = static.code_as(code, options, root.parse_params, sanitize=True,
                                  coerce=fst.FST.get_option('coerce', options))
     else:
         put_fst = code
@@ -992,7 +992,8 @@ def _put_one_ClassDef_bases(
     """Can't replace Starred base with non-Starred base after keywords."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if (child.__class__ is Starred
         and code.a.__class__ is not Starred
@@ -1018,7 +1019,8 @@ def _put_one_ClassDef_keywords(
 
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if code.a.arg is None and (bases := ast.bases) and bases[-1].f.loc > ast.keywords[idx].f.loc:
         raise ValueError("cannot put '**' ClassDef.keywords element at this location (non-keywords follow)")
@@ -1076,7 +1078,7 @@ def _put_one_ImportFrom_names(
 
     root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
     if is_star := ('*' in code.a.name):  # `in` just in case some whitespace got in there somehow
         if len(self.a.names) != 1:
@@ -1117,7 +1119,8 @@ def _put_one_BinOp_left_right(
     """Disallow invalid constant changes in patterns."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if self.parent_pattern():
         if field == 'right':
@@ -1147,7 +1150,7 @@ def _put_one_UnaryOp_operand(
     """Disallow invalid constant changes in patterns."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True)
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True)
 
     if self.parent_pattern():
         if (codea := code.a).__class__ is not Constant:
@@ -1190,7 +1193,8 @@ def _put_one_Lambda_arguments(
         code = ''
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
     prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
     target = self._loc_Lambda_args_entire()
 
@@ -1225,7 +1229,8 @@ def _put_one_Call_args(
     """Can't replace Starred arg with non-Starred arg after keywords."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if (child.__class__ is Starred
         and code.a.__class__ is not Starred
@@ -1251,7 +1256,8 @@ def _put_one_Call_keywords(
 
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if code.a.arg is None and (args := ast.args) and args[-1].f.loc > ast.keywords[idx].f.loc:
         raise ValueError("cannot put '**' Call.keywords element at this location (non-keywords follow)")
@@ -1289,7 +1295,8 @@ def _put_one_Attribute_value(
     need to make sure only unparenthesized `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
     is_annass = False
     above = child.f
 
@@ -1370,7 +1377,8 @@ def _put_one_Subscript_slice(
     """Don't allow put unparenthesized tuple containing Starred."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if code.is_parenthesized_tuple() is False and any(a.__class__ is Starred for a in code.a.elts):
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
@@ -1390,7 +1398,8 @@ def _put_one_List_elts(
     """Disallow non-targetable expressions in targets."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
     ctx_cls = self.a.ctx.__class__
 
     if ctx_cls is not Load:  # only allow possible expression targets into an expression target
@@ -1414,7 +1423,8 @@ def _put_one_Tuple_elts(
 
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
     codea = code.a
     pfield = self.pfield
     is_slice = pfield and pfield.name == 'slice'
@@ -1493,7 +1503,8 @@ def _put_one_arg(
     """Don't allow arg with Starred annotation into non-vararg args."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if code.a.annotation.__class__ is Starred:
         raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}', rawable=True)
@@ -1589,7 +1600,8 @@ def _put_one_MatchAs_pattern(
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is not None:
-        code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+        code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                              coerce=fst.FST.get_option('coerce', options))
 
         if code.a.__class__ is MatchStar:
             raise NodeError('cannot put a MatchStar to MatchAs.pattern', rawable=True)
@@ -1612,7 +1624,8 @@ def _put_one_pattern(
     """Enclose unenclosed MatchSequences being put here."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     if code.a.__class__ is MatchStar:
         if self.a.__class__ is not MatchSequence:
@@ -1638,7 +1651,8 @@ def _put_one_arglikes(
 
     arglikes = self._cached_arglikes()
     child, idx = _validate_put(self, code, idx, field, arglikes)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
     put_kind = validate_put_arglike(arglikes, idx, idx + 1, code.a)
     child_kind = arglike_kind(child)
     child_field, idx = child.f.pfield
@@ -1680,7 +1694,8 @@ def _put_one__arglikes_arglikes(
 
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
 
     validate_put_arglike(ast.arglikes, idx, idx + 1, code.a)
 
@@ -1703,7 +1718,7 @@ def _put_one_identifier_required(
 
     _, idx = _validate_put(self, code, idx, field, child)
 
-    code = static.code_as(code, self.root.parse_params)  # this will be an identifier code_as_() so sanitize not needed
+    code = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_() so sanitize not needed
     info = static.getinfo(self, static, idx, field)
 
     self._put_src(code, *info.loc_prim, True)
@@ -1740,7 +1755,7 @@ def _put_one_identifier_optional(
 
         return None
 
-    code = static.code_as(code, self.root.parse_params)
+    code = static.code_as(code, options, self.root.parse_params)
 
     if child is not None:  # replace existing identifier
         self._put_src(code, *info.loc_prim, True)
@@ -1840,7 +1855,7 @@ def _put_one_MatchAs_name(
     if code is None:
         code = '_'
     else:
-        code = code_as_identifier(code, self.root.parse_params)
+        code = code_as_identifier(code, options, self.root.parse_params)
 
     if self.a.pattern and code == '_':
         raise ValueError("cannot change MatchAs with pattern into wildcard '_'")

@@ -1167,7 +1167,7 @@ class FST:
         if copy or self.parent:
             self = self.copy()
 
-        return code.code_as(self, mode, self.parse_params, coerce=coerce)
+        return code.code_as(self, mode, {}, self.parse_params, coerce=coerce)
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed
@@ -2215,7 +2215,7 @@ class FST:
             raise ValueError("cannot replace root node with 'to' option")
 
         with self._modifying():
-            code = code_as_all(code, self.parse_params)
+            code = code_as_all(code, {}, self.parse_params)
             self._lines = code._lines
 
             self._set_ast(code.a, True)

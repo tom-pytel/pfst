@@ -1103,15 +1103,15 @@ def _put_slice_stmtlike_old(
             else:  # isinstance(ast, _ExceptHandlers)
                 star = body[0].f.is_except_star() if body else None
 
-            put_fst = code_as__ExceptHandlers(code, root.parse_params, coerce=True, star=star)
+            put_fst = code_as__ExceptHandlers(code, options, root.parse_params, coerce=True, star=star)
             put_body = put_fst.a.handlers
 
         elif field == 'cases':
-            put_fst = code_as__match_cases(code, root.parse_params, coerce=True)
+            put_fst = code_as__match_cases(code, options, root.parse_params, coerce=True)
             put_body = put_fst.a.cases
 
         else:  # 'body', 'orelse', 'finalbody'
-            put_fst = code_as_stmts(code, root.parse_params, coerce=True)
+            put_fst = code_as_stmts(code, options, root.parse_params, coerce=True)
             put_body = put_fst.a.body
 
         # NOTE: we do not convert an empty put_body to put_fst=None because we may be putting just comments and/or empty space

@@ -3627,7 +3627,7 @@ match a:
         for mode, src in mode_and_src:
             fst_ = FST(src, mode)
 
-            code._coerce_to_expr_ast(fst_.a, True, {}, 'test')
+            code._coerce_to_expr_ast(fst_.a, True, {}, {}, 'test')
 
             self.assertIsNone(fst_.a)
 
@@ -3669,7 +3669,7 @@ match a:
         for mode, src in mode_and_src:
             fst_ = FST(src, mode)
 
-            code._coerce_to_pattern(fst_, {})
+            code._coerce_to_pattern(fst_)
 
             self.assertIsNone(fst_.a)
 
