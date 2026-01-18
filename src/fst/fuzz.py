@@ -2684,7 +2684,7 @@ class SliceCoerce(Fuzzy):
                     sys.stdout.write('.'); sys.stdout.flush()
 
                 mode = choice(self.TO)
-                mode2 = f_copy = g = h = None
+                mode3 = mode2 = f_copy = g = h = k = None
 
                 try:
                     try:
@@ -2708,41 +2708,83 @@ class SliceCoerce(Fuzzy):
                     mode2 = choice(self.TO) if randint(0, 1) else f.a.__class__  # randomly coerce back to original type or new random type
 
                     try:
-                        h = g.as_(f.a.__class__, copy=True, norm_get=True)
+                        h = g.as_(mode2, copy=True, norm_get=True)
 
                     except NotImplementedError:
                         continue
 
                     except NodeError as exc:
-                        if not str(exc).startswith('expecting '):
+                        s = str(exc)
+
+                        if not (
+                            s.startswith('expecting ')
+                            or s == "'.' dotted alias not allowed"  # _aliases shared between Import_names and ImportFrom_names and may have illegal names for the other
+                        ):
                             raise
 
                         continue
 
-                    if mode2 != '_expr_arglikes':
-                        h.verify()  # coerce back
+                    if mode2 == '_expr_arglikes':
+                        continue
+
+                    h.verify()  # coerce back
+
+                    mode3 = choice(self.TO)  # third time, just for the lols
+
+                    try:
+                        k = h.as_(mode3, copy=True, norm_get=True)
+
+                    except NotImplementedError:
+                        continue
+
+                    except NodeError as exc:
+                        s = str(exc)
+
+                        if not (
+                            s.startswith('expecting ')
+                            or s == "'.' dotted alias not allowed"  # _aliases shared between Import_names and ImportFrom_names and may have illegal names for the other
+                        ):
+                            raise
+
+                        continue
+
+                    if mode3 == '_expr_arglikes':
+                        continue
+
+                    k.verify()  # coerce back
 
                 except Exception as exc:
                     if self.debug:
                         print()
-                        print(f'{mode=}, {mode2=}')
+                        print(f'{mode=}, {mode2=}, {mode3=}')
                         print(f'{f=}')
                         if f_copy:
                             print('\n'.join(repr(l) for l in f_copy.lines))
+                            if self.verbose:
+                                f_copy.dump()
                         print(f'{g=}')
                         if g:
                             print('\n'.join(repr(l) for l in g.lines))
+                            if self.verbose:
+                                g.dump()
                         print(f'{h=}')
                         if h:
                             print('\n'.join(repr(l) for l in h.lines))
+                            if self.verbose:
+                                h.dump()
+                        print(f'{k=}')
+                        if k:
+                            print('\n'.join(repr(l) for l in k.lines))
+                            if self.verbose:
+                                k.dump()
 
                     raise
 
         finally:
             print()
 
-            if self.verbose:
-                print(fst.src)
+            # if self.verbose:
+            #     print(fst.src)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

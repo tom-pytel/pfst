@@ -1013,14 +1013,14 @@ def _coerce_to_expr_ast__Assign_targets(
         for a in targets:
             f = a.f
 
-            if (is_pard := f.is_parenthesized_tuple()) is None:
-                _, _, ln, col = f.pars()
-
-            else:
+            if (is_pard := f.is_parenthesized_tuple()) is False:
                 if is_pard is False:
                     f._delimit_node()
 
                 _, _, ln, col = f.loc
+
+            else:  # a parenthesized tuple can still have grouping pars
+                _, _, ln, col = f.pars()
 
             eq = next_frag(lines, ln, col, len(lines) - 1, 0x7fffffffffffffff)  # may or may not be there '=' for last target
 
@@ -1212,8 +1212,11 @@ def _coerce_to_expr_ast_arguments(
             ln = lineno - 1
             col = lines[ln].b2c(col_offset)
             star_ln, star_col, src = prev_frag(lines, 0, 0, ln, col)  # we can use (0, 0) as start bound because we are sure there are no strings anywhere here
+
+            assert src.endswith('*')
+
             star_lineno = star_ln + 1
-            star_col_offset = lines[star_ln].c2b(star_col)
+            star_col_offset = lines[star_ln].c2b(star_col + len(src) - 1)
 
             elts.append(Starred(value=Name(id=vararg.arg, ctx=Load(), lineno=lineno, col_offset=col_offset,
                                            end_lineno=lineno, end_col_offset=end_col_offset),
@@ -1396,7 +1399,7 @@ def _coerce_to_expr_ast_MatchStar(
         col_offset = ast.col_offset
         end_col_offset = ast.end_col_offset
 
-        ret = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
+        ret = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name.encode()),
                                  end_lineno=end_lineno, end_col_offset=end_col_offset),
                       ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
                       end_col_offset=end_col_offset)
@@ -1618,7 +1621,7 @@ def _coerce_to_expr_ast_TypeVarTuple(
         col_offset = ast.col_offset
         end_col_offset = ast.end_col_offset
 
-        ret = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
+        ret = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name.encode()),
                                  end_lineno=end_lineno, end_col_offset=end_col_offset),
                       ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
                       end_col_offset=end_col_offset)
@@ -1658,7 +1661,8 @@ def _coerce_to_expr_ast__type_params(
                 col_offset = a.col_offset
                 end_col_offset = a.end_col_offset
 
-                a = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno, col_offset=end_col_offset - len(name),
+                a = Starred(value=Name(id=name, ctx=Load(), lineno=end_lineno,
+                                       col_offset=end_col_offset - len(name.encode()),
                                        end_lineno=end_lineno, end_col_offset=end_col_offset),
                             ctx=Load(), lineno=lineno, col_offset=col_offset, end_lineno=end_lineno,
                             end_col_offset=end_col_offset)
@@ -3079,6 +3083,7 @@ def _code_as_expr(
 
             ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, options, parse_params, expecting, to_tuple)
             ast_cls = ast.__class__
+            parse = None  # this is a signal so that singleton tuples always get trailing comma, maybe review this behavior
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 

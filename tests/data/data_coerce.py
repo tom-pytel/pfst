@@ -468,6 +468,67 @@ Call - ROOT 0,0..0,11
         .arg 'd'
         .value Name 'e' Load - 0,7..0,8
 '''),
+
+('', 0, 0, 'expr', {}, ('MatchStar',
+r'''*ά日本بμرةаб'''),
+r'''*ά日本بμرةаб''', r'''
+Starred - ROOT 0,0..0,10
+  .value Name 'ά日本بμرةаб' Load - 0,1..0,10
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('TypeVarTuple',
+r'''*ά日本بμرةаб'''),
+r'''*ά日本بμرةаб''', r'''
+Starred - ROOT 0,0..0,10
+  .value Name 'ά日本بμرةаб' Load - 0,1..0,10
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''*ά日本بμرةаб'''),
+r'''*ά日本بμرةаб,''',
+r'''(*ά日本بμرةаб,)''', r'''
+Tuple - ROOT 0,0..0,11
+  .elts[1]
+   0] Starred - 0,0..0,10
+     .value Name 'ά日本بμرةаб' Load - 0,1..0,10
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''x'''),
+r'''x,''',
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''x,*y'''),
+r'''x,*y''',
+r'''(x, *y)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Starred - 0,2..0,4
+     .value Name 'y' Load - 0,3..0,4
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'MatchSequence', {}, ('_Assign_targets',
+r'''(()) = [] ='''),
+r'''[(()), []]''',
+r'''[[], []]''', r'''
+MatchSequence - ROOT 0,0..0,10
+  .patterns[2]
+   0] MatchSequence - 0,2..0,4
+   1] MatchSequence - 0,7..0,9
+'''),
 ],
 
 }
