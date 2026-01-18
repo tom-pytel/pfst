@@ -2590,88 +2590,99 @@ class SliceExprlike(Fuzzy):
                     pass
 
 
-# class SliceCoerce(Fuzzy):
-#     """Test coercion between different types of nodes."""
+class SliceCoerce(Fuzzy):
+    """Test coercion between different types of nodes."""
 
-#     name = 'coerce'
-#     forever = True
+    name = 'coerce'
+    forever = True
 
-#     ASTS_LEAF = ASTS_LEAF_EXPR_STD | ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | {Expr}
-#     MODES = [*ASTS_LEAF,
-#         'exec',
-#         'expr',
-#         'expr_all',
-#         'expr_arglike',
-#         'expr_slice',
-#         'Tuple_elt',
-#         'Tuple',
-#         '_Assign_targets',
-#         '_decorator_list',
-#         '_arglike',
-#         '_arglikes',
-#         '_comprehension_ifs',
-#         'arguments',
-#         'arguments_lambda',
-#         'arg',
-#         'keyword',
-#         'alias',
-#         '_aliases',
-#         'Import_name',
-#         '_Import_names',
-#         'ImportFrom_name',
-#         '_ImportFrom_names',
-#         'withitem',
-#         '_withitems',
-#         'pattern',
-#         'type_param',
-#         '_type_params',
-#     ]
+    FROM = ASTS_LEAF_EXPR_STD | ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | {Expr}
+    TO = [*FROM,
+        'exec',
+        'expr',
+        'expr_all',
+        'expr_arglike',
+        'expr_slice',
+        'Tuple_elt',
+        'Tuple',
+        '_Assign_targets',
+        '_decorator_list',
+        '_arglike',
+        '_arglikes',
+        '_comprehension_ifs',
+        'arguments',
+        'arguments_lambda',
+        'arg',
+        'keyword',
+        'alias',
+        '_aliases',
+        'Import_name',
+        '_Import_names',
+        'ImportFrom_name',
+        '_ImportFrom_names',
+        'withitem',
+        '_withitems',
+        'pattern',
+    ]
 
-#     def fuzz_one(self, fst, fnm) -> bool:
-#         count = 0
+    if PYGE12:
+        TO.extend([
+            'type_param',
+            '_type_params',
+        ])
 
-#         try:
-#             for f in fst.walk(self.ASTS_LEAF, self_=False):
-#                 if self.check_abort():
-#                     break
+    def fuzz_one(self, fst, fnm) -> bool:
+        count = 0
 
-#                 if not ((count := count + 1) % 20):
-#                     sys.stdout.write('.'); sys.stdout.flush()
+        try:
+            for f in fst.walk(self.FROM, self_=False):
+                if self.check_abort():
+                    break
 
-#                 mode = choice(self.MODES)
-#                 g = None
+                if f.parent.is_ftstr:  # so we don't get invalid stuff (string Constants, format_spec, etc...)
+                    continue
 
-#                 try:
-#                     g = f.as_(mode, norm_get=True)  # norm_get for no invalid empty Sets
+                if not ((count := count + 1) % 100):
+                    sys.stdout.write('.'); sys.stdout.flush()
 
-#                 except NodeError as exc:
-#                     if not str(exc).startswith('expecting '):
-#                         raise
+                mode = choice(self.TO)
+                g = None
 
-#                     continue
+                try:
+                    try:
+                        g = f.as_(mode, norm_get=True)  # norm_get for no invalid empty Sets
 
-#                 try:
-#                     g.verify()
+                    except NotImplementedError:
+                        continue
 
-#                 except Exception as exc:
-#                     if self.debug:
-#                         print()
-#                         print(f'{mode=}')
-#                         print(f'{f=}')
-#                         print('\n'.join(repr(l) for l in f.lines))
-#                         print(f'{g=}')
-#                         print('\n'.join(repr(l) for l in g.lines))
-#                         fc = f.copy()
-#                         print(f'{fc=}')
-#                         print('\n'.join(repr(l) for l in fc.lines))
+                    except NodeError as exc:
+                        if not str(exc).startswith('expecting '):
+                            raise
 
-#                     raise
+                        continue
 
-#         finally:
-#             print()
+                    g.verify()
 
-#             if self.verbose:
-#                 print(fst.src)
+                except Exception as exc:
+                    if self.debug:
+                        print()
+                        print(f'{mode=}')
+                        print(f'{f=}')
+                        print('\n'.join(repr(l) for l in f.lines))
+                        print(f'{g=}')
+                        if g:
+                            print('\n'.join(repr(l) for l in g.lines))
+                        fc = f.copy()
+                        print(f'f.copy()={fc}')
+                        print('\n'.join(repr(l) for l in fc.lines))
+
+                    raise
+
+        finally:
+            print()
+
+            if self.verbose:
+                print(fst.src)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

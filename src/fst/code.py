@@ -236,7 +236,7 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
         self._touch()
 
 
-def _par_if_needed(
+def _par_if_needed(  # TODO: candidate function to move into core, possibly just the detection part and not the parenthesizing part, or selectable
     self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False, whole: bool = False
 ) -> bool:
     """Parenthesize node if needed for precedence or parsability (this one optional). We expect this to be called on
@@ -291,7 +291,7 @@ def _par_if_needed(
         need_pars = False
 
     if not need_pars and parsability:  # if not needed for precedence then check if needed for parsability
-        need_pars = not self._is_enclosed_in_parents(field) and not self._is_enclosed_or_line(pars=False, whole=whole)
+        need_pars = not self._is_enclosed_in_parents() and not self._is_enclosed_or_line(pars=False, whole=whole)
 
     if need_pars:
         if ast_cls is Tuple:
@@ -339,6 +339,9 @@ def _coerce_to_pattern_ast_stmtmod(
     if (ast := body[0]).__class__ is not Expr:
         return f'uncoercible type {ast.__class__.__name__}'
 
+    if is_FST:
+        ast.f._has_separator(sep=';', del_=True)
+
     ast = ast.value
 
     return _AST_COERCE_TO_PATTERN_FUNCS.get(
@@ -358,6 +361,9 @@ def _coerce_to_pattern_ast_Expr(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+
+    if is_FST:
+        ast.f._has_separator(sep=';', del_=True)
 
     ast = ast.value
 
@@ -407,6 +413,8 @@ def _coerce_to_pattern_ast_Attribute(
 
     if value_cls is not Name:
         return f'base value must be Name, not {value_cls.__name__}'
+    elif value.id == '_':
+        return "base Name cannot be '_'"
 
     return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
                        end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
@@ -551,9 +559,13 @@ def _coerce_to_pattern_ast_Dict(
             if value.__class__ is not Name:
                 return f"'**' value must be Name, not {value.__class__.__name__}"
 
-            rest = value.id
+            if (rest := value.id) == '_':
+                return "'**' key cannot be '_'"
 
             continue
+
+        elif rest:
+            return "values cannot follow '**' key"
 
         if is_FST:
             key.f._unparenthesize_grouping(False)  # cannot have pars
@@ -684,7 +696,7 @@ def _coerce_to_pattern_ast_BinOp(
         operand = None
 
         if left_cls is Constant:
-            if not isinstance(value := left.value, (int, float)) or value < 0:
+            if not isinstance(value := left.value, (int, float)) or isinstance(value, bool) or value < 0:
                 return 'left Constant value must be >= 0'
 
         elif left_cls is UnaryOp:
@@ -695,6 +707,7 @@ def _coerce_to_pattern_ast_BinOp(
 
             if (operand.__class__ is not Constant
                 or not isinstance(value := operand.value, (int, float))
+                or isinstance(value, bool)
                 or value < 0
             ):
                 return 'left UnaryOp operand must be int or float Constant >= 0'
@@ -770,7 +783,7 @@ def _coerce_to_pattern_ast_UnaryOp(
 
     value = operand.value
 
-    if isinstance(value, (int, float)):
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
         if value < 0:
             return 'operand value must be >= 0'
 
@@ -949,6 +962,9 @@ def _coerce_to_expr_ast_stmtmod(
     if (ast := body[0]).__class__ is not Expr:
         return f'uncoercible type {ast.__class__.__name__}'
 
+    if is_FST:
+        ast.f._has_separator(sep=';', del_=True)
+
     return ast.value, False, 0
 
 def _coerce_to_expr_ast_Expression(
@@ -958,10 +974,13 @@ def _coerce_to_expr_ast_Expression(
 
     return ast.body, False, 0
 
-def _coerce_to_expr_ast_value(
+def _coerce_to_expr_ast_Expr(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
+
+    if is_FST:
+        ast.f._has_separator(sep=';', del_=True)
 
     return ast.value, False, 0
 
@@ -1330,6 +1349,13 @@ def _coerce_to_expr_ast__withitems(
             Tuple(elts=elts)
     ), True, 2
 
+def _coerce_to_expr_ast_MatchValue(
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`."""
+
+    return ast.value, False, 0
+
 def _coerce_to_expr_ast_MatchSingleton(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
@@ -1640,7 +1666,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     Module:             _coerce_to_expr_ast_stmtmod,
     Interactive:        _coerce_to_expr_ast_stmtmod,
     Expression:         _coerce_to_expr_ast_Expression,
-    Expr:               _coerce_to_expr_ast_value,
+    Expr:               _coerce_to_expr_ast_Expr,
     _Assign_targets:    _coerce_to_expr_ast__Assign_targets,
     _decorator_list:    _coerce_to_expr_ast__decorator_list,
     _arglikes:          _coerce_to_expr_ast__arglikes,
@@ -1654,7 +1680,7 @@ _AST_COERCE_TO_EXPR_FUNCS = {
     _aliases:           _coerce_to_expr_ast__aliases,
     withitem:           _coerce_to_expr_ast_withitem,
     _withitems:         _coerce_to_expr_ast__withitems,
-    MatchValue:         _coerce_to_expr_ast_value,
+    MatchValue:         _coerce_to_expr_ast_MatchValue,
     MatchSingleton:     _coerce_to_expr_ast_MatchSingleton,
     MatchSequence:      _coerce_to_expr_ast_MatchSequence,  # recurses
     MatchMapping:       _coerce_to_expr_ast_MatchMapping,  # recurses
@@ -2274,16 +2300,17 @@ def _coerce_to__decorator_list(
             for e in elts:
                 f = e.f
 
-                if (is_pard := f.is_parenthesized_tuple()) is None:
-                    end_ln, end_col, _, _ = f.pars()
-
-                    maybe_par.append(f)
-
-                else:
-                    if is_pard is False:  # this doesn't really make sense to happen, but cover it anyway
-                        f._delimit_node()
+                if f.is_parenthesized_tuple() is False:
+                    f._delimit_node()
 
                     end_ln, end_col, _, _ = f.loc
+
+                else:  # a parenthesized tuple can still have grouping pars
+                    pars = f.pars()
+                    end_ln, end_col, _, _ = pars
+
+                    if not pars.n:
+                        maybe_par.append(f)
 
                 ln, col = lline_start(lines, last_end_ln, last_end_col, end_ln, end_col)  # start of logical line because decorators must start at start of block indent
                 fst_._put_src('\n@' if col else '@', ln, col, end_ln, end_col, True,

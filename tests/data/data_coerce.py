@@ -10,6 +10,22 @@ from fst.asttypes import *
 DATA_COERCE = {
 'stmt': [  # ................................................................................
 
+('', 0, 0, 'stmt', {}, ('stmt',
+r'''a;'''),
+r'''a;''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'stmt', {}, ('stmts',
+r'''a;'''),
+r'''a''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
 ('', 0, 0, 'stmt', {}, ('NamedExpr',
 r'''a := b'''),
 r'''(a := b)''',
@@ -100,6 +116,26 @@ Expr - ROOT 0,0..2,3
 ],
 
 'stmts': [  # ................................................................................
+
+('', 0, 0, 'stmts', {}, ('stmt',
+r'''a;'''),
+r'''a;''',
+r'''a''', r'''
+Module - ROOT 0,0..0,2
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'stmts', {}, ('stmts',
+r'''a;'''),
+r'''a;''',
+r'''a''', r'''
+Module - ROOT 0,0..0,2
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
 
 ('', 0, 0, 'stmts', {}, ('NamedExpr',
 r'''a := b'''),
@@ -203,6 +239,11 @@ MatchValue - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''-True'''),
+r'''FST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
 r'''(-1j)'''),
 r'''(-1j)''',
 r'''-1j''', r'''
@@ -284,6 +325,73 @@ r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
 r'''1+(-1j)'''),
 r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
 r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''True+1j'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''-True+1j'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+],
+
+'misc': [  # ................................................................................
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('List', r'''
+[
+        '^unconverted data remains when parsing with format ".*": ".*"'
+        f", at position 0. {PARSING_ERR_MSG}$",
+        f'^time data ".*" doesn\'t match format ".*", at position 0. '
+        f"{PARSING_ERR_MSG}$",
+    ]
+'''),
+'\n@(\'^unconverted data remains when parsing with format ".*": ".*"\'\n        f", at position 0. {PARSING_ERR_MSG}$")\n@(f\'^time data ".*" doesn\\\'t match format ".*", at position 0. \'\n        f"{PARSING_ERR_MSG}$")\n    ', r'''
+@f'^unconverted data remains when parsing with format ".*": ".*", at position 0. {PARSING_ERR_MSG}$'
+@f"""^time data ".*" doesn't match format ".*", at position 0. {PARSING_ERR_MSG}$"""
+''', r'''
+_decorator_list - ROOT 0,0..5,4
+  .decorator_list[2]
+   0] JoinedStr - 1,2..2,46
+     .values[3]
+      0] Constant '^unconverted data remains when parsing with format ".*": ".*", at position 0. ' - 1,2..2,27
+      1] FormattedValue - 2,27..2,44
+        .value Name 'PARSING_ERR_MSG' Load - 2,28..2,43
+        .conversion -1
+      2] Constant '$' - 2,44..2,45
+   1] JoinedStr - 3,2..4,29
+     .values[3]
+      0] Constant '^time data ".*" doesn\'t match format ".*", at position 0. ' - 3,4..3,63
+      1] FormattedValue - 4,10..4,27
+        .value Name 'PARSING_ERR_MSG' Load - 4,11..4,26
+        .conversion -1
+      2] Constant '$' - 4,27..4,28
+'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('Tuple',
+r'''((10, 110, 3), ((10, 100, 3)))'''), r'''
+@(10, 110, 3)
+@((10, 100, 3))
+''', r'''
+@(10, 110, 3)
+@(10, 100, 3)
+''', r'''
+_decorator_list - ROOT 0,0..1,15
+  .decorator_list[2]
+   0] Tuple - 0,1..0,13
+     .elts[3]
+      0] Constant 10 - 0,2..0,4
+      1] Constant 110 - 0,6..0,9
+      2] Constant 3 - 0,11..0,12
+     .ctx Load
+   1] Tuple - 1,2..1,14
+     .elts[3]
+      0] Constant 10 - 1,3..1,5
+      1] Constant 100 - 1,7..1,10
+      2] Constant 3 - 1,12..1,13
+     .ctx Load
+'''),
 ],
 
 }

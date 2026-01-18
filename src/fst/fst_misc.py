@@ -1381,10 +1381,11 @@ def _has_separator(
     end_ln: int | None = None,
     end_col: int | None = None,
     sep: str = ',',
+    del_: bool = False,
 ) -> tuple[int, int] | None:
     """Whether `self` has a separator (usually comma) following, after any possible closing parentheses. If so then
-    return the starting location of that separator. Will skip any closing parentheses so can be used with an end
-    location without having to call `pars()`.
+    return the starting location of that separator. Will skip any closing parentheses to find the separator so can be
+    used with an end location without having to call `pars()`. Will also skip comments and line continuations.
 
     **Parameters:**
     - (`ln`, `col`): Location of start of span to search, otherwise gotten from end of `self`.
@@ -1392,6 +1393,9 @@ def _has_separator(
         even if there are other nodes that may follow because if we run into them then they will not be a closing par or
         a separator so will return no separator found.
     - `sep`: Separator to search for, usually comma.
+    - `del_`': If a separator is found then delete it and any preceding whitespace. If this is `True` then the returned
+        location is where the separator was before the delete and can serve as a truthy indicator that a separator was
+        in fact deleted.
 
     **Returns:**
     - `(ln, col)`: Location of found separator after any closing parentheses.
@@ -1422,7 +1426,16 @@ def _has_separator(
             if not src:
                 continue
 
-        return (cln, ccol) if src.startswith(sep) else None
+        if not src.startswith(sep):
+            return None
+
+        if del_:
+            if cln != ln:  # if not on same line as start of search then delete to start of preceding whitespace
+                col = re_empty_space.search(lines[cln], 0, ccol).start()
+
+            self._put_src(None, cln, col, cln, ccol + len(sep), True)
+
+        return (cln, ccol)
 
     return None
 
