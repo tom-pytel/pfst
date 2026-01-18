@@ -12,6 +12,7 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR_STMT_OR_MOD,
+    ASTS_LEAF_YIELD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_TUPLE_OR_LIST,
     ASTS_LEAF_LIST_OR_SET,
@@ -1023,7 +1024,7 @@ def _coerce_to_expr_ast__Assign_targets(
 
                 _, _, ln, col = f.loc
 
-            eq = next_frag(lines, ln, col, len(lines), 0x7fffffffffffffff)  # may or may not be there '=' for last target
+            eq = next_frag(lines, ln, col, len(lines) - 1, 0x7fffffffffffffff)  # may or may not be there '=' for last target
 
             if not (is_last := a is last_target) or eq:
                 end_ln, end_col, src = eq
@@ -1508,7 +1509,7 @@ def _coerce_to_expr_ast_MatchClass(
 
     if is_FST:
         lines = ast.f.root._lines
-        _, _, end_ln, end_col = pat.f.loc if args else ast.cls.f.loc
+        _, _, prev_end_ln, prev_end_col = pat.f.loc if args else ast.cls.f.loc
 
     for arg, pat in zip(ast.kwd_attrs, ast.kwd_patterns, strict=True):
         value = _AST_COERCE_TO_EXPR_FUNCS.get(
@@ -1523,14 +1524,14 @@ def _coerce_to_expr_ast_MatchClass(
             keywords.append(keyword(arg=arg, value=value))
 
         else:
-            loc = pat.f.loc
-            ln, col, _, _ = loc
-            ln, col, _ = next_find_re(lines, end_ln, end_col, ln, col, re_identifier)  # must be there
+            ln, col, end_ln, end_col = pat.f.pars()
+            ln, col, _ = next_find_re(lines, prev_end_ln, prev_end_col, ln, col, re_identifier)  # must be there
 
             keywords.append(keyword(arg=arg, value=value, lineno=ln + 1, col_offset=lines[ln].c2b(col),
-                                    end_lineno=value.end_lineno, end_col_offset=value.end_col_offset))
+                                    end_lineno=end_ln + 1, end_col_offset=lines[end_ln].c2b(end_col)))
 
-            _, _, end_ln, end_col = loc
+            prev_end_ln = end_ln
+            prev_end_col = end_col
 
     return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
@@ -2250,7 +2251,7 @@ def _coerce_to__Assign_targets(
         fst_._maybe_add_line_continuations()  # location is already whole so don't need to pass whole=True
 
         if sanitize:  # won't really do much after adding line continuations but we must do that first to make sure locations are good
-            fst_ = fst_._sanitize()
+            fst_._sanitize()
 
         _fix__Assign_targets(fst_)
         _fix__slice_last_line_continuation(fst_, lines, end_ln, end_col)
@@ -2346,7 +2347,7 @@ def _coerce_to__decorator_list(
             fst_._touch()
 
             if sanitize:
-                fst_ = fst_._sanitize()
+                fst_._sanitize()
 
             for f in maybe_par:
                 _par_if_needed(f, False)
@@ -2429,7 +2430,7 @@ def _coerce_to__arglikes(
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
         if sanitize:
-            fst_ = fst_._sanitize()
+            fst_._sanitize()
 
     else:  # single element as sequence
         fst_ = code_as__arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
@@ -2760,16 +2761,21 @@ def _coerce_to__withitems(
     fst_ = _coerce_to_seq(code, options, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
 
     if fst_ is not None:  # sequence as sequence? ret_elts=False because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
-        return fst_._sanitize() if sanitize else fst_
+         if sanitize:
+            fst_._sanitize()
 
-    # single element as sequence
+    else: # single element as sequence
+        fst_ = code_as_withitem(code, options, parse_params, sanitize=sanitize, coerce=True)
 
-    fst_ = code_as_withitem(code, options, parse_params, sanitize=sanitize, coerce=True)
+        ast = _withitems(items=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                        end_col_offset=ls[-1].lenbytes)
 
-    ast = _withitems(items=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                     end_col_offset=ls[-1].lenbytes)
+        fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'items', True, False)
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'items', True, False)
+    for wi in fst_.a.items:
+        _par_if_needed(wi.context_expr.f)
+
+    return fst_
 
 
 def _coerce_to_pattern(
@@ -2795,7 +2801,7 @@ def _coerce_to_pattern(
         fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 
         if sanitize:
-            fst_ = fst_._sanitize()
+            fst_._sanitize()
 
     else:
         src = unparse(ast)

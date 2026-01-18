@@ -453,6 +453,39 @@ _comprehension_ifs - ROOT 0,0..1,9
       1] Name 'b' Load - 1,3..1,4
    1] Name 'c' Load - 1,8..1,9
 '''),
+
+('', 0, 0, 'Call', {}, ('MatchClass',
+r'''a(c(d=(e)))'''),
+r'''a(c(d=(e)))''',
+r'''a(c(d=e))''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'a' Load - 0,0..0,1
+  .args[1]
+   0] Call - 0,2..0,10
+     .func Name 'c' Load - 0,2..0,3
+     .keywords[1]
+      0] keyword - 0,4..0,9
+        .arg 'd'
+        .value Name 'e' Load - 0,7..0,8
+'''),
+
+('', 0, 0, '_withitems', {}, ('Yield',
+r'''yield'''),
+r'''(yield)''',
+r'''(yield)''', r'''
+_withitems - ROOT 0,0..0,7
+  .items[1]
+   0] withitem - 0,0..0,7
+     .context_expr Yield - 0,1..0,6
+'''),
+
+('', 0, 0, 'withitem', {}, ('Yield',
+r'''yield'''),
+r'''yield''',
+r'''(yield)''', r'''
+withitem - ROOT 0,0..0,5
+  .context_expr Yield - 0,0..0,5
+'''),
 ],
 
 }

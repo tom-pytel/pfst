@@ -326,6 +326,7 @@ __all__ = [
     'ASTS_LEAF_TRY',
     'ASTS_LEAF_IMPORT',
     'ASTS_LEAF_VAR_SCOPE_DECL',
+    'ASTS_LEAF_YIELD',
     'ASTS_LEAF_TUPLE_LIST_OR_SET',
     'ASTS_LEAF_TUPLE_OR_LIST',
     'ASTS_LEAF_LIST_OR_SET',
@@ -397,6 +398,8 @@ ASTS_LEAF_WITH               = frozenset([With, AsyncWith])
 ASTS_LEAF_TRY                = frozenset([Try, TryStar])
 ASTS_LEAF_IMPORT             = frozenset([Import, ImportFrom])
 ASTS_LEAF_VAR_SCOPE_DECL     = frozenset([Global, Nonlocal])
+
+ASTS_LEAF_YIELD              = frozenset([Yield, YieldFrom])
 
 ASTS_LEAF_TUPLE_LIST_OR_SET  = frozenset([Tuple, List, Set])
 ASTS_LEAF_TUPLE_OR_LIST      = frozenset([Tuple, List])

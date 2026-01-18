@@ -2684,12 +2684,12 @@ class SliceCoerce(Fuzzy):
                     sys.stdout.write('.'); sys.stdout.flush()
 
                 mode = choice(self.TO)
-                f_copy = g = None
+                mode2 = f_copy = g = h = None
 
                 try:
                     try:
                         f_copy = f.copy()
-                        g = f_copy.as_(mode, copy=True, norm_get=True)  # norm_get for no invalid empty Sets, always copies because is not root node
+                        g = f_copy.as_(mode, copy=True, norm_get=True)  # norm_get for no invalid empty Sets
 
                     except NotImplementedError:
                         continue
@@ -2700,19 +2700,41 @@ class SliceCoerce(Fuzzy):
 
                         continue
 
-                    if mode != '_expr_arglikes':  # this one is a hybrid monstrosity that may not verify, internal use only
-                        g.verify()
+                    if mode == '_expr_arglikes':  # this one is a hybrid monstrosity for internal use only, may not verify (so not parse to what it is), this means we are done here
+                        continue
+
+                    g.verify()  # coerce forward
+
+                    mode2 = choice(self.TO) if randint(0, 1) else f.a.__class__  # randomly coerce back to original type or new random type
+
+                    try:
+                        h = g.as_(f.a.__class__, copy=True, norm_get=True)
+
+                    except NotImplementedError:
+                        continue
+
+                    except NodeError as exc:
+                        if not str(exc).startswith('expecting '):
+                            raise
+
+                        continue
+
+                    if mode2 != '_expr_arglikes':
+                        h.verify()  # coerce back
 
                 except Exception as exc:
                     if self.debug:
                         print()
-                        print(f'{mode=}')
+                        print(f'{mode=}, {mode2=}')
                         print(f'{f=}')
                         if f_copy:
                             print('\n'.join(repr(l) for l in f_copy.lines))
                         print(f'{g=}')
                         if g:
                             print('\n'.join(repr(l) for l in g.lines))
+                        print(f'{h=}')
+                        if h:
+                            print('\n'.join(repr(l) for l in h.lines))
 
                     raise
 
