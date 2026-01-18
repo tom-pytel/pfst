@@ -1871,14 +1871,15 @@ a
 
         # lone With.items tuple
 
-        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace('x, y', raw=False).root).src)
-        f.verify()
+        # self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace('x, y', raw=False).root).src)
+        # f.verify()
+        self.assertRaises(ParseError, FST('with a: pass').items[0].replace, 'x, y', raw=False)
 
         self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace('(x, y)', raw=False).root).src)
         f.verify()
 
-        self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('x, y', withitem), raw=False).root).src)
-        f.verify()
+        # self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('x, y', withitem), raw=False).root).src)
+        # f.verify()
 
         self.assertEqual('with ((x, y)): pass', (f := FST('with a: pass').items[0].replace(FST('(x, y)', withitem), raw=False).root).src)
         f.verify()

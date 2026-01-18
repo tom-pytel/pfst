@@ -12,7 +12,6 @@ from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR_STMT_OR_MOD,
-    ASTS_LEAF_YIELD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_TUPLE_OR_LIST,
     ASTS_LEAF_LIST_OR_SET,
@@ -24,7 +23,6 @@ from .asttypes import (
     BitOr,
     Call,
     Constant,
-    Del,
     Dict,
     ExceptHandler,
     Expr,
@@ -2739,16 +2737,20 @@ def _coerce_to_withitem(
     # TODO: coerce "import a as b" names[0] -> "with a as b"?
 
     fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
+    ast_ = fst_.a
 
-    if fst_.a.__class__ is Starred:
+    if ast_.__class__ is Starred:
         raise NodeError('Starred not allowed in withitem')
 
     if fst_.is_parenthesized_tuple() is False:
         fst_._delimit_node()
 
     ast = withitem(context_expr=None)
+    fst_ = fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field(ast_, 'context_expr', True, False)
 
-    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field(fst_.a, 'context_expr', True, False)
+    _par_if_needed(ast_.f, None, False)
+
+    return fst_
 
 
 def _coerce_to__withitems(
@@ -2769,11 +2771,10 @@ def _coerce_to__withitems(
 
         ast = _withitems(items=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                         end_col_offset=ls[-1].lenbytes)
-
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'items', True, False)
 
     for wi in fst_.a.items:
-        _par_if_needed(wi.context_expr.f)
+        _par_if_needed(wi.context_expr.f, None, False)
 
     return fst_
 

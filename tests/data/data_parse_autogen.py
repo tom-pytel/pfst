@@ -2615,15 +2615,17 @@ withitem - ROOT 0,0..0,1
 r'''*a'''),
 r'''**SyntaxError('cannot use starred expression here')**'''),
 
-('parse_withitem', 0, 0, 'withitem', {}, ('withitem',
-r'''a, b'''), r'''
-withitem - ROOT 0,0..0,4
-  .context_expr Tuple - 0,0..0,4
-    .elts[2]
-     0] Name 'a' Load - 0,0..0,1
-     1] Name 'b' Load - 0,3..0,4
-    .ctx Load
-'''),
+('parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
+r'''a,'''),
+r'''**ParseError('expecting single withitem, has trailing comma')**'''),
+
+('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+r'''*a,'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
+r'''a, b'''),
+r'''**ParseError('expecting single withitem')**'''),
 
 ('parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''(a, b)'''), r'''
@@ -2670,6 +2672,22 @@ withitem - ROOT 0,0..0,3
   .context_expr Name 'a' Load - 0,1..0,2
 '''),
 
+('parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+r'''(i for i in j)'''), r'''
+withitem - ROOT 0,0..0,14
+  .context_expr GeneratorExp - 0,0..0,14
+    .elt Name 'i' Load - 0,1..0,2
+    .generators[1]
+     0] comprehension - 0,3..0,13
+       .target Name 'i' Store - 0,7..0,8
+       .iter Name 'j' Load - 0,12..0,13
+       .is_async 0
+'''),
+
+('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+r'''i for i in j'''),
+r'''**SyntaxError('expecting withitem, got unparenthesized GeneratorExp')**'''),
+
 ('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r'''(a as b)'''),
 r'''**SyntaxError('invalid syntax')**'''),
@@ -2701,6 +2719,18 @@ _withitems - ROOT 0,0..0,1
 ('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''*a'''),
 r'''**SyntaxError('cannot use starred expression here')**'''),
+
+('parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+r'''a,'''), r'''
+_withitems - ROOT 0,0..0,2
+  .items[1]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+r'''*a,'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b'''), r'''
@@ -2792,7 +2822,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''i for i in j'''),
-r'''**SyntaxError('expecting withitems, got unparenthesized GeneratorExp')**'''),
+r'''**SyntaxError('expecting _withitems, got unparenthesized GeneratorExp')**'''),
 
 ('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r''')'''),
@@ -4288,15 +4318,9 @@ withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
-('parse_withitem', 0, 0, 'withitem', {}, (withitem,
-r'''a, b'''), r'''
-withitem - ROOT 0,0..0,4
-  .context_expr Tuple - 0,0..0,4
-    .elts[2]
-     0] Name 'a' Load - 0,0..0,1
-     1] Name 'b' Load - 0,3..0,4
-    .ctx Load
-'''),
+('parse_withitem', 0, 0, 'ParseError', {}, (withitem,
+r'''a, b'''),
+r'''**ParseError('expecting single withitem')**'''),
 
 ('parse_withitem', 0, 0, 'withitem', {}, (withitem,
 r'''(a, b)'''), r'''
@@ -4679,12 +4703,9 @@ alias - ROOT 0,1..0,2
   .name '*'
 '''),
 
-('parse_withitem', 0, 0, 'withitem', {}, ('withitem',
-r''' a as b,  # tail'''), r'''
-withitem - ROOT 0,1..0,7
-  .context_expr Name 'a' Load - 0,1..0,2
-  .optional_vars Name 'b' Store - 0,6..0,7
-'''),
+('parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
+r''' a as b,  # tail'''),
+r'''**ParseError('expecting single withitem, has trailing comma')**'''),
 
 ('parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
 r''' 1 | 2 | 3  # tail'''), r'''

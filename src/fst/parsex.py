@@ -73,6 +73,7 @@ from .asttypes import (
     Module,
     Mult,
     Name,
+    NamedExpr,
     Not,
     NotEq,
     NotIn,
@@ -94,6 +95,8 @@ from .asttypes import (
     UAdd,
     USub,
     With,
+    Yield,
+    YieldFrom,
     alias,
     arg,
     arguments,
@@ -1735,46 +1738,38 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `withitem`, e.g. "something() as var". @private"""
 
     try:
-        items = _ast_parse1(f'with ((\n{src}\n)): pass', parse_params, With).items  # we need to try double parentheses first to catch unparenthesized singleton tuples "x,"
+        items = _ast_parse1(f'with (\n{src}\n): pass', parse_params, With).items
+    except SyntaxError as exc:
+        raise exc from None
 
-    except SyntaxError:
-        try:
-            items = _ast_parse1(f'with (\n{src}\n): pass', parse_params, With).items
-        except SyntaxError as exc:
-            raise exc from None
+    if len(items) != 1:
+        raise ParseError('expecting single withitem')
 
-        if len(items) != 1:
-            raise ParseError('expecting single withitem') from None
+    item0 = items[0]
+    ast = item0.context_expr
+    ast_cls = ast.__class__
 
-        ast = items[0].context_expr
-        ast_cls = ast.__class__
-
+    if ast.lineno == 1:
         if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-            raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp') from None
+            raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if ast.lineno == 1:  # something merged with our grouping pars, maybe the user was screwing around and passed ')+('
-            if ast_cls is Tuple and not ast.elts:  # empty tuple created by our pars
-                raise SyntaxError('expecting withitem, got nothing') from None
+        if ast_cls is Tuple and not ast.elts:  # empty tuple created by our pars
+            raise SyntaxError('expecting withitem, got nothing')
 
-            raise SyntaxError('invalid syntax') from None
+        raise SyntaxError('invalid syntax')  # something merged with our grouping pars, maybe the user was screwing around and passed ')+('
 
     else:
-        if len(items) != 1:
-            raise ParseError('expecting single withitem')
+        if last_ast := item0.optional_vars:
+            pass  # noop
 
-        ast = items[0].context_expr
+        elif (last_ast := ast).__class__ in (NamedExpr, Yield, YieldFrom):  # these must be explicitly parenthesized
+            if not _re_first_src.search(src).group(2).startswith('('):
+                raise ParseError(f'{ast.__class__.__name__} must be parenthesized in a withitem')
 
-        if ast.lineno == 1:  # unparenthesized Tuple or something merged with our grouping pars
-            if ast.__class__ is Tuple:
-                if not ast.elts:  # empty tuple created by our pars
-                    raise SyntaxError('expecting withitem, got nothing')
+        if _has_trailing_comma(src, last_ast.end_lineno - 1, last_ast.end_col_offset):
+            raise ParseError('expecting single withitem, has trailing comma')
 
-                _fix_undelimited_seq_parsed_delimited(src, ast)
-
-            else:
-                raise SyntaxError('invalid syntax')
-
-    return _offset_linenos(items[0], -1)
+    return _offset_linenos(item0, -1)
 
 
 def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1785,17 +1780,22 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     len_items = len(items)
 
     if len_items == 1:
-        ast = items[0].context_expr
+        i0 = items[0]
+        ast = i0.context_expr
         ast_cls = ast.__class__
 
         if ast.lineno == 1:  # something merged with our grouping pars, maybe the user was screwing around and passed ')+('
             if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-                raise SyntaxError('expecting withitems, got unparenthesized GeneratorExp')
+                raise SyntaxError('expecting _withitems, got unparenthesized GeneratorExp')
 
             if ast_cls is Tuple and not ast.elts:  # empty tuple created by our pars
                 items = []
             else:
                 raise SyntaxError('invalid syntax')
+
+        elif not i0.optional_vars and ast_cls in (NamedExpr, Yield, YieldFrom):  # these must be explicitly parenthesized
+            if not _re_first_src.search(src).group(2).startswith('('):
+                raise ParseError(f'{ast_cls.__name__} must be parenthesized in _withitems')
 
     elif len_items > 1:
         i0 = items[0]

@@ -314,17 +314,33 @@ withitem - ROOT 0,0..0,4
 <withitem ROOT 0,0..0,4>
 
 >>> cd.code_as_withitem('x,', coerce=True).dump('N').verify()
-0: x,
-withitem - ROOT 0,0..0,2
-0: x,
-  .context_expr Tuple - 0,0..0,2
-    .elts[1]
-0: x
-     0] Name 'x' Load - 0,0..0,1
-    .ctx Load
-<withitem ROOT 0,0..0,2>
+Traceback (most recent call last):
+...
+fst.ParseError: expecting single withitem, has trailing comma
 
->>> print(dump(px.parse_withitem('x,'), include_attributes=2, indent=2))
+>>> cd.code_as_withitem(FST('x,'), coerce=True).dump('N').verify()
+0: (x,)
+withitem - ROOT 0,0..0,4
+0: (x,)
+  .context_expr Tuple - 0,0..0,4
+    .elts[1]
+0:  x
+     0] Name 'x' Load - 0,1..0,2
+    .ctx Load
+<withitem ROOT 0,0..0,4>
+
+>>> cd.code_as_withitem(FST('x,').a, coerce=True).dump('N').verify()
+0: (x,)
+withitem - ROOT 0,0..0,4
+0: (x,)
+  .context_expr Tuple - 0,0..0,4
+    .elts[1]
+0:  x
+     0] Name 'x' Load - 0,1..0,2
+    .ctx Load
+<withitem ROOT 0,0..0,4>
+
+>>> print(dump(px.parse_withitem('(x,)'), include_attributes=2, indent=2))
 withitem(
   context_expr=Tuple(
     elts=[
@@ -332,14 +348,14 @@ withitem(
         id='x',
         ctx=Load(),
         lineno=1,
-        col_offset=0,
+        col_offset=1,
         end_lineno=1,
-        end_col_offset=1)],
+        end_col_offset=2)],
     ctx=Load(),
     lineno=1,
     col_offset=0,
     end_lineno=1,
-    end_col_offset=2))
+    end_col_offset=4))
 
 >>> dump(px.parse_withitem('x as y'))
 "withitem(context_expr=Name(id='x', ctx=Load()), optional_vars=Name(id='y', ctx=Store()))"
@@ -398,24 +414,9 @@ With - ROOT 0,0..0,19
 <With ROOT 0,0..0,19>
 
 >>> FST('with a: pass').put_slice(FST('*a,', 'withitem'), 'items').dump('N').verify()
-0: with ((*a,)):
-With - ROOT 0,0..0,18
-  .items[1]
-0:      ((*a,))
-   0] withitem - 0,5..0,12
-0:       (*a,)
-     .context_expr Tuple - 0,6..0,11
-       .elts[1]
-0:        *a
-        0] Starred - 0,7..0,9
-0:         a
-          .value Name 'a' Load - 0,8..0,9
-          .ctx Load
-       .ctx Load
-  .body[1]
-0:               pass
-   0] Pass - 0,14..0,18
-<With ROOT 0,0..0,18>
+Traceback (most recent call last):
+...
+SyntaxError: invalid syntax
 
 >>> FST('w,', '_withitems').dump('N').items[0]._has_separator()
 0: w,
@@ -427,7 +428,7 @@ _withitems - ROOT 0,0..0,2
      .context_expr Name 'w' Load - 0,0..0,1
 (0, 1)
 
->>> print(dump(px.parse_withitem('x,'), indent=2))
+>>> print(dump(px.parse_withitem('(x,)'), indent=2))
 withitem(
   context_expr=Tuple(
     elts=[

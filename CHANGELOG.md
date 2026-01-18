@@ -2,7 +2,7 @@
 
 ### Fixed
 
-- fixer parse `withitem` which is a solo `GeneratorExp`
+- fixed parse `withitem` of a solo `GeneratorExp`
 - allow put `Starred` to `TypeVarTuple.default_value`
 - don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
 - don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
@@ -26,6 +26,7 @@
 
 ### Updated
 
+- parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
 - improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
 - REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
 - allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability

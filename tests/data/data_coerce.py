@@ -468,24 +468,6 @@ Call - ROOT 0,0..0,11
         .arg 'd'
         .value Name 'e' Load - 0,7..0,8
 '''),
-
-('', 0, 0, '_withitems', {}, ('Yield',
-r'''yield'''),
-r'''(yield)''',
-r'''(yield)''', r'''
-_withitems - ROOT 0,0..0,7
-  .items[1]
-   0] withitem - 0,0..0,7
-     .context_expr Yield - 0,1..0,6
-'''),
-
-('', 0, 0, 'withitem', {}, ('Yield',
-r'''yield'''),
-r'''yield''',
-r'''(yield)''', r'''
-withitem - ROOT 0,0..0,5
-  .context_expr Yield - 0,0..0,5
-'''),
 ],
 
 }

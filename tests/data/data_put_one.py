@@ -12352,20 +12352,45 @@ _Assign_targets - ROOT 0,0..4,0
 'With_items': [  # ................................................................................
 
 ('', 0, None, 'items', {'raw': False}, (None,
-r'''with _: pass'''), ('Tuple',
-r'''x, y'''),
-r'''with ((x, y)): pass''', r'''
+r'''with (_): pass'''), (None,
+r'''a := b'''),
+r'''**ParseError('NamedExpr must be parenthesized in a withitem')**'''),
+
+('', 0, None, 'items', {'raw': False}, (None,
+r'''with (_): pass'''), (None,
+r'''(a := b)'''),
+r'''with (a := b): pass''', r'''
 With - ROOT 0,0..0,19
   .items[1]
    0] withitem - 0,5..0,13
-     .context_expr Tuple - 0,6..0,12
-       .elts[2]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'y' Load - 0,10..0,11
-       .ctx Load
+     .context_expr NamedExpr - 0,6..0,12
+       .target Name 'a' Store - 0,6..0,7
+       .value Name 'b' Load - 0,11..0,12
   .body[1]
    0] Pass - 0,15..0,19
 '''),
+
+('', 0, None, 'items', {'raw': False}, (None,
+r'''with (_): pass'''), (None,
+r'''yield'''),
+r'''**ParseError('Yield must be parenthesized in a withitem')**'''),
+
+('', 0, None, 'items', {'raw': False}, (None,
+r'''with (_): pass'''), (None,
+r'''(yield)'''),
+r'''with (yield): pass''', r'''
+With - ROOT 0,0..0,18
+  .items[1]
+   0] withitem - 0,5..0,12
+     .context_expr Yield - 0,6..0,11
+  .body[1]
+   0] Pass - 0,14..0,18
+'''),
+
+('', 0, None, 'items', {'raw': False}, (None,
+r'''with _: pass'''), ('Tuple',
+r'''x, y'''),
+r'''**ParseError('expecting single withitem')**'''),
 
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''with _: pass'''), ('Tuple',
@@ -12386,18 +12411,7 @@ With - ROOT 0,0..0,19
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''with (_): pass'''), ('Tuple',
 r'''x, y'''),
-r'''with ((x, y)): pass''', r'''
-With - ROOT 0,0..0,19
-  .items[1]
-   0] withitem - 0,5..0,13
-     .context_expr Tuple - 0,6..0,12
-       .elts[2]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'y' Load - 0,10..0,11
-       .ctx Load
-  .body[1]
-   0] Pass - 0,15..0,19
-'''),
+r'''**ParseError('expecting single withitem')**'''),
 
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''with (_): pass'''), ('Tuple',
@@ -12421,18 +12435,7 @@ With - ROOT 0,0..0,19
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''async with _: pass'''), ('Tuple',
 r'''x, y'''),
-r'''async with ((x, y)): pass''', r'''
-AsyncWith - ROOT 0,0..0,25
-  .items[1]
-   0] withitem - 0,11..0,19
-     .context_expr Tuple - 0,12..0,18
-       .elts[2]
-        0] Name 'x' Load - 0,13..0,14
-        1] Name 'y' Load - 0,16..0,17
-       .ctx Load
-  .body[1]
-   0] Pass - 0,21..0,25
-'''),
+r'''**ParseError('expecting single withitem')**'''),
 
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''async with _: pass'''), ('Tuple',
@@ -12453,18 +12456,7 @@ AsyncWith - ROOT 0,0..0,25
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''async with (_): pass'''), ('Tuple',
 r'''x, y'''),
-r'''async with ((x, y)): pass''', r'''
-AsyncWith - ROOT 0,0..0,25
-  .items[1]
-   0] withitem - 0,11..0,19
-     .context_expr Tuple - 0,12..0,18
-       .elts[2]
-        0] Name 'x' Load - 0,13..0,14
-        1] Name 'y' Load - 0,16..0,17
-       .ctx Load
-  .body[1]
-   0] Pass - 0,21..0,25
-'''),
+r'''**ParseError('expecting single withitem')**'''),
 
 ('', 0, None, 'items', {'raw': False}, (None,
 r'''async with (_): pass'''), ('Tuple',

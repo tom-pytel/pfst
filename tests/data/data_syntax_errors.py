@@ -764,6 +764,14 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: cannot use starred expression here',
 ],
 
+('withitem', '*a,'): [
+    'SyntaxError: invalid syntax',
+],
+
+('withitem', 'i for i in j'): [
+    'SyntaxError: expecting withitem, got unparenthesized GeneratorExp',
+],
+
 ('withitem', '(a as b)'): [
     '    (a as b)',
     '       ^^',
@@ -794,6 +802,10 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: cannot use starred expression here',
 ],
 
+('_withitems', '*a,'): [
+    'SyntaxError: invalid syntax',
+],
+
 ('_withitems', '(a as b)'): [
     '    (a as b)',
     '       ^^',
@@ -807,7 +819,7 @@ DATA_SYNTAX_ERRORS = {
 ],
 
 ('_withitems', 'i for i in j'): [
-    'SyntaxError: expecting withitems, got unparenthesized GeneratorExp',
+    'SyntaxError: expecting _withitems, got unparenthesized GeneratorExp',
 ],
 
 ('_withitems', ')'): [
