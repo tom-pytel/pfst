@@ -57,6 +57,7 @@ from .asttypes import (
     TypeVarTuple,
     Tuple,
     UnaryOp,
+    USub,
     alias,
     arg,
     arguments,
@@ -611,14 +612,14 @@ def _coerce_to_pattern_ast_Call(
         while True:
             if (cur := cur.value).__class__ is Name:
                 if cur.id == '_':
-                    return f"func Name cannot start with '_'"
+                    return "func Name cannot start with '_'"
 
                 break
 
     elif func_cls is not Name:
         return f"func must be Name or Attribute, not {func_cls.__name__}"
     elif func.id == '_':
-        return f"func Name cannot be '_'"
+        return "func Name cannot be '_'"
 
     patterns = []
     kwd_attrs = []
@@ -661,16 +662,60 @@ def _coerce_to_pattern_ast_Call(
 def _coerce_to_pattern_ast_BinOp(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
 ) -> tuple[AST, bool, int]:
-    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+    """See `_coerce_to_pattern_ast_ret_empty_str()`.
+
+    Either a complex number to a `MatchValue` or a `BitOr` (possibly ladder of them) to a `MatchOr`.
+    """
 
     op_cls = ast.op.__class__
 
-    if op_cls in (Add, Sub):  # `int + complex` or `int - complex`
-        raise NotImplementedError
+    if op_cls in (Add, Sub):  # `int +/- complex` -> MatchValue
+        right = ast.right
 
+        if (right.__class__ is not Constant
+            or not isinstance(value := right.value, complex)
+            or value.real
+            or value.imag < 0
+        ):
+            return 'right value must be pure imaginary Constant >= 0j'
 
+        left = ast.left
+        left_cls = left.__class__
+        operand = None
 
+        if left_cls is Constant:
+            if not isinstance(value := left.value, (int, float)) or value < 0:
+                return 'left Constant value must be >= 0'
 
+        elif left_cls is UnaryOp:
+            if left.op.__class__ is not USub:
+                return "left UnaryOp must be '-'"
+
+            operand = left.operand
+
+            if (operand.__class__ is not Constant
+                or not isinstance(value := operand.value, (int, float))
+                or value < 0
+            ):
+                return 'left UnaryOp operand must be int or float Constant >= 0'
+
+        else:
+            return 'left value must be +/- int or float'
+
+        if is_FST:  # do after all the checks because maybe in the future we make coercion attempts non-destructive?
+            left.f._unparenthesize_grouping(False)
+            right.f._unparenthesize_grouping(False)
+
+            if operand:
+                operand.f._unparenthesize_grouping(False)
+
+        return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                           end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+                if is_FST else
+                MatchValue(value=ast)
+        )
+
+    # 'a | b' -> MatchOr
 
     if op_cls is not BitOr:
         return f"op must be '+', '-' or '|', not {ast.op.__class__.__name__}"
@@ -709,6 +754,41 @@ def _coerce_to_pattern_ast_BinOp(
 
     return MatchOr(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                    end_col_offset=ast.end_col_offset)
+
+def _coerce_to_pattern_ast_UnaryOp(
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_pattern_ast_ret_empty_str()`."""
+
+    if ast.op.__class__ is not USub:
+        return f"op must be '+' or '-', not {ast.op.__class__.__name__}"
+
+    operand = ast.operand
+
+    if operand.__class__ is not Constant:
+        return f'operand must be Constant, not {operand.__class__.__name__}'
+
+    value = operand.value
+
+    if isinstance(value, (int, float)):
+        if value < 0:
+            return 'operand value must be >= 0'
+
+    elif isinstance(value, complex):
+        if value.real or value.imag < 0:
+            return 'complex operand must be pure imaginary >= 0j'
+
+    else:
+        return f'operand value must be int, float or complex, not {value.__class__.__name__}'
+
+    if is_FST:
+        operand.f._unparenthesize_grouping(False)
+
+    return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+            if is_FST else
+            MatchValue(value=ast)
+    )
 
 def _coerce_to_pattern_ast_seq(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -796,8 +876,8 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     _Assign_targets:    _coerce_to_pattern_ast_seq,
     _decorator_list:    _coerce_to_pattern_ast_seq,
     _arglikes:          _coerce_to_pattern_ast_seq,
-    BinOp:              _coerce_to_pattern_ast_BinOp,  # MatchOr from BitOr, MatchValue from 1+1j
-    # UnaryOp:            _coerce_to_pattern_ast_UnaryOp,  # MatchValue from -1
+    BinOp:              _coerce_to_pattern_ast_BinOp,  # MatchOr from BitOr, MatchValue from int+/-complex
+    UnaryOp:            _coerce_to_pattern_ast_UnaryOp,  # MatchValue from -int or -complex
     Dict:               _coerce_to_pattern_ast_Dict,  # MatchMapping
     Set:                _coerce_to_pattern_ast_seq,
     Call:               _coerce_to_pattern_ast_Call,  # MatchClass

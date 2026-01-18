@@ -167,4 +167,123 @@ Module - ROOT 0,0..3,2
 '''),
 ],
 
+'pattern_from_number': [  # ................................................................................
+
+('', 0, 0, 'pattern', {}, ('Constant',
+r'''(1)'''),
+r'''(1)''',
+r'''1''', r'''
+MatchValue - ROOT 0,1..0,2
+  .value Constant 1 - 0,1..0,2
+'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''+1'''),
+r'''FST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''(-1)'''),
+r'''(-1)''',
+r'''-1''', r'''
+MatchValue - ROOT 0,1..0,3
+  .value UnaryOp - 0,1..0,3
+    .op USub - 0,1..0,2
+    .operand Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''-(1)'''),
+r'''-1''',
+r'''-1''', r'''
+MatchValue - ROOT 0,0..0,2
+  .value UnaryOp - 0,0..0,2
+    .op USub - 0,0..0,1
+    .operand Constant 1 - 0,1..0,2
+'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''(-1j)'''),
+r'''(-1j)''',
+r'''-1j''', r'''
+MatchValue - ROOT 0,1..0,4
+  .value UnaryOp - 0,1..0,4
+    .op USub - 0,1..0,2
+    .operand Constant 1j - 0,2..0,4
+'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''-(1j)'''),
+r'''-1j''',
+r'''-1j''', r'''
+MatchValue - ROOT 0,0..0,3
+  .value UnaryOp - 0,0..0,3
+    .op USub - 0,0..0,1
+    .operand Constant 1j - 0,1..0,3
+'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''(1)+(1j)'''),
+r'''1+1j''',
+r'''1 + 1j''', r'''
+MatchValue - ROOT 0,0..0,4
+  .value BinOp - 0,0..0,4
+    .left Constant 1 - 0,0..0,1
+    .op Add - 0,1..0,2
+    .right Constant 1j - 0,2..0,4
+'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''(1)-(1j)'''),
+r'''1-1j''',
+r'''1 - 1j''', r'''
+MatchValue - ROOT 0,0..0,4
+  .value BinOp - 0,0..0,4
+    .left Constant 1 - 0,0..0,1
+    .op Sub - 0,1..0,2
+    .right Constant 1j - 0,2..0,4
+'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''(1)+(-1j)'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''-(1)+(1j)'''),
+r'''-1+1j''',
+r'''-1 + 1j''', r'''
+MatchValue - ROOT 0,0..0,5
+  .value BinOp - 0,0..0,5
+    .left UnaryOp - 0,0..0,2
+      .op USub - 0,0..0,1
+      .operand Constant 1 - 0,1..0,2
+    .op Add - 0,2..0,3
+    .right Constant 1j - 0,3..0,5
+'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''(-1)+(1j)'''),
+r'''-1+1j''',
+r'''-1 + 1j''', r'''
+MatchValue - ROOT 0,0..0,5
+  .value BinOp - 0,0..0,5
+    .left UnaryOp - 0,0..0,2
+      .op USub - 0,0..0,1
+      .operand Constant 1 - 0,1..0,2
+    .op Add - 0,2..0,3
+    .right Constant 1j - 0,3..0,5
+'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''+1+(1j)'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''1+(-1j)'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+],
+
 }

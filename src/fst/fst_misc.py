@@ -129,7 +129,6 @@ from .common import (
     re_line_end_cont_or_comment,
     re_line_end_ws_cont_or_comment,
     next_frag,
-    prev_frag,
     next_find,
     prev_find,
     next_delims,
@@ -1840,38 +1839,6 @@ def _fix__aliases(self: fst.FST) -> None:
 
     self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True, add_lconts=False)
 
-    # """Fix `_aliases` SPECIAL SLICE by stripping any leading and trailing whitespace (including line continuations) and
-    # adding line continuations to the rest if needed. Will replace comments with line continuations except on the last
-    # line. Does nothing to empty `_aliases`."""
-
-    # assert self.a.__class__ is _aliases
-
-    # ast = self.a
-    # names = ast.names
-
-    # if not names:
-    #     return
-
-    # lines = self._lines
-    # ln, col, end_ln, end_col = names[-1].f.loc
-
-    # if end_col != col or end_ln != ln:  # clean up tail end
-    #     if frag := prev_frag(lines, ln, col, end_ln, end_col, True):  # if there is a last comment then that is the end
-    #         ln, col, src = frag
-    #         col += len(src)
-
-    #     self._put_src(None, ln, col, end_ln, end_col)  # we don't offset self end position here because we will reset end position anyways
-
-    # ln, col, end_ln, end_col = names[0].f.loc
-
-    # self._put_src(None, 0, 0, ln, col, True)  # we do offset here because we need to offset the names
-
-    # ast.end_lineno = len(lines)  # reset end position for good measure, the function is called "fix" after all
-    # ast.end_col_offset = lines[-1].lenbytes
-
-    # self._touch()
-    # self._maybe_add_line_continuations(True)
-
 
 def _fix_elif(self: fst.FST) -> None:
     """If source at self is an `elif` instead of an `if` then convert it to `if`."""
@@ -2010,7 +1977,8 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     **Parameters:**
     - `shared`: Whether to allow merge of parentheses into shared single call argument generator expression or not. If
         `None` then will attempt to unparenthesize any enclosing parentheses, whether they belong to this node or not
-        (meant for internal use).
+        (meant for internal use). If sure that this cannot apply to `self` then pass `False` here for slightly more
+        optimal operation.
     - `star_child`: `Starred` expressions cannot be parenthesized, so when this is `True` the parentheses are removed
         from the `value` child.
 
