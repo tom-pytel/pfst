@@ -1605,78 +1605,81 @@ _PRECEDENCE_NODES = {  # default is _Precedence.ATOM
 }
 
 _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
-    (Expr, 'value'):           _Precedence.YIELD,
-    (Assign, 'targets'):       _Precedence.TUPLE,
-    (For, 'target'):           _Precedence.TUPLE,
-    (AsyncFor, 'target'):      _Precedence.TUPLE,
+    (Expr, 'value'):              _Precedence.YIELD,
+    (Assign, 'targets'):          _Precedence.TUPLE,
+    (For, 'target'):              _Precedence.TUPLE,
+    (AsyncFor, 'target'):         _Precedence.TUPLE,
 
-    (BinOp, 'values'):         False,                    # should be passed as the 'op'
-    (NamedExpr, 'target'):     _Precedence.ATOM,
-    (NamedExpr, 'value'):      _Precedence.TEST,         # XXX python ast.unparse() has this as _Precedence.ATOM, which as far as I can tell is unnecessary
-    (BinOp, 'left'):           False,                    # should be passed as the 'op'
-    (BinOp, 'right'):          False,                    # should be passed as the 'op'
-    (UnaryOp, 'operand'):      False,                    # should be passed as the 'op'
-    (Lambda, 'body'):          _Precedence.TEST,
-    (IfExp, 'body'):           _Precedence.TEST.next(),
-    (IfExp, 'test'):           _Precedence.TEST.next(),
-    (IfExp, 'orelse'):         _Precedence.TEST,
-    (Dict, 'values'):          False,                    # special case, '**' dict unpack `.value` gets _Precedence.EXPR
-    (Await, 'value'):          _Precedence.ATOM,
-    (Yield, 'value'):          _Precedence.ATOM,
-    (YieldFrom, 'value'):      _Precedence.ATOM,
-    (Compare, 'left'):         _Precedence.CMP.next(),
-    (Compare, 'comparators'):  _Precedence.CMP.next(),
-    (Call, 'func'):            _Precedence.ATOM,
-    (FormattedValue, 'value'): _Precedence.TEST.next(),
-    (Interpolation, 'value'):  _Precedence.TEST.next(),
-    (Attribute, 'value'):      False,                    # Constant integers require parentheses, e.g. '(1).bit_count()'
-    (Subscript, 'value'):      _Precedence.ATOM,
-    (Subscript, 'slice'):      False,                    # unparenthesized tuples put to slice don't need parens
-    (Starred, 'value'):        False,                    # different precedence when Starred is a call argument
+    (BinOp, 'values'):            False,                    # should be passed as the 'op'
+    (NamedExpr, 'target'):        _Precedence.ATOM,
+    (NamedExpr, 'value'):         _Precedence.TEST,         # XXX python ast.unparse() has this as _Precedence.ATOM, which as far as I can tell is unnecessary
+    (BinOp, 'left'):              False,                    # should be passed as the 'op'
+    (BinOp, 'right'):             False,                    # should be passed as the 'op'
+    (UnaryOp, 'operand'):         False,                    # should be passed as the 'op'
+    (Lambda, 'body'):             _Precedence.TEST,
+    (IfExp, 'body'):              _Precedence.TEST.next(),
+    (IfExp, 'test'):              _Precedence.TEST.next(),
+    (IfExp, 'orelse'):            _Precedence.TEST,
+    (Dict, 'values'):             False,                    # special case, '**' dict unpack `.value` gets _Precedence.EXPR
+    (Await, 'value'):             _Precedence.ATOM,
+    (Yield, 'value'):             _Precedence.ATOM,
+    (YieldFrom, 'value'):         _Precedence.ATOM,
+    (Compare, 'left'):            _Precedence.CMP.next(),
+    (Compare, 'comparators'):     _Precedence.CMP.next(),
+    (Call, 'func'):               _Precedence.ATOM,
+    (FormattedValue, 'value'):    _Precedence.TEST.next(),
+    (Interpolation, 'value'):     _Precedence.TEST.next(),
+    (Attribute, 'value'):         False,                    # Constant integers require parentheses, e.g. '(1).bit_count()'
+    (Subscript, 'value'):         _Precedence.ATOM,
+    (Subscript, 'slice'):         False,                    # unparenthesized tuples put to slice don't need parens
+    (Starred, 'value'):           False,                    # different precedence when Starred is a call argument
 
-    (Invert, 'operand'):       _Precedence.FACTOR,
-    (Not, 'operand'):          _Precedence.NOT,
-    (UAdd, 'operand'):         _Precedence.FACTOR,
-    (USub, 'operand'):         _Precedence.FACTOR,
+    (Invert, 'operand'):          _Precedence.FACTOR,
+    (Not, 'operand'):             _Precedence.NOT,
+    (UAdd, 'operand'):            _Precedence.FACTOR,
+    (USub, 'operand'):            _Precedence.FACTOR,
 
-    (Add, 'left'):             _Precedence.ARITH,
-    (Sub, 'left'):             _Precedence.ARITH,
-    (Mult, 'left'):            _Precedence.TERM,
-    (MatMult, 'left'):         _Precedence.TERM,
-    (Div, 'left'):             _Precedence.TERM,
-    (Mod, 'left'):             _Precedence.TERM,
-    (LShift, 'left'):          _Precedence.SHIFT,
-    (RShift, 'left'):          _Precedence.SHIFT,
-    (BitOr, 'left'):           _Precedence.BOR,
-    (BitXor, 'left'):          _Precedence.BXOR,
-    (BitAnd, 'left'):          _Precedence.BAND,
-    (FloorDiv, 'left'):        _Precedence.TERM,
-    (Pow, 'left'):             _Precedence.POWER.next(),
+    (Add, 'left'):                _Precedence.ARITH,
+    (Sub, 'left'):                _Precedence.ARITH,
+    (Mult, 'left'):               _Precedence.TERM,
+    (MatMult, 'left'):            _Precedence.TERM,
+    (Div, 'left'):                _Precedence.TERM,
+    (Mod, 'left'):                _Precedence.TERM,
+    (LShift, 'left'):             _Precedence.SHIFT,
+    (RShift, 'left'):             _Precedence.SHIFT,
+    (BitOr, 'left'):              _Precedence.BOR,
+    (BitXor, 'left'):             _Precedence.BXOR,
+    (BitAnd, 'left'):             _Precedence.BAND,
+    (FloorDiv, 'left'):           _Precedence.TERM,
+    (Pow, 'left'):                _Precedence.POWER.next(),
 
-    (Add, 'right'):            _Precedence.ARITH.next(),
-    (Sub, 'right'):            _Precedence.ARITH.next(),
-    (Mult, 'right'):           _Precedence.TERM.next(),
-    (MatMult, 'right'):        _Precedence.TERM.next(),
-    (Div, 'right'):            _Precedence.TERM.next(),
-    (Mod, 'right'):            _Precedence.TERM.next(),
-    (LShift, 'right'):         _Precedence.SHIFT.next(),
-    (RShift, 'right'):         _Precedence.SHIFT.next(),
-    (BitOr, 'right'):          _Precedence.BOR.next(),
-    (BitXor, 'right'):         _Precedence.BXOR.next(),
-    (BitAnd, 'right'):         _Precedence.BAND.next(),
-    (FloorDiv, 'right'):       _Precedence.TERM.next(),
-    (Pow, 'right'):            _Precedence.POWER,
+    (Add, 'right'):               _Precedence.ARITH.next(),
+    (Sub, 'right'):               _Precedence.ARITH.next(),
+    (Mult, 'right'):              _Precedence.TERM.next(),
+    (MatMult, 'right'):           _Precedence.TERM.next(),
+    (Div, 'right'):               _Precedence.TERM.next(),
+    (Mod, 'right'):               _Precedence.TERM.next(),
+    (LShift, 'right'):            _Precedence.SHIFT.next(),
+    (RShift, 'right'):            _Precedence.SHIFT.next(),
+    (BitOr, 'right'):             _Precedence.BOR.next(),
+    (BitXor, 'right'):            _Precedence.BXOR.next(),
+    (BitAnd, 'right'):            _Precedence.BAND.next(),
+    (FloorDiv, 'right'):          _Precedence.TERM.next(),
+    (Pow, 'right'):               _Precedence.POWER,
 
-    (And, 'values'):           False,                    # special handling for BoolOp child
-    (Or, 'values'):            False,                    # special handling for BoolOp child
+    (And, 'values'):              False,                    # special handling for BoolOp child
+    (Or, 'values'):               False,                    # special handling for BoolOp child
 
-    (comprehension, 'target'): _Precedence.TUPLE,
-    (comprehension, 'iter'):   _Precedence.TEST.next(),
-    (comprehension, 'ifs'):    _Precedence.TEST.next(),
+    (comprehension, 'target'):    _Precedence.TUPLE,
+    (comprehension, 'iter'):      _Precedence.TEST.next(),
+    (comprehension, 'ifs'):       _Precedence.TEST.next(),
 
-    (MatchClass, 'cls'):       _Precedence.ATOM,
-    (MatchAs, 'pattern'):      _Precedence.BOR,
-    (MatchOr, 'patterns'):     _Precedence.BOR.next(),
+    (MatchClass, 'cls'):          _Precedence.ATOM,
+    (MatchAs, 'pattern'):         _Precedence.BOR,
+    (MatchOr, 'patterns'):        _Precedence.BOR.next(),
+
+    (_Assign_targets, 'targets'): _Precedence.TUPLE,
+    (_comprehension_ifs, 'ifs'):  _Precedence.TEST.next(),
 }
 
 

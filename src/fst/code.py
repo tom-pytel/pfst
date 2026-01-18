@@ -17,6 +17,7 @@ from .asttypes import (
     ASTS_LEAF_LIST_OR_SET,
     ASTS_LEAF_FTSTR_FMT_OR_SLICE,
     AST,
+    Add,
     Attribute,
     BinOp,
     BitOr,
@@ -48,12 +49,14 @@ from .asttypes import (
     Slice,
     Starred,
     Store,
+    Sub,
     Try,
     TryStar,
     TypeIgnore,
     TypeVar,
     TypeVarTuple,
     Tuple,
+    UnaryOp,
     alias,
     arg,
     arguments,
@@ -551,21 +554,25 @@ def _coerce_to_pattern_ast_Dict(
 
             continue
 
-        key_cls = key.__class__
-
-        if key_cls not in (Constant, Attribute):
-            return f"key must be Constant or Attribute, not {key_cls.__name__}"
-
         if is_FST:
             key.f._unparenthesize_grouping(False)  # cannot have pars
 
-        key = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            key_cls, _coerce_to_expr_ast_ret_empty_str)(key, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
+        key_cls = key.__class__
 
-        if key.__class__ is str:
-            return key
+        if key_cls is Constant:  # these can just be used as-is
+            keys.append(key)
 
-        keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression
+        elif key.__class__ not in (UnaryOp, BinOp, Attribute):
+            return f"key must be Constant or Attribute, not {key_cls.__name__}"
+
+        else:  # these may be invalid or have parentheses so we need to walk
+            key = _AST_COERCE_TO_PATTERN_FUNCS.get(
+                key_cls, _coerce_to_expr_ast_ret_empty_str)(key, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
+
+            if key.__class__ is str:
+                return key
+
+            keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression (or Attribute)
 
         value = _AST_COERCE_TO_PATTERN_FUNCS.get(
             value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
@@ -599,8 +606,19 @@ def _coerce_to_pattern_ast_Call(
         if res.__class__ is str:
             return res
 
+        cur = func
+
+        while True:
+            if (cur := cur.value).__class__ is Name:
+                if cur.id == '_':
+                    return f"func Name cannot start with '_'"
+
+                break
+
     elif func_cls is not Name:
         return f"func must be Name or Attribute, not {func_cls.__name__}"
+    elif func.id == '_':
+        return f"func Name cannot be '_'"
 
     patterns = []
     kwd_attrs = []
@@ -645,8 +663,17 @@ def _coerce_to_pattern_ast_BinOp(
 ) -> tuple[AST, bool, int]:
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
-    if ast.op.__class__ is not BitOr:
-        return f"op must be '|' BitOr, not {ast.op.__class__.__name__}"
+    op_cls = ast.op.__class__
+
+    if op_cls in (Add, Sub):  # `int + complex` or `int - complex`
+        raise NotImplementedError
+
+
+
+
+
+    if op_cls is not BitOr:
+        return f"op must be '+', '-' or '|', not {ast.op.__class__.__name__}"
 
     right = ast.right
 
@@ -769,7 +796,8 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     _Assign_targets:    _coerce_to_pattern_ast_seq,
     _decorator_list:    _coerce_to_pattern_ast_seq,
     _arglikes:          _coerce_to_pattern_ast_seq,
-    BinOp:              _coerce_to_pattern_ast_BinOp,  # MatchOr (only from BitOr)
+    BinOp:              _coerce_to_pattern_ast_BinOp,  # MatchOr from BitOr, MatchValue from 1+1j
+    # UnaryOp:            _coerce_to_pattern_ast_UnaryOp,  # MatchValue from -1
     Dict:               _coerce_to_pattern_ast_Dict,  # MatchMapping
     Set:                _coerce_to_pattern_ast_seq,
     Call:               _coerce_to_pattern_ast_Call,  # MatchClass
@@ -2463,17 +2491,18 @@ def _coerce_to__aliases(
 
     # TODO: coerce _withitems specially for the "a as b" format?
 
-    if fst_ := _coerce_to__aliases_common(code, options, parse_params, parse__aliases, '_aliases', sanitize, True):  # sequence as sequence?
-        return fst_
+    if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
+                                               parse__aliases, '_aliases', sanitize, True)):  # sequence as sequence?
+        fst_ = code_as_alias(code, options, parse_params, sanitize=sanitize, coerce=True)  # single element as sequence
 
-    # single element as sequence
+        ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
 
-    fst_ = code_as_alias(code, options, parse_params, sanitize=sanitize, coerce=True)
+        fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
-    ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                   end_col_offset=ls[-1].lenbytes)
+    fst_._fix__aliases()
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
+    return fst_
 
 
 _coerce_to__Import_name = _coerce_to_alias
@@ -2486,17 +2515,18 @@ def _coerce_to__Import_names(
 
     # TODO: coerce _withitems specially for the "a as b" format?
 
-    if fst_ := _coerce_to__aliases_common(code, options, parse_params, parse__Import_names, 'Import names', sanitize, True):  # sequence as sequence?
-        return fst_
+    if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
+                                               parse__Import_names, 'Import names', sanitize, True)):  # sequence as sequence?
+        fst_ = code_as_Import_name(code, options, parse_params, sanitize=sanitize, coerce=True)  # single element as sequence
 
-    # single element as sequence
+        ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
 
-    fst_ = code_as_Import_name(code, options, parse_params, sanitize=sanitize, coerce=True)
+        fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
-    ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                   end_col_offset=ls[-1].lenbytes)
+    fst_._fix__aliases()
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
+    return fst_
 
 
 def _coerce_to__ImportFrom_name(
@@ -2525,18 +2555,18 @@ def _coerce_to__ImportFrom_names(
 
     # TODO: coerce _withitems specially for the "a as b" format?
 
-    if fst_ := _coerce_to__aliases_common(code, options, parse_params, parse__ImportFrom_names, 'ImportFrom names',
-                                          sanitize, False):  # sequence as sequence?
-        return fst_
+    if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
+                                          parse__ImportFrom_names, 'ImportFrom names', sanitize, False)):  # sequence as sequence?
+        fst_ = code_as_ImportFrom_name(code, options, parse_params, sanitize=sanitize, coerce=True)  # single element as sequence
 
-    # single element as sequence
+        ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                    end_col_offset=ls[-1].lenbytes)
 
-    fst_ = code_as_ImportFrom_name(code, options, parse_params, sanitize=sanitize, coerce=True)
+        fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
-    ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                   end_col_offset=ls[-1].lenbytes)
+    fst_._fix__aliases()
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
+    return fst_
 
 
 def _coerce_to_arguments(

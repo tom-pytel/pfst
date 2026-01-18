@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fixer parse `withitem` which is a solo `GeneratorExp`
 - allow put `Starred` to `TypeVarTuple.default_value`
 - don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
 - don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce

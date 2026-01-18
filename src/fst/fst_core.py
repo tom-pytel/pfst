@@ -1329,7 +1329,7 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     '_ExceptHandlers'
     """
 
-    if not self.is_root:
+    if self.parent:  # not is_root
         raise ValueError('parse mode only makes sense for root nodes')
 
     ast = self.a

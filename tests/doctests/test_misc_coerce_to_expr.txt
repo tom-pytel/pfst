@@ -210,80 +210,76 @@ _type_params - ROOT 0,0..0,5
 'call(a, b, c)'
 
 >>> cd.code_as__aliases(FST('# 0\na, # 1\nb, # 2\nc # 3\n# 4', Tuple), coerce=True).dump('N')
-0: # 0
-1: a, # 1
-2: b, # 2
-3: c # 3
-4: # 4
-_aliases - ROOT 0,0..4,3
+0: a,
+1: b,
+2: c
+3: # 4
+_aliases - ROOT 0,0..3,3
   .names[3]
-1: a
-   0] alias - 1,0..1,1
+0: a
+   0] alias - 0,0..0,1
      .name 'a'
-2: b
-   1] alias - 2,0..2,1
+1: b
+   1] alias - 1,0..1,1
      .name 'b'
-3: c
-   2] alias - 3,0..3,1
+2: c
+   2] alias - 2,0..2,1
      .name 'c'
-<_aliases ROOT 0,0..4,3>
+<_aliases ROOT 0,0..3,3>
 
 >>> cd.code_as__aliases(FST('# 0\na, # 1\nb.c, # 2\nd # 3\n# 4', Tuple), coerce=True).dump('N')
-0: # 0
-1: a, # 1
-2: b.c, # 2
-3: d # 3
-4: # 4
-_aliases - ROOT 0,0..4,3
+0: a,
+1: b.c,
+2: d
+3: # 4
+_aliases - ROOT 0,0..3,3
   .names[3]
-1: a
-   0] alias - 1,0..1,1
+0: a
+   0] alias - 0,0..0,1
      .name 'a'
-2: b.c
-   1] alias - 2,0..2,3
+1: b.c
+   1] alias - 1,0..1,3
      .name 'b.c'
-3: d
-   2] alias - 3,0..3,1
+2: d
+   2] alias - 2,0..2,1
      .name 'd'
-<_aliases ROOT 0,0..4,3>
+<_aliases ROOT 0,0..3,3>
 
 >>> cd.code_as__Import_names(FST('# 0\na, # 1\nb.c, # 2\nd # 3\n# 4', Tuple), coerce=True).dump('N')
-0: # 0
-1: a, # 1
-2: b.c, # 2
-3: d # 3
-4: # 4
-_aliases - ROOT 0,0..4,3
+0: a,
+1: b.c,
+2: d
+3: # 4
+_aliases - ROOT 0,0..3,3
   .names[3]
-1: a
-   0] alias - 1,0..1,1
+0: a
+   0] alias - 0,0..0,1
      .name 'a'
-2: b.c
-   1] alias - 2,0..2,3
+1: b.c
+   1] alias - 1,0..1,3
      .name 'b.c'
-3: d
-   2] alias - 3,0..3,1
+2: d
+   2] alias - 2,0..2,1
      .name 'd'
-<_aliases ROOT 0,0..4,3>
+<_aliases ROOT 0,0..3,3>
 
 >>> cd.code_as__ImportFrom_names(FST('# 0\na, # 1\nb, # 2\nd # 3\n# 4', Tuple), coerce=True).dump('N')
-0: # 0
-1: a, # 1
-2: b, # 2
-3: d # 3
-4: # 4
-_aliases - ROOT 0,0..4,3
+0: a,
+1: b,
+2: d
+3: # 4
+_aliases - ROOT 0,0..3,3
   .names[3]
-1: a
-   0] alias - 1,0..1,1
+0: a
+   0] alias - 0,0..0,1
      .name 'a'
-2: b
-   1] alias - 2,0..2,1
+1: b
+   1] alias - 1,0..1,1
      .name 'b'
-3: d
-   2] alias - 3,0..3,1
+2: d
+   2] alias - 2,0..2,1
      .name 'd'
-<_aliases ROOT 0,0..4,3>
+<_aliases ROOT 0,0..3,3>
 
 >>> cd.code_as__aliases(FST('', '_withitems'), coerce=True).dump('N')
 0:

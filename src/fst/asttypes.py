@@ -656,3 +656,28 @@ class _type_params(_slice):
 
 ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _arglikes,
                               _comprehensions, _comprehension_ifs, _aliases, _withitems, _type_params])
+
+
+# remove nonexistent nodes in lower versions of python from ASTS_LEAF_* sets
+
+if sys.version_info[:2] < (3, 11):
+    _REMOVE = {TemplateStr, Interpolation,
+               TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple,
+               TryStar}
+
+elif sys.version_info[:2] < (3, 12):
+    _REMOVE = {TemplateStr, Interpolation,
+               TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple}
+
+elif sys.version_info[:2] < (3, 14):
+    _REMOVE = {TemplateStr, Interpolation}
+
+else:
+    _REMOVE = None
+
+if _REMOVE:
+    _GLOBALS = globals()
+
+    for _n, _v in list(_GLOBALS.items()):
+        if _n.startswith('ASTS_LEAF_'):
+            _GLOBALS[_n] = _v - _REMOVE

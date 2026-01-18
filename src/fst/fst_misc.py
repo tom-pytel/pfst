@@ -20,7 +20,6 @@ from .asttypes import (
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_BLOCK,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
-    # ASTS_LEAF_TUPLE_OR_LIST,
     AST,
     AnnAssign,
     Assert,
@@ -130,6 +129,7 @@ from .common import (
     re_line_end_cont_or_comment,
     re_line_end_ws_cont_or_comment,
     next_frag,
+    prev_frag,
     next_find,
     prev_find,
     next_delims,
@@ -1571,15 +1571,27 @@ def _maybe_add_singleton_comma(self: fst.FST, is_par: bool | None = None, elts: 
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
-def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
+def _maybe_add_line_continuations(
+    self: fst.FST,
+    whole: bool = False,
+    *,
+    del_comments: bool = True,
+    del_comment_lines: bool = False,
+    add_lconts: bool = True
+) -> bool:
     """Check if `self` needs them and if so add line continuations to make parsable. Can delete commnents which may
-    prevent line continuations.
+    prevent line continuations. Can also **JUST** delete comments (except on last line), without adding line
+    continuations.
 
     **Parameters:**
     - `whole`: Whether to check whole source (and add line continuations to, only if at root). Otherwise will just
         check and modify lines that this node lives on.
     - `del_comments`: If `True` then will delete comments which prevent line continuations from making the source
         parsable. If `False` then will raise an error if this is encountered.
+    - `del_comment_lines`: If `True` and deleting comments then if a comment is the only thing on a line then that whole
+        line is deleted.
+    - `add_lconts`: If `True` (the normal mode of operation) then does what this function name indicates. Can turn this
+        off to only delete comments, which is useful for sanitizing some things like the `_aliases` SPECIAL SLICE.
 
     **Returns:**
     - `bool`: Whether modification was made or not.
@@ -1599,11 +1611,18 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_commen
 
             end_cols[end_ln] = max(end_cols.get(end_ln, 0), end_col)
 
+    if del_comment_lines:  # if deleting lines then need to go in reverse
+        lns = list(lns)
+
+        lns.sort()
+        lns.reverse()
+
     for ln in lns:
         m = re_line_end_cont_or_comment.search(l := lines[ln], end_cols.get(ln, 0))
 
         if not (g := m.group(1)):
-            lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
+            if add_lconts:
+                lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
 
         elif g.startswith('#'):
             if not del_comments:
@@ -1611,8 +1630,15 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_commen
 
             # maybe just delete line if contains only comment?
 
-            c = c + 1 if (c := re_empty_space.search(l, 0, cc := m.start(1)).start()) else cc
-            lines[ln] = bistr(l[:c] + '\\')
+            comment_start = m.start(1)
+            empty_space_start = re_empty_space.search(l, 0, comment_start).start()
+
+            if not empty_space_start and del_comment_lines:  # comment takes up whole line and deleteing whole comment lines?
+                self._put_src(None, ln, 0, ln + 1, 0, True)
+            elif add_lconts:  # adding line continuations?
+                lines[ln] = bistr(l[:(empty_space_start + 1 if empty_space_start else comment_start)] + '\\')
+            else:  # just delete comment
+                lines[ln] = bistr(l[:empty_space_start])
 
     return True
 
@@ -1798,7 +1824,7 @@ def _fix_Set(self: fst.FST, norm: bool | Literal['star', 'call'] = True) -> None
 
 def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None, field: str = 'elts') -> None:
     """Parenthesize any arglike expressions in `self` according to `options` if not `None`, otherwise always
-    parenthesizes."""
+    parenthesizes (NOT the `_arglikes` SPECIAL SLICE)."""
 
     # assert self.a.__class__ is Tuple
 
@@ -1806,6 +1832,45 @@ def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None, field
         for e in getattr(self.a, field):
             if (f := e.f)._is_expr_arglike_only():
                 f._parenthesize_grouping()
+
+
+def _fix__aliases(self: fst.FST) -> None:
+    """Fix `_aliases` SPECIAL SLICE by deleting comments except on last line. That is considered a valid `_aliases` for
+    our purposes because if it is put to an `import` then line continuations will be added as needed there."""
+
+    self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True, add_lconts=False)
+
+    # """Fix `_aliases` SPECIAL SLICE by stripping any leading and trailing whitespace (including line continuations) and
+    # adding line continuations to the rest if needed. Will replace comments with line continuations except on the last
+    # line. Does nothing to empty `_aliases`."""
+
+    # assert self.a.__class__ is _aliases
+
+    # ast = self.a
+    # names = ast.names
+
+    # if not names:
+    #     return
+
+    # lines = self._lines
+    # ln, col, end_ln, end_col = names[-1].f.loc
+
+    # if end_col != col or end_ln != ln:  # clean up tail end
+    #     if frag := prev_frag(lines, ln, col, end_ln, end_col, True):  # if there is a last comment then that is the end
+    #         ln, col, src = frag
+    #         col += len(src)
+
+    #     self._put_src(None, ln, col, end_ln, end_col)  # we don't offset self end position here because we will reset end position anyways
+
+    # ln, col, end_ln, end_col = names[0].f.loc
+
+    # self._put_src(None, 0, 0, ln, col, True)  # we do offset here because we need to offset the names
+
+    # ast.end_lineno = len(lines)  # reset end position for good measure, the function is called "fix" after all
+    # ast.end_col_offset = lines[-1].lenbytes
+
+    # self._touch()
+    # self._maybe_add_line_continuations(True)
 
 
 def _fix_elif(self: fst.FST) -> None:
