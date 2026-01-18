@@ -154,7 +154,6 @@ from .parsex import (
 
 __all__ = [
     'Code',
-    'code_as_lines',
     'code_as',
     'code_as_all',
     'code_as_stmts',
@@ -2941,6 +2940,25 @@ def _coerce_to__expr_arglikes(
 
 # ......................................................................................................................
 
+# This is meant for export but it doesn't deserver a non-underscore start, so its here
+def _code_as_lines(code: Code | None) -> list[str]:
+    """Get list of lines of `code` if is `FST`, unparse `AST`, split `str` or just return `list[str]` if is that.
+    `code=None` is returned as `['']`."""
+
+    if isinstance(code, str):
+        return code.split('\n')
+    elif code is None:
+        return ['']
+    elif isinstance(code, list):
+        return code
+    elif isinstance(code, AST):
+        return unparse(code).split('\n')
+    elif code.parent:  # not code.is_root:  # isinstance(code, fst.FST
+        raise ValueError('expecting root node')
+    else:
+        return code._lines
+
+
 def _code_as(
     code: Code,
     options: Mapping[str, Any],
@@ -3133,24 +3151,6 @@ def _code_as_op(
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-
-def code_as_lines(code: Code | None) -> list[str]:
-    """Get list of lines of `code` if is `FST`, unparse `AST`, split `str` or just return `list[str]` if is that.
-    `code=None` is returned as `['']`."""
-
-    if isinstance(code, str):
-        return code.split('\n')
-    elif code is None:
-        return ['']
-    elif isinstance(code, list):
-        return code
-    elif isinstance(code, AST):
-        return unparse(code).split('\n')
-    elif code.parent:  # not code.is_root:  # isinstance(code, fst.FST
-        raise ValueError('expecting root node')
-    else:
-        return code._lines
-
 
 def code_as(
     code: Code,

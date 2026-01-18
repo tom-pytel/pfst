@@ -4100,7 +4100,7 @@ match a:
         self.assertRaises(NodeError, FST('a = b').put, FST('a as b', 'withitem'))
         self.assertRaises(NodeError, FST('a = b').put, FST('a as b', 'withitem').a)
 
-        self.assertRaises(ValueError, code.code_as_lines, FST('a = b').value)
+        self.assertRaises(ValueError, code._code_as_lines, FST('a = b').value)
         self.assertRaises(ValueError, code.code_as_all, FST('a = b').value)
 
         self.assertEqual('a\nb', code.code_as_all(['a', 'b']).src)

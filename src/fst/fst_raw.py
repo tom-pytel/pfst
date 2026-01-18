@@ -29,7 +29,7 @@ from .astutil import bistr
 from .common import NodeError, astfield
 
 from .parsex import Mode, parse_ExceptHandler, parse_match_case
-from .code import Code, code_as_lines
+from .code import Code, _code_as_lines
 
 
 _STMTLIKE_FIELDS    = frozenset(('body', 'orelse', 'handlers', 'finalbody', 'cases'))
@@ -285,7 +285,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
     """
 
-    new_lines = code_as_lines(code)
+    new_lines = _code_as_lines(code)
 
     if not _reparse_raw_stmtlike(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
         root = self.root

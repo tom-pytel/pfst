@@ -140,7 +140,7 @@ from .astutil import (
 
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
-from .code import Code, code_as_lines, code_as_all
+from .code import Code, _code_as_lines, code_as_all
 from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body, fstview_arglikes
 from .reconcile import Reconcile
 from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
@@ -3010,7 +3010,7 @@ class FST:
             with parent._modifying(False, True):
                 return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
-        put_lines = code_as_lines(code)
+        put_lines = _code_as_lines(code)
 
         if action == 'offset':  # self matters in this mode!
             # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage, not arguments because at zero-length it has no loc

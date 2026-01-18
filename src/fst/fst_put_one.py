@@ -156,7 +156,7 @@ from .common import (
 
 from .code import (
     Code,
-    code_as_lines,
+    _code_as_lines,
     code_as_expr,
     code_as_expr_arglike,
     code_as_expr_slice,
@@ -2746,7 +2746,7 @@ def _put_one_raw(
     if to is not None and not isinstance(to, fst.FST):
         raise ValueError(f"expecting FST for 'to' option, got {to.__class__.__name__}")
 
-    put_lines = code_as_lines(code)
+    put_lines = _code_as_lines(code)
 
     ast = self.a
     ast_cls = ast.__class__

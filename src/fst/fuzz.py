@@ -2596,9 +2596,40 @@ class SliceCoerce(Fuzzy):
     name = 'coerce'
     forever = True
 
-    FROM = ASTS_LEAF_EXPR_STD | ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | {Expr}
+    FROM = ASTS_LEAF_EXPR_STD | ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | ASTS_LEAF_STMT  # {Expr}
     TO = [*FROM,
+        # 'exec',
+        # 'expr',
+        # 'expr_all',
+        # 'expr_arglike',
+        # 'expr_slice',
+        # 'Tuple_elt',
+        # 'Tuple',
+        # '_Assign_targets',
+        # '_decorator_list',
+        # '_arglike',
+        # '_arglikes',
+        # '_comprehension_ifs',
+        # 'arguments',
+        # 'arguments_lambda',
+        # 'arg',
+        # 'keyword',
+        # 'alias',
+        # '_aliases',
+        # 'Import_name',
+        # '_Import_names',
+        # 'ImportFrom_name',
+        # '_ImportFrom_names',
+        # 'withitem',
+        # '_withitems',
+        # 'pattern',
         'exec',
+        'stmt',
+        'stmts',
+        'ExceptHandler',
+        '_ExceptHandlers',
+        'match_case',
+        '_match_cases',
         'expr',
         'expr_all',
         'expr_arglike',
@@ -2609,6 +2640,12 @@ class SliceCoerce(Fuzzy):
         '_decorator_list',
         '_arglike',
         '_arglikes',
+        'boolop',
+        'operator',
+        'unaryop',
+        'cmpop',
+        'comprehension',
+        '_comprehensions',
         '_comprehension_ifs',
         'arguments',
         'arguments_lambda',
@@ -2623,6 +2660,7 @@ class SliceCoerce(Fuzzy):
         'withitem',
         '_withitems',
         'pattern',
+        '_expr_arglikes',
     ]
 
     if PYGE12:
@@ -2646,11 +2684,11 @@ class SliceCoerce(Fuzzy):
                     sys.stdout.write('.'); sys.stdout.flush()
 
                 mode = choice(self.TO)
-                g = None
-                f_copy = f.copy()
+                f_copy = g = None
 
                 try:
                     try:
+                        f_copy = f.copy()
                         g = f_copy.as_(mode, copy=True, norm_get=True)  # norm_get for no invalid empty Sets, always copies because is not root node
 
                     except NotImplementedError:
@@ -2662,14 +2700,16 @@ class SliceCoerce(Fuzzy):
 
                         continue
 
-                    g.verify()
+                    if mode != '_expr_arglikes':  # this one is a hybrid monstrosity that may not verify, internal use only
+                        g.verify()
 
                 except Exception as exc:
                     if self.debug:
                         print()
                         print(f'{mode=}')
-                        print(f'f.copy()={f_copy}')
-                        print('\n'.join(repr(l) for l in f_copy.lines))
+                        print(f'{f=}')
+                        if f_copy:
+                            print('\n'.join(repr(l) for l in f_copy.lines))
                         print(f'{g=}')
                         if g:
                             print('\n'.join(repr(l) for l in g.lines))
