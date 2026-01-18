@@ -369,7 +369,7 @@ _decorator_list - ROOT 0,0..5,4
       2] Constant '$' - 4,27..4,28
 '''),
 
-('', 0, 0, '_decorator_list', {'_ver': 12}, ('Tuple',
+('', 0, 0, '_decorator_list', {}, ('Tuple',
 r'''((10, 110, 3), ((10, 100, 3)))'''), r'''
 @(10, 110, 3)
 @((10, 100, 3))
@@ -391,6 +391,67 @@ _decorator_list - ROOT 0,0..1,15
       1] Constant 100 - 1,7..1,10
       2] Constant 3 - 1,12..1,13
      .ctx Load
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('List', r'''
+[a,#0
+b]
+'''), r'''
+a = \
+b =
+''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..1,3
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 1,0..1,1
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('List', r'''
+[a,#0
+b, #1
+]
+'''), r'''
+a = \
+b = \
+
+''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..2,0
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 1,0..1,1
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('List', r'''
+[a#0
+]
+'''), r'''
+a = \
+
+''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..1,0
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('Tuple', r'''
+(a \
+or b,c)
+'''), r'''
+if a \
+or b if c
+''',
+r'''if a or b if c''', r'''
+_comprehension_ifs - ROOT 0,0..1,9
+  .ifs[2]
+   0] BoolOp - 0,3..1,4
+     .op Or
+     .values[2]
+      0] Name 'a' Load - 0,3..0,4
+      1] Name 'b' Load - 1,3..1,4
+   1] Name 'c' Load - 1,8..1,9
 '''),
 ],
 

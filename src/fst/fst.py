@@ -5119,7 +5119,6 @@ class FST:
         _fix_Tuple,
         _fix_Set,
         _fix_arglikes,
-        _fix__aliases,
         _fix_elif,
         _fix_copy,
 

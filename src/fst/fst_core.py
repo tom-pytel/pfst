@@ -113,6 +113,7 @@ _MODIFYING = set()  # root nodes of trees being `_Modifying()`ed, to prevent mul
 
 _astfieldctx = astfield('ctx')
 
+_re_line_end_cont = re.compile(r'[^#]*\\$')  # line ends with line continuation only, not comment and not empty
 _re_fval_expr_equals = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documenting debug str
 
 
@@ -992,7 +993,8 @@ def _is_enclosed_or_line(
     - `whole`: Whether entire source should be checked and not just the lines corresponding to the node. This is
         only valid for a root node.
     - `out_lns`: If this is not `None` then it is expected to be a `Set` which will get the line numbers added of
-        all the lines that would need line continuation backslashes in order to make this function `True`.
+        all the lines that would need line continuation backslashes in order to make this function `True`. Any existing
+        line numbers already present in this will not be removed.
 
     **Returns:**
     - `True`: Node is enclosed or single logical line.
@@ -1115,6 +1117,7 @@ def _is_enclosed_or_line(
                 return True
 
         last_ln = ln
+        last_col = col
 
         if ast_cls is Call:  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
             children = [ast.func,
@@ -1147,14 +1150,22 @@ def _is_enclosed_or_line(
         else:  # we don't check always-enclosed statement fields here because statements will never get here
             children = syntax_ordered_children(ast)
 
+    else:
+        last_col = 0  # the 0 is an emergency value, should not cause any problems
+
     failed = False  # this is flagged for return False after process all because user may be requesting all lines which need line continuations
 
     for child in children:
-        if not child or not (loc := (childf := child.f).pars()) or (child_end_ln := loc.end_ln) == last_ln:
+        if not child or not (loc := (childf := child.f).pars()):
+            continue
+
+        if (child_end_ln := loc.end_ln) == last_ln:
+            last_col = loc.end_col
+
             continue
 
         for ln in range(last_ln, loc.ln):
-            if not lines[ln].endswith('\\'):  # we know end of line is outside of a string so we can check for this
+            if not _re_line_end_cont.match(lines[ln], last_col):
                 if out_lns is None:
                     return False
 
@@ -1162,6 +1173,8 @@ def _is_enclosed_or_line(
                     failed = True
 
                     out_lns.add(ln)
+
+            last_col = 0
 
         if not getattr(loc, 'n', 0) and not childf._is_enclosed_or_line(pars=pars, out_lns=out_lns):
             if out_lns is None:
@@ -1171,6 +1184,7 @@ def _is_enclosed_or_line(
 
         pars = False
         last_ln = child_end_ln
+        last_col = loc.end_col
 
     for ln in range(last_ln, end_ln):  # tail
         if not lines[ln].endswith('\\'):

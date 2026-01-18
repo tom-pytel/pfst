@@ -2647,10 +2647,11 @@ class SliceCoerce(Fuzzy):
 
                 mode = choice(self.TO)
                 g = None
+                f_copy = f.copy()
 
                 try:
                     try:
-                        g = f.as_(mode, norm_get=True)  # norm_get for no invalid empty Sets
+                        g = f_copy.as_(mode, copy=True, norm_get=True)  # norm_get for no invalid empty Sets, always copies because is not root node
 
                     except NotImplementedError:
                         continue
@@ -2667,14 +2668,11 @@ class SliceCoerce(Fuzzy):
                     if self.debug:
                         print()
                         print(f'{mode=}')
-                        print(f'{f=}')
-                        print('\n'.join(repr(l) for l in f.lines))
+                        print(f'f.copy()={f_copy}')
+                        print('\n'.join(repr(l) for l in f_copy.lines))
                         print(f'{g=}')
                         if g:
                             print('\n'.join(repr(l) for l in g.lines))
-                        fc = f.copy()
-                        print(f'f.copy()={fc}')
-                        print('\n'.join(repr(l) for l in fc.lines))
 
                     raise
 

@@ -236,6 +236,21 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
         self._touch()
 
 
+def _fix__aliases(self: fst.FST) -> None:
+    """Fix `_aliases` SPECIAL SLICE by deleting comments except on last line. That is considered a valid `_aliases` for
+    our purposes because if it is put to an `import` then line continuations will be added as needed there."""
+
+    self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True, add_lconts=False)
+
+
+def _fix__Assign_targets(self: fst.FST) -> None:
+    """Fix `_Assign_targets` SPECIAL SLICE by deleting comments except on last line. That is considered a valid
+    `_Assign_targets` for our purposes because if it is put to actual `targets` then line continuations will be added as
+    needed there."""
+
+    self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True)#, add_lconts=False)
+
+
 def _par_if_needed(  # TODO: candidate function to move into core, possibly just the detection part and not the parenthesizing part, or selectable
     self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False, whole: bool = False
 ) -> bool:
@@ -2238,6 +2253,7 @@ def _coerce_to__Assign_targets(
         if sanitize:  # won't really do much after adding line continuations but we must do that first to make sure locations are good
             fst_ = fst_._sanitize()
 
+        _fix__Assign_targets(fst_)
         _fix__slice_last_line_continuation(fst_, lines, end_ln, end_col)
 
         return fst_
@@ -2488,7 +2504,8 @@ def _coerce_to__comprehension_ifs(
 
                     fst_._put_src(None, comma_ln, comma_col, comma_ln, comma_col + 1, True)  # remove comma
 
-                    comma_col += len(if_src)
+                    if comma_ln == ln:
+                        comma_col += len(if_src)
 
                 fst_._put_src(if_src, ln, col, ln, col, False)  # add if
 
@@ -2607,7 +2624,7 @@ def _coerce_to__aliases(
 
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
-    fst_._fix__aliases()
+    _fix__aliases(fst_)
 
     return fst_
 
@@ -2631,7 +2648,7 @@ def _coerce_to__Import_names(
 
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
-    fst_._fix__aliases()
+    _fix__aliases(fst_)
 
     return fst_
 
@@ -2671,7 +2688,7 @@ def _coerce_to__ImportFrom_names(
 
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
-    fst_._fix__aliases()
+    _fix__aliases(fst_)
 
     return fst_
 

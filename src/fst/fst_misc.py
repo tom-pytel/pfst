@@ -1583,7 +1583,7 @@ def _maybe_add_singleton_comma(self: fst.FST, is_par: bool | None = None, elts: 
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
-def _maybe_add_line_continuations(
+def _maybe_add_line_continuations(  # TODO: doing double-duty, maybe rename to something like `_fix_line_endings()`?
     self: fst.FST,
     whole: bool = False,
     *,
@@ -1643,14 +1643,17 @@ def _maybe_add_line_continuations(
             # maybe just delete line if contains only comment?
 
             comment_start = m.start(1)
-            empty_space_start = re_empty_space.search(l, 0, comment_start).start()
+            m = re_empty_space.search(l, 0, comment_start)
+            ws_start = m.start()
 
-            if not empty_space_start and del_comment_lines:  # comment takes up whole line and deleteing whole comment lines?
+            if not ws_start and del_comment_lines:  # comment takes up whole line and deleteing whole comment lines?
                 self._put_src(None, ln, 0, ln + 1, 0, True)
-            elif add_lconts:  # adding line continuations?
-                lines[ln] = bistr(l[:(empty_space_start + 1 if empty_space_start else comment_start)] + '\\')
-            else:  # just delete comment
-                lines[ln] = bistr(l[:empty_space_start])
+            elif not add_lconts:  # just delete comment
+                lines[ln] = bistr(l[:ws_start])
+            elif not ws_start:  # adding line continuations, fully empty line so put line continuation where comment started
+                lines[ln] = bistr(l[:comment_start] + '\\')
+            else:
+                lines[ln] = bistr(l[:ws_start] + ' \\')
 
     return True
 
@@ -1844,13 +1847,6 @@ def _fix_arglikes(self: fst.FST, options: Mapping[str, Any] | None = None, field
         for e in getattr(self.a, field):
             if (f := e.f)._is_expr_arglike_only():
                 f._parenthesize_grouping()
-
-
-def _fix__aliases(self: fst.FST) -> None:
-    """Fix `_aliases` SPECIAL SLICE by deleting comments except on last line. That is considered a valid `_aliases` for
-    our purposes because if it is put to an `import` then line continuations will be added as needed there."""
-
-    self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True, add_lconts=False)
 
 
 def _fix_elif(self: fst.FST) -> None:
