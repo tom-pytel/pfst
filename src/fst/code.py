@@ -4212,7 +4212,7 @@ def code_as__expr_arglikes(
 
 _CODE_AS_MODE_FUNCS = {
     'all':                    code_as_all,
-    # 'strict':                 code_as_strict,
+    'strict':                 code_as_stmts,
     'exec':                   code_as_stmts,
     'eval':                   None,  # why do we even support these at all?
     'single':                 None,
@@ -4254,6 +4254,7 @@ _CODE_AS_MODE_FUNCS = {
     'pattern':                code_as_pattern,
     'type_param':             code_as_type_param,
     '_type_params':           code_as__type_params,
+    '_expr_arglikes':         code_as__expr_arglikes,
     mod:                      code_as_stmts,
     Expression:               None,
     Interactive:              None,
@@ -4295,7 +4296,6 @@ _CODE_AS_MODE_FUNCS = {
     _aliases:                 code_as__aliases,
     _withitems:               code_as__withitems,
     _type_params:             code_as__type_params,
-    '_expr_arglikes':         code_as__expr_arglikes,
 }  # automatically filled out with all AST types and their names derived from these
 
 

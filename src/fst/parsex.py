@@ -274,7 +274,6 @@ Mode = Literal[
     'pattern',
     'type_param',
     '_type_params',
-    '_expr_arglikes',
 ] | type[AST]
 
 """Extended parse modes:
@@ -2187,6 +2186,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'pattern':                parse_pattern,
     'type_param':             parse_type_param,
     '_type_params':           parse__type_params,
+    '_expr_arglikes':         parse__expr_arglikes,
     mod:                      parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
     Expression:               parse_Expression,
     Interactive:              parse_Interactive,
@@ -2228,14 +2228,15 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _aliases:                 parse__aliases,
     _withitems:               parse__withitems,
     _type_params:             parse__type_params,
-    '_expr_arglikes':         parse__expr_arglikes,
 }  # automatically filled out with all AST types and their names derived from these
 
 _AST_TYPE_BY_NAME_OR_TYPE = {}  # {Module: Module, 'Module': Module, ...}  - filled out below
 
 
-assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \
-    'Mode string modes do not match _PARSE_MODE_FUNCS table'
+assert (
+    set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)) ==
+    {'_expr_arglikes'}
+), 'Mode string modes do not match _PARSE_MODE_FUNCS table'
 
 for ast_cls in FIELDS:  # fill out _PARSE_MODE_FUNCS with all supported AST types and their class names as parse modes
     ast_name = ast_cls.__name__
