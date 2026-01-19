@@ -3109,12 +3109,16 @@ def _code_as_expr(
             if not coerce:
                 raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled', rawable=True)
 
+            old_ast = ast
             ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, options, parse_params, expecting, to_tuple)
-
-            if ast.__class__ not in no_coerce_clss:  # we do this because if no_coerce_clss restricted to one type of expr instead of all then the same expr can come back and we need to make sure it is the one we want
-                raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, could not coerce', rawable=True)
-
             ast_cls = ast.__class__
+
+            if ast_cls not in no_coerce_clss:  # we do this because if no_coerce_clss restricted to one type of expr instead of all then the same expr can come back and we need to make sure it is the one we want
+                raise NodeError(f'expecting {expecting}, got {old_ast.__class__.__name__}, could not coerce')
+            elif ast_cls is Starred and parse is parse_expr_slice:
+                raise NodeError(f'expecting expression (slice), got {old_ast.__class__.__name__}, coerced to Starred'
+                                ', must be in a sequence')
+
             parse = None  # this is a signal so that singleton tuples always get trailing comma, maybe review this behavior
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
@@ -3133,13 +3137,14 @@ def _code_as_expr(
                 code._maybe_add_singleton_comma()
 
     else:
+        old_code = code
+
         if is_ast := isinstance(code, AST):
             if code.__class__ not in no_coerce_clss:  # if not an expr then try coerce if allowed
                 if not coerce:
                     raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}'
                                     ', coerce disabled', rawable=True)
 
-                old_code = code
                 code, _ = _coerce_to_expr_ast(code, False, options, parse_params, expecting, to_tuple)
 
                 if code.__class__ not in no_coerce_clss:
@@ -3159,9 +3164,14 @@ def _code_as_expr(
         if is_ast:
             if ast.__class__ is not code.__class__:  # sanity check, could have tried with a FormattedValue
                 if parse is parse_expr_slice and ast.__class__ is Tuple and code.__class__ is Starred:  # SPECIAL CASE specifically for lone '*starred' being parsed as a `Tuple`
-                    ast = ast.elts[0]  # just use the Starred
+                    if code is old_code:
+                        raise NodeError('expecting expression (slice), got Starred, must be in a sequence')  # pragma: no cover  # this currently gets rejected in code_as_expr_slice() so will not get here
+                    else:
+                        raise NodeError(f'expecting expression (slice), got {old_code.__class__.__name__}'
+                                        f', coerced to Starred, must be in a sequence')
                 else:
-                    raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+                    raise ParseError(f'could not reparse AST to {old_code.__class__.__name__}'
+                                     f', got {ast.__class__.__name__}')
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -3518,6 +3528,9 @@ def code_as_expr_slice(
     coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a any `expr` `FST` that can go into a `Subscript.slice` if possible."""
+
+    if getattr(code, 'a', code).__class__ is Starred:  # Starred cannot be a direct slice
+        raise NodeError('expecting expression (slice), got Starred, must be in sequence')
 
     return _code_as_expr(code, options, parse_params, parse_expr_slice, True, True, sanitize, coerce)
 

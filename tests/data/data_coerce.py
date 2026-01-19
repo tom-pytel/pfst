@@ -1923,16 +1923,10 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', 0, 0, 'expr_slice', {'_ver': 11}, ('expr_arglike',
+('', 0, 0, 'expr_slice', {}, ('expr_arglike',
 r'''*not a'''),
-r'''*not a''',
-r'''*(not a)''', r'''
-Starred - ROOT 0,0..0,6
-  .value UnaryOp - 0,1..0,6
-    .op Not - 0,1..0,4
-    .operand Name 'a' Load - 0,5..0,6
-  .ctx Load
-'''),
+r'''FST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('expr_slice',
 r'''a:b, c:d'''),
@@ -2038,13 +2032,10 @@ Attribute - ROOT 0,0..0,3
   .ctx Load
 '''),
 
-('', 0, 0, 'expr_slice', {'_ver': 11}, ('Starred',
+('', 0, 0, 'expr_slice', {}, ('Starred',
 r'''*a'''),
-r'''*a''', r'''
-Starred - ROOT 0,0..0,2
-  .value Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
+r'''FST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('Name',
 r'''a'''),
@@ -2172,11 +2163,8 @@ Call - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {'_ver': 11}, ('MatchStar',
 r'''*a'''),
-r'''*a''', r'''
-Starred - ROOT 0,0..0,2
-  .value Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
+r'''FST: **NodeError('expecting expression (slice), got MatchStar, coerced to Starred, must be in a sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got MatchStar, coerced to Starred, must be in a sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('MatchAs',
 r'''a'''),
@@ -2199,11 +2187,8 @@ r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
-r'''*a''', r'''
-Starred - ROOT 0,0..0,2
-  .value Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
+r'''FST: **NodeError('expecting expression (slice), got TypeVarTuple, coerced to Starred, must be in a sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got TypeVarTuple, coerced to Starred, must be in a sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
 r'''a'''),
