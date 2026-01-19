@@ -538,6 +538,54 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, 'exec', {}, ('_Import_names', r'''
+\
+a \
+
+'''), r'''
+(a,) \
+
+''',
+r'''(a,)''', r'''
+Module - ROOT 0,0..1,0
+  .body[1]
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[1]
+        0] Name 'a' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('Slice',
+r'''a:b:c'''),
+r'''FST: **NodeError('expecting stmt, got Slice, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got Slice, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('Starred',
+r'''*a'''),
+r'''*a''', r'''
+Expr - ROOT 0,0..0,2
+  .value Starred - 0,0..0,2
+    .value Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('Slice',
+r'''a:b:c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got Slice, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got Slice, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('Starred',
+r'''*a'''),
+r'''*a''', r'''
+Module - ROOT 0,0..0,2
+  .body[1]
+   0] Expr - 0,0..0,2
+     .value Starred - 0,0..0,2
+       .value Name 'a' Load - 0,1..0,2
+       .ctx Load
+'''),
 ],
 
 }

@@ -2754,7 +2754,7 @@ class SliceCoerce(Fuzzy):
                     k.verify()  # coerce back
 
                 except Exception as exc:
-                    if self.debug:
+                    if True:  # self.debug:
                         print()
                         print(f'{mode=}, {mode2=}, {mode3=}')
                         print(f'{f=}')

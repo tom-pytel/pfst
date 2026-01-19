@@ -2035,6 +2035,10 @@ match a:
         self.assertRaises(ParseError, code_as__comprehension_ifs, '*a', coerce=True)
         self.assertRaises(NodeError, code_as__comprehension_ifs, FST('*a'), coerce=True)
 
+    def test_coerce_special(self):
+        self.assertRaises(NodeError, code.code_as_stmt, FST('f"{a}"').values[0].a, coerce=True)
+        self.assertRaises(NodeError, code.code_as_stmts, FST('f"{a}"').values[0].a, coerce=True)
+
     def test_code_as_coerce(self):
         def test(code, res):
             try:

@@ -306,6 +306,7 @@ __all__ = [
     'ASTS_LEAF_PATTERN',
     'ASTS_LEAF_TYPE_PARAM',
     'ASTS_LEAF_STMT_OR_MOD',
+    'ASTS_LEAF_STMT_OR_STMTMOD',
     'ASTS_LEAF_EXPR_OR_PATTERN',
     'ASTS_LEAF_EXPR_STMT_OR_MOD',
     'ASTS_LEAF_EXPR_CHAIN',
@@ -372,6 +373,7 @@ ASTS_LEAF_PATTERN            = frozenset([MatchValue, MatchSingleton, MatchSeque
 ASTS_LEAF_TYPE_PARAM         = frozenset([TypeVar, ParamSpec, TypeVarTuple])
 
 ASTS_LEAF_STMT_OR_MOD        = ASTS_LEAF_STMT | ASTS_LEAF_MOD
+ASTS_LEAF_STMT_OR_STMTMOD    = ASTS_LEAF_STMT_OR_MOD - {Expression}
 ASTS_LEAF_EXPR_OR_PATTERN    = ASTS_LEAF_EXPR | ASTS_LEAF_PATTERN
 ASTS_LEAF_EXPR_STMT_OR_MOD   = ASTS_LEAF_EXPR | ASTS_LEAF_STMT | ASTS_LEAF_MOD
 ASTS_LEAF_EXPR_CHAIN         = ASTS_LEAF_EXPR | {comprehension, arguments, arg, keyword}  # can be in expression chain (have expressions ABOVE as well as below), this excludes withitem and patterns

@@ -11,7 +11,7 @@ from . import fst
 from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_STMT,
-    ASTS_LEAF_EXPR_STMT_OR_MOD,
+    ASTS_LEAF_STMT_OR_STMTMOD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_TUPLE_OR_LIST,
     ASTS_LEAF_LIST_OR_SET,
@@ -2041,8 +2041,8 @@ def _coerce_to_stmt(
 
         if end_ln == ln:
             end_col -= col
-        else:
-            end_ln -= (ln - new_ln)
+
+        end_ln -= ln - new_ln
 
     ast = Expr(value=None, lineno=new_ln + 1, col_offset=0, end_lineno=end_ln + 1,
                end_col_offset=lines[end_ln].c2b(end_col))
@@ -2077,13 +2077,12 @@ def _coerce_to_stmts(
 
             return fst.FST(ast, code.lines, None, from_=code, lcopy=False)._set_field(codea.body, 'body', True, False)
 
-    elif code_cls in ASTS_LEAF_EXPR_STMT_OR_MOD:  # all these ASTs can be coerced into stmts
-        code = _fixing_unparse(code)
-        lines = code.split('\n')
+    elif code_cls in ASTS_LEAF_STMT_OR_STMTMOD:
+        ast = Module(body=code.body if code_cls is Interactive else [code], type_ignores=[])
+        src = _fixing_unparse(code)
+        lines = src.split('\n')
 
-        # TODO: do this correctly, for example currently cd.code_as_stmts(FST('f"{a}"').values[0].a, coerce=True) winds up as a Set
-
-        return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
+        return fst.FST(parse_stmts(src, parse_params), lines, None, parse_params=parse_params)
 
     fst_ = _coerce_to_stmt(code, options, parse_params, sanitize=sanitize)
 
@@ -3134,7 +3133,9 @@ def _code_as_expr(
 
         ast = parse(src, parse_params)
 
-        assert not is_ast or (ast.__class__ is code.__class__)  # sanity check
+        if is_ast:
+            if ast.__class__ is not code.__class__:  # sanity check, could have tried with a FormattedValue
+                raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
