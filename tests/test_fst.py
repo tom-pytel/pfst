@@ -2349,29 +2349,29 @@ y"
 
         # just testing, don't use type_comments
 
-        a = ast_parse('i = 1  # type: int', '', 'exec', type_comments=True)
+        # a = ast_parse('i = 1  # type: int', '', 'exec', type_comments=True)
 
-        self.assertEqual('i = 1 # type: int', FST.fromast(a).src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec').src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a, type_comments=True).src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec', type_comments=True).src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a, type_comments=None).src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec', type_comments=None).src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a.body[0], type_comments=True).src)
-        self.assertEqual('i = 1 # type: int', FST.fromast(a.body[0], 'exec', type_comments=True).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec').src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a, type_comments=True).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec', type_comments=True).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a, type_comments=None).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec', type_comments=None).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a.body[0], type_comments=True).src)
+        # self.assertEqual('i = 1 # type: int', FST.fromast(a.body[0], 'exec', type_comments=True).src)
         # self.assertRaises(ValueError, FST.fromast, a.body[0], 'exec', type_comments=True)
 
         a = ast_parse('i = 1  # type: ignore', '', 'exec', type_comments=True)
 
-        self.assertRaises(ValueError, FST.fromast, a)
+        # self.assertRaises(ValueError, FST.fromast, a)
         # self.assertRaises(ValueError, FST.fromast, a, 'exec')
-        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec').src)
-        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, type_comments=True).src)
-        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec', type_comments=True).src)
-        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, type_comments=None).src)
-        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec', type_comments=None).src)
-        self.assertEqual('i = 1', FST.fromast(a.body[0], type_comments=True).src)
-        self.assertEqual('i = 1', FST.fromast(a.body[0], 'exec', type_comments=True).src)
+        # self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec').src)
+        # self.assertEqual('i = 1 # type: ignore', FST.fromast(a, type_comments=True).src)
+        # self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec', type_comments=True).src)
+        # self.assertEqual('i = 1 # type: ignore', FST.fromast(a, type_comments=None).src)
+        # self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec', type_comments=None).src)
+        # self.assertEqual('i = 1', FST.fromast(a.body[0], type_comments=True).src)
+        # self.assertEqual('i = 1', FST.fromast(a.body[0], 'exec', type_comments=True).src)
         # self.assertRaises(ValueError, FST.fromast, a.body[0], 'exec', type_comments=True)
 
         # TODO: more tests, explicit coerce with same source

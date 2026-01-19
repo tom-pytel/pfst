@@ -9,8 +9,9 @@ from unicodedata import normalize
 from . import fst
 
 from .asttypes import (
-    ASTS_LEAF_EXPR,
     ASTS_LEAF_STMT,
+    ASTS_LEAF_EXPR,
+    ASTS_LEAF_EXPR_CONTEXT,
     ASTS_LEAF_STMT_OR_STMTMOD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_TUPLE_OR_LIST,
@@ -101,9 +102,9 @@ from .astutil import (
 )
 
 from .common import (
+    re_line_end_ws_cont_or_comment,
     NodeError,
     nspace,
-    re_line_end_ws_cont_or_comment,
     pyver,
     shortstr,
     lline_start,
@@ -3128,7 +3129,7 @@ def _code_as_expr(
 
             if fix_coerced_tuple:
                 code._fix_Tuple(False)  # it is not parenthesized
-            elif parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, doesn't happen organically but can be created with FST('*a', 'expr_slice'), should we bother? for now on the side of yes
+            elif parse is not parse_expr_slice:  # SPECIAL CASE specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, doesn't happen organically but can be created with FST('*a', 'expr_slice'), should we bother? for now on the side of yes
                 code._maybe_add_singleton_comma()
 
     else:
@@ -3157,7 +3158,10 @@ def _code_as_expr(
 
         if is_ast:
             if ast.__class__ is not code.__class__:  # sanity check, could have tried with a FormattedValue
-                raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+                if parse is parse_expr_slice and ast.__class__ is Tuple and code.__class__ is Starred:  # SPECIAL CASE specifically for lone '*starred' being parsed as a `Tuple`
+                    ast = ast.elts[0]  # just use the Starred
+                else:
+                    raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -3619,8 +3623,14 @@ def code_as__arglike(
                     _coerce_to__arglike if coerce else False,
                     name='expression (arglike)')
 
-    if fst_ is code and fst_.a.__class__ in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # fst_ is code only if FST passed in, in which case make sure we didn't get an invalid arglike
-        raise NodeError(f'expecting expression (arglike), got {fst_.a.__class__.__name__}', rawable=True)
+    if code.__class__ is fst.FST:  # if anything else then these conditions will have been rejected by parse__arglike
+        ast_ = fst_.a
+        ast_cls = ast_.__class__
+
+        if ast_cls in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # need to check coercions as well as origina fst_
+            raise NodeError(f'expecting expression (arglike), got {fst_.a.__class__.__name__}', rawable=True)
+        elif ast_cls is Tuple and any(e.__class__ is Slice for e in ast_.elts):
+            raise NodeError('expecting expression (arglike), got Tuple with a Slice in it', rawable=True)
 
     return fst_
 
@@ -3998,6 +4008,78 @@ def code_as__type_params(
                     _coerce_to__type_params if coerce else False)
 
 
+def code_as_Load(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+    as_cls: type[AST] = Load,
+) -> fst.FST:
+    """Convert `code` to an `expr_context`. Accepts any source and creates the `FST` for one of these. "coercion" is
+    allowed between the three. This exists as a convenience."""
+
+    if isinstance(code, fst.FST):
+        if code.parent:  # not code.is_root
+            raise ValueError('expecting root node')
+
+        codea = code.a
+        codea_cls = codea.__class__
+
+        if codea_cls is not as_cls:
+            if not coerce:
+                raise NodeError(f'expecting {as_cls.__name__}, got {codea_cls.__name__}, coerce disabled')
+            if codea_cls not in ASTS_LEAF_EXPR_CONTEXT:
+                raise NodeError(f'expecting {as_cls.__name__}, got {codea_cls.__name__}, could not coerce')
+
+            code = fst.FST(as_cls(), code._lines, None, from_=code, lcopy=False)
+
+        return code._sanitize() if sanitize else code
+
+    if isinstance(code, AST):
+        code_cls = code.__class__
+
+        if code_cls is not as_cls:
+            if not coerce:
+                raise NodeError(f'expecting {as_cls.__name__}, got {code_cls.__name__}, coerce disabled')
+            if code_cls not in ASTS_LEAF_EXPR_CONTEXT:
+                raise NodeError(f'expecting {as_cls.__name__}, got {code_cls.__name__}, could not coerce')
+
+        code = ['']
+
+    elif isinstance(code, str):
+        code = code.split('\n')
+
+    return fst.FST(as_cls(), code, None, parse_params=parse_params)
+
+
+def code_as_Store(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+) -> fst.FST:
+    """See `code_as_Load()`."""
+
+    return code_as_Load(code, options, parse_params, sanitize=sanitize, coerce=coerce, as_cls=Store)
+
+
+def code_as_Del(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+) -> fst.FST:
+    """See `code_as_Load()`."""
+
+    return code_as_Load(code, options, parse_params, sanitize=sanitize, coerce=coerce, as_cls=Del)
+
+
 def code_as_identifier(
     code: Code,
     options: Mapping[str, Any] = {},
@@ -4255,7 +4337,6 @@ _CODE_AS_MODE_FUNCS = {
     'pattern':                code_as_pattern,
     'type_param':             code_as_type_param,
     '_type_params':           code_as__type_params,
-    '_expr_arglikes':         code_as__expr_arglikes,
     mod:                      code_as_stmts,
     Expression:               None,
     Interactive:              None,
@@ -4280,9 +4361,9 @@ _CODE_AS_MODE_FUNCS = {
     withitem:                 code_as_withitem,
     pattern:                  code_as_pattern,
     type_param:               code_as_type_param,
-    Load:                     None,
-    Store:                    None,
-    Del:                      None,
+    Load:                     code_as_Load,
+    Store:                    code_as_Store,
+    Del:                      code_as_Del,
     FunctionType:             None,  # explicitly prohibit from parse
     FormattedValue:           None,
     Interpolation:            None,
@@ -4297,6 +4378,7 @@ _CODE_AS_MODE_FUNCS = {
     _aliases:                 code_as__aliases,
     _withitems:               code_as__withitems,
     _type_params:             code_as__type_params,
+    '_expr_arglikes':         code_as__expr_arglikes,
 }  # automatically filled out with all AST types and their names derived from these
 
 

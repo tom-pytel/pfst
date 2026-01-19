@@ -865,7 +865,7 @@ class FST:
 
         if pfield is False:  # top level shortcut
             if src_or_ast_or_fst.__class__ is FST:
-                return src_or_ast_or_fst.as_(mode or 'all', kwargs.get('copy', True), **filter_options(kwargs))
+                return src_or_ast_or_fst.as_(mode, kwargs.get('copy', True), **filter_options(kwargs))
 
             parse_params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                             if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
@@ -1051,14 +1051,17 @@ class FST:
     @staticmethod
     def fromast(
         ast: AST,
-        mode: Mode | Literal[False] | None = None,
+        mode: Mode | None | Literal[False] = None,
         *,
+        coerce: bool = True,
         filename: builtins.str = _DEFAULT_FILENAME,
-        type_comments: bool | None = False,
+        type_comments: bool = False,
         feature_version: tuple[int, int] | None = None,
-        ctx: bool = False,
     ) -> FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
+        Will attempt to coerce `ast` to the requested `mode` if is not `None`.
+
+        **Note:** The `ast` passed in is not consumed unless `mode=False`.
 
         **WARNING!** The `type_comments` parameter is `False` by default and no guarantees are made if you turn it on.
         It is provided just in case but really shouldn't be used as `fst` takes care of comments anyway, this just turns
@@ -1069,9 +1072,6 @@ class FST:
         - `ast`: The root `AST` node.
         - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. Two special values are added,
             `None` and `False`. The modes are:
-            - `specific mode`: The `ast` passed in will be unparsed and will attempt to reparse it with this mode. The
-                resulting node type will be of the `mode` type and if this is not the same as `ast` then this is fine,
-                its a way to convert one type of `AST` to another if the source representation is the same.
             - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
                 other values should be considered as a coerce. If this mode is used then the resulting parsed node must
                 be of the same type as the `ast` passed in.
@@ -1079,11 +1079,12 @@ class FST:
                 Use this only if you are absolutely certain that the `AST` unparsed source will correspond with the
                 locations already present in the `AST`. This is almost never the case unless the `AST` was
                 `ast.parse()`d from an explicitly `ast.unparse()`d `AST`.
+            - `specific mode`: If is the same as the `ast` passed in then is just created with that. If not then will
+                attempt to coerce to the given `mode`.
+        - `coerce`: This exists to allow you to turn **OFF** coercion for some reason as by default coerce is attempted.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
         - `feature_version`: `ast.parse()` parameter. Don't use this either, here just in case.
-        - `ctx`: Whether to make sure that the `ctx` field of the reparsed `AST` matches or not. `False` for
-            convenience, `True` if you're feeling pedantic.
 
         **Returns:**
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
@@ -1091,7 +1092,7 @@ class FST:
         **Examples:**
 
         >>> import ast
-        >>> from ast import Assign, Slice, Constant
+        >>> from ast import Assign, Constant, List, Name, Slice
 
         >>> _ = FST.fromast(Assign(targets=[Name(id='var')],
         ...                        value=Constant(value=123))).dump('stmt')
@@ -1101,12 +1102,28 @@ class FST:
            0] Name 'var' Store - 0,0..0,3
           .value Constant 123 - 0,6..0,9
 
-        >>> _ = FST.fromast(Assign(targets=[Name(id='var')],
-        ...                        value=Constant(value=123)), 'keyword').dump('stmt')
-        0: var = 123
-        keyword - ROOT 0,0..0,9
-          .arg 'var'
-          .value Constant 123 - 0,6..0,9
+        >>> _ = FST.fromast(Slice(lower=Constant(value=1),
+        ...                       step=Name(id='step'))).dump('node')
+        0: 1::step
+        Slice - ROOT 0,0..0,7
+        0: 1
+          .lower Constant 1 - 0,0..0,1
+        0:    step
+          .step Name 'step' Load - 0,3..0,7
+
+        >>> _ = FST.fromast(List(elts=[Name(id='var')]),
+        ...                 'pattern', coerce=True).dump('stmt')
+        0: [var]
+        MatchSequence - ROOT 0,0..0,5
+          .patterns[1]
+           0] MatchAs - 0,1..0,4
+             .name 'var'
+
+        >>> _ = FST.fromast(List(elts=[Name(id='var')]),
+        ...                 'pattern', coerce=False).dump('stmt')
+        Traceback (most recent call last):
+        ...
+        fst.NodeError: expecting pattern, got List, coerce disabled
 
         >>> _ = FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
@@ -1120,44 +1137,24 @@ class FST:
                 .targets[1]
                  0] Name 'j' Store - 1,4..1,5
                 .value Constant 5 - 1,8..1,9
-
-        >>> _ = FST.fromast(Slice(lower=Constant(value=1),
-        ...                       step=Name(id='step'))).dump('node')
-        0: 1::step
-        Slice - ROOT 0,0..0,7
-        0: 1
-          .lower Constant 1 - 0,0..0,1
-        0:    step
-          .step Name 'step' Load - 0,3..0,7
         """
 
-        if type_comments is None:
-            type_comments = has_type_comments(ast)
-
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        src = parsex.unparse(ast)
-        lines = src.split('\n')
 
-        if mode is not False:
-            org = ast
-            ast = parsex.parse(src, ast.__class__ if mode is None else mode, parse_params)
+        if mode is False:
+            lines = parsex.unparse(ast).split('\n')
 
-            if mode is None:
-                try:
-                    compare_asts(ast, org, type_comments=type_comments, ctx=ctx, raise_=True)
-                except WalkFail as exc:
-                    raise ValueError('could not reparse ast identically') from exc
+            return FST(ast, lines, None, parse_params=parse_params, indent='    ')
 
-            # TODO: verify that would up as same kind of AST or allow different if coerce=False
+        return code.code_as(ast, mode or ast.__class__, parse_params=parse_params, coerce=coerce)
 
-        return FST(ast, lines, None, parse_params=parse_params, indent='    ')
 
     get_options = fst_options.get_options  # we do assign instead of import so that pdoc gets the right order
     get_option = fst_options.get_option
     set_options = fst_options.set_options
     options = fst_options.options
 
-    def as_(self, mode: Mode = 'all', copy: bool = False, **options) -> FST:
+    def as_(self, mode: Mode | None = None, copy: bool = False, **options) -> FST:
         """Attempt to coerce `self` to the type of node given my `mode`. If `self` is already the requested type of node
         at root level then will do nothing and return `self`. If is not at root level then will copy the node first and
         then attempt to coerce.
@@ -1176,7 +1173,7 @@ class FST:
         unchanged, e.g. `Assign` and you request a `stmt`.
 
         **Parameters:**
-        - `mode`: The type of node you want, see `fst.parsex.Mode`.
+        - `mode`: The type of node you want, `None` means no coerce and just return `self`, see `fst.parsex.Mode`.
         - `copy`: This only matters if you are calling this function on a root node, in which case a copy is made before
             coerce is attempted in order to make sure the node you are calling remains valid.
         - `options`: See `options()`. These same options will be used for both a possible copy and for coercion.
@@ -1219,7 +1216,7 @@ class FST:
         if copy or self.parent:
             self = self.copy(**options)
 
-        return code.code_as(self, mode, options, self.parse_params, coerce=True)
+        return code.code_as(self, mode or 'all', options, self.parse_params, coerce=True)
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed

@@ -1925,8 +1925,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'expr_slice', {'_ver': 11}, ('expr_arglike',
 r'''*not a'''),
-r'''AST: **ParseError('could not reparse AST to Starred, got Tuple')**''',
-r'''*not a''', r'''
+r'''*not a''',
+r'''*(not a)''', r'''
 Starred - ROOT 0,0..0,6
   .value UnaryOp - 0,1..0,6
     .op Not - 0,1..0,4
@@ -2040,7 +2040,6 @@ Attribute - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {'_ver': 11}, ('Starred',
 r'''*a'''),
-r'''AST: **ParseError('could not reparse AST to Starred, got Tuple')**''',
 r'''*a''', r'''
 Starred - ROOT 0,0..0,2
   .value Name 'a' Load - 0,1..0,2
@@ -2173,7 +2172,6 @@ Call - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {'_ver': 11}, ('MatchStar',
 r'''*a'''),
-r'''AST: **ParseError('could not reparse AST to Starred, got Tuple')**''',
 r'''*a''', r'''
 Starred - ROOT 0,0..0,2
   .value Name 'a' Load - 0,1..0,2
@@ -2201,7 +2199,6 @@ r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
-r'''AST: **ParseError('could not reparse AST to Starred, got Tuple')**''',
 r'''*a''', r'''
 Starred - ROOT 0,0..0,2
   .value Name 'a' Load - 0,1..0,2
@@ -3616,18 +3613,8 @@ Starred - ROOT 0,0..0,6
 
 ('', 0, 0, '_arglike', {}, ('expr_slice',
 r'''a:b, c:d'''),
-r'''AST: **SyntaxError('invalid syntax')**''',
-r'''a:b, c:d''', r'''
-Tuple - ROOT 0,0..0,8
-  .elts[2]
-   0] Slice - 0,0..0,3
-     .lower Name 'a' Load - 0,0..0,1
-     .upper Name 'b' Load - 0,2..0,3
-   1] Slice - 0,5..0,8
-     .lower Name 'c' Load - 0,5..0,6
-     .upper Name 'd' Load - 0,7..0,8
-  .ctx Load
-'''),
+r'''FST: **NodeError('expecting expression (arglike), got Tuple with a Slice in it')**''',
+r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, '_arglike', {}, ('NamedExpr',
 r'''a := b'''),
