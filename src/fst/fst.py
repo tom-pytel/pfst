@@ -1148,6 +1148,8 @@ class FST:
                 except WalkFail as exc:
                     raise ValueError('could not reparse ast identically') from exc
 
+            # TODO: verify that would up as same kind of AST or allow different if coerce=False
+
         return FST(ast, lines, None, parse_params=parse_params, indent='    ')
 
     get_options = fst_options.get_options  # we do assign instead of import so that pdoc gets the right order

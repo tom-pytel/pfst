@@ -263,6 +263,16 @@ MatchValue - ROOT 0,0..0,3
     .operand Constant 1j - 0,1..0,3
 '''),
 
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''-a'''),
+r'''FST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('UnaryOp',
+r'''-(1+1j)'''),
+r'''FST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got UnaryOp, could not coerce')**'''),
+
 ('', 0, 0, 'pattern', {}, ('BinOp',
 r'''(1)+(1j)'''),
 r'''1+1j''',
@@ -335,6 +345,74 @@ r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
 r'''-True+1j'''),
 r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
 r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''a+1j'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+],
+
+'pattern_underscore': [  # ................................................................................
+
+('', 0, 0, 'pattern', {}, ('Attribute',
+r'''_.b'''),
+r'''FST: **NodeError('expecting pattern, got Attribute, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got Attribute, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('Starred',
+r'''*_'''),
+r'''*_''',
+r'''MatchStar - ROOT 0,0..0,2'''),
+
+('', 0, 0, 'pattern', {}, ('Name',
+r'''_'''),
+r'''_''',
+r'''MatchAs - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'pattern', {}, ('arg',
+r'''_'''),
+r'''_''',
+r'''MatchAs - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'pattern', {}, ('alias',
+r'''_'''),
+r'''_''',
+r'''MatchAs - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('TypeVar',
+r'''_'''),
+r'''_''',
+r'''MatchAs - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('TypeVarTuple',
+r'''*_'''),
+r'''*_''',
+r'''MatchStar - ROOT 0,0..0,2'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('Dict',
+r'''{_: a}'''),
+r'''FST: **NodeError('expecting pattern, got Dict, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('Dict',
+r'''{**_}'''),
+r'''FST: **NodeError('expecting pattern, got Dict, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('Dict',
+r'''{**a, 1: b}'''),
+r'''FST: **NodeError('expecting pattern, got Dict, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got Dict, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('Call',
+r'''_()'''),
+r'''FST: **NodeError('expecting pattern, got Call, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got Call, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('Call',
+r'''_.b()'''),
+r'''FST: **NodeError('expecting pattern, got Call, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got Call, could not coerce')**'''),
 ],
 
 'misc': [  # ................................................................................
@@ -586,6 +664,70 @@ Module - ROOT 0,0..0,2
        .value Name 'a' Load - 0,1..0,2
        .ctx Load
 '''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''{**_} | a'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('BinOp',
+r'''a | {**_}'''),
+r'''FST: **NodeError('expecting pattern, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got BinOp, could not coerce')**'''),
+
+('', 0, 0, 'List', {}, ('_expr_arglikes',
+r'''*not a,'''),
+r'''[*(not a),]''',
+r'''[*(not a)]''', r'''
+List - ROOT 0,0..0,11
+  .elts[1]
+   0] Starred - 0,1..0,9
+     .value UnaryOp - 0,3..0,8
+       .op Not - 0,3..0,6
+       .operand Name 'a' Load - 0,7..0,8
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'match_case', {}, ('_match_cases',
+r'''case _: pass'''),
+r'''FST: **NodeError('expecting match_case, got _match_cases, could not coerce')**''',
+r'''AST: **NodeError('expecting match_case, got _match_cases, could not coerce')**'''),
+
+('', 0, 0, '_match_cases', {}, ('ExceptHandler',
+r'''except: pass'''),
+r'''FST: **NodeError('expecting _match_cases, got ExceptHandler, could not coerce')**''',
+r'''AST: **NodeError('expecting _match_cases, got ExceptHandler, could not coerce')**'''),
+
+('', 0, 0, 'List', {}, ('pattern',
+r'''a'''),
+r'''FST: **NodeError('expecting List, got MatchAs, could not coerce')**''',
+r'''AST: **NodeError('expecting List, got MatchAs, could not coerce')**'''),
+
+('', 0, 0, 'Set', {}, ('pattern',
+r'''a'''),
+r'''FST: **NodeError('expecting Set, got MatchAs, could not coerce')**''',
+r'''AST: **NodeError('expecting Set, got MatchAs, could not coerce')**'''),
+
+('', 0, 0, 'Tuple', {}, ('pattern',
+r'''a'''),
+r'''FST: **NodeError('expecting Tuple, got MatchAs, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got MatchAs, could not coerce')**'''),
+
+('', 0, 0, 'Tuple', {}, ('Name',
+r'''a'''),
+r'''FST: **NodeError('expecting Tuple, got Name, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got Name, could not coerce')**'''),
+
+('', 0, 0, 'List', {}, ('Name',
+r'''a'''),
+r'''FST: **NodeError('expecting List, got Name, could not coerce')**''',
+r'''AST: **NodeError('expecting List, got Name, could not coerce')**'''),
+
+('', 0, 0, 'Set', {}, ('Name',
+r'''a'''),
+r'''FST: **NodeError('expecting Set, got Name, could not coerce')**''',
+r'''AST: **NodeError('expecting Set, got Name, could not coerce')**'''),
 ],
 
 }

@@ -1010,7 +1010,7 @@ def regen_parse_invalid_src_data():
 
 
 class TestParse(unittest.TestCase):
-    """Genral parse and unparse and `Code` conversions."""
+    """General parse and unparse and `Code` conversions."""
 
     maxDiff = None
 
@@ -4118,13 +4118,8 @@ match a:
         self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('a'))
         self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('a').a)
 
-        self.assertEqual('except:\n    pass', code.code_as__ExceptHandlers(FST('except: pass', '_ExceptHandlers', coerce=True).a).src)
-        self.assertEqual('except:\n  pass', code.code_as__ExceptHandlers(['except:', '  pass'], coerce=True).src)
-
         self.assertRaises(NodeError, code.code_as__match_cases, FST('a'))
         self.assertRaises(NodeError, code.code_as__match_cases, FST('a').a)
-
-        self.assertEqual('case _:\n  pass', code.code_as__match_cases(['case _:', '  pass'], coerce=True).src)
 
         self.assertRaises(NodeError, code.code_as_Tuple, FST('a'))
 
@@ -4149,9 +4144,54 @@ match a:
 
         self.assertEqual('a\nb', code.code_as_constant(['a', 'b']))
 
+        self.assertRaises(NodeError, code.code_as, "a", FunctionType)
+        self.assertRaises(ValueError, code.code_as, "a", list)
+
+        self.assertRaises(ValueError, code.code_as_ExceptHandler, FST('a + b').left)
+        self.assertRaises(NodeError, code.code_as_ExceptHandler, FST('a'))
+        self.assertRaises(NodeError, code.code_as_ExceptHandler, FST('a').a)
+
+        self.assertEqual('except: pass', code.code_as_ExceptHandler(['except: pass']).src)
+
+        self.assertRaises(NodeError, code.code_as_ExceptHandler, FST('except: pass'), star=True)
+        self.assertRaises(ParseError, code.code_as_ExceptHandler, 'except: pass', star=True)
+
+        self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('except: pass'))
+        self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('except: pass').a)
+
+        self.assertRaises(NodeError, code.code_as_Tuple, FST('a'))
+
+    def test_coerce_coverage(self):
+        self.assertEqual('except:\n    pass', code.code_as__ExceptHandlers(FST('except: pass', '_ExceptHandlers', coerce=True).a).src)
+        self.assertEqual('except:\n  pass', code.code_as__ExceptHandlers(['except:', '  pass'], coerce=True).src)
+
+        self.assertEqual('case _:\n  pass', code.code_as__match_cases(['case _:', '  pass'], coerce=True).src)
+
         self.assertRaises(ParseError, code.code_as__comprehension_ifs, '**z', coerce=True)
 
         self.assertEqual('if a', code.code_as__comprehension_ifs(FST('a,'), coerce=True).src)
+
+        self.assertRaises(NodeError, code.code_as_pattern, UnaryOp(USub(), Constant(-1)), coerce=True)
+        self.assertRaises(NodeError, code.code_as_pattern, UnaryOp(USub(), Constant(1-1j)), coerce=True)
+        self.assertRaises(NodeError, code.code_as_pattern, UnaryOp(USub(), Constant(-1j)), coerce=True)
+
+        self.assertRaises(NodeError, code.code_as_pattern, BinOp(Starred(Constant(1)), BitOr(), Starred(Constant(1))), coerce=True)
+        self.assertRaises(NodeError, code.code_as_pattern, BinOp(Starred(Constant(1)), BitOr(), Constant(1)), coerce=True)
+
+        self.assertRaises(NodeError, code.code_as__match_cases, FST('a').a, coerce=True)
+
+        self.assertEqual('x', code.code_as__arglikes(FST('[x]'), sanitize=True, coerce=True).src)
+        self.assertEqual('x', code.code_as__withitems(FST('[x]'), sanitize=True, coerce=True).src)
+
+        # fst.code._par_if_needed()
+
+        f = FST('cls([a])', pattern)
+        f.patterns[0]._undelimit_node('patterns')
+        self.assertEqual('cls(a)', f.src)
+        self.assertTrue(code._par_if_needed(f.patterns[0]))
+        self.assertEqual('cls([a])', f.src)
+
+        self.assertFalse(code._par_if_needed(FST('a')))
 
 
 if __name__ == '__main__':

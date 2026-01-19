@@ -1590,7 +1590,7 @@ _PRECEDENCE_NODES = {  # default is _Precedence.ATOM
 
     # MatchValue:     None,
     # MatchSingleton: None,
-    # MatchSequence:  None,
+    MatchSequence:  _Precedence.TUPLE,  # this is to make sure our par checks delimit this if an unparenthesized one of these is put into another pattern
     # MatchMapping:   None,
     # MatchClass:     None,
     # MatchStar:      None,

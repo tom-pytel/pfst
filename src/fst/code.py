@@ -290,7 +290,7 @@ def _par_if_needed(  # TODO: candidate function to move into core, possibly just
     if ast_cls is Tuple:
         has_pars = bool(self._is_delimited_seq())
     elif ast_cls is MatchSequence:
-        has_pars = bool(self._is_delimited_seq('patterns'))
+        has_pars = bool(self.is_delimited_matchseq())
     elif has_pars is None:
         has_pars = self.pars().n
 
@@ -607,7 +607,7 @@ def _coerce_to_pattern_ast_Dict(
 
         else:  # these may be invalid or have parentheses so we need to walk
             key = _AST_COERCE_TO_PATTERN_FUNCS.get(
-                key_cls, _coerce_to_expr_ast_ret_empty_str)(key, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
+                key_cls, _coerce_to_pattern_ast_ret_empty_str)(key, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
             if key.__class__ is str:
                 return key
@@ -615,7 +615,7 @@ def _coerce_to_pattern_ast_Dict(
             keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression (or Attribute)
 
         value = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
+            value.__class__, _coerce_to_pattern_ast_ret_empty_str)(value, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
         if value.__class__ is str:
             return value
@@ -640,20 +640,10 @@ def _coerce_to_pattern_ast_Call(
         if is_FST:
             func.f._unparenthesize_grouping(False)  # cannot have pars
 
-        res = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            func_cls, _coerce_to_expr_ast_ret_empty_str)(func, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
+        res = _coerce_to_pattern_ast_Attribute(func, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
         if res.__class__ is str:
             return res
-
-        cur = func
-
-        while True:
-            if (cur := cur.value).__class__ is Name:
-                if cur.id == '_':
-                    return "func Name cannot start with '_'"
-
-                break
 
     elif func_cls is not Name:
         return f"func must be Name or Attribute, not {func_cls.__name__}"
@@ -669,7 +659,7 @@ def _coerce_to_pattern_ast_Call(
             return 'cannot have Starred'
 
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            arg.__class__, _coerce_to_expr_ast_ret_empty_str)(arg, is_FST, options, parse_params)
+            arg.__class__, _coerce_to_pattern_ast_ret_empty_str)(arg, is_FST, options, parse_params)
 
         if pat.__class__ is str:
             return pat
@@ -684,7 +674,7 @@ def _coerce_to_pattern_ast_Call(
             return "cannot have '**' keyword"
 
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
-            value.__class__, _coerce_to_expr_ast_ret_empty_str)(value, is_FST, options, parse_params)
+            value.__class__, _coerce_to_pattern_ast_ret_empty_str)(value, is_FST, options, parse_params)
 
         if pat.__class__ is str:
             return pat
@@ -766,7 +756,7 @@ def _coerce_to_pattern_ast_BinOp(
         return 'cannot have Starred'
 
     pat_right = _AST_COERCE_TO_PATTERN_FUNCS.get(
-        right.__class__, _coerce_to_expr_ast_ret_empty_str)(right, is_FST, options, parse_params)
+        right.__class__, _coerce_to_pattern_ast_ret_empty_str)(right, is_FST, options, parse_params)
 
     if pat_right.__class__ is str:
         return pat_right
@@ -777,7 +767,7 @@ def _coerce_to_pattern_ast_BinOp(
         return 'cannot have Starred'
 
     pat_left = _AST_COERCE_TO_PATTERN_FUNCS.get(
-        left.__class__, _coerce_to_expr_ast_ret_empty_str)(left, is_FST, options, parse_params)
+        left.__class__, _coerce_to_pattern_ast_ret_empty_str)(left, is_FST, options, parse_params)
 
     pat_left_cls = pat_left.__class__
 
@@ -866,7 +856,7 @@ def _coerce_to_pattern_ast_seq(
 
         if is_FST:
             res = _AST_COERCE_TO_EXPR_FUNCS.get(
-                ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # just need to convert their special syntax to comma-delimited sequence
+                ast_cls, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # just need to convert their special syntax to comma-delimited sequence
 
             if res.__class__ is str:
                 return res  # pragma: no cover  # not currently returned for these types
@@ -875,7 +865,7 @@ def _coerce_to_pattern_ast_seq(
 
     elif ast_cls in (arguments, _aliases, _withitems, _type_params):
         res = _AST_COERCE_TO_EXPR_FUNCS.get(
-            ast_cls, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # need to convert their elements to expressions, container will be Tuple
+            ast_cls, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # need to convert their elements to expressions, container will be Tuple
 
         if res.__class__ is str:
             return res
@@ -974,7 +964,21 @@ def _coerce_to_expr_ast_ret_empty_str(
             - `0`: Unmake the returned `AST` parents.
             - `1`: Unmake just the original `FST` root node, no children.
             - `2`: Unmake the entire original `FST`.
+            - `-1`: Does not unmake.
     """
+
+    return ''  # pragma: no cover  # can only happen if non-pattern nodes illegally present where patterns expected
+
+def _coerce_to_expr_ast_maybe_expr(
+    ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
+) -> tuple[AST, bool, int]:
+    """See `_coerce_to_expr_ast_ret_empty_str()`.
+
+    This exists so that attempting to coerce an `expr` to an `expr` just returns the same `expr.
+    """
+
+    if ast.__class__ in ASTS_LEAF_EXPR:
+        return ast, False, -1
 
     return ''
 
@@ -1739,7 +1743,11 @@ def _coerce_to_expr_ast(
     node creation in that case is just targetted at the `unparse()` and may not have locations or other things a full
     node would.
 
-    This function will unmake the source `FST` if is one.
+    If the `ast` is a `List` or `Set` then it will be coerced to a `Tuple` on the assumption that we are coercing
+    sequences. If it is another type of expression then it is returned unchanged.
+
+    This function will unmake the source `FST` if is one if a coercion occurs (meaning if is non-seq `expr` coming in
+    then will not unmake).
 
     **WARNING!** Can not assume any `AST` nodes returned from here have valid `FST` nodes even if `is_FST=True`. They
     must always be recreated.
@@ -1761,7 +1769,7 @@ def _coerce_to_expr_ast(
     """
 
     ret = _AST_COERCE_TO_EXPR_FUNCS.get(
-        ast.__class__, _coerce_to_expr_ast_ret_empty_str)(ast, is_FST, options, parse_params)
+        ast.__class__, _coerce_to_expr_ast_maybe_expr)(ast, is_FST, options, parse_params)
 
     if ret.__class__ is str:
         raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
@@ -1777,7 +1785,7 @@ def _coerce_to_expr_ast(
 
         if ret.__class__ is str:
             raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
-                            f', could not coerce{", " + ret if ret else ""}', rawable=True)  # ret here is reason str
+                            f', could not coerce{", " + ret if ret else ""}', rawable=True)  # pragma: no cover  # can't currently happen as List and Set can always coerce to each other
 
         ret = ret[0]  # don't even check for is_nonstd_tuple because wasn't tuple and this one isn't either
         unmake_which = 2  # at this point its just safer and easier
@@ -1787,7 +1795,7 @@ def _coerce_to_expr_ast(
             ret.f._unmake_fst_parents()
         elif unmake_which == 1:  # just the root node (and ctx if it has one)
             getattr(ast, 'ctx', ast).f._unmake_fst_parents(True)
-        else:  # node was completely regenerated, unmake whole original (e.g. arg.arg coerced to new Name node, or complicated MatchSequence with nested stuff)
+        elif unmake_which == 2:  # node was completely regenerated, unmake whole original (e.g. arg.arg coerced to new Name node, or complicated MatchSequence with nested stuff)
             ast.f._unmake_fst_tree()
 
     return ret, is_nonstd_tuple
@@ -2152,9 +2160,12 @@ def _coerce_to_List(
         delims = '[]'
     else:
         delims = '{}'
+
         assert to_cls is Set
 
     if isinstance(code, fst.FST):
+        codea = code.a
+
         ast, fix_coerced_tuple = _coerce_to_expr_ast(code.a, True, options, parse_params, to_cls.__name__, to_cls)
         ast_cls = ast.__class__
 
@@ -2162,7 +2173,7 @@ def _coerce_to_List(
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a to_cls
 
         elif ast_cls is not Tuple:
-            raise NodeError(f'expecting Set, got {code.a.__class__}, could not coerce')
+            raise NodeError(f'expecting {to_cls.__name__}, got {codea.__class__.__name__}, could not coerce')
 
         else:
             if to_cls is List:
@@ -2192,8 +2203,12 @@ def _coerce_to_List(
 
     else:  # is AST
         ast, _ = _coerce_to_expr_ast(code, False, options, parse_params, to_cls.__name__, to_cls)
+        ast_cls = ast.__class__
 
-        if ast.__class__ is not to_cls:
+        if ast_cls is not to_cls:
+            if ast_cls is not Tuple:
+                raise NodeError(f'expecting {to_cls.__name__}, got {code.__class__.__name__}, could not coerce')
+
             ast = to_cls(elts=ast.elts)
 
         src = unparse(ast)
@@ -2450,9 +2465,6 @@ def _coerce_to__arglikes(
 
     else:  # single element as sequence
         fst_ = code_as__arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
-
-        # if fst_.is_parenthesized_tuple() is False:  # doesn't currently happen, but could in the future, tuple is caught above and tuple str fails in parse
-        #     fst_._delimit_node()
 
         ast = _arglikes(arglikes=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                         end_col_offset=ls[-1].lenbytes)
@@ -3078,7 +3090,7 @@ def _code_as_expr(
 
     expecting = _EXPR_PARSE_FUNC_TO_NAME[parse]
 
-    if to_tuple := parse is parse_Tuple:  # special handling for code as Tuple
+    if to_tuple := parse is parse_Tuple:  # special handling for code as Tuple, TODO: maybe it deserves its own handler?
         no_coerce_clss = (Tuple,)
     else:
         no_coerce_clss = ASTS_LEAF_EXPR
@@ -3096,6 +3108,10 @@ def _code_as_expr(
                 raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled', rawable=True)
 
             ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, options, parse_params, expecting, to_tuple)
+
+            if ast.__class__ not in no_coerce_clss:  # we do this because if no_coerce_clss restricted to one type of expr instead of all then the same expr can come back and we need to make sure it is the one we want
+                raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, could not coerce', rawable=True)
+
             ast_cls = ast.__class__
             parse = None  # this is a signal so that singleton tuples always get trailing comma, maybe review this behavior
 
@@ -3121,7 +3137,12 @@ def _code_as_expr(
                     raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}'
                                     ', coerce disabled', rawable=True)
 
+                old_code = code
                 code, _ = _coerce_to_expr_ast(code, False, options, parse_params, expecting, to_tuple)
+
+                if code.__class__ not in no_coerce_clss:
+                    raise NodeError(f'expecting {expecting}, got {old_code.__class__.__name__}, could not coerce',
+                                    rawable=True)
 
             src = unparse(code)
             lines = src.split('\n')
@@ -3199,7 +3220,7 @@ def code_as(
 
         if mode_type and not isinstance(fst_.a, mode_type):
             raise NodeError(f'expecting {mode_type.__name__}, got {fst_.a.__class__.__name__}'
-                            f'{", could not coerce" if coerce else ", coerce disabled"}')
+                            f'{", could not coerce" if coerce else ", coerce disabled"}')  # pragma: no cover  # can't think of a case where this would happen
 
         return fst_
 
@@ -3523,8 +3544,8 @@ def code_as_Tuple(
 
     fst_ = _code_as_expr(code, options, parse_params, parse_Tuple, False, True, sanitize, coerce)
 
-    if fst_ is code and fst_.a.__class__ is not Tuple:  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
-        raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
+    # if fst_ is code and fst_.a.__class__ is not Tuple:  # CURRENTLY HANDLED in _code_as_expr()  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
+    #     raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
 
     return fst_
 
