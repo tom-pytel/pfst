@@ -122,7 +122,8 @@ class BaseCases(dict):
             nonlocal case_src_idx, lineno
 
             prev_case_src_idx = case_src_idx
-            case_src_idx = src.index("\n\n('", prev_case_src_idx) + 2  # WARNING! this special string may need to be checked better as test case source may eventually contain something that looks like it1
+            # WARNING! this special string may need to be checked better as test case source may eventually contain something that looks like it1
+            case_src_idx = src.index("\n\n('", prev_case_src_idx) + 2  # MAKE SURE THERE IS A NEWLINE between the "'name': [" and first cases and between all cases!
             lineno += src.count('\n', prev_case_src_idx, case_src_idx)
 
             return lineno
@@ -215,12 +216,13 @@ class CoerceCases(BaseCases):
         super().__init__(fnm, None)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
-        rest = []
-        h    = None
-        g    = None
-        f    = _make_fst(case.code, case.attr)
-        a    = f.copy_ast()
-        opts = _clean_options(case.options)
+        rest   = []
+        h      = None
+        g      = None
+        f      = _make_fst(case.code, case.attr)
+        a      = f.copy_ast()
+        opts   = _clean_options(case.options)
+        verify = case.options.get('_verify', True)
 
         if 'coerce' not in opts:
             opts['coerce'] = True
@@ -230,14 +232,16 @@ class CoerceCases(BaseCases):
         except Exception as exc:
             rest.append(f'FST: **{_san_exc(exc)!r}**')
         else:
-            g.verify()
+            if verify:
+                g.verify()
 
         try:
             h = code_as(a, case.field, **opts)
         except Exception as exc:
             rest.append(f'AST: **{_san_exc(exc)!r}**')
         else:
-            h.verify()
+            if verify:
+                h.verify()
 
         same = True
 

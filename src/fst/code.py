@@ -23,6 +23,7 @@ from .asttypes import (
     BitOr,
     Call,
     Constant,
+    Del,
     Dict,
     ExceptHandler,
     Expr,
@@ -1883,7 +1884,7 @@ def _coerce_to_seq(
 
         return fst.FST(ast, code._lines, None, lcopy=False)
 
-    trim_end = -2 if ast_cls is Tuple and len(ast.elts) == 1 else -1  # singleton tuple trim should remove trailing comma
+    trim_end = -2 if ast.__class__ is Tuple and len(ast.elts) == 1 else -1  # singleton tuple should remove trailing comma
     src = unparse(ast)[1 : trim_end]  # need to strip Tuple or List or Set unparsed delimiters
     lines = src.split('\n')
     ast = parse(src, parse_params)
@@ -1954,14 +1955,14 @@ def _coerce_to__aliases_common(
                        end_col_offset=tmp.end_col_offset)
         fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
-    if names := fst_.a.names:  # remove trailing comma if present, not legal in Import/From names mostly (except parenthesized ImportFrom.names)
-        _, _, ln, col = names[-1].f.loc
-        _, _, end_ln, end_col = fst_.loc
+        if names := fst_.a.names:  # remove trailing comma if present, not legal in Import/From names mostly (except parenthesized ImportFrom.names)
+            _, _, ln, col = names[-1].f.loc
+            _, _, end_ln, end_col = fst_.loc
 
-        if (frag := next_frag(fst_._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
-            ln, col, _ = frag
+            if (frag := next_frag(fst_._lines, ln, col, end_ln, end_col)) and frag.src.startswith(','):
+                ln, col, _ = frag
 
-            fst_._put_src(None, ln, col, ln, col + 1, True)
+                fst_._put_src(None, ln, col, ln, col + 1, True)
 
     return fst_._sanitize() if sanitize else fst_
 
@@ -4279,9 +4280,9 @@ _CODE_AS_MODE_FUNCS = {
     withitem:                 code_as_withitem,
     pattern:                  code_as_pattern,
     type_param:               code_as_type_param,
-    # Load:                     lambda src, parse_params = {}: Load(),  # HACKS
-    # Store:                    lambda src, parse_params = {}: Store(),
-    # Del:                      lambda src, parse_params = {}: Del(),
+    Load:                     None,
+    Store:                    None,
+    Del:                      None,
     FunctionType:             None,  # explicitly prohibit from parse
     FormattedValue:           None,
     Interpolation:            None,
