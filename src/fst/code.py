@@ -1809,7 +1809,7 @@ def _coerce_to_seq(
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST] | None,
     to_cls: type[AST],
-    ret_elts: bool | None = None,
+    ret_elts: bool = False,
     allow_starred: bool = False,
 ) -> fst.FST | list[AST] | tuple[list[AST], bool] | None:
     """Attempt coerce of given `code` if is sequence type to list of `AST` elements. Meant for conversion to one of our
@@ -1826,12 +1826,10 @@ def _coerce_to_seq(
     - `parse`: Can be `None` if `ret_elts=True`.
     - `ret_elts`: When to return just the elements and not make an `FST`.
         - `True`: Always return just the elements. In this case returns a tuple of `(elts, is_FST)`.
-        - `False`: Never return just the elements. In case of an `FST`, will reparse the source to an `FST` using the
-            `parse` function. Returns the `FST` or `elts`.
-        - `None`: Return the elements in case of `FST` but do the parse in case of `AST`. Returns just the `FST`.
+        - `False`: For an `FST` return just the elements. For an `AST` do the parse and return the parsed `FST`.
 
     **Returns:**
-    - `FST`: Coerced tree ready for return.
+    - `FST`: Coerced tree ready for return, from an `AST` only.
     - `list[AST]`: Came from an `FST` so wasn't parsed so may need to coerce the individual elements, they are all valid
         `FST` `AST` nodes so need to unmake them if recreating nodes.
     - `(list[AST], is_FST)`: Just the individual elements, which may or may not have come from an `FST`, as well as a
@@ -1874,16 +1872,7 @@ def _coerce_to_seq(
         return ast.elts, is_FST
 
     if is_FST:
-        if ret_elts is not False:
-            return ast.elts
-
-        code._unmake_fst_tree(ast.elts)
-
-        ast = parse(code.src, parse_params)
-
-        assert ast.__class__ is to_cls  # sanity check
-
-        return fst.FST(ast, code._lines, None, lcopy=False)
+        return ast.elts
 
     trim_end = -2 if ast.__class__ is Tuple and len(ast.elts) == 1 else -1  # singleton tuple should remove trailing comma
     src = unparse(ast)[1 : trim_end]  # need to strip Tuple or List or Set unparsed delimiters
@@ -2710,7 +2699,7 @@ def _coerce_to__ImportFrom_names(
     # TODO: coerce _withitems specially for the "a as b" format?
 
     if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
-                                          parse__ImportFrom_names, 'ImportFrom names', sanitize, False)):  # sequence as sequence?
+                                               parse__ImportFrom_names, 'ImportFrom names', sanitize, False)):  # sequence as sequence?
         fst_ = code_as_ImportFrom_name(code, options, parse_params, sanitize=sanitize, coerce=True)  # single element as sequence
 
         ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -2792,10 +2781,19 @@ def _coerce_to__withitems(
 
     # TODO: coerce _aliases specially for the "a as b" format?
 
-    fst_ = _coerce_to_seq(code, options, parse_params, parse__withitems, _withitems, ret_elts=False)  # list[AST] is never returned with ret_elts=False
+    fst_ = _coerce_to_seq(code, options, parse_params, parse__withitems, _withitems)
 
-    if fst_ is not None:  # sequence as sequence? ret_elts=False because otherwise it would be a pain to get individual withitem locations because of possible group pars around context_exprs
-         if sanitize:
+    if fst_ is not None:  # sequence as sequence?
+        if fst_.__class__ is list:  # this means code is an FST
+            items = [withitem(a) for a in fst_]
+            ast = _withitems(items=items, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                             end_col_offset=ls[-1].lenbytes)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+
+            for a in items:
+                _par_if_needed(a.context_expr.f, None, False)
+
+        if sanitize:
             fst_._sanitize()
 
     else: # single element as sequence

@@ -8964,6 +8964,152 @@ Tuple - ROOT 0,0..0,1
 '''),
 ],
 
+'stmt': [  # ................................................................................
+
+('', 0, 0, 'stmt', {}, ('stmt',
+r'''a;'''),
+r'''a;''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'stmt', {}, ('stmts',
+r'''a;'''),
+r'''a''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'stmt', {}, ('Module', r'''
+# 0
+a # 1
+# 2
+'''), r'''
+# 0
+a # 1
+# 2
+''',
+r'''a''', r'''
+Expr - ROOT 1,0..1,1
+  .value Name 'a' Load - 1,0..1,1
+'''),
+
+('', 0, 0, 'stmt', {}, ('Expression',
+r'''( a )'''),
+r'''( a )''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,5
+  .value Name 'a' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'stmt', {}, ('Name',
+r''' ( a ) '''),
+r'''( a ) ''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,5
+  .value Name 'a' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'stmt', {}, ('Name', r'''
+\
+  (
+  a
+  )
+'''), r'''
+(
+  a
+  )
+''',
+r'''a''', r'''
+Expr - ROOT 0,0..2,3
+  .value Name 'a' Load - 1,2..1,3
+'''),
+
+('', 0, 0, 'stmt', {}, ('Name',
+' \\\n  (\n  a\n  )\n  '),
+'(\n  a\n  )\n  ',
+r'''a''', r'''
+Expr - ROOT 0,0..2,3
+  .value Name 'a' Load - 1,2..1,3
+'''),
+],
+
+'stmts': [  # ................................................................................
+
+('', 0, 0, 'stmts', {}, ('stmt',
+r'''a;'''),
+r'''a;''',
+r'''a''', r'''
+Module - ROOT 0,0..0,2
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'stmts', {}, ('stmts',
+r'''a;'''),
+r'''a;''',
+r'''a''', r'''
+Module - ROOT 0,0..0,2
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'stmts', {'_ver': 14}, ('Interactive',
+r'''a; b'''),
+r'''a; b''', r'''
+Module - ROOT 0,0..0,4
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 0,3..0,4
+     .value Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, 'stmts', {}, ('Expression',
+r'''( a )'''),
+r'''( a )''',
+r'''a''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Expr - 0,0..0,5
+     .value Name 'a' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'stmts', {}, ('Name',
+' \\\n  (\n  a\n  )\n  '),
+'(\n  a\n  )\n  ',
+r'''a''', r'''
+Module - ROOT 0,0..3,2
+  .body[1]
+   0] Expr - 0,0..2,3
+     .value Name 'a' Load - 1,2..1,3
+'''),
+],
+
+'_withitems': [  # ................................................................................
+
+('', 0, 0, '_withitems', {}, ('Tuple',
+r'''a := b, (yield), (yield from a)'''),
+r'''(a := b), (yield), (yield from a)''',
+r'''(a := b), (yield), (yield from a)''', r'''
+_withitems - ROOT 0,0..0,33
+  .items[3]
+   0] withitem - 0,0..0,8
+     .context_expr NamedExpr - 0,1..0,7
+       .target Name 'a' Store - 0,1..0,2
+       .value Name 'b' Load - 0,6..0,7
+   1] withitem - 0,10..0,17
+     .context_expr Yield - 0,11..0,16
+   2] withitem - 0,19..0,33
+     .context_expr YieldFrom - 0,20..0,32
+       .value Name 'a' Load - 0,31..0,32
+'''),
+],
+
 'pattern_from_number': [  # ................................................................................
 
 ('', 0, 0, 'pattern', {}, ('Constant',
@@ -9489,132 +9635,6 @@ r'''AST: **NodeError('expecting List, got Name, could not coerce')**'''),
 r'''a'''),
 r'''FST: **NodeError('expecting Set, got Name, could not coerce')**''',
 r'''AST: **NodeError('expecting Set, got Name, could not coerce')**'''),
-],
-
-'misc_stmt': [  # ................................................................................
-
-('', 0, 0, 'stmt', {}, ('stmt',
-r'''a;'''),
-r'''a;''',
-r'''a''', r'''
-Expr - ROOT 0,0..0,1
-  .value Name 'a' Load - 0,0..0,1
-'''),
-
-('', 0, 0, 'stmt', {}, ('stmts',
-r'''a;'''),
-r'''a''',
-r'''a''', r'''
-Expr - ROOT 0,0..0,1
-  .value Name 'a' Load - 0,0..0,1
-'''),
-
-('', 0, 0, 'stmt', {}, ('Module', r'''
-# 0
-a # 1
-# 2
-'''), r'''
-# 0
-a # 1
-# 2
-''',
-r'''a''', r'''
-Expr - ROOT 1,0..1,1
-  .value Name 'a' Load - 1,0..1,1
-'''),
-
-('', 0, 0, 'stmt', {}, ('Expression',
-r'''( a )'''),
-r'''( a )''',
-r'''a''', r'''
-Expr - ROOT 0,0..0,5
-  .value Name 'a' Load - 0,2..0,3
-'''),
-
-('', 0, 0, 'stmt', {}, ('Name',
-r''' ( a ) '''),
-r'''( a ) ''',
-r'''a''', r'''
-Expr - ROOT 0,0..0,5
-  .value Name 'a' Load - 0,2..0,3
-'''),
-
-('', 0, 0, 'stmt', {}, ('Name', r'''
-\
-  (
-  a
-  )
-'''), r'''
-(
-  a
-  )
-''',
-r'''a''', r'''
-Expr - ROOT 0,0..2,3
-  .value Name 'a' Load - 1,2..1,3
-'''),
-
-('', 0, 0, 'stmt', {}, ('Name',
-' \\\n  (\n  a\n  )\n  '),
-'(\n  a\n  )\n  ',
-r'''a''', r'''
-Expr - ROOT 0,0..2,3
-  .value Name 'a' Load - 1,2..1,3
-'''),
-],
-
-'misc_stmts': [  # ................................................................................
-
-('', 0, 0, 'stmts', {}, ('stmt',
-r'''a;'''),
-r'''a;''',
-r'''a''', r'''
-Module - ROOT 0,0..0,2
-  .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'a' Load - 0,0..0,1
-'''),
-
-('', 0, 0, 'stmts', {}, ('stmts',
-r'''a;'''),
-r'''a;''',
-r'''a''', r'''
-Module - ROOT 0,0..0,2
-  .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'a' Load - 0,0..0,1
-'''),
-
-('', 0, 0, 'stmts', {'_ver': 14}, ('Interactive',
-r'''a; b'''),
-r'''a; b''', r'''
-Module - ROOT 0,0..0,4
-  .body[2]
-   0] Expr - 0,0..0,1
-     .value Name 'a' Load - 0,0..0,1
-   1] Expr - 0,3..0,4
-     .value Name 'b' Load - 0,3..0,4
-'''),
-
-('', 0, 0, 'stmts', {}, ('Expression',
-r'''( a )'''),
-r'''( a )''',
-r'''a''', r'''
-Module - ROOT 0,0..0,5
-  .body[1]
-   0] Expr - 0,0..0,5
-     .value Name 'a' Load - 0,2..0,3
-'''),
-
-('', 0, 0, 'stmts', {}, ('Name',
-' \\\n  (\n  a\n  )\n  '),
-'(\n  a\n  )\n  ',
-r'''a''', r'''
-Module - ROOT 0,0..3,2
-  .body[1]
-   0] Expr - 0,0..2,3
-     .value Name 'a' Load - 1,2..1,3
-'''),
 ],
 
 }
