@@ -99,7 +99,18 @@ from .astutil import (
     precedence_require_parens,
 )
 
-from .common import NodeError, nspace, pyver, shortstr, lline_start, next_frag, prev_frag, next_find_re, next_delims
+from .common import (
+    NodeError,
+    nspace,
+    re_line_end_ws_cont_or_comment,
+    pyver,
+    shortstr,
+    lline_start,
+    next_frag,
+    prev_frag,
+    next_find_re,
+    next_delims,
+)
 
 from .parsex import (
     _AST_TYPE_BY_NAME_OR_TYPE,
@@ -217,8 +228,9 @@ _EXPR_PARSE_FUNC_TO_NAME = {
 }
 
 
-def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln: int, end_col: int) -> None:
+def _fix__slice_last_line(self: fst.FST, lines: list[bistr], end_ln: int, end_col: int, comment: bool = False) -> None:
     """Make sure there is no line continuation backslash on the last line of a known `_slice` SPECIAL SLICE node.
+    Optionally also remove comment if there.
 
     **Parameters:**
     - `(end_ln, end_col)`: End location of last child, or `(0, 0)` if none (or anything really in that case).
@@ -227,8 +239,10 @@ def _fix__slice_last_line_continuation(self: fst.FST, lines: list[bistr], end_ln
     if end_ln != len(lines) - 1:
         end_col = 0
 
-    if (l := lines[-1]).endswith('\\') and l.find('#', end_col) == -1:
-        lines[-1] = l = bistr(l[:-1].rstrip())
+    m = re_line_end_ws_cont_or_comment.search(l := lines[-1], end_col)
+
+    if (g := m.group(1)) and (comment or not g.startswith('#')):
+        lines[-1] = l = bistr(l[:m.start()])
         self.a.end_col_offset = l.lenbytes
 
         self._touch()
@@ -2067,6 +2081,8 @@ def _coerce_to_stmts(
         code = _fixing_unparse(code)
         lines = code.split('\n')
 
+        # TODO: do this correctly, for example currently cd.code_as_stmts(FST('f"{a}"').values[0].a, coerce=True) winds up as a Set
+
         return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
 
     fst_ = _coerce_to_stmt(code, options, parse_params, sanitize=sanitize)
@@ -2250,13 +2266,12 @@ def _coerce_to__Assign_targets(
             if not frag:  # need to add equals just to end of expr because no comma or comma on different line
                 fst_._put_src(' =', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)  # replace from end of expression to just past comma with ' ='
 
-        fst_._maybe_add_line_continuations()  # location is already whole so don't need to pass whole=True
+        _fix__Assign_targets(fst_)
 
         if sanitize:  # won't really do much after adding line continuations but we must do that first to make sure locations are good
             fst_._sanitize()
 
-        _fix__Assign_targets(fst_)
-        _fix__slice_last_line_continuation(fst_, lines, end_ln, end_col)
+        _fix__slice_last_line(fst_, lines, end_ln, end_col, True)
 
         return fst_
 
@@ -2354,7 +2369,7 @@ def _coerce_to__decorator_list(
             for f in maybe_par:
                 _par_if_needed(f, False)
 
-            _fix__slice_last_line_continuation(fst_, lines, last_end_ln, last_end_col)
+            _fix__slice_last_line(fst_, lines, last_end_ln, last_end_col)
 
             return fst_
 

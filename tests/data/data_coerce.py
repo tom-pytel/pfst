@@ -529,6 +529,15 @@ MatchSequence - ROOT 0,0..0,10
    0] MatchSequence - 0,2..0,4
    1] MatchSequence - 0,7..0,9
 '''),
+
+('', 0, 0, '_Assign_targets', {}, ('_decorator_list',
+r'''@a  # b'''),
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+'''),
 ],
 
 }

@@ -2269,7 +2269,7 @@ match a:
                 (_Assign_targets, 'a = b = c =')),
             (code_as__Assign_targets, (Tuple, '(a) , \\\n # 0\n(b) # 1\n,\n(c) \\'),
                 "**SyntaxError**",  # src
-                (_Assign_targets, '(a) = \\\n \\\n(b) = \\\n\\\n(c) ='),
+                (_Assign_targets, '(a) = \\\n(b) = \\\n\\\n(c) ='),
                 (_Assign_targets, 'a = b = c =')),
             (code_as__Assign_targets, (Tuple, 'a,'),
                 (_Assign_targets, 'a,'),
