@@ -4183,6 +4183,13 @@ match a:
         self.assertEqual('x', code.code_as__arglikes(FST('[x]'), sanitize=True, coerce=True).src)
         self.assertEqual('x', code.code_as__withitems(FST('[x]'), sanitize=True, coerce=True).src)
 
+        self.assertRaises(ValueError, code.code_as_Store, FST('a').ctx)
+        self.assertRaises(NodeError, code.code_as_Store, FST('a'))
+        self.assertRaises(NodeError, code.code_as_Store, FST('a').a)
+
+        self.assertEqual('# test', code.code_as_Store('# test').src)
+        self.assertEqual('# test', code.code_as_Store(['# test']).src)
+
         # fst.code._par_if_needed()
 
         f = FST('cls([a])', pattern)

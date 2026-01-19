@@ -9110,6 +9110,54 @@ _withitems - ROOT 0,0..0,33
 '''),
 ],
 
+'expr_context': [  # ................................................................................
+
+('', 0, 0, 'Load', {}, ('Load',
+r''''''),
+r'''''',
+r'''Load - ROOT 0,0..0,0'''),
+
+('', 0, 0, 'Load', {}, ('Del',
+r''''''),
+r'''''',
+r'''Load - ROOT 0,0..0,0'''),
+
+('', 0, 0, 'Load', {}, ('Name',
+r'''a'''),
+r'''FST: **NodeError('expecting Load, got Name, could not coerce')**''',
+r'''AST: **NodeError('expecting Load, got Name, could not coerce')**'''),
+
+('', 0, 0, 'Store', {}, ('Store',
+r''''''),
+r'''''',
+r'''Store - ROOT 0,0..0,0'''),
+
+('', 0, 0, 'Store', {}, ('Del',
+r''''''),
+r'''''',
+r'''Store - ROOT 0,0..0,0'''),
+
+('', 0, 0, 'Store', {}, ('Name',
+r'''a'''),
+r'''FST: **NodeError('expecting Store, got Name, could not coerce')**''',
+r'''AST: **NodeError('expecting Store, got Name, could not coerce')**'''),
+
+('', 0, 0, 'Del', {}, ('Del',
+r''''''),
+r'''''',
+r'''Del - ROOT 0,0..0,0'''),
+
+('', 0, 0, 'Del', {}, ('Load',
+r''''''),
+r'''''',
+r'''Del - ROOT 0,0..0,0'''),
+
+('', 0, 0, 'Del', {}, ('Name',
+r'''a'''),
+r'''FST: **NodeError('expecting Del, got Name, could not coerce')**''',
+r'''AST: **NodeError('expecting Del, got Name, could not coerce')**'''),
+],
+
 'pattern_from_number': [  # ................................................................................
 
 ('', 0, 0, 'pattern', {}, ('Constant',
