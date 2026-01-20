@@ -1952,7 +1952,7 @@ def _put_slice_ClassDef_bases(
 
     if keywords := ast.keywords:
         if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
-            raise NodeError('cannot put ClassDef.bases slice because it includes keywords')
+            raise NodeError("cannot put to ClassDef.bases slice because it includes keywords, try the '_bases' field")
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
 
@@ -2420,7 +2420,7 @@ def _put_slice_Call_args(
 
     if keywords := ast.keywords:
         if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
-            raise NodeError('cannot put Call.args slice because it includes keywords')
+            raise NodeError("cannot put to Call.args slice because it includes keywords, try the '_args' field")
 
     else:
         if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
@@ -2520,7 +2520,8 @@ def _put_slice_Call_ClassDef_keywords(
     exprs = getattr(ast, exprs_field)
 
     if exprs and start != stop and body[start].f.loc < exprs[-1].f.loc:
-        raise NodeError(f'cannot put {ast.__class__.__name__}.keywords slice because it includes {exprs_field}')
+        raise NodeError(f'cannot put to {ast.__class__.__name__}.keywords slice because it includes {exprs_field}'
+                        f", try the '_{exprs_field}' field")
 
     nexprs = len(exprs)
 

@@ -1562,7 +1562,8 @@ def _get_slice_Call_ClassDef_args_bases(
         kw0_pos = keywords[0].f.loc
 
         if kw0_pos < body[stop - 1].f.loc:  # don't need to do pars()
-            raise NodeError(f'cannot get {ast.__class__.__name__}.{field} slice because it includes keywords')
+            raise NodeError(f'cannot get {ast.__class__.__name__}.{field} slice because it includes keywords'
+                            f", try the '_{field}' field")
 
         self_tail_sep = True if body[-1].f.loc < kw0_pos else None
 
@@ -1665,7 +1666,8 @@ def _get_slice_Call_ClassDef_keywords(
     exprs = getattr(ast, exprs_field)
 
     if exprs and start != stop and body[start].f.loc < exprs[-1].f.loc:
-        raise NodeError(f'cannot get {ast.__class__.__name__}.keywords slice because it includes {exprs_field}')
+        raise NodeError(f'cannot get {ast.__class__.__name__}.keywords slice because it includes {exprs_field}'
+                        f", try the '_{exprs_field}' field")
 
     len_exprs = len(exprs)
 
