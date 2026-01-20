@@ -344,6 +344,9 @@ def _coerce_to_pattern_ast_ret_empty_str(
 
     These individual functions ARE allowed to change `FST` source as long as it wouldn't break any recursion going on.
 
+    If an `FST` is passed in then it will remain valid after coercion but the source may be modified to conform to the
+    desired node type rules.
+
     **Parameters:**
     - `ast`: The `AST` node to coerce, can be part of an `FST` tree.
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
@@ -942,6 +945,9 @@ def _coerce_to_expr_ast_ret_empty_str(
 
     These individual functions ARE allowed to change `FST` source as long as it wouldn't break any recursion going on,
     for example a `pattern` changing source so that location of previouisly coerced `AST` in a `MatchSequence` changes.
+
+    If an `FST` is passed in then it will remain valid after coercion but the source may be modified to conform to the
+    desired node type rules.
 
     **Parameters:**
     - `ast`: The `AST` node to coerce, can be part of an `FST` tree.
@@ -1844,7 +1850,7 @@ def _coerce_to_seq(
     if not (ast_cls in _ASTS_LEAF_EXPRISH_SEQ
         or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
     ):
-        return None  # TODO: add ceorce from Expr Tuple / List / Set?
+        return None  # TODO: add coerce from Expr Tuple / List / Set?
 
     if ast_cls not in ASTS_LEAF_TUPLE_LIST_OR_SET:
         if is_FST and ast_cls is MatchSequence and code.is_delimited_matchseq():
@@ -2602,7 +2608,7 @@ def _coerce_to_alias(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce "with a as b" items[0] -> "import a as b"?
+    # TODO: coerce "with a as b" items[0] -> "import a as b"? doesn't really seem as something that would ever be used
 
     fst_ = code_as_expr(code, options, parse_params, sanitize=True, coerce=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = a = fst_.a
@@ -2630,7 +2636,7 @@ def _coerce_to__aliases(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce _withitems specially for the "a as b" format?
+    # TODO: coerce _withitems specially for the "a as b" format? doesn't really seem as something that would ever be used
 
     if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
                                                parse__aliases, '_aliases', sanitize, True)):  # sequence as sequence?
@@ -2654,7 +2660,7 @@ def _coerce_to__Import_names(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce _withitems specially for the "a as b" format?
+    # TODO: coerce _withitems specially for the "a as b" format? doesn't really seem as something that would ever be used
 
     if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
                                                parse__Import_names, 'Import names', sanitize, True)):  # sequence as sequence?
@@ -2694,7 +2700,7 @@ def _coerce_to__ImportFrom_names(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce _withitems specially for the "a as b" format?
+    # TODO: coerce _withitems specially for the "a as b" format? doesn't really seem as something that would ever be used
 
     if not (fst_ := _coerce_to__aliases_common(code, options, parse_params,
                                                parse__ImportFrom_names, 'ImportFrom names', sanitize, False)):  # sequence as sequence?
@@ -2753,7 +2759,7 @@ def _coerce_to_withitem(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce "import a as b" names[0] -> "with a as b"?
+    # TODO: coerce "import a as b" names[0] -> "with a as b"? doesn't really seem as something that would ever be used
 
     fst_ = code_as_expr(code, options, parse_params, sanitize=sanitize, coerce=True)
     ast_ = fst_.a
@@ -2777,7 +2783,7 @@ def _coerce_to__withitems(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce _aliases specially for the "a as b" format?
+    # TODO: coerce _aliases specially for the "a as b" format? doesn't really seem as something that would ever be used
 
     fst_ = _coerce_to_seq(code, options, parse_params, parse__withitems, _withitems)
 
