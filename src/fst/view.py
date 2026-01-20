@@ -69,6 +69,10 @@ class fstview:
 
     >>> f.elts[1:3] = '[4]'
     >>> f.src
+    '[0, [4], 3]'
+
+    >>> f.elts[1:2] = '4'
+    >>> f.src
     '[0, 4, 3]'
 
     >>> del f.elts[1:]
@@ -227,12 +231,18 @@ class fstview:
         '[0, 4, 2, 3]'
 
         >>> (f := FST('[0, 1, 2, 3]')).elts[:3] = '[5]'; f.src
+        '[[5], 3]'
+
+        >>> (f := FST('[0, 1, 2, 3]')).elts[:3] = '5'; f.src
         '[5, 3]'
 
         >>> (f := FST('[0, 1, 2, 3]')).elts[:3] = '5,'; f.src
         '[5, 3]'
 
         >>> (f := FST('[0, 1, 2, 3]')).elts[-3:] = '[6]'; f.src
+        '[0, [6]]'
+
+        >>> (f := FST('[0, 1, 2, 3]')).elts[-3:] = '6'; f.src
         '[0, 6]'
 
         >>> (f := FST('[0, 1, 2, 3]')).elts[:] = '7, 8'; f.src
@@ -379,7 +389,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def replace(self, code: Code | None, one: bool | None = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -398,7 +408,13 @@ class fstview:
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').base.src
         '[0, (4, 5), 3]'
 
+        >>> FST('[0, 1, 2, 3]').elts[1:3].replace('4, 5').base.src
+        '[0, (4, 5), 3]'
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)', one=False).base.src
+        '[0, (4, 5), 3]'
+
+        >>> FST('[0, 1, 2, 3]').elts[1:3].replace('4, 5', one=False).base.src
         '[0, 4, 5, 3]'
         """
 
@@ -441,7 +457,7 @@ class fstview:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool | None = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -458,15 +474,24 @@ class fstview:
 
         >>> from fst import FST
 
+        >>> FST('[0, 1, 2, 3]').elts.insert('4, 5', 1).base.src
+        '[0, (4, 5), 1, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).base.src
         '[0, (4, 5), 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 'end', one=False).base.src
+        >>> FST('[0, 1, 2, 3]').elts.insert('4, 5', 'end', one=False).base.src
         '[0, 1, 2, 3, 4, 5]'
 
+        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 'end', one=False).base.src
+        '[0, 1, 2, 3, (4, 5)]'
+
         >>> # same as 'end' but 'end' is always 'end'
-        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).base.src
+        >>> FST('[0, 1, 2, 3]').elts.insert('4, 5', 4, one=False).base.src
         '[0, 1, 2, 3, 4, 5]'
+
+        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).base.src
+        '[0, 1, 2, 3, (4, 5)]'
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].insert('*star').base.src
         '[0, *star, 1, 2, 3]'
@@ -521,7 +546,7 @@ class fstview:
 
         return self
 
-    def extend(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -535,18 +560,24 @@ class fstview:
 
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').base.src
+        >>> FST('[0, 1, 2, 3]').elts.extend('4, 5').base.src
         '[0, 1, 2, 3, 4, 5]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').base.src
+        >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').base.src
+        '[0, 1, 2, 3, (4, 5)]'
+
+        >>> FST('[0, 1, 2, 3]').elts[1:3].extend('4, 5').base.src
         '[0, 1, 2, 4, 5, 3]'
+
+        >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').base.src
+        '[0, 1, 2, (4, 5), 3]'
         """
 
         check_options(options)
 
         _, stop, len_before = self._get_indices()
 
-        self.base = self.base._put_slice(code, stop, stop, self.field, False, options)
+        self.base = self.base._put_slice(code, stop, stop, self.field, None if one is None else False, options)
 
         if self._stop is not None:
             self._stop = stop + (self._len_field() - len_before)
@@ -585,7 +616,7 @@ class fstview:
 
         return self
 
-    def prextend(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -599,18 +630,24 @@ class fstview:
 
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').base.src
+        >>> FST('[0, 1, 2, 3]').elts.prextend('4, 5').base.src
         '[4, 5, 0, 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').base.src
+        >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').base.src
+        '[(4, 5), 0, 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('4, 5').base.src
         '[0, 4, 5, 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').base.src
+        '[0, (4, 5), 1, 2, 3]'
         """
 
         check_options(options)
 
         start, _, len_before = self._get_indices()
 
-        self.base = self.base._put_slice(code, start, start, self.field, False, options)
+        self.base = self.base._put_slice(code, start, start, self.field, None if one is None else False, options)
 
         if self._stop is not None:
             self._stop += self._len_field() - len_before
@@ -766,7 +803,7 @@ class fstview_dummy(fstview):
     def cut(self, **options) -> fst.FST:
         raise RuntimeError('cannot cut a dummy view')
 
-    def replace(self, code: Code | None, one: bool = True, **options) -> fstview:
+    def replace(self, code: Code | None, one: bool | None = True, **options) -> fstview:
         if code is not None:
             raise RuntimeError('cannot replace a dummy view')
 
@@ -775,7 +812,7 @@ class fstview_dummy(fstview):
     def remove(self, **options) -> fstview:
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> fstview:
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool | None = True, **options) -> fstview:
         if code is not None:
             raise RuntimeError('cannot insert to a dummy view')
 
@@ -787,7 +824,7 @@ class fstview_dummy(fstview):
 
         return self
 
-    def extend(self, code: Code, **options) -> fstview:
+    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:
         if code is not None:
             raise RuntimeError('cannot extend a dummy view')
 
@@ -799,7 +836,7 @@ class fstview_dummy(fstview):
 
         return self
 
-    def prextend(self, code: Code, **options) -> fstview:
+    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:
         if code is not None:
             raise RuntimeError('cannot prextend a dummy view')
 

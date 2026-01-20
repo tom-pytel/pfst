@@ -74,7 +74,7 @@ You can assign slices to a view.
 
 >>> f = FST('[a, b]')
 
->>> f.elts[1:1] = '{x, y}'
+>>> f.elts[1:1] = 'x, y'
 
 >>> print(f.src)
 [a, x, y, b]
@@ -104,7 +104,7 @@ y
 
 If you want to assign the element as a slice, you must use slice indexing.
 
->>> f.elts[3:3] = '[c, d]'
+>>> f.elts[3:3] = 'c, d'
 
 >>> print(f.src)
 [x, y, [a, b], c, d]
@@ -146,7 +146,13 @@ particular indexed view which selects their range in the list.
 >>> print(FST('[a, b, c]').elts.replace('[x, y]').base.src)
 [[x, y]]
 
+>>> print(FST('[a, b, c]').elts.replace('x, y').base.src)
+[(x, y)]
+
 >>> print(FST('[a, b, c]').elts.replace('[x, y]', one=False).base.src)
+[[x, y]]
+
+>>> print(FST('[a, b, c]').elts.replace('x, y', one=False).base.src)
 [x, y]
 
 >>> print(FST('[a, b, c]').elts.remove().base.src)
@@ -159,21 +165,39 @@ particular indexed view which selects their range in the list.
 [a, [x, y], b, c]
 
 >>> print(FST('[a, b, c]').elts.insert('[x, y]', 1, one=False).base.src)
+[a, [x, y], b, c]
+
+>>> print(FST('[a, b, c]').elts.insert('x, y', 1, one=False).base.src)
 [a, x, y, b, c]
 
 >>> print(FST('[a, b, c]').elts.insert('[x, y]', 'end', one=False).base.src)
+[a, b, c, [x, y]]
+
+>>> print(FST('[a, b, c]').elts.insert('x, y', 'end', one=False).base.src)
 [a, b, c, x, y]
 
 >>> print(FST('[a, b, c]').elts.append('[x, y]').base.src)
 [a, b, c, [x, y]]
 
+>>> print(FST('[a, b, c]').elts.append('x, y').base.src)
+[a, b, c, (x, y)]
+
 >>> print(FST('[a, b, c]').elts.extend('[x, y]').base.src)
+[a, b, c, [x, y]]
+
+>>> print(FST('[a, b, c]').elts.extend('x, y').base.src)
 [a, b, c, x, y]
 
 >>> print(FST('[a, b, c]').elts.prepend('[x, y]').base.src)
 [[x, y], a, b, c]
 
+>>> print(FST('[a, b, c]').elts.prepend('x, y').base.src)
+[(x, y), a, b, c]
+
 >>> print(FST('[a, b, c]').elts.prextend('[x, y]').base.src)
+[[x, y], a, b, c]
+
+>>> print(FST('[a, b, c]').elts.prextend('x, y').base.src)
 [x, y, a, b, c]
 
 They work on subviews as well.
@@ -181,7 +205,13 @@ They work on subviews as well.
 >>> print(FST('[a, b, c]').elts[1:2].replace('[x, y]').base.src)
 [a, [x, y], c]
 
+>>> print(FST('[a, b, c]').elts[1:2].replace('x, y').base.src)
+[a, (x, y), c]
+
 >>> print(FST('[a, b, c]').elts[1:2].replace('[x, y]', one=False).base.src)
+[a, [x, y], c]
+
+>>> print(FST('[a, b, c]').elts[1:2].replace('x, y', one=False).base.src)
 [a, x, y, c]
 
 >>> print(FST('[a, b, c]').elts[1:3].remove().base.src)
@@ -193,22 +223,37 @@ They work on subviews as well.
 >>> print(FST('[a, b, c]').elts[1:2][1:1].insert('[x, y]').base.src)
 [a, b, [x, y], c]
 
+>>> print(FST('[a, b, c]').elts[1:2][1:1].insert('x, y').base.src)
+[a, b, (x, y), c]
+
 >>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 1, one=False).base.src)
+[a, b, [x, y], c]
+
+>>> print(FST('[a, b, c]').elts[1:2].insert('x, y', 1, one=False).base.src)
 [a, b, x, y, c]
 
 >>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 'end', one=False).base.src)
+[a, b, [x, y], c]
+
+>>> print(FST('[a, b, c]').elts[1:2].insert('x, y', 'end', one=False).base.src)
 [a, b, x, y, c]
 
 >>> print(FST('[a, b, c]').elts[1:2].append('[x, y]').base.src)
 [a, b, [x, y], c]
 
 >>> print(FST('[a, b, c]').elts[1:2].extend('[x, y]').base.src)
+[a, b, [x, y], c]
+
+>>> print(FST('[a, b, c]').elts[1:2].extend('x, y').base.src)
 [a, b, x, y, c]
 
 >>> print(FST('[a, b, c]').elts[1:2].prepend('[x, y]').base.src)
 [a, [x, y], b, c]
 
 >>> print(FST('[a, b, c]').elts[1:2].prextend('[x, y]').base.src)
+[a, [x, y], b, c]
+
+>>> print(FST('[a, b, c]').elts[1:2].prextend('x, y').base.src)
 [a, x, y, b, c]
 
 

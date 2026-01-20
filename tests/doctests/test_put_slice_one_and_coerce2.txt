@@ -35,7 +35,7 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 ...
 ...     return False
 
->>> def test_one_coerce_target_src(one: bool, coerce: bool, target: str, field: str, src: str, mode=None, target_mode=None, options={}):
+>>> def test_one_coerce_target_src(one: bool | None, coerce: bool, target: str, field: str, src: str, mode=None, target_mode=None, options={}):
 ...     for name, code in [
 ...         ('src', src),
 ...         ('FST', FST(src, mode)),
@@ -48,8 +48,12 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 ...
 ...         print(text if name != 'src' else f'{text}  # {src=}')
 
->>> def test_target_srcs(target: str, field: str, srcs: list[str], mode=None, target_mode=None, options={}):
-...     for i, (one, coerce) in enumerate(((False, True), (False, False), (True, True), (True, False))):
+>>> def test_target_srcs(target: str, field: str, srcs: list[str], mode=None, target_mode=None, options={}, one_None=False):
+...     for i, (one, coerce) in enumerate(
+...         ((None, True), (None, False))
+...         if one_None else
+...         ((False, True), (False, False), (True, True), (True, False))
+...     ):
 ...         print('\xa0')
 ...         print(text := f'{one=}, {coerce=}  ({mode=})')
 ...         print('-' * len(text))
@@ -63,7 +67,7 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 ...             if src is not last_src:
 ...                 print('\xa0')
 ...
-...         if i < 3:
+...         if i < (1 if one_None else 3):
 ...             print('\xa0')
 
 
@@ -95,15 +99,15 @@ src: *x,  # src='*x,'
 FST: *x,
 AST: *x,
  
-src: x,  # src='(x,)'
+src: (x,),  # src='(x,)'
 FST: x,
 AST: x,
  
-src: x,  # src='[x]'
+src: [x],  # src='[x]'
 FST: x,
 AST: x,
  
-src: x,  # src='{x}'
+src: {x},  # src='{x}'
 FST: x,
 AST: x,
  
@@ -148,15 +152,15 @@ src: *x,  # src='*x,'
 FST: *x,
 AST: *x,
  
-src: x,  # src='(x,)'
+src: **ValueError("cannot put Tuple as slice to Tuple without 'one=True' or 'coerce=True'")**  # src='(x,)'
 FST: x,
 AST: x,
  
-src: x,  # src='[x]'
+src: **ValueError("cannot put List as slice to Tuple without 'one=True' or 'coerce=True'")**  # src='[x]'
 FST: x,
 AST: x,
  
-src: x,  # src='{x}'
+src: **ValueError("cannot put Set as slice to Tuple without 'one=True' or 'coerce=True'")**  # src='{x}'
 FST: x,
 AST: x,
  
@@ -286,6 +290,41 @@ FST: **NodeError('expecting expression (all types), got _comprehension_ifs, coer
 AST: **NodeError('expecting expression (all types), got _comprehension_ifs, coerce disabled')**
 
 
+........................................................................................................................
+>>> test_target_srcs('a, b, c', 'elts', ['(x,)', '[x]', '{x}'], one_None=True)
+ 
+one=None, coerce=True  (mode=None)
+----------------------------------
+ 
+src: x,  # src='(x,)'
+FST: x,
+AST: x,
+ 
+src: x,  # src='[x]'
+FST: x,
+AST: x,
+ 
+src: x,  # src='{x}'
+FST: x,
+AST: x,
+ 
+ 
+one=None, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: x,  # src='(x,)'
+FST: x,
+AST: x,
+ 
+src: x,  # src='[x]'
+FST: x,
+AST: x,
+ 
+src: x,  # src='{x}'
+FST: x,
+AST: x,
+
+
 
 
 ========================================================================================================================
@@ -314,15 +353,15 @@ src: (*x,)  # src='*x,'
 FST: (*x,)
 AST: (*x,)
  
-src: (x,)  # src='(x,)'
+src: ((x,),)  # src='(x,)'
 FST: (x,)
 AST: (x,)
  
-src: (x,)  # src='[x]'
+src: ([x],)  # src='[x]'
 FST: (x,)
 AST: (x,)
  
-src: (x,)  # src='{x}'
+src: ({x},)  # src='{x}'
 FST: (x,)
 AST: (x,)
  
@@ -367,15 +406,15 @@ src: (*x,)  # src='*x,'
 FST: (*x,)
 AST: (*x,)
  
-src: (x,)  # src='(x,)'
+src: **ValueError("cannot put Tuple as slice to Tuple without 'one=True' or 'coerce=True'")**  # src='(x,)'
 FST: (x,)
 AST: (x,)
  
-src: (x,)  # src='[x]'
+src: **ValueError("cannot put List as slice to Tuple without 'one=True' or 'coerce=True'")**  # src='[x]'
 FST: (x,)
 AST: (x,)
  
-src: (x,)  # src='{x}'
+src: **ValueError("cannot put Set as slice to Tuple without 'one=True' or 'coerce=True'")**  # src='{x}'
 FST: (x,)
 AST: (x,)
  
@@ -505,6 +544,41 @@ FST: **NodeError('expecting expression (all types), got _comprehension_ifs, coer
 AST: **NodeError('expecting expression (all types), got _comprehension_ifs, coerce disabled')**
 
 
+........................................................................................................................
+>>> test_target_srcs('(a, b, c)', 'elts', ['(x,)', '[x]', '{x}'], one_None=True)
+ 
+one=None, coerce=True  (mode=None)
+----------------------------------
+ 
+src: (x,)  # src='(x,)'
+FST: (x,)
+AST: (x,)
+ 
+src: (x,)  # src='[x]'
+FST: (x,)
+AST: (x,)
+ 
+src: (x,)  # src='{x}'
+FST: (x,)
+AST: (x,)
+ 
+ 
+one=None, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: (x,)  # src='(x,)'
+FST: (x,)
+AST: (x,)
+ 
+src: (x,)  # src='[x]'
+FST: (x,)
+AST: (x,)
+ 
+src: (x,)  # src='{x}'
+FST: (x,)
+AST: (x,)
+
+
 
 
 ========================================================================================================================
@@ -533,15 +607,15 @@ src: [*x]  # src='*x,'
 FST: [*x]
 AST: [*x]
  
-src: [x]  # src='(x,)'
+src: [(x,)]  # src='(x,)'
 FST: [x]
 AST: [x]
  
-src: [x]  # src='[x]'
+src: [[x]]  # src='[x]'
 FST: [x]
 AST: [x]
  
-src: [x]  # src='{x}'
+src: [{x}]  # src='{x}'
 FST: [x]
 AST: [x]
  
@@ -586,15 +660,15 @@ src: [*x]  # src='*x,'
 FST: [*x]
 AST: [*x]
  
-src: [x]  # src='(x,)'
+src: **ValueError("cannot put Tuple as slice to List without 'one=True' or 'coerce=True'")**  # src='(x,)'
 FST: [x]
 AST: [x]
  
-src: [x]  # src='[x]'
+src: **ValueError("cannot put List as slice to List without 'one=True' or 'coerce=True'")**  # src='[x]'
 FST: [x]
 AST: [x]
  
-src: [x]  # src='{x}'
+src: **ValueError("cannot put Set as slice to List without 'one=True' or 'coerce=True'")**  # src='{x}'
 FST: [x]
 AST: [x]
  
@@ -724,6 +798,41 @@ FST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerc
 AST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
 
 
+........................................................................................................................
+>>> test_target_srcs('[a, b, c]', 'elts', ['(x,)', '[x]', '{x}'], one_None=True)
+ 
+one=None, coerce=True  (mode=None)
+----------------------------------
+ 
+src: [x]  # src='(x,)'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='[x]'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='{x}'
+FST: [x]
+AST: [x]
+ 
+ 
+one=None, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: [x]  # src='(x,)'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='[x]'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='{x}'
+FST: [x]
+AST: [x]
+
+
 
 
 ========================================================================================================================
@@ -752,15 +861,15 @@ src: {*x}  # src='*x,'
 FST: {*x}
 AST: {*x}
  
-src: {x}  # src='(x,)'
+src: {(x,)}  # src='(x,)'
 FST: {x}
 AST: {x}
  
-src: {x}  # src='[x]'
+src: {[x]}  # src='[x]'
 FST: {x}
 AST: {x}
  
-src: {x}  # src='{x}'
+src: {{x}}  # src='{x}'
 FST: {x}
 AST: {x}
  
@@ -805,15 +914,15 @@ src: {*x}  # src='*x,'
 FST: {*x}
 AST: {*x}
  
-src: {x}  # src='(x,)'
+src: **ValueError("cannot put Tuple as slice to Set without 'one=True' or 'coerce=True'")**  # src='(x,)'
 FST: {x}
 AST: {x}
  
-src: {x}  # src='[x]'
+src: **ValueError("cannot put List as slice to Set without 'one=True' or 'coerce=True'")**  # src='[x]'
 FST: {x}
 AST: {x}
  
-src: {x}  # src='{x}'
+src: **ValueError("cannot put Set as slice to Set without 'one=True' or 'coerce=True'")**  # src='{x}'
 FST: {x}
 AST: {x}
  
@@ -941,6 +1050,41 @@ AST: **NodeError('expecting expression (standard), got _decorator_list, coerce d
 src: **SyntaxError**  # src='if x if y'
 FST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
 AST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
+
+
+........................................................................................................................
+>>> test_target_srcs('{a, b, c}', 'elts', ['(x,)', '[x]', '{x}'], one_None=True)
+ 
+one=None, coerce=True  (mode=None)
+----------------------------------
+ 
+src: {x}  # src='(x,)'
+FST: {x}
+AST: {x}
+ 
+src: {x}  # src='[x]'
+FST: {x}
+AST: {x}
+ 
+src: {x}  # src='{x}'
+FST: {x}
+AST: {x}
+ 
+ 
+one=None, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: {x}  # src='(x,)'
+FST: {x}
+AST: {x}
+ 
+src: {x}  # src='[x]'
+FST: {x}
+AST: {x}
+ 
+src: {x}  # src='{x}'
+FST: {x}
+AST: {x}
 
 
 
@@ -1188,15 +1332,15 @@ src: **NodeError('invalid slice for Delete target')**  # src='*x,'
 FST: **NodeError('invalid slice for Delete target')**
 AST: **NodeError('invalid slice for Delete target')**
  
-src: del x  # src='(x,)'
+src: del (x,)  # src='(x,)'
 FST: del x
 AST: del x
  
-src: del x  # src='[x]'
+src: del [x]  # src='[x]'
 FST: del x
 AST: del x
  
-src: del x  # src='{x}'
+src: **NodeError('invalid slice for Delete target')**  # src='{x}'
 FST: del x
 AST: del x
  
@@ -1241,15 +1385,15 @@ src: **NodeError('invalid slice for Delete target')**  # src='*x,'
 FST: **NodeError('invalid slice for Delete target')**
 AST: **NodeError('invalid slice for Delete target')**
  
-src: del x  # src='(x,)'
+src: **ValueError("cannot put Tuple as slice to Delete without 'one=True' or 'coerce=True'")**  # src='(x,)'
 FST: del x
 AST: del x
  
-src: del x  # src='[x]'
+src: **ValueError("cannot put List as slice to Delete without 'one=True' or 'coerce=True'")**  # src='[x]'
 FST: del x
 AST: del x
  
-src: del x  # src='{x}'
+src: **ValueError("cannot put Set as slice to Delete without 'one=True' or 'coerce=True'")**  # src='{x}'
 FST: del x
 AST: del x
  
@@ -1377,6 +1521,41 @@ AST: **NodeError('expecting expression (standard), got _decorator_list, coerce d
 src: **SyntaxError**  # src='if x if y'
 FST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
 AST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
+
+
+........................................................................................................................
+>>> test_target_srcs('del a, b, c', 'targets', ['(x,)', '[x]', '{x}'], one_None=True)
+ 
+one=None, coerce=True  (mode=None)
+----------------------------------
+ 
+src: del x  # src='(x,)'
+FST: del x
+AST: del x
+ 
+src: del x  # src='[x]'
+FST: del x
+AST: del x
+ 
+src: del x  # src='{x}'
+FST: del x
+AST: del x
+ 
+ 
+one=None, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: del x  # src='(x,)'
+FST: del x
+AST: del x
+ 
+src: del x  # src='[x]'
+FST: del x
+AST: del x
+ 
+src: del x  # src='{x}'
+FST: del x
+AST: del x
 
 
 
@@ -1626,15 +1805,15 @@ src: **NodeError('cannot put Starred to Global.names')**  # src='*x,'
 FST: **NodeError('cannot put Starred to Global.names')**
 AST: **NodeError('cannot put Starred to Global.names')**
  
-src: global x  # src='(x,)'
+src: **NodeError('cannot put Tuple to Global.names')**  # src='(x,)'
 FST: global x
 AST: global x
  
-src: global x  # src='[x]'
+src: **NodeError('cannot put List to Global.names')**  # src='[x]'
 FST: global x
 AST: global x
  
-src: global x  # src='{x}'
+src: **NodeError('cannot put Set to Global.names')**  # src='{x}'
 FST: global x
 AST: global x
  
@@ -1679,15 +1858,15 @@ src: **NodeError('cannot put Starred to Global.names')**  # src='*x,'
 FST: **NodeError('cannot put Starred to Global.names')**
 AST: **NodeError('cannot put Starred to Global.names')**
  
-src: global x  # src='(x,)'
+src: **ValueError("cannot put Tuple as slice to Global without 'one=True' or 'coerce=True'")**  # src='(x,)'
 FST: global x
 AST: global x
  
-src: global x  # src='[x]'
+src: **ValueError("cannot put List as slice to Global without 'one=True' or 'coerce=True'")**  # src='[x]'
 FST: global x
 AST: global x
  
-src: global x  # src='{x}'
+src: **ValueError("cannot put Set as slice to Global without 'one=True' or 'coerce=True'")**  # src='{x}'
 FST: global x
 AST: global x
  
@@ -3592,11 +3771,11 @@ src: *x,  # src='*x,'
 FST: *x,
 AST: *x,
  
-src: x,  # src='(x,)'
+src: (x,),  # src='(x,)'
 FST: x,
 AST: x,
  
-src: x,  # src='[x]'
+src: [x],  # src='[x]'
 FST: x,
 AST: x,
  
@@ -3645,11 +3824,11 @@ src: *x,  # src='*x,'
 FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
 AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: x,  # src='(x,)'
+src: (x,),  # src='(x,)'
 FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
 AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: x,  # src='[x]'
+src: [x],  # src='[x]'
 FST: **NodeError('expecting pattern, got List, coerce disabled')**
 AST: **NodeError('expecting pattern, got List, coerce disabled')**
  
@@ -3783,17 +3962,196 @@ FST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
 AST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
 
 
+........................................................................................................................
+>>> test_target_srcs('a, b, c', 'patterns', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{9: y}', '{**r}'], mode='pattern', target_mode='MatchSequence')
+ 
+one=False, coerce=True  (mode='pattern')
+----------------------------------------
+ 
+src: x,  # src='x'
+FST: x,
+AST: x,
+ 
+src: *x,  # src='*x'
+FST: *x,
+AST: *x,
+ 
+src: x,  # src='x,'
+FST: x,
+AST: x,
+ 
+src: *x,  # src='*x,'
+FST: *x,
+AST: *x,
+ 
+src: (x,),  # src='(x,)'
+FST: x,
+AST: x,
+ 
+src: [x],  # src='[x]'
+FST: x,
+AST: x,
+ 
+src: {9: y},  # src='{9: y}'
+FST: {9: y},
+AST: {9: y},
+ 
+src: {**r},  # src='{**r}'
+FST: {**r},
+AST: {**r},
+ 
+ 
+one=False, coerce=False  (mode='pattern')
+-----------------------------------------
+ 
+src: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='x'
+FST: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+src: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='*x'
+FST: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+src: x,  # src='x,'
+FST: x,
+AST: x,
+ 
+src: *x,  # src='*x,'
+FST: *x,
+AST: *x,
+ 
+src: (x,),  # src='(x,)'
+FST: x,
+AST: x,
+ 
+src: [x],  # src='[x]'
+FST: x,
+AST: x,
+ 
+src: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='{9: y}'
+FST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+src: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='{**r}'
+FST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+ 
+one=True, coerce=True  (mode='pattern')
+---------------------------------------
+ 
+src: x,  # src='x'
+FST: x,
+AST: x,
+ 
+src: *x,  # src='*x'
+FST: *x,
+AST: *x,
+ 
+src: [x,],  # src='x,'
+FST: [x,],
+AST: [x],
+ 
+src: [*x,],  # src='*x,'
+FST: [*x,],
+AST: [*x],
+ 
+src: (x,),  # src='(x,)'
+FST: (x,),
+AST: [x],
+ 
+src: [x],  # src='[x]'
+FST: [x],
+AST: [x],
+ 
+src: {9: y},  # src='{9: y}'
+FST: {9: y},
+AST: {9: y},
+ 
+src: {**r},  # src='{**r}'
+FST: {**r},
+AST: {**r},
+ 
+ 
+one=True, coerce=False  (mode='pattern')
+----------------------------------------
+ 
+src: x,  # src='x'
+FST: x,
+AST: x,
+ 
+src: *x,  # src='*x'
+FST: *x,
+AST: *x,
+ 
+src: [x,],  # src='x,'
+FST: [x,],
+AST: [x],
+ 
+src: [*x,],  # src='*x,'
+FST: [*x,],
+AST: [*x],
+ 
+src: (x,),  # src='(x,)'
+FST: (x,),
+AST: [x],
+ 
+src: [x],  # src='[x]'
+FST: [x],
+AST: [x],
+ 
+src: {9: y},  # src='{9: y}'
+FST: {9: y},
+AST: {9: y},
+ 
+src: {**r},  # src='{**r}'
+FST: {**r},
+AST: {**r},
+
+
+........................................................................................................................
+>>> test_target_srcs('a, b, c', 'patterns', ['x,', '(x,)', '[x]'], mode='pattern', target_mode='MatchSequence', one_None=True)
+ 
+one=None, coerce=True  (mode='pattern')
+---------------------------------------
+ 
+src: x,  # src='x,'
+FST: x,
+AST: x,
+ 
+src: x,  # src='(x,)'
+FST: x,
+AST: x,
+ 
+src: x,  # src='[x]'
+FST: x,
+AST: x,
+ 
+ 
+one=None, coerce=False  (mode='pattern')
+----------------------------------------
+ 
+src: x,  # src='x,'
+FST: x,
+AST: x,
+ 
+src: x,  # src='(x,)'
+FST: x,
+AST: x,
+ 
+src: x,  # src='[x]'
+FST: x,
+AST: x,
+
+
 
 
 ========================================================================================================================
 MatchSequence (delimited)
 ========================================================================================================================
-
-........................................................................................................................
->>> test_target_srcs('[a, b, c]', 'patterns', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', 'x = y =', '@x\n@y', 'if x if y'], target_mode='MatchSequence')
  
-one=False, coerce=True  (mode=None)
------------------------------------
+one=False, coerce=True  (mode='pattern')
+----------------------------------------
  
 src: [x]  # src='x'
 FST: [x]
@@ -3811,94 +4169,61 @@ src: [*x]  # src='*x,'
 FST: [*x]
 AST: [*x]
  
-src: [x]  # src='(x,)'
+src: [(x,)]  # src='(x,)'
 FST: [x]
 AST: [x]
  
-src: [x]  # src='[x]'
+src: [[x]]  # src='[x]'
 FST: [x]
 AST: [x]
  
-src: **SyntaxError**  # src='{x}'
-FST: [x]
-AST: [x]
+src: [{9: y}]  # src='{9: y}'
+FST: [{9: y}]
+AST: [{9: y}]
  
-src: **SyntaxError**  # src='{x: y}'
-FST: **NodeError('expecting pattern, got Dict, could not coerce')**
-AST: **NodeError('expecting pattern, got Dict, could not coerce')**
- 
-src: [x, y]  # src='x, y'
-FST: [x, y]
-AST: [x, y]
- 
-src: **SyntaxError**  # src='x = y ='
-FST: [x, y]
-AST: [x, y]
- 
-src: **SyntaxError**  # src='@x\n@y'
-FST: [x,
- y]
-AST: [x, y]
- 
-src: **SyntaxError**  # src='if x if y'
-FST: [x, y]
-AST: [x, y]
+src: [{**r}]  # src='{**r}'
+FST: [{**r}]
+AST: [{**r}]
  
  
-one=False, coerce=False  (mode=None)
-------------------------------------
+one=False, coerce=False  (mode='pattern')
+-----------------------------------------
  
 src: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='x'
-FST: **NodeError('expecting pattern, got Name, coerce disabled')**
-AST: **NodeError('expecting pattern, got Name, coerce disabled')**
+FST: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**
  
 src: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='*x'
-FST: **NodeError('expecting pattern, got Starred, coerce disabled')**
-AST: **NodeError('expecting pattern, got Starred, coerce disabled')**
+FST: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**
  
 src: [x]  # src='x,'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+FST: [x]
+AST: [x]
  
 src: [*x]  # src='*x,'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+FST: [*x]
+AST: [*x]
  
-src: [x]  # src='(x,)'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+src: [(x,)]  # src='(x,)'
+FST: [x]
+AST: [x]
  
-src: [x]  # src='[x]'
-FST: **NodeError('expecting pattern, got List, coerce disabled')**
-AST: **NodeError('expecting pattern, got List, coerce disabled')**
+src: [[x]]  # src='[x]'
+FST: [x]
+AST: [x]
  
-src: **SyntaxError**  # src='{x}'
-FST: **NodeError('expecting pattern, got Set, coerce disabled')**
-AST: **NodeError('expecting pattern, got Set, coerce disabled')**
+src: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='{9: y}'
+FST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
  
-src: **SyntaxError**  # src='{x: y}'
-FST: **NodeError('expecting pattern, got Dict, coerce disabled')**
-AST: **NodeError('expecting pattern, got Dict, coerce disabled')**
- 
-src: [x, y]  # src='x, y'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
- 
-src: **SyntaxError**  # src='x = y ='
-FST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
-AST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
- 
-src: **SyntaxError**  # src='@x\n@y'
-FST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
-AST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
- 
-src: **SyntaxError**  # src='if x if y'
-FST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
-AST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
+src: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='{**r}'
+FST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
  
  
-one=True, coerce=True  (mode=None)
-----------------------------------
+one=True, coerce=True  (mode='pattern')
+---------------------------------------
  
 src: [x]  # src='x'
 FST: [x]
@@ -3924,82 +4249,231 @@ src: [[x]]  # src='[x]'
 FST: [[x]]
 AST: [[x]]
  
-src: **SyntaxError**  # src='{x}'
+src: [{9: y}]  # src='{9: y}'
+FST: [{9: y}]
+AST: [{9: y}]
+ 
+src: [{**r}]  # src='{**r}'
+FST: [{**r}]
+AST: [{**r}]
+ 
+ 
+one=True, coerce=False  (mode='pattern')
+----------------------------------------
+ 
+src: [x]  # src='x'
+FST: [x]
+AST: [x]
+ 
+src: [*x]  # src='*x'
+FST: [*x]
+AST: [*x]
+ 
+src: [[x,]]  # src='x,'
+FST: [[x,]]
+AST: [[x]]
+ 
+src: [[*x,]]  # src='*x,'
+FST: [[*x,]]
+AST: [[*x]]
+ 
+src: [(x,)]  # src='(x,)'
+FST: [(x,)]
+AST: [[x]]
+ 
+src: [[x]]  # src='[x]'
 FST: [[x]]
 AST: [[x]]
  
-src: **SyntaxError**  # src='{x: y}'
-FST: **NodeError('expecting pattern, got Dict, could not coerce')**
-AST: **NodeError('expecting pattern, got Dict, could not coerce')**
+src: [{9: y}]  # src='{9: y}'
+FST: [{9: y}]
+AST: [{9: y}]
  
-src: [[x, y]]  # src='x, y'
-FST: [[x, y]]
-AST: [[x, y]]
+src: [{**r}]  # src='{**r}'
+FST: [{**r}]
+AST: [{**r}]
+
+
+........................................................................................................................
+>>> test_target_srcs('[a, b, c]', 'patterns', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{9: y}', '{**r}'], mode='pattern', target_mode='MatchSequence')
  
-src: **SyntaxError**  # src='x = y ='
-FST: [[x, y]]
-AST: [[x, y]]
- 
-src: **SyntaxError**  # src='@x\n@y'
-FST: [[x,
- y]]
-AST: [[x, y]]
- 
-src: **SyntaxError**  # src='if x if y'
-FST: [[x, y]]
-AST: [[x, y]]
- 
- 
-one=True, coerce=False  (mode=None)
------------------------------------
+one=False, coerce=True  (mode='pattern')
+----------------------------------------
  
 src: [x]  # src='x'
-FST: **NodeError('expecting pattern, got Name, coerce disabled')**
-AST: **NodeError('expecting pattern, got Name, coerce disabled')**
+FST: [x]
+AST: [x]
  
 src: [*x]  # src='*x'
-FST: **NodeError('expecting pattern, got Starred, coerce disabled')**
-AST: **NodeError('expecting pattern, got Starred, coerce disabled')**
+FST: [*x]
+AST: [*x]
  
-src: [[x,]]  # src='x,'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+src: [x]  # src='x,'
+FST: [x]
+AST: [x]
  
-src: [[*x,]]  # src='*x,'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+src: [*x]  # src='*x,'
+FST: [*x]
+AST: [*x]
  
 src: [(x,)]  # src='(x,)'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+FST: [x]
+AST: [x]
  
 src: [[x]]  # src='[x]'
-FST: **NodeError('expecting pattern, got List, coerce disabled')**
-AST: **NodeError('expecting pattern, got List, coerce disabled')**
+FST: [x]
+AST: [x]
  
-src: **SyntaxError**  # src='{x}'
-FST: **NodeError('expecting pattern, got Set, coerce disabled')**
-AST: **NodeError('expecting pattern, got Set, coerce disabled')**
+src: [{9: y}]  # src='{9: y}'
+FST: [{9: y}]
+AST: [{9: y}]
  
-src: **SyntaxError**  # src='{x: y}'
-FST: **NodeError('expecting pattern, got Dict, coerce disabled')**
-AST: **NodeError('expecting pattern, got Dict, coerce disabled')**
+src: [{**r}]  # src='{**r}'
+FST: [{**r}]
+AST: [{**r}]
  
-src: [[x, y]]  # src='x, y'
-FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
-AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: **SyntaxError**  # src='x = y ='
-FST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
-AST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
+one=False, coerce=False  (mode='pattern')
+-----------------------------------------
  
-src: **SyntaxError**  # src='@x\n@y'
-FST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
-AST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
+src: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='x'
+FST: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchAs as slice to MatchSequence without 'one=True' or 'coerce=True'")**
  
-src: **SyntaxError**  # src='if x if y'
-FST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
-AST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
+src: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='*x'
+FST: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchStar as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+src: [x]  # src='x,'
+FST: [x]
+AST: [x]
+ 
+src: [*x]  # src='*x,'
+FST: [*x]
+AST: [*x]
+ 
+src: [(x,)]  # src='(x,)'
+FST: [x]
+AST: [x]
+ 
+src: [[x]]  # src='[x]'
+FST: [x]
+AST: [x]
+ 
+src: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='{9: y}'
+FST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+src: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**  # src='{**r}'
+FST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+AST: **ValueError("cannot put MatchMapping as slice to MatchSequence without 'one=True' or 'coerce=True'")**
+ 
+ 
+one=True, coerce=True  (mode='pattern')
+---------------------------------------
+ 
+src: [x]  # src='x'
+FST: [x]
+AST: [x]
+ 
+src: [*x]  # src='*x'
+FST: [*x]
+AST: [*x]
+ 
+src: [[x,]]  # src='x,'
+FST: [[x,]]
+AST: [[x]]
+ 
+src: [[*x,]]  # src='*x,'
+FST: [[*x,]]
+AST: [[*x]]
+ 
+src: [(x,)]  # src='(x,)'
+FST: [(x,)]
+AST: [[x]]
+ 
+src: [[x]]  # src='[x]'
+FST: [[x]]
+AST: [[x]]
+ 
+src: [{9: y}]  # src='{9: y}'
+FST: [{9: y}]
+AST: [{9: y}]
+ 
+src: [{**r}]  # src='{**r}'
+FST: [{**r}]
+AST: [{**r}]
+ 
+ 
+one=True, coerce=False  (mode='pattern')
+----------------------------------------
+ 
+src: [x]  # src='x'
+FST: [x]
+AST: [x]
+ 
+src: [*x]  # src='*x'
+FST: [*x]
+AST: [*x]
+ 
+src: [[x,]]  # src='x,'
+FST: [[x,]]
+AST: [[x]]
+ 
+src: [[*x,]]  # src='*x,'
+FST: [[*x,]]
+AST: [[*x]]
+ 
+src: [(x,)]  # src='(x,)'
+FST: [(x,)]
+AST: [[x]]
+ 
+src: [[x]]  # src='[x]'
+FST: [[x]]
+AST: [[x]]
+ 
+src: [{9: y}]  # src='{9: y}'
+FST: [{9: y}]
+AST: [{9: y}]
+ 
+src: [{**r}]  # src='{**r}'
+FST: [{**r}]
+AST: [{**r}]
+
+
+........................................................................................................................
+>>> test_target_srcs('[a, b, c]', 'patterns', ['x,', '(x,)', '[x]'], mode='pattern', target_mode='MatchSequence', one_None=True)
+ 
+one=None, coerce=True  (mode='pattern')
+---------------------------------------
+ 
+src: [x]  # src='x,'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='(x,)'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='[x]'
+FST: [x]
+AST: [x]
+ 
+ 
+one=None, coerce=False  (mode='pattern')
+----------------------------------------
+ 
+src: [x]  # src='x,'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='(x,)'
+FST: [x]
+AST: [x]
+ 
+src: [x]  # src='[x]'
+FST: [x]
+AST: [x]
 
 
 

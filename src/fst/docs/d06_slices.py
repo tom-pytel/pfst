@@ -45,13 +45,13 @@ This same type is used to put back to the node.
 For the three types of sequences, `Tuple`, `List` and `Set`, they will all accept any of the other sequences for a slice
 put.
 
->>> print(FST('[1, 2, 3]').put_slice('(4, 5)', 1, 2).src)
+>>> print(FST('[1, 2, 3]').put_slice(FST('(4, 5)'), 1, 2).src)
 [1, 4, 5, 3]
 
->>> print(FST('{1, 2, 3}').put_slice('[4, 5]', 1, 2).src)
+>>> print(FST('{1, 2, 3}').put_slice(FST('[4, 5]'), 1, 2).src)
 {1, 4, 5, 3}
 
->>> print(FST('(1, 2, 3)').put_slice('{4, 5}', 1, 2).src)
+>>> print(FST('(1, 2, 3)').put_slice(FST('{4, 5}'), 1, 2).src)
 (1, 4, 5, 3)
 
 But return their own type on a get.
@@ -88,7 +88,7 @@ These will also generally accept any of the three sequence types for a slice put
 
 >>> parent = FST('del a, b, c')
 
->>> parent.put_slice('[x, y]', 1, 2)
+>>> parent.put_slice('x, y', 1, 2)
 <Delete ROOT 0,0..0,14>
 
 >>> print(parent.src)
@@ -96,7 +96,7 @@ del a, x, y, c
 
 >>> parent = FST('nonlocal a, b, c')
 
->>> parent.put_slice('{x, y}', 1, 2)
+>>> parent.put_slice('x, y', 1, 2)
 <Nonlocal ROOT 0,0..0,19>
 
 >>> print(parent.src)
@@ -432,7 +432,7 @@ to a slice put and will result in nothing being put. However, there is no "denor
 If you get a normalized empty set as `{*()}` and you put this as a sequence, the `*()` element will be put just like any
 other element.
 
->>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1, norm=True).src)
+>>> print(FST('[a, b, c]').put_slice('*()', 1, 1, norm=True).src)
 [a, *(), b, c]
 
 To finish off the `Set` normalization, there is an option `set_norm` which may be `'star'`, `'call'` or `False`. This
@@ -492,7 +492,7 @@ Name 'a' Load - ROOT 0,0..0,1
 When putting a slice, the node being put is normally considered to be a slice of the type needed to put to the target
 and the elements specified from `start` to `stop` will be replaced with the elements of the slice. For example:
 
->>> print(FST('[a, b, c]').put_slice('[x, y]', 1, 2).src)
+>>> print(FST('[a, b, c]').put_slice('x, y', 1, 2).src)
 [a, x, y, c]
 
 In this case the elements `x, y` replaced the element `b` in the target. If instead of replacing with the elements of

@@ -8004,7 +8004,9 @@ class cls:
         self.assertEqual(3, v.stop)
 
         self.assertEqual('[x, z]', v.copy().src)
-        self.assertEqual('[a, b]', v.replace('[a, b]', one=False).copy().src)
+        self.assertEqual('[[a, b]]', v.replace('[a, b]', one=False).copy().src)
+        self.assertEqual('[a, b]', v.replace('[a, b]', one=None).copy().src)
+        self.assertEqual('[a, b]', v.replace('a, b', one=False).copy().src)
         self.assertEqual(3, v.stop)
         self.assertEqual('[[c, d]]', v.replace('[c, d]').copy().src)
         self.assertEqual(2, v.stop)
@@ -9256,7 +9258,8 @@ if 1:
         self.assertEqual('<<Dict ROOT 0,0..0,6>.keys [<Name 0,1..0,2>]>', str(f.keys))
         self.assertEqual('<<Dict ROOT 0,0..0,6>.values [<Name 0,4..0,5>]>', str(f.values))
 
-        self.assertEqual('{a, b, c}', test(FST('{x, y}'), 'elts', '{a, b, c}', fstview, '{x, y}').src)
+        self.assertEqual('{{a, b, c}}', test(FST('{x, y}'), 'elts', '{a, b, c}', fstview, '{x, y}').src)
+        self.assertEqual('{a, b, c}', test(FST('{x, y}'), 'elts', 'a, b, c', fstview, '{x, y}').src)
 
         f = FST('[i for i in j if i]')
         self.assertEqual('[new for i in j if i]', test(f, 'elt', 'new', FST, 'i').src)
@@ -9319,11 +9322,15 @@ if 1:
         self.assertIsInstance(f.ctx.a, Load)
 
         f = FST('[a, b]')
-        self.assertEqual('[x, y, z]', test(f, 'elts', '[x, y, z]', fstview, '[a, b]').src)
+        self.assertEqual('[[x, y, z]]', test(f, 'elts', '[x, y, z]', fstview, '[a, b]').src)
+        self.assertIsInstance(f.ctx.a, Load)
+        self.assertEqual('[x, y, z]', test(f, 'elts', 'x, y, z', fstview, '[[x, y, z]]').src)
         self.assertIsInstance(f.ctx.a, Load)
 
         f = FST('(a, b)')
-        self.assertEqual('(x, y, z)', test(f, 'elts', '(x, y, z)', fstview, '(a, b)').src)
+        self.assertEqual('((x, y, z),)', test(f, 'elts', '(x, y, z)', fstview, '(a, b)').src)
+        self.assertIsInstance(f.ctx.a, Load)
+        self.assertEqual('(x, y, z)', test(f, 'elts', 'x, y, z', fstview, '((x, y, z),)').src)
         self.assertIsInstance(f.ctx.a, Load)
 
         f = FST('a:b:c')

@@ -174,7 +174,7 @@ element, not as a slice. You can specify slice operation via the `one` parameter
 >>> print(f.src)
 [1, [a, b, c]]
 
->>> f.put('[a, b, c]', 1, 'end', one=False)
+>>> f.put('a, b, c', 1, 'end', one=False)
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)
@@ -203,7 +203,7 @@ possibly at the start, end or between other elements (`fst.fst.FST.put_slice()`)
 
 >>> f = FST('[1, c]')
 
->>> f.put('[x]', 1, 1, one=False)
+>>> f.put('x', 1, 1, one=False)
 <List ROOT 0,0..0,9>
 
 >>> print(f.src)
@@ -211,7 +211,7 @@ possibly at the start, end or between other elements (`fst.fst.FST.put_slice()`)
 
 `put_slice()` doesn't need `one=False` as that is the default there.
 
->>> f.put_slice('[y]', 2, 2)
+>>> f.put_slice('y', 2, 2)
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)
@@ -219,7 +219,7 @@ possibly at the start, end or between other elements (`fst.fst.FST.put_slice()`)
 
 The special `'end'` index allows you to put at the end without knowing how long the field is.
 
->>> f.put_slice('[4,5,6]', 'end')
+>>> f.put_slice('4,5,6', 'end')
 <List ROOT 0,0..0,19>
 
 >>> print(f.src)
@@ -249,7 +249,7 @@ You can use `'end'` with `put()` or `put_slice()` to append or extend to a list 
 >>> print(FST('[1, 2]').put('x', 'end').src)
 [1, 2, x]
 
->>> print(FST('[1, 2]').put_slice('[x, y]', 'end').src)
+>>> print(FST('[1, 2]').put_slice('x, y', 'end').src)
 [1, 2, x, y]
 
 `put()` and `put_slice()` return the object on which they were called (the parent of the put) for the same reason that
@@ -328,10 +328,10 @@ Insert is the only one which takes an index and optional `one` field to specify 
 
 Or you can insert as a slice:
 
->>> print(FST('[1, 2, 3]').insert('[x, y]', 1, one=False).src)
+>>> print(FST('[1, 2, 3]').insert('x, y', 1, one=False).src)
 [1, x, y, 2, 3]
 
->>> print(FST('[1, 2, 3]').put_slice('[x, y]', 1, 1).src)
+>>> print(FST('[1, 2, 3]').put_slice('x, y', 1, 1).src)
 [1, x, y, 2, 3]
 
 `append()` works just like the Python version.
@@ -344,10 +344,10 @@ Or you can insert as a slice:
 
 Likewise `extend()`.
 
->>> print(FST('[1, 2, 3]').extend('[x, y]').src)
+>>> print(FST('[1, 2, 3]').extend('x, y').src)
 [1, 2, 3, x, y]
 
->>> print(FST('[1, 2, 3]').put_slice('[x, y]', 'end').src)
+>>> print(FST('[1, 2, 3]').put_slice('x, y', 'end').src)
 [1, 2, 3, x, y]
 
 `prepend()` is just `append()` at the beginning.
@@ -360,10 +360,10 @@ Likewise `extend()`.
 
 And `prextend()` is the same for `extend()`.
 
->>> print(FST('[1, 2, 3]').prextend('[x, y]').src)
+>>> print(FST('[1, 2, 3]').prextend('x, y').src)
 [x, y, 1, 2, 3]
 
->>> print(FST('[1, 2, 3]').put_slice('[x, y]', 0, 0).src)
+>>> print(FST('[1, 2, 3]').put_slice('x, y', 0, 0).src)
 [x, y, 1, 2, 3]
 
 If you specify a field to any of these operations, it is the same as specifying a field to `put_slice()` and the

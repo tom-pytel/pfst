@@ -1513,10 +1513,16 @@ def func():
         self.assertEqual('[]', f.get_slice('end', 'end').src)
 
     def test_put_slice_param_matrix(self):
-        self.assertEqual('[a, x, c]', FST('[a, b, c]').put_slice('[x]', 1, 2).src)
+        self.assertEqual('[a, x, c]', FST('[a, b, c]').put_slice('x', 1, 2).src)
+        self.assertEqual('[a, [x], c]', FST('[a, b, c]').put_slice('[x]', 1, 2).src)
+        self.assertEqual('[a, x, c]', FST('[a, b, c]').put_slice('[x]', 1, 2, one=None).src)
         self.assertRaises(IndexError, FST('[a, b, c]').put_slice,'[x]', 'end', 2)
-        self.assertEqual('[a, x]', FST('[a, b, c]').put_slice('[x]', 1, 'end').src)
-        self.assertEqual('[a, b, c, x]', FST('[a, b, c]').put_slice('[x]', 'end', 'end').src)
+        self.assertEqual('[a, x]', FST('[a, b, c]').put_slice('x', 1, 'end').src)
+        self.assertEqual('[a, [x]]', FST('[a, b, c]').put_slice('[x]', 1, 'end').src)
+        self.assertEqual('[a, x]', FST('[a, b, c]').put_slice('[x]', 1, 'end', one=None).src)
+        self.assertEqual('[a, b, c, x]', FST('[a, b, c]').put_slice('x', 'end', 'end').src)
+        self.assertEqual('[a, b, c, [x]]', FST('[a, b, c]').put_slice('[x]', 'end', 'end').src)
+        self.assertEqual('[a, b, c, x]', FST('[a, b, c]').put_slice('[x]', 'end', 'end', one=None).src)
 
         self.assertEqual('[a, [x], c]', FST('[a, b, c]').put_slice('[x]', 1, 2, one=True).src)
         self.assertRaises(IndexError, FST('[a, b, c]').put_slice,'[x]', 'end', 2, one=True)
@@ -1537,11 +1543,21 @@ def func():
         self.assertEqual('[x, y]', f.elts[1].replace('[x, y]').src)
         self.assertEqual('[a, [x, y], c]', f.src)
         f.verify()
-        self.assertEqual('x', f.elts[1].replace('[x, y]', one=False).src)
+        self.assertEqual('[x, y]', f.elts[1].replace('[x, y]', one=False).src)
+        self.assertEqual('[a, [x, y], c]', f.src)
+        f.verify()
+        self.assertEqual('(x, y)', f.elts[1].replace('x, y').src)
+        self.assertEqual('[a, (x, y), c]', f.src)
+        f.verify()
+        self.assertEqual('x', f.elts[1].replace('x, y', one=False).src)
         self.assertEqual('[a, x, y, c]', f.src)
         f.verify()
         self.assertIsNone(f.elts[1].replace(None, one=False))
         self.assertEqual('[a, y, c]', f.src)
+        f.verify()
+        self.assertEqual('x', f.elts[1].replace('[x, y]', one=None).src)
+        self.assertEqual('[a, x, y, c]', f.src)
+        f.verify()
 
     def test_slice_coverage(self):
         # misc stuff to fill out test coverage
@@ -2341,16 +2357,26 @@ if 1:
         if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
             f.values[0].value.put_slice("()")
+            self.assertEqual('((),)', f.values[0].value.src)
+            self.assertEqual('((),)', f.values[0].str)
+            f.values[0].value.put_slice("()", one=None)
+            self.assertEqual('()', f.values[0].value.src)
+            self.assertEqual('()', f.values[0].str)
+            f.values[0].value.put_slice(None)
             self.assertEqual('()', f.values[0].value.src)
             self.assertEqual('()', f.values[0].str)
 
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
             f.values[0].value.put("()", None, None, one=False)
-            self.assertEqual('()', f.values[0].value.src)
-            self.assertEqual('()', f.values[0].str)
+            self.assertEqual('((),)', f.values[0].value.src)
+            self.assertEqual('((),)', f.values[0].str)
 
         f = FST('a, b = c')
-        f.targets[0].put_slice('{z}', 1, 2)
+        # f.targets[0].put_slice('{z}', 1, 2)
+        self.assertRaises(NodeError, f.targets[0].put_slice, '{z}', 1, 2)
+        f.targets[0].put_slice('{z}', 1, 2, one=None)
+        self.assertEqual('a, z = c', f.src)
+        f.targets[0].put_slice('z', 1, 2)
         self.assertEqual('a, z = c', f.src)
         f.verify()
 
@@ -2546,11 +2572,15 @@ if 1:
 
         self.assertRaises(NodeError, FST('del a, b, c').put, '*(),', 1, 2)
         self.assertRaises(NodeError, FST('del a, b, c').put, '*()', 1, 2)
+        self.assertRaises(NodeError, FST('del a, b, c').put_slice, '{x, y}', 1, 2)
 
-        self.assertEqual('del a, x, y, c', (f := FST('del a, b, c')).put_slice('{x, y}', 1, 2).src)
+        self.assertEqual('del a, x, y, c', (f := FST('del a, b, c')).put_slice('{x, y}', 1, 2, one=None).src)
         f.verify()
 
-        self.assertEqual('del a, x, y, c', (f := FST('del a, b, c')).put_slice('[x, y]', 1, 2).src)
+        self.assertEqual('del a, [x, y], c', (f := FST('del a, b, c')).put_slice('[x, y]', 1, 2).src)
+        f.verify()
+
+        self.assertEqual('del a, x, y, c', (f := FST('del a, b, c')).put_slice('x, y', 1, 2).src)
         f.verify()
 
         self.assertEqual('del b', (f := FST('del(a)')).put_slice('b', 0, 1).src)
@@ -2610,44 +2640,85 @@ if 1:
         # more unparenthesized tuple schenanigans
 
         f = FST('a[:, b]')
-        f.slice.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        f.slice.put_slice('\n"foo"\n', 1, 2, 'elts')
         self.assertEqual('a[:,\n  "foo"\n]', f.src)
 
+        f = FST('a[:, b]')
+        f.slice.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        self.assertEqual('a[:, [\n  "foo"\n  ]]', f.src)
+
         f = FST('a = b, c')
-        f.value.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        f.value.put_slice('\n"foo"\n', 1, 2, 'elts')
         self.assertEqual('a = (b,\n    "foo"\n)', f.src)
 
         f = FST('a = b, c')
-        f.value.put_slice('["foo"   ]', 1, 2, 'elts')
+        f.value.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        self.assertEqual('a = b, [\n    "foo"\n    ]', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('"foo"   ', 1, 2, 'elts')
         self.assertEqual('a = b, "foo"', f.src)
 
+        f = FST('a = b, c')
+        f.value.put_slice('["foo"   ]', 1, 2, 'elts')
+        self.assertEqual('a = b, ["foo"   ]', f.src)
+
         f = FST('for a, b in c: pass')
-        f.target.put_slice('[\nz\n]', 1, 2, 'elts')
+        f.target.put_slice('\nz\n', 1, 2, 'elts')
         self.assertEqual('for (a,\n    z\n) in c: pass', f.src)
 
         f = FST('for a, b in c: pass')
-        f.target.put_slice('[z   ]', 1, 2, 'elts')
+        f.target.put_slice('[\nz\n]', 1, 2, 'elts')
+        self.assertEqual('for a, [\n    z\n    ] in c: pass', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('z   ', 1, 2, 'elts')
         self.assertEqual('for a, z in c: pass', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[z   ]', 1, 2, 'elts')
+        self.assertEqual('for a, [z   ] in c: pass', f.src)
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('"foo"\\\n', 1, 2, 'elts')
+        self.assertEqual('a[:, "foo"\\\n]', f.src)
 
         f = FST('a[:, b]')
         f.slice.put_slice('["foo"\\\n]', 1, 2, 'elts')
-        self.assertEqual('a[:, "foo"\\\n]', f.src)
+        self.assertEqual('a[:, ["foo"\\\n  ]]', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('"foo"\\\n', 1, 2, 'elts')
+        self.assertEqual('a = b, "foo"', f.src)
 
         f = FST('a = b, c')
         f.value.put_slice('["foo"\\\n]', 1, 2, 'elts')
-        self.assertEqual('a = b, "foo"', f.src)
+        self.assertEqual('a = b, ["foo"\\\n    ]', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('z\\\n', 1, 2, 'elts')
+        self.assertEqual('for a, z\\\n in c: pass', f.src)
 
         f = FST('for a, b in c: pass')
         f.target.put_slice('[z\\\n]', 1, 2, 'elts')
-        self.assertEqual('for a, z\\\n in c: pass', f.src)
+        self.assertEqual('for a, [z\\\n    ] in c: pass', f.src)
+
+        f = FST('a,')
+        f.put_slice(' {z} ', 0, 1)
+        self.assertEqual('{z},', f.src)
 
         f = FST('a,')
         f.put_slice('[ {z} ]', 0, 1)
+        self.assertEqual('[ {z} ],', f.src)
+
+
+        f = FST('a,')
+        f.put_slice(' {z} ', 0, 1)
         self.assertEqual('{z},', f.src)
 
         f = FST('a[:, b]')
         f.slice.put_slice('[ {z} ]', 0, 1)
-        self.assertEqual('a[{z}, b]', f.src)
+        self.assertEqual('a[[ {z} ], b]', f.src)
 
         # make sure indent preserved on ins pep8space to semicoloned stmts
 
@@ -2720,42 +2791,50 @@ class cls:
 
         a = parse('1, \\\n2, \\\n3')
         a.body[0].value.f.put_slice('(a, \\\n)', 0, 0)
+        self.assertEqual(a.f.src, '(a, \\\n), 1, \\\n2, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 0, one=None)
         self.assertEqual(a.f.src, 'a, \\\n1, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 1, 1)
+        a.body[0].value.f.put_slice('a, \\\n', 0, 0)
+        self.assertEqual(a.f.src, 'a, \\\n1, \\\n2, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('a, \\\n', 1, 1)
         self.assertEqual(a.f.src, '1, \\\na, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 2, 2)
+        a.body[0].value.f.put_slice('a, \\\n', 2, 2)
         self.assertEqual(a.f.src, '1, \\\n2, \\\na, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 3, 3)
+        a.body[0].value.f.put_slice('a, \\\n', 3, 3)
         self.assertEqual(a.f.src, '1, \\\n2, \\\n3, a,')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 0, 1)
+        a.body[0].value.f.put_slice('a, \\\n', 0, 1)
         self.assertEqual(a.f.src, 'a, \\\n2, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 1, 2)
+        a.body[0].value.f.put_slice('a, \\\n', 1, 2)
         self.assertEqual(a.f.src, '1, \\\na, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 2, 3)
+        a.body[0].value.f.put_slice('a, \\\n', 2, 3)
         self.assertEqual(a.f.src, '1, \\\n2, \\\na,')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 0, 2)
+        a.body[0].value.f.put_slice('a, \\\n', 0, 2)
         self.assertEqual(a.f.src, 'a, \\\n3')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 1, 3)
+        a.body[0].value.f.put_slice('a, \\\n', 1, 3)
         self.assertEqual(a.f.src, '1, \\\na,')
 
         a = parse('1, \\\n2, \\\n3')
-        a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
+        a.body[0].value.f.put_slice('a, \\\n', 0, 3)
         self.assertEqual(a.f.src, 'a,')
 
     def test_line_continuation_issue_at_top_level(self):
@@ -3714,27 +3793,33 @@ i ; \\
 
             # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm='star')
             self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, norm='star').src)
-            self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, norm='star').src)
+            self.assertEqual('[{*()}]', FST('[1, 2]').put_slice('{*()}', raw=False, norm='star').src)
+            self.assertEqual('[*()]', FST('[1, 2]').put_slice('*()', raw=False, norm='star').src)
+            self.assertEqual('[*()]', FST('[1, 2]').put_slice('*(),', raw=False, norm='star').src)
 
             self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, norm='call').src)
-            self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, norm='call').src)
+            self.assertEqual('[{*()}]', FST('[1, 2]').put_slice('{*()}', raw=False, norm='call').src)
+            self.assertEqual('[*()]', FST('[1, 2]').put_slice('*()', raw=False, norm='call').src)
+            self.assertEqual('[*()]', FST('[1, 2]').put_slice('*(),', raw=False, norm='call').src)
 
             # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm=False)
             self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, norm=False).src)
-            self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, norm=False).src)
+            self.assertEqual('[{*()}]', FST('[1, 2]').put_slice('{*()}', raw=False, norm=False).src)
+            self.assertEqual('[*()]', FST('[1, 2]').put_slice('*()', raw=False, norm=False).src)
+            self.assertEqual('[*()]', FST('[1, 2]').put_slice('*(),', raw=False, norm=False).src)
 
             # using set_norm=
 
             # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_norm='star')
-            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm='star').src)
-            self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm='star').src)
+            # self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm='star').src)
+            # self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm='star').src)
 
-            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm='call').src)
-            self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm='call').src)
+            # self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm='call').src)
+            # self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm='call').src)
 
             # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_norm=False)
-            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm=False).src)
-            self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm=False).src)
+            # self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm=False).src)
+            # self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm=False).src)
 
             # delete
 
@@ -3817,25 +3902,25 @@ i ; \\
             f = parse('{*()}').body[0].value.f
             self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
             self.assertEqual('{*()}', f.src)
-            self.assertEqual('{*(), *()}', f.put_slice('{*()}', 0, 0).src)
+            self.assertEqual('{{*()}, *()}', f.put_slice('{*()}', 0, 0).src)
             f.root.verify()
 
             f = parse('{*[]}').body[0].value.f
             self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
             self.assertEqual('{*[]}', f.src)
-            self.assertEqual('{*(), *[]}', f.put_slice('{*()}', 0, 0).src)
+            self.assertEqual('{{*()}, *[]}', f.put_slice('{*()}', 0, 0).src)
             f.root.verify()
 
             f = parse('{*{}}').body[0].value.f
             self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
             self.assertEqual('{*{}}', f.src)
-            self.assertEqual('{*(), *{}}', f.put_slice('{*()}', 0, 0).src)
+            self.assertEqual('{{*()}, *{}}', f.put_slice('{*()}', 0, 0).src)
             f.root.verify()
 
             f = parse('{ * ( ) }').body[0].value.f
             self.assertEqual('{*()}', f.get_slice(0, 0, cut=True).src)
             self.assertEqual('{ * ( ) }', f.src)
-            self.assertEqual('{ *(), * ( ) }', f.put_slice('{*()}', 0, 0).src)
+            self.assertEqual('{ {*()}, * ( ) }', f.put_slice('{*()}', 0, 0).src)
             f.root.verify()
 
     def test_slice_matchor_empty_or_len1(self):
@@ -4109,7 +4194,11 @@ a | (
         self.assertEqual('a, (\n# pre\nc, # line\n# post\n), b', (f := FST('a, b').put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
         f.verify()
 
-        self.assertEqual('(a, c, # line\nb)', (f := FST('a, b').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        self.assertEqual('(a, c, # line\nb)', (f := FST('a, b').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=None)).src)
+        f.verify()
+        self.assertEqual('(a,\n# pre\n[c, # line\n], # post\nb)', (f := FST('a, b').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('(a,\n# pre\nc, # line\n# post\nb)', (f := FST('a, b').put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
         f.verify()
         self.assertEqual('(a,\n# pre\n[c, # line\n], # post\nb)', (f := FST('a, b').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
         f.verify()
@@ -4135,7 +4224,11 @@ a | (
         self.assertEqual('[a, (\n # pre\n c, # line\n # post\n ), b]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
         f.verify()
 
-        self.assertEqual('[a, c, # line\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        self.assertEqual('[a, c, # line\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=None)).src)
+        f.verify()
+        self.assertEqual('[a,\n # pre\n [c, # line\n ], # post\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[a,\n # pre\n c, # line\n # post\n b]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
         f.verify()
         self.assertEqual('[a,\n # pre\n [c, # line\n ], # post\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
         f.verify()
@@ -4170,7 +4263,11 @@ a | (
         self.assertEqual('a, [\n# pre\nc, # line\n# post\n], b', (f := FST('a, b', pattern).put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
         f.verify()
 
-        self.assertEqual('[a, c, # line\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        self.assertEqual('[a, c, # line\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=None)).src)
+        f.verify()
+        self.assertEqual('[a,\n# pre\n[c, # line\n], # post\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[a,\n# pre\nc, # line\n# post\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
         f.verify()
         self.assertEqual('[a,\n# pre\n[c, # line\n], # post\nb]', (f := FST('a, b', pattern).put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
         f.verify()

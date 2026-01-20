@@ -8,7 +8,7 @@
 - don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
 - fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
 - fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
-- delimit whole node at root when degenerate last line has line continuation without trailing newline
+- fixed delimit of whole node at root when degenerate last line has line continuation without trailing newline
 - `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
 - fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized
 
@@ -27,14 +27,16 @@
 
 ### Updated
 
+- **BREAKING CHANGE** for consistency
+  - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked
+  - previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
 - parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
 - improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
 - REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
 - allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability
 - `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
-- concretized behavior of put slice with `one=True` for custom special slices, will not allow put multiple elements now in this mode
+- concretized behavior of put slice with `one=True` for custom special slices, will not put multiple elements now in this mode when one requested
 - `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
-- `FST.fromast()` allows coerce of passed `ast` to any other type to which the `ast` source can compile, e.g. `Assign` to `keyword`
 
 ## 0.2.5 - alpha - 2026-01-06
 

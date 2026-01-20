@@ -1771,17 +1771,26 @@ class FST:
         >>> (f := FST('[0, 1, 2, 3]'))[1] = '4'; f.src
         '[0, 4, 2, 3]'
 
-        >>> (f := FST('[0, 1, 2, 3]'))[:3] = '[5]'; f.src
+        >>> (f := FST('[0, 1, 2, 3]'))[:3] = '5'; f.src
         '[5, 3]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[:3] = '[5]'; f.src
+        '[[5], 3]'
 
         >>> (f := FST('[0, 1, 2, 3]'))[:3] = '5,'; f.src
         '[5, 3]'
 
-        >>> (f := FST('[0, 1, 2, 3]'))[-3:] = '[6]'; f.src
+        >>> (f := FST('[0, 1, 2, 3]'))[-3:] = '6'; f.src
         '[0, 6]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[-3:] = '[6]'; f.src
+        '[0, [6]]'
 
         >>> (f := FST('[0, 1, 2, 3]'))[:] = '7, 8'; f.src
         '[7, 8]'
+
+        >>> (f := FST('[0, 1, 2, 3]'))[:] = '[7, 8]'; f.src
+        '[[7, 8]]'
 
         >>> f = FST('[0, 1, 2, 3]')
         >>> f[2:2] = f[1:3].copy()
@@ -2182,7 +2191,7 @@ class FST:
 
         raise ValueError('cannot cut root node')
 
-    def replace(self, code: Code | None, one: bool=True, **options) -> FST | None:  # -> replaced self or None if deleted
+    def replace(self, code: Code | None, one: bool | None = True, **options) -> FST | None:  # -> replaced self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
         **CAN** replace root node, in which case `self` remains the same but the top-level `AST` and source change.
@@ -2229,7 +2238,7 @@ class FST:
             if idx is None:
                 raise ValueError(f"cannot replace {parent.a.__class__.__name__}.{field} with slice")
 
-            parent = parent._put_slice(code, idx, idx + 1, field, False, options)
+            parent = parent._put_slice(code, idx, idx + 1, field, None if one is None else False, options)
 
             if code is None or not parent:
                 return None
@@ -2278,7 +2287,7 @@ class FST:
         idx: int | Literal['end'] = 0,
         field: builtins.str | None = None,
         *,
-        one: bool = True,
+        one: bool | None = True,
         **options
     ) -> FST:  # -> self or None if deleted due to raw reparse
         """Insert into `field` of `self` at a specific index. Default field if `field=None`. This is a convenience
@@ -2304,15 +2313,24 @@ class FST:
 
         >>> from fst import FST
 
+        >>> FST('[0, 1, 2, 3]').insert('4, 5', 1).src
+        '[0, (4, 5), 1, 2, 3]'
+
         >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 1).src
         '[0, (4, 5), 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 'end', one=False).src
+        >>> FST('[0, 1, 2, 3]').insert('4, 5', 'end', one=False).src
         '[0, 1, 2, 3, 4, 5]'
 
+        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 'end', one=False).src
+        '[0, 1, 2, 3, (4, 5)]'
+
         >>> # same as 'end' but 'end' is always 'end'
-        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 4, one=False).src
+        >>> FST('[0, 1, 2, 3]').insert('4, 5', 4, one=False).src
         '[0, 1, 2, 3, 4, 5]'
+
+        >>> FST('[0, 1, 2, 3]').insert('(4, 5)', 4, one=False).src
+        '[0, 1, 2, 3, (4, 5)]'
 
         >>> FST('[0, 1, 2, 3]')[1:3].insert('*star').base.src
         '[0, *star, 1, 2, 3]'
@@ -2356,7 +2374,9 @@ class FST:
 
         return self._put_slice(code, 'end', 'end', field, True, options)
 
-    def extend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
+    def extend(
+        self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options
+    ) -> FST:  # -> self or None if deleted due to raw reparse
         """Extend `field` of `self` with the slice in `code` (type must be compatible). Default field if `field=None`.
         This is a convenience function for `self.put_slice()`.
 
@@ -2374,18 +2394,24 @@ class FST:
 
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').extend('(4, 5)').src
+        >>> FST('[0, 1, 2, 3]').extend('4, 5').src
         '[0, 1, 2, 3, 4, 5]'
 
-        >>> FST('[0, 1, 2, 3]')[1:3].extend('(4, 5)').base.src
+        >>> FST('[0, 1, 2, 3]').extend('(4, 5)').src
+        '[0, 1, 2, 3, (4, 5)]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].extend('4, 5').base.src
         '[0, 1, 2, 4, 5, 3]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].extend('(4, 5)').base.src
+        '[0, 1, 2, (4, 5), 3]'
         """
 
         check_options(options)
 
         field, _ = fixup_field_body(self.a, field, True)
 
-        return self._put_slice(code, 'end', 'end', field, False, options)
+        return self._put_slice(code, 'end', 'end', field, None if one is None else False, options)
 
     def prepend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
         """prepend `code` as a single element to the beginning of `field` of `self`. Default field if `field=None`. This
@@ -2417,7 +2443,9 @@ class FST:
 
         return self._put_slice(code, 0, 0, field, True, options)
 
-    def prextend(self, code: Code, field: builtins.str | None = None, **options) -> fstview:  # -> self or None if deleted due to raw reparse
+    def prextend(
+        self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options
+    ) -> fstview:  # -> self or None if deleted due to raw reparse
         """Extend the beginning of the `field` of `self` with the slice in `code` (type must be compatible). Default
         field if `field=None`. This is a convenience function for `self.put_slice()`.
 
@@ -2435,18 +2463,24 @@ class FST:
 
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').prextend('(4, 5)').src
+        >>> FST('[0, 1, 2, 3]').prextend('4, 5').src
         '[4, 5, 0, 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]')[1:3].prextend('(4, 5)').base.src
+        >>> FST('[0, 1, 2, 3]').prextend('(4, 5)').src
+        '[(4, 5), 0, 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].prextend('4, 5').base.src
         '[0, 4, 5, 1, 2, 3]'
+
+        >>> FST('[0, 1, 2, 3]')[1:3].prextend('(4, 5)').base.src
+        '[0, (4, 5), 1, 2, 3]'
         """
 
         check_options(options)
 
         field, _ = fixup_field_body(self.a, field, True)
 
-        return self._put_slice(code, 0, 0, field, False, options)
+        return self._put_slice(code, 0, 0, field, None if one is None else False, options)
 
     def get(
         self,
@@ -2550,7 +2584,7 @@ class FST:
         idx: int | Literal['end'] | None = None,
         stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
-        one: bool = True,
+        one: bool | None = True,
         **options,
     ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put an individual node or a slice of nodes to `self` if possible. The node is passed as an existing
@@ -2734,7 +2768,7 @@ class FST:
         start: int | Literal['end'] = 0,
         stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
-        one: bool = False,
+        one: bool | None = False,
         **options,
     ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string

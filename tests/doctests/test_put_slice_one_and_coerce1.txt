@@ -35,7 +35,7 @@ Interaction of `one` with `coerce` for slice puts, complicated but needs to feel
 ...
 ...     return False
 
->>> def test_one_coerce_target_src(one: bool, coerce: bool, target: str, field: str, src: str, mode=None, target_mode=None):
+>>> def test_one_coerce_target_src(one: bool | None, coerce: bool, target: str, field: str, src: str, mode=None, target_mode=None):
 ...     for name, code in [
 ...         ('src', src),
 ...         ('FST', FST(src, mode)),

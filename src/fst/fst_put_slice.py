@@ -274,7 +274,7 @@ class slicestatic(NamedTuple):
 def _code_to_slice_expr(
     self: fst.FST,
     code: Code | None,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     code_as: Callable = code_as_expr,
 ) -> fst.FST | None:
@@ -288,47 +288,53 @@ def _code_to_slice_expr(
     coerce = fst.FST.get_option('coerce', options)
     fst_ = code_as(code, options, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
-    ast__cls = ast_.__class__
-    is_slice_type = ast__cls in ASTS_LEAF_TUPLE_LIST_OR_SET
+    ast_cls = ast_.__class__
+    is_pard_tup = fst_.is_parenthesized_tuple()
+    is_slice_type = ast_cls in ASTS_LEAF_TUPLE_LIST_OR_SET
+
+    if one is None or not isinstance(code, (str, list)):
+        is_slice = is_slice_type
+    else:
+        is_slice = is_pard_tup is False
 
     if not one:
-        if is_slice_type:
+        if is_slice:
             if not ast_.elts:  # put empty sequence is same as delete
                 return None
 
-            if fst_.is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
+            if is_pard_tup is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
                 fst_._trim_delimiters()
             else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
                 _set_loc_whole(fst_)
 
             return fst_
 
-    # one=True or any expression which is not a slice type we can coerce to a singleton slice
+    # one=True or any expression which is not a slice type we can implicitly coerce to a singleton slice
 
-    if not is_slice_type and not (one or coerce):
+    if not is_slice and not (one or coerce):
         raise ValueError(f'cannot put {fst_.a.__class__.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
-    if (is_par := fst_.is_parenthesized_tuple()) is not None:
-        if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+    if is_pard_tup is not None:
+        if is_pard_tup is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
-    elif ast__cls is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
+    elif ast_cls is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
         if not fst_.pars().n and self.is_parenthesized_tuple() is False:
             fst_._parenthesize_grouping()
 
-    elif ast__cls in (Yield, YieldFrom):  # these need to be parenthesized definitely
+    elif ast_cls in (Yield, YieldFrom):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
 
-    ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
+    ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
                  end_col_offset=ls[-1].lenbytes)  # Tuple as temporary container because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _code_to_slice_key_and_other(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any], code_as: Callable
 ) -> fst.FST | None:
     """Handles `Dict` and `MatchMapping`."""
 
@@ -352,7 +358,7 @@ def _code_to_slice_key_and_other(
 
 
 def _code_to_slice_BoolOp_values(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     """A `BoolOp` slice can be an invalid `AST` at length 0 or 1."""
 
@@ -407,7 +413,7 @@ def _code_to_slice_BoolOp_values(
 def _code_to_slice_BoolOp_values_maybe_dangling(
     self: fst.FST,
     code: Code | None,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     is_first: bool,
     is_last: bool,
@@ -493,7 +499,7 @@ def _code_to_slice_BoolOp_values_maybe_dangling(
 
 
 def _code_to_slice_Compare__all(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     """A `Compare._all` slice is a normal `Compare` for two or more elements and can be a singleton with a single
     element in `Compare.left`. Zero-length `Compare` slices not supported currently."""
@@ -539,7 +545,7 @@ def _code_to_slice_Compare__all(
 def _code_to_slice_Compare__all_maybe_dangling(
     self: fst.FST,
     code: Code | None,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     is_first: bool,
     is_last: bool,
@@ -721,7 +727,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
 
 
 def _code_to_slice_MatchSequence(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     if code is None:
         return None
@@ -729,16 +735,22 @@ def _code_to_slice_MatchSequence(
     coerce = fst.FST.get_option('coerce', options)
     fst_ = code_as_pattern(code, options, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
+    is_delimited_matchseq = fst_.is_delimited_matchseq()
 
-    if not one and ast_.__class__ is not MatchSequence:
-        if not coerce:
-            raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
-                             "without 'one=True' or 'coerce=True'")
+    if not one:
+        if ast_.__class__ is not MatchSequence:
+            if not coerce:
+                raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
+                                 "without 'one=True' or 'coerce=True'")
 
-        one = True
+            one = True
+
+        elif one is False and isinstance(code, (str, list)):
+            if is_delimited_matchseq:
+                one = True
 
     if one:
-        if fst_.is_delimited_matchseq() == '':
+        if is_delimited_matchseq == '':
             fst_._delimit_node(delims='[]')
 
         ast_ = MatchSequence(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -749,7 +761,7 @@ def _code_to_slice_MatchSequence(
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
 
-    if fst_.is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
+    if is_delimited_matchseq:  # delimited is restricted to the inside of the delimiters, which are removed
         fst_._trim_delimiters()
     else:  # if undelimited then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -757,7 +769,9 @@ def _code_to_slice_MatchSequence(
     return fst_
 
 
-def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
+def _code_to_slice_MatchOr(
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
+) -> fst.FST | None:
     if code is None:
         return None
 
@@ -823,7 +837,7 @@ def _code_to_slice__special1(
     self: fst.FST,
     code: Code | None,
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     ast_cls: type[AST],
     code_as: Callable,
@@ -860,7 +874,7 @@ def _code_to_slice__special2(
     self: fst.FST,
     code: Code | None,
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     ast_cls: type[AST],
     code_as: Callable,
@@ -907,21 +921,21 @@ def _code_to_slice__special2(
 
 
 def _code_to_slice__Assign_targets(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special2(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets,
                                     _code_as_one__Assign_targets)
 
 
 def _code_to_slice__decorator_list(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special2(self, code, 'decorator_list', one, options, _decorator_list,
                                     code_as__decorator_list, _code_as_one__decorator_list)
 
 
 def _code_to_slice__arglikes(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     """All this mostly do deal with how to treat sequences when passed in as either source or nodes with various
     combinations of `one` and `coerce` for the most common-sense interpretation."""
@@ -1002,41 +1016,41 @@ def _code_to_slice__arglikes(
 
 
 def _code_to_slice__comprehensions(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special1(self, code, 'generators', one, options, _comprehensions, code_as__comprehensions,
                                     code_as_comprehension)
 
 
 def _code_to_slice__comprehensions_ifs(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special2(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs,
                                     _code_as_one__comprehension_ifs)
 
 
 def _code_to_slice__aliases(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special1(self, code, 'names', one, options, _aliases, code_as__aliases, code_as_alias)
 
 
 def _code_to_slice_Import_names(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special1(self, code, 'names', one, options, _aliases, code_as__Import_names,
                                    code_as_Import_name)
 
 
 def _code_to_slice_ImportFrom_names(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special1(self, code, 'names', one, options, _aliases, code_as__ImportFrom_names,
                                    code_as_ImportFrom_name)
 
 
 def _code_to_slice__withitems(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     """All this mostly do deal with how to treat sequences when passed in as either source or nodes with various
     combinations of `one` and `coerce` for the most common-sense interpretation."""
@@ -1137,14 +1151,14 @@ def _code_to_slice__withitems(
 
 
 def _code_to_slice__type_params(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     return _code_to_slice__special1(self, code, 'type_params', one, options, _type_params, code_as__type_params,
                                     code_as_type_param)
 
 
 def _code_to_slice__expr_arglikes(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
 ) -> fst.FST | None:
     """All this mostly do deal with how to treat sequences when passed in as either source or nodes with various
     combinations of `one` and `coerce` for the most common-sense interpretation.
@@ -1387,7 +1401,7 @@ def _put_slice_NOT_IMPLEMENTED_YET(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
@@ -1399,7 +1413,7 @@ def _put_slice_Tuple_elts(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """Tuple is used in many different ways in python, also for expressionlike slices by us."""
@@ -1471,7 +1485,7 @@ def _put_slice_List_elts(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -1500,7 +1514,7 @@ def _put_slice_Set_elts(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     body = self.a.elts
@@ -1530,7 +1544,7 @@ def _put_slice_Dict__all(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -1580,7 +1594,7 @@ def _put_slice_Delete_targets(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """Even though when getting a slice it will be returned as a `Tuple`, any sequence of valid target types is accepted
@@ -1629,7 +1643,7 @@ def _put_slice_Assign_targets(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     body = self.a.targets
@@ -1661,7 +1675,7 @@ def _put_slice_With_AsyncWith_items(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -1708,7 +1722,7 @@ def _put_slice_Import_names(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -1756,7 +1770,7 @@ def _put_slice_ImportFrom_names(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -1821,7 +1835,7 @@ def _put_slice_Global_Nonlocal_names(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """In order to do this put since `Global` and `Nonlocal` do not have child `AST` nodes but just identifiers, we
@@ -1934,7 +1948,7 @@ def _put_slice_ClassDef_bases(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -2007,7 +2021,7 @@ def _put_slice_decorator_list(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """This handles `FunctionDef`, `AsyncFunctionDef`, `ClassDef` and the `_decorator_list` SPECIAL SLICE. Since a
@@ -2087,7 +2101,7 @@ def _put_slice_generators(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """This handles `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` and the `_comprehensions` SPECIAL SLICE."""
@@ -2133,7 +2147,7 @@ def _put_slice_comprehension_ifs(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """This handles `comprehension` and the `_comprehension_ifs` SPECIAL SLICE."""
@@ -2189,7 +2203,7 @@ def _put_slice_BoolOp_values(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -2263,7 +2277,7 @@ def _put_slice_Compare__all(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """In order to carry out this operation over all the operands we temporarily add `left` to `comparators` to make
@@ -2403,7 +2417,7 @@ def _put_slice_Call_args(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -2445,7 +2459,7 @@ def _put_slice_Call_ClassDef_arglikes(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     *,
     kw_only: bool = False,
@@ -2512,7 +2526,7 @@ def _put_slice_Call_ClassDef_keywords(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """A `Call.keywords` or `ClassDef.keywords` slice is just check to make sure the slice is all keywords then fall
@@ -2540,7 +2554,7 @@ def _put_slice_MatchSequence_patterns(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
@@ -2570,7 +2584,7 @@ def _put_slice_MatchMapping__all(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     ast = self.a
@@ -2657,7 +2671,7 @@ def _put_slice_MatchOr_patterns(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     body = self.a.patterns
@@ -2700,7 +2714,7 @@ def _put_slice_type_params(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
@@ -2764,7 +2778,7 @@ def _put_slice__slice(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
     """This handles generic SPECIAL SLICE puts which don't have very special rules or formatting."""
@@ -2797,7 +2811,7 @@ def _put_slice_stmtlike__body(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> fst.FST:
     """Put a slice to a statementlike virtual `_body` field which is just a `body` as if it didn't have a docstring."""
@@ -3103,7 +3117,7 @@ def _adjust_slice_raw_ast(
     self: fst.FST,
     code: AST,
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     put_ln: int,
     put_col: int,
@@ -3167,7 +3181,7 @@ def _adjust_slice_raw_fst(
     self: fst.FST,
     code: fst.FST,
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
     put_ln: int,
     put_col: int,
@@ -3285,7 +3299,7 @@ def _put_slice_raw(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool,
+    one: bool | None,
     options: Mapping[str, Any],
 ) -> fst.FST | None:  # -> self or reparsed self or None if deleted
     """Put a raw slice to `self`. Currently just trailing comma stuff."""
@@ -3319,7 +3333,7 @@ def _put_slice(
     start: int | Literal['end'],
     stop: int | Literal['end'],
     field: str,
-    one: bool = False,
+    one: bool | None = False,
     options: Mapping[str, Any] = {},
 ) -> fst.FST | None:  # -> self or reparsed self or None if disappeared due to raw
     """Put an a slice of child nodes to `self`."""
