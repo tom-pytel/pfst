@@ -621,7 +621,7 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> fst.FST: 
     Unmake exists for two reasons. First it breaks links to make garbage collection easier (which is not really a big
     deal in modern python). More importantly it marks `FST` nodes as invalid.
 
-    **WARNING!** `stack` is consumed.
+    **WARNING!** If `stack` is passed then it is consumed.
 
     **Parameters:**
     - `stack`: Can unmake multiple trees by passing in this. Mostly used for deleted elements in slice operations.
@@ -646,18 +646,27 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> fst.FST: 
 
 
 def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> fst.FST:  # -> self
-    """Unmake parent tree from `self` on up, unmaking `self` optionally as well if `self_=True`.
+    """Unmake parent tree from `self` on up, unmaking `self` optionally as well if `self_=True`. This is only meant for
+    parent chains of only children because will **NOT** unmake any siblings along the way. It does unmake any `ctx`
+    nodes along the way as these are common in parent containers.
 
-    **WARNING!** Only meant for parent chains of only children because will **NOT** unmake any siblings along the way.
+    **WARNING!** Unlike `_unmake_fst_tree()`, this function assumes the parent chain (and `self` if that is being
+    unmade) are valid `FST` nodes.
     """
 
     if self_:
         if a := getattr(self, 'a', None):
             a.f = self.a = None
 
+            if a := getattr(a, 'ctx', None) and (f := getattr(a, 'f', None)):
+                a.f = f.a = None
+
     while self := self.parent:
         if a := getattr(self, 'a', None):
             a.f = self.a = None
+
+            if a := getattr(a, 'ctx', None) and (f := getattr(a, 'f', None)):
+                a.f = f.a = None
 
     return self
 

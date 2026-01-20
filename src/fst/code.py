@@ -1802,7 +1802,7 @@ def _coerce_to_expr_ast(
         if not unmake_which:  # WARNING! make sure ast is only child of parent and whole parent chain is only-children if coerced!!!
             ret.f._unmake_fst_parents()
         elif unmake_which == 1:  # just the root node (and ctx if it has one)
-            getattr(ast, 'ctx', ast).f._unmake_fst_parents(True)
+            ast.f._unmake_fst_parents(True)
         elif unmake_which == 2:  # node was completely regenerated, unmake whole original (e.g. arg.arg coerced to new Name node, or complicated MatchSequence with nested stuff)
             ast.f._unmake_fst_tree()
 
