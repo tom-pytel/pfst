@@ -2447,6 +2447,8 @@ def _put_slice_Call_ClassDef_arglikes(
     field: str,
     one: bool,
     options: Mapping[str, Any],
+    *,
+    kw_only: bool = False,
 ) -> None:
     ast = self.a
     body = self._cached_arglikes()
@@ -2461,6 +2463,9 @@ def _put_slice_Call_ClassDef_arglikes(
             return
 
     else:
+        if kw_only and any((bad := a).__class__ is not keyword for a in fst_.a.arglikes):
+            raise NodeError(f'expecting only keywords, got {bad.__class__.__name__}')
+
         validate_put_arglike(body, start, stop, fst_.a.arglikes)
 
     is_call = ast.__class__ is Call
@@ -2525,7 +2530,8 @@ def _put_slice_Call_ClassDef_keywords(
 
     nexprs = len(exprs)
 
-    return _put_slice_Call_ClassDef_arglikes(self, code, start + nexprs, stop + nexprs, '_' + exprs_field, one, options)
+    return _put_slice_Call_ClassDef_arglikes(self, code, start + nexprs, stop + nexprs, '_' + exprs_field, one, options,
+                                             kw_only=True)
 
 
 def _put_slice_MatchSequence_patterns(

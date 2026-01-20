@@ -133,7 +133,6 @@ from .astutil import (
     bistr,
     WalkFail,
     repr_str_multiline,
-    has_type_comments,
     compare_asts,
     copy_ast,
 )

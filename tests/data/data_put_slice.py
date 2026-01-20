@@ -28270,6 +28270,43 @@ ClassDef - ROOT 0,0..0,37
 r'''class cls(a, b=c, *d, **e): pass'''), ('_arglikes',
 r'''f=g, **h'''),
 r'''**NodeError("cannot put to ClassDef.keywords slice because it includes bases, try the '_bases' field")**'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''class cls: pass'''), ('_arglikes',
+r'''a'''),
+r'''**NodeError('expecting only keywords, got Name')**'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''class cls: pass'''), ('_arglikes',
+r'''*a'''),
+r'''**NodeError('expecting only keywords, got Starred')**'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''class cls: pass'''), ('_arglikes',
+r'''a=b'''),
+r'''class cls(a=b): pass''', r'''
+ClassDef - ROOT 0,0..0,20
+  .name 'cls'
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .arg 'a'
+     .value Name 'b' Load - 0,12..0,13
+  .body[1]
+   0] Pass - 0,16..0,20
+'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''class cls: pass'''), ('_arglikes',
+r'''**a'''),
+r'''class cls(**a): pass''', r'''
+ClassDef - ROOT 0,0..0,20
+  .name 'cls'
+  .keywords[1]
+   0] keyword - 0,10..0,13
+     .value Name 'a' Load - 0,12..0,13
+  .body[1]
+   0] Pass - 0,16..0,20
+'''),
 ],
 
 'ClassDef__bases': [  # ................................................................................
@@ -33125,6 +33162,39 @@ Call - ROOT 0,0..0,26
 r'''call(a, b=c, *d, **e)'''), ('_arglikes',
 r'''f=g, **h'''),
 r'''**NodeError("cannot put to Call.keywords slice because it includes args, try the '_args' field")**'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''call()'''), ('_arglikes',
+r'''a'''),
+r'''**NodeError('expecting only keywords, got Name')**'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''call()'''), ('_arglikes',
+r'''*a'''),
+r'''**NodeError('expecting only keywords, got Starred')**'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''call()'''), ('_arglikes',
+r'''a=b'''),
+r'''call(a=b)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .arg 'a'
+     .value Name 'b' Load - 0,7..0,8
+'''),
+
+('', 'end', 'end', 'keywords', {}, (None,
+r'''call()'''), ('_arglikes',
+r'''**a'''),
+r'''call(**a)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .value Name 'a' Load - 0,7..0,8
+'''),
 ],
 
 'Call__args': [  # ................................................................................
