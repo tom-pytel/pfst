@@ -1775,7 +1775,7 @@ def _coerce_to_expr_ast(
 
     if ret.__class__ is str:
         raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
-                        f', could not coerce{", " + ret if ret else ""}', rawable=True)  # ret here is reason str
+                        f', could not coerce{", " + ret if ret else ""}')  # ret here is reason str
 
     ret, is_nonstd_tuple, unmake_which = ret
 
@@ -1787,7 +1787,7 @@ def _coerce_to_expr_ast(
 
         if ret.__class__ is str:
             raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
-                            f', could not coerce{", " + ret if ret else ""}', rawable=True)  # pragma: no cover  # can't currently happen as List and Set can always coerce to each other
+                            f', could not coerce{", " + ret if ret else ""}')  # pragma: no cover  # can't currently happen as List and Set can always coerce to each other
 
         ret = ret[0]  # don't even check for is_nonstd_tuple because wasn't tuple and this one isn't either
         unmake_which = 2  # at this point its just safer and easier
@@ -1855,8 +1855,7 @@ def _coerce_to_seq(
     else:
         if ast_cls is Tuple:
             if any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'expecting {to_cls.__name__}, got Tuple with a Slice in it, could not coerce',
-                                rawable=True)
+                raise NodeError(f'expecting {to_cls.__name__}, got Tuple with a Slice in it, could not coerce')
 
         if is_FST:
             if code.is_parenthesized_tuple() is not False:
@@ -1865,8 +1864,7 @@ def _coerce_to_seq(
             getattr(codea := code.a, 'ctx', codea).f._unmake_fst_parents(True)  # if there is a ctx then make sure to unmake that as well
 
     if not allow_starred and any(e.__class__ is Starred for e in ast.elts):
-        raise NodeError(f'expecting {to_cls.__name__}, got {ast_cls.__name__}, could not coerce, found Starred',
-                        rawable=True)
+        raise NodeError(f'expecting {to_cls.__name__}, got {ast_cls.__name__}, could not coerce, found Starred')
 
     if ret_elts:
         return ast.elts, is_FST
@@ -2824,7 +2822,7 @@ def _coerce_to_pattern(
 
     if ast.__class__ is str:
         raise NodeError(f'expecting pattern, got {ast.__class__.__name__}'
-                        f', could not coerce{", " + ast if ast else ""}', rawable=True)  # ast here is reason str
+                        f', could not coerce{", " + ast if ast else ""}')  # ast here is reason str
 
     if is_FST:
         code._unmake_fst_tree()
@@ -3018,26 +3016,26 @@ def _code_as(
         if not isinstance(codea, ast_type):
             if not coerce_to:
                 raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}'
-                                f'{", coerce disabled" if coerce_to is False else ""}', rawable=True)
+                                f'{", coerce disabled" if coerce_to is False else ""}')
 
             try:
                 return coerce_to(code, options, parse_params, sanitize=sanitize)
             except (NodeError, SyntaxError, NotImplementedError) as exc:
                 raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}, '
-                                'could not coerce', rawable=True) from exc
+                                'could not coerce') from exc
 
     else:
         if isinstance(code, AST):
             if not isinstance(code, ast_type):
                 if not coerce_to:
                     raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}'
-                                    f'{", coerce disabled" if coerce_to is False else ""}', rawable=True)
+                                    f'{", coerce disabled" if coerce_to is False else ""}')
 
                 try:
                     return coerce_to(code, options, parse_params, sanitize=sanitize)
                 except (NodeError, SyntaxError, NotImplementedError) as exc:
                     raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}, '
-                                    'could not coerce', rawable=True) from exc
+                                    'could not coerce') from exc
 
             src = unparse(code)
             lines = src.split('\n')
@@ -3105,7 +3103,7 @@ def _code_as_expr(
 
         if ast_cls not in no_coerce_clss:  # if not an expr then try coerce if allowed
             if not coerce:
-                raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled', rawable=True)
+                raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled')
 
             old_ast = ast
             ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, options, parse_params, expecting, to_tuple)
@@ -3123,11 +3121,11 @@ def _code_as_expr(
 
         if ast_cls is Slice:
             if not allow_Slice:
-                raise NodeError(f'expecting {expecting}, got Slice', rawable=True)
+                raise NodeError(f'expecting {expecting}, got Slice')
 
         elif ast_cls is Tuple:
             if not allow_Tuple_of_Slice and any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'expecting {expecting}, got Tuple with a Slice in it', rawable=True)
+                raise NodeError(f'expecting {expecting}, got Tuple with a Slice in it')
 
             if fix_coerced_tuple:
                 code._fix_Tuple(False)  # it is not parenthesized
@@ -3140,14 +3138,12 @@ def _code_as_expr(
         if is_ast := isinstance(code, AST):
             if code.__class__ not in no_coerce_clss:  # if not an expr then try coerce if allowed
                 if not coerce:
-                    raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}'
-                                    ', coerce disabled', rawable=True)
+                    raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}, coerce disabled')
 
                 code, _ = _coerce_to_expr_ast(code, False, options, parse_params, expecting, to_tuple)
 
                 if code.__class__ not in no_coerce_clss:
-                    raise NodeError(f'expecting {expecting}, got {old_code.__class__.__name__}, could not coerce',
-                                    rawable=True)
+                    raise NodeError(f'expecting {expecting}, got {old_code.__class__.__name__}, could not coerce')
 
             src = unparse(code)
             lines = src.split('\n')
@@ -3191,11 +3187,11 @@ def _code_as_op(
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, op_type):
-            raise NodeError(f'expecting {op_type.__name__}, got {code.a.__class__.__name__}', rawable=True)
+            raise NodeError(f'expecting {op_type.__name__}, got {code.a.__class__.__name__}')
 
     elif isinstance(code, AST):
         if not isinstance(code, op_type):
-            raise NodeError(f'expecting {op_type.__name__}, got {code.__class__.__name__}', rawable=True)
+            raise NodeError(f'expecting {op_type.__name__}, got {code.__class__.__name__}')
 
         code_cls = code.__class__
 
@@ -3561,7 +3557,7 @@ def code_as_Tuple(
     fst_ = _code_as_expr(code, options, parse_params, parse_Tuple, False, True, sanitize, coerce)
 
     # if fst_ is code and fst_.a.__class__ is not Tuple:  # CURRENTLY HANDLED in _code_as_expr()  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
-    #     raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
+    #     raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}')
 
     return fst_
 
@@ -3639,9 +3635,9 @@ def code_as__arglike(
         ast_cls = ast_.__class__
 
         if ast_cls in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # need to check coercions as well as origina fst_
-            raise NodeError(f'expecting expression (arglike), got {fst_.a.__class__.__name__}', rawable=True)
+            raise NodeError(f'expecting expression (arglike), got {fst_.a.__class__.__name__}')
         elif ast_cls is Tuple and any(e.__class__ is Slice for e in ast_.elts):
-            raise NodeError('expecting expression (arglike), got Tuple with a Slice in it', rawable=True)
+            raise NodeError('expecting expression (arglike), got Tuple with a Slice in it')
 
     return fst_
 
@@ -4242,24 +4238,24 @@ def code_as_constant(
 
     if isinstance(code, AST):
         if code.__class__ is not Constant:
-            raise NodeError('expecting constant', rawable=True)
+            raise NodeError('expecting constant')
 
         code = code.value
 
         if isinstance(code, (int, float)):
             if code < 0:
-                raise NodeError('constants cannot be negative', rawable=True)
+                raise NodeError('constants cannot be negative')
 
         elif isinstance(code, complex):
             if code.real:
-                raise NodeError('imaginary constants cannot have real componenets', rawable=True)
+                raise NodeError('imaginary constants cannot have real componenets')
             if code.imag < 0:
-                raise NodeError('imaginary constants cannot be negative', rawable=True)
+                raise NodeError('imaginary constants cannot be negative')
 
     elif isinstance(code, list):
         code = '\n'.join(code)
     elif not isinstance(code, constant):
-        raise NodeError('expecting constant', rawable=True)
+        raise NodeError('expecting constant')
 
     return code
 

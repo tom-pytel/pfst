@@ -81,7 +81,7 @@ class NodeError(Exception):
 
     rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode. @private"""
 
-    def __init__(self, *args: object, rawable: bool = False) -> None:
+    def __init__(self, *args: object, rawable: bool = True) -> None:
         """@private"""
 
         super().__init__(*args)

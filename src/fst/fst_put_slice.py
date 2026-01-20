@@ -336,14 +336,14 @@ def _code_to_slice_key_and_other(
         return None
 
     if one:
-        raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice", rawable=True)
+        raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
     fst_ = code_as(code, options, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
-                        f", not a {ast_.__class__.__name__}", rawable=True)
+                        f", not a {ast_.__class__.__name__}")
 
     if not ast_.keys and not getattr(ast_, 'rest', None):  # put empty sequence is same as delete, check `rest` because in that case MatchMapping is not empty
         return None
@@ -3331,7 +3331,7 @@ def _put_slice(
     if raw is not True:
         try:
             if not (handler := _PUT_SLICE_HANDLERS.get((self.a.__class__, field))):  # allow raw to handle some non-contiguous list fields
-                raise NodeError(f'cannot put slice to {self.a.__class__.__name__}.{field}', rawable=True)
+                raise NodeError(f'cannot put slice to {self.a.__class__.__name__}.{field}')
 
             with self._modifying(field):
                 handler(self, code, start, stop, field, one, options)
