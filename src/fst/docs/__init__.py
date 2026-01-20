@@ -15,15 +15,17 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d07_views`: Slice views and virtual fields
 
-`fst.docs.d08_raw`: Raw reparse operations
+`fst.docs.d08_coerce`: Coercion and slice put as `one=True`
 
 `fst.docs.d09_parentheses`: Parentheses handling
 
 `fst.docs.d10_options`: Options
 
-`fst.docs.d11_reconcile`: Edit pure AST while preserving formatting
+`fst.docs.d11_raw`: Raw reparse operations
 
-`fst.docs.d12_examples`: Example recipes
+`fst.docs.d12_reconcile`: Edit pure AST while preserving formatting
+
+`fst.docs.d13_examples`: Example recipes
 """
 
 from . import (
@@ -34,11 +36,12 @@ from . import (
     d05_put,
     d06_slices,
     d07_views,
-    d08_raw,
+    d08_coerce,
     d09_parentheses,
     d10_options,
-    d11_reconcile,
-    d12_examples,
+    d11_raw,
+    d12_reconcile,
+    d13_examples,
 )
 
 __all__ = [
@@ -49,9 +52,10 @@ __all__ = [
     'd05_put',
     'd06_slices',
     'd07_views',
-    'd08_raw',
+    'd08_coerce',
     'd09_parentheses',
     'd10_options',
-    'd11_reconcile',
-    'd12_examples',
+    'd11_raw',
+    'd12_reconcile',
+    'd13_examples',
 ]

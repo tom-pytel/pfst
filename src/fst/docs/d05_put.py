@@ -464,7 +464,8 @@ you specify it.
 If the changes are not valid then neither the tree nor the source is actually changed. `fst` attempts to minimize the
 amount of code which is reparsed and the minimum elemenent that can be reparsed is a single statement or block statement
 header. Though multiple statements or even entire blocks may be reparsed if the changes span those blocks. Whatever is
-reparsed will have its `FST` nodes changed, except the root node.
+reparsed will have its `FST` nodes changed (invalidating any variables referring to those nodes themselves), except the
+root node which will always remain the same even if its `AST` changes.
 
 The actual location for the reparse is not restricted in any way. It doesn't have to fall on node boundaries and can
 extend over the entire source code if need be. Like `get_src()`, it doesn't matter what node of the tree this function
@@ -478,6 +479,9 @@ is called on in this mode, the domain is always over the entire tree.
 ...         t()
 ... '''.strip())
 
+>>> f.test.ops[0], f.body[0].test.ops[0]
+(<Lt 0,5..0,6>, <Lt 1,9..1,10>)
+
 >>> f.put_src('''
 ... = x:
 ...     if y !=
@@ -490,6 +494,9 @@ if a <= x:
         s()
     else:
         t()
+
+>>> f.test.ops[0], f.body[0].test.ops[0]
+(<LtE 0,5..0,7>, <NotEq 1,9..1,11>)
 
 >>> f.put_src('a <', 1, 7, 1, 11)
 (1, 10)

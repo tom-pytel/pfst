@@ -14,7 +14,7 @@ with the details of:
 - Various Python version-specific syntax quirks
 - Lots more...
 
-See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples.
 
 ```py
 >>> import fst  # pip install pfst, import fst

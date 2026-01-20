@@ -15,12 +15,9 @@ prescribed node operations.
 
 Raw mode puts can be executed on individual nodes or slices by specifying the option `raw=True`. `raw='auto'` can be
 used so that the prescribed operation with rules is tried first and if that fails a raw put is attempted as a fallback.
-Raw mode automatic fallback is turned off globally by default as the error messages can be confusing, but if you want
+Raw mode automatic fallback is turned off globally by default as the error messages can be confusing and it requires
+a preemptive node copy in case of putting an `FST` node due to coercion attempts being destructive. If you want
 this turned on for all operations without having to specify anything then do `FST.set_options(raw='auto')`.
-
-Raw put operations like this, whether explicit via `raw=True` or as a fallback via `raw='auto'` cannot insert or delete
-nodes, they can only change existing nodes. Existing parentheses in the target may be removed depending on the `pars`
-option.
 
 Raw node put operations can do things which are not normally possible with prescribed operations.
 
@@ -61,6 +58,10 @@ Assign - ROOT 0,0..0,5
 
 Raw mode node operations are available for slices as well, in which case whatever source you pass is just put at the
 location spanned by the first and last elements.
+
+When using raw put operations on a slice put, whether explicit via `raw=True` or as a fallback via `raw='auto'` cannot
+insert or just delete nodes, they can only change existing nodes (maybe changing the number there is). Existing
+parentheses in the target may be removed depending on the `pars` option.
 
 >>> f = FST('[1, 2, 3, 4, 5]')
 

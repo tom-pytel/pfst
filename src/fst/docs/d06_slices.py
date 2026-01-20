@@ -513,6 +513,9 @@ This is allowed anywhere where the single element being put would be allowed to 
 >>> print(FST('del a, b, c, d').put_slice('x, y', 1, 3, one=True).src)
 del a, (x, y), d
 
+The `one=True` slice put mode overlaps with some coerce usage and that is covered in its own section in
+`fst.docs.d08_coerce`.
+
 
 ## Trivia
 
