@@ -154,7 +154,7 @@ __all__ = [
 ]
 
 
-_DEFAULT_FILENAME = '<fst>'
+_DEFAULT_FILENAME = '<FST>'
 _DEFAULT_PARSE_PARAMS = dict(filename=_DEFAULT_FILENAME, type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
@@ -199,7 +199,6 @@ _ASTS_LEAF_SCOPE_SYMBOLS = ASTS_LEAF_DEF | ASTS_LEAF_TYPE_PARAM | {Name, arg, Au
 
 _ASTS_LEAF_EXPR_CHAIN_OP_OR_CTX = (ASTS_LEAF_EXPR_CHAIN | ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR
                                    | ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP)
-
 
 
 def _swizzle_getput_params(
@@ -788,7 +787,7 @@ class FST:
         ...     FST('start:stop:step', 'strict')
         ... except Exception as exc:
         ...     print(repr(exc))
-        SyntaxError('invalid syntax', ('<fst>', 1, 11, 'start:stop:step\n', 1, 12))
+        SyntaxError('invalid syntax', ('<FST>', 1, 11, 'start:stop:step\n', 1, 12))
 
         You can also pass an `AST` and the source will be generated from it.
 
@@ -1061,8 +1060,6 @@ class FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
         Will attempt to coerce `ast` to the requested `mode` if is not `None`.
 
-        **Note:** The `ast` passed in is not consumed unless `mode=False`.
-
         **WARNING!** The `type_comments` parameter is `False` by default and no guarantees are made if you turn it on.
         It is provided just in case but really shouldn't be used as `fst` takes care of comments anyway, this just turns
         on storing the comments in the `AST` nodes which may cause all sorts of madness like duplication on unparse or
@@ -1070,17 +1067,8 @@ class FST:
 
         **Parameters:**
         - `ast`: The root `AST` node.
-        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. Two special values are added,
-            `None` and `False`. The modes are:
-            - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
-                other values should be considered as a coerce. If this mode is used then the resulting parsed node must
-                be of the same type as the `ast` passed in.
-            - `False`: This will skip the reparse and just `ast.unparse()` the `AST` to generate source for the `FST`.
-                Use this only if you are absolutely certain that the `AST` unparsed source will correspond with the
-                locations already present in the `AST`. This is almost never the case unless the `AST` was
-                `ast.parse()`d from an explicitly `ast.unparse()`d `AST`.
-            - `specific mode`: If is the same as the `ast` passed in then is just created with that. If not then will
-                attempt to coerce to the given `mode`.
+        - `mode`: Parse mode to allow coercion, see `fst.parsex.Mode`. If `None` then will just use the `AST` as-is and
+            make an `FST` for it.
         - `coerce`: This exists to allow you to turn **OFF** coercion for some reason as by default coerce is attempted.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
@@ -1141,13 +1129,7 @@ class FST:
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
-        if mode is False:
-            lines = parsex.unparse(ast).split('\n')
-
-            return FST(ast, lines, None, parse_params=parse_params, indent='    ')
-
         return code.code_as(ast, mode or ast.__class__, parse_params=parse_params, coerce=coerce)
-
 
     get_options = fst_options.get_options  # we do assign instead of import so that pdoc gets the right order
     get_option = fst_options.get_option
