@@ -2971,6 +2971,8 @@ def _put_one(
     nonraw_exc = None
 
     if raw is not True:
+        preserved_code = code.copy() if raw and code.__class__ is fst.FST else code  # attempt at put may be destructive so need to make a copy of an FST if raw fallback is a possibility on fail
+
         try:
             if to:
                 raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field} without 'raw'")
@@ -2988,8 +2990,9 @@ def _put_one(
                 raise
 
             nonraw_exc = exc
+            code = preserved_code
 
-    with self._modifying(field, True):
+    with self._modifying(field, True):  # raw put, either explicit by raw=True or fallback by raw='auto'
         try:
             child = _put_one_raw(self, code, idx, field, child, static, options)
 
