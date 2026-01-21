@@ -1731,7 +1731,7 @@ def _fix_undelimited_seq(
             and (
                 not (
                     end_ln == ln
-                    or self._is_enclosed_or_line(pars=False)
+                    or self._is_enclosed_or_line(check_pars=False)
                     or self._is_enclosed_in_parents()
                 )  # could have line continuations
                 or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously

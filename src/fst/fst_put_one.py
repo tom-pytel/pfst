@@ -773,7 +773,7 @@ def _make_exprlike_fst(
         ):  # veeery special case "3.__abs__()" -> "(3).__abs__()"
             return True
 
-        if not self._is_enclosed_in_parents(field) and not put_fst._is_enclosed_or_line(pars=adding):
+        if not self._is_enclosed_in_parents(field) and not put_fst._is_enclosed_or_line(check_pars=adding):
             return True
 
         if put_ast.__class__ is Lambda:  # Lambda inside FormattedValue/Interpolation needs pars
@@ -1096,7 +1096,7 @@ def _put_one_ImportFrom_names(
             self._put_src(None, star_end_ln, star_end_col, end_ln, end_col, True)
             self._put_src(head, pars_ln, pars_col, star_ln, star_col, False)
 
-    elif not pars.n and not self._is_enclosed_or_line(pars=False):  # otherwise if need them then add
+    elif not pars.n and not self._is_enclosed_or_line(check_pars=False):  # otherwise if need them then add
         pars_ln, pars_col, pars_end_ln, pars_end_col = pars
 
         self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)

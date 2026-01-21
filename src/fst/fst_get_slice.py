@@ -1103,7 +1103,7 @@ def _get_slice_With_AsyncWith_items(
                          options, 'items', '', '', ',', False, False)
 
     if cut and not pars_n:  # only need to fix maybe if there are no parentheses
-        if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self._is_enclosed_or_line(check_pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
@@ -1211,7 +1211,7 @@ def _get_slice_ImportFrom_names(
             _fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
                                 ast.end_lineno, ast.end_col_offset)
 
-        if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self._is_enclosed_or_line(check_pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)

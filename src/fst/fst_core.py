@@ -975,7 +975,7 @@ def _is_atom(
 
 
 def _is_enclosed_or_line(
-    self: fst.FST, *, pars: bool = True, whole: bool = False, out_lns: set | None = None
+    self: fst.FST, *, check_pars: bool = True, whole: bool = False, out_lns: set | None = None
 ) -> bool | Literal['pars']:
     r"""Whether `self` lives on a single line or logical line (entirely terminated with line continuations) or is
     otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` so that it can be parsed without error due to
@@ -997,7 +997,7 @@ def _is_enclosed_or_line(
     for that see `_is_enclosed_in_parents()`.
 
     **Parameters:**
-    - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
+    - `check_pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
         multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
     - `whole`: Whether entire source should be checked and not just the lines corresponding to the node. This is
         only valid for a root node.
@@ -1064,7 +1064,7 @@ def _is_enclosed_or_line(
         else:  # if something doesn't have a loc or loc doesn't span over entire range of lines then we need to check the whole source
             end_ln = whole_end_ln
             last_ln = 0
-            children = [ast]
+            children = [ast]  # check_pars will be carried out on this first child (self)
 
     if not whole:
         if not loc:  # this catches empty `arguments` mostly
@@ -1089,11 +1089,11 @@ def _is_enclosed_or_line(
         if end_ln == ln:
             return True
 
-        if pars:
+        if check_pars:
             if self.pars().n:
                 return 'pars'
 
-            pars = False
+            check_pars = False
 
         if (is_const := (ast_cls is Constant)) or ast_cls in (JoinedStr, TemplateStr):
             if is_const:
@@ -1185,13 +1185,13 @@ def _is_enclosed_or_line(
 
             last_col = 0
 
-        if not getattr(loc, 'n', 0) and not childf._is_enclosed_or_line(pars=pars, out_lns=out_lns):
+        if not getattr(loc, 'n', 0) and not childf._is_enclosed_or_line(check_pars=check_pars, out_lns=out_lns):
             if out_lns is None:
                 return False
             else:
                 failed = True
 
-        pars = False
+        check_pars = False
         last_ln = child_end_ln
         last_col = loc.end_col
 

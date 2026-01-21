@@ -2254,7 +2254,7 @@ class FST:
             raise ValueError("cannot replace root node with 'to' option")
 
         with self._modifying():
-            code = code_as_all(code, {}, self.parse_params)
+            code = code_as_all(code, options, self.parse_params)
             self._lines = code._lines
 
             self._set_ast(code.a, True)

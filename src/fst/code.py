@@ -266,7 +266,7 @@ def _fix__Assign_targets(self: fst.FST) -> None:
 
 
 def _par_if_needed(  # TODO: candidate function to move into core, possibly just the detection part and not the parenthesizing part, or selectable
-    self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False, whole: bool = False
+    self: fst.FST, has_pars: bool | None = None, parsability: bool = True, arglike: bool = False
 ) -> bool:
     """Parenthesize node if needed for precedence or parsability (this one optional). We expect this to be called on
     stuff that can actually be parenthesized.
@@ -290,14 +290,16 @@ def _par_if_needed(  # TODO: candidate function to move into core, possibly just
     ast_cls = self.a.__class__
 
     if ast_cls is Tuple:
-        has_pars = bool(self._is_delimited_seq())
-    elif ast_cls is MatchSequence:
-        has_pars = bool(self.is_delimited_matchseq())
-    elif has_pars is None:
-        has_pars = self.pars().n
+        if has_pars := bool(self._is_delimited_seq()):
+            return False
 
-    if has_pars:
-        return False
+    elif ast_cls is MatchSequence:
+        if has_pars := bool(self.is_delimited_matchseq()):
+            return False
+
+    elif has_pars is None:
+        if has_pars := self.pars().n:
+            return False
 
     child = self.a
 
@@ -312,7 +314,7 @@ def _par_if_needed(  # TODO: candidate function to move into core, possibly just
         field, idx = self.pfield
 
     else:
-        field = None
+        field = idx = None
 
     if parent:  # if there is a parent then we can check for precedence
         need_pars = precedence_require_parens(child, parent, field, idx, arglike=arglike)
@@ -320,15 +322,15 @@ def _par_if_needed(  # TODO: candidate function to move into core, possibly just
         need_pars = False
 
     if not need_pars and parsability:  # if not needed for precedence then check if needed for parsability
-        need_pars = not self._is_enclosed_in_parents() and not self._is_enclosed_or_line(pars=False, whole=whole)
+        need_pars = not self._is_enclosed_in_parents() and not self._is_enclosed_or_line(check_pars=False, whole=False)
 
     if need_pars:
         if ast_cls is Tuple:
-            self._delimit_node(whole)
+            self._delimit_node(False)  # <-- whole=False
         elif ast_cls is MatchSequence:
-            self._delimit_node(whole, '[]')
+            self._delimit_node(False, '[]')  # <-- whole=False
         else:
-            self.par(whole=whole)
+            self.par(whole=False)
 
     return need_pars
 
