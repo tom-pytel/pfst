@@ -9469,6 +9469,22 @@ _Assign_targets - ROOT 0,0..1,0
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('Attribute', r'''
+a.
+ b
+'''), r'''
+a. \
+ b
+''',
+r'''a.b''', r'''
+_Assign_targets - ROOT 0,0..1,2
+  .targets[1]
+   0] Attribute - 0,0..1,2
+     .value Name 'a' Load - 0,0..0,1
+     .attr 'b'
+     .ctx Store
+'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('Tuple', r'''
 (a \
 or b,c)

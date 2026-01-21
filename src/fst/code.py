@@ -262,7 +262,7 @@ def _fix__Assign_targets(self: fst.FST) -> None:
     `_Assign_targets` for our purposes because if it is put to actual `targets` then line continuations will be added as
     needed there."""
 
-    self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True)#, add_lconts=False)
+    self._maybe_add_line_continuations(True, del_comments=True, del_comment_lines=True)
 
 
 def _par_if_needed(  # TODO: candidate function to move into core, possibly just the detection part and not the parenthesizing part, or selectable
@@ -2310,8 +2310,15 @@ def _code_as_one__Assign_targets(
 
     ast = _Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                           end_col_offset=ls[-1].lenbytes)
+    fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)  # _set_field() is alternative to putting ast_ in the ast.targets to begin with (only if it is known to be valid FST tree), this won't walk existing valid FST tree unnecessarily
 
-    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)  # _set_field() is alternative to putting ast_ in the ast.targets to begin with (only if it is known to be valid FST tree), this won't walk existing valid FST tree unnecessarily
+    _fix__Assign_targets(fst_)
+
+    _, _, end_ln, end_col = ast_.f.loc
+
+    _fix__slice_last_line(fst_, fst_._lines, end_ln, end_col, True)
+
+    return fst_
 
 
 def _coerce_to__decorator_list(
