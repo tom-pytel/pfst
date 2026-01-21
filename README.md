@@ -380,7 +380,6 @@ This module is not finished but functional enough that it can be useful.
 
 * Prescribed get / put slice from / to:
   * `arguments._all`
-  * `MatchClass.patterns`
   * `MatchClass.patterns+kwd_attrs:kwd_patterns`
   * `JoinedStr.values`
   * `TemplateStr.values`

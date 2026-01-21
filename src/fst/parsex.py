@@ -231,50 +231,50 @@ _re_parse_all_category = re.compile(r'''
 ''', re.MULTILINE | re.VERBOSE)
 
 Mode = Literal[
-    'all',
-    'strict',
-    'exec',
-    'eval',
-    'single',
-    'stmts',
-    'stmt',
-    'ExceptHandler',
-    '_ExceptHandlers',
-    'match_case',
-    '_match_cases',
-    'expr',
-    'expr_all',
-    'expr_arglike',
-    'expr_slice',
-    'Tuple_elt',
-    'Tuple',
-    '_Assign_targets',
-    '_decorator_list',
-    '_arglike',
-    '_arglikes',
-    'boolop',
-    'operator',
-    'unaryop',
-    'cmpop',
-    'comprehension',
-    '_comprehensions',
-    '_comprehension_ifs',
-    'arguments',
-    'arguments_lambda',
-    'arg',
-    'keyword',
-    'alias',
-    '_aliases',
-    'Import_name',
-    '_Import_names',
-    'ImportFrom_name',
-    '_ImportFrom_names',
-    'withitem',
-    '_withitems',
-    'pattern',
-    'type_param',
-    '_type_params',
-] | type[AST]
+    'all',                 # noqa: PYI051
+    'strict',              # noqa: PYI051
+    'exec',                # noqa: PYI051
+    'eval',                # noqa: PYI051
+    'single',              # noqa: PYI051
+    'stmts',               # noqa: PYI051
+    'stmt',                # noqa: PYI051
+    'ExceptHandler',       # noqa: PYI051
+    '_ExceptHandlers',     # noqa: PYI051
+    'match_case',          # noqa: PYI051
+    '_match_cases',        # noqa: PYI051
+    'expr',                # noqa: PYI051
+    'expr_all',            # noqa: PYI051
+    'expr_arglike',        # noqa: PYI051
+    'expr_slice',          # noqa: PYI051
+    'Tuple_elt',           # noqa: PYI051
+    'Tuple',               # noqa: PYI051
+    '_Assign_targets',     # noqa: PYI051
+    '_decorator_list',     # noqa: PYI051
+    '_arglike',            # noqa: PYI051
+    '_arglikes',           # noqa: PYI051
+    'boolop',              # noqa: PYI051
+    'operator',            # noqa: PYI051
+    'unaryop',             # noqa: PYI051
+    'cmpop',               # noqa: PYI051
+    'comprehension',       # noqa: PYI051
+    '_comprehensions',     # noqa: PYI051
+    '_comprehension_ifs',  # noqa: PYI051
+    'arguments',           # noqa: PYI051
+    'arguments_lambda',    # noqa: PYI051
+    'arg',                 # noqa: PYI051
+    'keyword',             # noqa: PYI051
+    'alias',               # noqa: PYI051
+    '_aliases',            # noqa: PYI051
+    'Import_name',         # noqa: PYI051
+    '_Import_names',       # noqa: PYI051
+    'ImportFrom_name',     # noqa: PYI051
+    '_ImportFrom_names',   # noqa: PYI051
+    'withitem',            # noqa: PYI051
+    '_withitems',          # noqa: PYI051
+    'pattern',             # noqa: PYI051
+    'type_param',          # noqa: PYI051
+    '_type_params',        # noqa: PYI051
+] | str | type[AST]
 
 """Extended parse modes:
 - `'all'`: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will

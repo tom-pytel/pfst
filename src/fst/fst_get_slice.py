@@ -1892,6 +1892,47 @@ def _get_slice_MatchMapping__all(
     return fst_
 
 
+def _get_slice_MatchClass_patterns(
+    self: fst.FST,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """A `MatchClass.patterns` slice is just a normal `MatchSequence`."""
+
+    ast = self.a
+    body = ast.patterns
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['[]'], None, from_=self)
+
+    if ast.kwd_patterns:
+        self_tail_sep = True
+    else:
+        self_tail_sep = None
+
+    loc = self._loc_MatchClass_pars()
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, loc)
+    asts = _cut_or_copy_asts(start, stop, field, cut, body)
+    ret_ast = MatchSequence(patterns=asts)
+
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                         options, field, '[', ']', ',', self_tail_sep, False)
+
+    if cut:
+        if self_tail_sep:  # means there are keywords
+            if start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+                self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    return fst_
+
+
 def _get_slice_MatchOr_patterns(
     self: fst.FST,
     start: int | Literal['end'],
@@ -2118,7 +2159,7 @@ _GET_SLICE_HANDLERS = {
 
     (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
     (MatchMapping, '_all'):                   _get_slice_MatchMapping__all,  # key:pattern*
-    (MatchClass, 'patterns'):                 _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchClass, 'patterns'):                 _get_slice_MatchClass_patterns,  # pattern*
     (MatchOr, 'patterns'):                    _get_slice_MatchOr_patterns,  # pattern*
 
     (FunctionDef, 'type_params'):             _get_slice_type_params,  # type_param*

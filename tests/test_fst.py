@@ -9394,8 +9394,7 @@ if 1:
 
         f = FST('cls(a, b=c)', MatchClass)
         self.assertEqual('glob(a, b=c)', test(f, 'cls', 'glob', FST, 'cls').src)
-        self.assertEqual('glob(new, b=c)', test(f, 'patterns', 'new', fstview,
-                                               '<<MatchClass ROOT 0,0..0,12>.patterns [<MatchAs 0,5..0,6>]>').src)
+        self.assertEqual('glob(new, b=c)', test(f, 'patterns', 'new', fstview, '[a]').src)
         self.assertEqual('glob(new, kw=c)', test(f, 'kwd_attrs', 'kw', None,
                                                 "<<MatchClass ROOT 0,0..0,14>.kwd_attrs ['b']>").src)
         self.assertEqual('glob(new, kw=blah)', test(f, 'kwd_patterns', 'blah', fstview, 'c').src)

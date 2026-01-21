@@ -2165,7 +2165,15 @@ r'''Name 'cls' Load - ROOT 0,0..0,3'''),
 
 ('', 0, None, 'patterns', {}, (MatchClass,
 r'''cls(a, b=c)'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''cls(b=c)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,6..0,7
+     .name 'c'
+''',
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
   .name 'a'

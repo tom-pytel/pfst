@@ -37476,6 +37476,719 @@ r'''{2: x, **y}'''),
 r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 ],
 
+'MatchClass_patterns': [  # ................................................................................
+
+('', 0, 1, 'patterns', {}, ('pattern', r'''
+call( \
+a \
+, \
+b \
+, \
+c \
+, \
+d \
+= \
+e \
+)
+'''), (None,
+r'''x,'''), r'''
+call( \
+x,
+b \
+, \
+c \
+, \
+d \
+= \
+e \
+)
+''', r'''
+MatchClass - ROOT 0,0..9,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[3]
+   0] MatchAs - 1,0..1,1
+     .name 'x'
+   1] MatchAs - 2,0..2,1
+     .name 'b'
+   2] MatchAs - 4,0..4,1
+     .name 'c'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 8,0..8,1
+     .name 'e'
+'''),
+
+('', 1, 2, 'patterns', {}, ('pattern', r'''
+call( \
+a \
+, \
+b \
+, \
+c \
+, \
+d \
+= \
+e \
+)
+'''), (None,
+r'''x,'''), r'''
+call( \
+a \
+, \
+x,
+c \
+, \
+d \
+= \
+e \
+)
+''', r'''
+MatchClass - ROOT 0,0..9,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[3]
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+   1] MatchAs - 3,0..3,1
+     .name 'x'
+   2] MatchAs - 4,0..4,1
+     .name 'c'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 8,0..8,1
+     .name 'e'
+'''),
+
+('', 2, 3, 'patterns', {}, ('pattern', r'''
+call( \
+a \
+, \
+b \
+, \
+c \
+, \
+d \
+= \
+e \
+)
+'''), (None,
+r'''x,'''), r'''
+call( \
+a \
+, \
+b \
+, \
+x,
+d \
+= \
+e \
+)
+''', r'''
+MatchClass - ROOT 0,0..9,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[3]
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+   1] MatchAs - 3,0..3,1
+     .name 'b'
+   2] MatchAs - 5,0..5,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 8,0..8,1
+     .name 'e'
+'''),
+
+('', 0, 3, 'patterns', {}, ('pattern', r'''
+call( \
+a \
+, \
+b \
+, \
+c \
+, \
+d \
+= \
+e \
+)
+'''), (None,
+r'''x,'''), r'''
+call( \
+x,
+d \
+= \
+e \
+)
+''', r'''
+MatchClass - ROOT 0,0..5,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 1,0..1,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 4,0..4,1
+     .name 'e'
+'''),
+
+('', 0, 3, 'patterns', {}, ('pattern', r'''
+call( \
+a \
+, \
+b \
+, \
+c \
+, \
+d \
+= \
+e \
+)
+'''), (None,
+r'''**DEL**'''), r'''
+call( \
+d \
+= \
+e \
+)
+''', r'''
+MatchClass - ROOT 0,0..4,1
+  .cls Name 'call' Load - 0,0..0,4
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 3,0..3,1
+     .name 'e'
+'''),
+
+('', 0, 1, 'patterns', {}, ('pattern', r'''
+call(
+a
+,
+b
+,
+c
+,
+d
+=
+e
+)
+'''), (None,
+r'''x,'''), r'''
+call(
+x,
+b
+,
+c
+,
+d
+=
+e
+)
+''', r'''
+MatchClass - ROOT 0,0..9,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[3]
+   0] MatchAs - 1,0..1,1
+     .name 'x'
+   1] MatchAs - 2,0..2,1
+     .name 'b'
+   2] MatchAs - 4,0..4,1
+     .name 'c'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 8,0..8,1
+     .name 'e'
+'''),
+
+('', 1, 2, 'patterns', {}, ('pattern', r'''
+call(
+a
+,
+b
+,
+c
+,
+d
+=
+e
+)
+'''), (None,
+r'''x,'''), r'''
+call(
+a
+,
+x,
+c
+,
+d
+=
+e
+)
+''', r'''
+MatchClass - ROOT 0,0..9,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[3]
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+   1] MatchAs - 3,0..3,1
+     .name 'x'
+   2] MatchAs - 4,0..4,1
+     .name 'c'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 8,0..8,1
+     .name 'e'
+'''),
+
+('', 2, 3, 'patterns', {}, ('pattern', r'''
+call(
+a
+,
+b
+,
+c
+,
+d
+=
+e
+)
+'''), (None,
+r'''x,'''), r'''
+call(
+a
+,
+b
+,
+x,
+d
+=
+e
+)
+''', r'''
+MatchClass - ROOT 0,0..9,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[3]
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+   1] MatchAs - 3,0..3,1
+     .name 'b'
+   2] MatchAs - 5,0..5,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 8,0..8,1
+     .name 'e'
+'''),
+
+('', 0, 3, 'patterns', {}, ('pattern', r'''
+call(
+a
+,
+b
+,
+c
+,
+d
+=
+e
+)
+'''), (None,
+r'''x,'''), r'''
+call(
+x,
+d
+=
+e
+)
+''', r'''
+MatchClass - ROOT 0,0..5,1
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 1,0..1,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 4,0..4,1
+     .name 'e'
+'''),
+
+('', 0, 3, 'patterns', {}, ('pattern', r'''
+call(
+a
+,
+b
+,
+c
+,
+d
+=
+e
+)
+'''), (None,
+r'''**DEL**'''), r'''
+call(
+d
+=
+e
+)
+''', r'''
+MatchClass - ROOT 0,0..4,1
+  .cls Name 'call' Load - 0,0..0,4
+  .kwd_attrs[1]
+   0] 'd'
+  .kwd_patterns[1]
+   0] MatchAs - 3,0..3,1
+     .name 'e'
+'''),
+
+('', 0, 1, 'patterns', {}, ('pattern',
+r'''call(a, b=c, d=e)'''), (None,
+r'''x,'''),
+r'''call(x, b=c, d=e)''', r'''
+MatchClass - ROOT 0,0..0,17
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'b'
+   1] 'd'
+  .kwd_patterns[2]
+   0] MatchAs - 0,10..0,11
+     .name 'c'
+   1] MatchAs - 0,15..0,16
+     .name 'e'
+'''),
+
+('', 0, 1, 'patterns', {}, ('pattern',
+r'''call(a, b=c, d=e,)'''), (None,
+r'''x,'''),
+r'''call(x, b=c, d=e,)''', r'''
+MatchClass - ROOT 0,0..0,18
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'b'
+   1] 'd'
+  .kwd_patterns[2]
+   0] MatchAs - 0,10..0,11
+     .name 'c'
+   1] MatchAs - 0,15..0,16
+     .name 'e'
+'''),
+
+('', 0, 1, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d, d=e)'''), (None,
+r'''x,'''),
+r'''call(x, b, c=d, d=e)''', r'''
+MatchClass - ROOT 0,0..0,20
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+   1] MatchAs - 0,8..0,9
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'd'
+  .kwd_patterns[2]
+   0] MatchAs - 0,13..0,14
+     .name 'd'
+   1] MatchAs - 0,18..0,19
+     .name 'e'
+'''),
+
+('', 1, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d, d=e)'''), (None,
+r'''x,'''),
+r'''call(a, x, c=d, d=e)''', r'''
+MatchClass - ROOT 0,0..0,20
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+   1] MatchAs - 0,8..0,9
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'd'
+  .kwd_patterns[2]
+   0] MatchAs - 0,13..0,14
+     .name 'd'
+   1] MatchAs - 0,18..0,19
+     .name 'e'
+'''),
+
+('', 0, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d, d=e)'''), (None,
+r'''x,'''),
+r'''call(x, c=d, d=e)''', r'''
+MatchClass - ROOT 0,0..0,17
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'd'
+  .kwd_patterns[2]
+   0] MatchAs - 0,10..0,11
+     .name 'd'
+   1] MatchAs - 0,15..0,16
+     .name 'e'
+'''),
+
+('', 0, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d, d=e,)'''), (None,
+r'''x,'''),
+r'''call(x, c=d, d=e,)''', r'''
+MatchClass - ROOT 0,0..0,18
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'd'
+  .kwd_patterns[2]
+   0] MatchAs - 0,10..0,11
+     .name 'd'
+   1] MatchAs - 0,15..0,16
+     .name 'e'
+'''),
+
+('', 0, 0, 'patterns', {}, ('pattern',
+r'''call()'''), (None,
+r'''x,'''),
+r'''call(x)''', r'''
+MatchClass - ROOT 0,0..0,7
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+'''),
+
+('', 0, 0, 'patterns', {}, ('pattern',
+r'''call()'''), (None,
+r'''x, y,'''),
+r'''call(x, y)''', r'''
+MatchClass - ROOT 0,0..0,10
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+   1] MatchAs - 0,8..0,9
+     .name 'y'
+'''),
+
+('', 0, 0, 'patterns', {}, ('pattern',
+r'''call(a=b)'''), (None,
+r'''x,'''),
+r'''call(x, a=b)''', r'''
+MatchClass - ROOT 0,0..0,12
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,10..0,11
+     .name 'b'
+'''),
+
+('', 0, 0, 'patterns', {}, ('pattern',
+r'''call(a=b,)'''), (None,
+r'''x,'''),
+r'''call(x, a=b,)''', r'''
+MatchClass - ROOT 0,0..0,13
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,10..0,11
+     .name 'b'
+'''),
+
+('', 0, 1, 'patterns', {}, ('pattern',
+r'''call(a, b)'''), (None,
+r'''**DEL**'''),
+r'''call(b)''', r'''
+MatchClass - ROOT 0,0..0,7
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'b'
+'''),
+
+('', 1, 2, 'patterns', {}, ('pattern',
+r'''call(a, b)'''), (None,
+r'''**DEL**'''),
+r'''call(a)''', r'''
+MatchClass - ROOT 0,0..0,7
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+'''),
+
+('', 0, 2, 'patterns', {}, ('pattern',
+r'''call(a, b)'''), (None,
+r'''**DEL**'''),
+r'''call()''', r'''
+MatchClass - ROOT 0,0..0,6
+  .cls Name 'call' Load - 0,0..0,4
+'''),
+
+('', 1, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d)'''), (None,
+r'''**DEL**'''),
+r'''call(a, c=d)''', r'''
+MatchClass - ROOT 0,0..0,12
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+   0] MatchAs - 0,10..0,11
+     .name 'd'
+'''),
+
+('', 0, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d)'''), (None,
+r'''**DEL**'''),
+r'''call(c=d)''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'call' Load - 0,0..0,4
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+   0] MatchAs - 0,7..0,8
+     .name 'd'
+'''),
+
+('', 1, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d,)'''), (None,
+r'''**DEL**'''),
+r'''call(a, c=d,)''', r'''
+MatchClass - ROOT 0,0..0,13
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+   0] MatchAs - 0,10..0,11
+     .name 'd'
+'''),
+
+('', 0, 2, 'patterns', {}, ('pattern',
+r'''call(a, b, c=d,)'''), (None,
+r'''**DEL**'''),
+r'''call(c=d,)''', r'''
+MatchClass - ROOT 0,0..0,10
+  .cls Name 'call' Load - 0,0..0,4
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+   0] MatchAs - 0,7..0,8
+     .name 'd'
+'''),
+
+('', 0, 0, 'patterns', {'one': True}, ('pattern',
+r'''call()'''), (None,
+r'''x'''),
+r'''call(x)''', r'''
+MatchClass - ROOT 0,0..0,7
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+'''),
+
+('', 0, 0, 'patterns', {'one': True}, ('pattern',
+r'''call()'''), (None,
+r'''x,'''),
+r'''call([x,])''',
+r'''call([x])''', r'''
+MatchClass - ROOT 0,0..0,10
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchSequence - 0,5..0,9
+     .patterns[1]
+      0] MatchAs - 0,6..0,7
+        .name 'x'
+'''),
+
+('', 0, 0, 'patterns', {'one': True}, ('pattern',
+r'''call()'''), (None,
+r'''x, y,'''),
+r'''call([x, y,])''',
+r'''call([x, y])''', r'''
+MatchClass - ROOT 0,0..0,13
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchSequence - 0,5..0,12
+     .patterns[2]
+      0] MatchAs - 0,6..0,7
+        .name 'x'
+      1] MatchAs - 0,9..0,10
+        .name 'y'
+'''),
+
+('', 0, 2, 'patterns', {'one': True}, ('pattern',
+r'''call(a, b, c)'''), (None,
+r'''x'''),
+r'''call(x, c)''', r'''
+MatchClass - ROOT 0,0..0,10
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+   1] MatchAs - 0,8..0,9
+     .name 'c'
+'''),
+
+('', 1, 3, 'patterns', {'one': True}, ('pattern',
+r'''call(a, b, c)'''), (None,
+r'''x'''),
+r'''call(a, x)''', r'''
+MatchClass - ROOT 0,0..0,10
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'a'
+   1] MatchAs - 0,8..0,9
+     .name 'x'
+'''),
+
+('', 0, 3, 'patterns', {'one': True}, ('pattern',
+r'''call(a, b, c)'''), (None,
+r'''x'''),
+r'''call(x)''', r'''
+MatchClass - ROOT 0,0..0,7
+  .cls Name 'call' Load - 0,0..0,4
+  .patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'x'
+'''),
+],
+
 'MatchOr': [  # ................................................................................
 
 ('', 0, 0, None, {}, ('MatchOr',

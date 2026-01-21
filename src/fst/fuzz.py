@@ -2418,8 +2418,8 @@ class SliceExprlike(Fuzzy):
             return ('seq',)
 
         if isinstance(ast, (Delete, Assign, Import, Global, Nonlocal,
-                            Dict, MatchSequence, MatchMapping, MatchOr,
-                            With, AsyncWith,
+                            Dict, MatchSequence, MatchMapping, MatchClass, MatchOr,
+                            With, AsyncWith, Compare, comprehension,
                             )):
             return (ast.__class__,)
 
@@ -2434,9 +2434,6 @@ class SliceExprlike(Fuzzy):
                 return ('type_params', 'decorator_list', 'ClassDef_bases',)# 'keywords')
             else:
                 return ('type_params', 'decorator_list', 'arglikes')
-
-        if isinstance(ast, Compare):
-            return (Compare,)
 
         if isinstance(ast, BoolOp):
             return ('and' if isinstance(ast.op, And) else 'or',)
@@ -2454,9 +2451,6 @@ class SliceExprlike(Fuzzy):
 
         if isinstance(ast, ImportFrom):
             return (ImportFrom,) if ast.module != '__future__' and ast.names[0].name != '*' else ()
-
-        if isinstance(ast, comprehension):
-            return (comprehension,)
 
         return ()
 
@@ -2486,6 +2480,7 @@ class SliceExprlike(Fuzzy):
             comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
             MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
+            MatchClass:       self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchOr:          self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
         }
 
@@ -2598,31 +2593,6 @@ class SliceCoerce(Fuzzy):
 
     FROM = ASTS_LEAF_EXPR_STD | ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | ASTS_LEAF_STMT  # {Expr}
     TO = [*FROM,
-        # 'exec',
-        # 'expr',
-        # 'expr_all',
-        # 'expr_arglike',
-        # 'expr_slice',
-        # 'Tuple_elt',
-        # 'Tuple',
-        # '_Assign_targets',
-        # '_decorator_list',
-        # '_arglike',
-        # '_arglikes',
-        # '_comprehension_ifs',
-        # 'arguments',
-        # 'arguments_lambda',
-        # 'arg',
-        # 'keyword',
-        # 'alias',
-        # '_aliases',
-        # 'Import_name',
-        # '_Import_names',
-        # 'ImportFrom_name',
-        # '_ImportFrom_names',
-        # 'withitem',
-        # '_withitems',
-        # 'pattern',
         'exec',
         'stmt',
         'stmts',

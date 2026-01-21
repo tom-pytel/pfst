@@ -1374,7 +1374,7 @@ def _has_Starred(self: fst.FST) -> bool:
     ))
 
 
-def _has_separator(
+def _has_separator(  # TODO: merge this with _maybe_del_separator
     self: fst.FST,
     ln: int | None = None,
     col: int | None = None,
@@ -1440,7 +1440,7 @@ def _has_separator(
     return None
 
 
-def _maybe_del_separator(
+def _maybe_del_separator(  # TODO: merge this with _has_separator
     self: fst.FST,
     ln: int,
     col: int,
@@ -1583,7 +1583,7 @@ def _maybe_add_singleton_comma(self: fst.FST, is_par: bool | None = None, elts: 
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
-def _maybe_add_line_continuations(  # TODO: doing double-duty, maybe rename to something like `_fix_line_endings()`?
+def _maybe_add_line_continuations(  # TODO: doing double duty, maybe rename to something like `_fix_line_endings()`?
     self: fst.FST,
     whole: bool = False,
     *,

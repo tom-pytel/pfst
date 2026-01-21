@@ -2665,6 +2665,38 @@ def _put_slice_MatchMapping__all(
             self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
+def _put_slice_MatchClass_patterns(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    one: bool | None,
+    options: Mapping[str, Any],
+) -> None:
+    ast = self.a
+    body = ast.patterns
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    fst_ = _code_to_slice_MatchSequence(self, code, one, options)
+
+    if not fst_ and start == stop:
+        return
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_MatchClass_pars()
+    bound_col += 1
+    bound_end_col -= 1
+
+    self_tail_sep = ((fst_ or start) and ast.kwd_patterns and stop == len_body) or None
+
+    _put_slice_seq_and_asts(self, start, stop, 'patterns', body, fst_, 'patterns', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', self_tail_sep, options)
+
+    if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+
 def _put_slice_MatchOr_patterns(
     self: fst.FST,
     code: Code | None,
@@ -2901,7 +2933,7 @@ _PUT_SLICE_HANDLERS = {
 
     (MatchSequence, 'patterns'):              _put_slice_MatchSequence_patterns,  # pattern*
     (MatchMapping, '_all'):                   _put_slice_MatchMapping__all,  # key:pattern*
-    (MatchClass, 'patterns'):                 _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchClass, 'patterns'):                 _put_slice_MatchClass_patterns,  # pattern*
     (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*
 
     (FunctionDef, 'type_params'):             _put_slice_type_params,  # type_param*

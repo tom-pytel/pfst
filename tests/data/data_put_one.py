@@ -8208,8 +8208,24 @@ r'''**IndexError('index out of range')**'''),
 match a:
  case c(a, (b)): pass
 '''), ('pattern',
-r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''**DEL**'''), r'''
+match a:
+ case c((b)): pass
+''', r'''
+Module - ROOT 0,0..1,18
+  .body[1]
+   0] Match - 0,0..1,18
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,18
+        .pattern MatchClass - 1,6..1,12
+          .cls Name 'c' Load - 1,6..1,7
+          .patterns[1]
+           0] MatchAs - 1,9..1,10
+             .name 'b'
+        .body[1]
+         0] Pass - 1,14..1,18
+'''),
 
 ('body[0].cases[0].pattern', 0, None, 'patterns', {}, ('exec', r'''
 match a:

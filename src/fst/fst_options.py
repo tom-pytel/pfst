@@ -363,9 +363,9 @@ def options(**options) -> Iterator[dict[str, Any]]:
         - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).
     - `pars_arglike`: Whether to **ADD** parentheses to argumentlike-only expressions (`*not a`, `*b or c`) when cut /
         copied either as single element or as part of a slice. If parentheses were already present then setting this
-        to `False` will not remove them. Unlike `pars_walrus` this is not mostly an aesthetic option as unparenthesized
-        arglike-only expressions are invalid everywhere except in `Call.args`, `ClassDef.bases` or an unparenthesized
-        `Subscript.slice` `Tuple`.
+        to `False` will not remove them. Unlike `pars_walrus` this is **NOT** mostly an aesthetic option as
+        unparenthesized arglike-only expressions are invalid everywhere except in `Call.args`, `ClassDef.bases` or an
+        unparenthesized `Subscript.slice` `Tuple`.
         - `True`: Parenthesize cut / copied argumentlike expressions. **DEFAULT**
         - `False`: Do not parenthesize cut / copied argumentlike expressions.
         - `None`: Parenthesize according to the `pars` option (`True` and `'auto'` parenthesize, `False` does not).

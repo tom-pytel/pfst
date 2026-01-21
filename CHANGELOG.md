@@ -14,6 +14,7 @@
 
 ### Added
 
+- prescribed slicing for `MatchClass.patterns`
 - coercion expanded greatly
   - a lot more coercion cases allowed
     - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
