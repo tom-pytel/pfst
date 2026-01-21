@@ -2,42 +2,41 @@
 
 ### Fixed
 
-- fixed parse `withitem` of a solo `GeneratorExp`
-- allow put `Starred` to `TypeVarTuple.default_value`
-- don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
-- don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
-- fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
-- fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
-- fixed delimit of whole node at root when degenerate last line has line continuation without trailing newline
-- `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
 - fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized
+- `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
+- fixed delimit of whole node at root when degenerate last line has line continuation without trailing newline
+- fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
+- fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
+- don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
+- don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
+- allow put `Starred` to `TypeVarTuple.default_value`
+- fixed parse `withitem` of a solo `GeneratorExp`
 
 ### Added
 
-- prescribed slicing for `MatchClass.patterns`
 - coercion expanded greatly
-  - a lot more coercion cases allowed
-    - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
-    - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`, `List` or `Set`
-    - all sequence types, custom and standard, to custom slice types
-    - all expressions and custom slice types to `pattern`
-  - `FST.as_(mode)` for explicit coercion directly to `mode` (which can be an explicit `type[AST]` or a parse mode)
-  - `FST(FST, mode)` for constructor default non-destructive coerce copy from other `FST` node, a-la `list(other_list) is not other_list`
-  - `FST(AST, mode)` and `FST.fromast(AST, type[AST] or mode)` can use the new coercion to convert `AST`
-  - put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
+  - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
+  - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`, `List` or `Set`
+  - all sequence types, custom and standard, to custom slice types
+  - all expressions and custom slice types to `pattern`
+- `FST.as_(mode)` for explicit coercion directly to `mode` (which can be an explicit `type[AST]` or a parse mode)
+- `FST(FST, mode)` for constructor default non-destructive coerce copy from other `FST` node, a-la `list(other_list) is not other_list`
+- `FST(AST, mode)` and `FST.fromast(AST, type[AST] or mode)` can use the new coercion to convert `AST`
+- put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
+- prescribed slicing for `MatchClass.patterns`
 
 ### Updated
 
+- `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
+- concretized behavior of put slice with `one=True` for custom special slices, will not put multiple elements now in this mode when one requested
+- `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
+- allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability
+- REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
+- improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
+- parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
 - **BREAKING CHANGE** for consistency
   - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked
   - previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
-- parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
-- improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
-- REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
-- allow put `Starred` to `value` field of `Expr`, `Return`, `AnnAssign` and `Yield` even though not compilable, for consistency, our metric is parsability, not compilability
-- `parse_withitem('x,')` now parses to singleton `Tuple` `withitem` instead of single `Name` `withitem` with trailing comma, makes more sense
-- concretized behavior of put slice with `one=True` for custom special slices, will not put multiple elements now in this mode when one requested
-- `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
 
 ## 0.2.5 - alpha - 2026-01-06
 

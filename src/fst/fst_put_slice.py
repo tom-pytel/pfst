@@ -2012,7 +2012,7 @@ def _put_slice_ClassDef_bases(
         put_slice_sep_end(self, end_params)
 
         if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-            self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+            self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
 
 def _put_slice_decorator_list(
@@ -2450,7 +2450,7 @@ def _put_slice_Call_args(
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', self_tail_sep, options)
 
     if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+        self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
 
 def _put_slice_Call_ClassDef_arglikes(
@@ -2662,7 +2662,7 @@ def _put_slice_MatchMapping__all(
 
     else:
         if self_tail_sep:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
-            self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
+            self._maybe_ins_sep(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
 def _put_slice_MatchClass_patterns(
@@ -2694,7 +2694,7 @@ def _put_slice_MatchClass_patterns(
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', self_tail_sep, options)
 
     if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+        self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
 
 def _put_slice_MatchOr_patterns(

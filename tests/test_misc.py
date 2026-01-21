@@ -831,27 +831,27 @@ d  # comment3''', f.src)
 
     def test__maybe_ins_separator(self):
         f = FST('[a#c\n]')
-        f._maybe_ins_separator(0, 2, False, 0, 2)
+        f._maybe_ins_sep(0, 2, False, 0, 2)
         self.assertEqual('[a,#c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_ins_separator(0, 2, True, 0, 2)
+        f._maybe_ins_sep(0, 2, True, 0, 2)
         self.assertEqual('[a, #c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_ins_separator(0, 2, False, 0, 6)
+        f._maybe_ins_sep(0, 2, False, 0, 6)
         self.assertEqual('[a,#c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_ins_separator(0, 2, True, 0, 6)
+        f._maybe_ins_sep(0, 2, True, 0, 6)
         self.assertEqual('[a, #c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_ins_separator(0, 2, False, 1, 0)
+        f._maybe_ins_sep(0, 2, False, 1, 0)
         self.assertEqual('[a,#c\n]', f.src)
 
         f = FST('[a#c\n]')
-        f._maybe_ins_separator(0, 2, True, 1, 0)
+        f._maybe_ins_sep(0, 2, True, 1, 0)
         self.assertEqual('[a, #c\n]', f.src)
 
     def test__trail_sep(self):

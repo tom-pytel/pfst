@@ -554,7 +554,7 @@ def get_slice_sep(
     if sep:
         if not ret_tail_sep:  # don't need or want return trailing separator
             if sep_end_pos:  # but have it
-                _, _, last_end_ln, last_end_col = ast_last.f.loc  # this will now definitely have the .f attribute and FST, we don't use _poss_end() because field may not be the same
+                _, _, last_end_ln, last_end_col = ast_last.f.loc  # this will now definitely have the .f attribute and FST
                 _, _, fst_end_ln, fst_end_col = fst_.loc
 
                 fst_._trail_sep(last_end_ln, last_end_col, fst_end_ln, fst_end_col - len(suffix), sep,
@@ -564,7 +564,7 @@ def get_slice_sep(
             _, _, last_end_ln, last_end_col = ast_last.f.loc
             _, _, fst_end_ln, fst_end_col = fst_.loc
 
-            fst_._maybe_ins_separator(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
+            fst_._maybe_ins_sep(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
 
         if self_tail_sep is not None:
             bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
@@ -578,7 +578,7 @@ def get_slice_sep(
                 last_end_col = bound_col
 
             if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
-                self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
+                self._maybe_ins_sep(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
             else:  # removed tail element(s) and what is left doesn't need its trailing separator
                 self._trail_sep(last_end_ln, last_end_col, bound_end_ln, bound_end_col, sep,
                                 self_tail_sep is False or None)
@@ -932,7 +932,7 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
                                                             bound_end_col_offset, params_offset)
 
         if self_tail_sep:
-            self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep, last)
+            self._maybe_ins_sep(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep, last)
         else:
             self._trail_sep(last_end_ln, last_end_col, bound_end_ln, bound_end_col, sep,
                             self_tail_sep is False or None)
@@ -946,7 +946,7 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
             _, _, put_last_end_ln, put_last_end_col = put_last.loc
             new_stop_ln, new_stop_col, _, _ = self._loc_maybe_key(new_stop, True, body, body2).loc
 
-            self._maybe_ins_separator(put_last_end_ln, put_last_end_col, True, new_stop_ln, new_stop_col, sep, put_last)
+            self._maybe_ins_sep(put_last_end_ln, put_last_end_col, True, new_stop_ln, new_stop_col, sep, put_last)
 
         if is_ins and start:  # between self split (last element of first part) or end and new slice following it
             self_split = body2[start - 1].f
@@ -954,8 +954,8 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
             _, _, self_split_end_ln, self_split_end_col = self_split.loc
             put_first_ln, put_first_col, _, _ = self._loc_maybe_key(start, True, body, body2).loc
 
-            self._maybe_ins_separator(self_split_end_ln, self_split_end_col, True, put_first_ln, put_first_col, sep,
-                                      self_split)
+            self._maybe_ins_sep(self_split_end_ln, self_split_end_col, True, put_first_ln, put_first_col, sep,
+                                self_split)
 
             return self
 

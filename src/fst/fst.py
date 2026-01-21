@@ -5111,6 +5111,7 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
+        _cached_allargs,
         _cached_arglikes,
 
         _is_expr_arglike_only,
@@ -5124,7 +5125,7 @@ class FST:
         _has_Starred,
 
         _trail_sep,
-        _maybe_ins_separator,
+        _maybe_ins_sep,
         _maybe_add_singleton_comma,
         _maybe_add_line_continuations,
         _fix_joined_alnum,
@@ -5155,6 +5156,7 @@ class FST:
         _loc_block_header_end,
         _loc_arguments_empty,
         _loc_comprehension_if,
+        _loc_argument,
         _loc_decorator,
         _loc_Lambda_args_entire,
         _loc_ClassDef_bases_pars,

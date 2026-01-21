@@ -79,7 +79,7 @@ understand annotations?
 >>> from fst import *
 
 >>> def type_annotations_to_type_comments(src: str) -> str:
-...     fst_ = FST(src, 'exec')  # same as "fst.parse(src).f"
+...     fst_ = FST(src)  # same as "fst.parse(src).f"
 ...
 ...     # walk the whole tree but only yield AnnAssign nodes
 ...     for f in fst_.walk(AnnAssign):

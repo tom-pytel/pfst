@@ -231,6 +231,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('_all',                  (MatchMapping,)),  # key:pattern,rest?
     ('_all',                  (Compare,)),       # left,op:comparator
     ('_args',                 (Call,)),          # args,keywords
+    # ('_all',                  (arguments,)),     # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
 
     # single value fields
     ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
@@ -1090,6 +1091,21 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
         _dump_lines(self, st, len(self.root._lines), 0, 0, 0, None)
 
 
+def _cached_allargs(self: fst.FST) -> list[AST]:
+    """Get cached merged ordered `posonlyargs+args+vararg+kwonlyargs+kwarg` arguments from `arguments`. Does not include
+    `defaults` or `kw_defaults`."""
+
+    try:
+        allargs = self._cache['allargs']
+
+    except KeyError:
+        ast = self.a
+        allargs = self._cache['allargs'] = [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()),
+                                            *ast.kwonlyargs, *([a] if (a := ast.kwarg) else ())]
+
+    return allargs
+
+
 def _cached_arglikes(self: fst.FST) -> list[AST]:
     """Get cached merged ordered arglikes from `Call.args+keywords` or `ClassDef.bases+keywords`."""
 
@@ -1447,7 +1463,7 @@ def _trail_sep(
     return None
 
 
-def _maybe_ins_separator(
+def _maybe_ins_sep(
     self: fst.FST,
     ln: int,
     col: int,
@@ -1531,8 +1547,8 @@ def _maybe_add_singleton_comma(self: fst.FST, is_delimited: bool | None = None, 
         elts = self.a.elts
 
     if len(elts) == 1:
-        self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
-                                  self.end_col - (self._is_delimited_seq() if is_delimited is None else is_delimited))
+        self._maybe_ins_sep((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
+                            self.end_col - (self._is_delimited_seq() if is_delimited is None else is_delimited))
 
 
 def _maybe_add_line_continuations(  # TODO: doing double duty, maybe rename to something like `_fix_line_endings()`?

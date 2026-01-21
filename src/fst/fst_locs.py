@@ -495,6 +495,62 @@ def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
+def _loc_argument(self: fst.FST, default: bool = False) -> fstloc:
+    """Get the location of the argument `self` including the leading `*` for a `vararg` or `**` for a `kwarg` if is one
+    of those. Can return end of argument or end of default value which corresponds to this argument, but this will only
+    be returned if requested with `default=True` and if `self` is actually a child of an `arguments` node.
+
+    **Parameters:**
+    - `default`: Whether to include the default value of this argument in the location or not.
+        - `True`: Will return end as end of the default value for this node if present. Will also return the default
+            node as a `.default` attribute of the returned location. If there is no parent or the parent is not an
+            `arguments` node then this fails silently and the `.default` attribute returned will be `None` the same as
+            if there was no default.
+        - `False`: Will return end of this `arg` as end location and there will not be a `.default` attribute at all.
+
+    **Returns:**
+    - `fstloc | fstlocn`: Location of argument including any preceding `*` or `**` and optionally ending at the end of
+        its default value. If `default=True` then there will be a `.default` attribute which will either be the node of
+        the default value or `None`.
+    """
+
+    loc = self.loc
+
+    if not (pfield := self.pfield):
+        return fstlocn(*loc, default=None) if default else loc
+
+    ln, col, end_ln, end_col = loc
+    field, _ = pfield
+    parent = self.parent
+
+    if (is_kwarg := field == 'kwarg') or field == 'vararg':
+        lines = self.root._lines
+
+        if prev := self.prev():
+            _, _, prev_ln, prev_col = prev.loc
+        else:
+            prev_ln, prev_col, _, _ = parent.loc
+
+        ln, col, src = prev_frag(lines, prev_ln, prev_col, ln, col)  # must be there
+        col += len(src) - (2 if is_kwarg else 1)
+
+        if default:
+            return fstlocn(ln, col, end_ln, end_col, default=None)
+        else:
+            return fstloc(ln, col, end_ln, end_col)
+
+    if not default:
+        return loc
+
+    default = None
+
+    if (next := self.next()) and next.pfield.name in ('defaults', 'kw_defaults'):
+        _, _, end_ln, end_col = next.pars()
+        default = next
+
+    return fstlocn(ln, col, end_ln, end_col, default=default)
+
+
 def _loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     r"""Location of `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `_decorator_list` specific decorator expression
     including the leading `@` (which is not included in the location of the expression itself). We have a whole function

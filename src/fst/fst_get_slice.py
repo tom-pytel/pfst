@@ -56,6 +56,7 @@ from .asttypes import (
     Tuple,
     While,
     With,
+    arguments,
     comprehension,
     keyword,
     match_case,
@@ -93,7 +94,6 @@ _re_empty_line_start_maybe_cont_1 = re.compile(r'[ \t]+\\?')  # empty line start
 
 
 # ......................................................................................................................
-# shared with fst_put_slice
 
 def _get_option_op_side(is_first: bool, is_last: bool, options: Mapping[str, Any]) -> bool | None:
     """Get concrete `op_side_left` from `op_side` option hint and actual location of slice (if at start or end).
@@ -674,7 +674,7 @@ def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = N
     body = self.a.patterns
 
     if len(body) == 1 and not delims.startswith('['):  #delims.startswith('('):  #
-        self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
+        self._maybe_ins_sep((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
 
     if not delims:
         return self._fix_undelimited_seq(body, '[]')
@@ -1590,7 +1590,7 @@ def _get_slice_Call_ClassDef_args_bases(
     if cut:
         if keywords:
             if start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-                self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+                self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
         elif not (is_call or body):  # everything was cut from a ClassDef and no keywords, remove parentheses
             pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
@@ -1809,6 +1809,60 @@ def _get_slice_comprehension_ifs(
     return fst_
 
 
+
+
+
+
+
+
+
+
+def _get_slice_arguments(
+    self: fst.FST,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """The slice of `arguments` is just another `arguments`."""
+
+    ast = self.a
+    allargs = self._cached_allargs()
+    len_body = len(allargs)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[],
+                                 lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
+
+    loc_first = allargs[start].f._loc_argument(True)
+    loc_last = loc_first if start == stop - 1 else allargs[stop - 1].f._loc_argument(True)
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+
+
+    # asts = _cut_or_copy_asts(start, stop, 'ifs', cut, body)
+    # ret_ast = _comprehension_ifs(ifs=asts)
+
+    # fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
+    #                        loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
+
+    # return fst_
+
+
+
+    # TODO: if cut all arguments from a Lambda then need to remove space between 'lambda' and ':' colon
+
+
+
+
+
+
+
 def _get_slice_MatchSequence_patterns(
     self: fst.FST,
     start: int | Literal['end'],
@@ -1932,7 +1986,7 @@ def _get_slice_MatchClass_patterns(
     if cut:
         if self_tail_sep:  # means there are keywords
             if start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-                self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+                self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
     return fst_
 
