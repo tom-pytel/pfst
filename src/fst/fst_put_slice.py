@@ -393,8 +393,8 @@ def _code_to_slice_BoolOp_values(
                              f'as slice to {op_cls.__name__} {self.a.__class__.__name__} '
                              "without 'one=True' or 'coerce=True'")
 
-    if (is_par := fst_.is_parenthesized_tuple()) is not None:
-        if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+    if (is_pard_tup := fst_.is_parenthesized_tuple()) is not None:
+        if is_pard_tup is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
     elif (
@@ -524,8 +524,8 @@ def _code_to_slice_Compare__all(
         raise ValueError(f'cannot put {ast__cls.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
-    if (is_par := fst_.is_parenthesized_tuple()) is not None:
-        if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+    if (is_pard_tup := fst_.is_parenthesized_tuple()) is not None:
+        if is_pard_tup is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
     elif (
@@ -1429,7 +1429,7 @@ def _put_slice_Tuple_elts(
 
     # extra checks for tuple special usage
 
-    is_par = self._is_delimited_seq()
+    is_delimited = self._is_delimited_seq()
     pfield = self.pfield
     is_slice = pfield and pfield.name == 'slice'
     need_par = False
@@ -1441,25 +1441,25 @@ def _put_slice_Tuple_elts(
             raise NodeError('cannot put tuple with Slices to tuple')
 
         if PYLT11:
-            if is_slice and not is_par and any(e.__class__ is Starred for e in fst_body):
+            if is_slice and not is_delimited and any(e.__class__ is Starred for e in fst_body):
                 if any(e.__class__ is Slice for i, e in enumerate(body) if i < start or i >= stop):
                     raise NodeError('cannot put Starred to a slice Tuple containing Slices')
 
                 need_par = True
 
         elif PYGE14:
-            if not is_par and pfield and pfield.name == 'type' and any(e.__class__ is Starred for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+            if not is_delimited and pfield and pfield.name == 'type' and any(e.__class__ is Starred for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
                 need_par = True
 
     # normal stuff
 
     _validate_put_seq(self, fst_,
-                      '' if not pfield or (is_slice and not is_par) else 'non-root non-unparenthesized-slice Tuple',
+                      '' if not pfield or (is_slice and not is_delimited) else 'non-root non-unparenthesized-slice Tuple',
                       check_target=is_valid_target)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if is_par:
+    if is_delimited:
         bound_col += 1
         bound_end_col -= 1
 
@@ -1473,9 +1473,9 @@ def _put_slice_Tuple_elts(
     else:  # for a delete we use the same rule as for a cut
         par_if_needed = pars is True if self.is_root else pars is not False
 
-    is_par = self._fix_Tuple(is_par, par_if_needed)
+    is_delimited = self._fix_Tuple(is_delimited, par_if_needed)
 
-    if need_par and not is_par and par_if_needed:
+    if need_par and not is_delimited and par_if_needed:
         self._delimit_node()
 
 

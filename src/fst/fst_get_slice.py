@@ -78,7 +78,6 @@ from .astutil import re_identifier, bistr, copy_ast
 from .common import NodeError, astfield, fstloc, next_frag, next_find, next_find_re
 
 from .fst_misc import (
-    new_empty_tuple,
     new_empty_set_star,
     new_empty_set_call,
     new_empty_set_curlies,
@@ -843,10 +842,11 @@ def _get_slice_Tuple_elts(
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return new_empty_tuple(from_=self)
+        return fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['()'], None, from_=self)
 
-    is_par = self._is_delimited_seq()
-    locs = _locs_and_bounds_get(self, start, stop, body, body, is_par)
+    is_delimited = self._is_delimited_seq()
+    locs = _locs_and_bounds_get(self, start, stop, body, body, is_delimited)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx_cls = ast.ctx.__class__
     ret_ast = Tuple(elts=asts, ctx=Load())
@@ -854,7 +854,7 @@ def _get_slice_Tuple_elts(
     if ctx_cls is not Load:
         self._set_ctx(Load, asts[:])
 
-    if is_par:
+    if is_delimited:
         prefix, suffix = '()'
     else:
         prefix = suffix = ''
@@ -865,13 +865,13 @@ def _get_slice_Tuple_elts(
     pars = fst.FST.get_option('pars', options)
     par_if_needed = pars is True if self.is_root else pars is not False
 
-    if not is_par:
+    if not is_delimited:
         fst_._fix_Tuple(False, par_if_needed)  # cutting from unparenthesized tuple defaults to different parenthesization if needed depending if cutting from root or not
 
     fst_._fix_arglikes(options)  # parenthesize any arglike expressions (could have come from a slice)
 
     if cut:
-        self._fix_Tuple(is_par, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
+        self._fix_Tuple(is_delimited, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
 
     return fst_
 
@@ -991,7 +991,8 @@ def _get_slice_Delete_targets(
     len_slice = stop - start
 
     if not len_slice:
-        return new_empty_tuple(from_=self)
+        return fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['()'], None, from_=self)
 
     if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError("cannot cut all Delete.targets without norm_self=False")
@@ -1234,7 +1235,9 @@ def _get_slice_Global_Nonlocal_names(
     len_slice = stop - start
 
     if not len_slice:
-        return new_empty_tuple(from_=self)
+        return fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['()'], None, from_=self)
+
 
     if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without norm_self=False')
@@ -1556,7 +1559,8 @@ def _get_slice_Call_ClassDef_args_bases(
     is_call = ast.__class__ is Call
 
     if not len_slice:
-        return new_empty_tuple(from_=self)
+        return fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['()'], None, from_=self)
 
     if keywords := ast.keywords:
         kw0_pos = keywords[0].f.loc

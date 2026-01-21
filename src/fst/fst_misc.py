@@ -135,7 +135,6 @@ from .common import (
 )
 
 __all__ = [
-    'new_empty_tuple',
     'new_empty_set_star',
     'new_empty_set_call',
     'new_empty_set_curlies',
@@ -520,12 +519,6 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-
-def new_empty_tuple(*, from_: fst.FST | None = None) -> fst.FST:
-    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return fst.FST(ast, ['()'], None, from_=from_)
-
 
 def new_empty_set_star(
     lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True
@@ -1569,7 +1562,7 @@ def _maybe_ins_separator(
     return srcwpos(ln, col, sep)
 
 
-def _maybe_add_singleton_comma(self: fst.FST, is_par: bool | None = None, elts: list[AST] | None = None) -> None:
+def _maybe_add_singleton_comma(self: fst.FST, is_delimited: bool | None = None, elts: list[AST] | None = None) -> None:
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
     into account. `self.a` must be a `Tuple`. Can also be used on other comma-delimited sequences."""
 
@@ -1580,7 +1573,7 @@ def _maybe_add_singleton_comma(self: fst.FST, is_par: bool | None = None, elts: 
 
     if len(elts) == 1:
         self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
-                                  self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
+                                  self.end_col - (self._is_delimited_seq() if is_delimited is None else is_delimited))
 
 
 def _maybe_add_line_continuations(  # TODO: doing double duty, maybe rename to something like `_fix_line_endings()`?
@@ -1787,11 +1780,12 @@ def _fix_undelimited_seq(
     return False
 
 
-def _fix_Tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = True) -> bool:
+def _fix_Tuple(self: fst.FST, is_delimited: bool | None = None, par_if_needed: bool = True) -> bool:
     """Add a missing trailing comma to a singleton tuple without one and parenthesize an empty tuple if it is not
     parenthesized or requires it for parsability (and is allowed by `pars` option).
 
     **Parameters:**
+    - `is_delimited`: Either `True` or `False` to indicate that is or is not delimited or `None` so that we check here.
     - `par_if_needed`: Whether to parenthesize **NON-EMPTY** tuple if it needs it or not. Empty tuples are always
         parenthesized irrespective of this parameter.
 
@@ -1801,16 +1795,16 @@ def _fix_Tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = 
 
     assert self.a.__class__ is Tuple
 
-    if is_par is None:
-        is_par = self._is_delimited_seq()
+    if is_delimited is None:
+        is_delimited = self._is_delimited_seq()
 
     if body := self.a.elts:
-        self._maybe_add_singleton_comma(is_par)
+        self._maybe_add_singleton_comma(is_delimited)
 
-    if not is_par:
+    if not is_delimited:
         return self._fix_undelimited_seq(body, '()', par_if_needed and None)
 
-    return is_par
+    return is_delimited
 
 
 def _fix_Set(self: fst.FST, norm: bool | Literal['star', 'call'] = True) -> None:
@@ -1898,12 +1892,12 @@ def _fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
             need_pars = None  # we don't know
 
         if pars:
-            if is_par := self._is_delimited_seq():
+            if is_delimited := self._is_delimited_seq():
                 need_pars = False
             elif need_pars is None:  # unparenthesized walrus in naked tuple?
                 need_pars = any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts)
 
-            self._maybe_add_singleton_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
+            self._maybe_add_singleton_comma(is_delimited)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
 
             if need_pars:
                 self._delimit_node()

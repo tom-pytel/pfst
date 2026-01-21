@@ -337,10 +337,10 @@ def _fix_With_items(self: fst.FST) -> None:
 
     cef = i0a.context_expr.f
 
-    if (is_par := cef.is_parenthesized_tuple()) is None:
+    if (is_pard_tup := cef.is_parenthesized_tuple()) is None:
         return
 
-    if not is_par:
+    if not is_pard_tup:
         cef._delimit_node()
 
     if len(prev_delims(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
@@ -1425,12 +1425,12 @@ def _put_one_Tuple_elts(
     codea = code.a
     pfield = self.pfield
     is_slice = pfield and pfield.name == 'slice'
-    is_par = self._is_delimited_seq()
+    is_delimited = self._is_delimited_seq()
 
     if pfield and codea.__class__ is Slice:  # putting Slice to non-root Tuple
         if not is_slice:
             raise NodeError('cannot put Slice to non-root Tuple which is not an Subscript.slice')
-        elif is_par:
+        elif is_delimited:
             raise NodeError('cannot put Slice to parenthesized Subscript.slice Tuple')
 
     ctx_cls = ast.ctx.__class__
@@ -1440,7 +1440,7 @@ def _put_one_Tuple_elts(
             raise NodeError(f'invalid expression for Tuple {ctx_cls.__name__} target')
 
     if PYLT11:
-        if put_star_to_unpar_slice := (is_slice and codea.__class__ is Starred and not is_par):
+        if put_star_to_unpar_slice := (is_slice and codea.__class__ is Starred and not is_delimited):
             r = (elts := ast.elts)[idx]
 
             if any(e.__class__ is Slice for e in elts if e is not r):
@@ -1452,16 +1452,16 @@ def _put_one_Tuple_elts(
             self._delimit_node()
 
     else:
-        if PYGE14 and self.pfield == ('type', None) and codea.__class__ is Starred and not is_par:  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+        if PYGE14 and self.pfield == ('type', None) and codea.__class__ is Starred and not is_delimited:  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
             self._delimit_node()
 
         self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and elts[0].__class__ is Starred  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
 
         ret = _put_one_exprlike_required(self, code, idx, field, child, static, options, 2,
-                                        arglike=is_slice and not is_par)
+                                         arglike=is_slice and not is_delimited)
 
         if self_is_solo_star_in_slice:
-            self._maybe_add_singleton_comma(is_par)
+            self._maybe_add_singleton_comma(is_delimited)
 
     return ret
 

@@ -1041,8 +1041,8 @@ def _coerce_to_expr_ast__Assign_targets(
         for a in targets:
             f = a.f
 
-            if (is_pard := f.is_parenthesized_tuple()) is False:
-                if is_pard is False:
+            if (is_pard_tup := f.is_parenthesized_tuple()) is False:
+                if is_pard_tup is False:
                     f._delimit_node()
 
                 _, _, ln, col = f.loc
