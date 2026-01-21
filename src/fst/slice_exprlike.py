@@ -557,8 +557,8 @@ def get_slice_sep(
                 _, _, last_end_ln, last_end_col = ast_last.f.loc  # this will now definitely have the .f attribute and FST, we don't use _poss_end() because field may not be the same
                 _, _, fst_end_ln, fst_end_col = fst_.loc
 
-                fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False,
-                                          fst_end_ln, fst_end_col - len(suffix), sep)
+                fst_._trail_sep(last_end_ln, last_end_col, fst_end_ln, fst_end_col - len(suffix), sep,
+                                ret_tail_sep is False or None)
 
         elif not sep_end_pos:  # need return trailing separator and don't have it
             _, _, last_end_ln, last_end_col = ast_last.f.loc
@@ -580,7 +580,8 @@ def get_slice_sep(
             if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
                 self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
             else:  # removed tail element(s) and what is left doesn't need its trailing separator
-                self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, bound_end_ln, bound_end_col, sep)
+                self._trail_sep(last_end_ln, last_end_col, bound_end_ln, bound_end_col, sep,
+                                self_tail_sep is False or None)
 
     return fst_
 
@@ -933,8 +934,8 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
         if self_tail_sep:
             self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep, last)
         else:
-            self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, bound_end_ln, bound_end_col,
-                                      sep)
+            self._trail_sep(last_end_ln, last_end_col, bound_end_ln, bound_end_col, sep,
+                            self_tail_sep is False or None)
 
     if not is_del:  # internal separator
         new_stop = start + len_fst

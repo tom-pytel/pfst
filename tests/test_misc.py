@@ -854,29 +854,45 @@ d  # comment3''', f.src)
         f._maybe_ins_separator(0, 2, True, 1, 0)
         self.assertEqual('[a, #c\n]', f.src)
 
-    def test__maybe_del_separator(self):
+    def test__trail_sep(self):
         f = FST('[a, #c\n]')
-        f._maybe_del_separator(0, 2, True, 0, 2)
+        f.elts[0]._trail_sep(0, 2, 0, 2, del_=True)
         self.assertEqual('[a, #c\n]', f.src)
 
         f = FST('[a, #c\n]')
-        f._maybe_del_separator(0, 2, True, 0, 3)
+        f.elts[0]._trail_sep(0, 2, 0, 3, del_=True)
         self.assertEqual('[a #c\n]', f.src)
 
         f = FST('[a, #c\n]')
-        f._maybe_del_separator(0, 2, False)
+        f.elts[0]._trail_sep(0, 2, del_=None)
         self.assertEqual('[a, #c\n]', f.src)
 
         f = FST('[a, \\\n]')
-        f._maybe_del_separator(0, 2, False)
+        f.elts[0]._trail_sep(0, 2, del_=None)
         self.assertEqual('[a, \\\n]', f.src)
 
         f = FST('[a, #c\n]')
-        f._maybe_del_separator(0, 2, True)
+        f.elts[0]._trail_sep(0, 2, del_=True)
         self.assertEqual('[a #c\n]', f.src)
 
         f = FST('[a,\n]')
-        f._maybe_del_separator(0, 2, False)
+        f.elts[0]._trail_sep(0, 2, del_=None)
+        self.assertEqual('[a\n]', f.src)
+
+        f = FST('[a, #c\n]')
+        f.elts[0]._trail_sep(del_=None)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a, \\\n]')
+        f.elts[0]._trail_sep(del_=None)
+        self.assertEqual('[a, \\\n]', f.src)
+
+        f = FST('[a, #c\n]')
+        f.elts[0]._trail_sep(del_=True)
+        self.assertEqual('[a #c\n]', f.src)
+
+        f = FST('[a,\n]')
+        f.elts[0]._trail_sep(del_=None)
         self.assertEqual('[a\n]', f.src)
 
     def test__maybe_fix_tuple(self):

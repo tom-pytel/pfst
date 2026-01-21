@@ -374,7 +374,7 @@ def _coerce_to_pattern_ast_stmtmod(
         return f'uncoercible type {ast.__class__.__name__}'
 
     if is_FST:
-        ast.f._has_separator(sep=';', del_=True)
+        ast.f._trail_sep(sep=';', del_=True)
 
     ast = ast.value
 
@@ -397,7 +397,7 @@ def _coerce_to_pattern_ast_Expr(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if is_FST:
-        ast.f._has_separator(sep=';', del_=True)
+        ast.f._trail_sep(sep=';', del_=True)
 
     ast = ast.value
 
@@ -1004,7 +1004,7 @@ def _coerce_to_expr_ast_stmtmod(
         return f'uncoercible type {ast.__class__.__name__}'
 
     if is_FST:
-        ast.f._has_separator(sep=';', del_=True)
+        ast.f._trail_sep(sep=';', del_=True)
 
     return ast.value, False, 0
 
@@ -1021,7 +1021,7 @@ def _coerce_to_expr_ast_Expr(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if is_FST:
-        ast.f._has_separator(sep=';', del_=True)
+        ast.f._trail_sep(sep=';', del_=True)
 
     return ast.value, False, 0
 

@@ -418,7 +418,7 @@ Traceback (most recent call last):
 ...
 SyntaxError: invalid syntax
 
->>> FST('w,', '_withitems').dump('N').items[0]._has_separator()
+>>> FST('w,', '_withitems').dump('N').items[0]._trail_sep()
 0: w,
 _withitems - ROOT 0,0..0,2
   .items[1]

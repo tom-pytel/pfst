@@ -1367,18 +1367,19 @@ def _has_Starred(self: fst.FST) -> bool:
     ))
 
 
-def _has_separator(  # TODO: merge this with _maybe_del_separator
+def _trail_sep(
     self: fst.FST,
     ln: int | None = None,
     col: int | None = None,
     end_ln: int | None = None,
     end_col: int | None = None,
     sep: str = ',',
-    del_: bool = False,
+    del_: bool | None = False,
 ) -> tuple[int, int] | None:
-    """Whether `self` has a separator (usually comma) following, after any possible closing parentheses. If so then
-    return the starting location of that separator. Will skip any closing parentheses to find the separator so can be
-    used with an end location without having to call `pars()`. Will also skip comments and line continuations.
+    """Check and optionally delete trailing separator of `self`, meaning a separator directly following the `self` node,
+    not a trailing separator in a node `self` which is a sequence. The separator may follow any number of closing
+    parentheses, comments and line continuations (as long as is withing bound). If full bound provided then no locations
+    are checked on `self` or parent. Does not call `pars()` so safe to use in the middle of edits.
 
     **Parameters:**
     - (`ln`, `col`): Location of start of span to search, otherwise gotten from end of `self`.
@@ -1386,9 +1387,15 @@ def _has_separator(  # TODO: merge this with _maybe_del_separator
         even if there are other nodes that may follow because if we run into them then they will not be a closing par or
         a separator so will return no separator found.
     - `sep`: Separator to search for, usually comma.
-    - `del_`': If a separator is found then delete it and any preceding whitespace. If this is `True` then the returned
-        location is where the separator was before the delete and can serve as a truthy indicator that a separator was
-        in fact deleted.
+    - `del_`: If a separator is found then this indicates whether to delete it or not (or delete it if not aesthetic).
+        - `True`: Always delete separator if found.
+        - `False`: Never delete separator if found (this is just a query function in this case).
+        - `None`: Delete separator if found in not "aesthetic", which means followed by a comment or linecont.
+
+    If a separator is deleted then any preceding whitespace is deleted as well unless there is nothing else preceding it
+    on the line, in which case only the separator is deleted and the whitespace is left. If a separator is deleted then
+    the returned location is where the separator was before the delete and can serve as a truthy indicator that a
+    separator was in fact deleted.
 
     **Returns:**
     - `(ln, col)`: Location of found separator after any closing parentheses.
@@ -1422,70 +1429,22 @@ def _has_separator(  # TODO: merge this with _maybe_del_separator
         if not src.startswith(sep):
             return None
 
+        if del_ is None:  # delete if not "aesthetic"
+            if (not (frag := next_frag(lines, cln, ccol + len(sep), cln,
+                                       end_col if cln == end_ln else 0x7fffffffffffffff, True, True))
+                or frag.src[0] not in '#\\'
+            ):
+                del_ = True
+
         if del_:
             if cln != ln:  # if not on same line as start of search then delete to start of preceding whitespace
-                col = re_empty_space.search(lines[cln], 0, ccol).start()
+                col = re_empty_space.search(lines[cln], 0 if cln > ln else col, ccol).start()  # `0 if cln > ln else col` to make sure we don't step backwards over starting bound, harmless if already skipped some par frags
 
-            self._put_src(None, cln, col, cln, ccol + len(sep), True)
+            self._put_src(None, cln, col or ccol, cln, ccol + len(sep), True)  # if whitespace extends to start of line then don't delete that, maybe needed for alignment
 
         return (cln, ccol)
 
     return None
-
-
-def _maybe_del_separator(  # TODO: merge this with _has_separator
-    self: fst.FST,
-    ln: int,
-    col: int,
-    force: bool = False,
-    end_ln: int | None = None,
-    end_col: int | None = None,
-    sep: str = ',',
-) -> bool:
-    """Maybe delete a separator if present. Can be always deleted or allow function to decide aeshtetically. We
-    specifically don't use `pars()` here because is meant to be used where the element is being modified and may not be
-    valid for that. This is meant to work with potential closing parentheses present after (`ln`, `col`) and expects
-    that if the separator is present in the span that it is the valid separator we are looking for. If no separator
-    found then nothing is deleted.
-
-    **Parameters:**
-    - (`ln`, `col`): Location of start of span.
-    - `force`: Whether to always delete a separator if it is present or maybe leave based on aesthetics.
-    - (`end_ln`, `end_col`): Location of end of span, otherwise gotten from end of `self`.
-    - `sep`: Separator to delete, usually comma.
-
-    **Returns:**
-    - `bool`: Whether a separator was deleted or not
-    """
-
-    if end_ln is None:
-        _, _, end_ln, end_col = self.loc
-
-    lines = self.root._lines
-
-    if not (pos := next_find(lines, ln, col, end_ln, end_col, sep)):
-        return False
-
-    sep_ln, sep_col = pos
-    sep_end_col = sep_col + len(sep)
-    sep_on_end_ln = sep_ln == end_ln
-    line_sep = lines[sep_ln]
-
-    if not (frag := next_frag(lines, sep_ln, sep_end_col, sep_ln, end_col if sep_on_end_ln else 0x7fffffffffffffff,
-                              True, True)):  # nothing on rest of line after separator?
-        sep_end_col = end_col if sep_on_end_ln else len(line_sep)
-
-    elif frag.src[0] not in '#\\':  # not a comment or line continuation, closing delimiter or next element if being used that way
-        sep_end_col = frag.col
-
-    elif not force:  # comment or line continuation follows, leave separator for aesthetic reasons if allowed
-        return False
-
-    del_col = re_empty_space.search(line_sep, col if sep_ln == ln else 0, sep_col).start()
-
-    self._put_src(None, sep_ln, del_col or sep_col, sep_ln, sep_end_col, True)
-
-    return True
 
 
 def _maybe_ins_separator(

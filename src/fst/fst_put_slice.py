@@ -983,7 +983,7 @@ def _code_to_slice__arglikes(
             arglike0 = arglikes[0]
 
             if isinstance(code, (str, list)):
-                if not arglike0.f._has_separator():
+                if not arglike0.f._trail_sep():
                     return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
             if arglike0.__class__ is keyword:
@@ -1107,7 +1107,7 @@ def _code_to_slice__withitems(
 
             if len(items) == 1:  # if is length 1 then maybe we put just this one element
                 if isinstance(code, (str, list)):
-                    if not items[0].f._has_separator():
+                    if not items[0].f._trail_sep():
                         return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
                 elif codea_cls is withitem:  # was already expression or withitem node passed in
@@ -1194,7 +1194,7 @@ def _code_to_slice__expr_arglikes(
 
         if len(elts := ast_.elts) == 1:  # if is length 1 then maybe we put just this one element and not singleton Tuple
             if isinstance(code, (str, list)):
-                if not elts[0].f._has_separator():
+                if not elts[0].f._trail_sep():
                     return fst_  # if a single element like 'a' passed as source without a trailing comma then we don't treat that as a sequence because it would be counterintuitive
 
             if codea_cls is Tuple and codea is code:  # AST Tuple passed in, proper representation was figured out in code_as__expr_arglikes(..., one=one)
