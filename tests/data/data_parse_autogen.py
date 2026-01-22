@@ -4632,7 +4632,7 @@ comprehension - ROOT 0,1..0,11
 
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r''' a: list[str], /, b: int = 1, *c, d=100, **e  # tail'''), r'''
-arguments - ROOT 0,1..0,44
+arguments - ROOT 0,0..0,52
   .posonlyargs[1]
    0] arg - 0,1..0,13
      .arg 'a'
@@ -4659,7 +4659,7 @@ arguments - ROOT 0,1..0,44
 
 ('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r''' a, /, b, *c, d=100, **e  # tail'''), r'''
-arguments - ROOT 0,1..0,24
+arguments - ROOT 0,0..0,32
   .posonlyargs[1]
    0] arg - 0,1..0,2
      .arg 'a'

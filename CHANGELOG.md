@@ -14,7 +14,7 @@
 
 ### Added
 
-- coercion expanded greatly
+- coercion expanded greatly, can now successfully put more nodes which are not the exact type but that "should work" according to common sense
   - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
   - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`, `List` or `Set`
   - all sequence types, custom and standard, to custom slice types

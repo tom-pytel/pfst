@@ -49,12 +49,12 @@ _re_line_end_ws_comment = re.compile(r'\s*#.*$')     # search: line end maybe wh
 # }
 
 _re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
-    ',':   re.compile(r'\s*  (?:,\s*)?    (?:\\|\#.*)?  $', re.VERBOSE),
-    '|':   re.compile(r'\s*  (?:\|\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
-    '=':   re.compile(r'\s*  (?:=\s*)?    (?:\\|\#.*)?  $', re.VERBOSE),
+    ',':   re.compile(r'\s*  (?:,\s*)?    (\\|\#.*)?  $', re.VERBOSE),
+    '|':   re.compile(r'\s*  (?:\|\s*)?   (\\|\#.*)?  $', re.VERBOSE),
+    '=':   re.compile(r'\s*  (?:=\s*)?    (\\|\#.*)?  $', re.VERBOSE),
     # 'and': re.compile(r'\s*  (?:and\s*)?  (?:\\|\#.*)?  $', re.VERBOSE),
     # 'or':  re.compile(r'\s*  (?:or\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
-    '':    re.compile(r'\s*               (?:\\|\#.*)?  $', re.VERBOSE),
+    '':    re.compile(r'\s*               (\\|\#.*)?  $', re.VERBOSE),
 }
 
 _shorter = lambda a, b: a if len(a) < len(b) else b
@@ -288,6 +288,13 @@ def _locs_slice(
      ++++          +++       ++++      ++++
     =-----        =---      =----     =-----
 
+    ... case 4b ..........................................................
+     PRE,\n
+     GET, # trivia
+     +++++++++++++
+    =-------------
+    special case when there is a comment on the last line of the bound
+
     ... case 5 ...........................................................
     [PRE,\n        [PRE,\n        [PRE,\n       [PRE,\n       [PRE,\n
          ++             ++             ++            ++            ++
@@ -298,7 +305,7 @@ def _locs_slice(
     ++++++         +++++          ++++          +++++         +++++
     -------        =-----         =---          =----         =-----
     fallthrough
-    from case 4
+    from case 4 / 4b
 
     ... case 6 ...........................................................
     [PRE,\n
@@ -366,15 +373,22 @@ def _locs_slice(
         assert ld_col == 0
 
         if tr_ln == last_end_ln:  # does not extend past end of line (different from trailing_trivia() 'ends_line')
+            eff_end_col = last_end_col
+
             if ld_ln == first_ln:  # starts on first line which is copied / deleted
-                if single or not _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine since its just informative)
+                m = None
+
+                if single or not (m := _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col)):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine since its just informative)
                     return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
                             fstloc(first_ln, ld_col, last_end_ln, tr_col),
                             indent, sep_end_pos)  # case 4, we do it this way to return this specific information that it starts a line but doesn't end one
 
-            return ((fstloc((l := ld_ln - 1), len(lines[l]), last_end_ln, last_end_col)
+                if m and (g := m.group(1)) and g.startswith('#'):  # THIS IS A PATCH! this catches trailing comment that was included in the trivia but on bound last line that otherwise would be excluded because of this
+                    eff_end_col = tr_col  # case 4b
+
+            return ((fstloc((l := ld_ln - 1), len(lines[l]), last_end_ln, eff_end_col)
                      if ld_ln else
-                     fstloc(ld_ln, ld_col, last_end_ln, last_end_col)),
+                     fstloc(ld_ln, ld_col, last_end_ln, eff_end_col)),
                     fstloc(ld_ln, ld_col, last_end_ln, tr_col),
                     indent, sep_end_pos)  # case 5
 
@@ -436,16 +450,17 @@ def get_slice_sep(
     bound_end_ln: int,
     bound_end_col: int,
     options: Mapping[str, Any],
-    field: str = 'elts',
+    field_or_new_last: str | fst.FST = 'elts',
     prefix: str = '',
     suffix: str = '',
     sep: str = ',',
     self_tail_sep: bool | Literal[0, 1] | None = None,
     ret_tail_sep: bool | Literal[0, 1] | None = None,
+    set_ast_loc: bool = True,
 ) -> fst.FST:
     """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
     with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
-    deleted.
+    deleted. This does not cut or copy the actual `AST` nodes, that must be done by the caller, it just does the source.
 
     If doing with separators then trailing separators will be added / removed as needed and according to if they are in
     normal positions. If cut from `self` leaves an empty unparenthesized tuple then parentheses will NOT be added here.
@@ -458,9 +473,10 @@ def get_slice_sep(
     `bound_end_col`) must be end of container just before closing delimiters.
 
     **Parameters:**
-    - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
-    - `ast`: The already built new `AST` that is being gotten. The elements being gotten must be in this with their
-        current locations in the `self`. The insides of this are not accessed, just the location is set.
+    - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of body. These are only used to
+        determine what separators to put or delete, not for any actual accesses.
+    - `ast`: The already built new `AST` that is being gotten (cut or copied). The elements being gotten must be in this
+        with their current locations in the `self`. The insides of this are not accessed, just the location is set.
     - `ast_last`: The `AST` of the last element copied or cut, not assumend to have `.f` `FST` attribute to begin with.
         Can be `None` if not doing separators.
     - `loc_first`: The full location of the first element copied or cut, parentheses included.
@@ -472,12 +488,19 @@ def get_slice_sep(
         sequence if there are other things which follow and look like part of the sequence (like a `rest` in a
         `MatchMapping`).
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
-    - `field`: Which field of is being gotten from. In the case of two-field sequences like `Dict` this should be the
-        last field syntactically, `value` in the case of `Dict` and should always have valid entries and not `None`.
+    - `field_or_new_last`: Either a `str` indicating an existing field which is the body or an actual `FST` of the new
+        last element after the copy or cut.
+        - `str`: Which field of `self` is being gotten from. In the case of two-field sequences like `Dict` this should
+            be the last field syntactically, `value` in the case of `Dict` and should always have valid entries and not
+            `None`.
+        - `FST`: The new last element of `self` after the cut or copy. In the case of copy it is just the actual last
+            element. In the case of cut it can be the current last element if the cut is internal or a new internal
+            element if the cut removes the current last element. If everything is cut then just set this to '' as it
+            will not be used.
     - `prefix`, `suffix`: What delimiters to add to copied / cut span of elements (pars, brackets, curlies).
     - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr. If this is false
-        (empty string) then no separator stuff is done and `ast_last`, `field`, `self_tail_sep` and `ret_tail_sep` are
-        not used.
+        (empty string) then no separator stuff is done and `ast_last`, `field_or_new_last`, `self_tail_sep` and
+        `ret_tail_sep` are not used.
     - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
         - `True`: Always add if not present.
@@ -490,6 +513,7 @@ def get_slice_sep(
         - `False`: Always remove if present.
         - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
+    - `set_ast_loc`: Whether to set the location attributes in the `ast` or not.
     """
 
     lines = self.root._lines
@@ -534,18 +558,20 @@ def get_slice_sep(
 
     # set location of root node and make the actual FST
 
-    ast.lineno = copy_ln + 1
-    ast.col_offset = lines[copy_ln].c2b(copy_col)
-    ast.end_lineno = copy_end_ln + 1
-    ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+    if set_ast_loc:
+        ast.lineno = copy_ln + 1
+        ast.col_offset = lines[copy_ln].c2b(copy_col)
+        ast.end_lineno = copy_end_ln + 1
+        ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
     fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
                                                     del_loc if cut else None,
                                                     [del_indent] if del_indent and del_loc.end_col else None,
                                                     docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
 
-    ast.col_offset = 0  # before prefix
-    ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
+    if set_ast_loc:
+        ast.col_offset = 0  # before prefix
+        ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
 
     fst_._touch()
 
@@ -570,7 +596,9 @@ def get_slice_sep(
             bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
                                                                 params_offset)
 
-            if isinstance(last := getattr(self.a, field)[-1], AST):
+            if field_or_new_last.__class__ is fst.FST:
+                _, _, last_end_ln, last_end_col = field_or_new_last.loc
+            elif isinstance(last := getattr(self.a, field_or_new_last)[-1], AST):
                 _, _, last_end_ln, last_end_col = last.f.loc
 
             else:  # Globals or Locals names, no last element with location so we use start of bound which is just past last untouched element which is now the last element

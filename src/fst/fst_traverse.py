@@ -34,13 +34,6 @@ from .astutil import last_block_header_child, syntax_ordered_children
 from .traverse_next import NEXT_FUNCS
 from .traverse_prev import PREV_FUNCS
 
-__all__ = [
-    'next_bound',
-    'prev_bound',
-    'next_bound_step',
-    'prev_bound_step',
-]
-
 
 _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP = {arguments,} | ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP
 _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_OP     = (_ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP | ASTS_LEAF_OPERATOR |
@@ -77,11 +70,9 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Internal "public"
+# private FST class methods
 
-# TODO: make these private members or get rid of them?
-
-def next_bound(self: fst.FST) -> tuple[int, int]:
+def _next_bound(self: fst.FST) -> tuple[int, int]:
     """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
     self then return end of parent. If no parent then return end of source."""
 
@@ -93,7 +84,7 @@ def next_bound(self: fst.FST) -> tuple[int, int]:
     return len(ls := self.root._lines) - 1, len(ls[-1])
 
 
-def prev_bound(self: fst.FST) -> tuple[int, int]:
+def _prev_bound(self: fst.FST) -> tuple[int, int]:
     """Get a prev bound for search after any previous ASTs for this object within parent. If no siblings found before
     self then return start of parent. If no parent then return (0, 0)."""
 
@@ -105,7 +96,7 @@ def prev_bound(self: fst.FST) -> tuple[int, int]:
     return 0, 0
 
 
-def next_bound_step(self: fst.FST) -> tuple[int, int]:
+def _next_bound_step(self: fst.FST) -> tuple[int, int]:
     """Get a next bound for search before any following ASTs for this object using `step_fwd()`."""
 
     if next := self.step_fwd('loc', False):
@@ -114,7 +105,7 @@ def next_bound_step(self: fst.FST) -> tuple[int, int]:
     return len(ls := self.root._lines) - 1, len(ls[-1])
 
 
-def prev_bound_step(self: fst.FST) -> tuple[int, int]:
+def _prev_bound_step(self: fst.FST) -> tuple[int, int]:
     """Get a prev bound for search after any previous ASTs for this object using `step_back()`."""
 
     if prev := self.step_back('loc', False):

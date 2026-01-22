@@ -46,10 +46,7 @@ from .asttypes import (
 )
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
-
 from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re
-
-from .fst_traverse import next_bound, prev_bound
 
 
 _ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
@@ -141,51 +138,41 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
 
     assert self.a.__class__ is arguments
 
-    if not (first := self.first_child()):
+    if not (last_child := self.last_child()):
         return None
 
-    ast = self.a
-    last = self.last_child()
+    if not (parent := self.parent):  # standalone args can be used as a slice, we make whole source its location
+        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+
     lines = self.root._lines
     last_ln = len(lines) - 1
-    rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound(self))
+    parenta = parent.a
+    parent_cls = parenta.__class__
+    _, _, end_ln, end_col = last_child.loc
 
-    end_ln, end_col = rpars[-1]
-    start_ln, start_col, _, _ = first.loc
+    if parent_cls is Lambda:
+        ln, col, _, _ = parent.loc
+        col += 6
 
-    if ast.posonlyargs:
-        leading_stars = None  # no leading stars
-        trailing_slash = False if ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg else True
+        if lines[ln][col : col + 1].isspace():
+            col += 1
+
+        end_ln, end_col = next_find(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff, ':')  # must be there
 
     else:
-        trailing_slash = False
+        assert parent_cls in ASTS_LEAF_FUNCDEF
 
-        if ast.args:
-            leading_stars = None  # no leading stars
-        elif ast.vararg or ast.kwonlyargs:
-            leading_stars = '*'  # leading star just before varname or bare leading star with comma following
-        elif ast.kwarg:
-            leading_stars = '**'  # leading double star just before varname
+        first_child = self.first_child()
+        _, _, first_end_ln, first_end_col = first_child.loc
+        ln, col = self._prev_bound()
 
-    if (frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff)) and frag.src.startswith(','):  # trailing comma
-        end_ln, end_col, _ = frag
-        end_col += 1
+        ln, col = next_find(lines, ln, col, first_end_ln, first_end_col, '(')  # must be there
+        col += 1
 
-    elif (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_FUNCDEF:  # arguments enclosed in pars
-        end_ln, end_col = rpars[-2]  # must be there
+        next_ln, next_col = self._next_bound()
+        end_ln, end_col = prev_find(lines, end_ln, end_col, next_ln, next_col, ')')  # must be there
 
-    if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-        start_ln, start_col = prev_find(lines, *prev_bound(self), start_ln, start_col, leading_stars)
-
-    if trailing_slash:
-        end_ln, end_col = next_find(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff, '/')  # must be there
-        end_col += 1
-
-        if (frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff)) and frag.src.startswith(','):  # silly, but, trailing comma trailing slash
-            end_ln, end_col, _ = frag
-            end_col += 1
-
-    return fstloc(start_ln, start_col, end_ln, end_col)
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def _loc_comprehension(self: fst.FST) -> fstloc:
@@ -229,7 +216,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
             end_ln, end_col = rpars[0]
         else:
 
-            end_ln, end_col = rpars[len(prev_delims(lines, *prev_bound(last), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
+            end_ln, end_col = rpars[len(prev_delims(lines, *last._prev_bound(), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -459,6 +446,8 @@ def _loc_arguments_empty(self: fst.FST) -> fstloc:
         end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')
 
     else:
+        assert parenta.__class__ in ASTS_LEAF_FUNCDEF
+
         if type_params := getattr(parenta, 'type_params', None):  # doesn't exist in py < 3.12
             _, _, ln, col = type_params[-1].f.loc
 

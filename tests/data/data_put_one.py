@@ -2352,7 +2352,7 @@ Module - ROOT 0,0..0,22
   .body[1]
    0] FunctionDef - 0,0..0,22
      .name 'f'
-     .args arguments - 0,6..0,14
+     .args arguments - 0,6..0,15
        .args[1]
         0] arg - 0,6..0,14
           .arg 'a'
@@ -2369,7 +2369,7 @@ Module - ROOT 0,0..0,15
   .body[1]
    0] FunctionDef - 0,0..0,15
      .name 'f'
-     .args arguments - 0,6..0,7
+     .args arguments - 0,6..0,8
        .args[1]
         0] arg - 0,6..0,7
           .arg 'a'
@@ -10646,13 +10646,11 @@ def f(a=(1), * \
  b \
  ): pass
 '''), ('arg',
-r'''**DEL**'''), r'''
-def f(a=(1) \
- ): pass
-''', r'''
-Module - ROOT 0,0..1,8
+r'''**DEL**'''),
+r'''def f(a=(1)): pass''', r'''
+Module - ROOT 0,0..0,18
   .body[1]
-   0] FunctionDef - 0,0..1,8
+   0] FunctionDef - 0,0..0,18
      .name 'f'
      .args arguments - 0,6..0,11
        .args[1]
@@ -10661,7 +10659,7 @@ Module - ROOT 0,0..1,8
        .defaults[1]
         0] Constant 1 - 0,9..0,10
      .body[1]
-      0] Pass - 1,4..1,8
+      0] Pass - 0,14..0,18
 '''),
 
 ('body[0].args', None, None, 'vararg', {}, ('exec',
@@ -10935,21 +10933,19 @@ lambda a=(1), * \
  b \
  : None
 '''), ('arg',
-r'''**DEL**'''), r'''
-lambda a=(1) \
- : None
-''', r'''
-Module - ROOT 0,0..1,7
+r'''**DEL**'''),
+r'''lambda a=(1): None''', r'''
+Module - ROOT 0,0..0,18
   .body[1]
-   0] Expr - 0,0..1,7
-     .value Lambda - 0,0..1,7
+   0] Expr - 0,0..0,18
+     .value Lambda - 0,0..0,18
        .args arguments - 0,7..0,12
          .args[1]
           0] arg - 0,7..0,8
             .arg 'a'
          .defaults[1]
           0] Constant 1 - 0,10..0,11
-       .body Constant None - 1,3..1,7
+       .body Constant None - 0,14..0,18
 '''),
 
 ('body[0].value.args', None, None, 'vararg', {}, ('exec',
@@ -11995,10 +11991,10 @@ Module - ROOT 0,0..0,24
 ('body[0].args', None, None, 'kwarg', {}, ('exec',
 r'''def f(a, /, ): pass'''), ('arg',
 r'''new'''),
-r'''def f(a, /, **new ): pass''', r'''
-Module - ROOT 0,0..0,25
+r'''def f(a, /, **new): pass''', r'''
+Module - ROOT 0,0..0,24
   .body[1]
-   0] FunctionDef - 0,0..0,25
+   0] FunctionDef - 0,0..0,24
      .name 'f'
      .args arguments - 0,6..0,17
        .posonlyargs[1]
@@ -12007,7 +12003,7 @@ Module - ROOT 0,0..0,25
        .kwarg arg - 0,14..0,17
          .arg 'new'
      .body[1]
-      0] Pass - 0,21..0,25
+      0] Pass - 0,20..0,24
 '''),
 
 ('body[0].value.args', None, None, 'kwarg', {}, ('exec',
@@ -12101,18 +12097,18 @@ Module - ROOT 0,0..0,24
 ('body[0].value.args', None, None, 'kwarg', {}, ('exec',
 r'''lambda a, /, : None'''), ('arg',
 r'''new'''),
-r'''lambda a, /, **new : None''', r'''
-Module - ROOT 0,0..0,25
+r'''lambda a, /, **new: None''', r'''
+Module - ROOT 0,0..0,24
   .body[1]
-   0] Expr - 0,0..0,25
-     .value Lambda - 0,0..0,25
+   0] Expr - 0,0..0,24
+     .value Lambda - 0,0..0,24
        .args arguments - 0,7..0,18
          .posonlyargs[1]
           0] arg - 0,7..0,8
             .arg 'a'
          .kwarg arg - 0,15..0,18
            .arg 'new'
-       .body Constant None - 0,21..0,25
+       .body Constant None - 0,20..0,24
 '''),
 
 ('body[0].value.values[0].value', None, None, 'operand', {'_ver': 12}, ('exec',
@@ -17376,27 +17372,29 @@ r'''lambda: None'''), ('arg',
 r'''x: int'''),
 r'''**NodeError('expecting lambda arguments, got arg, could not coerce')**'''),
 
-('', None, None, 'args', {'_src': False}, ('FunctionDef',
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
 r'''def f(): pass'''), ('Tuple', r'''
 
 x,
 y,
 
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
 ('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
@@ -17406,20 +17404,22 @@ x,
 y,
 ]
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
 ('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
@@ -17429,20 +17429,22 @@ x,
 y,
 }
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
 ('', None, None, 'args', {'_src': False}, ('FunctionDef',
@@ -17506,27 +17508,29 @@ FunctionDef - ROOT 0,0..1,8
    0] Pass - 1,4..1,8
 '''),
 
-('', None, None, 'args', {'_src': False}, ('FunctionDef',
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
 r'''def f(): pass'''), ('_arglikes', r'''
 
 x,
 y,
 
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
 ('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
@@ -17536,66 +17540,72 @@ if x
 if y
 
 '''), r'''
-def f(x,
-y): pass
+def f(
+x,
+y
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,8
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,1
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,4..1,8
+   0] Pass - 3,3..3,7
 '''),
 
-('', None, None, 'args', {'_src': False}, ('FunctionDef',
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
 r'''def f(): pass'''), ('arguments', r'''
 
 x,
 y,
 
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
-('', None, None, 'args', {'_src': False}, ('FunctionDef',
+('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
 r'''def f(): pass'''), ('arguments', r'''
 
 x,
 *y,
 
 '''), r'''
-def f(x,
-*y,): pass
+def f(
+x,
+*y,
+): pass
 ''',
 r'''def f(x, *y): pass''', r'''
-FunctionDef - ROOT 0,0..1,10
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,3
+  .args arguments - 0,6..3,0
     .args[1]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-    .vararg arg - 1,1..1,2
+    .vararg arg - 2,1..2,2
       .arg 'y'
   .body[1]
-   0] Pass - 1,6..1,10
+   0] Pass - 3,3..3,7
 '''),
 
 ('', None, None, 'args', {'_src': False}, ('FunctionDef',
@@ -17675,20 +17685,22 @@ x,
 y,
 )
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
 ('', None, None, 'args', {'_src': False, 'raw': False}, ('FunctionDef',
@@ -17698,66 +17710,72 @@ x,
 y,
 ]
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
-('', None, None, 'args', {'_src': False, '_ver': 12}, ('FunctionDef',
+('', None, None, 'args', {'_src': False, '_ver': 12, 'raw': False}, ('FunctionDef',
 r'''def f(): pass'''), ('_type_params', r'''
 
 x,
 y,
 
 '''), r'''
-def f(x,
-y,): pass
+def f(
+x,
+y,
+): pass
 ''',
 r'''def f(x, y): pass''', r'''
-FunctionDef - ROOT 0,0..1,9
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,2
+  .args arguments - 0,6..3,0
     .args[2]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-     1] arg - 1,0..1,1
+     1] arg - 2,0..2,1
        .arg 'y'
   .body[1]
-   0] Pass - 1,5..1,9
+   0] Pass - 3,3..3,7
 '''),
 
-('', None, None, 'args', {'_src': False, '_ver': 12}, ('FunctionDef',
+('', None, None, 'args', {'_src': False, '_ver': 12, 'raw': False}, ('FunctionDef',
 r'''def f(): pass'''), ('_type_params', r'''
 
 x,
 *y,
 
 '''), r'''
-def f(x,
-*y,): pass
+def f(
+x,
+*y,
+): pass
 ''',
 r'''def f(x, *y): pass''', r'''
-FunctionDef - ROOT 0,0..1,10
+FunctionDef - ROOT 0,0..3,7
   .name 'f'
-  .args arguments - 0,6..1,3
+  .args arguments - 0,6..3,0
     .args[1]
-     0] arg - 0,6..0,7
+     0] arg - 1,0..1,1
        .arg 'x'
-    .vararg arg - 1,1..1,2
+    .vararg arg - 2,1..2,2
       .arg 'y'
   .body[1]
-   0] Pass - 1,6..1,10
+   0] Pass - 3,3..3,7
 '''),
 ],
 

@@ -1271,7 +1271,7 @@ def _coerce_to_expr_ast_arguments(
     _, _, end_ln, end_col = ast.f.loc  # need to do this because of possible trailing comma
 
     return Tuple(elts=elts, ctx=Load(), lineno=e0.lineno, col_offset=e0.col_offset, end_lineno=end_ln + 1,
-                 end_col_offset=lines[end_ln].c2b(end_col)), False, 2
+                 end_col_offset=lines[end_ln].c2b(end_col)), True, 2
 
 def _coerce_to_expr_ast_arg(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]

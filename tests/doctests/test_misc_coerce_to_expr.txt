@@ -758,7 +758,8 @@ _arglikes - ROOT 0,0..0,11
 6: c
 7: ,
 8: d
-arguments - ROOT 1,0..8,1
+9:
+arguments - ROOT 0,0..9,0
   .args[2]
 1: a
    0] arg - 1,0..1,1
@@ -775,8 +776,7 @@ arguments - ROOT 1,0..8,1
      .arg 'd'
   .kw_defaults[1]
    0] None
-9:
-<arguments ROOT 1,0..8,1>
+<arguments ROOT 0,0..9,0>
 
 >>> cd.code_as_expr(FST('a | b', pattern).put(None, 1), coerce=True).dump('N').verify()
 0: a

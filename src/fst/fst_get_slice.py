@@ -665,6 +665,145 @@ def _fix_decorator_list_del(
             root._offset(bound_ln, 0, 1, 0)
 
 
+def _fix_arguments_copy(self: fst.FST) -> None:
+    """Fix copied `arguments` slice. Add needed `/` positional and / or `*` keyword indicators to end or start of
+    copied arguments."""
+
+    assert not self.parent  # self.is_root
+
+    ast = self.a
+    lines = self._lines
+
+    if posonlyargs := ast.posonlyargs:  # may need to add trailing ',/' to indicate position-only arguments
+        if not (ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg):  # only if there is nothing following
+            f = posonlyargs[-1].f
+            ln, col, end_ln, end_col = f.loc  # args can't has pars
+
+            if (g := f.next()) and g.pfield.name == 'defaults':
+                _, _, end_ln, end_col = g.pars()  # defaults can has pars
+
+            if frag := next_frag(lines, end_ln, end_col, len(lines) - 1, 0x7fffffffffffffff):  # trailing comma?
+                end_ln, end_col, src = frag
+
+                assert src == ','
+
+                if lines[-1]:  # non-own-line last keyword arg
+                    self._put_src(' /', end_ln, end_col, end_ln, end_col)  # we don't have to offset because after last node and arguments has calculated location
+                else:
+                    self._put_src(f'{lines[ln][:col]}/,', end_ln + 1, 0, end_ln + 1, 0)
+
+            elif lines[-1]:  # no trailing comma
+                self._put_src(', /', end_ln, end_col, end_ln, end_col)
+
+            else:
+                self._put_src(',', end_ln, end_col, end_ln, end_col)  # may be comment after
+                self._put_src(f'{lines[ln][:col]}/', end_ln + 1, 0, end_ln + 1, 0)
+
+            self._touch()  # because we didn't offset
+
+    elif (kwonlyargs := ast.kwonlyargs) and not (ast.args or ast.vararg):  # may need to add leading '*,' to indicate keyword-only arguments
+        ln, col, _, _ = kwonlyargs[0].f.loc
+
+        if lines[0]:
+            self._put_src('*, ', ln, col, ln, col, False)
+        else:  # need to put '*' on its own line
+            self._put_src(f'{lines[ln][:col]}*,\n', ln, 0, ln, 0, False)
+
+
+def _fix_arguments_del(self: fst.FST) -> None:
+    """Fix `arguments` slice after a deletion. May need to replace removed `/` or `*` or may need to remove them."""
+
+    ast = self.a
+    lines = self.root._lines
+    posonlyargs = ast.posonlyargs
+    args = ast.args
+    vararg = ast.vararg
+    kwonlyargs = ast.kwonlyargs
+    kwarg = ast.kwarg
+    is_empty = not (posonlyargs or args or vararg or kwonlyargs or kwarg)
+
+    if is_empty:  # if completely empty then just delete everything and we are done
+        ln, col, end_ln, end_col = self._loc_arguments_empty()
+
+        self._put_src(None, ln, col, end_ln, end_col, True)
+
+        return
+
+    self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+    # posonlyargs '/'
+
+    if not posonlyargs:  # remove leading '/' if exists
+        if (frag := next_frag(lines, self_ln, self_col, self_end_ln, self_end_col)) and frag.src.startswith('/'):
+            ln, col, _ = frag
+            end_ln, end_col, src = next_frag(lines, ln, col + 1, self_end_ln, self_end_col)  # must be there
+            end_col += 1
+
+            if src == ',':
+                end_ln, end_col, src = next_frag(lines, end_ln, end_col, self_end_ln, self_end_col)  # must be there
+            else:  # next element right after comma without space
+                assert src.startswith(',')
+
+            self._put_src(None, ln, col, end_ln, end_col, True)
+
+            self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+    else:  # there are posonlyargs, make sure there is a '/'
+        f = posonlyargs[-1].f
+        ln, col, end_ln, end_col = f.loc  # args can't has pars
+
+        if (g := f.next()) and g.pfield.name == 'defaults':
+            _, _, end_ln, end_col = g.pars()  # defaults can has pars
+
+        if frag := next_frag(lines, end_ln, end_col, self_end_ln, self_end_col):  # something after?
+            end_ln, end_col, src = frag
+            end_col += 1
+
+            assert src == ','  # has to be this
+
+            if frag := next_frag(lines, end_ln, end_col, self_end_ln, self_end_col):  # something after?
+                next_ln, _, src = frag
+
+                if not src.startswith('/'):
+                    if next_ln == end_ln:  # next element on same line as comma?
+                        self._put_src(' /,', end_ln, end_col, end_ln, end_col, True)
+                    else:
+                        self._put_src(f'{lines[ln][:col]}/,\n', end_ln + 1, 0, end_ln + 1, 0, True)
+
+            elif self_end_ln == end_ln:
+                self._put_src(' /,', end_ln, end_col, end_ln, end_col, True)
+            else:
+                self._put_src(f'{lines[ln][:col]}/,\n', end_ln + 1, 0, end_ln + 1, 0, True)
+
+        elif self_end_ln == end_ln:  # nothing follow, not comma or anything
+            self._put_src(', /', end_ln, end_col, end_ln, end_col, True)
+        else:
+            self._put_src(f',\n{lines[ln][:col]}/', end_ln + 1, 0, end_ln + 1, 0, True)
+
+        self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+    # kwonlyargs '*'
+
+    if vararg:  # if this exists then we don't have to do anything about a standalone '*'
+        pass  # noop
+
+    elif not kwonlyargs:  # remove '*' if exists and not needed
+        pass
+
+    else:  # there are kwonlyargs, make sure there is a '*'
+        pass
+
+
+
+
+    # TODO: kwonlyargs '*' star
+
+
+
+
+
+
+
 def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
     assert self.a.__class__ is MatchSequence
 
@@ -1809,14 +1948,6 @@ def _get_slice_comprehension_ifs(
     return fst_
 
 
-
-
-
-
-
-
-
-
 def _get_slice_arguments(
     self: fst.FST,
     start: int | Literal['end'],
@@ -1828,39 +1959,114 @@ def _get_slice_arguments(
     """The slice of `arguments` is just another `arguments`."""
 
     ast = self.a
-    allargs = self._cached_allargs()
-    len_body = len(allargs)
+    body = self._cached_allargs()  # does not contain default nodes
+    len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[],
-                                 lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+        return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
                        [''], None, from_=self)
 
-    loc_first = allargs[start].f._loc_argument(True)
-    loc_last = loc_first if start == stop - 1 else allargs[stop - 1].f._loc_argument(True)
+    loc_first = body[start].f._loc_argument(True)
+    loc_last = loc_first if start == stop - 1 else body[stop - 1].f._loc_argument(True)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
+    if start:
+        f = body[start - 1].f
+
+        if (g := f.next()) and g.pfield.name in ('defaults', 'kw_defaults'):
+            f = g
+
+        _, _, bound_ln, bound_col = f.pars()
+
+    ret_ast = arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[])
+
+    if not cut:
+        for i in range(start, stop):
+            a = body[i]
+            f = a.f
+            a = copy_ast(a)
+
+            if (field := f.pfield.name) in ('kwarg', 'vararg'):
+                setattr(ret_ast, field, a)
+
+            else:
+                getattr(ret_ast, field).append(a)
+
+                if (f := f.next()) and (dflt_field := f.pfield.name) in ('defaults', 'kw_defaults'):
+                    getattr(ret_ast, dflt_field).append(a := copy_ast(f.a))
+                elif field == 'kwonlyargs':  # these always have a kw_defaults entry even if it is None
+                    ret_ast.kw_defaults.append(None)
+
+        ast_last = a
+        new_last = ''
+
+    else:  # if cutting then moving the nodes aroung is a bit tricky
+        ast_last = None
+
+        for i in range(stop - 1, start - 1, -1):  # we do in reverse because we will be removing them from their lists along the way
+            a = body[i]
+            f = a.f
+            field, idx = f.pfield
+
+            if field in ('kwarg', 'vararg'):
+                setattr(ret_ast, field, a)
+                setattr(ast, field, None)
+
+            else:
+                getattr(ret_ast, field).insert(0, a)
+
+                if f := f.next():
+                    dflt_field, dflt_idx = f.pfield
+
+                    if dflt_field in ('defaults', 'kw_defaults'):
+                        getattr(ret_ast, dflt_field).insert(0, a := f.a)
+
+                        del getattr(ast, dflt_field)[dflt_idx]
+
+                    else:
+                        f = None
+
+                if not f and field == 'kwonlyargs':
+                    ret_ast.kw_defaults.insert(0, None)
+
+                    del ast.kw_defaults[idx]  # can't use dflt_idx because possibly nonexistent, but idx will be same as dflt_idx should be
+
+                del getattr(ast, field)[idx]
+
+            if ast_last is None:
+                ast_last = a
+
+        for field in ('posonlyargs', 'args', 'kwonlyargs', 'kw_defaults', 'defaults'):  # reset pfields to account for any removed nodes
+            for i, a in enumerate(getattr(ast, field)):
+                if a:
+                    a.f.pfield = astfield(field, i)
+
+        if len_slice == len_body:
+            new_last = ''
+
+        else:
+            new_last = body[start - 1 if stop == len_body else -1].f  # new last node in 'self' after cut
+
+            if f := new_last.next():  # if there is a next then it is a default and that should be new_last
+                new_last = f
+
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, ast_last,
+                         loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                         options, new_last, '', '', ',', 0, 0, False)
 
 
-    # asts = _cut_or_copy_asts(start, stop, 'ifs', cut, body)
-    # ret_ast = _comprehension_ifs(ifs=asts)
-
-    # fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
-    #                        loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
-
-    # return fst_
+    # # TODO: fst_: 'argpos' or whatever option to move arguments to '.args' if possible, removing any '/' or '*'
 
 
+    _fix_arguments_copy(fst_)
 
-    # TODO: if cut all arguments from a Lambda then need to remove space between 'lambda' and ':' colon
+    if cut:
+        _fix_arguments_del(self)
 
-
-
-
-
+    return fst_
 
 
 def _get_slice_MatchSequence_patterns(
@@ -2203,6 +2409,7 @@ _GET_SLICE_HANDLERS = {
     (Call, 'keywords'):                       _get_slice_Call_ClassDef_keywords,  # keyword*
     (Call, '_args'):                          _get_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
+    (arguments, '_all'):                      _get_slice_arguments,  # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
 
     (ListComp, 'generators'):                 _get_slice_generators,  # comprehension*
     (SetComp, 'generators'):                  _get_slice_generators,  # comprehension*

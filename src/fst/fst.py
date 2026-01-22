@@ -144,7 +144,6 @@ from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, 
 from .reconcile import Reconcile
 from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
-from .fst_traverse import next_bound, prev_bound
 from .fst_options import check_options, filter_options
 
 
@@ -3358,7 +3357,7 @@ class FST:
             lines = self.root._lines
             ln, col, end_ln, end_col = self.bloc
 
-            rpars = next_delims(lines, end_ln, end_col, *next_bound(self))
+            rpars = next_delims(lines, end_ln, end_col, *self._next_bound())
 
             if (lrpars := len(rpars)) == 1:  # no pars on right
                 if not shared and self._is_solo_call_arg_genexp():
@@ -3367,7 +3366,7 @@ class FST:
                     locn = fstlocn(ln, col, end_ln, end_col, n=0)
 
             else:
-                lpars = prev_delims(lines, *prev_bound(self), ln, col)
+                lpars = prev_delims(lines, *self._prev_bound(), ln, col)
 
                 if (llpars := len(lpars)) == 1:  # no pars on left
                     locn = fstlocn(ln, col, end_ln, end_col, n=0)
@@ -5144,6 +5143,13 @@ class FST:
         _normalize_block,
 
         _getput_line_comment,
+    )
+
+    from .fst_traverse import (
+        _next_bound,
+        _prev_bound,
+        _next_bound_step,
+        _prev_bound_step,
     )
 
     from .fst_locs import (

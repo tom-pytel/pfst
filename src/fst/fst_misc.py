@@ -231,7 +231,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('_all',                  (MatchMapping,)),  # key:pattern,rest?
     ('_all',                  (Compare,)),       # left,op:comparator
     ('_args',                 (Call,)),          # args,keywords
-    # ('_all',                  (arguments,)),     # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
+    ('_all',                  (arguments,)),     # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
 
     # single value fields
     ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,

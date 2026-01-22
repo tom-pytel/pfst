@@ -41910,7 +41910,7 @@ _Assign_targets - ROOT 0,0..2,3
      .ctx Store
 '''),
 
-('', 0, 'end', None, {'one': True}, ('_Assign_targets',
+('', 0, 'end', None, {'_same': False, 'one': True}, ('_Assign_targets',
 r'''a ='''), ('arguments', r'''
 
 x,
