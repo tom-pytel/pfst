@@ -790,8 +790,14 @@ def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_MatchMapping_rest(self: fst.FST) -> fstloc | None:
-    """Location of `rest` identifier if present, otherwise `None`."""
+def _loc_MatchMapping_rest(self: fst.FST, stars: bool = False) -> fstloc | None:
+    """Location of `rest` identifier if present, otherwise `None`.
+
+    **Parameters:**
+    - `stars`: What to return as the start.
+        - `False`: The start of the identifier.
+        - `True`: The start of the `**` double stars.
+    """
 
     assert self.a.__class__ is MatchMapping
 
@@ -808,9 +814,19 @@ def _loc_MatchMapping_rest(self: fst.FST) -> fstloc | None:
     else:
         col += 1
 
-    ln, col = next_find(self.root._lines, ln, col, end_ln, end_col, rest)
+    lines = self.root._lines
 
-    return fstloc(ln, col, ln, col + len(rest))
+    if not stars:
+        ln, col = next_find(lines, ln, col, end_ln, end_col, rest)
+
+        return fstloc(ln, col, ln, col + len(rest))
+
+    ln, col = next_find(lines, ln, col, end_ln, end_col, '**')
+    end_ln, end_col, src = next_frag(lines, ln, col + 2, end_ln, end_col)  # must be there
+
+    assert src.startswith(rest)
+
+    return fstloc(ln, col, end_ln, end_col + len(rest))
 
 
 def _loc_MatchClass_pars(self: fst.FST) -> fstloc:

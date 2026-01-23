@@ -6802,6 +6802,37 @@ finally:
         f.names[0].unpar(shared=None)
         self.assertEqual('from a import b', f.src)
 
+        # invalid node param
+
+        f = FST('a')
+        self.assertRaises(ValueError, f.unpar, 0)
+        self.assertRaises(ValueError, f.unpar, 1)
+        self.assertRaises(ValueError, f.unpar, None)
+        self.assertRaises(ValueError, f.unpar, '')
+        self.assertRaises(ValueError, f.unpar, 'valid')
+
+        # 'invalid' non-Tuple non-MatchSequence delimited nodes
+
+        self.assertEqual('  1,  ', FST('  [ 1, ]  ').unpar('invalid').src)
+        self.assertEqual('  1,  ', FST('  { 1, }  ').unpar('invalid').src)
+        self.assertEqual('  1: a,  ', FST('  { 1: a, }  ').unpar('invalid').src)
+        self.assertEqual('  **a,  ', FST('  { **a, }  ').unpar('invalid').src)
+        self.assertEqual('  1: a, **b,  ', FST('  { 1: a, **b, }  ').unpar('invalid').src)
+        self.assertEqual('  1: a,  ', FST('  { 1: a, }  ', pattern).unpar('invalid').src)
+        self.assertEqual('  **a,  ', FST('  { **a, }  ', pattern).unpar('invalid').src)
+        self.assertEqual('  1: a,  ', FST('  { 1: a, }  ', pattern).unpar('invalid').src)
+        self.assertEqual('  1: a, **b,  ', FST('  { 1: a, **b, }  ', pattern).unpar('invalid').src)
+        self.assertEqual('  i for i in j  ', FST('  [ i for i in j ]  ').unpar('invalid').src)
+        self.assertEqual('  i for i in j if i  ', FST('  [ i for i in j if i ]  ').unpar('invalid').src)
+
+        f = FST('  [ i for i in j ]  ')
+        del f.generators[0]
+        self.assertEqual('  i  ', f.unpar('invalid').src)
+
+        self.assertEqual('  i for i in j  ', FST('  { i for i in j }  ').unpar('invalid').src)
+        self.assertEqual('  i for i in j  ', FST('  ( i for i in j )  ').unpar('invalid').src)
+        self.assertEqual('  i: i for i in j  ', FST('  { i: i for i in j }  ').unpar('invalid').src)
+
         # for test coverage
 
         f = FST('(i)')

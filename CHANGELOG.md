@@ -13,6 +13,7 @@
 - fixed parse `withitem` of a solo `GeneratorExp`
 - will not parenthesize `arg` or `arguments` if putting multiline to a `Lambda` but instead parenthesize the `Lambda`
 - will not parenthesize multiline `withitem` put to `With.items` with existing `items` but rather the whole `items` field
+- fixed `unpar(node=True)` node if first and or last elements are parenthesized
 
 ### Added
 
@@ -26,6 +27,7 @@
 - `FST(AST, mode)` and `FST.fromast(AST, type[AST] or mode)` can use the new coercion to convert `AST`
 - put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
 - prescribed slicing for `MatchClass.patterns`
+- `unpar('invalid')` can remove delimiters from `List`, `Set`, `Dict`, `MatchMapping`, `ListComp`, `SetComp`, `DictComp` and `GeneratorExp`, if needed for some reason
 
 ### Updated
 

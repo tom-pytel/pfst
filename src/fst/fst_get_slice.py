@@ -563,11 +563,11 @@ def _fix_BoolOp(
         if not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete
             ln, col, _, _ = body[start].f.loc
 
-            self._fix_joined_alnum(ln, col)
+            self._fix_joined_alnums(ln, col)
 
     ln, col, end_ln, end_col = self.loc
 
-    self._fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
+    self._fix_joined_alnums(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
 
     if norm and len(body) == 1:  # if only one element remains and normalizing then replace the BoolOp AST in self with the single `values` AST which remains
         self._set_ast(body.pop(), True)
@@ -595,16 +595,16 @@ def _fix_Compare(
         if not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete on left
             ln, col, _, _ = body[start].f.loc
 
-            self._fix_joined_alnum(ln, col)
+            self._fix_joined_alnums(ln, col)
 
         if is_del and not is_first:  # on right of start of delete
             _, _, end_ln, end_col = body[start - 1].f.loc
 
-            self._fix_joined_alnum(end_ln, end_col)
+            self._fix_joined_alnums(end_ln, end_col)
 
     ln, col, end_ln, end_col = self.loc
 
-    self._fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
+    self._fix_joined_alnums(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
 
     if len(body) == 1 and norm:  # if only one element remains and normalizing then replace the Compare AST in self with the single `comparators` AST which remains
         self._set_ast(body.pop(), True)  # this will unmake the leftmost operator fine, placeholder or op_side left or rotated right as well as `left` placeholder
@@ -895,7 +895,7 @@ def _fix_arguments_del(self: fst.FST) -> None:
                 ):  # if first keyword starts own line and does not share lines with next node then we put '*' on own line too
                     self._put_src(f'*,\n{m.group()}', ln, col, ln, col, False)
                 else:
-                    self._put_src(f'*, ', ln, col, ln, col, False)
+                    self._put_src('*, ', ln, col, ln, col, False)
 
 
 def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
@@ -963,7 +963,7 @@ def _fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
             did_par = True
 
     if not did_par:
-        self._fix_joined_alnum(*self.loc)
+        self._fix_joined_alnums(*self.loc, lines=lines)
 
 
 def _fix_stmt_end(
@@ -1252,7 +1252,7 @@ def _get_slice_Delete_targets(
 
         ln, col, _, _ = self.loc
 
-        self._fix_joined_alnum(ln, col + 3)
+        self._fix_joined_alnums(ln, col + 3)
         self._maybe_add_line_continuations()
 
     return fst_
@@ -1346,7 +1346,7 @@ def _get_slice_With_AsyncWith_items(
         elif not start and len_slice != len_body:  # if not adding pars then need to make sure cut didn't join new first `withitem` with the `with`
             ln, col, _, _ = pars.bound
 
-            self._fix_joined_alnum(ln, col)
+            self._fix_joined_alnums(ln, col)
 
     return fst_
 

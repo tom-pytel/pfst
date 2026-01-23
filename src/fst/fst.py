@@ -50,6 +50,7 @@ from .asttypes import (
     ASTS_LEAF_COMP,
     ASTS_LEAF_FTSTR,
     ASTS_LEAF_FTSTR_FMT,
+    ASTS_LEAF_DELIMITED,
     ASTS_LEAF_MAYBE_DOCSTR,
     ASTS_LEAF__SLICE,
     AST,
@@ -3482,19 +3483,25 @@ class FST:
 
         return self
 
-    def unpar(self, node: bool = False, *, shared: bool | None = True) -> FST:  # -> self
-        """Remove all parentheses if present. Normally removes just grouping parentheses but can also remove `Tuple`
-        parentheses and `MatchSequence` parentheses or brackets intrinsic to the node if `node=True`. If dealing with a
-        `Starred` then the parentheses are checked in and removed from the child. If `shared=None` then will also remove
-        parentheses which do not belong to this node but enclose it directly, this is meant for internal use.
+    def unpar(self, node: bool | Literal['invalid'] = False, *, shared: bool | None = True) -> FST:  # -> self
+        """Remove all parentheses if present. Normally removes just grouping parentheses but can also remove intrinsic
+        `Tuple` node parentheses and `MatchSequence` parentheses or brackets if `node=True`. If dealing with a `Starred`
+        then the parentheses are checked in and removed from the child.
+
+        If `shared=None` then will also remove parentheses which do not belong to this node but enclose it directly,
+        this is meant for internal use.
 
         **WARNING!** This function doesn't do any higher level parsability validation. So if you unparenthesize
         something that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.
 
         **Parameters:**
-        - `node`: If `True` then will remove intrinsic parentheses from a parenthesized `Tuple` and parentheses /
-            brackets from parenthesized / bracketed `MatchSequence`, otherwise only removes grouping parentheses if
-            present. Also from a parentesized `Starred` arglike expression which can cause it to become unparsable.
+        - `node`: What to remove.
+            - `False`: Only grouping parentheses.
+            - `True`: Grouping parentheses and also remove intrinsic parentheses from a parenthesized `Tuple` and
+                parentheses / brackets from parenthesized / bracketed `MatchSequence`. Also from a parentesized
+                `Starred` arglike-only expression which can cause it to become unparsable, e.g. `*(a or b)`.
+            - `'invalid'`: Remove intrinsic delimiters also from `List`, `Set`, `Dict`, `MatchMapping`, `ListComp`,
+                `SetComp`, `DictComp` and `GeneratorExp`.
         - `shared`: Whether to allow merge of parentheses of single call argument generator expression with `Call`
             parentheses or not. If `None` then will attempt to unparenthesize **ANY** enclosing parentheses, whether
             they belong to this node or not (meant for internal use).
@@ -3541,21 +3548,35 @@ class FST:
         >>> FST('*(a or b)').unpar(node=True).src  # so can force with node=True
         '*a or b'
 
-        >>> # not just root node
+        Not just root node.
+
         >>> FST('call(i = (1 + 2))').keywords[0].value.unpar().root.src
         'call(i = 1 + 2)'
 
-        >>> # by default allows sharing
+        By default allows sharing.
+
         >>> FST('call(((i for i in j)))').args[0].unpar().root.src
         'call(i for i in j)'
 
-        >>> # unless told not to
+        Unless told not to.
+
         >>> FST('call(((i for i in j)))').args[0].unpar(shared=False).root.src
         'call((i for i in j))'
+
+        Invalid stuff.
+
+        >>> FST('{1: a, **rest}', pattern).unpar(node='invalid').root.src
+        '1: a, **rest'
+
+        >>> FST('[i for i in j if i]').unpar(node='invalid').root.src
+        'i for i in j if i'
         """
 
         ast = self.a
         ast_cls = self.a.__class__
+
+        if ((node is not True and node != 'invalid') if node else (node is not False)):
+            raise ValueError(f"invalid node parameter {node!r}, can only be True, False or 'invalid'")
 
         if ast_cls is Starred:
             is_expr_arglike = self._is_expr_arglike_only()
@@ -3578,15 +3599,10 @@ class FST:
                 self._unparenthesize_grouping(shared)
 
             if node:
-                if ast_cls is Tuple:
+                if ast_cls in (Tuple, MatchSequence) or (node == 'invalid' and ast_cls in ASTS_LEAF_DELIMITED):
                     modifying = modifying or self._modifying().enter()
 
                     self._undelimit_node()
-
-                elif ast_cls is MatchSequence:
-                    modifying = modifying or self._modifying().enter()
-
-                    self._undelimit_node('patterns')
 
         except:
             if modifying:
@@ -5127,7 +5143,7 @@ class FST:
         _maybe_ins_sep,
         _maybe_add_singleton_comma,
         _maybe_add_line_continuations,
-        _fix_joined_alnum,
+        _fix_joined_alnums,
         _fix_undelimited_seq,
         _fix_Tuple,
         _fix_Set,

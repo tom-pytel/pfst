@@ -1395,31 +1395,31 @@ d  # comment3''', f.src)
         # MatchSequence
 
         f = FST('()', pattern)
-        f._undelimit_node('patterns')
+        f._undelimit_node()
         self.assertEqual('()', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
 
         f = FST('[i,]', pattern)
-        f._undelimit_node('patterns')
+        f._undelimit_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
 
         f = FST('(a, b)', pattern)
-        f._undelimit_node('patterns')
+        f._undelimit_node()
         self.assertEqual('a, b', f.src)
         self.assertEqual((0, 0, 0, 4), f.loc)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
         self.assertEqual((0, 3, 0, 4), f.patterns[1].loc)
 
         f = FST('[ # pre\ni,\n# post\n]', pattern)
-        f._undelimit_node('patterns')
+        f._undelimit_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 2), f.loc)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
 
         f = FST('( # pre\ni,\n# post\n)', pattern)
-        f._undelimit_node('patterns')
+        f._undelimit_node()
         self.assertEqual('i,', f.src)
         self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
 
@@ -1447,12 +1447,61 @@ d  # comment3''', f.src)
         f.verify()
 
         f = FST('case[1,2]as c: pass')
-        f.pattern.pattern._undelimit_node('patterns')
+        f.pattern.pattern._undelimit_node()
         self.assertEqual('case 1,2 as c: pass', f.src)
 
         f = FST('case(1,2)as c: pass')
-        f.pattern.pattern._undelimit_node('patterns')
+        f.pattern.pattern._undelimit_node()
         self.assertEqual('case 1,2 as c: pass', f.src)
+
+        # non-Tuple non-MatchSequence delimited nodes
+
+        self.assertTrue((f := FST('  [ 1, ]  '))._undelimit_node())
+        self.assertEqual('  1,  ', f.src)
+
+        self.assertTrue((f := FST('  { 1, }  '))._undelimit_node())
+        self.assertEqual('  1,  ', f.src)
+
+        self.assertTrue((f := FST('  { 1: a, }  '))._undelimit_node())
+        self.assertEqual('  1: a,  ', f.src)
+
+        self.assertTrue((f := FST('  { **a, }  '))._undelimit_node())
+        self.assertEqual('  **a,  ', f.src)
+
+        self.assertTrue((f := FST('  { 1: a, **b, }  '))._undelimit_node())
+        self.assertEqual('  1: a, **b,  ', f.src)
+
+        self.assertTrue((f := FST('  { 1: a, }  ', pattern))._undelimit_node())
+        self.assertEqual('  1: a,  ', f.src)
+
+        self.assertTrue((f := FST('  { **a, }  ', pattern))._undelimit_node())
+        self.assertEqual('  **a,  ', f.src)
+
+        self.assertTrue((f := FST('  { 1: a, }  ', pattern))._undelimit_node())
+        self.assertEqual('  1: a,  ', f.src)
+
+        self.assertTrue((f := FST('  { 1: a, **b, }  ', pattern))._undelimit_node())
+        self.assertEqual('  1: a, **b,  ', f.src)
+
+        self.assertTrue((f := FST('  [ i for i in j ]  '))._undelimit_node())
+        self.assertEqual('  i for i in j  ', f.src)
+
+        self.assertTrue((f := FST('  [ i for i in j if i ]  '))._undelimit_node())
+        self.assertEqual('  i for i in j if i  ', f.src)
+
+        f = FST('  [ i for i in j ]  ')
+        del f.generators[0]
+        self.assertTrue(f._undelimit_node())
+        self.assertEqual('  i  ', f.src)
+
+        self.assertTrue((f := FST('  { i for i in j }  '))._undelimit_node())
+        self.assertEqual('  i for i in j  ', f.src)
+
+        self.assertTrue((f := FST('  ( i for i in j )  '))._undelimit_node())
+        self.assertEqual('  i for i in j  ', f.src)
+
+        self.assertTrue((f := FST('  { i: i for i in j }  '))._undelimit_node())
+        self.assertEqual('  i: i for i in j  ', f.src)
 
     def test__loc_maybe_key(self):
         a = parse('''{

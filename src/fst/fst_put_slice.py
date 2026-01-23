@@ -1633,7 +1633,7 @@ def _put_slice_Delete_targets(
 
     ln, col, _, _ = self.loc
 
-    self._fix_joined_alnum(ln, col + 3)
+    self._fix_joined_alnums(ln, col + 3)
     self._maybe_add_line_continuations()
 
 
@@ -1713,7 +1713,7 @@ def _put_slice_With_AsyncWith_items(
         if not start:  # if pars weren't added then need to make sure del or put didn't join new first `withitem` with the `with`
             ln, col, _, _ = pars.bound
 
-            self._fix_joined_alnum(ln, col)
+            self._fix_joined_alnums(ln, col)
 
 
 def _put_slice_Import_names(
@@ -1761,7 +1761,7 @@ def _put_slice_Import_names(
             _fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
                                 ast.end_lineno, ast.end_col_offset)
 
-    self._maybe_add_line_continuations()  # THEORETICALLY could need to _fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+    self._maybe_add_line_continuations()  # THEORETICALLY could need to _fix_joined_alnums() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
 def _put_slice_ImportFrom_names(
@@ -1819,7 +1819,7 @@ def _put_slice_ImportFrom_names(
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
 
-        # THEORETICALLY could need to _fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+        # THEORETICALLY could need to _fix_joined_alnums() but only if the user goes out of their way to F S up, so we don't bother with this
 
     elif put_star:  # if put star then must remove parentheses (including any trivia inside them)
         pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
@@ -1939,7 +1939,7 @@ def _put_slice_Global_Nonlocal_names(
 
         _fix_stmt_end(self, last_end_ln + 1, lines[last_end_ln].c2b(last_end_col), ast.end_lineno, ast.end_col_offset)
 
-    self._maybe_add_line_continuations()  # THEORETICALLY could need to _fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+    self._maybe_add_line_continuations()  # THEORETICALLY could need to _fix_joined_alnums() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
 def _put_slice_ClassDef_bases(
@@ -2194,7 +2194,7 @@ def _put_slice_comprehension_ifs(
             if next_idx < len(parent_body):  # only if self was not last comprehension in list
                 ln, col, _, _ = parent_body[next_idx].f.loc
 
-                self._fix_joined_alnum(ln, col)
+                self._fix_joined_alnums(ln, col)
 
 
 def _put_slice_BoolOp_values(

@@ -20,6 +20,7 @@ from .asttypes import (
     ASTS_LEAF_STMTLIKE,
     ASTS_LEAF_BLOCK,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
+    ASTS_LEAF_DELIMITED,
     AST,
     AnnAssign,
     Assert,
@@ -250,15 +251,14 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
 ] for kls in classes}
 
 _ASTS_LEAF_TUPLE_OR_MATCHSEQ = frozenset([Tuple, MatchSequence])
-# _ASTS_LEAF_DELIMITED = frozenset([Tuple, List, Set, MatchSequence, ListComp, SetComp, DictComp, GeneratorExp])
 
 _re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)
 _re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_par_open_alnums    = re.compile(rf'[{pat_alnum}.][(][{pat_alnum}]')
 _re_par_close_alnums   = re.compile(rf'[{pat_alnum}.][)][{pat_alnum}]')
-_re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
-_re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
+_re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][({{[][{pat_alnum}]')
+_re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)}}\]][{pat_alnum}]')
 
 _re_stmt_line_comment  = re.compile(r'(\s*;)?(\s*\#(.*)$)?')  # a line comment with optional leading whitespace and maybe a single inert semicolon before, or indicate if there is a trailing semicolon
 
@@ -1626,17 +1626,25 @@ def _maybe_add_line_continuations(  # TODO: doing double duty, maybe rename to s
     return True
 
 
-def _fix_joined_alnum(
-    self: fst.FST, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None
+def _fix_joined_alnums(
+    self: fst.FST,
+    ln: int,
+    col: int,
+    end_ln: int | None = None,
+    end_col: int | None = None,
+    *,
+    lines: list[str] | None = None,
 ) -> None:
     """Check if location(s) `lines[ln][col-1 : col+1]` and optionally `lines[end_ln][end_col-1 : end_col+1] is / are
     alphanumeric and if so separate them with a space. This is for operations that may inadvertantly join two distinct
     elements into a single parsable alphanumeric, e.g. `for i inb, 2: pass`.
 
-    `self` doesn't matter, call on any node in tree.
+    `self` doesn't matter, call on any node in tree. `lines` is in case caller already has it to not walk up parent
+    chain again to get it.
     """
 
-    lines = self.root._lines
+    if lines is None:
+        lines = self.root._lines
 
     if end_ln is not None:
         if end_col and re_alnumdot_alnum.match(lines[end_ln], end_col - 1):  # make sure last element didn't wind up joining two alphanumerics, and if so separate
@@ -1750,7 +1758,7 @@ def _fix_undelimited_seq(
         end_ln = eend_ln
         end_col = eend_col
 
-    self._fix_joined_alnum(ln, col, end_ln, end_col)
+    self._fix_joined_alnums(ln, col, end_ln, end_col, lines=lines)
 
     return False
 
@@ -2062,28 +2070,72 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
     ast.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
-def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
-    """Unparenthesize or unbracketize a parenthesized / bracketed `Tuple` or `MatchSequence`, shrinking node location
-    for the removed delimiters. Will not undelimit an empty `Tuple` or `MatchSequence`. Removes everything between the
-    delimiters and the actual sequence, e.g. `(  1, 2  # yay \\n)` -> `1, 2`.
-
-    Can also unbracketize / uncurlyize a `List` or `Set` in case of unconventional need.
-
-    **WARNING!** No checks are done so make sure to call where it is appropriate! Does not check to see if node is
-    properly paren/bracketized so make sure of this before calling!
+def _undelimit_node(self: fst.FST) -> bool:
+    """Remove intrinsic delimiters from `Tuple`, `List`, `Set`, `Dict`, `MatchSequence`, `MatchMapping`, `ListComp`,
+    `SetComp`, `DictComp` or `GeneratorExp`. Shrinks node location for the removed delimiters. Will not undelimit an
+    empty node. Removes everything between the delimiters and the actual sequence, e.g. `(  1, 2  # yay \\n)` -> `1, 2`.
 
     **Returns:**
-    - `bool`: Whether delimiters were removed or not (they may not be for an empty tuple).
+    - `bool`: Whether delimiters were removed or not (they may not be for an empty `Tuple` or other empty sequence).
     """
 
-    assert self.a.__class__ in _ASTS_LEAF_TUPLE_OR_MATCHSEQ  # _ASTS_LEAF_DELIMITED
+    ast = self.a
+    ast_cls = ast.__class__
 
-    if not (body := getattr(self.a, field, None)):
+    assert ast_cls in ASTS_LEAF_DELIMITED
+
+    if (body := getattr(ast, 'elts', None)) is not None:  # Tuple, List, Set
+        if not body:
+            return False
+
+        b0 = body[0]
+        bn = body[-1]
+
+    elif (body := getattr(ast, 'patterns', None)) is not None:  # MatchSequence, MatchMapping
+        if ast_cls is MatchSequence:
+            if not body:
+                return False
+
+            b0 = body[0]
+            bn = body[-1]
+
+        else:  # MatchMapping, need to check for `rest`
+            if ast.rest:
+                bn = nspace(f=nspace(pars=lambda loc=self._loc_MatchMapping_rest(True): loc))  # noqa: B008
+                b0 = ast.keys[0] if body else bn
+
+            elif not body:
+                return False
+
+            else:
+                b0 = ast.keys[0]
+                bn = body[-1]
+
+    elif ast_cls is Dict:
+        if not (body := ast.values):
+            return False
+
+        bn = body[-1]
+
+        if not (b0 := ast.keys[0]):
+            b0 = nspace(f=nspace(pars=lambda loc=self._loc_maybe_key(0): loc))  # noqa: B008
+
+    else:  # Comp or GeneratorExp
+        b0 = getattr(ast, 'elt', None) or ast.key
+        bn = self.last_child().a
+
+    # got the first and last elements, now do the undelimiting
+
+    ln, col, end_ln, end_col = self.loc
+    b0_ln, b0_col, bn_end_ln, bn_end_col = b0.f.pars()
+
+    if b0_col == col and b0_ln == ln:  # if not delimited then return
         return False
 
+    if bn is not b0:
+        _, _, bn_end_ln, bn_end_col = bn.f.pars()
+
     lines = self.root._lines
-    ln, col, end_ln, end_col = self.loc
-    _, _, bn_end_ln, bn_end_col = body[-1].f.loc
 
     if comma := next_find(lines, bn_end_ln, bn_end_col, end_ln, end_col, ','):  # need to leave trailing comma if its there
         bn_end_ln, bn_end_col = comma
@@ -2096,7 +2148,7 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     head_alnums = col and _re_delim_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
 
     self._put_src(None, bn_end_ln, bn_end_col, end_ln, end_col, True, self)
-    self._put_src(None, ln, col, (e0 := body[0].f).ln, e0.col, False)
+    self._put_src(None, ln, col, b0_ln, b0_col, False)
 
     if head_alnums:  # but put after delete par to keep locations same
         self._put_src(' ', ln, col, ln, col, False)

@@ -336,6 +336,7 @@ __all__ = [
     'ASTS_LEAF_FTSTR_FMT',
     'ASTS_LEAF_FTSTR_FMT_OR_SLICE',
     'ASTS_LEAF_ARGLIKE',
+    'ASTS_LEAF_DELIMITED',
     'ASTS_LEAF_OP_NON_BOOL',
     'ASTS_LEAF_OP',
     'ASTS_LEAF_CMPOP_TWO_WORD',
@@ -413,6 +414,8 @@ ASTS_LEAF_FTSTR_FMT          = frozenset([FormattedValue, Interpolation])
 ASTS_LEAF_FTSTR_FMT_OR_SLICE = ASTS_LEAF_FTSTR_FMT | {Slice}
 
 ASTS_LEAF_ARGLIKE            = ASTS_LEAF_EXPR - ASTS_LEAF_FTSTR_FMT_OR_SLICE | {keyword}
+ASTS_LEAF_DELIMITED          = frozenset([Tuple, List, Set, Dict, MatchSequence, MatchMapping,
+                                          ListComp, SetComp, DictComp, GeneratorExp])
 
 ASTS_LEAF_OP_NON_BOOL        = ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP
 ASTS_LEAF_OP                 = ASTS_LEAF_OP_NON_BOOL | ASTS_LEAF_BOOLOP

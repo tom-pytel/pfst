@@ -4194,7 +4194,7 @@ match a:
         # fst.code._par_if_needed()
 
         f = FST('cls([a])', pattern)
-        f.patterns[0]._undelimit_node('patterns')
+        f.patterns[0]._undelimit_node()
         self.assertEqual('cls(a)', f.src)
         self.assertTrue(code._par_if_needed(f.patterns[0]))
         self.assertEqual('cls([a])', f.src)
