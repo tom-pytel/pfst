@@ -733,7 +733,7 @@ def _fix_arguments_del(self: fst.FST) -> None:
 
     # posonlyargs '/'
 
-    if not posonlyargs:  # remove leading '/' if exists
+    if not posonlyargs:  # remove leading '/' if exists, helps that we know that there is some node following it (otherwise would be is_empty)
         if (frag := next_frag(lines, self_ln, self_col, self_end_ln, self_end_col)) and frag.src.startswith('/'):
             ln, col, _ = frag
             end_ln, end_col, src = next_frag(lines, ln, col + 1, self_end_ln, self_end_col)  # must be there
@@ -788,6 +788,9 @@ def _fix_arguments_del(self: fst.FST) -> None:
         pass  # noop
 
     elif not kwonlyargs:  # remove '*' if exists and not needed
+
+
+
         pass
 
     else:  # there are kwonlyargs, make sure there is a '*'
@@ -2032,7 +2035,7 @@ def _get_slice_arguments(
                 if not f and field == 'kwonlyargs':
                     ret_ast.kw_defaults.insert(0, None)
 
-                    del ast.kw_defaults[idx]  # can't use dflt_idx because possibly nonexistent, but idx will be same as dflt_idx should be
+                    del ast.kw_defaults[idx]  # can't use dflt_idx because possibly nonexistent, but idx will be same as dflt_idx should be for kw_defaults
 
                 del getattr(ast, field)[idx]
 

@@ -14,6 +14,7 @@ from . import fst
 from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_PATTERN,
+    ASTS_LEAF_STMTLIKE_OR_MOD,
     ASTS_LEAF_WITH,
     ASTS_LEAF_ARGLIKE,
     AST,
@@ -704,7 +705,38 @@ def _put_one_NOT_IMPLEMENTED_YET_14(
 # ......................................................................................................................
 # exprlike put (expr, pattern, comprehension, etc...)
 
-def _make_exprlike_fst(
+def _fix_deferred_make_exprlike_fst_par(self: fst.FST) -> None:
+    """If parenthesization was deferred in `_make_exprlike_fst()` then do it here."""
+
+    a = self.a
+
+    while True:
+        if (f := a.f).is_parenthesizable():
+            if a.__class__ is Tuple:  # will be undelimited if we got here
+                f._delimit_node()
+            else:
+                f._parenthesize_grouping()
+
+            break
+
+        if (a_cls := a.__class__) in ASTS_LEAF_WITH:  # With.items, if we got to this it was from the `items` because if from `body` then would have terminated before getting here
+            pars_ln, pars_col, pars_end_ln, pars_end_col = f._loc_With_items_pars()
+
+            f._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
+            f._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
+
+            break
+
+        if a_cls in ASTS_LEAF_STMTLIKE_OR_MOD:
+            break
+
+        if not (parent := f.parent):  # if this happens then nothing is parenthesized, but nothing was parenthesizable along the way so root isn't parsable standalone anyway
+            break
+
+        a = parent.a
+
+
+def _make_exprlike_fst(  # TODO: this needs a refactor, cleanup and simplification
     self: fst.FST,
     code: _PutOneCode,
     idx: int | None,
@@ -717,7 +749,7 @@ def _make_exprlike_fst(
     suffix: str = '',
     validated: int = 0,
     arglike: bool = False,
-) -> fst.FST:
+) -> tuple[fst.FST, bool]:
     """Make an expression `FST` from `Code` for a field/idx containing an existing node or creating a new one. Takes
     care of parenthesizing, indenting and offsetting.
 
@@ -745,6 +777,7 @@ def _make_exprlike_fst(
     put_is_star = put_ast.__class__ is Starred
     tgt_is_FST = target.is_FST
     del_tgt_pars = False
+    deferred_par = False
 
     def need_pars(adding: bool) -> bool:
         """`adding` means looking to add pars to `put_fst`, otherwise it already has."""
@@ -825,8 +858,10 @@ def _make_exprlike_fst(
             elif need_pars(True):  # could be parenthesizing grouping or a tuple, not a MatchSeqence because that never gets here unenclosed
                 if put_fst.is_parenthesized_tuple() is False:
                     put_fst._delimit_node()
-                else:
+                elif put_fst.is_parenthesizable():  # put_ast.__class__ not in (arg, arguments):
                     put_fst._parenthesize_grouping()
+                else:  # arguments or something like this, can't parenthesize this so defer par to parent after everything is done
+                    deferred_par = True
 
     # figure out put target location
 
@@ -879,7 +914,7 @@ def _make_exprlike_fst(
     if merge_alnum_start:  # we put this after because otherwise would be included in any parents that start at element being put
         self._put_src([' '], ln, col, ln, col, False)
 
-    return put_fst
+    return put_fst, deferred_par
 
 
 def _put_one_exprlike_required(
@@ -905,10 +940,13 @@ def _put_one_exprlike_required(
     childf = child.f
     ctx = ctx.__class__ if (ctx := getattr(child, 'ctx', None)) else Load
 
-    put_fst = _make_exprlike_fst(self, code, idx, field, static, options, target or childf, ctx, prefix, '', validated,
-                                 arglike)
+    put_fst, deferred_par = _make_exprlike_fst(self, code, idx, field, static, options, target or childf, ctx, prefix,
+                                               '', validated, arglike)
 
     childf._set_ast(put_fst.a)
+
+    if deferred_par:  # we need to do this after the put completes to have the complete parent for the operation (With.items is the culprit)
+        _fix_deferred_make_exprlike_fst_par(self)
 
     return childf
 
@@ -953,12 +991,15 @@ def _put_one_exprlike_optional(
     if not loc:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst = _make_exprlike_fst(self, code, idx, field, static, options, loc, static.ctx_cls, info.prefix, info.suffix,
-                                max(1, validated))
+    put_fst, deferred_par = _make_exprlike_fst(self, code, idx, field, static, options, loc, static.ctx_cls,
+                                               info.prefix, info.suffix, max(1, validated))
     put_fst = fst.FST(put_fst.a, self, astfield(field, idx))
 
     self._make_fst_tree([put_fst])
     put_fst.pfield.set(self.a, put_fst.a)
+
+    if deferred_par:  # we need to do this after the put completes to have the complete parent for the operation (With.items is the culprit)
+        _fix_deferred_make_exprlike_fst_par(self)
 
     return put_fst
 

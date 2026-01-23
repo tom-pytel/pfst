@@ -12440,6 +12440,30 @@ With - ROOT 0,0..0,19
   .body[1]
    0] Pass - 0,15..0,19
 '''),
+
+('', 1, None, 'items', {'raw': False}, (None,
+r'''with a, b, c: pass'''), ('Tuple', r'''
+x
+as
+y
+'''), r'''
+with (a, x
+as
+y, c): pass
+''',
+r'''**SyntaxError('invalid syntax')**''', r'''
+With - ROOT 0,0..2,11
+  .items[3]
+   0] withitem - 0,6..0,7
+     .context_expr Name 'a' Load - 0,6..0,7
+   1] withitem - 0,9..2,1
+     .context_expr Name 'x' Load - 0,9..0,10
+     .optional_vars Name 'y' Store - 2,0..2,1
+   2] withitem - 2,3..2,4
+     .context_expr Name 'c' Load - 2,3..2,4
+  .body[1]
+   0] Pass - 2,7..2,11
+'''),
 ],
 
 'AsyncWith_items': [  # ................................................................................
@@ -14622,6 +14646,30 @@ ClassDef - ROOT 0,0..0,27
      .value Name 'c3' Load - 0,18..0,20
   .body[1]
    0] Pass - 0,23..0,27
+'''),
+],
+
+'Lambda': [  # ................................................................................
+
+('', None, None, 'args', {'raw': False}, (None,
+r'''lambda: None'''), (None, r'''
+a
+,
+b
+'''), r'''
+(lambda a
+,
+b: None)
+''',
+r'''lambda a, b: None''', r'''
+Lambda - ROOT 0,1..2,7
+  .args arguments - 0,8..2,1
+    .args[2]
+     0] arg - 0,8..0,9
+       .arg 'a'
+     1] arg - 2,0..2,1
+       .arg 'b'
+  .body Constant None - 2,3..2,7
 '''),
 ],
 

@@ -11,6 +11,8 @@
 - don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
 - allow put `Starred` to `TypeVarTuple.default_value`
 - fixed parse `withitem` of a solo `GeneratorExp`
+- will not parenthesize `arg` or `arguments` if putting multiline to a `Lambda` but instead parenthesize the `Lambda`
+- will not parenthesize multiline `withitem` put to `With.items` with existing `items` but rather the whole `items` field
 
 ### Added
 
@@ -34,7 +36,7 @@
 - REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
 - improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
 - parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
-- **BREAKING CHANGE** for consistency
+- BREAKING CHANGE for consistency
   - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked
   - previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
 
