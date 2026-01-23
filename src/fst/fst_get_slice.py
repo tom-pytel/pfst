@@ -76,7 +76,17 @@ from .asttypes import (
 )
 
 from .astutil import re_identifier, bistr, copy_ast
-from .common import NodeError, astfield, fstloc, next_frag, next_find, next_find_re
+
+from .common import (
+    re_empty_space,
+    re_line_end_ws_cont_or_comment,
+    NodeError,
+    astfield,
+    fstloc,
+    next_frag,
+    next_find,
+    next_find_re,
+)
 
 from .fst_misc import (
     new_empty_set_star,
@@ -711,7 +721,7 @@ def _fix_arguments_copy(self: fst.FST) -> None:
 
 
 def _fix_arguments_del(self: fst.FST) -> None:
-    """Fix `arguments` slice after a deletion. May need to replace removed `/` or `*` or may need to remove them."""
+    """Fix `arguments` after a slice deletion. May need to replace removed `/` or `*` or may need to remove them."""
 
     ast = self.a
     lines = self.root._lines
@@ -746,65 +756,146 @@ def _fix_arguments_del(self: fst.FST) -> None:
 
             self._put_src(None, ln, col, end_ln, end_col, True)
 
-            self_ln, self_col, self_end_ln, self_end_col = self.loc
+            self_ln, self_col, self_end_ln, self_end_col = self.loc  # for the new end location
+
+        aa_ln = self_ln  # aa = "after args", we may need this position for '*' processing
+        aa_col = self_col
 
     else:  # there are posonlyargs, make sure there is a '/'
         f = posonlyargs[-1].f
-        ln, col, end_ln, end_col = f.loc  # args can't has pars
+        ln, col, aa_ln, aa_col = f.loc  # args can't has pars
 
         if (g := f.next()) and g.pfield.name == 'defaults':
-            _, _, end_ln, end_col = g.pars()  # defaults can has pars
+            _, _, aa_ln, aa_col = g.pars()  # defaults can has pars
 
-        if frag := next_frag(lines, end_ln, end_col, self_end_ln, self_end_col):  # something after?
-            end_ln, end_col, src = frag
-            end_col += 1
+        if frag := next_frag(lines, aa_ln, aa_col, self_end_ln, self_end_col):  # something after?
+            aa_ln, aa_col, src = frag
+            aa_col += 1
 
             assert src == ','  # has to be this
 
-            if frag := next_frag(lines, end_ln, end_col, self_end_ln, self_end_col):  # something after?
-                next_ln, _, src = frag
+            if frag := next_frag(lines, aa_ln, aa_col, self_end_ln, self_end_col):  # something after?
+                next_ln, next_col, src = frag
 
-                if not src.startswith('/'):
-                    if next_ln == end_ln:  # next element on same line as comma?
-                        self._put_src(' /,', end_ln, end_col, end_ln, end_col, True)
+                if src.startswith('/'):
+                    aa_ln = next_ln
+                    aa_col = next_col + 1
+
+                else:
+                    if next_ln == aa_ln:  # next element on same line as comma?
+                        self._put_src(' /,', aa_ln, aa_col, aa_ln, aa_col, True)
+
+                        aa_col += 3
+
                     else:
-                        self._put_src(f'{lines[ln][:col]}/,\n', end_ln + 1, 0, end_ln + 1, 0, True)
+                        self._put_src(f'{lines[ln][:col]}/,\n', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True)
 
-            elif self_end_ln == end_ln:
-                self._put_src(' /,', end_ln, end_col, end_ln, end_col, True)
+                        aa_ln += 1
+                        aa_col = 0
+
+            elif self_end_ln == aa_ln:
+                self._put_src(' /,', aa_ln, aa_col, aa_ln, aa_col, True)
+
+                aa_col += 3
+
             else:
-                self._put_src(f'{lines[ln][:col]}/,\n', end_ln + 1, 0, end_ln + 1, 0, True)
+                self._put_src(f'{lines[ln][:col]}/,\n', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True)
 
-        elif self_end_ln == end_ln:  # nothing follow, not comma or anything
-            self._put_src(', /', end_ln, end_col, end_ln, end_col, True)
+                aa_ln += 1
+                aa_col = 0
+
+        elif self_end_ln == aa_ln:  # nothing follow, not comma or anything
+            self._put_src(', /', aa_ln, aa_col, aa_ln, aa_col, True,
+                          exclude=f, offset_excluded=False)  # we may be exactly at end of previous posonly node, make sure we don't extend its size
+
+            aa_col += 3
+
         else:
-            self._put_src(f',\n{lines[ln][:col]}/', end_ln + 1, 0, end_ln + 1, 0, True)
+            self._put_src(f',\n{lines[ln][:col]}/', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True,
+                          exclude=f, offset_excluded=False)
+
+            aa_ln += 1
+            aa_col = 0
 
         self_ln, self_col, self_end_ln, self_end_col = self.loc
 
     # kwonlyargs '*'
 
-    if vararg:  # if this exists then we don't have to do anything about a standalone '*'
-        pass  # noop
+    if not vararg:  # if vararg exists then we don't have to do anything about a standalone '*', otherwise need to check
+        if args:
+            f = args[-1].f
 
-    elif not kwonlyargs:  # remove '*' if exists and not needed
+            if (g := f.next()) and g.pfield.name == 'defaults':
+                _, _, aa_ln, aa_col = g.pars()  # defaults can has pars
+            else:
+                _, _, aa_ln, aa_col = f.loc  # args can't has pars
 
+        if frag := next_frag(lines, aa_ln, aa_col, self_end_ln, self_end_col):  # find element where the '*' would be, if any
+            ln, col, src = frag
 
+            if src.startswith(','):
+                aa_ln = ln
+                aa_col = col + 1
 
-        pass
+                if src == ',':
+                    if frag := next_frag(lines, ln, col + 1, self_end_ln, self_end_col):
+                        ln, col, src = frag
+                else:
+                    src = src[1:]
+                    col += 1
 
-    else:  # there are kwonlyargs, make sure there is a '*'
-        pass
+        if not kwonlyargs:  # remove '*' if exists and not needed
+            if frag and not src.startswith('**'):  # this means there is a standalone '*'
+                if not (frag := next_frag(lines, ln, col + 1, self_end_ln, self_end_col)):
+                    end_ln = ln
+                    end_col = col + 1
 
+                else:
+                    next_ln, next_col, src = frag
 
+                    if not src.startswith(','):
+                        end_ln = ln
+                        end_col = col + 1
+                    else:
+                        end_ln = next_ln
+                        end_col = next_col + 1
 
+                    if src == ',':
+                        if frag := next_frag(lines, next_ln, next_col + 1, self_end_ln, self_end_col):
+                            next_ln, next_col, src = frag
+                    else:
+                        src = src[1:]
+                        next_col += 1
 
-    # TODO: kwonlyargs '*' star
+                if frag:  # there is a '**kwarg', just delete up to it
+                    self._put_src(None, ln, col, next_ln, next_col, False)
+                elif aa_ln == ln:  # previous element ends on same line so just delete from its end to '*' end
+                    self._put_src(None, aa_ln, aa_col, end_ln, end_col, True)
+                elif end_ln < self_end_ln:  # '*' does not end on last line and starts its own, delete whole line
+                    self._put_src(None, ln, 0, end_ln + 1, 0, True)
 
+                else:  # ends on last line, delete from end of '*' (and comma) to start of previous line whitespace (possibly with line continuation)
+                    ln -= 1
+                    m = re_line_end_ws_cont_or_comment.search(lines[ln])
+                    col = m.end() if (g := m.group(1)) and g.startswith('#') else m.start()  # if comment then just del to end of that, otherwise to start of whitespace
 
+                    self._put_src(None, ln, col, end_ln, end_col, True)
 
+        else:  # there are kwonlyargs, make sure there is a '*'
+            if not src.startswith('*'):  # we know there is a frag and this exists because there are kwonlyargs, if not star then is first keyword
+                _, _, end_ln, end_col = dflt.f.pars() if (dflt := ast.kw_defaults[0]) else kwonlyargs[0].f.loc
 
+                if (frag := next_frag(lines, end_ln, end_col, self_end_ln, self_end_col)) and frag.src.startswith(','):  # after maybe comma
+                    end_ln, end_col, _ = frag
+                    end_col += 1
 
+                if ((m := re_empty_space.match(lines[ln], 0, col))
+                    and not next_frag(lines, end_ln, end_col, end_ln,
+                                      0x7fffffffffffffff if end_ln < self_end_ln else self_end_col)  # because could be '**\n'
+                ):  # if first keyword starts own line and does not share lines with next node then we put '*' on own line too
+                    self._put_src(f'*,\n{m.group()}', ln, col, ln, col, False)
+                else:
+                    self._put_src(f'*, ', ln, col, ln, col, False)
 
 
 def _fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:

@@ -288,13 +288,6 @@ def _locs_slice(
      ++++          +++       ++++      ++++
     =-----        =---      =----     =-----
 
-    ... case 4b ..........................................................
-     PRE,\n
-     GET, # trivia
-     +++++++++++++
-    =-------------
-    special case when there is a comment on the last line of the bound
-
     ... case 5 ...........................................................
     [PRE,\n        [PRE,\n        [PRE,\n       [PRE,\n       [PRE,\n
          ++             ++             ++            ++            ++
@@ -349,6 +342,16 @@ def _locs_slice(
     def calc_locs(
         ld_ln: int, ld_col: int, tr_ln: int, tr_col: int
     ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:  # (copy_loc, del_loc, indent, sep_end_pos)
+        if (tr_ln == last_end_ln
+            and (m := _re_sep_line_nonexpr_end[sep].match(lines[last_end_ln], last_end_col))
+            and (g := m.group(1))
+            and g.startswith('#')
+            and m.start(1) < tr_col
+        ):  # THIS IS A PATCH! this catches trailing comment that was included in the trivia but on bound last line that otherwise would be excluded because of this
+            eff_last_end_col = tr_col
+        else:
+            eff_last_end_col = last_end_col
+
         if indent is None:  # does not start line, no preceding trivia
             del_col = re_empty_space.search(lines[first_ln], 0 if first_ln > bound_ln else bound_col, first_col).start()
 
@@ -356,14 +359,14 @@ def _locs_slice(
                 if not is_last or lines[last_end_ln].startswith('#', tr_col):  # if there is a next element or trailing line comment then don't delete space before this element
                     del_col = first_col
 
-                return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
+                return (fstloc(first_ln, first_col, last_end_ln, eff_last_end_col),
                         fstloc(first_ln, del_col, last_end_ln, tr_col),
                         None, sep_end_pos)  # case 1
 
             if tr_text_pos == end_pos and tr_ln == last_end_ln + 1:  # no comments, maybe trailing space on line, treat as if doesn't end line
                 if single or not re_empty_line.match(lines[loc_last.ln], 0, loc_last.col):  # if multiple elements and last element starts its own line then fall through to next case, yes the re match can extend beyond starting bound (its fine since its just informative)
-                    return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
-                            fstloc(first_ln, del_col, last_end_ln, last_end_col),
+                    return (fstloc(first_ln, first_col, last_end_ln, eff_last_end_col),
+                            fstloc(first_ln, del_col, last_end_ln, eff_last_end_col),
                             None, sep_end_pos)  # case 2
 
             return (fstloc(first_ln, first_col, tr_ln, tr_col),
@@ -373,22 +376,15 @@ def _locs_slice(
         assert ld_col == 0
 
         if tr_ln == last_end_ln:  # does not extend past end of line (different from trailing_trivia() 'ends_line')
-            eff_end_col = last_end_col
-
             if ld_ln == first_ln:  # starts on first line which is copied / deleted
-                m = None
-
-                if single or not (m := _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col)):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine since its just informative)
-                    return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
+                if single or not _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine since its just informative)
+                    return (fstloc(first_ln, first_col, last_end_ln, eff_last_end_col),
                             fstloc(first_ln, ld_col, last_end_ln, tr_col),
                             indent, sep_end_pos)  # case 4, we do it this way to return this specific information that it starts a line but doesn't end one
 
-                if m and (g := m.group(1)) and g.startswith('#'):  # THIS IS A PATCH! this catches trailing comment that was included in the trivia but on bound last line that otherwise would be excluded because of this
-                    eff_end_col = tr_col  # case 4b
-
-            return ((fstloc((l := ld_ln - 1), len(lines[l]), last_end_ln, eff_end_col)
+            return ((fstloc((l := ld_ln - 1), len(lines[l]), last_end_ln, eff_last_end_col)
                      if ld_ln else
-                     fstloc(ld_ln, ld_col, last_end_ln, eff_end_col)),
+                     fstloc(ld_ln, ld_col, last_end_ln, eff_last_end_col)),
                     fstloc(ld_ln, ld_col, last_end_ln, tr_col),
                     indent, sep_end_pos)  # case 5
 
@@ -538,6 +534,7 @@ def get_slice_sep(
                                                              options.get('trivia'), sep, cut)
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
+    del_ln, _, del_end_ln, del_end_col = del_loc
 
     if sep:
         if not ret_tail_sep and sep_end_pos:
@@ -550,13 +547,16 @@ def get_slice_sep(
                 ret_tail_sep = True
 
         if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
-            del_ln, _, del_end_ln, del_end_col = del_loc
-
             if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):
                 del_loc = fstloc(bound_ln, bound_col, del_end_ln, del_end_col)  # there can be nothing but a separator and whitespace between these locations
                 self_tail_sep = None
 
     # set location of root node and make the actual FST
+
+    if cut and del_indent and del_end_col and del_end_col != len(lines[del_end_ln]):  # the last check means if line ends on put end then don't add indentation
+        put_lines = [del_indent]
+    else:
+        put_lines = None
 
     if set_ast_loc:
         ast.lineno = copy_ln + 1
@@ -566,7 +566,7 @@ def get_slice_sep(
 
     fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
                                                     del_loc if cut else None,
-                                                    [del_indent] if del_indent and del_loc.end_col else None,
+                                                    put_lines,
                                                     docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
 
     if set_ast_loc:
