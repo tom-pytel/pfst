@@ -6234,7 +6234,7 @@ finally:
         f._put_src(['# comment', ''], 0, 0, 0, 0)
         f.par()
         self.assertEqual('# comment\ni = 1', f.src)
-        f.par(force='unsafe')
+        f.par(force='invalid')
         self.assertEqual('(# comment\ni = 1)', f.src)
 
         if PYGE14:  # make sure parent Interpolation.str gets modified
@@ -6482,23 +6482,23 @@ finally:
 
         # lets force par some empty arguments at root
 
-        self.assertEqual('()', FST('', 'arguments').par(force='unsafe').src)
+        self.assertEqual('()', FST('', 'arguments').par(force='invalid').src)
 
-        # force='unsafe'
+        # force='invalid'
 
-        self.assertEqual('(expr)', FST('expr').par(force='unsafe').src)
-        self.assertEqual('(pat)', FST('pat', 'pattern').par(force='unsafe').src)
-        self.assertEqual('(a, b)', FST('a, b').par(force='unsafe').src)
-        self.assertEqual('[u, v]', FST('u, v', 'pattern').par(force='unsafe').src)
-        self.assertEqual('(arg)', FST('arg', 'arg').par(force='unsafe').src)
-        self.assertEqual('(stmt)', FST('stmt', 'stmt').par(force='unsafe').src)
-        self.assertEqual('(except: pass)', FST('except: pass').par(force='unsafe').src)
-        self.assertEqual('(>>)', FST('>>', 'operator').par(force='unsafe').src)
+        self.assertEqual('(expr)', FST('expr').par(force='invalid').src)
+        self.assertEqual('(pat)', FST('pat', 'pattern').par(force='invalid').src)
+        self.assertEqual('(a, b)', FST('a, b').par(force='invalid').src)
+        self.assertEqual('[u, v]', FST('u, v', 'pattern').par(force='invalid').src)
+        self.assertEqual('(arg)', FST('arg', 'arg').par(force='invalid').src)
+        self.assertEqual('(stmt)', FST('stmt', 'stmt').par(force='invalid').src)
+        self.assertEqual('(except: pass)', FST('except: pass').par(force='invalid').src)
+        self.assertEqual('(>>)', FST('>>', 'operator').par(force='invalid').src)
 
         if PYGE12:
-            self.assertEqual('(T)', FST('T', 'TypeVar').par(force='unsafe').src)
+            self.assertEqual('(T)', FST('T', 'TypeVar').par(force='invalid').src)
 
-        self.assertRaises(ValueError, FST('a').par, force='invalid')
+        self.assertRaises(ValueError, FST('a').par, force='whatever')
 
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
@@ -6781,7 +6781,7 @@ finally:
         # unowned pars
 
         f = FST('a:b:c')
-        f.par(force='unsafe')
+        f.par(force='invalid')
         self.assertEqual('(a:b:c)', f.src)
         f.unpar(shared=None)
         self.assertEqual('a:b:c', f.src)
@@ -6916,7 +6916,7 @@ finally:
         # unowned pars
 
         f = FST('a:b:c')
-        f.par(force='unsafe')
+        f.par(force='invalid')
         self.assertEqual((0, 1, 0, 6), f.pars())
         self.assertEqual((0, 0, 0, 7), f.pars(shared=None))
 

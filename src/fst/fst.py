@@ -3387,13 +3387,13 @@ class FST:
 
         return locn
 
-    def par(self, force: bool | Literal['safe'] = False, *, whole: bool = True) -> FST:  # -> self
+    def par(self, force: bool | Literal['invalid'] = False, *, whole: bool = True) -> FST:  # -> self
         """Parenthesize node if it **MAY** need it. Will not parenthesize atoms which are always enclosed like `List`,
         or nodes which are not `is_parenthesizable()`, unless `force=True`. Will add intrinsic node-owned parentheses to
         unparenthesized `Tuple` and brackets to unbracketed `MatchSequence`, adjusting the node location. If dealing with
         a `Starred` then the parentheses are applied to the child.
 
-        **WARNING!** If you unsafe-force-parenthesize something that shouldn't be parenthesized, and you wind up poking
+        **WARNING!** If you invalid-force-parenthesize something that shouldn't be parenthesized, and you wind up poking
         an eye out, that's on you.
 
         **Parameters:**
@@ -3404,7 +3404,7 @@ class FST:
                 if allowed by syntax, e.g. this won't parenthesize an `arg`, `withitem` any kind of `statement` or
                 anything which would cause a syntax error with the parentheses there, so no `Slice`s or f-string
                 `Constant`s either.
-            - `'unsafe'`: Add a layer of parentheses regardless if any already present or even syntactically allowed.
+            - `'invalid'`: Add a layer of parentheses regardless if any already present or even syntactically allowed.
         - `whole`: If at root then parenthesize whole source instead of just node, if `False` then only node.
 
         **Returns:**
@@ -3433,7 +3433,7 @@ class FST:
         >>> FST('a:b:c', 'Slice').par(force=True).src  # syntactically wrong
         'a:b:c'
 
-        >>> FST('a:b:c', 'Slice').par(force='unsafe').src  # can still force
+        >>> FST('a:b:c', 'Slice').par(force='invalid').src  # can still force
         '(a:b:c)'
 
         >>> # parethesize MatchSequence puts brackets like ast.unparse()
@@ -3462,8 +3462,8 @@ class FST:
             if not self.is_parenthesizable():
                 return self
 
-        elif force != 'unsafe':
-            raise ValueError(f"invalid force {force!r}, can only be True, False or 'unsafe'")
+        elif force != 'invalid':
+            raise ValueError(f"invalid force parameter {force!r}, can only be True, False or 'invalid'")
 
         with self._modifying():
             if ast_cls is Tuple:

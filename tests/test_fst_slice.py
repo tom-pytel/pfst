@@ -2999,6 +2999,205 @@ i ; \\
         self.assertEqual('a = x = d = z', (f := FST('a = b = c = d = z')).put_slice('x', 1, 3, 'targets', one=True).root.src)
         f.verify()
 
+    def test_put_slice_one_vs_None(self):
+        # delimited
+
+        self.assertEqual('[x] =', FST('zzz', '_Assign_targets').put_slice('[x]', one=True).src)
+        self.assertEqual('[x] =', FST('zzz', '_Assign_targets').put_slice('[x]', one=False).src)
+        self.assertEqual('[x] =', FST('zzz', '_Assign_targets').put_slice('[x]', one=None).src)
+
+        self.assertEqual('@[x]', FST('@zzz', '_decorator_list').put_slice('[x]', one=True).src)
+        self.assertEqual('@[x]', FST('@zzz', '_decorator_list').put_slice('[x]', one=False).src)
+        self.assertEqual('@[x]', FST('@zzz', '_decorator_list').put_slice('[x]', one=None).src)
+
+        self.assertEqual('[x]', FST('zzz', '_arglikes').put_slice('[x]', one=True).src)
+        self.assertEqual('[x]', FST('zzz', '_arglikes').put_slice('[x]', one=False).src)
+        self.assertEqual('[x]', FST('zzz', '_arglikes').put_slice('[x]', one=None).src)
+
+        self.assertEqual('if [x]', FST('if zzz', '_comprehension_ifs').put_slice('[x]', one=True).src)
+        self.assertEqual('if [x]', FST('if zzz', '_comprehension_ifs').put_slice('[x]', one=False).src)
+        self.assertEqual('if [x]', FST('if zzz', '_comprehension_ifs').put_slice('[x]', one=None).src)
+
+        self.assertEqual('[x]', FST('zzz', '_withitems').put_slice('[x]', one=True).src)
+        self.assertEqual('[x]', FST('zzz', '_withitems').put_slice('[x]', one=False).src)
+        self.assertEqual('[x]', FST('zzz', '_withitems').put_slice('[x]', one=None).src)
+
+        self.assertEqual('[x],', FST('zzz', '_expr_arglikes').put_slice('[x]', one=True).src)
+        self.assertEqual('[x],', FST('zzz', '_expr_arglikes').put_slice('[x]', one=False).src)
+        self.assertEqual('x,', FST('zzz', '_expr_arglikes').put_slice('[x]', one=None).src)
+
+        self.assertEqual('with [x]: pass', FST('with zzz: pass', 'With').put_slice('[x]', 'items', one=True).src)
+        self.assertEqual('with [x]: pass', FST('with zzz: pass', 'With').put_slice('[x]', 'items', one=False).src)
+        self.assertEqual('with [x]: pass', FST('with zzz: pass', 'With').put_slice('[x]', 'items', one=None).src)
+
+        self.assertEqual('class cls([x]): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('[x]', 'bases', one=True).src)
+        self.assertEqual('class cls([x]): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('[x]', 'bases', one=False).src)
+        self.assertEqual('class cls([x]): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('[x]', 'bases', one=None).src)
+
+        self.assertEqual('class cls([x]): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('[x]', '_bases', one=True).src)
+        self.assertEqual('class cls([x]): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('[x]', '_bases', one=False).src)
+        self.assertEqual('class cls([x]): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('[x]', '_bases', one=None).src)
+
+        self.assertEqual('call([x])', FST('call(zzz)', 'Call').put_slice('[x]', 'args', one=True).src)
+        self.assertEqual('call([x])', FST('call(zzz)', 'Call').put_slice('[x]', 'args', one=False).src)
+        self.assertEqual('call([x])', FST('call(zzz)', 'Call').put_slice('[x]', 'args', one=None).src)
+
+        self.assertEqual('call([x])', FST('call(zzz)', 'Call').put_slice('[x]', '_args', one=True).src)
+        self.assertEqual('call([x])', FST('call(zzz)', 'Call').put_slice('[x]', '_args', one=False).src)
+        self.assertEqual('call([x])', FST('call(zzz)', 'Call').put_slice('[x]', '_args', one=None).src)
+
+        self.assertEqual('[x],', FST('zzz,', 'Tuple').put_slice('[x]', one=True).src)
+        self.assertEqual('[x],', FST('zzz,', 'Tuple').put_slice('[x]', one=False).src)
+        self.assertEqual('x,', FST('zzz,', 'Tuple').put_slice('[x]', one=None).src)
+
+        self.assertEqual('[[x]]', FST('[zzz]', 'List').put_slice('[x]', one=True).src)
+        self.assertEqual('[[x]]', FST('[zzz]', 'List').put_slice('[x]', one=False).src)
+        self.assertEqual('[x]', FST('[zzz]', 'List').put_slice('[x]', one=None).src)
+
+        self.assertEqual('{[x]}', FST('{zzz}', 'Set').put_slice('[x]', one=True).src)
+        self.assertEqual('{[x]}', FST('{zzz}', 'Set').put_slice('[x]', one=False).src)
+        self.assertEqual('{x}', FST('{zzz}', 'Set').put_slice('[x]', one=None).src)
+
+        self.assertEqual('del [x]', FST('del zzz', 'Delete').put_slice('[x]', 'targets', one=True).src)
+        self.assertEqual('del [x]', FST('del zzz', 'Delete').put_slice('[x]', 'targets', one=False).src)
+        self.assertEqual('del x', FST('del zzz', 'Delete').put_slice('[x]', 'targets', one=None).src)
+
+        self.assertEqual('[x],', FST('zzz,', 'MatchSequence').put_slice('[x]', one=True).src)
+        self.assertEqual('[x],', FST('zzz,', 'MatchSequence').put_slice('[x]', one=False).src)
+        self.assertEqual('x,', FST('zzz,', 'MatchSequence').put_slice('[x]', one=None).src)
+
+        # single
+
+        self.assertEqual('x =', FST('zzz', '_Assign_targets').put_slice('x', one=True).src)
+        self.assertEqual('x =', FST('zzz', '_Assign_targets').put_slice('x', one=False).src)
+        self.assertEqual('x =', FST('zzz', '_Assign_targets').put_slice('x', one=None).src)
+
+        self.assertEqual('@x', FST('@zzz', '_decorator_list').put_slice('x', one=True).src)
+        self.assertEqual('@x', FST('@zzz', '_decorator_list').put_slice('x', one=False).src)
+        self.assertEqual('@x', FST('@zzz', '_decorator_list').put_slice('x', one=None).src)
+
+        self.assertEqual('x', FST('zzz', '_arglikes').put_slice('x', one=True).src)
+        self.assertEqual('x', FST('zzz', '_arglikes').put_slice('x', one=False).src)
+        self.assertEqual('x', FST('zzz', '_arglikes').put_slice('x', one=None).src)
+
+        self.assertEqual('if x', FST('if zzz', '_comprehension_ifs').put_slice('x', one=True).src)
+        self.assertEqual('if x', FST('if zzz', '_comprehension_ifs').put_slice('x', one=False).src)
+        self.assertEqual('if x', FST('if zzz', '_comprehension_ifs').put_slice('x', one=None).src)
+
+        self.assertEqual('x', FST('zzz', '_withitems').put_slice('x', one=True).src)
+        self.assertEqual('x', FST('zzz', '_withitems').put_slice('x', one=False).src)
+        self.assertEqual('x', FST('zzz', '_withitems').put_slice('x', one=None).src)
+
+        self.assertEqual('x,', FST('zzz', '_expr_arglikes').put_slice('x', one=True).src)
+        self.assertEqual('x,', FST('zzz', '_expr_arglikes').put_slice('x', one=False).src)
+        self.assertEqual('x,', FST('zzz', '_expr_arglikes').put_slice('x', one=None).src)
+
+        self.assertEqual('with x: pass', FST('with zzz: pass', 'With').put_slice('x', 'items', one=True).src)
+        self.assertEqual('with x: pass', FST('with zzz: pass', 'With').put_slice('x', 'items', one=False).src)
+        self.assertEqual('with x: pass', FST('with zzz: pass', 'With').put_slice('x', 'items', one=None).src)
+
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x', 'bases', one=True).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x', 'bases', one=False).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x', 'bases', one=None).src)
+
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x', '_bases', one=True).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x', '_bases', one=False).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x', '_bases', one=None).src)
+
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x', 'args', one=True).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x', 'args', one=False).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x', 'args', one=None).src)
+
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x', '_args', one=True).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x', '_args', one=False).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x', '_args', one=None).src)
+
+        self.assertEqual('x,', FST('zzz,', 'Tuple').put_slice('x', one=True).src)
+        self.assertEqual('x,', FST('zzz,', 'Tuple').put_slice('x', one=False).src)
+        self.assertEqual('x,', FST('zzz,', 'Tuple').put_slice('x', one=None).src)
+
+        self.assertEqual('[x]', FST('[zzz]', 'List').put_slice('x', one=True).src)
+        self.assertEqual('[x]', FST('[zzz]', 'List').put_slice('x', one=False).src)
+        self.assertEqual('[x]', FST('[zzz]', 'List').put_slice('x', one=None).src)
+
+        self.assertEqual('{x}', FST('{zzz}', 'Set').put_slice('x', one=True).src)
+        self.assertEqual('{x}', FST('{zzz}', 'Set').put_slice('x', one=False).src)
+        self.assertEqual('{x}', FST('{zzz}', 'Set').put_slice('x', one=None).src)
+
+        self.assertEqual('del x', FST('del zzz', 'Delete').put_slice('x', 'targets', one=True).src)
+        self.assertEqual('del x', FST('del zzz', 'Delete').put_slice('x', 'targets', one=False).src)
+        self.assertEqual('del x', FST('del zzz', 'Delete').put_slice('x', 'targets', one=None).src)
+
+        self.assertEqual('x,', FST('zzz,', 'MatchSequence').put_slice('x', one=True).src)
+        self.assertEqual('x,', FST('zzz,', 'MatchSequence').put_slice('x', one=False).src)
+        self.assertEqual('x,', FST('zzz,', 'MatchSequence').put_slice('x', one=None).src)
+
+        # undelimited
+
+        self.assertEqual('x, =', FST('zzz', '_Assign_targets').put_slice('x,', one=True).src)
+        self.assertEqual('x, =', FST('zzz', '_Assign_targets').put_slice('x,', one=False).src)
+        self.assertEqual('x, =', FST('zzz', '_Assign_targets').put_slice('x,', one=None).src)
+
+        self.assertEqual('@(x,)', FST('@zzz', '_decorator_list').put_slice('x,', one=True).src)
+        self.assertEqual('@(x,)', FST('@zzz', '_decorator_list').put_slice('x,', one=False).src)
+        self.assertEqual('@(x,)', FST('@zzz', '_decorator_list').put_slice('x,', one=None).src)
+
+        self.assertEqual('(x,)', FST('zzz', '_arglikes').put_slice('x,', one=True).src)
+        self.assertEqual('x', FST('zzz', '_arglikes').put_slice('x,', one=False).src)
+        self.assertEqual('x', FST('zzz', '_arglikes').put_slice('x,', one=None).src)
+
+        self.assertEqual('if (x,)', FST('if zzz', '_comprehension_ifs').put_slice('x,', one=True).src)
+        self.assertEqual('if (x,)', FST('if zzz', '_comprehension_ifs').put_slice('x,', one=False).src)
+        self.assertEqual('if (x,)', FST('if zzz', '_comprehension_ifs').put_slice('x,', one=None).src)
+
+        self.assertEqual('(x,)', FST('zzz', '_withitems').put_slice('x,', one=True).src)
+        self.assertEqual('x', FST('zzz', '_withitems').put_slice('x,', one=False).src)
+        self.assertEqual('x', FST('zzz', '_withitems').put_slice('x,', one=None).src)
+
+        self.assertEqual('(x,),', FST('zzz', '_expr_arglikes').put_slice('x,', one=True).src)
+        self.assertEqual('x,', FST('zzz', '_expr_arglikes').put_slice('x,', one=False).src)
+        self.assertEqual('x,', FST('zzz', '_expr_arglikes').put_slice('x,', one=None).src)
+
+        self.assertEqual('with ((x,)): pass', FST('with zzz: pass', 'With').put_slice('x,', 'items', one=True).src)
+        self.assertEqual('with x: pass', FST('with zzz: pass', 'With').put_slice('x,', 'items', one=False).src)
+        self.assertEqual('with x: pass', FST('with zzz: pass', 'With').put_slice('x,', 'items', one=None).src)
+
+        self.assertEqual('class cls((x,)): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x,', 'bases', one=True).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x,', 'bases', one=False).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x,', 'bases', one=None).src)
+
+        self.assertEqual('class cls((x,)): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x,', '_bases', one=True).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x,', '_bases', one=False).src)
+        self.assertEqual('class cls(x): pass', FST('class cls(zzz): pass', 'ClassDef').put_slice('x,', '_bases', one=None).src)
+
+        self.assertEqual('call((x,))', FST('call(zzz)', 'Call').put_slice('x,', 'args', one=True).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x,', 'args', one=False).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x,', 'args', one=None).src)
+
+        self.assertEqual('call((x,))', FST('call(zzz)', 'Call').put_slice('x,', '_args', one=True).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x,', '_args', one=False).src)
+        self.assertEqual('call(x)', FST('call(zzz)', 'Call').put_slice('x,', '_args', one=None).src)
+
+        self.assertEqual('(x,),', FST('zzz,', 'Tuple').put_slice('x,', one=True).src)
+        self.assertEqual('x,', FST('zzz,', 'Tuple').put_slice('x,', one=False).src)
+        self.assertEqual('x,', FST('zzz,', 'Tuple').put_slice('x,', one=None).src)
+
+        self.assertEqual('[(x,)]', FST('[zzz]', 'List').put_slice('x,', one=True).src)
+        self.assertEqual('[x]', FST('[zzz]', 'List').put_slice('x,', one=False).src)
+        self.assertEqual('[x]', FST('[zzz]', 'List').put_slice('x,', one=None).src)
+
+        self.assertEqual('{(x,)}', FST('{zzz}', 'Set').put_slice('x,', one=True).src)
+        self.assertEqual('{x}', FST('{zzz}', 'Set').put_slice('x,', one=False).src)
+        self.assertEqual('{x}', FST('{zzz}', 'Set').put_slice('x,', one=None).src)
+
+        self.assertEqual('del (x,)', FST('del zzz', 'Delete').put_slice('x,', 'targets', one=True).src)
+        self.assertEqual('del x', FST('del zzz', 'Delete').put_slice('x,', 'targets', one=False).src)
+        self.assertEqual('del x', FST('del zzz', 'Delete').put_slice('x,', 'targets', one=None).src)
+
+        self.assertEqual('[x,],', FST('zzz,', 'MatchSequence').put_slice('x,', one=True).src)
+        self.assertEqual('x,', FST('zzz,', 'MatchSequence').put_slice('x,', one=False).src)
+        self.assertEqual('x,', FST('zzz,', 'MatchSequence').put_slice('x,', one=None).src)
+
     def test_put_slice_Delete(self):
         self.assertEqual('del z', (f := FST('del a, b')).put_slice('z').root.src)
         f.verify()

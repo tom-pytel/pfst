@@ -69,7 +69,7 @@ From GitHub, after cloning for development:
 
     pip install -e .[dev]
 
-# Example
+## Example
 
 Maybe you need to convert modern Python type annotations into older style type comments for something which doesn't
 understand annotations?
