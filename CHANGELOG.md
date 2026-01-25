@@ -17,7 +17,7 @@
 
 ### Added
 
-- coercion expanded greatly, can now successfully put more nodes which are not the exact type but that "should work" according to common sense
+- coercion expanded greatly, can now put more nodes which are not the exact type but that "should work", e.g. `TupleFST.elts = MatchSequenceFST.patterns.copy()`
   - `pattern`, `arguments`, `arg`, `alias`, `withitem`, `TypeVar` and `TypeVarTuple` to `expr`
   - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`, `List` or `Set`
   - all sequence types, custom and standard, to custom slice types
@@ -27,6 +27,7 @@
 - `FST(AST, mode)` and `FST.fromast(AST, type[AST] or mode)` can use the new coercion to convert `AST`
 - put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
 - prescribed slicing for `MatchClass.patterns`
+- prescribed slicing for `arguments._all`, e.g. `FunctionDefFST.args[x:y] = 'a: int, /, b=c'`
 - `unpar('invalid')` can remove delimiters from `List`, `Set`, `Dict`, `MatchMapping`, `ListComp`, `SetComp`, `DictComp` and `GeneratorExp`, if needed for some reason
 
 ### Updated

@@ -36479,6 +36479,1013 @@ _comprehension_ifs - ROOT 0,0..0,9
 '''),
 ],
 
+'arguments': [  # ................................................................................
+
+('', 2, 2, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j, /'''),
+r'''**NodeError('posonlyargs cannot follow args')**'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j, /'''),
+r'''a=1, x=1j, /''', r'''
+arguments - ROOT 0,0..0,12
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'x'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 1j - 0,7..0,9
+'''),
+
+('', 0, 2, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j, /'''),
+r'''x=1j, /''', r'''
+arguments - ROOT 0,0..0,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .defaults[1]
+   0] Constant 1j - 0,2..0,4
+'''),
+
+('', 1, 1, '_all', {}, ('arguments',
+r'''a=1'''), ('arguments',
+r'''x=1j, /'''),
+r'''**NodeError('posonlyargs cannot follow args')**'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''a=1'''), ('arguments',
+r'''x=1j, /'''),
+r'''x=1j, /''', r'''
+arguments - ROOT 0,0..0,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .defaults[1]
+   0] Constant 1j - 0,2..0,4
+'''),
+
+('', 1, 1, '_all', {}, ('arguments',
+r'''*, a=1'''), ('arguments',
+r'''x=1j, /'''),
+r'''**NodeError('posonlyargs cannot follow kwonlyargs')**'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''*, a=1'''), ('arguments',
+r'''x=1j, /'''),
+r'''x=1j, /''', r'''
+arguments - ROOT 0,0..0,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .defaults[1]
+   0] Constant 1j - 0,2..0,4
+'''),
+
+('', 0, 0, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j'''),
+r'''**NodeError('posonlyargs cannot follow args')**'''),
+
+('', 0, 0, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j, /'''),
+r'''x=1j, a=1, /, b=2''', r'''
+arguments - ROOT 0,0..0,17
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'x'
+   1] arg - 0,6..0,7
+     .arg 'a'
+  .args[1]
+   0] arg - 0,14..0,15
+     .arg 'b'
+  .defaults[3]
+   0] Constant 1j - 0,2..0,4
+   1] Constant 1 - 0,8..0,9
+   2] Constant 2 - 0,16..0,17
+'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j, /'''),
+r'''x=1j, /, b=2''', r'''
+arguments - ROOT 0,0..0,12
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .args[1]
+   0] arg - 0,9..0,10
+     .arg 'b'
+  .defaults[2]
+   0] Constant 1j - 0,2..0,4
+   1] Constant 2 - 0,11..0,12
+'''),
+
+('', 0, 2, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j, /'''),
+r'''x=1j, /''', r'''
+arguments - ROOT 0,0..0,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .defaults[1]
+   0] Constant 1j - 0,2..0,4
+'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j'''),
+r'''x=1j, b=2''', r'''
+arguments - ROOT 0,0..0,9
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'x'
+   1] arg - 0,6..0,7
+     .arg 'b'
+  .defaults[2]
+   0] Constant 1j - 0,2..0,4
+   1] Constant 2 - 0,8..0,9
+'''),
+
+('', 0, 2, '_all', {}, ('arguments',
+r'''a=1, /, b=2'''), ('arguments',
+r'''x=1j'''),
+r'''x=1j''', r'''
+arguments - ROOT 0,0..0,4
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .defaults[1]
+   0] Constant 1j - 0,2..0,4
+'''),
+
+('', 0, 1, '_all', {'_verify': False}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''**x'''),
+r'''**NodeError('kwonlyargs cannot follow kwarg')**'''),
+
+('', 1, 2, '_all', {'_verify': False}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''**x'''),
+r'''a=1, **x''', r'''
+arguments - ROOT 0,0..0,8
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwarg arg - 0,7..0,8
+    .arg 'x'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 2, '_all', {'_verify': False}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''**x'''),
+r'''**x''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'x'
+'''),
+
+('', 0, 1, '_all', {'_verify': False}, ('arguments',
+r'''*c, b=2'''), ('arguments',
+r'''**x'''),
+r'''**NodeError('kwonlyargs cannot follow kwarg')**'''),
+
+('', 1, 2, '_all', {'_verify': False}, ('arguments',
+r'''*c, b=2'''), ('arguments',
+r'''**x'''),
+r'''*c, **x''', r'''
+arguments - ROOT 0,0..0,7
+  .vararg arg - 0,1..0,2
+    .arg 'c'
+  .kwarg arg - 0,6..0,7
+    .arg 'x'
+'''),
+
+('', 0, 2, '_all', {'_verify': False}, ('arguments',
+r'''*c, b=2'''), ('arguments',
+r'''**x'''),
+r'''**x''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'x'
+'''),
+
+('', 0, 1, '_all', {'_verify': False}, ('arguments',
+r'''a=1, **b'''), ('arguments',
+r'''**x'''),
+r'''**NodeError('would result in two kwargs')**'''),
+
+('', 1, 2, '_all', {'_verify': False}, ('arguments',
+r'''a=1, **b'''), ('arguments',
+r'''**x'''),
+r'''a=1, **x''', r'''
+arguments - ROOT 0,0..0,8
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwarg arg - 0,7..0,8
+    .arg 'x'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 2, '_all', {'_verify': False}, ('arguments',
+r'''a=1, **b'''), ('arguments',
+r'''**x'''),
+r'''**x''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'x'
+'''),
+
+('', 0, 0, '_all', {}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''**NodeError('args cannot follow kwonlyargs')**'''),
+
+('', 0, 1, '_all', {}, ('arguments', r'''
+    a=1,
+    *,
+    b=2
+'''), ('arguments', r'''
+
+  *,
+  x=1j
+
+'''), r'''
+    *,
+    x=1j,
+    b=2
+''', r'''
+    *, x=1j,
+    b=2
+''', r'''
+arguments - ROOT 0,0..2,7
+  .kwonlyargs[2]
+   0] arg - 1,4..1,5
+     .arg 'x'
+   1] arg - 2,4..2,5
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 1,6..1,8
+   1] Constant 2 - 2,6..2,7
+'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''*, x=1j, b=2''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'x'
+   1] arg - 0,9..0,10
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 0,5..0,7
+   1] Constant 2 - 0,11..0,12
+'''),
+
+('', 0, 2, '_all', {}, ('arguments', r'''
+    a=1,
+    *,
+    b=2
+'''), ('arguments', r'''
+
+  *,
+  x=1j
+
+'''), r'''
+    *,
+    x=1j
+
+''',
+r'''    *, x=1j''', r'''
+arguments - ROOT 0,0..2,0
+  .kwonlyargs[1]
+   0] arg - 1,4..1,5
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 1,6..1,8
+'''),
+
+('', 0, 2, '_all', {}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''*, x=1j''', r'''
+arguments - ROOT 0,0..0,7
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 0,5..0,7
+'''),
+
+('', 1, 2, '_all', {}, ('arguments', r'''
+    a=1,
+    *,
+    b=2
+'''), ('arguments', r'''
+
+  *,
+  x=1j
+
+'''), r'''
+    a=1,
+    *,
+    x=1j
+
+''', r'''
+    a=1,
+    *, x=1j
+''', r'''
+arguments - ROOT 0,0..3,0
+  .args[1]
+   0] arg - 0,4..0,5
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 2,4..2,5
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 2,6..2,8
+  .defaults[1]
+   0] Constant 1 - 0,6..0,7
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''a=1, *, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''a=1, *, x=1j''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,8..0,9
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 0,10..0,12
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 1, 2, '_all', {}, ('arguments', r'''
+    *,
+    a=1,
+    b=2
+'''), ('arguments', r'''
+
+  *,
+  x=1j
+
+'''), r'''
+    *,
+    a=1,
+    x=1j
+
+''', r'''
+    *,
+    a=1,
+    x=1j
+''', r'''
+arguments - ROOT 0,0..3,0
+  .kwonlyargs[2]
+   0] arg - 1,4..1,5
+     .arg 'a'
+   1] arg - 2,4..2,5
+     .arg 'x'
+  .kw_defaults[2]
+   0] Constant 1 - 1,6..1,7
+   1] Constant 1j - 2,6..2,8
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''*, a=1, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''*, a=1, x=1j''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'x'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 1j - 0,10..0,12
+'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''a=1, *c, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''**NodeError('vararg cannot follow kwonlyargs')**'''),
+
+('', 0, 2, '_all', {}, ('arguments', r'''
+  a=1,
+  *c,
+  b=2
+'''), ('arguments', r'''
+
+    *,
+    x=1j
+
+'''), r'''
+  *,
+  x=1j,
+  b=2
+''', r'''
+  *, x=1j,
+  b=2
+''', r'''
+arguments - ROOT 0,0..2,5
+  .kwonlyargs[2]
+   0] arg - 1,2..1,3
+     .arg 'x'
+   1] arg - 2,2..2,3
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 1,4..1,6
+   1] Constant 2 - 2,4..2,5
+'''),
+
+('', 0, 2, '_all', {}, ('arguments',
+r'''a=1, *c, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''*, x=1j, b=2''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'x'
+   1] arg - 0,9..0,10
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 0,5..0,7
+   1] Constant 2 - 0,11..0,12
+'''),
+
+('', 1, 2, '_all', {}, ('arguments', r'''
+  a=1,
+  *c,
+  b=2
+'''), ('arguments', r'''
+
+    *,
+    x=1j
+
+'''), r'''
+  a=1,
+  *,
+  x=1j,
+  b=2
+''', r'''
+  a=1,
+  *, x=1j,
+  b=2
+''', r'''
+arguments - ROOT 0,0..3,5
+  .args[1]
+   0] arg - 0,2..0,3
+     .arg 'a'
+  .kwonlyargs[2]
+   0] arg - 2,2..2,3
+     .arg 'x'
+   1] arg - 3,2..3,3
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 2,4..2,6
+   1] Constant 2 - 3,4..3,5
+  .defaults[1]
+   0] Constant 1 - 0,4..0,5
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''a=1, *c, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''a=1, *, x=1j, b=2''', r'''
+arguments - ROOT 0,0..0,17
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[2]
+   0] arg - 0,8..0,9
+     .arg 'x'
+   1] arg - 0,14..0,15
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 0,10..0,12
+   1] Constant 2 - 0,16..0,17
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 1, 3, '_all', {}, ('arguments', r'''
+  a=1,
+  *c,
+  b=2
+'''), ('arguments', r'''
+
+    *,
+    x=1j
+
+'''), r'''
+  a=1,
+  *,
+  x=1j
+
+''', r'''
+  a=1,
+  *, x=1j
+''', r'''
+arguments - ROOT 0,0..3,0
+  .args[1]
+   0] arg - 0,2..0,3
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 2,2..2,3
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 2,4..2,6
+  .defaults[1]
+   0] Constant 1 - 0,4..0,5
+'''),
+
+('', 1, 3, '_all', {}, ('arguments',
+r'''a=1, *c, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''a=1, *, x=1j''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,8..0,9
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 0,10..0,12
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 2, 3, '_all', {}, ('arguments', r'''
+  a=1,
+  *c,
+  b=2
+'''), ('arguments', r'''
+
+    *,
+    x=1j
+
+'''), r'''
+  a=1,
+  *c,
+  x=1j
+
+''', r'''
+  a=1,
+  *c,
+  x=1j
+''', r'''
+arguments - ROOT 0,0..3,0
+  .args[1]
+   0] arg - 0,2..0,3
+     .arg 'a'
+  .vararg arg - 1,3..1,4
+    .arg 'c'
+  .kwonlyargs[1]
+   0] arg - 2,2..2,3
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 2,4..2,6
+  .defaults[1]
+   0] Constant 1 - 0,4..0,5
+'''),
+
+('', 2, 3, '_all', {}, ('arguments',
+r'''a=1, *c, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''a=1, *c, x=1j''', r'''
+arguments - ROOT 0,0..0,13
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,6..0,7
+    .arg 'c'
+  .kwonlyargs[1]
+   0] arg - 0,9..0,10
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 0,11..0,13
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 0, '_all', {}, ('arguments',
+r'''a=1, **c'''), ('arguments',
+r'''*, x=1j'''),
+r'''**NodeError('args cannot follow kwonlyargs')**'''),
+
+('', 0, 1, '_all', {}, ('arguments', r'''
+  a=1,
+  **c
+'''), ('arguments', r'''
+
+    *,
+    x=1j
+
+'''), r'''
+  *,
+  x=1j,
+  **c
+''', r'''
+  *, x=1j,
+  **c
+''', r'''
+arguments - ROOT 0,0..2,5
+  .kwonlyargs[1]
+   0] arg - 1,2..1,3
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 1,4..1,6
+  .kwarg arg - 2,4..2,5
+    .arg 'c'
+'''),
+
+('', 0, 1, '_all', {}, ('arguments',
+r'''a=1, **c'''), ('arguments',
+r'''*, x=1j'''),
+r'''*, x=1j, **c''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 0,5..0,7
+  .kwarg arg - 0,11..0,12
+    .arg 'c'
+'''),
+
+('', 1, 1, '_all', {}, ('arguments', r'''
+  a=1,
+  **c
+'''), ('arguments', r'''
+
+    *,
+    x=1j
+
+'''), r'''
+  a=1,
+  *,
+  x=1j,
+  **c
+''',
+r'''**IndexError('list index out of range')**''', r'''
+arguments - ROOT 0,0..3,5
+  .args[1]
+   0] arg - 0,2..0,3
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 2,2..2,3
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 2,4..2,6
+  .kwarg arg - 3,4..3,5
+    .arg 'c'
+  .defaults[1]
+   0] Constant 1 - 0,4..0,5
+'''),
+
+('', 1, 1, '_all', {}, ('arguments',
+r'''a=1, **c'''), ('arguments',
+r'''*, x=1j'''),
+r'''a=1, *, x=1j, **c''', r'''
+arguments - ROOT 0,0..0,17
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,8..0,9
+     .arg 'x'
+  .kw_defaults[1]
+   0] Constant 1j - 0,10..0,12
+  .kwarg arg - 0,16..0,17
+    .arg 'c'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 1, 3, '_all', {}, ('arguments', r'''
+  a=1,
+  b=2,
+  /,
+  *,
+  d=3,
+  e=4,
+'''), ('arguments', r'''
+
+    x=1j,
+    /,
+    *,
+    y=2j,
+
+'''), r'''
+  a=1,
+  x=1j,
+  /,
+  *,
+  y=2j,
+  e=4,
+''', r'''
+  a=1,
+  x=1j, /, *, y=2j,
+  e=4,
+''', r'''
+arguments - ROOT 0,0..5,6
+  .posonlyargs[2]
+   0] arg - 0,2..0,3
+     .arg 'a'
+   1] arg - 1,2..1,3
+     .arg 'x'
+  .kwonlyargs[2]
+   0] arg - 4,2..4,3
+     .arg 'y'
+   1] arg - 5,2..5,3
+     .arg 'e'
+  .kw_defaults[2]
+   0] Constant 2j - 4,4..4,6
+   1] Constant 4 - 5,4..5,5
+  .defaults[2]
+   0] Constant 1 - 0,4..0,5
+   1] Constant 1j - 1,4..1,6
+'''),
+
+('', 1, 3, '_all', {}, ('arguments',
+r'''a=1, b=2, /, *, d=3, e=4'''), ('arguments',
+r'''x=1j, /, *, y=2j'''),
+r'''a=1, x=1j, /, *, y=2j, e=4''', r'''
+arguments - ROOT 0,0..0,26
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'x'
+  .kwonlyargs[2]
+   0] arg - 0,17..0,18
+     .arg 'y'
+   1] arg - 0,23..0,24
+     .arg 'e'
+  .kw_defaults[2]
+   0] Constant 2j - 0,19..0,21
+   1] Constant 4 - 0,25..0,26
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 1j - 0,7..0,9
+'''),
+
+('', 2, 2, '_all', {}, ('arguments', r'''
+  a=1,
+  b=2,
+  /,
+  *,
+  d=3,
+  e=4,
+'''), ('arguments', r'''
+
+    x=1j,
+    /,
+    *,
+    y=2j,
+
+'''), r'''
+  a=1,
+  b=2,
+  x=1j,
+  /,
+  *,
+  y=2j,
+  d=3,
+  e=4,
+''', r'''
+  a=1,
+  b=2,
+  x=1j, /, *, y=2j,
+  d=3,
+  e=4,
+''', r'''
+arguments - ROOT 0,0..7,6
+  .posonlyargs[3]
+   0] arg - 0,2..0,3
+     .arg 'a'
+   1] arg - 1,2..1,3
+     .arg 'b'
+   2] arg - 2,2..2,3
+     .arg 'x'
+  .kwonlyargs[3]
+   0] arg - 5,2..5,3
+     .arg 'y'
+   1] arg - 6,2..6,3
+     .arg 'd'
+   2] arg - 7,2..7,3
+     .arg 'e'
+  .kw_defaults[3]
+   0] Constant 2j - 5,4..5,6
+   1] Constant 3 - 6,4..6,5
+   2] Constant 4 - 7,4..7,5
+  .defaults[3]
+   0] Constant 1 - 0,4..0,5
+   1] Constant 2 - 1,4..1,5
+   2] Constant 1j - 2,4..2,6
+'''),
+
+('', 2, 2, '_all', {}, ('arguments',
+r'''a=1, b=2, /, *, d=3, e=4'''), ('arguments',
+r'''x=1j, /, *, y=2j'''),
+r'''a=1, b=2, x=1j, /, *, y=2j, d=3, e=4''', r'''
+arguments - ROOT 0,0..0,36
+  .posonlyargs[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+   2] arg - 0,10..0,11
+     .arg 'x'
+  .kwonlyargs[3]
+   0] arg - 0,22..0,23
+     .arg 'y'
+   1] arg - 0,28..0,29
+     .arg 'd'
+   2] arg - 0,33..0,34
+     .arg 'e'
+  .kw_defaults[3]
+   0] Constant 2j - 0,24..0,26
+   1] Constant 3 - 0,30..0,31
+   2] Constant 4 - 0,35..0,36
+  .defaults[3]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+   2] Constant 1j - 0,12..0,14
+'''),
+
+('', 1, 2, '_all', {}, ('arguments', r'''
+  a=1,
+  b=2,
+  /,
+  *,
+  d=3,
+  e=4,
+'''), ('arguments', r'''
+
+    x=1j,
+    /,
+    *,
+    y=2j,
+
+'''), r'''
+  a=1,
+  x=1j,
+  /,
+  *,
+  y=2j,
+  d=3,
+  e=4,
+''', r'''
+  a=1,
+  x=1j, /, *, y=2j,
+  d=3,
+  e=4,
+''', r'''
+arguments - ROOT 0,0..6,6
+  .posonlyargs[2]
+   0] arg - 0,2..0,3
+     .arg 'a'
+   1] arg - 1,2..1,3
+     .arg 'x'
+  .kwonlyargs[3]
+   0] arg - 4,2..4,3
+     .arg 'y'
+   1] arg - 5,2..5,3
+     .arg 'd'
+   2] arg - 6,2..6,3
+     .arg 'e'
+  .kw_defaults[3]
+   0] Constant 2j - 4,4..4,6
+   1] Constant 3 - 5,4..5,5
+   2] Constant 4 - 6,4..6,5
+  .defaults[2]
+   0] Constant 1 - 0,4..0,5
+   1] Constant 1j - 1,4..1,6
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''a=1, b=2, /, *, d=3, e=4'''), ('arguments',
+r'''x=1j, /, *, y=2j'''),
+r'''a=1, x=1j, /, *, y=2j, d=3, e=4''', r'''
+arguments - ROOT 0,0..0,31
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'x'
+  .kwonlyargs[3]
+   0] arg - 0,17..0,18
+     .arg 'y'
+   1] arg - 0,23..0,24
+     .arg 'd'
+   2] arg - 0,28..0,29
+     .arg 'e'
+  .kw_defaults[3]
+   0] Constant 2j - 0,19..0,21
+   1] Constant 3 - 0,25..0,26
+   2] Constant 4 - 0,30..0,31
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 1j - 0,7..0,9
+'''),
+
+('', 2, 3, '_all', {}, ('arguments', r'''
+  a=1,
+  b=2,
+  /,
+  *,
+  d=3,
+  e=4,
+'''), ('arguments', r'''
+
+    x=1j,
+    /,
+    *,
+    y=2j,
+
+'''), r'''
+  a=1,
+  b=2,
+  x=1j,
+  /,
+  *,
+  y=2j,
+  e=4,
+''', r'''
+  a=1,
+  b=2,
+  x=1j, /, *, y=2j,
+  e=4,
+''', r'''
+arguments - ROOT 0,0..6,6
+  .posonlyargs[3]
+   0] arg - 0,2..0,3
+     .arg 'a'
+   1] arg - 1,2..1,3
+     .arg 'b'
+   2] arg - 2,2..2,3
+     .arg 'x'
+  .kwonlyargs[2]
+   0] arg - 5,2..5,3
+     .arg 'y'
+   1] arg - 6,2..6,3
+     .arg 'e'
+  .kw_defaults[2]
+   0] Constant 2j - 5,4..5,6
+   1] Constant 4 - 6,4..6,5
+  .defaults[3]
+   0] Constant 1 - 0,4..0,5
+   1] Constant 2 - 1,4..1,5
+   2] Constant 1j - 2,4..2,6
+'''),
+
+('', 2, 3, '_all', {}, ('arguments',
+r'''a=1, b=2, /, *, d=3, e=4'''), ('arguments',
+r'''x=1j, /, *, y=2j'''),
+r'''a=1, b=2, x=1j, /, *, y=2j, e=4''', r'''
+arguments - ROOT 0,0..0,31
+  .posonlyargs[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+   2] arg - 0,10..0,11
+     .arg 'x'
+  .kwonlyargs[2]
+   0] arg - 0,22..0,23
+     .arg 'y'
+   1] arg - 0,28..0,29
+     .arg 'e'
+  .kw_defaults[2]
+   0] Constant 2j - 0,24..0,26
+   1] Constant 4 - 0,30..0,31
+  .defaults[3]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+   2] Constant 1j - 0,12..0,14
+'''),
+],
+
 'MatchSequence': [  # ................................................................................
 
 ('', 1, 3, None, {}, ('MatchSequence',

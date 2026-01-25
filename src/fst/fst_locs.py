@@ -510,7 +510,6 @@ def _loc_argument(self: fst.FST, default: bool = False) -> fstloc:
 
     ln, col, end_ln, end_col = loc
     field, _ = pfield
-    parent = self.parent
 
     if (is_kwarg := field == 'kwarg') or field == 'vararg':
         lines = self.root._lines
@@ -518,7 +517,7 @@ def _loc_argument(self: fst.FST, default: bool = False) -> fstloc:
         if prev := self.prev():
             _, _, prev_ln, prev_col = prev.loc
         else:
-            prev_ln, prev_col, _, _ = parent.loc
+            prev_ln, prev_col, _, _ = self.parent.loc
 
         ln, col, src = prev_frag(lines, prev_ln, prev_col, ln, col)  # must be there
         col += len(src) - (2 if is_kwarg else 1)

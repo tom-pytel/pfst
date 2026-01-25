@@ -5126,7 +5126,6 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
-        _cached_allargs,
         _cached_arglikes,
 
         _is_expr_arglike_only,

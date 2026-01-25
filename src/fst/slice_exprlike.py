@@ -19,6 +19,7 @@ from .common import (
     re_empty_line,
     re_empty_space,
     re_line_end_cont_or_comment,
+    re_line_end_ws_comment,
     fstloc,
     next_frag,
     next_find,
@@ -37,7 +38,6 @@ _LocFunc = Callable[[list[AST], int], fstloc]  # location function for child wit
 
 _re_open_delim_or_space = re.compile(r'[({\s[]')  # this is a special set of delimiter openers which are considered to not need an aesthetic space after
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a special set of terminations which are considered to not need an aesthetic space before if a slice put ends with a non-space right before them
-_re_line_end_ws_comment = re.compile(r'\s*#.*$')     # search: line end maybe whitespace and definitely comment
 
 
 # _re_sep_starts = {  # match separator at start of fragment, needs to be a pattern to recognize 'and\b' and 'or\b' so they are not recognized as part of an identifier like 'origin'
@@ -614,7 +614,7 @@ def get_slice_sep(
     return fst_
 
 
-def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this really needs a refactor
+def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this really needs a refactor, in fact a rewrite to totally abstract the body and location stuff
     self: fst.FST,
     start: int,
     stop: int,
@@ -631,9 +631,11 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     field2: str | None = None,
     sep: str = ',',
     self_tail_sep: bool | Literal[0, 1] | None = None,
-    locfunc: _LocFunc | None = None,
+    *,
+    fst_field: str | None = None,
     allow_redent: bool = True,
-) -> tuple:
+    locfunc: _LocFunc | None = None,
+) -> tuple[_ParamsOffset, _ParamsOffset, tuple]:
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
     just delete in the same way that a cut operation would.
 
@@ -671,13 +673,18 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         - `False`: Always remove if present.
         - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
-    - `locfunc`: Location function ONLY for single-element non-`sep` sequence. Used to provide full location for
-        elements of `comprehension.ifs` to include the leading `if` which is not part of the expression location. If
-        `None` then standard location is used.
+    - `fst_field`: This allows override of field used to get body for checking `fst_` element indentation. Needed for
+        really different "slices" like `arguments`.
     - `allow_redent`: Whether to allow re-indentation of multiline elements to current indentation of multiline elements
         or another indentation level if that cannot be determined. Meant to allow avoid redent for decorators.
+    - `locfunc`: Location function used to provide full location for elements if the location is not their own standard
+        location. For example for `comprehension.ifs` to include the leading `if` which is not part of the expression
+        location. If `None` then standard location is used.
     **Returns:**
-    - `param`: A parameter to be passed to `put_slice_sep_end(param)` to finish the put.
+    - `(params_offset, fst_params_offset, other_params)`: A parameter to be passed to `put_slice_sep_end(param)` to
+        finish the put. The first two elements of the tuple are the single offset parameters that were applied to `self`
+        and `fst_` respectively. Provided if the caller needs to offset any extra nodes (`arguments` slice put) before
+        calling `put_slice_sep_end()`.
     """
 
     def get_indent_elts() -> str:
@@ -722,7 +729,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     # locations
 
     if not is_first:  # if not first then bound start is at end of previous element
-        _, _, bound_ln, bound_col = body2[start - 1].f.pars()  # we don't use locfunc(body2, start - 1) because currenly that only returns a different BEGINNING location and end_ln and end_col are same as this
+        _, _, bound_ln, bound_col = locfunc(body2, start - 1)
 
     if not is_ins:  # replace or delete, location is element span
         loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body2, locfunc)
@@ -789,6 +796,8 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                     put_col = bound_col
                     self_tail_sep = None
 
+        fst_params_offset = None
+
     # insert or replace, this is the bit that deals with tricky leading and trailing newlines and indentation
 
     else:
@@ -816,7 +825,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                 and (l := lines[put_end_ln]).startswith('#', put_end_col)  # comment at end of put line?
                 and bound_end_ln > put_end_ln  # and the edit is within bounds
             ):
-                comment = _re_line_end_ws_comment.search(l, put_col).group()  # get whole comment including leading space because get trivia location ate that
+                comment = re_line_end_ws_comment.search(l, put_col).group()  # get whole comment including leading space because get trivia location ate that
                 put_end_ln += 1  # overwrite comment on put because we copy it into slice body
                 put_end_col = 0
 
@@ -827,10 +836,12 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         if not is_del and len(fst_._lines) > 1 and allow_redent:
             if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
                 ast_ = fst_.a
-                fst_indent = _get_element_indent(fst_,
-                                                 getattr(ast_, fst_first.pfield.name if fst_first else 'keys'),
-                                                 getattr(ast_, fst_last.pfield.name),
-                                                 0, locfunc)
+                fst_indent = _get_element_indent(
+                    fst_,
+                    getattr(ast_, fst_field or (fst_first.pfield.name if fst_first else 'keys')),
+                    getattr(ast_, fst_field or fst_last.pfield.name),
+                    0, locfunc
+                )
 
                 fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):], docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring  # fst_._dedent_lns(fst_indent or ''), fst_._indent_lns(elts_indent[len(self_indent):])
 
@@ -911,7 +922,10 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         # indent and offset source and FST to put
 
         fst_._indent_lns(self_indent, skip=skip, docstr=False)
-        fst_._offset(0, 0, put_ln, lines[put_ln].c2b(put_col))
+
+        fst_params_offset = _ParamsOffset(0, 0, put_ln, lines[put_ln].c2b(put_col))  # we do this way so we can return it
+
+        fst_._offset(*fst_params_offset)
 
         if post_indent:  # we do this here like this because otherwise a completely empty line at the end of fst_ will not be indented at all in _indent_lns() which we may need to add self_indent alone
             put_lines[-1] = bistr(post_indent)
@@ -937,23 +951,38 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
     # parameters for put / del trailing and internal separators, we return explicitly so that the ASTs can be modified so the next part doesn't get too screwy
 
-    return (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
-            params_offset, is_last, is_del, is_ins)
+    return (params_offset, fst_params_offset, (
+        start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
+        is_last, is_del, is_ins
+    ))
 
 
-def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
+def put_slice_sep_end(
+    self: fst.FST, params: tuple, body2_node_override: Callable[[fst.FST], fst.FST] | None = None
+) -> None:
     """Finish up sequence slice put with separators. `AST` nodes are assumed to have been modified by here and general
     structure of `self` is correct, even if it is not parsable due to separators in source not being correct yet. Should
     not be called for slices which do not use separators.
 
+    **Parameters:**
+    - `params`: Parameters from `put_slice_sep_begin()`.
+    - `body2_node_override`: If the actual last node is not in `body` or `body2` (like is done with `arguments`), this
+        functions should convert the `FST` node from the actual body into the actual last node. This is needed for
+        proper offsetting when a separator is inserted.
+
     **WARNING:** `locfunc` is not used here because currently it only applies to non-`sep` sequences.
     """
 
-    (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset, params_offset,
-     is_last, is_del, is_ins) = params
+    if body2_node_override is None:
+        body2_node_override = lambda f: f
+
+    params_offset, _, (
+        start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
+        is_last, is_del, is_ins
+    ) = params
 
     if self_tail_sep is not None:  # trailing separator
-        last = body2[-1].f
+        last = body2_node_override(body2[-1].f)
 
         _, _, last_end_ln, last_end_col = last.loc
         bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
@@ -969,7 +998,7 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
         new_stop = start + len_fst
 
         if not is_last:  # past the newly put slice
-            put_last = body2[new_stop - 1].f
+            put_last = body2_node_override(body2[new_stop - 1].f)
 
             _, _, put_last_end_ln, put_last_end_col = put_last.loc
             new_stop_ln, new_stop_col, _, _ = self._loc_maybe_key(new_stop, True, body, body2).loc
@@ -977,7 +1006,7 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
             self._maybe_ins_sep(put_last_end_ln, put_last_end_col, True, new_stop_ln, new_stop_col, sep, put_last)
 
         if is_ins and start:  # between self split (last element of first part) or end and new slice following it
-            self_split = body2[start - 1].f
+            self_split = body2_node_override(body2[start - 1].f)
 
             _, _, self_split_end_ln, self_split_end_col = self_split.loc
             put_first_ln, put_first_col, _, _ = self._loc_maybe_key(start, True, body, body2).loc
@@ -1075,4 +1104,4 @@ def put_slice_nosep(
 
     put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_last, -1,
                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, field, None, '', None,
-                        locfunc, allow_redent)
+                        allow_redent=allow_redent, locfunc=locfunc)

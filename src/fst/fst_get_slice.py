@@ -723,16 +723,15 @@ def _fix_arguments_copy(self: fst.FST) -> None:
 def _fix_arguments_del(self: fst.FST) -> None:
     """Fix `arguments` after a slice deletion. May need to replace removed `/` or `*` or may need to remove them."""
 
-    ast = self.a
     lines = self.root._lines
+    ast = self.a
     posonlyargs = ast.posonlyargs
     args = ast.args
     vararg = ast.vararg
     kwonlyargs = ast.kwonlyargs
     kwarg = ast.kwarg
-    is_empty = not (posonlyargs or args or vararg or kwonlyargs or kwarg)
 
-    if is_empty:  # if completely empty then just delete everything and we are done
+    if not (posonlyargs or args or vararg or kwonlyargs or kwarg):  # if completely empty then just delete everything and we are done
         ln, col, end_ln, end_col = self._loc_arguments_empty()
 
         self._put_src(None, ln, col, end_ln, end_col, True)
@@ -743,7 +742,7 @@ def _fix_arguments_del(self: fst.FST) -> None:
 
     # posonlyargs '/'
 
-    if not posonlyargs:  # remove leading '/' if exists, helps that we know that there is some node following it (otherwise would be is_empty)
+    if not posonlyargs:  # remove leading '/' if exists, helps that we know that there is some node following it (otherwise would be empty)
         if (frag := next_frag(lines, self_ln, self_col, self_end_ln, self_end_col)) and frag.src.startswith('/'):
             ln, col, _ = frag
             end_ln, end_col, src = next_frag(lines, ln, col + 1, self_end_ln, self_end_col)  # must be there
@@ -2050,10 +2049,12 @@ def _get_slice_arguments(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """The slice of `arguments` is just another `arguments`."""
+    """The slice of `arguments` is just another `arguments`. We treat all args as part of the same sequence and fix any
+    `/` and `*` indicators afterwards."""
 
     ast = self.a
-    body = self._cached_allargs()  # does not contain default nodes
+    body = [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()), *ast.kwonlyargs,
+            *([a] if (a := ast.kwarg) else ())]
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2135,7 +2136,7 @@ def _get_slice_arguments(
 
         for field in ('posonlyargs', 'args', 'kwonlyargs', 'kw_defaults', 'defaults'):  # reset pfields to account for any removed nodes
             for i, a in enumerate(getattr(ast, field)):
-                if a:
+                if a:  # because of kw_defaults None values
                     a.f.pfield = astfield(field, i)
 
         if len_slice == len_body:
@@ -2152,7 +2153,7 @@ def _get_slice_arguments(
                          options, new_last, '', '', ',', 0, 0, False)
 
 
-    # # TODO: fst_: 'argpos' or whatever option to move arguments to '.args' if possible, removing any '/' or '*'
+    # TODO: fst_: 'argpos' or whatever option to move arguments to '.args' if possible, convert to just normal args if possible (no '/' or '*')
 
 
     _fix_arguments_copy(fst_)

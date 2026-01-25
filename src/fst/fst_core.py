@@ -771,10 +771,11 @@ def _set_field(
         if unmake:
             self._unmake_fst_tree([body])
 
-        f = fst.FST(ast_or_list, self, astfield(field, None))
+        if ast_or_list is not None:  # can just be deleting a field
+            f = fst.FST(ast_or_list, self, astfield(field, None))
 
-        if not valid_fst:
-            f._make_fst_tree()
+            if not valid_fst:
+                f._make_fst_tree()
 
     setattr(ast, field, ast_or_list)
 
