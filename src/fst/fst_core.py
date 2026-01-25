@@ -763,7 +763,8 @@ def _set_field(
             stack = []
 
             for i, a in enumerate(ast_or_list):
-                stack.append(fst.FST(a, self, astfield(field, i)))
+                if a is not None:
+                    stack.append(fst.FST(a, self, astfield(field, i)))
 
             self._make_fst_tree(stack)
 

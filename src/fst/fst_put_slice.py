@@ -155,7 +155,14 @@ from .code import (
 
 from .fst_misc import fixup_slice_indices, validate_put_arglike
 from .slice_stmtlike import put_slice_stmtlike
-from .slice_exprlike import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
+
+from .slice_exprlike import (
+    _LocationAbstract,
+    _LocationAbstract_dictlike,
+    put_slice_sep_begin,
+    put_slice_sep_end,
+    put_slice_nosep,
+)
 
 from .fst_get_slice import (
     _get_option_op_side,
@@ -277,6 +284,7 @@ class slicestatic(NamedTuple):
     sep:           str
     self_tail_sep: bool | Literal[0, 1] | None
     ret_tail_sep:  bool | Literal[0, 1] | None
+
 
 # ......................................................................................................................
 
@@ -1403,19 +1411,22 @@ def _put_slice_seq_and_asts(
 ) -> None:
     """Helper for most slice put operations."""
 
+    locabst = _LocationAbstract(body)
+
     if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+        end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, field, None, sep, self_tail_sep)
+                                         options, sep, self_tail_sep)
 
         _put_slice_asts(self, start, stop, field, body, None, None)
 
     else:
         fst_body = getattr(fst_.a, fst_field)
+        fst_locabst = _LocationAbstract(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, field, None, sep, self_tail_sep)
+                                         options, sep, self_tail_sep)
 
         _put_slice_asts(self, start, stop, field, body, fst_, fst_body, ctx_cls)
 
@@ -1701,10 +1712,12 @@ def _put_slice_Dict__all(
     bound_col += 1
     bound_end_col -= 1
 
+    locabst = _LocationAbstract_dictlike(body, body2, self)
+
     if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+        end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'values')
+                                         options)
 
         _put_slice_asts2(self, start, stop, 'values', body, body2, None, None, None)
 
@@ -1712,11 +1725,11 @@ def _put_slice_Dict__all(
         ast_ = fst_.a
         fst_body = ast_.keys
         fst_body2 = ast_.values
-        fst_first = a.f if (a := fst_body[0]) else None
+        fst_locabst = _LocationAbstract_dictlike(fst_body, fst_body2, fst_)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'values')
+                                         options)
 
         _put_slice_asts2(self, start, stop, 'values', body, body2, fst_, fst_body, fst_body2)
 
@@ -2037,10 +2050,12 @@ def _put_slice_Global_Nonlocal_names(
         bound_ln = last_end_ln = bound_end_ln
         bound_col = last_end_col = bound_end_col
 
+    locabst = _LocationAbstract(tmp_elts)
+
     if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+        end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'elts', None, ',', False)
+                                         options, ',', False)
 
         del body[start : stop]  # this is the real update
 
@@ -2048,11 +2063,11 @@ def _put_slice_Global_Nonlocal_names(
 
     else:
         fst_body = fst_.a.elts
-        fst_last = fst_body[-1].f
+        fst_locabst = _LocationAbstract(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_last, len(fst_body),
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'elts', None, ',', False)
+                                         options, ',', False)
 
         body[start : stop] = [e.id for e in fst_body]  # this is the real update
 
@@ -2105,6 +2120,8 @@ def _put_slice_ClassDef_bases(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
 
+    locabst = _LocationAbstract(body)
+
     if not fst_:
         if not keywords and len_slice == len_body:  # deleting everything so remove pars
             self._put_src(None, bound_ln, bound_col, bound_end_ln, bound_end_col, False)
@@ -2116,9 +2133,9 @@ def _put_slice_ClassDef_bases(
             bound_end_col -= 1
             self_tail_sep = (start and keywords and stop == len_body) or None
 
-            end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+            end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
                                              bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                             options, 'bases', None, ',', self_tail_sep)
+                                             options, ',', self_tail_sep)
 
         _put_slice_asts(self, start, stop, 'bases', body, None, None)
 
@@ -2136,10 +2153,11 @@ def _put_slice_ClassDef_bases(
 
         self_tail_sep = (keywords and stop == len_body) or None
         fst_body = fst_.a.elts
+        fst_locabst = _LocationAbstract(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'bases', None, ',', self_tail_sep)
+                                         options, ',', self_tail_sep)
 
         _put_slice_asts(self, start, stop, 'bases', body, fst_, fst_body)
 
@@ -2148,6 +2166,11 @@ def _put_slice_ClassDef_bases(
 
         if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
             self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+
+class _LocationAbstract_decorator_list(_LocationAbstract):
+    def loc_head(self, idx: int) -> fstloc:
+        return self.body[idx].f.parent._loc_decorator(idx)
 
 
 def _put_slice_decorator_list(
@@ -2188,17 +2211,17 @@ def _put_slice_decorator_list(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_decorator_list(self)
 
-    locfunc = lambda body, idx: body[idx].f.parent._loc_decorator(idx)
-
     root = self.root
     lines = root._lines  # for fixes after put or del
     old_last_line = lines[-1]
     old_first_line = lines[bound_ln]
 
+    locabst = _LocationAbstract_decorator_list(body)
+
     if not fst_:
-        put_slice_nosep(self, start, stop, None, None, None,
+        put_slice_nosep(self, start, stop, locabst, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'decorator_list', locfunc)
+                        options)
 
         _put_slice_asts(self, start, stop, 'decorator_list', body, None, None)
 
@@ -2207,12 +2230,12 @@ def _put_slice_decorator_list(
     else:
         old_body_empty = not body  # for fixes after put
         old_loc = self.loc
-
         fst_body = fst_.a.decorator_list
+        fst_locabst = _LocationAbstract_decorator_list(fst_body)
 
-        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        put_slice_nosep(self, start, stop, locabst, fst_locabst, fst_,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'decorator_list', locfunc, False)
+                        options, False)
 
         _put_slice_asts(self, start, stop, 'decorator_list', body, fst_, fst_body)
 
@@ -2259,21 +2282,29 @@ def _put_slice_generators(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_generators(self)
 
+    locabst = _LocationAbstract(body)
+
     if not fst_:
         fst_body = None
 
-        put_slice_nosep(self, start, stop, None, None, None,
+        put_slice_nosep(self, start, stop, locabst, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'generators')
+                        options)
 
     else:
         fst_body = fst_.a.generators
+        fst_locabst = _LocationAbstract(fst_body)
 
-        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        put_slice_nosep(self, start, stop, locabst, fst_locabst, fst_,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'generators')
+                        options)
 
     _put_slice_asts(self, start, stop, 'generators', body, fst_, fst_body)
+
+
+class _LocationAbstract_comprehension_ifs(_LocationAbstract):
+    def loc_head(self, idx: int) -> fstloc:
+        return self.body[idx].f.parent._loc_comprehension_if(idx)
 
 
 def _put_slice_comprehension_ifs(
@@ -2300,25 +2331,26 @@ def _put_slice_comprehension_ifs(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_comprehension_ifs(self)
 
-    locfunc = lambda body, idx: body[idx].f.parent._loc_comprehension_if(idx)
-
     if ast.__class__ is comprehension:
         _, _, bound_ln, bound_col = ast.iter.f.pars()
 
+    locabst = _LocationAbstract_comprehension_ifs(body)
+
     if not fst_:
-        put_slice_nosep(self, start, stop, None, None, None,
+        put_slice_nosep(self, start, stop, locabst, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'ifs', locfunc)
+                        options)
 
         _put_slice_asts(self, start, stop, 'ifs', body, None, None)
 
     else:
         fst_body = fst_.a.ifs
         is_last = stop == len_body
+        fst_locabst = _LocationAbstract_comprehension_ifs(fst_body)
 
-        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        put_slice_nosep(self, start, stop, locabst, fst_locabst, fst_,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'ifs', locfunc)
+                        options)
 
         _put_slice_asts(self, start, stop, 'ifs', body, fst_, fst_body)
 
@@ -2330,6 +2362,26 @@ def _put_slice_comprehension_ifs(
                 ln, col, _, _ = parent_body[next_idx].f.loc
 
                 self._fix_joined_alnums(ln, col)
+
+
+class _LocationAbstract_arguments(_LocationAbstract):
+    """Gives the location of each `arguments` `arg` along with its default value if it has one. The tail node is always
+    the default if present, otherwise the arg."""
+
+    def tail_node(self, idx: int) -> AST:
+        a = self.body[idx]
+        f = a.f
+
+        if a.__class__ is arg and (g := f.next()) and g.pfield.name in ('defaults', 'kw_defaults'):
+            return g.a
+
+        return a
+
+    def loc_head(self, idx: int) -> fstloc:
+        a = self.body[idx]
+        f = a.f
+
+        return f.loc if a.__class__ is Pass else f._loc_argument(True)
 
 
 def _put_slice_arguments(
@@ -2447,81 +2499,74 @@ def _put_slice_arguments(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    ast._allargs = allargs  # this is a quick hacky way to do this until we rework get/put_slice exprlike base function to do location better
-    ast_._allargs = fst_allargs
+    locabst = _LocationAbstract_arguments(allargs)
+    fst_locabst = _LocationAbstract_arguments(fst_allargs)
 
-    try:
-        def locfunc(body: list[AST], idx: int) -> fstloc:
-            return a.f.loc if (a := body[idx]).__class__ is Pass else a.f._loc_argument(True)
+    assert len(fst_markers_to_delete) < 2  # we only ever expect 1 marker to delete, but just in case, TODO: future, don't need list for this
 
-        def body2_node_override(f: fst.FST) -> fst.FST:
-            if f.a.__class__ is arg and (g := f.next()) and g.pfield.name in ('defaults', 'kw_defaults'):
-                return g
+    while fst_markers_to_delete:  # if we need to delete redundant `/` and / or `*` markers it will be in the fst_
+        idx = fst_markers_to_delete.pop()
 
-            return f
+        end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
 
-        assert len(fst_markers_to_delete) < 2  # we only ever expect 1 marker to delete, but just in case, TODO: future, don't need list for this
+        del fst_allargs[idx]
 
-        while fst_markers_to_delete:  # if we need to delete redundant `/` and / or `*` markers it will be in the fst_
-            idx = fst_markers_to_delete.pop()
+        put_slice_sep_end(fst_, end_params)
 
-            end_params = put_slice_sep_begin(fst_, idx, idx + 1, None, None, None, 0, *fst_.loc,
-                                             options, '_allargs', None, ',', 0, fst_field='_allargs', locfunc=locfunc)
+    end_params = put_slice_sep_begin(self, aa_start, aa_stop, locabst, fst_locabst, fst_,
+                                     bound_ln, bound_col, bound_end_ln, bound_end_col, options, ',', 0)
 
-            del fst_allargs[idx]
+    allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
 
-            put_slice_sep_end(fst_, end_params, body2_node_override)
+    params_offsets = end_params[:2]  # (params_offset, fst_params_offset)
 
-        end_params = put_slice_sep_begin(self, aa_start, aa_stop,
-                                         fst_, fst_allargs[0].f, fst_allargs[-1].f, len(fst_allargs),
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, '_allargs', None, ',', 0, fst_field='_allargs', locfunc=locfunc)
+    for a in allargs:  # offset any markers present so that `put_slice_sep_end()` doesn't screw up, as they are not part of any nodes which were offset in `put_slice_sep_begin()`
+        if a.__class__ is Pass:
+            a.f._offset(*params_offsets[a._tag])
 
-        allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
+    new_fields = {
+        'posonlyargs': [],
+        'args': [],
+        'vararg': None,
+        'kwonlyargs': [],
+        'kw_defaults': [],
+        'kwarg': None,
+        'defaults': [],
+    }
 
-        params_offsets = end_params[:2]  # (params_offset, fst_params_offset)
+    for a in allargs:
+        f = a.f
 
-        for a in allargs:  # offset any markers present so that `put_slice_sep_end()` doesn't screw up, as they are not part of any nodes which were offset in `put_slice_sep_begin()`
-            if a.__class__ is Pass:
-                a.f._offset(*params_offsets[a._tag])
+        if a.__class__ is not Pass:
+            field, idx = f.pfield
 
-        new_fields = {
-            'posonlyargs': [],
-            'args': [],
-            'vararg': None,
-            'kwonlyargs': [],
-            'kw_defaults': [],
-            'kwarg': None,
-            'defaults': [],
-        }
+            if idx is None:  # vararg or kwarg
+                new_fields[field] = a
 
-        for a in allargs:
-            f = a.f
+            else:
+                new_fields[field].append(a)
 
-            if a.__class__ is not Pass:
-                field, idx = f.pfield
+                if (g := f.next()) and (dflt_field := g.pfield.name) in ('defaults', 'kw_defaults'):
+                    new_fields[dflt_field].append(g.a)
+                elif field == 'kwonlyargs':
+                    new_fields['kw_defaults'].append(None)
 
-                if idx is None:  # vararg or kwarg
-                    new_fields[field] = a
+    for field, ast_or_list in new_fields.items():  # we do this in order to not change the AST, might be counterintuitive
+        self._set_field(ast_or_list, field)
 
-                else:
-                    new_fields[field].append(a)
+    put_slice_sep_end(self, end_params)
 
-                    if (g := f.next()) and (dflt_field := g.pfield.name) in ('defaults', 'kw_defaults'):
-                        new_fields[dflt_field].append(g.a)
-                    elif field == 'kwonlyargs':
-                        new_fields['kw_defaults'].append(None)
+    fst_._unmake_fst_parents(True)  # all the children have been put in self so  over to self
 
-        for field, ast_or_list in new_fields.items():  # we do this in order to not change the AST, might be counterintuitive
-            self._set_field(ast_or_list, field)
 
-        put_slice_sep_end(self, end_params, body2_node_override)
+class _LocationAbstract_BoolOp_values(_LocationAbstract):
+    def __init__(self, body: list[AST], loc_first: fstloc, ast_dangling: AST) -> None:
+        self.body = body
+        self.loc_first = loc_first
+        self.ast_dangling = ast_dangling
 
-        fst_._unmake_fst_parents(True)  # all the children have been put in self so  over to self
-
-    finally:
-        del ast_._allargs
-        del ast._allargs
+    def loc_head(self, idx: int) -> fstloc:
+        return self.loc_first if (a := self.body[idx]) is self.ast_dangling else a.f.pars()
 
 
 def _put_slice_BoolOp_values(
@@ -2557,7 +2602,7 @@ def _put_slice_BoolOp_values(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    locfunc = None
+    locabst = None
 
     if op_side_left is not None:  # if no dangling operator then location function is just normal location
         ast_dangling = None
@@ -2577,25 +2622,50 @@ def _put_slice_BoolOp_values(
         if ast_dangling:
             loc_first = fstloc(ln, col, end_ln, end_col)
 
-            locfunc = lambda body, idx: loc_first if (a := body[idx]) is ast_dangling else a.f.pars()
+            locabst = _LocationAbstract_BoolOp_values(body, loc_first, ast_dangling)
+
+    if locabst is None:
+        locabst = _LocationAbstract(body)
 
     if is_del:
         fst_body = None
 
-        put_slice_nosep(self, start, stop, None, None, None,
+        put_slice_nosep(self, start, stop, locabst, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'values', locfunc)
+                        options)
 
     else:
         fst_body = fst_.a.values
+        fst_locabst = _LocationAbstract(fst_body)
 
-        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        put_slice_nosep(self, start, stop, locabst, fst_locabst, fst_,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'values', locfunc)
+                        options)
 
     _put_slice_asts(self, start, stop, 'values', body, fst_, fst_body)
 
     _fix_BoolOp(self, start, is_del, is_last, options, norm_self)
+
+
+class _LocationAbstract_Compare__all_op_side_left(_LocationAbstract):
+    def loc_head(self, idx: int) -> fstloc:
+        f = self.body[idx].f
+        _, _, end_ln, end_col = f.pars()
+        ln, col, _, _ = f.parent.a.ops[idx].f.loc  # comparator always has an operator on thje left
+
+        return fstloc(ln, col, end_ln, end_col)
+
+
+class _LocationAbstract_Compare__all_op_side_right(_LocationAbstract):
+    def loc_head(self, idx: int) -> fstloc:
+        body = self.body
+        f = body[idx].f
+        ln, col, end_ln, end_col = f.pars()
+
+        if (i := idx + 1) < len(body):  # comparator doesn't always have an opertator on the right
+            _, _, end_ln, end_col = f.parent.a.ops[i].f.loc
+
+        return fstloc(ln, col, end_ln, end_col)
 
 
 def _put_slice_Compare__all(
@@ -2645,25 +2715,11 @@ def _put_slice_Compare__all(
     _move_Compare_left_into_comparators(self)  # we put everything into `comparators` for the sake of sanity (relatively speaking)
 
     if op_side_left is None:  # if no operator side then location function is just normal location
-        locfunc = None
-
+        locabst = _LocationAbstract(body)
     elif op_side_left:
-        def locfunc(body: list[AST], idx: int) -> fstloc:
-            f = body[idx].f
-            _, _, end_ln, end_col = f.pars()
-            ln, col, _, _ = f.parent.a.ops[idx].f.loc  # comparator always has an operator on thje left
-
-            return fstloc(ln, col, end_ln, end_col)
-
+        locabst = _LocationAbstract_Compare__all_op_side_left(body)
     else:  # op_side_left is False
-        def locfunc(body: list[AST], idx: int) -> fstloc:
-            f = body[idx].f
-            ln, col, end_ln, end_col = f.pars()
-
-            if (i := idx + 1) < len(body):  # comparator doesn't always have an opertator on the right
-                _, _, end_ln, end_col = f.parent.a.ops[i].f.loc
-
-            return fstloc(ln, col, end_ln, end_col)
+        locabst = _LocationAbstract_Compare__all_op_side_right(body)
 
     ops = ast.ops
 
@@ -2671,9 +2727,9 @@ def _put_slice_Compare__all(
         fst_body = None
         start_old_right = start
 
-        put_slice_nosep(self, start, stop, None, None, None,
+        put_slice_nosep(self, start, stop, locabst, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'comparators', locfunc)
+                        options)
 
         slice_ops = slice(start + (not op_side_left), stop + (not op_side_left))  # op_side_left is never None here
 
@@ -2686,10 +2742,11 @@ def _put_slice_Compare__all(
         ast_ = fst_.a
         fst_body = ast_.comparators
         fst_ops = ast_.ops
+        fst_locabst = locabst.__class__(fst_body)
 
-        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+        put_slice_nosep(self, start, stop, locabst, fst_locabst, fst_,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'comparators', locfunc)
+                        options)
 
         len_fst = len(fst_body)
 
@@ -2960,21 +3017,23 @@ def _put_slice_MatchMapping__all(
     else:
         self_tail_sep = (ast.rest and stop == len_body) or None
 
+    locabst = _LocationAbstract_dictlike(body, body2, self)
+
     if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+        end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'patterns', ',', self_tail_sep)
+                                         options, ',', self_tail_sep)
 
         _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
 
     else:
         fst_body = ast_.keys
         fst_body2 = ast_.patterns
-        fst_first = a.f if (a := fst_body[0]) else None  # could be the temporary `rest` key of None
+        fst_locabst = _LocationAbstract_dictlike(fst_body, fst_body2, fst_)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'patterns', ',', self_tail_sep)
+                                         options, ',', self_tail_sep)
 
         _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
 
@@ -3041,6 +3100,8 @@ def _put_slice_MatchOr_patterns(
 
     fst_ = _code_to_slice_MatchOr(self, code, one, options)
 
+    locabst = _LocationAbstract(body)
+
     if not fst_:
         if not len_slice:
             return
@@ -3048,17 +3109,17 @@ def _put_slice_MatchOr_patterns(
         if len_slice == len_body and self_norm:
             raise ValueError("cannot delete all MatchOr.patterns without norm_self=False")
 
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0, *self.loc,
-                                         options, 'patterns', None, '|', False)
+        end_params = put_slice_sep_begin(self, start, stop, locabst, None, None, *self.loc,
+                                         options, '|', False)
 
         _put_slice_asts(self, start, stop, 'patterns', body, None, None)
 
     else:
         fst_body = fst_.a.patterns
-        len_fst_body = len(fst_body)
+        fst_locabst = _LocationAbstract(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                         *self.loc, options, 'patterns', None, '|', False)
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_, *self.loc,
+                                         options, '|', False)
 
         _put_slice_asts(self, start, stop, 'patterns', body, fst_, fst_body)
 
@@ -3096,6 +3157,8 @@ def _put_slice_type_params(
     if bound:
         bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
+    locabst = _LocationAbstract(body)
+
     if not fst_:
         if not len_slice:
             return
@@ -3106,9 +3169,9 @@ def _put_slice_type_params(
             end_params = None
 
         else:
-            end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+            end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
                                              bound_ln, bound_col + 1, bound_end_ln, bound_end_col - 1,
-                                             options, 'type_params')
+                                             options)
 
         _put_slice_asts(self, start, stop, 'type_params', body, None, None)
 
@@ -3120,10 +3183,11 @@ def _put_slice_type_params(
             bound_col = bound_end_col = name_col + 1
 
         fst_body = fst_.a.type_params
+        fst_locabst = _LocationAbstract(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'type_params')
+                                         options)
 
         _put_slice_asts(self, start, stop, 'type_params', body, fst_, fst_body)
 

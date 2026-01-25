@@ -96,7 +96,7 @@ from .fst_misc import (
 )
 
 from .slice_stmtlike import get_slice_stmtlike
-from .slice_exprlike import _locs_first_and_last, get_slice_sep, get_slice_nosep
+from .slice_exprlike import get_slice_sep, get_slice_nosep
 
 
 _re_empty_line_start_maybe_cont_0 = re.compile(r'[ \t]*\\?')  # empty line start with maybe continuation
@@ -120,6 +120,33 @@ def _get_option_op_side(is_first: bool, is_last: bool, options: Mapping[str, Any
         return True
     else:
         return fst.FST.get_option('op_side', options) == 'left'
+
+
+def _locs_first_and_last(
+    self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST]
+) -> tuple[fstloc, fstloc]:
+    """Get the location of the first and last elemnts of a one or two-element sequence (assumed present)."""
+
+    stop_1 = stop - 1
+
+    if body2 is body:
+        loc_first = body[start].f.pars()
+        loc_last = loc_first if start == stop_1 else body[stop_1].f.pars()
+
+    else:
+        ln, col, _, _ = self._loc_maybe_key(start, True, body, body2)
+        _, _, end_ln, end_col = body2[start].f.pars()
+        loc_first = fstloc(ln, col, end_ln, end_col)
+
+        if start == stop_1:
+            loc_last = loc_first
+
+        else:
+            ln, col, _, _ = self._loc_maybe_key(stop_1, True, body, body2)
+            _, _, end_ln, end_col = body2[stop_1].f.pars()
+            loc_last = fstloc(ln, col, end_ln, end_col)
+
+    return loc_first, loc_last
 
 
 def _locs_and_bounds_get(

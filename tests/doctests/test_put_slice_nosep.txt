@@ -1,7 +1,7 @@
 >>> from pprint import pp
 >>> from fst import *
 >>> from fst.common import astfield
->>> from fst.slice_exprlike import put_slice_nosep
+>>> from fst.slice_exprlike import _LocationAbstract, put_slice_nosep
 
 
 delete
@@ -13,9 +13,11 @@ delete
 ...     _, _, bound_end_ln, bound_end_col = fst_.loc
 ...     bound_end_col -= 1
 ...
-...     put_slice_nosep(fst_, start, stop, None, None, None,
+...     locabst = _LocationAbstract(generators)
+...
+...     put_slice_nosep(fst_, start, stop, locabst, None, None,
 ...                     bound_ln, bound_col, bound_end_ln, bound_end_col,
-...                     {'trivia': trivia}, 'generators')
+...                     {'trivia': trivia})
 ...
 ...     del generators[start : stop]
 ...
@@ -146,9 +148,12 @@ replace
 ...     _, _, bound_end_ln, bound_end_col = fst_.loc
 ...     bound_end_col -= 1
 ...
-...     put_slice_nosep(fst_, start, stop, new, new_body[0].f, new_body[-1].f,
+...     locabst = _LocationAbstract(body)
+...     new_locabst = _LocationAbstract(new_body)
+...
+...     put_slice_nosep(fst_, start, stop, locabst, new_locabst, new,
 ...                     bound_ln, bound_col, bound_end_ln, bound_end_col,
-...                     {'trivia': trivia}, 'generators')
+...                     {'trivia': trivia})
 ...
 ...     fst_._unmake_fst_tree(body[start : stop])
 ...     new._unmake_fst_parents(True)
@@ -272,9 +277,12 @@ replace
 ...     _, _, bound_end_ln, bound_end_col = fst_.loc
 ...     bound_end_col -= 1
 ...
-...     put_slice_nosep(fst_, idx, idx, new, new_body[0].f, new_body[-1].f,
+...     locabst = _LocationAbstract(body)
+...     new_locabst = _LocationAbstract(new_body)
+...
+...     put_slice_nosep(fst_, idx, idx, locabst, new_locabst, new,
 ...                     bound_ln, bound_col, bound_end_ln, bound_end_col,
-...                     {'trivia': trivia}, 'generators')
+...                     {'trivia': trivia})
 ...
 ...     new._unmake_fst_parents(True)
 ...
