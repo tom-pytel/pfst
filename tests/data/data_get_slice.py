@@ -22888,6 +22888,45 @@ arguments - ROOT 0,0..0,18
    0] Constant 3.0 - 0,13..0,16
 '''),
 
+('args', 0, 'end', '_all', {}, (None,
+r'''def f(a, b, c): pass'''),
+r'''def f(): pass''', r'''
+FunctionDef - ROOT 0,0..0,13
+  .name 'f'
+  .body[1]
+   0] Pass - 0,9..0,13
+''',
+r'''a, b, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('args', 0, 'end', '_all', {}, (None,
+r'''lambda a, b, c: None'''),
+r'''lambda: None''', r'''
+Lambda - ROOT 0,0..0,12
+  .body Constant None - 0,8..0,12
+''',
+r'''a, b, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+],
+
+'arguments_markers': [  # ................................................................................
+
 ('', 0, 2, None, {}, ('arguments',
 r'''a, b, /, c'''),
 r'''c''', r'''

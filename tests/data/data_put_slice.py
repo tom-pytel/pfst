@@ -36575,15 +36575,15 @@ a,
   b,
   c
 '''), r'''
-lambda a,
+(lambda a,
     b,
-    c: None
+    c: None)
 ''',
 r'''lambda a, b, c: None''', r'''
-Lambda - ROOT 0,0..2,11
-  .args arguments - 0,7..2,5
+Lambda - ROOT 0,1..2,11
+  .args arguments - 0,8..2,5
     .args[3]
-     0] arg - 0,7..0,8
+     0] arg - 0,8..0,9
        .arg 'a'
      1] arg - 1,4..1,5
        .arg 'b'
@@ -36600,15 +36600,15 @@ r'''lambda: None'''), ('arguments', r'''
   c, # c
 
 '''), r'''
-lambda
+(lambda
     a, # a
     b, # b
     c, # c
-: None
+: None)
 ''',
 r'''lambda a, b, c: None''', r'''
-Lambda - ROOT 0,0..4,6
-  .args arguments - 0,6..4,0
+Lambda - ROOT 0,1..4,6
+  .args arguments - 0,7..4,0
     .args[3]
      0] arg - 1,4..1,5
        .arg 'a'

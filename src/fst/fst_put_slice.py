@@ -2570,11 +2570,9 @@ def _put_slice_arguments(
 
                 if len(l := lines[ln]) > col and not l[col].isspace():
                     parent._put_src(' ', ln, col, ln, col, False)
-                # parent._fix_joined_alnums(ln, col + 6)
 
-
-            # TODO: parenthesize?
-
+            if not self._is_enclosed_or_line(check_pars=False) and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
+                parent._parenthesize_grouping()
 
         else:  # we know was not empty because would have returned early
             parent._put_src(None, *parent._loc_Lambda_args_entire(), False)
