@@ -1072,6 +1072,8 @@ def _code_to_slice_arguments(
         if nargs != 1:
             raise ValueError(f"expecting single argument for put as 'one=True', got {nargs}")
 
+    _set_loc_whole(fst_)
+
     return fst_
 
 
@@ -1266,6 +1268,8 @@ def _code_to_slice__expr_arglikes(
 
 def _set_loc_whole(self: fst.FST) -> fst.FST:  # self
     """Set location of `self` (which must be root) to the location of the whole source."""
+
+    assert not self.parent  # self.is_root
 
     lines = self._lines
     ast = self.a
@@ -3437,7 +3441,7 @@ def _loc_slice_raw_put_Compare__all(
     if stop != start + 1:
         _, _, end_ln, end_col = comparators[stop - 2].f.pars()
 
-    return ln, col, end_ln, end_col, start, stop, comparators
+    return ln, col, end_ln, end_col, start, stop, [ast.left, *comparators]  # body2 isn't really used because doesn't need comma, but lets be consistent
 
 def _loc_slice_raw_put_MatchMapping__all(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
@@ -3479,6 +3483,20 @@ def _loc_slice_raw_put_Call_ClassDef_arglikes(
         _, _, end_ln, end_col = arglikes[stop - 1].f.pars()
 
     return ln, col, end_ln, end_col, start, stop, arglikes
+
+def _loc_slice_raw_put_arguments__all(
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
+) -> tuple[int, int, int, int, int, int, list[AST]]:
+    ast = self.a
+    body = [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()), *ast.kwonlyargs,
+            *([a] if (a := ast.kwarg) else ())]
+    start, stop = _fixup_slice_index_for_raw(len(body), start, stop)
+    ln, col, end_ln, end_col = body[start].f._loc_argument(True)
+
+    if stop - 1 != start:
+        _, _, end_ln, end_col = body[stop - 1].f._loc_argument(True)
+
+    return ln, col, end_ln, end_col, start, stop, body
 
 def _loc_slice_raw_put__body(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
@@ -3523,6 +3541,7 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (Dict, '_all'):                       _loc_slice_raw_put_Dict__all,
     (Compare, '_all'):                    _loc_slice_raw_put_Compare__all,
     (MatchMapping, '_all'):               _loc_slice_raw_put_MatchMapping__all,
+    (arguments, '_all'):                  _loc_slice_raw_put_arguments__all,
 
     (ClassDef, '_bases'):                 _loc_slice_raw_put_Call_ClassDef_arglikes,
     (Call, '_args'):                      _loc_slice_raw_put_Call_ClassDef_arglikes,

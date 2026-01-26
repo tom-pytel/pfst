@@ -36481,6 +36481,137 @@ _comprehension_ifs - ROOT 0,0..0,9
 
 'arguments': [  # ................................................................................
 
+('', 0, 'end', '_all', {}, ('arguments',
+r''''''), ('arguments',
+r'''a, b, c'''),
+r'''a, b, c''', r'''
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+   2] arg - 0,6..0,7
+     .arg 'c'
+'''),
+
+('', 0, 'end', '_all', {}, ('arguments',
+r''''''), ('arguments', r'''
+a,
+  b,
+  c
+'''), r'''
+a,
+    b,
+    c
+''',
+r'''a, b, c''', r'''
+arguments - ROOT 0,0..2,5
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 1,4..1,5
+     .arg 'b'
+   2] arg - 2,4..2,5
+     .arg 'c'
+'''),
+
+('', 0, 'end', '_all', {}, ('arguments',
+r''''''), ('arguments', r'''
+
+  a, # a
+  b, # b
+  c, # c
+
+'''), r'''
+    a, # a
+    b, # b
+    c, # c
+
+''',
+r'''a, b, c''', r'''
+arguments - ROOT 0,0..3,0
+  .args[3]
+   0] arg - 0,4..0,5
+     .arg 'a'
+   1] arg - 1,4..1,5
+     .arg 'b'
+   2] arg - 2,4..2,5
+     .arg 'c'
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''x, y, z'''), ('arguments',
+r'''a, b, c'''),
+r'''x, a, b, c, z''', r'''
+arguments - ROOT 0,0..0,13
+  .args[5]
+   0] arg - 0,0..0,1
+     .arg 'x'
+   1] arg - 0,3..0,4
+     .arg 'a'
+   2] arg - 0,6..0,7
+     .arg 'b'
+   3] arg - 0,9..0,10
+     .arg 'c'
+   4] arg - 0,12..0,13
+     .arg 'z'
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''x, y, z'''), ('arguments', r'''
+a,
+  b,
+  c
+'''), r'''
+x, a,
+  b,
+  c, z
+''',
+r'''x, a, b, c, z''', r'''
+arguments - ROOT 0,0..2,6
+  .args[5]
+   0] arg - 0,0..0,1
+     .arg 'x'
+   1] arg - 0,3..0,4
+     .arg 'a'
+   2] arg - 1,2..1,3
+     .arg 'b'
+   3] arg - 2,2..2,3
+     .arg 'c'
+   4] arg - 2,5..2,6
+     .arg 'z'
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''x, y, z'''), ('arguments', r'''
+
+  a, # a
+  b, # b
+  c, # c
+
+'''), r'''
+x,
+  a, # a
+  b, # b
+  c, # c
+z
+''',
+r'''x, a, b, c, z''', r'''
+arguments - ROOT 0,0..4,1
+  .args[5]
+   0] arg - 0,0..0,1
+     .arg 'x'
+   1] arg - 1,2..1,3
+     .arg 'a'
+   2] arg - 2,2..2,3
+     .arg 'b'
+   3] arg - 3,2..3,3
+     .arg 'c'
+   4] arg - 4,0..4,1
+     .arg 'z'
+'''),
+
 ('args', 0, 'end', '_all', {}, (None,
 r'''def f(): pass'''), ('arguments',
 r'''a, b, c'''),
@@ -36553,6 +36684,168 @@ FunctionDef - ROOT 0,0..4,7
    0] Pass - 4,3..4,7
 '''),
 
+('args', 1, 2, '_all', {}, (None,
+r'''def f(x, y, z): pass'''), ('arguments',
+r'''a, b, c'''),
+r'''def f(x, a, b, c, z): pass''', r'''
+FunctionDef - ROOT 0,0..0,26
+  .name 'f'
+  .args arguments - 0,6..0,19
+    .args[5]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 0,9..0,10
+       .arg 'a'
+     2] arg - 0,12..0,13
+       .arg 'b'
+     3] arg - 0,15..0,16
+       .arg 'c'
+     4] arg - 0,18..0,19
+       .arg 'z'
+  .body[1]
+   0] Pass - 0,22..0,26
+'''),
+
+('args', 1, 2, '_all', {}, (None,
+r'''def f(x, y, z): pass'''), ('arguments', r'''
+a,
+  b,
+  c
+'''), r'''
+def f(x, a,
+      b,
+      c, z): pass
+''',
+r'''def f(x, a, b, c, z): pass''', r'''
+FunctionDef - ROOT 0,0..2,17
+  .name 'f'
+  .args arguments - 0,6..2,10
+    .args[5]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 0,9..0,10
+       .arg 'a'
+     2] arg - 1,6..1,7
+       .arg 'b'
+     3] arg - 2,6..2,7
+       .arg 'c'
+     4] arg - 2,9..2,10
+       .arg 'z'
+  .body[1]
+   0] Pass - 2,13..2,17
+'''),
+
+('args', 1, 2, '_all', {}, (None,
+r'''def f(x, y, z): pass'''), ('arguments', r'''
+
+  a, # a
+  b, # b
+  c, # c
+
+'''), r'''
+def f(x,
+      a, # a
+      b, # b
+      c, # c
+      z): pass
+''',
+r'''def f(x, a, b, c, z): pass''', r'''
+FunctionDef - ROOT 0,0..4,14
+  .name 'f'
+  .args arguments - 0,6..4,7
+    .args[5]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 1,6..1,7
+       .arg 'a'
+     2] arg - 2,6..2,7
+       .arg 'b'
+     3] arg - 3,6..3,7
+       .arg 'c'
+     4] arg - 4,6..4,7
+       .arg 'z'
+  .body[1]
+   0] Pass - 4,10..4,14
+'''),
+
+('args', 1, 2, '_all', {'raw': False}, (None,
+r'''lambda x, y, z: None'''), ('arguments',
+r'''a, b, c'''),
+r'''lambda x, a, b, c, z: None''', r'''
+Lambda - ROOT 0,0..0,26
+  .args arguments - 0,7..0,20
+    .args[5]
+     0] arg - 0,7..0,8
+       .arg 'x'
+     1] arg - 0,10..0,11
+       .arg 'a'
+     2] arg - 0,13..0,14
+       .arg 'b'
+     3] arg - 0,16..0,17
+       .arg 'c'
+     4] arg - 0,19..0,20
+       .arg 'z'
+  .body Constant None - 0,22..0,26
+'''),
+
+('args', 1, 2, '_all', {'raw': False}, (None,
+r'''lambda x, y, z: None'''), ('arguments', r'''
+a,
+  b,
+  c
+'''), r'''
+(lambda x, a,
+       b,
+       c, z: None)
+''',
+r'''lambda x, a, b, c, z: None''', r'''
+Lambda - ROOT 0,1..2,17
+  .args arguments - 0,8..2,11
+    .args[5]
+     0] arg - 0,8..0,9
+       .arg 'x'
+     1] arg - 0,11..0,12
+       .arg 'a'
+     2] arg - 1,7..1,8
+       .arg 'b'
+     3] arg - 2,7..2,8
+       .arg 'c'
+     4] arg - 2,10..2,11
+       .arg 'z'
+  .body Constant None - 2,13..2,17
+'''),
+
+('args', 1, 2, '_all', {'raw': False}, (None,
+r'''lambda x, y, z: None'''), ('arguments', r'''
+
+  a, # a
+  b, # b
+  c, # c
+
+'''), r'''
+(lambda x,
+       a, # a
+       b, # b
+       c, # c
+       z: None)
+''',
+r'''lambda x, a, b, c, z: None''', r'''
+Lambda - ROOT 0,1..4,14
+  .args arguments - 0,8..4,8
+    .args[5]
+     0] arg - 0,8..0,9
+       .arg 'x'
+     1] arg - 1,7..1,8
+       .arg 'a'
+     2] arg - 2,7..2,8
+       .arg 'b'
+     3] arg - 3,7..3,8
+       .arg 'c'
+     4] arg - 4,7..4,8
+       .arg 'z'
+  .body Constant None - 4,10..4,14
+'''),
+
 ('args', 0, 'end', '_all', {'raw': False}, (None,
 r'''lambda: None'''), ('arguments',
 r'''a, b, c'''),
@@ -36618,6 +36911,108 @@ Lambda - ROOT 0,1..4,6
        .arg 'c'
   .body Constant None - 4,2..4,6
 '''),
+
+('', 1, -1, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), ('arguments',
+r'''x=0, y=0, z=0'''),
+r'''a: int = ( 1 ), x=0, y=0, z=0, e: complex = ( 1j )''', r'''
+arguments - ROOT 0,0..0,50
+  .args[5]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+   1] arg - 0,16..0,17
+     .arg 'x'
+   2] arg - 0,21..0,22
+     .arg 'y'
+   3] arg - 0,26..0,27
+     .arg 'z'
+   4] arg - 0,31..0,41
+     .arg 'e'
+     .annotation Name 'complex' Load - 0,34..0,41
+  .defaults[5]
+   0] Constant 1 - 0,11..0,12
+   1] Constant 0 - 0,18..0,19
+   2] Constant 0 - 0,23..0,24
+   3] Constant 0 - 0,28..0,29
+   4] Constant 1j - 0,46..0,48
+'''),
+
+('args', 1, -1, '_all', {}, (None,
+r'''def f(a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )): pass'''), ('arguments',
+r'''x=0, y=0, z=0'''),
+r'''def f(a: int = ( 1 ), x=0, y=0, z=0, e: complex = ( 1j )): pass''', r'''
+FunctionDef - ROOT 0,0..0,63
+  .name 'f'
+  .args arguments - 0,6..0,56
+    .args[5]
+     0] arg - 0,6..0,12
+       .arg 'a'
+       .annotation Name 'int' Load - 0,9..0,12
+     1] arg - 0,22..0,23
+       .arg 'x'
+     2] arg - 0,27..0,28
+       .arg 'y'
+     3] arg - 0,32..0,33
+       .arg 'z'
+     4] arg - 0,37..0,47
+       .arg 'e'
+       .annotation Name 'complex' Load - 0,40..0,47
+    .defaults[5]
+     0] Constant 1 - 0,17..0,18
+     1] Constant 0 - 0,24..0,25
+     2] Constant 0 - 0,29..0,30
+     3] Constant 0 - 0,34..0,35
+     4] Constant 1j - 0,52..0,54
+  .body[1]
+   0] Pass - 0,59..0,63
+'''),
+
+('args', 1, -1, '_all', {}, (None,
+r'''lambda a = ( 1 ), b = ( '2' ), c = ( 3.0 ), d = ( b'z' ), e = ( 1j ): None'''), ('arguments',
+r'''x=0, y=0, z=0'''),
+r'''lambda a = ( 1 ), x=0, y=0, z=0, e = ( 1j ): None''', r'''
+Lambda - ROOT 0,0..0,49
+  .args arguments - 0,7..0,43
+    .args[5]
+     0] arg - 0,7..0,8
+       .arg 'a'
+     1] arg - 0,18..0,19
+       .arg 'x'
+     2] arg - 0,23..0,24
+       .arg 'y'
+     3] arg - 0,28..0,29
+       .arg 'z'
+     4] arg - 0,33..0,34
+       .arg 'e'
+    .defaults[5]
+     0] Constant 1 - 0,13..0,14
+     1] Constant 0 - 0,20..0,21
+     2] Constant 0 - 0,25..0,26
+     3] Constant 0 - 0,30..0,31
+     4] Constant 1j - 0,39..0,41
+  .body Constant None - 0,45..0,49
+'''),
+
+('', 0, 'end', '_all', {'one': True}, ('arguments',
+r'''a, b, c'''), ('arguments',
+r'''x'''),
+r'''x''', r'''
+arguments - ROOT 0,0..0,1
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+'''),
+
+('', 0, 'end', '_all', {'one': True}, ('arguments',
+r'''a, b, c'''), ('arguments',
+r'''x, y'''),
+r'''**ValueError("expecting single argument for put as 'one=True', got 2")**'''),
+
+('', 0, 'end', '_all', {'one': True}, ('arguments',
+r'''a, b, c'''), ('arguments',
+r''''''),
+r'''**ValueError("expecting single argument for put as 'one=True', got 0")**'''),
 ],
 
 'arguments_markers': [  # ................................................................................
