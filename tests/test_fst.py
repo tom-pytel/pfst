@@ -9501,12 +9501,12 @@ if 1:
         # Dict
 
         f = FST('{a: b, c: d, e: f}')
-        self.assertEqual('<<Dict ROOT 0,0..0,18>._all {<Name 0,1..0,2>:<Name 0,4..0,5>, <Name 0,7..0,8>:<Name 0,10..0,11>, <Name 0,13..0,14>:<Name 0,16..0,17>}>', str(f._all))
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all {<Name 0,1..0,2>: <Name 0,4..0,5>, <Name 0,7..0,8>: <Name 0,10..0,11>, <Name 0,13..0,14>: <Name 0,16..0,17>}>', str(f._all))
         self.assertEqual('{a: b}', f._all[:1].copy().src)
         self.assertEqual('{e: f}', f._all[-1:].copy().src)
         self.assertEqual('{}', f._all[0:0].copy().src)
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1:2] {<Name 0,7..0,8>: <Name 0,10..0,11>}>', str(f._all[1]))
 
-        self.assertRaises(ValueError, lambda: f._all[1])
         self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
 
         f._all[1] = None
@@ -9530,7 +9530,8 @@ if 1:
         self.assertEqual('{2: b, **c}', f._all[-2:].copy().src)
         self.assertEqual('{}', f._all[0:0].copy().src)
 
-        self.assertRaises(ValueError, lambda: f._all[0])
+        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[1:2] {<Constant 0,7..0,8>: <MatchAs 0,10..0,11>}>', str(f._all[1:2]))
+        # self.assertRaises(ValueError, lambda: f._all[0])
         self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
 
         f._all[1] = None

@@ -141,7 +141,17 @@ from .astutil import (
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, _code_as_lines, code_as_all
-from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body, fstview_arglikes
+
+from .view import (
+    fstview,
+    fstview_Dict,
+    fstview_MatchMapping,
+    fstview_Compare,
+    fstview_arguments,
+    fstview__body,
+    fstview_arglikes,
+)
+
 from .reconcile import Reconcile
 from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
@@ -1915,10 +1925,9 @@ class FST:
 
         key = 'ownlS' if docstr == 'strict' else 'ownlT' if docstr else 'ownlF'
 
-        # if cached := self._cache.get(key):  # cached indent and indentable lines
-        #     dedent, lns = cached
+        if cached := self._cache.get(key):  # cached indent and indentable lines
+            dedent, lns = cached
 
-        if False: pass
         else:
             dedent = self._get_block_indent()
             lns = tuple(self._get_indentable_lns(1, docstr=docstr))
@@ -5126,6 +5135,7 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
+        _cached_allargs,
         _cached_arglikes,
 
         _is_expr_arglike_only,
@@ -5310,6 +5320,9 @@ class FST:
         >>> FST('a < b == c > d')._all[1:3].copy().src
         'b == c'
 
+        >>> FST('def f(a=1, *b, c: int = 3, **d): pass').args._all[1:3].copy().src
+        '*b, c: int = 3'
+
         @public
         """
 
@@ -5450,4 +5463,5 @@ _VIRTUAL_FIELD_VIEW__ALL = {
     Dict:         fstview_Dict,
     MatchMapping: fstview_MatchMapping,
     Compare:      fstview_Compare,
+    arguments:    fstview_arguments,
 }

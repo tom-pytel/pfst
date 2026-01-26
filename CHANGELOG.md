@@ -43,6 +43,7 @@
   - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked
   - previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
 - empty `arguments` now always have a location, having potentially zero-length `arguments` is less ugly than having arguments with no location
+- `Dict` and `MatchMapping` slice views dereferenced with a single index will now return a view of that single key:value pair instead of raising
 
 ## 0.2.5 - alpha - 2026-01-06
 

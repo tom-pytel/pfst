@@ -1091,6 +1091,21 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
         _dump_lines(self, st, len(self.root._lines), 0, 0, 0, None)
 
 
+def _cached_allargs(self: fst.FST) -> list[AST]:
+    """Get cached merged ordered `posonlyargs+args+vararg+kwonlyargs+kwarg` arguments from `arguments`. Does not include
+    `defaults` or `kw_defaults`."""
+
+    try:
+        allargs = self._cache['allargs']
+
+    except KeyError:
+        ast = self.a
+        allargs = self._cache['allargs'] = [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()),
+                                            *ast.kwonlyargs, *([a] if (a := ast.kwarg) else ())]
+
+    return allargs
+
+
 def _cached_arglikes(self: fst.FST) -> list[AST]:
     """Get cached merged ordered arglikes from `Call.args+keywords` or `ClassDef.bases+keywords`."""
 

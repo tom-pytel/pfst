@@ -3508,9 +3508,7 @@ def _loc_slice_raw_put_Call_ClassDef_arglikes(
 def _loc_slice_raw_put_arguments__all(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
-    ast = self.a
-    body = [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()), *ast.kwonlyargs,
-            *([a] if (a := ast.kwarg) else ())]
+    body = self._cached_allargs()
     start, stop = _fixup_slice_index_for_raw(len(body), start, stop)
     ln, col, end_ln, end_col = body[start].f._loc_argument(True)
 

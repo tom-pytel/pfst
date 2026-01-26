@@ -12,7 +12,16 @@ from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
 from .fst_options import check_options
 
-__all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare', 'fstview_arglikes', 'fstview_dummy']
+__all__ = [
+    'fstview',
+    'fstview_Dict',
+    'fstview_MatchMapping',
+    'fstview_Compare',
+    'fstview_arguments',
+    'fstview__body',
+    'fstview_arglikes',
+    'fstview_dummy',
+]
 
 
 class fstview:
@@ -109,8 +118,9 @@ class fstview:
         return len(getattr(self.base.a, self.field))
 
     def _deref_one(self, idx: int) -> AST | str:
-        """Return a single element from field (which may not be a contiguous list). `idx` guaranteed to be positive. NO
-        COPY JUST RETURN NODE."""
+        """Return a single element from field (which may not be a contiguous list). `idx` is the real index already
+        absolute (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN NODE. Can
+        return `AST` or primitive or another `fstview`."""
 
         return getattr(self.base.a, self.field)[idx]
 
@@ -662,7 +672,7 @@ class fstview_Dict(fstview):
         return len(self.base.a.keys)
 
     def _deref_one(self, idx: int) -> AST | str:
-        raise ValueError('cannot get single element from Dict._all')
+        return fstview_Dict(self.base, '_all', idx, idx + 1)
 
     def __repr__(self) -> str:
         start, stop, _ = self._get_indices()
@@ -672,7 +682,7 @@ class fstview_Dict(fstview):
         keys = ast.keys[start : stop]
         values = ast.values[start : stop]
 
-        seq = ', '.join(f'{f"{k.f}:" if k else "**"}{v.f}' for k, v in zip(keys, values, strict=True))
+        seq = ', '.join(f'{f"{k.f}: " if k else "**"}{v.f}' for k, v in zip(keys, values, strict=True))
 
         return f'<{base!r}._all{indices} {{{seq}}}>'
 
@@ -684,17 +694,16 @@ class fstview_MatchMapping(fstview):
         return len((a := self.base.a).keys) + bool(a.rest)
 
     def _deref_one(self, idx: int) -> AST | str:
-        raise ValueError('cannot get single element from MatchMapping._all')
+        return fstview_MatchMapping(self.base, '_all', idx, idx + 1)
 
     def __repr__(self) -> str:
         start, stop, _ = self._get_indices()
         indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
         base = self.base
         ast = base.a
-        keys = ast.keys[start : stop]
-        patterns = ast.patterns[start : stop]
+        patterns = ast.patterns
 
-        seq = [f'{k.f}: {p.f}' for k, p in zip(keys, patterns, strict=True)]
+        seq = [f'{k.f}: {p.f}' for k, p in zip(ast.keys[start : stop], patterns[start : stop], strict=True)]
 
         if (rest := ast.rest) and stop > len(patterns):
             seq.append('**' + rest)
@@ -738,6 +747,30 @@ class fstview_Compare(fstview):
         return f'<{base!r}._all{indices} {"".join(seq)}>'
 
 
+class fstview_arguments(fstview):
+    """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. @private"""
+
+    def _len_field(self) -> int:
+        return len(self.base._cached_allargs())
+
+    def _deref_one(self, idx: int) -> AST | str:
+        return fstview_arguments(self.base, '_all', idx, idx + 1)
+
+    def __repr__(self) -> str:
+        start, stop, _ = self._get_indices()
+        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
+        base = self.base
+        seq = []
+
+        for a in base._cached_allargs()[start : stop]:
+            if (g := (f := a.f).next()) and g.pfield.name in ('defaults', 'kw_defaults'):
+                seq.append(f'{f}={g}')
+            else:
+                seq.append(str(f))
+
+        return f'<{base!r}._all{indices} {", ".join(seq)}>'
+
+
 class fstview__body(fstview):
     """View for `_body` virtual field, only used on node types that can have a docstring. @private"""
 
@@ -769,7 +802,7 @@ class fstview_arglikes(fstview):
         indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
         base = self.base
 
-        return f'<{base!r}._{self.field}{indices} {tuple(a.f for a in base._cached_arglikes())}>'
+        return f'<{base!r}._{self.field}{indices} {tuple(a.f for a in base._cached_arglikes()[start : stop])}>'
 
 
 class fstview_dummy(fstview):

@@ -2080,8 +2080,7 @@ def _get_slice_arguments(
     `/` and `*` indicators afterwards."""
 
     ast = self.a
-    body = [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()), *ast.kwonlyargs,
-            *([a] if (a := ast.kwarg) else ())]
+    body = self._cached_allargs()
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
