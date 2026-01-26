@@ -2464,7 +2464,7 @@ def _put_slice_arguments(
 
     aa_stop = aa_last + 1
     new_allargs = allargs.copy()
-    new_allargs[aa_start : aa_stop] = fst_allargs
+    new_allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
     prev_arg_cat = 0  # 0 = posonlyargs, 1 = args, 2 = vararg, 3 = kwonlyargs, 4 = kwarg
     defaults_started = False
     fst_markers_to_delete = []  # indices of `Pass` `/` or `*` extra markers that need to be deleted
@@ -2516,11 +2516,11 @@ def _put_slice_arguments(
     end_params = put_slice_sep_begin(self, aa_start, aa_stop, locabst, fst_locabst, fst_,
                                      bound_ln, bound_col, bound_end_ln, bound_end_col, options, ',', 0)
 
-    allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
+    locabst.body = new_allargs
 
     params_offsets = end_params[:2]  # (params_offset, fst_params_offset)
 
-    for a in allargs:  # offset any markers present so that `put_slice_sep_end()` doesn't screw up, as they are not part of any nodes which were offset in `put_slice_sep_begin()`
+    for a in new_allargs:  # offset any markers present so that `put_slice_sep_end()` doesn't screw up, as they are not part of any nodes which were offset in `put_slice_sep_begin()`
         if a.__class__ is Pass:
             a.f._offset(*params_offsets[a._tag])
 
@@ -2534,7 +2534,7 @@ def _put_slice_arguments(
         'defaults': [],
     }
 
-    for a in allargs:
+    for a in new_allargs:
         f = a.f
 
         if a.__class__ is not Pass:
@@ -2551,12 +2551,12 @@ def _put_slice_arguments(
                 elif field == 'kwonlyargs':
                     new_fields['kw_defaults'].append(None)
 
-    for field, ast_or_list in new_fields.items():  # we do this in order to not change the AST, might be counterintuitive
+    for field, ast_or_list in new_fields.items():  # we do individual fields instead of _set_ast() in order to not change the AST, which might be counterintuitive
         self._set_field(ast_or_list, field)
 
     put_slice_sep_end(self, end_params)
 
-    fst_._unmake_fst_parents(True)  # all the children have been put in self so  over to self
+    fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
 
 
 class _LocationAbstract_BoolOp_values(_LocationAbstract):
