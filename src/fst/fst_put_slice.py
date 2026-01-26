@@ -182,6 +182,7 @@ from .fst_get_slice import (
     _fix_Assign_target0,
     _fix_decorator_list_trailing_newline,
     _fix_decorator_list_del,
+    _fix_arguments_del,
     _fix_MatchSequence,
     _fix_MatchOr,
     _fix_stmt_end,
@@ -2472,11 +2473,13 @@ def _put_slice_arguments(
     aa_stop = aa_last + 1
     new_allargs = allargs.copy()
     new_allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
-    prev_arg_cat = 0  # 0 = posonlyargs, 1 = args, 2 = vararg, 3 = kwonlyargs, 4 = kwarg
-    defaults_started = False
+    prev_arg_cat = -1  # 0 = posonlyargs, 1 = args, 2 = vararg, 3 = kwonlyargs, 4 = kwarg
     fst_markers_to_delete = []  # indices of `Pass` `/` or `*` extra markers that need to be deleted
+    need_slash_idx = None  # if we need to insert a `/` marker, if not None then it should at be after this idx (in new_allargs)
+    need_star_idx = None  # if we need to insert a `*` marker, if not None then it should at be before this idx (in new_allargs)
+    defaults_started = False
 
-    for a in new_allargs:
+    for i, a in enumerate(new_allargs):  # validate list of arguments that will result from operation
         if a.__class__ is Pass:  # standin `/` or `*`
             if a._is_star:
                 if prev_arg_cat > 1:  # can only be fst_ `*` because in invalid place, self stars will have been eaten or be in valid spot
@@ -2502,6 +2505,20 @@ def _put_slice_arguments(
                 raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} without defaults cannot follow'
                                 f'{_ARG_CAT2NAME[prev_arg_cat]} with defaults')
 
+            if not arg_cat:
+                next_a = new_allargs[i + 1]  # this should not fail because otherwise it would have been a pure delete
+
+                if (next_a._is_star if next_a.__class__ is Pass else next_a.f.pfield.name != 'posonlyargs'):
+                    need_slash_idx = i
+
+        elif arg_cat == 3 and prev_arg_cat < 3:  # transition from pre-kwonlyargs to kwonlyargs, make sure there is an appropriate marker
+            assert i  # this should not fail because otherwise it would have been a pure delete which does not get here
+
+            prev_a = new_allargs[i - 1]
+
+            if (not prev_a._is_star if prev_a.__class__ is Pass else prev_a.f.pfield.name != 'vararg'):
+                need_star_idx = i
+
         prev_arg_cat = arg_cat
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
@@ -2517,6 +2534,7 @@ def _put_slice_arguments(
         end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
 
         del fst_allargs[idx]
+        del new_allargs[idx + aa_start]
 
         put_slice_sep_end(fst_, end_params)
 
@@ -2564,6 +2582,9 @@ def _put_slice_arguments(
     put_slice_sep_end(self, end_params)
 
     fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
+
+    if need_slash_idx is not None or need_star_idx is not None:  # TODO: LAZY, could use the actual indices to do more efficiently
+        _fix_arguments_del(self)
 
     if is_lambda:  # if arguments of Lambda then may need some fixes
         if fst_:

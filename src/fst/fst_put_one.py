@@ -2682,6 +2682,7 @@ _PUT_ONE_HANDLERS = {
     (arguments, 'kwonlyargs'):            (False, _put_one_arg, _onestatic_arg_required),  # arg*
     (arguments, 'kw_defaults'):           (False, _put_one_exprlike_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)),  # expr*
     (arguments, 'kwarg'):                 (False, _put_one_exprlike_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=code_as_arg)),  # arg?
+    (arguments, '_all'):                  (True, False, False),  # arguments
     (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
     (arg, 'annotation'):                  (False, _put_one_arg_annotation, onestatic(_one_info_arg_annotation, _restrict_default)),  # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=code_as_identifier)),  # identifier?
@@ -2970,7 +2971,7 @@ def _put_one(
 
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
-    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementlikes and virtual fields (which have handler=None)
+    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementlikes and virtual fields (which have handler=None) and anything that is sliceable and does not have a handler
         start_at = 0
 
         # TODO; convert this logic to own func
@@ -2993,6 +2994,9 @@ def _put_one(
         elif ast_cls in (Call, ClassDef):  # '_args' or '_bases'
             len_ = len(getattr(ast, field[1:])) + len(ast.keywords)
 
+        elif ast_cls is arguments:  # `arguments._all`
+            len_ = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
+
         else:
             raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 
@@ -3007,9 +3011,15 @@ def _put_one(
             return None
 
         if is_virtual_field:
-            assert keys is not None  # only Dict or MatchMapping get here, Compare and others are only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare and others have handlers
+            if keys is not None:  # Dict or MatchMapping
+                return None
 
-            return None
+            assert ast_cls is arguments  # Compare and others are only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare and others have handlers
+
+            ast = new_self.a
+
+            return [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()), *ast.kwonlyargs,
+                    *([a] if (a := ast.kwarg) else ())][idx].f  # we return only the arg portion even though it might have a default, but it will never be called expecting a return with a default because that would be a .replace() on a single combined arg+defualt element which never exists on its own
 
         try:
             return getattr(new_self.a, field)[idx].f  # may not be there due to removal of last element or raw reparsing of weird *(^$

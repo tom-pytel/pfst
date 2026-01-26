@@ -14649,6 +14649,515 @@ ClassDef - ROOT 0,0..0,27
 '''),
 ],
 
+'arguments__all': [  # ................................................................................
+
+('', 0, None, '_all', {'raw': False}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''), ('arguments',
+r'''x: complex = -1j, /'''),
+r'''x: complex = -1j, /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict''',
+r'''x: complex=-1j, /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict''', r'''
+arguments - ROOT 0,0..0,80
+  .posonlyargs[1]
+   0] arg - 0,0..0,10
+     .arg 'x'
+     .annotation Name 'complex' Load - 0,3..0,10
+  .args[1]
+   0] arg - 0,21..0,27
+     .arg 'b'
+     .annotation Name 'str' Load - 0,24..0,27
+  .vararg arg - 0,40..0,48
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,43..0,48
+  .kwonlyargs[1]
+   0] arg - 0,50..0,58
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,53..0,58
+  .kw_defaults[1]
+   0] Constant b'z' - 0,63..0,67
+  .kwarg arg - 0,73..0,80
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,76..0,80
+  .defaults[2]
+   0] UnaryOp - 0,13..0,16
+     .op USub - 0,13..0,14
+     .operand Constant 1j - 0,14..0,16
+   1] Constant '2' - 0,32..0,35
+'''),
+
+('', 1, None, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''), ('arguments',
+r'''x: complex = -1j'''),
+r'''a: int = ( 1 ), /, x: complex = -1j, *c: tuple, d: bytes = ( b'z' ), **e: dict''',
+r'''a: int = ( 1 ), /, x: complex=-1j, *c: tuple, d: bytes = ( b'z' ), **e: dict''', r'''
+arguments - ROOT 0,0..0,78
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,19..0,29
+     .arg 'x'
+     .annotation Name 'complex' Load - 0,22..0,29
+  .vararg arg - 0,38..0,46
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,41..0,46
+  .kwonlyargs[1]
+   0] arg - 0,48..0,56
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,51..0,56
+  .kw_defaults[1]
+   0] Constant b'z' - 0,61..0,65
+  .kwarg arg - 0,71..0,78
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,74..0,78
+  .defaults[2]
+   0] Constant 1 - 0,11..0,12
+   1] UnaryOp - 0,32..0,35
+     .op USub - 0,32..0,33
+     .operand Constant 1j - 0,33..0,35
+'''),
+
+('', 2, None, '_all', {'raw': False}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''), ('arguments',
+r'''x: complex = -1j'''),
+r'''a: int = ( 1 ), /, b: str = ( '2' ), x: complex = -1j, *, d: bytes = ( b'z' ), **e: dict''',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), x: complex=-1j, *, d: bytes = ( b'z' ), **e: dict''', r'''
+arguments - ROOT 0,0..0,88
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[2]
+   0] arg - 0,19..0,25
+     .arg 'b'
+     .annotation Name 'str' Load - 0,22..0,25
+   1] arg - 0,37..0,47
+     .arg 'x'
+     .annotation Name 'complex' Load - 0,40..0,47
+  .kwonlyargs[1]
+   0] arg - 0,58..0,66
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,61..0,66
+  .kw_defaults[1]
+   0] Constant b'z' - 0,71..0,75
+  .kwarg arg - 0,81..0,88
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,84..0,88
+  .defaults[3]
+   0] Constant 1 - 0,11..0,12
+   1] Constant '2' - 0,30..0,33
+   2] UnaryOp - 0,50..0,53
+     .op USub - 0,50..0,51
+     .operand Constant 1j - 0,51..0,53
+'''),
+
+('', 3, None, '_all', {'raw': False}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''), ('arguments',
+r'''*, x: complex = -1j'''),
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, x: complex = -1j, **e: dict''',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, x: complex=-1j, **e: dict''', r'''
+arguments - ROOT 0,0..0,75
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,19..0,25
+     .arg 'b'
+     .annotation Name 'str' Load - 0,22..0,25
+  .vararg arg - 0,38..0,46
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,41..0,46
+  .kwonlyargs[1]
+   0] arg - 0,48..0,58
+     .arg 'x'
+     .annotation Name 'complex' Load - 0,51..0,58
+  .kw_defaults[1]
+   0] UnaryOp - 0,61..0,64
+     .op USub - 0,61..0,62
+     .operand Constant 1j - 0,62..0,64
+  .kwarg arg - 0,68..0,75
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,71..0,75
+  .defaults[2]
+   0] Constant 1 - 0,11..0,12
+   1] Constant '2' - 0,30..0,33
+'''),
+
+('', 4, None, '_all', {'raw': False}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''), ('arguments',
+r'''*, x: complex = -1j'''),
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), x: complex = -1j''',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), x: complex=-1j''', r'''
+arguments - ROOT 0,0..0,85
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,19..0,25
+     .arg 'b'
+     .annotation Name 'str' Load - 0,22..0,25
+  .vararg arg - 0,38..0,46
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,41..0,46
+  .kwonlyargs[2]
+   0] arg - 0,48..0,56
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,51..0,56
+   1] arg - 0,69..0,79
+     .arg 'x'
+     .annotation Name 'complex' Load - 0,72..0,79
+  .kw_defaults[2]
+   0] Constant b'z' - 0,61..0,65
+   1] UnaryOp - 0,82..0,85
+     .op USub - 0,82..0,83
+     .operand Constant 1j - 0,83..0,85
+  .defaults[2]
+   0] Constant 1 - 0,11..0,12
+   1] Constant '2' - 0,30..0,33
+'''),
+
+('args', 0, None, '_all', {'raw': False}, (None,
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass'''), ('arguments',
+r'''x: complex = -1j, /'''),
+r'''def f(x: complex = -1j, /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass''',
+r'''def f(x: complex=-1j, /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass''', r'''
+FunctionDef - ROOT 0,0..0,93
+  .name 'f'
+  .args arguments - 0,6..0,86
+    .posonlyargs[1]
+     0] arg - 0,6..0,16
+       .arg 'x'
+       .annotation Name 'complex' Load - 0,9..0,16
+    .args[1]
+     0] arg - 0,27..0,33
+       .arg 'b'
+       .annotation Name 'str' Load - 0,30..0,33
+    .vararg arg - 0,46..0,54
+      .arg 'c'
+      .annotation Name 'tuple' Load - 0,49..0,54
+    .kwonlyargs[1]
+     0] arg - 0,56..0,64
+       .arg 'd'
+       .annotation Name 'bytes' Load - 0,59..0,64
+    .kw_defaults[1]
+     0] Constant b'z' - 0,69..0,73
+    .kwarg arg - 0,79..0,86
+      .arg 'e'
+      .annotation Name 'dict' Load - 0,82..0,86
+    .defaults[2]
+     0] UnaryOp - 0,19..0,22
+       .op USub - 0,19..0,20
+       .operand Constant 1j - 0,20..0,22
+     1] Constant '2' - 0,38..0,41
+  .body[1]
+   0] Pass - 0,89..0,93
+'''),
+
+('args', 1, None, '_all', {}, (None,
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass'''), ('arguments',
+r'''x: complex = -1j'''),
+r'''def f(a: int = ( 1 ), /, x: complex = -1j, *c: tuple, d: bytes = ( b'z' ), **e: dict): pass''',
+r'''def f(a: int = ( 1 ), /, x: complex=-1j, *c: tuple, d: bytes = ( b'z' ), **e: dict): pass''', r'''
+FunctionDef - ROOT 0,0..0,91
+  .name 'f'
+  .args arguments - 0,6..0,84
+    .posonlyargs[1]
+     0] arg - 0,6..0,12
+       .arg 'a'
+       .annotation Name 'int' Load - 0,9..0,12
+    .args[1]
+     0] arg - 0,25..0,35
+       .arg 'x'
+       .annotation Name 'complex' Load - 0,28..0,35
+    .vararg arg - 0,44..0,52
+      .arg 'c'
+      .annotation Name 'tuple' Load - 0,47..0,52
+    .kwonlyargs[1]
+     0] arg - 0,54..0,62
+       .arg 'd'
+       .annotation Name 'bytes' Load - 0,57..0,62
+    .kw_defaults[1]
+     0] Constant b'z' - 0,67..0,71
+    .kwarg arg - 0,77..0,84
+      .arg 'e'
+      .annotation Name 'dict' Load - 0,80..0,84
+    .defaults[2]
+     0] Constant 1 - 0,17..0,18
+     1] UnaryOp - 0,38..0,41
+       .op USub - 0,38..0,39
+       .operand Constant 1j - 0,39..0,41
+  .body[1]
+   0] Pass - 0,87..0,91
+'''),
+
+('args', 2, None, '_all', {'raw': False}, (None,
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass'''), ('arguments',
+r'''x: complex = -1j'''),
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), x: complex = -1j, *, d: bytes = ( b'z' ), **e: dict): pass''',
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), x: complex=-1j, *, d: bytes = ( b'z' ), **e: dict): pass''', r'''
+FunctionDef - ROOT 0,0..0,101
+  .name 'f'
+  .args arguments - 0,6..0,94
+    .posonlyargs[1]
+     0] arg - 0,6..0,12
+       .arg 'a'
+       .annotation Name 'int' Load - 0,9..0,12
+    .args[2]
+     0] arg - 0,25..0,31
+       .arg 'b'
+       .annotation Name 'str' Load - 0,28..0,31
+     1] arg - 0,43..0,53
+       .arg 'x'
+       .annotation Name 'complex' Load - 0,46..0,53
+    .kwonlyargs[1]
+     0] arg - 0,64..0,72
+       .arg 'd'
+       .annotation Name 'bytes' Load - 0,67..0,72
+    .kw_defaults[1]
+     0] Constant b'z' - 0,77..0,81
+    .kwarg arg - 0,87..0,94
+      .arg 'e'
+      .annotation Name 'dict' Load - 0,90..0,94
+    .defaults[3]
+     0] Constant 1 - 0,17..0,18
+     1] Constant '2' - 0,36..0,39
+     2] UnaryOp - 0,56..0,59
+       .op USub - 0,56..0,57
+       .operand Constant 1j - 0,57..0,59
+  .body[1]
+   0] Pass - 0,97..0,101
+'''),
+
+('args', 3, None, '_all', {'raw': False}, (None,
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass'''), ('arguments',
+r'''*, x: complex = -1j'''),
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, x: complex = -1j, **e: dict): pass''',
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, x: complex=-1j, **e: dict): pass''', r'''
+FunctionDef - ROOT 0,0..0,88
+  .name 'f'
+  .args arguments - 0,6..0,81
+    .posonlyargs[1]
+     0] arg - 0,6..0,12
+       .arg 'a'
+       .annotation Name 'int' Load - 0,9..0,12
+    .args[1]
+     0] arg - 0,25..0,31
+       .arg 'b'
+       .annotation Name 'str' Load - 0,28..0,31
+    .vararg arg - 0,44..0,52
+      .arg 'c'
+      .annotation Name 'tuple' Load - 0,47..0,52
+    .kwonlyargs[1]
+     0] arg - 0,54..0,64
+       .arg 'x'
+       .annotation Name 'complex' Load - 0,57..0,64
+    .kw_defaults[1]
+     0] UnaryOp - 0,67..0,70
+       .op USub - 0,67..0,68
+       .operand Constant 1j - 0,68..0,70
+    .kwarg arg - 0,74..0,81
+      .arg 'e'
+      .annotation Name 'dict' Load - 0,77..0,81
+    .defaults[2]
+     0] Constant 1 - 0,17..0,18
+     1] Constant '2' - 0,36..0,39
+  .body[1]
+   0] Pass - 0,84..0,88
+'''),
+
+('args', 4, None, '_all', {'raw': False}, (None,
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass'''), ('arguments',
+r'''*, x: complex = -1j'''),
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), x: complex = -1j): pass''',
+r'''def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), x: complex=-1j): pass''', r'''
+FunctionDef - ROOT 0,0..0,98
+  .name 'f'
+  .args arguments - 0,6..0,91
+    .posonlyargs[1]
+     0] arg - 0,6..0,12
+       .arg 'a'
+       .annotation Name 'int' Load - 0,9..0,12
+    .args[1]
+     0] arg - 0,25..0,31
+       .arg 'b'
+       .annotation Name 'str' Load - 0,28..0,31
+    .vararg arg - 0,44..0,52
+      .arg 'c'
+      .annotation Name 'tuple' Load - 0,47..0,52
+    .kwonlyargs[2]
+     0] arg - 0,54..0,62
+       .arg 'd'
+       .annotation Name 'bytes' Load - 0,57..0,62
+     1] arg - 0,75..0,85
+       .arg 'x'
+       .annotation Name 'complex' Load - 0,78..0,85
+    .kw_defaults[2]
+     0] Constant b'z' - 0,67..0,71
+     1] UnaryOp - 0,88..0,91
+       .op USub - 0,88..0,89
+       .operand Constant 1j - 0,89..0,91
+    .defaults[2]
+     0] Constant 1 - 0,17..0,18
+     1] Constant '2' - 0,36..0,39
+  .body[1]
+   0] Pass - 0,94..0,98
+'''),
+
+('args', 0, None, '_all', {'raw': False}, (None,
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), **e: None'''), ('arguments',
+r'''x = -1j, /'''),
+r'''lambda x = -1j, /, b = ( '2' ), *c, d = ( b'z' ), **e: None''',
+r'''lambda x=-1j, /, b = ( '2' ), *c, d = ( b'z' ), **e: None''', r'''
+Lambda - ROOT 0,0..0,59
+  .args arguments - 0,7..0,53
+    .posonlyargs[1]
+     0] arg - 0,7..0,8
+       .arg 'x'
+    .args[1]
+     0] arg - 0,19..0,20
+       .arg 'b'
+    .vararg arg - 0,33..0,34
+      .arg 'c'
+    .kwonlyargs[1]
+     0] arg - 0,36..0,37
+       .arg 'd'
+    .kw_defaults[1]
+     0] Constant b'z' - 0,42..0,46
+    .kwarg arg - 0,52..0,53
+      .arg 'e'
+    .defaults[2]
+     0] UnaryOp - 0,11..0,14
+       .op USub - 0,11..0,12
+       .operand Constant 1j - 0,12..0,14
+     1] Constant '2' - 0,25..0,28
+  .body Constant None - 0,55..0,59
+'''),
+
+('args', 1, None, '_all', {}, (None,
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), **e: None'''), ('arguments',
+r'''x = -1j'''),
+r'''lambda a = ( 1 ), /, x = -1j, *c, d = ( b'z' ), **e: None''',
+r'''lambda a = ( 1 ), /, x=-1j, *c, d = ( b'z' ), **e: None''', r'''
+Lambda - ROOT 0,0..0,57
+  .args arguments - 0,7..0,51
+    .posonlyargs[1]
+     0] arg - 0,7..0,8
+       .arg 'a'
+    .args[1]
+     0] arg - 0,21..0,22
+       .arg 'x'
+    .vararg arg - 0,31..0,32
+      .arg 'c'
+    .kwonlyargs[1]
+     0] arg - 0,34..0,35
+       .arg 'd'
+    .kw_defaults[1]
+     0] Constant b'z' - 0,40..0,44
+    .kwarg arg - 0,50..0,51
+      .arg 'e'
+    .defaults[2]
+     0] Constant 1 - 0,13..0,14
+     1] UnaryOp - 0,25..0,28
+       .op USub - 0,25..0,26
+       .operand Constant 1j - 0,26..0,28
+  .body Constant None - 0,53..0,57
+'''),
+
+('args', 2, None, '_all', {'raw': False}, (None,
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), **e: None'''), ('arguments',
+r'''x = -1j'''),
+r'''lambda a = ( 1 ), /, b = ( '2' ), x = -1j, *, d = ( b'z' ), **e: None''',
+r'''lambda a = ( 1 ), /, b = ( '2' ), x=-1j, *, d = ( b'z' ), **e: None''', r'''
+Lambda - ROOT 0,0..0,69
+  .args arguments - 0,7..0,63
+    .posonlyargs[1]
+     0] arg - 0,7..0,8
+       .arg 'a'
+    .args[2]
+     0] arg - 0,21..0,22
+       .arg 'b'
+     1] arg - 0,34..0,35
+       .arg 'x'
+    .kwonlyargs[1]
+     0] arg - 0,46..0,47
+       .arg 'd'
+    .kw_defaults[1]
+     0] Constant b'z' - 0,52..0,56
+    .kwarg arg - 0,62..0,63
+      .arg 'e'
+    .defaults[3]
+     0] Constant 1 - 0,13..0,14
+     1] Constant '2' - 0,27..0,30
+     2] UnaryOp - 0,38..0,41
+       .op USub - 0,38..0,39
+       .operand Constant 1j - 0,39..0,41
+  .body Constant None - 0,65..0,69
+'''),
+
+('args', 3, None, '_all', {'raw': False}, (None,
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), **e: None'''), ('arguments',
+r'''*, x = -1j'''),
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, x = -1j, **e: None''',
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, x=-1j, **e: None''', r'''
+Lambda - ROOT 0,0..0,56
+  .args arguments - 0,7..0,50
+    .posonlyargs[1]
+     0] arg - 0,7..0,8
+       .arg 'a'
+    .args[1]
+     0] arg - 0,21..0,22
+       .arg 'b'
+    .vararg arg - 0,35..0,36
+      .arg 'c'
+    .kwonlyargs[1]
+     0] arg - 0,38..0,39
+       .arg 'x'
+    .kw_defaults[1]
+     0] UnaryOp - 0,42..0,45
+       .op USub - 0,42..0,43
+       .operand Constant 1j - 0,43..0,45
+    .kwarg arg - 0,49..0,50
+      .arg 'e'
+    .defaults[2]
+     0] Constant 1 - 0,13..0,14
+     1] Constant '2' - 0,27..0,30
+  .body Constant None - 0,52..0,56
+'''),
+
+('args', 4, None, '_all', {'raw': False}, (None,
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), **e: None'''), ('arguments',
+r'''*, x = -1j'''),
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), x = -1j: None''',
+r'''lambda a = ( 1 ), /, b = ( '2' ), *c, d = ( b'z' ), x=-1j: None''', r'''
+Lambda - ROOT 0,0..0,65
+  .args arguments - 0,7..0,59
+    .posonlyargs[1]
+     0] arg - 0,7..0,8
+       .arg 'a'
+    .args[1]
+     0] arg - 0,21..0,22
+       .arg 'b'
+    .vararg arg - 0,35..0,36
+      .arg 'c'
+    .kwonlyargs[2]
+     0] arg - 0,38..0,39
+       .arg 'd'
+     1] arg - 0,52..0,53
+       .arg 'x'
+    .kw_defaults[2]
+     0] Constant b'z' - 0,44..0,48
+     1] UnaryOp - 0,56..0,59
+       .op USub - 0,56..0,57
+       .operand Constant 1j - 0,57..0,59
+    .defaults[2]
+     0] Constant 1 - 0,13..0,14
+     1] Constant '2' - 0,27..0,30
+  .body Constant None - 0,61..0,65
+'''),
+],
+
 'Lambda': [  # ................................................................................
 
 ('', None, None, 'args', {'raw': False}, (None,

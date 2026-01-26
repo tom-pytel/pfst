@@ -38020,6 +38020,92 @@ arguments - ROOT 0,0..0,31
    1] Constant 2 - 0,7..0,8
    2] Constant 1j - 0,12..0,14
 '''),
+
+('', 1, 'end', '_all', {}, ('arguments',
+r'''a=1, b=2, /'''), ('arguments',
+r'''x=1j'''),
+r'''a=1, /, x=1j''', r'''
+arguments - ROOT 0,0..0,12
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .args[1]
+   0] arg - 0,8..0,9
+     .arg 'x'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 1j - 0,10..0,12
+'''),
+
+('', 1, 'end', '_all', {}, ('arguments',
+r'''a=1, b=2, /, c=3'''), ('arguments',
+r'''x=1j'''),
+r'''a=1, /, x=1j''', r'''
+arguments - ROOT 0,0..0,12
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .args[1]
+   0] arg - 0,8..0,9
+     .arg 'x'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 1j - 0,10..0,12
+'''),
+
+('', 0, 2, '_all', {}, ('arguments',
+r'''a=1, *, b=2, c=3'''), ('arguments',
+r'''x=1j'''),
+r'''x=1j, *, c=3''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .kwonlyargs[1]
+   0] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[1]
+   0] Constant 3 - 0,11..0,12
+  .defaults[1]
+   0] Constant 1j - 0,2..0,4
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''a=1, *c, b=2'''), ('arguments',
+r'''x=1j'''),
+r'''a=1, x=1j, *, b=2''', r'''
+arguments - ROOT 0,0..0,17
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'x'
+  .kwonlyargs[1]
+   0] arg - 0,14..0,15
+     .arg 'b'
+  .kw_defaults[1]
+   0] Constant 2 - 0,16..0,17
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 1j - 0,7..0,9
+'''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''*c, a=1, b=2'''), ('arguments',
+r'''*, x=1j'''),
+r'''*c, x=1j, b=2''', r'''
+arguments - ROOT 0,0..0,13
+  .vararg arg - 0,1..0,2
+    .arg 'c'
+  .kwonlyargs[2]
+   0] arg - 0,4..0,5
+     .arg 'x'
+   1] arg - 0,10..0,11
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1j - 0,6..0,8
+   1] Constant 2 - 0,12..0,13
+'''),
 ],
 
 'MatchSequence': [  # ................................................................................
