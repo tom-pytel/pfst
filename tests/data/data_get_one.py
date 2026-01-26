@@ -2949,6 +2949,171 @@ keyword - ROOT 0,0..0,10
 '''),
 ],
 
+'arguments__all': [  # ................................................................................
+
+('', 0, None, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''),
+r'''b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict''', r'''
+arguments - ROOT 0,0..0,59
+  .args[1]
+   0] arg - 0,0..0,6
+     .arg 'b'
+     .annotation Name 'str' Load - 0,3..0,6
+  .vararg arg - 0,19..0,27
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,22..0,27
+  .kwonlyargs[1]
+   0] arg - 0,29..0,37
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,32..0,37
+  .kw_defaults[1]
+   0] Constant b'z' - 0,42..0,46
+  .kwarg arg - 0,52..0,59
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,55..0,59
+  .defaults[1]
+   0] Constant '2' - 0,11..0,14
+''',
+r'''a: int = ( 1 ), /''', r'''
+arguments - ROOT 0,0..0,17
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .defaults[1]
+   0] Constant 1 - 0,11..0,12
+'''),
+
+('', 1, None, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''),
+r'''a: int = ( 1 ), /, *c: tuple, d: bytes = ( b'z' ), **e: dict''', r'''
+arguments - ROOT 0,0..0,60
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .vararg arg - 0,20..0,28
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,23..0,28
+  .kwonlyargs[1]
+   0] arg - 0,30..0,38
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,33..0,38
+  .kw_defaults[1]
+   0] Constant b'z' - 0,43..0,47
+  .kwarg arg - 0,53..0,60
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,56..0,60
+  .defaults[1]
+   0] Constant 1 - 0,11..0,12
+''',
+r'''b: str = ( '2' )''', r'''
+arguments - ROOT 0,0..0,16
+  .args[1]
+   0] arg - 0,0..0,6
+     .arg 'b'
+     .annotation Name 'str' Load - 0,3..0,6
+  .defaults[1]
+   0] Constant '2' - 0,11..0,14
+'''),
+
+('', 2, None, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''),
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *, d: bytes = ( b'z' ), **e: dict''', r'''
+arguments - ROOT 0,0..0,70
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,19..0,25
+     .arg 'b'
+     .annotation Name 'str' Load - 0,22..0,25
+  .kwonlyargs[1]
+   0] arg - 0,40..0,48
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,43..0,48
+  .kw_defaults[1]
+   0] Constant b'z' - 0,53..0,57
+  .kwarg arg - 0,63..0,70
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,66..0,70
+  .defaults[2]
+   0] Constant 1 - 0,11..0,12
+   1] Constant '2' - 0,30..0,33
+''',
+r'''*c: tuple''', r'''
+arguments - ROOT 0,0..0,9
+  .vararg arg - 0,1..0,9
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,4..0,9
+'''),
+
+('', 3, None, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''),
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, **e: dict''', r'''
+arguments - ROOT 0,0..0,57
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,19..0,25
+     .arg 'b'
+     .annotation Name 'str' Load - 0,22..0,25
+  .vararg arg - 0,38..0,46
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,41..0,46
+  .kwarg arg - 0,50..0,57
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,53..0,57
+  .defaults[2]
+   0] Constant 1 - 0,11..0,12
+   1] Constant '2' - 0,30..0,33
+''',
+r'''*, d: bytes = ( b'z' )''', r'''
+arguments - ROOT 0,0..0,22
+  .kwonlyargs[1]
+   0] arg - 0,3..0,11
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,6..0,11
+  .kw_defaults[1]
+   0] Constant b'z' - 0,16..0,20
+'''),
+
+('', 4, None, '_all', {}, ('arguments',
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict'''),
+r'''a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' )''', r'''
+arguments - ROOT 0,0..0,67
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,19..0,25
+     .arg 'b'
+     .annotation Name 'str' Load - 0,22..0,25
+  .vararg arg - 0,38..0,46
+    .arg 'c'
+    .annotation Name 'tuple' Load - 0,41..0,46
+  .kwonlyargs[1]
+   0] arg - 0,48..0,56
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,51..0,56
+  .kw_defaults[1]
+   0] Constant b'z' - 0,61..0,65
+  .defaults[2]
+   0] Constant 1 - 0,11..0,12
+   1] Constant '2' - 0,30..0,33
+''',
+r'''**e: dict''', r'''
+arguments - ROOT 0,0..0,9
+  .kwarg arg - 0,2..0,9
+    .arg 'e'
+    .annotation Name 'dict' Load - 0,5..0,9
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',

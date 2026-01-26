@@ -113,6 +113,9 @@ from .slice_stmtlike import get_slice_stmtlike
 
 _GetOneRet = Union['fst.FST', None, str, constant]
 
+class _NoCut(BaseException):
+    """Raised from a handler to indicate that not explicit cut should be done after because the handler handled it."""
+
 
 def _params_Compare(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
     """Convert `idx` of combined Compare all `left` and `comparators` fields into parameters which access the actual
@@ -229,6 +232,16 @@ def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, op
 
     return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
                    [''], None, from_=self)
+
+
+def _get_one_arguments__all(
+    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
+) -> _GetOneRet:
+    ast = self.a
+    len_body = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
+    idx = fixup_one_index(len_body, idx)
+
+    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete in the caller
 
 
 def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
@@ -579,6 +592,7 @@ _GET_ONE_HANDLERS = {
     (arguments, 'kwonlyargs'):            _get_one_default,  # arg*
     (arguments, 'kw_defaults'):           _get_one_default,  # expr*
     (arguments, 'kwarg'):                 _get_one_default,  # arg?
+    (arguments, '_all'):                  _get_one_arguments__all,  # arguments
     (arg, 'arg'):                         _get_one_identifier,  # identifier
     (arg, 'annotation'):                  _get_one_default,  # expr?
     (keyword, 'arg'):                     _get_one_identifier,  # identifier?
@@ -678,13 +692,14 @@ def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Map
 
         return handler(self, idx, field, cut, options)
 
-    ret = handler(self, idx, field, cut, options)
+    try:
+        ret = handler(self, idx, field, cut, options)
 
-    if cut:
-        options = options.copy()
-        options['raw'] = False
-        options['to'] = None
+    except _NoCut as exc:
+        ret = exc.args[0]
 
-        self._put_one(None, idx, field, options)
+    else:
+        if cut:
+            self._put_one(None, idx, field, dict(options, raw=False, to=None))
 
     return ret

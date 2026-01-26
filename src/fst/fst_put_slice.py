@@ -1067,10 +1067,10 @@ def _code_to_slice_arguments(
 
     if one:
         ast_ = fst_.a
-        nargs = len(ast_.posonlyargs) + len(ast_.args) + bool(ast_.vararg) + len(ast_.kwonlyargs) + bool(ast_.kwarg)
+        len_body = len(ast_.posonlyargs) + len(ast_.args) + bool(ast_.vararg) + len(ast_.kwonlyargs) + bool(ast_.kwarg)
 
-        if nargs != 1:
-            raise ValueError(f"expecting single argument for put as 'one=True', got {nargs}")
+        if len_body != 1:
+            raise ValueError(f"expecting single argument for put as 'one=True', got {len_body}")
 
     _set_loc_whole(fst_)
 
