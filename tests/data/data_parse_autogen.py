@@ -1990,11 +1990,11 @@ r'''**ParseError('expecting comprehension ifs, got extra generators')**'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r''''''),
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,0'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r'''#'''),
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,1'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''
@@ -2025,11 +2025,11 @@ arguments - ROOT 0,0..0,43
 
 ('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r''''''),
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,0'''),
 
 ('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r'''#'''),
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,1'''),
 
 ('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r'''a, /, b, *c, d=100, **e'''), r'''
@@ -4167,7 +4167,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, (arguments,
 r''''''),
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,0'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, (arguments,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''

@@ -130,7 +130,7 @@ def _loc_maybe_key(
     return fstloc(ln, col, ln, col + 2)
 
 
-def _loc_arguments(self: fst.FST) -> fstloc | None:
+def _loc_arguments(self: fst.FST) -> fstloc | None:  # TODO: merge with _loc_arugments_empty()
     """`arguments` location from children. Called from `.loc`. Returns `None` when there are no arguments.
 
     **Note:** This function is explicitly safe to use from `FST.loc`.
@@ -138,11 +138,11 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
 
     assert self.a.__class__ is arguments
 
-    if not (last_child := self.last_child()):
-        return None
-
-    if not (parent := self.parent):  # standalone args can be used as a slice, we make whole source its location
+    if not (parent := self.parent):  # arguments at root have location of whole source, both because they are used as a slice and because root should always have a location
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
+
+    if not (last_child := self.last_child()):
+        return self._loc_arguments_empty()
 
     lines = self.root._lines
     last_ln = len(lines) - 1
@@ -430,8 +430,11 @@ def _loc_block_header_end(
     return ln, col, colon_ln, colon_col + 1  # block header start and end location just past the ':'
 
 
-def _loc_arguments_empty(self: fst.FST) -> fstloc:
-    """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!"""
+def _loc_arguments_empty(self: fst.FST) -> fstloc:  # TODO: merge with _loc_arugments()
+    """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!
+
+    **Note:** This function is explicitly safe to use from `FST.loc`.
+    """
 
     assert self.a.__class__ is arguments
 
@@ -584,8 +587,9 @@ def _loc_Lambda_args_entire(self: fst.FST) -> fstloc:
     ln, col, end_ln, end_col = self.loc
     col += 6
     lines = self.root._lines
+    args = self.a.args.f
 
-    if not (args := self.a.args.f).loc:
+    if args.is_empty_arguments():
         end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')
 
     else:

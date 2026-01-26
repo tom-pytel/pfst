@@ -303,7 +303,7 @@ class TestFSTPut(unittest.TestCase):
 
                     continue
 
-                except NodeError as exc:  # putting to empty arguments
+                except NodeError as exc:
                     if str(exc) != 'cannot determine location to put to':
                         raise
 

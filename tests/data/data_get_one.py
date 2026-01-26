@@ -115,7 +115,7 @@ FunctionDef - ROOT 0,0..0,16
    0] Pass - 0,12..0,16
 ''',
 r'''''',
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,0'''),
 
 ('', None, None, 'returns', {}, (FunctionDef,
 r'''def func() -> int: pass'''),
@@ -221,7 +221,7 @@ AsyncFunctionDef - ROOT 0,0..0,22
    0] Pass - 0,18..0,22
 ''',
 r'''''',
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,0'''),
 
 ('', None, None, 'returns', {}, (AsyncFunctionDef,
 r'''async def func() -> int: pass'''),
@@ -1035,7 +1035,7 @@ Lambda - ROOT 0,0..0,12
   .body Constant None - 0,8..0,12
 ''',
 r'''''',
-r'''arguments - ROOT'''),
+r'''arguments - ROOT 0,0..0,0'''),
 
 ('', None, None, 'body', {}, (Lambda,
 r'''lambda: None'''),

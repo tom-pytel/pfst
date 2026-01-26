@@ -109,7 +109,7 @@ from .parsex import _PARSE_MODE_FUNCS
 
 _HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
-_MODIFYING = set()  # root nodes of trees being `_Modifying()`ed, to prevent multiple nested on same tree
+_MODIFYING = {}  # {root: (fst_, count), ...} root nodes of trees being `_Modifying()`ed, to prevent multiple nested modification of different nodes on same tree, same node will be counted and allowed
 
 _astfieldctx = astfield('ctx')
 
@@ -283,8 +283,8 @@ class _Modifying:
         fst_, field, raw = self._params
         self.root = root = fst_.root
 
-        if root in _MODIFYING:
-            raise RuntimeError(f'nested modification not allowed on {root}')
+        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0]:
+            raise RuntimeError(f'nested modification of different nodes not allowed on {root}')
 
         if raw:
             self.fst = False
@@ -335,7 +335,7 @@ class _Modifying:
                     field = pfield.name
                     fst_ = parent
 
-        _MODIFYING.add(root)
+        _MODIFYING[root] = (nesting[0], nesting[1] + 1) if nesting else (fst_, 1)
 
         return self
 
@@ -351,7 +351,10 @@ class _Modifying:
 
         root = self.root  # should be same as fst_.root if passed in since root node never changes even with raw reparse
 
-        _MODIFYING.remove(root)
+        if (nesting := _MODIFYING.get(root))[1] > 1:
+            _MODIFYING[root] = (nesting[0], nesting[1] - 1)
+        else:
+            del _MODIFYING[root]
 
         if fst_ is False:
             if not (fst_ := self.fst):
@@ -394,7 +397,12 @@ class _Modifying:
     def fail(self, exc_val: BaseException | None = None) -> None:
         """Parameter `exc_val` not currently used for anything."""
 
-        _MODIFYING.remove(self.root)
+        root = self.root
+
+        if (nesting := _MODIFYING.get(root))[1] > 1:
+            _MODIFYING[root] = (nesting[0], nesting[1] - 1)
+        else:
+            del _MODIFYING[root]
 
 
 @pyver(lt=12)  # override _Modifying if py too low
@@ -421,25 +429,33 @@ class _Modifying:
         fst_, _, raw = self._params
         self.root = root = fst_.root
 
-        if root in _MODIFYING:
-            raise RuntimeError(f'nested modification not allowed on {root}')
+        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0]:
+            raise RuntimeError(f'nested modification of different nodes not allowed on {root}')
 
         if raw is False:
             while (fst_ := fst_.parent) and not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
                 if a.__class__ is JoinedStr:
                     raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
 
-        _MODIFYING.add(root)
+        _MODIFYING[root] = (nesting[0], nesting[1] + 1) if nesting else (fst_, 1)
 
         return self
 
     def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         root = self.root  # should be same as fst_.root if present since root node never changes
 
-        _MODIFYING.remove(root)
+        if (nesting := _MODIFYING.get(root))[1] > 1:
+            _MODIFYING[root] = (nesting[0], nesting[1] - 1)
+        else:
+            del _MODIFYING[root]
 
     def fail(self, exc_val: BaseException | None = None) -> None:
-        _MODIFYING.remove(self.root)
+        root = self.root
+
+        if (nesting := _MODIFYING.get(root))[1] > 1:
+            _MODIFYING[root] = (nesting[0], nesting[1] - 1)
+        else:
+            del _MODIFYING[root]
 
 
 class _ParamsOffset(NamedTuple):
@@ -1069,7 +1085,7 @@ def _is_enclosed_or_line(
             children = [ast]  # check_pars will be carried out on this first child (self)
 
     if not whole:
-        if not loc:  # this catches empty `arguments` mostly
+        if not loc:
             return True
 
         if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
@@ -1323,7 +1339,7 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
             if ret:
                 return True
 
-        if getattr(parent.pars(), 'n', 0):  # could be empty args which has None for a loc
+        if getattr(parent.pars(), 'n', 0):  # just in case no loc
             return True
 
         self = parent

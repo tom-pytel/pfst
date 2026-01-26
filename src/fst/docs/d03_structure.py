@@ -196,7 +196,7 @@ A simple walk over all nodes (the `all=True`).
 >>> for g in f.walk(all=True):
 ...     print(f'{str(g):30}{g.src or None}')
 <FunctionDef ROOT 0,0..0,31>  def f(): return [[1, 2], 3 + 4]
-<arguments>                   None
+<arguments 0,6..0,6>          None
 <Return 0,9..0,31>            return [[1, 2], 3 + 4]
 <List 0,16..0,31>             [[1, 2], 3 + 4]
 <List 0,17..0,23>             [1, 2]

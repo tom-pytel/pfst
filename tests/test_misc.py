@@ -1570,10 +1570,10 @@ two  # fake comment start""", **b
 
         self.assertEqual((0, 15, 0, 16), _loc_block_header_end(parse('def f(a) -> int: pass').body[0].f))
         self.assertEqual((0, 7, 0, 9),  _loc_block_header_end(parse('def f(a): pass').body[0].f))
-        self.assertEqual((0, 0, 0, 8),  _loc_block_header_end(parse('def f(): pass').body[0].f))
+        self.assertEqual((0, 6, 0, 8),  _loc_block_header_end(parse('def f(): pass').body[0].f))
         self.assertEqual((0, 21, 0, 22), _loc_block_header_end(parse('async def f(a) -> int: pass').body[0].f))
         self.assertEqual((0, 13, 0, 15), _loc_block_header_end(parse('async def f(a): pass').body[0].f))
-        self.assertEqual((0, 0, 0, 14), _loc_block_header_end(parse('async def f(): pass').body[0].f))
+        self.assertEqual((0, 12, 0, 14), _loc_block_header_end(parse('async def f(): pass').body[0].f))
         self.assertEqual((0, 25, 0, 27), _loc_block_header_end(parse('class cls(base, keyword=1): pass').body[0].f))
         self.assertEqual((0, 14, 0, 16), _loc_block_header_end(parse('class cls(base): pass').body[0].f))
         self.assertEqual((0, 10, 0, 11), _loc_block_header_end(parse('for a in b: pass\nelse: pass').body[0].f))

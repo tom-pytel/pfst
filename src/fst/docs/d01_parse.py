@@ -151,7 +151,7 @@ Because maybe it is normally shadowed by something more common.
 In some cases you must tell it what you want (valid empty arguments).
 
 >>> print(FST('', arguments))
-<arguments ROOT>
+<arguments ROOT 0,0..0,0>
 
 Have you ever dreamed of being able to parse the `+` operator by itself? Well now you can!
 

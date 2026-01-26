@@ -36481,6 +36481,147 @@ _comprehension_ifs - ROOT 0,0..0,9
 
 'arguments': [  # ................................................................................
 
+('args', 0, 'end', '_all', {}, (None,
+r'''def f(): pass'''), ('arguments',
+r'''a, b, c'''),
+r'''def f(a, b, c): pass''', r'''
+FunctionDef - ROOT 0,0..0,20
+  .name 'f'
+  .args arguments - 0,6..0,13
+    .args[3]
+     0] arg - 0,6..0,7
+       .arg 'a'
+     1] arg - 0,9..0,10
+       .arg 'b'
+     2] arg - 0,12..0,13
+       .arg 'c'
+  .body[1]
+   0] Pass - 0,16..0,20
+'''),
+
+('args', 0, 'end', '_all', {}, (None,
+r'''def f(): pass'''), ('arguments', r'''
+a,
+  b,
+  c
+'''), r'''
+def f(a,
+    b,
+    c): pass
+''',
+r'''def f(a, b, c): pass''', r'''
+FunctionDef - ROOT 0,0..2,12
+  .name 'f'
+  .args arguments - 0,6..2,5
+    .args[3]
+     0] arg - 0,6..0,7
+       .arg 'a'
+     1] arg - 1,4..1,5
+       .arg 'b'
+     2] arg - 2,4..2,5
+       .arg 'c'
+  .body[1]
+   0] Pass - 2,8..2,12
+'''),
+
+('args', 0, 'end', '_all', {}, (None,
+r'''def f(): pass'''), ('arguments', r'''
+
+  a, # a
+  b, # b
+  c, # c
+
+'''), r'''
+def f(
+    a, # a
+    b, # b
+    c, # c
+): pass
+''',
+r'''def f(a, b, c): pass''', r'''
+FunctionDef - ROOT 0,0..4,7
+  .name 'f'
+  .args arguments - 0,6..4,0
+    .args[3]
+     0] arg - 1,4..1,5
+       .arg 'a'
+     1] arg - 2,4..2,5
+       .arg 'b'
+     2] arg - 3,4..3,5
+       .arg 'c'
+  .body[1]
+   0] Pass - 4,3..4,7
+'''),
+
+('args', 0, 'end', '_all', {'raw': False}, (None,
+r'''lambda: None'''), ('arguments',
+r'''a, b, c'''),
+r'''lambda a, b, c: None''', r'''
+Lambda - ROOT 0,0..0,20
+  .args arguments - 0,7..0,14
+    .args[3]
+     0] arg - 0,7..0,8
+       .arg 'a'
+     1] arg - 0,10..0,11
+       .arg 'b'
+     2] arg - 0,13..0,14
+       .arg 'c'
+  .body Constant None - 0,16..0,20
+'''),
+
+('args', 0, 'end', '_all', {'raw': False}, (None,
+r'''lambda: None'''), ('arguments', r'''
+a,
+  b,
+  c
+'''), r'''
+lambda a,
+    b,
+    c: None
+''',
+r'''lambda a, b, c: None''', r'''
+Lambda - ROOT 0,0..2,11
+  .args arguments - 0,7..2,5
+    .args[3]
+     0] arg - 0,7..0,8
+       .arg 'a'
+     1] arg - 1,4..1,5
+       .arg 'b'
+     2] arg - 2,4..2,5
+       .arg 'c'
+  .body Constant None - 2,7..2,11
+'''),
+
+('args', 0, 'end', '_all', {'raw': False}, (None,
+r'''lambda: None'''), ('arguments', r'''
+
+  a, # a
+  b, # b
+  c, # c
+
+'''), r'''
+lambda
+    a, # a
+    b, # b
+    c, # c
+: None
+''',
+r'''lambda a, b, c: None''', r'''
+Lambda - ROOT 0,0..4,6
+  .args arguments - 0,6..4,0
+    .args[3]
+     0] arg - 1,4..1,5
+       .arg 'a'
+     1] arg - 2,4..2,5
+       .arg 'b'
+     2] arg - 3,4..3,5
+       .arg 'c'
+  .body Constant None - 4,2..4,6
+'''),
+],
+
+'arguments_markers': [  # ................................................................................
+
 ('', 2, 2, '_all', {}, ('arguments',
 r'''a=1, /, b=2'''), ('arguments',
 r'''x=1j, /'''),

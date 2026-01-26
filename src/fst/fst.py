@@ -477,7 +477,7 @@ class FST:
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
         else:
-            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop, expr_context and empty arguments
+            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop or expr_context
 
     @property
     def src(self) -> builtins.str:
@@ -496,7 +496,7 @@ class FST:
         elif loc := self.bloc:
             return self._get_src(*loc)
         else:
-            return OPCLS2STR.get(self.a.__class__, '')  # for boolop, expr_context and empty arguments
+            return OPCLS2STR.get(self.a.__class__, '')  # for boolop or expr_context
 
     @property
     def has_own_loc(self) -> bool:
@@ -1905,7 +1905,7 @@ class FST:
             return self._lines[:]
 
         if not (loc := self.loc):
-            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop, expr_context and empty arguments
+            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop or expr_context
 
         if is_root:
             return self._get_src(loc.ln, loc.col, loc.end_ln, loc.end_col, True)  # note, elif cannot exist at root so we don't check for it

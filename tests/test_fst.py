@@ -2854,7 +2854,7 @@ def f():
             "  .name",
             "    'f'",
             "  .args",
-            "    arguments",
+            "    arguments - 0,6..0,6",
             "  .body[2]",
             "   0] Expr - 1,4..3,87",
             "     .value",

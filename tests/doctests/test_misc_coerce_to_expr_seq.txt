@@ -64,7 +64,7 @@ arguments - ROOT 0,0..0,6
 <arguments ROOT 0,0..0,6>
 
 >>> FST('', arguments)
-<arguments ROOT>
+<arguments ROOT 0,0..0,0>
 
 >>> f = FST('a = b')
 >>> g = f.as_(stmt)

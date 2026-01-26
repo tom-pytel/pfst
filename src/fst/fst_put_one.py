@@ -1016,7 +1016,8 @@ def _put_one_FunctionDef_arguments(
     """Put FunctionDef.arguments. Does not have location if there are no arguments."""
 
     return _put_one_exprlike_required(self, code or '', idx, field, child, static, options,
-                                      target=None if (args := self.a.args.f).loc else args._loc_arguments_empty())
+                                      target=None if not (args := self.a.args.f).is_empty_arguments() else args.loc)
+                                    #   target=None if (args := self.a.args.f).loc else args._loc_arguments_empty())
 
 
 def _put_one_ClassDef_bases(
@@ -1226,7 +1227,7 @@ def _put_one_Lambda_arguments(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Put Lambda.arguments. Does not have location if there are no arguments."""
+    """Put Lambda.arguments."""
 
     if code is None:
         code = ''
@@ -1234,7 +1235,7 @@ def _put_one_Lambda_arguments(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, options, self.root.parse_params, sanitize=True,
                           coerce=fst.FST.get_option('coerce', options))
-    prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
+    prefix = '' if code.is_empty_arguments() else ' '
     target = self._loc_Lambda_args_entire()
 
     return _put_one_exprlike_required(self, code, idx, field, child, static, options, 1, target, prefix)
@@ -2236,7 +2237,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
         return oneinfo(', *', fstloc(ln, col, ln, col))
 
-    loc = self._loc_arguments_empty()
+    loc = self.loc  # _loc_arguments_empty()
     prefix = ' *' if (parent := self.parent) and parent.a.__class__ is Lambda else '*'
 
     return oneinfo(prefix, loc)
@@ -2294,8 +2295,9 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
 
     # insert location
 
-    if not (loc := self.loc):
-        loc = self._loc_arguments_empty()
+    loc = self.loc
+
+    if self.is_empty_arguments():
         prefix = ' **' if (parent := self.parent) and parent.a.__class__ is Lambda else '**'
 
         return oneinfo(prefix, loc)
@@ -2866,15 +2868,20 @@ def _put_one_raw(
 
     # from location (if not gotten already for Dict or MatchMapping key)
 
+    if ast_cls is Lambda and child.__class__ is arguments and childf.is_empty_arguments():  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
+        if not put_lines[0][:1].isspace():
+            put_lines[0] =  ' ' + put_lines[0]
+
     if loc is None:
         if childf:
             if (loc := childf.pars(shared=False) if pars else childf.bloc) is None:
-                if child.__class__ is arguments:  # empty arguments need special loc get
-                    loc = childf._loc_arguments_empty()
+                pass  # noop
+                # if child.__class__ is arguments:  # empty arguments need special loc get
+                #     loc = childf._loc_arguments_empty()
 
-                    if ast_cls is Lambda:  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
-                        if not put_lines[0][:1].isspace():
-                            put_lines[0] =  ' ' + put_lines[0]
+                #     if ast_cls is Lambda:  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
+                #         if not put_lines[0][:1].isspace():
+                #             put_lines[0] =  ' ' + put_lines[0]
 
             elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 loc = non_shared_loc
@@ -2896,10 +2903,11 @@ def _put_one_raw(
             raise ValueError("'to' must be part of same tree")
 
         if (to_loc := to.pars(shared=False) if pars else to.bloc) is None:
-            if to.a.__class__ is arguments:  # empty arguments need special loc get
-                to_loc = to._loc_arguments_empty()
-            else:
-                raise ValueError("'to' node must have a location")
+            raise ValueError("'to' node must have a location")
+            # if to.a.__class__ is arguments:  # empty arguments need special loc get
+            #     to_loc = to.loc  # _loc_arguments_empty()
+            # else:
+            #     raise ValueError("'to' node must have a location")
 
         if not pars and to._is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:  # solo GeneratorExp argument in Call which shares parentheses
             to_loc = non_shared_loc

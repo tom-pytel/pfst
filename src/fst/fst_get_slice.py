@@ -759,7 +759,7 @@ def _fix_arguments_del(self: fst.FST) -> None:
     kwarg = ast.kwarg
 
     if not (posonlyargs or args or vararg or kwonlyargs or kwarg):  # if completely empty then just delete everything and we are done
-        ln, col, end_ln, end_col = self._loc_arguments_empty()
+        ln, col, end_ln, end_col = self.loc  # self._loc_arguments_empty()
 
         self._put_src(None, ln, col, end_ln, end_col, True)
 

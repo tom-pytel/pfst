@@ -2404,8 +2404,11 @@ def _put_slice_arguments(
     len_body = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+    parent = self.parent
+    is_lambda = parent and parent.a.__class__ is Lambda
 
-    if (parent := self.parent) and parent.a.__class__ is Lambda:
+    if is_lambda:
+        was_empty = not (ast.posonlyargs or ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg)
         code_as = code_as_arguments_lambda
     else:
         code_as = code_as_arguments
@@ -2557,6 +2560,24 @@ def _put_slice_arguments(
     put_slice_sep_end(self, end_params)
 
     fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
+
+    if is_lambda:  # if arguments of Lambda then may need some fixes
+        if fst_:
+            if was_empty:
+                lines = parent.root._lines
+                ln, col, _, _ = parent.loc
+                col += 6
+
+                if len(l := lines[ln]) > col and not l[col].isspace():
+                    parent._put_src(' ', ln, col, ln, col, False)
+                # parent._fix_joined_alnums(ln, col + 6)
+
+
+            # TODO: parenthesize?
+
+
+        else:  # we know was not empty because would have returned early
+            parent._put_src(None, *parent._loc_Lambda_args_entire(), False)
 
 
 class _LocationAbstract_BoolOp_values(_LocationAbstract):

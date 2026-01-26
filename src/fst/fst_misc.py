@@ -1912,7 +1912,7 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
 
         if loc:
             _, _, self_end_ln, search_col = loc
-        else:  # at root it is almost completely, but not entirely, implausible that someone would try to force par some empty arguments
+        else:
             self_end_ln = search_col = 0
 
         is_last_line_comment = lines[end_ln].find('#', 0 if self_end_ln < end_ln else search_col) != -1

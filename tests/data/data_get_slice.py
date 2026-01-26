@@ -22795,7 +22795,7 @@ _comprehension_ifs - ROOT 0,0..0,14
 ('', 0, 'end', None, {}, ('arguments',
 r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''),
 r'''''',
-r'''arguments - ROOT''',
+r'''arguments - ROOT 0,0..0,0''',
 r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )''', r'''
 arguments - ROOT 0,0..0,94
   .args[5]
@@ -23128,7 +23128,7 @@ arguments - ROOT 0,0..4,0
 ('', 0, 'end', None, {}, ('arguments',
 r'''*a, b, c'''),
 r'''''',
-r'''arguments - ROOT''',
+r'''arguments - ROOT 0,0..0,0''',
 r'''*a, b, c''', r'''
 arguments - ROOT 0,0..0,8
   .vararg arg - 0,1..0,2
@@ -23189,7 +23189,7 @@ b,
 c
 '''),
 r'''''',
-r'''arguments - ROOT''', r'''
+r'''arguments - ROOT 0,0..0,0''', r'''
 *a,
 b,
 c
@@ -23265,7 +23265,7 @@ arguments - ROOT 0,0..0,4
 ('', 0, 'end', None, {}, ('arguments',
 r'''*, b, c'''),
 r'''''',
-r'''arguments - ROOT''',
+r'''arguments - ROOT 0,0..0,0''',
 r'''*, b, c''', r'''
 arguments - ROOT 0,0..0,7
   .kwonlyargs[2]
@@ -23284,7 +23284,7 @@ b,
 c
 '''),
 r'''''',
-r'''arguments - ROOT''', r'''
+r'''arguments - ROOT 0,0..0,0''', r'''
 
 *,
 b,
@@ -23307,7 +23307,7 @@ arguments - ROOT 0,0..3,1
   c  # c
 '''),
 r'''''',
-r'''arguments - ROOT''', r'''
+r'''arguments - ROOT 0,0..0,0''', r'''
 
   *,
   b,  # b
@@ -23503,7 +23503,7 @@ arguments - ROOT 0,0..0,10
 ('', 0, 'end', None, {}, ('arguments',
 r'''  *, c,  # c'''),
 r'''''',
-r'''arguments - ROOT''',
+r'''arguments - ROOT 0,0..0,0''',
 r'''*, c,  # c''', r'''
 arguments - ROOT 0,0..0,10
   .kwonlyargs[1]
