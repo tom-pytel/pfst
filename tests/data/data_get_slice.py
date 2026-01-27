@@ -22947,11 +22947,47 @@ arguments - ROOT 0,0..0,1
 r'''param,/'''),
 r'''''',
 r'''arguments - ROOT 0,0..0,0''',
-r'''param, /''', r'''
-arguments - ROOT 0,0..0,8
+r'''param,/''', r'''
+arguments - ROOT 0,0..0,7
   .posonlyargs[1]
    0] arg - 0,0..0,5
      .arg 'param'
+'''),
+
+('', 1, 3, '_all', {}, (None, r'''
+func:PropertyT,/,
+                   *,
+                   repr:bool=_Unset,
+                   init:bool|None=ά中o文кκц
+'''), r'''
+func:PropertyT,/
+
+''', r'''
+arguments - ROOT 0,0..1,0
+  .posonlyargs[1]
+   0] arg - 0,0..0,14
+     .arg 'func'
+     .annotation Name 'PropertyT' Load - 0,5..0,14
+''', r'''
+
+                   *,
+                   repr:bool=_Unset,
+                   init:bool|None=ά中o文кκц
+''', r'''
+arguments - ROOT 0,0..3,41
+  .kwonlyargs[2]
+   0] arg - 2,19..2,28
+     .arg 'repr'
+     .annotation Name 'bool' Load - 2,24..2,28
+   1] arg - 3,19..3,33
+     .arg 'init'
+     .annotation BinOp - 3,24..3,33
+       .left Name 'bool' Load - 3,24..3,28
+       .op BitOr - 3,28..3,29
+       .right Constant None - 3,29..3,33
+  .kw_defaults[2]
+   0] Name '_Unset' Load - 2,29..2,35
+   1] Name 'ά中o文кκц' Load - 3,34..3,41
 '''),
 ],
 
@@ -22988,9 +23024,10 @@ arguments - ROOT 0,0..0,7
 ''', r'''
 a,  # a
 b,  # b
-/,
+/,  # /
+
 ''', r'''
-arguments - ROOT 0,0..2,2
+arguments - ROOT 0,0..3,0
   .posonlyargs[2]
    0] arg - 0,0..0,1
      .arg 'a'
@@ -23012,9 +23049,10 @@ arguments - ROOT 0,0..0,9
 ''', r'''
   a,  # a
   b,  # b
-  /,
+  /,  # /
+
 ''', r'''
-arguments - ROOT 0,0..2,4
+arguments - ROOT 0,0..3,0
   .posonlyargs[2]
    0] arg - 0,2..0,3
      .arg 'a'
@@ -23354,16 +23392,15 @@ c
 '''),
 r'''''',
 r'''arguments - ROOT 0,0..0,0''', r'''
-
 *,
 b,
 c
 ''', r'''
-arguments - ROOT 0,0..3,1
+arguments - ROOT 0,0..2,1
   .kwonlyargs[2]
-   0] arg - 2,0..2,1
+   0] arg - 1,0..1,1
      .arg 'b'
-   1] arg - 3,0..3,1
+   1] arg - 2,0..2,1
      .arg 'c'
   .kw_defaults[2]
    0] None
@@ -23377,16 +23414,15 @@ arguments - ROOT 0,0..3,1
 '''),
 r'''''',
 r'''arguments - ROOT 0,0..0,0''', r'''
-
-  *,
+  *,  # *
   b,  # b
   c  # c
 ''', r'''
-arguments - ROOT 0,0..3,8
+arguments - ROOT 0,0..2,8
   .kwonlyargs[2]
-   0] arg - 2,2..2,3
+   0] arg - 1,2..1,3
      .arg 'b'
-   1] arg - 3,2..3,3
+   1] arg - 2,2..2,3
      .arg 'c'
   .kw_defaults[2]
    0] None
@@ -23449,11 +23485,14 @@ arguments - ROOT 0,0..1,0
   .args[1]
    0] arg - 0,0..0,1
      .arg 'a'
-''',
-r'''*, b,''', r'''
-arguments - ROOT 0,0..0,5
+''', r'''
+
+*,
+b,
+''', r'''
+arguments - ROOT 0,0..2,2
   .kwonlyargs[1]
-   0] arg - 0,3..0,4
+   0] arg - 2,0..2,1
      .arg 'b'
   .kw_defaults[1]
    0] None
@@ -23494,11 +23533,14 @@ arguments - ROOT 0,0..2,0
      .arg 'a'
    1] arg - 1,2..1,3
      .arg 'b'
-''',
-r'''*, c,  # c''', r'''
-arguments - ROOT 0,0..0,10
+''', r'''
+
+  *,  # *
+  c,  # c
+''', r'''
+arguments - ROOT 0,0..2,9
   .kwonlyargs[1]
-   0] arg - 0,3..0,4
+   0] arg - 2,2..2,3
      .arg 'c'
   .kw_defaults[1]
    0] None
@@ -23510,20 +23552,21 @@ arguments - ROOT 0,0..0,10
   c,  # c
 '''), r'''
   a,  # a
-  b  # *
-
+  b
 ''', r'''
-arguments - ROOT 0,0..2,0
+arguments - ROOT 0,0..1,3
   .args[2]
    0] arg - 0,2..0,3
      .arg 'a'
    1] arg - 1,2..1,3
      .arg 'b'
-''',
-r'''*, c,  # c''', r'''
-arguments - ROOT 0,0..0,10
+''', r'''
+*,  # *
+  c,  # c
+''', r'''
+arguments - ROOT 0,0..1,9
   .kwonlyargs[1]
-   0] arg - 0,3..0,4
+   0] arg - 1,2..1,3
      .arg 'c'
   .kw_defaults[1]
    0] None
@@ -23585,9 +23628,11 @@ arguments - ROOT 0,0..0,10
 ('', 1, 'end', None, {}, ('arguments', r'''
   b,
   *, c,  # c
-'''),
-r'''  b''', r'''
-arguments - ROOT 0,0..0,3
+'''), r'''
+  b
+
+''', r'''
+arguments - ROOT 0,0..1,0
   .args[1]
    0] arg - 0,2..0,3
      .arg 'b'
@@ -23604,9 +23649,11 @@ arguments - ROOT 0,0..0,10
 ('', 1, 'end', None, {}, ('arguments', r'''
   b,  # b
   *, c,  # c
-'''),
-r'''  b,  # b''', r'''
-arguments - ROOT 0,0..0,9
+'''), r'''
+  b,  # b
+
+''', r'''
+arguments - ROOT 0,0..1,0
   .args[1]
    0] arg - 0,2..0,3
      .arg 'b'
@@ -23623,9 +23670,11 @@ arguments - ROOT 0,0..0,10
 ('', 1, 'end', None, {}, ('arguments', r'''
   b, \
   *, c,  # c
-'''),
-r'''  b,''', r'''
-arguments - ROOT 0,0..0,4
+'''), r'''
+  b, \
+
+''', r'''
+arguments - ROOT 0,0..1,0
   .args[1]
    0] arg - 0,2..0,3
      .arg 'b'
@@ -23898,14 +23947,13 @@ arguments - ROOT 0,0..0,12
   .kwarg arg - 0,4..0,5
     .arg 'd'
 ''', r'''
-
-  *,
+  *, # *
   c, # c
 
 ''', r'''
-arguments - ROOT 0,0..3,0
+arguments - ROOT 0,0..2,0
   .kwonlyargs[1]
-   0] arg - 2,2..2,3
+   0] arg - 1,2..1,3
      .arg 'c'
   .kw_defaults[1]
    0] None
@@ -24145,9 +24193,10 @@ arguments - ROOT 0,0..2,8
 ''', r'''
   a, # a
   b, # b
-  /,
+  /, # /
+
 ''', r'''
-arguments - ROOT 0,0..2,4
+arguments - ROOT 0,0..3,0
   .posonlyargs[2]
    0] arg - 0,2..0,3
      .arg 'a'
@@ -24198,7 +24247,7 @@ arguments - ROOT 0,0..3,0
      .arg 'b'
 ''', r'''
 
-  *,
+  *, # *
   c, # c
   d, # d
 ''', r'''
