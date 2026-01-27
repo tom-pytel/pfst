@@ -679,7 +679,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     self_tail_sep: bool | Literal[0, 1] | None = None,
     *,
     allow_redent: bool = True,
-) -> tuple[_ParamsOffset, _ParamsOffset, tuple]:
+) -> tuple:
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
     just delete in the same way that a cut operation would.
 
@@ -714,11 +714,9 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     - `allow_redent`: Whether to allow re-indentation of multiline elements to current indentation of multiline elements
         or another indentation level if that cannot be determined. Meant to allow avoid redent for decorators.
+
     **Returns:**
-    - `(params_offset, fst_params_offset, other_params)`: A parameter to be passed to `put_slice_sep_end(param)` to
-        finish the put. The first two elements of the tuple are the single offset parameters that were applied to `self`
-        and `fst_` respectively. Provided if the caller needs to offset any extra nodes (`arguments` slice put) before
-        calling `put_slice_sep_end()`.
+    - `param`: A parameter to be passed to `put_slice_sep_end(param)` to finish the put.
     """
 
     def get_indent_elts() -> str:
@@ -821,8 +819,6 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                     put_ln = bound_ln  # there can be nothing but a separator and whitespace between these locations
                     put_col = bound_col
                     self_tail_sep = None
-
-        fst_params_offset = None
 
     # insert or replace, this is the bit that deals with tricky leading and trailing newlines and indentation
 
@@ -944,10 +940,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         # indent and offset source and FST to put
 
         fst_._indent_lns(self_indent, skip=skip, docstr=False)
-
-        fst_params_offset = _ParamsOffset(0, 0, put_ln, lines[put_ln].c2b(put_col))  # we do this way so we can return it
-
-        fst_._offset(*fst_params_offset)
+        fst_._offset(0, 0, put_ln, lines[put_ln].c2b(put_col))
 
         if post_indent:  # we do this here like this because otherwise a completely empty line at the end of fst_ will not be indented at all in _indent_lns() which we may need to add self_indent alone
             put_lines[-1] = bistr(post_indent)
@@ -973,10 +966,8 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
     # parameters for put / del trailing and internal separators, we return explicitly so that the ASTs can be modified so the next part doesn't get too screwy
 
-    return (params_offset, fst_params_offset, (
-        start, locabst, len_fst, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
-        is_last, is_del, is_ins
-    ))
+    return (start, locabst, len_fst, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
+        is_last, is_del, is_ins, params_offset)
 
 
 def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
@@ -986,17 +977,10 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
 
     **Parameters:**
     - `params`: Parameters from `put_slice_sep_begin()`.
-    - `body2_node_override`: If the actual last node is not in `body` or `body2` (like is done with `arguments`), this
-        functions should convert the `FST` node from the actual body into the actual last node. This is needed for
-        proper offsetting when a separator is inserted.
-
-    **WARNING:** `locfunc` is not used here because currently it only applies to non-`sep` sequences.
     """
 
-    params_offset, _, (
-        start, locabst, len_fst, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
-        is_last, is_del, is_ins
-    ) = params
+    (start, locabst, len_fst, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
+        is_last, is_del, is_ins, params_offset) = params
 
     if self_tail_sep is not None:  # trailing separator
         last = locabst.tail_node(-1).f

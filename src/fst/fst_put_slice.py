@@ -1442,18 +1442,33 @@ def _put_slice_seq_and_asts(
     put_slice_sep_end(self, end_params)
 
 
-def _make_arguments_allargs(self: fst.FST, tag: object = None) -> tuple[list[AST], int | None, int | None]:
+def _make_arguments_allargs(
+    self: fst.FST,
+    tag: object = None,
+    start: int = -1,
+    stop: int = -1,
+    exp_left_into_slash: bool = True,
+    exp_right_into_star: bool = True,
+) -> tuple[list[AST], int | None, int | None, int, int]:
     """Make a list of all arguments with standin `/` and `*` marker nodes from an `arguments` for slicing operation
-    use. We use the `Pass` node as marker for the standins as it doesn't have any children and doesn't normally appear
-    outside of statement blocks.
+    use.
+
+    We use the `Pass` node as marker for the standins as it doesn't have any children and doesn't normally appear
+    outside of statement blocks. The markers are inserted into the actual `arguments` node as if they were `arg` nodes
+    at those locations for easier processing. The `/` marker node may also get an empty `defaults` node inserted if
+    would be needed for correct sequence of the `arguments` as a whole.
 
     **Returns:**
-    - `(allargs, idx_slash, idx_star)`:
+    - `(allargs, idx_slash, idx_star, new_start, new_stop)`:
         - `allargs`: List of `AST` nodes which will be the original `arg` nodes from the `arguments` in order
             intersperced with optional `Name` nodes to indicate `/` or `*` markers.
         - `idx_slash`: Index of `/` marker in the list if any, `None` if not present.
         - `idx_star`: Index of `*` marker in the list if any, `None` if not present. This is only the empty star, a
             `vararg` is not considered this and in fact will cause this to be `None`.
+        - `new_start`, `new_stop`: `start` and `stop` indices passed in offset according to whatever markers were
+            inserted and expanded to include those markers if wound up alongside them.
+        - `exp_left_into_slash`: Whether to allow expand of start to the left into a `/` marker or not.
+        - `exp_right_into_star`: Whether to allow expand of stop to the right into a `*` marker or not.
     """
 
     lines = self.root._lines
@@ -1488,13 +1503,29 @@ def _make_arguments_allargs(self: fst.FST, tag: object = None) -> tuple[list[AST
         idx_slash = len(allargs)
         lineno = ln + 1
         col_offset = lines[ln].c2b(col)
-        a = Pass(lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset + 1)
+        end_col_offset = col_offset + 1
+        a = Pass(lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=end_col_offset)
         a._is_star = False
         a._tag = tag
 
-        fst.FST(a, self, astfield('_allargs', idx_slash))  # throwaway standin for '/'
+        fst.FST(a, self, astfield('posonlyargs', idx_slash))  # throwaway standin for '/'
 
+        posonlyargs.append(a)
         allargs.append(a)
+
+        defaults = ast.defaults
+        len_defaults = len(defaults)
+        len_args = len(args)
+
+        if len_defaults > len_args:  # if defaults extend into posonlyargs then need to insert an empty one of those for correctness
+            a = Pass(lineno=lineno, col_offset=end_col_offset, end_lineno=lineno, end_col_offset=end_col_offset)
+
+            fst.FST(a, self, astfield('defaults', -1))  # throwaway standin for '/' default value
+
+            defaults.insert(len_defaults - len_args, a)
+
+            for i, a in enumerate(defaults):  # reset all pfields for inserted default element
+                a.f.pfield = astfield('defaults', i)
 
     allargs.extend(args)
 
@@ -1526,17 +1557,60 @@ def _make_arguments_allargs(self: fst.FST, tag: object = None) -> tuple[list[AST
             a = Pass(lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset + 1)
             a._is_star = True
             a._tag = tag
+            kw_defaults = ast.kw_defaults
 
-            fst.FST(a, self, astfield('_allargs', idx_star))  # throwaway standin for '*'
+            fst.FST(a, self, astfield('kwonlyargs', 0))  # throwaway standin for '*'
 
-            allargs.append(a)
+            kw_defaults.insert(0, None)
+            kwonlyargs.insert(0, a)
+
+            for i, (k, d) in enumerate(zip(kwonlyargs, kw_defaults, strict=True)):  # reset all pfields for inserted element, don't really need to do this for the processing that follows but lets be correct
+                k.f.pfield = astfield('kwonlyargs', i)
+
+                if d:
+                    d.f.pfield = astfield('kw_defaults', i)
 
         allargs.extend(kwonlyargs)
 
     if kwarg:
         allargs.append(kwarg)
 
-    return allargs, idx_slash, idx_star
+    # offset start and stop for inserted markers
+
+    if idx_slash is not None:  # if `/` exists in self and start or stop beyond it then increment them to reflect actual idx after the `/` standin node
+        if start >= idx_slash:
+            start += 1
+            stop += 1
+
+        elif stop > idx_slash:
+            stop += 1
+
+    if idx_star is not None:  # if `*` exists in self and start or stop beyond it then increment them to reflect actual idx after the `*` standin node
+        if start >= idx_star:
+            start += 1
+            stop += 1
+
+        elif stop > idx_star:
+            stop += 1
+
+    # if start right after marker(s) or end right before then expand endpoints to include them in [start:stop]
+
+    if idx_slash is not None:  # if put ends right before `/` then we remove it no matter what, put is either posonlyargs and has one of its own or is invalid anyway
+        if stop == idx_slash:
+            stop += 1
+
+    if idx_star is not None:
+        if start == idx_star + 1:  # if put starts right after `*` then we remove it no matter what, put either has another one or vararg or kwarg or is invalid
+            start -= 1
+
+        if exp_right_into_star and stop == idx_star and (vararg or kwonlyargs or kwarg):  # if put starts right before `*` and put has kwonlyargs or vararg (or kwarg, but that will be an error anyway, we let it eat the star just in case)
+            stop += 1
+
+    if exp_left_into_slash and idx_slash is not None:
+        if start == idx_slash + 1 and posonlyargs:  # if put ends right after `/` and put has posonlyargs then remove the `/`
+            start -= 1
+
+    return allargs, idx_slash, idx_star, start, stop
 
 
 _SPECIAL_SLICE_STATICS = {  # the other SPECIAL SLICEs have their own handlers so don't need an entry here, this is just for _put_slice__slice()
@@ -2403,11 +2477,8 @@ def _put_slice_arguments(
     options: Mapping[str, Any],
 ) -> None:
     """The slice of `arguments` is just another `arguments`. But we need to deal with three differnt kinds of args
-    along with possibly incompatible `defaults` and `/` and `*` markers. It can get messy.
-
-    This is maybe the most convoluted slice put, but there is logic to it. The funnest part is making sure any marker
-    nodes are offset properly between the two phases of the `put_slice_sep`.
-    """
+    along with possibly incompatible `defaults` and `/` and `*` markers. Temporary standin nodes are created for the
+    markers and added to the `arguments` node itself for the processing."""
 
     ast = self.a
     len_body = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
@@ -2432,48 +2503,16 @@ def _put_slice_arguments(
         return
 
     ast_ = fst_.a
-    allargs, idx_slash, idx_star = _make_arguments_allargs(self, 0)
-    fst_allargs, fst_idx_slash, _ = _make_arguments_allargs(fst_, 1)
+    fst_allargs, fst_idx_slash, _, _, _ = _make_arguments_allargs(fst_, 1)
+    allargs, _, _, aa_start, aa_stop = _make_arguments_allargs(self, 0, start, stop,
+        exp_left_into_slash = bool(ast_.posonlyargs),
+        exp_right_into_star = bool(ast_.vararg or ast_.kwonlyargs or ast_.kwarg),
+    )
 
 
     # TODO: fst_: 'argsas' or whatever option to adapt posargs/args/kwargs if possible
 
 
-    aa_start = start
-    aa_last = stop - 1
-
-    if idx_slash is not None:  # if `/` exists in self and start or stop beyond it then increment them to reflect actual idx after the `/` standin node
-        if aa_start >= idx_slash:
-            aa_start += 1
-            aa_last += 1
-
-        elif aa_last >= idx_slash:
-            aa_last += 1
-
-    if idx_star is not None:  # if `*` exists in self and start or stop beyond it then increment them to reflect actual idx after the `*` standin node
-        if aa_start >= idx_star:
-            aa_start += 1
-            aa_last += 1
-
-        elif aa_last >= idx_star:
-            aa_last += 1
-
-    if idx_slash is not None:  # if put ends right before `/` then we remove it no matter what, put is either posonlyargs and has one of its own or is invalid anyway
-        if aa_last == idx_slash - 1:
-            aa_last += 1
-
-    if idx_star is not None:
-        if aa_start == idx_star + 1:  # if put starts right after `*` then we remove it no matter what, put either has another one or vararg or kwarg or is invalid
-            aa_start -= 1
-
-        if aa_last == idx_star - 1 and (ast_.vararg or ast_.kwonlyargs or ast_.kwarg):  # if put starts right before `*` and put has kwonlyargs or vararg (or kwarg, but that will be an error anyway, we let it eat the star just in case)
-            aa_last += 1
-
-    if idx_slash is not None:
-        if aa_start == idx_slash + 1 and ast_.posonlyargs:  # if put ends right after `/` and put has posonlyargs then remove the `/`
-            aa_start -= 1
-
-    aa_stop = aa_last + 1
     new_allargs = allargs.copy()
     new_allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
     prev_arg_cat = -1  # 0 = posonlyargs, 1 = args, 2 = vararg, 3 = kwonlyargs, 4 = kwarg
@@ -2536,7 +2575,7 @@ def _put_slice_arguments(
 
         end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
 
-        del fst_allargs[idx]
+        del fst_allargs[idx]  # don't need to remove from arguments nodes because harmless there, the allargs are what determine the sequence for our purposes
         del new_allargs[idx + aa_start]
 
         put_slice_sep_end(fst_, end_params)
@@ -2545,47 +2584,54 @@ def _put_slice_arguments(
                                      bound_ln, bound_col, bound_end_ln, bound_end_col, options, ',', 0)
 
     locabst.body = new_allargs
-
-    params_offsets = end_params[:2]  # (params_offset, fst_params_offset)
-
-    for a in new_allargs:  # offset any markers present so that `put_slice_sep_end()` doesn't screw up, as they are not part of any nodes which were offset in `put_slice_sep_begin()`
-        if a.__class__ is Pass:
-            a.f._offset(*params_offsets[a._tag])
-
     new_fields = {
-        'posonlyargs': [],
-        'args': [],
+        'posonlyargs': (posonlyargs := []),
+        'args': (args := []),
         'vararg': None,
-        'kwonlyargs': [],
-        'kw_defaults': [],
+        'kwonlyargs': (kwonlyargs := []),
+        'kw_defaults': (kw_defaults := []),
         'kwarg': None,
-        'defaults': [],
+        'defaults': (defaults := []),
     }
 
-    for a in new_allargs:
+    for a in new_allargs:  # we copy all nodes into the new arguments fields, this can include markers which will be removed after
         f = a.f
+        field, idx = f.pfield
 
-        if a.__class__ is Pass:
-            a.f.parent = self  # HACK! because all nodes from fst_ should have been copied into self and have self as parent, this is needed so that .loc on this node can operate correcly
+        if idx is None:  # vararg or kwarg
+            new_fields[field] = a
 
         else:
-            field, idx = f.pfield
+            new_fields[field].append(a)
 
-            if idx is None:  # vararg or kwarg
-                new_fields[field] = a
-
-            else:
-                new_fields[field].append(a)
-
-                if (g := f.next()) and (dflt_field := g.pfield.name) in ('defaults', 'kw_defaults'):
-                    new_fields[dflt_field].append(g.a)
-                elif field == 'kwonlyargs':
-                    new_fields['kw_defaults'].append(None)
+            if (g := f.next()) and (dflt_field := g.pfield.name) in ('defaults', 'kw_defaults'):
+                new_fields[dflt_field].append(g.a)
+            elif field == 'kwonlyargs':
+                new_fields['kw_defaults'].append(None)
 
     for field, ast_or_list in new_fields.items():  # we do individual fields instead of _set_ast() in order to not change the AST, which might be counterintuitive
         self._set_field(ast_or_list, field)
 
     put_slice_sep_end(self, end_params)
+
+    if posonlyargs and posonlyargs[-1].__class__ is Pass:  # if '/' marker present then remove, there can only be one marker `/` at end of posonlyargs because if there was another one that could have been a duplicate then it was removed from fst_ above
+        del posonlyargs[-1]
+
+        if (i := len(defaults) - len(args)) > 0:  # if has default then remove that too
+            del defaults[i - 1]
+
+        for i, a in enumerate(defaults):  # reset all pfields for deleted default element
+            a.f.pfield = astfield('defaults', i)
+
+    if kwonlyargs and kwonlyargs[0].__class__ is Pass:  # if '*' marker present then remove, there can only be one marker `*` at beginning of kwonlyargs because if there was another one that could have been a duplicate then it was removed from fst_ above
+        del kwonlyargs[0]
+        del kw_defaults[0]
+
+        for i, (k, d) in enumerate(zip(kwonlyargs, kw_defaults, strict=True)):  # reset all pfields for deleted element
+            k.f.pfield = astfield('kwonlyargs', i)
+
+            if d:
+                d.f.pfield = astfield('kw_defaults', i)
 
     fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
 

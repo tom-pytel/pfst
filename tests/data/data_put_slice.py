@@ -38128,6 +38128,51 @@ arguments - ROOT 0,0..0,13
      .arg 'e'
 '''),
 
+('', 1, 2, '_all', {}, ('arguments', r'''
+  a=1, # a
+  /,   # /
+  b=2, # b
+'''), ('arguments',
+r'''c=3'''), r'''
+  a=1, # a
+  /,   # /
+  c=3
+''', r'''
+arguments - ROOT 0,0..2,5
+  .posonlyargs[1]
+   0] arg - 0,2..0,3
+     .arg 'a'
+  .args[1]
+   0] arg - 2,2..2,3
+     .arg 'c'
+  .defaults[2]
+   0] Constant 1 - 0,4..0,5
+   1] Constant 3 - 2,4..2,5
+'''),
+
+('', 0, 1, '_all', {}, ('arguments', r'''
+  a=1, # a
+  *,   # *
+  b=2, # b
+'''), ('arguments',
+r'''c=3'''), r'''
+  c=3,
+  *,   # *
+  b=2, # b
+''', r'''
+arguments - ROOT 0,0..2,10
+  .args[1]
+   0] arg - 0,2..0,3
+     .arg 'c'
+  .kwonlyargs[1]
+   0] arg - 2,2..2,3
+     .arg 'b'
+  .kw_defaults[1]
+   0] Constant 2 - 2,4..2,5
+  .defaults[1]
+   0] Constant 3 - 0,4..0,5
+'''),
+
 ('args', 1, 1, '_all', {}, (None, r'''
 
 
