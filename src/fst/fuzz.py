@@ -2129,11 +2129,11 @@ class SliceExprlike(Fuzzy):
     class Bucket(NamedTuple):
         field:       str | None  # None means Dict or MatchMapping
         slice_field: str | None  # None means same as field
-        min_script:  int
-        min_tmp:     int
-        one:         bool
-        fst:         FST
-        transfer:    Callable | None = None
+        min_script:  int | None
+        min_tmp:     int | None
+        one:         bool | None
+        fst:         FST  # the actual temporary element container
+        transfer:    Callable | None = None  # if this is present then it is the back-and-forth transfer, not just the half transfer_simple()
 
     @staticmethod
     def rnd_trivia():
@@ -2206,7 +2206,7 @@ class SliceExprlike(Fuzzy):
             # dst.dump()
             print()
 
-    def transfer(
+    def transfer_simple(
         self,
         dir: str,
         cat: str,
@@ -2406,6 +2406,11 @@ class SliceExprlike(Fuzzy):
 
         self.debug_post(src, dst)
 
+    # def transfer_back_and_forth(self, fst: FST, cat: str, exprlike: FST, bucket: Bucket):
+    #     pass
+
+    # transfer_back_and_forth.back_and_forth = True
+
     @staticmethod
     def cat(fst: FST) -> tuple[str | type[AST], ...]:
         ast = fst.a
@@ -2538,17 +2543,22 @@ class SliceExprlike(Fuzzy):
                         continue
 
                     with FST.options(norm=False):
-                        transfer = bucket.transfer or self.transfer
+                        if (transfer := bucket.transfer) and getattr(transfer, 'back_and_forth', False):
+                            transfer(fst, cat, exprlike, bucket)
 
-                        transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprlike, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
+                        else:
+                            if not transfer:
+                                transfer = self.transfer_simple
 
-                        if self.verify:
-                            fst.verify()
+                            transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprlike, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
 
-                        transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprlike, bucket.min_tmp, bucket.min_script, bucket.one)
+                            if self.verify:
+                                fst.verify()
 
-                        if self.verify:
-                            fst.verify()
+                            transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprlike, bucket.min_tmp, bucket.min_script, bucket.one)
+
+                            if self.verify:
+                                fst.verify()
 
                     # input('Waiting...')
 

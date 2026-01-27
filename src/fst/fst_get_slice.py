@@ -2179,7 +2179,7 @@ def _get_slice_arguments(
                          options, new_last, '', '', ',', 0, 0, False)
 
 
-    # TODO: fst_: 'argpos' or whatever option to move arguments to '.args' if possible, convert to just normal args if possible (no '/' or '*')
+    # TODO: fst_: 'argsas' or whatever option to move arguments to '.args' if possible, convert to just normal args if possible (no '/' or '*')
 
 
     _fix_arguments_copy(fst_)

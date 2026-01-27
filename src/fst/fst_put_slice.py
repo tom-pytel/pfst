@@ -2433,7 +2433,7 @@ def _put_slice_arguments(
     fst_allargs, fst_idx_slash, _ = _make_arguments_allargs(fst_, 1)
 
 
-    # TODO: fst_: 'argpos' or whatever option to adapt posargs/args/kwargs if possible
+    # TODO: fst_: 'argsas' or whatever option to adapt posargs/args/kwargs if possible
 
 
     aa_start = start
