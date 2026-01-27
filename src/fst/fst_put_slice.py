@@ -1065,6 +1065,10 @@ def _code_to_slice_arguments(
 
     coerce = fst.FST.get_option('coerce', options)
     fst_ = code_as(code, options, self.root.parse_params, coerce=coerce)
+    ast_ = fst_.a
+
+    if not (ast_.args or ast_.vararg or ast_.kwarg or ast_.kwonlyargs or ast_.posonlyargs):
+        return None
 
     if one:
         ast_ = fst_.a
@@ -2413,7 +2417,6 @@ def _put_slice_arguments(
     is_lambda = parent and parent.a.__class__ is Lambda
 
     if is_lambda:
-        was_empty = not (ast.posonlyargs or ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg)
         code_as = code_as_arguments_lambda
     else:
         code_as = code_as_arguments
@@ -2562,7 +2565,10 @@ def _put_slice_arguments(
     for a in new_allargs:
         f = a.f
 
-        if a.__class__ is not Pass:
+        if a.__class__ is Pass:
+            a.f.parent = self  # HACK! because all nodes from fst_ should have been copied into self and have self as parent, this is needed so that .loc on this node can operate correcly
+
+        else:
             field, idx = f.pfield
 
             if idx is None:  # vararg or kwarg
@@ -2588,15 +2594,16 @@ def _put_slice_arguments(
 
     if is_lambda:  # if arguments of Lambda then may need some fixes
         if fst_:
-            if was_empty:
-                lines = parent.root._lines
-                ln, col, _, _ = parent.loc
-                col += 6
+            lines = parent.root._lines
+            ln, col, _, _ = parent.loc
+            col += 6
 
-                if len(l := lines[ln]) > col and not l[col].isspace():
-                    parent._put_src(' ', ln, col, ln, col, False)
+            if len(l := lines[ln]) > col and not l[col].isspace():  # joined alnums
+                parent._put_src(' ', ln, col, ln, col, False)
 
-            if not self._is_enclosed_or_line(check_pars=False) and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
+            ln, _, end_ln, _ = self.loc
+
+            if end_ln != ln and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
                 parent._parenthesize_grouping()
 
         else:  # we know was not empty because would have returned early

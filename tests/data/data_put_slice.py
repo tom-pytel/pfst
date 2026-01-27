@@ -37012,7 +37012,8 @@ r'''**ValueError("expecting single argument for put as 'one=True', got 2")**''')
 ('', 0, 'end', '_all', {'one': True}, ('arguments',
 r'''a, b, c'''), ('arguments',
 r''''''),
-r'''**ValueError("expecting single argument for put as 'one=True', got 0")**'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0'''),
 ],
 
 'arguments_markers': [  # ................................................................................
@@ -37681,8 +37682,10 @@ arguments - ROOT 0,0..0,12
   *,
   x=1j,
   **c
-''',
-r'''**IndexError('list index out of range')**''', r'''
+''', r'''
+  a=1,
+  *, x=1j, **c
+''', r'''
 arguments - ROOT 0,0..3,5
   .args[1]
    0] arg - 0,2..0,3
@@ -38105,6 +38108,96 @@ arguments - ROOT 0,0..0,13
   .kw_defaults[2]
    0] Constant 1j - 0,6..0,8
    1] Constant 2 - 0,12..0,13
+'''),
+
+('', 4, 4, '_all', {}, ('arguments',
+r'''a, b, c, d, e'''), ('arguments',
+r''''''),
+r'''a, b, c, d, e''', r'''
+arguments - ROOT 0,0..0,13
+  .args[5]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+   2] arg - 0,6..0,7
+     .arg 'c'
+   3] arg - 0,9..0,10
+     .arg 'd'
+   4] arg - 0,12..0,13
+     .arg 'e'
+'''),
+
+('args', 1, 1, '_all', {}, (None, r'''
+
+
+
+
+
+async def greenlet_spawn(driver: greenlet) -> _T: pass
+'''), ('arguments', r'''
+
+             *,
+             _require_await: bool = False,
+             **kwargs: Any
+
+'''), r'''
+
+
+
+
+
+async def greenlet_spawn(driver: greenlet,
+                         *,
+                         _require_await: bool = False,
+                         **kwargs: Any
+) -> _T: pass
+''', r'''
+
+
+
+
+
+async def greenlet_spawn(driver: greenlet, *, _require_await: bool=False, **kwargs: Any) -> _T: pass
+''', r'''
+AsyncFunctionDef - ROOT 5,0..9,13
+  .name 'greenlet_spawn'
+  .args arguments - 5,25..9,0
+    .args[1]
+     0] arg - 5,25..5,41
+       .arg 'driver'
+       .annotation Name 'greenlet' Load - 5,33..5,41
+    .kwonlyargs[1]
+     0] arg - 7,25..7,45
+       .arg '_require_await'
+       .annotation Name 'bool' Load - 7,41..7,45
+    .kw_defaults[1]
+     0] Constant False - 7,48..7,53
+    .kwarg arg - 8,27..8,38
+      .arg 'kwargs'
+      .annotation Name 'Any' Load - 8,35..8,38
+  .body[1]
+   0] Pass - 9,9..9,13
+  .returns Name '_T' Load - 9,5..9,7
+'''),
+
+('args', 1, 2, '_all', {'_src': False}, (None,
+r'''lambda a, b: None'''), ('arguments',
+r'''c: int'''),
+r'''**NodeError('lambda arguments cannot have annotations')**'''),
+
+('args', 0, 1, '_all', {'_verify': False}, (None,
+r'''lambda*a: None'''), ('arguments',
+r'''b, c'''),
+r'''lambda b, c: None''', r'''
+Lambda - ROOT 0,0..0,17
+  .args arguments - 0,7..0,11
+    .args[2]
+     0] arg - 0,7..0,8
+       .arg 'b'
+     1] arg - 0,10..0,11
+       .arg 'c'
+  .body Constant None - 0,13..0,17
 '''),
 ],
 

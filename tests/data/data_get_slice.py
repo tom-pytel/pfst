@@ -22923,6 +22923,36 @@ arguments - ROOT 0,0..0,7
    2] arg - 0,6..0,7
      .arg 'c'
 '''),
+
+('', 2, 3, '_all', {}, (None,
+r'''config:ConfigDict,/, d, e'''),
+r'''config:ConfigDict,/, d''', r'''
+arguments - ROOT 0,0..0,22
+  .posonlyargs[1]
+   0] arg - 0,0..0,17
+     .arg 'config'
+     .annotation Name 'ConfigDict' Load - 0,7..0,17
+  .args[1]
+   0] arg - 0,21..0,22
+     .arg 'd'
+''',
+r'''e''', r'''
+arguments - ROOT 0,0..0,1
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'e'
+'''),
+
+('', 0, 1, '_all', {}, (None,
+r'''param,/'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''param, /''', r'''
+arguments - ROOT 0,0..0,8
+  .posonlyargs[1]
+   0] arg - 0,0..0,5
+     .arg 'param'
+'''),
 ],
 
 'arguments_markers': [  # ................................................................................

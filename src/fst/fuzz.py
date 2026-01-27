@@ -2332,6 +2332,68 @@ class SliceExprlike(Fuzzy):
 
         self.debug_post(src, dst)
 
+    def transfer_arguments(
+        self,
+        dir: str,
+        cat: str,
+        field: str | None,
+        slice_field: str | None,
+        src: FST,
+        dst: FST,
+        min_src: int,
+        min_dst: int,
+        one: bool,
+    ):
+        src_len = len(src_body := src._cached_allargs())
+        dst_len = len(dst_body := dst._cached_allargs())
+
+        src_start, src_stop, dst_start, dst_stop = self.rnd_indices(src_len, dst_len, min_dst)
+        src_trivia, dst_trivia = self.rnd_trivia(), self.rnd_trivia()
+
+        len_src_slice = src_stop - src_start
+        cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
+
+        if one:
+            one = bool(randint(0, 1)) if src_stop - src_start == 1 else False
+
+        self.debug_pre(dir, cat, cut, one, src, src_start, src_stop, src_len, min_src, src_trivia, dst, dst_start, dst_stop, dst_len, min_dst, dst_trivia)
+
+        src_elts = src_body[src_start : src_stop]
+        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
+        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
+
+        slice = src.get_slice(src_start_, src_stop_, field='_all', cut=cut, trivia=src_trivia)
+
+        # slice_elts = slice._cached_allargs()
+
+        # assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
+
+        # slice_elts = slice._cached_allargs()
+
+        self.debug_slice(slice)
+
+        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
+        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
+
+        try:
+            dst.put_slice(slice, dst_start_, dst_stop_, field='_all', one=one, trivia=dst_trivia)
+
+        except NodeError as exc:  # positional stuff, put thing back if we cut it
+            if cut:
+                src.put_slice(slice, src_start, src_start, field='_all', trivia=(False, False))
+
+            if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+                print('   FAILED:', str(exc))
+
+            return
+
+        # if not one:
+        #     dst_elts = dst._cached_allargs()[dst_start : dst_start + (src_stop - src_start)]
+
+        #     # assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
+
+        self.debug_post(src, dst)
+
     def transfer_arglikes(
         self,
         dir: str,
@@ -2424,7 +2486,7 @@ class SliceExprlike(Fuzzy):
 
         if isinstance(ast, (Delete, Assign, Import, Global, Nonlocal,
                             Dict, MatchSequence, MatchMapping, MatchClass, MatchOr,
-                            With, AsyncWith, Compare, comprehension,
+                            With, AsyncWith, Compare, comprehension, arguments,
                             )):
             return (ast.__class__,)
 
@@ -2461,38 +2523,39 @@ class SliceExprlike(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
-            'slice':          self.Bucket('elts', None, 1, 1, False, FST('tmp[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
-            'target':         self.Bucket('elts', None, 0, 0, True, FST('()')),
-            'seq':            self.Bucket('elts', None, 1, 0, True, FST('()')),  # 1 because of Set
-            Dict:             self.Bucket(None, None, 0, 0, False, FST('{}')),
-            Delete:           self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
-            Assign:           self.Bucket('targets', None, 1, 0, False, FST('', '_Assign_targets')),
-            'decorator_list': self.Bucket('decorator_list', None, 0, 0, False, FST('', '_decorator_list')),
-            With:             (wbucket := self.Bucket('items', None, 1, 0, False, FST('', '_withitems'))),
-            AsyncWith:        wbucket,
-            Import:           self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),
-            ImportFrom:       self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),
-            Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
-            Nonlocal:         glbucket,
-            'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
-            'and':            self.Bucket('values', None, 2, 2, True, FST('a and b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
-            'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
-            Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare), self.transfer_Compare),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
-            'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
-            # 'keywords':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes')),
-            'arglikes':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes'), self.transfer_arglikes),
-            'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
-            comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
-            MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
-            MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
-            MatchClass:       self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
-            MatchOr:          self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
+            # 'slice':          self.Bucket('elts', None, 1, 1, False, FST('tmp[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            # 'target':         self.Bucket('elts', None, 0, 0, True, FST('()')),
+            # 'seq':            self.Bucket('elts', None, 1, 0, True, FST('()')),  # 1 because of Set
+            # Dict:             self.Bucket(None, None, 0, 0, False, FST('{}')),
+            # Delete:           self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
+            # Assign:           self.Bucket('targets', None, 1, 0, False, FST('', '_Assign_targets')),
+            # 'decorator_list': self.Bucket('decorator_list', None, 0, 0, False, FST('', '_decorator_list')),
+            # With:             (wbucket := self.Bucket('items', None, 1, 0, False, FST('', '_withitems'))),
+            # AsyncWith:        wbucket,
+            # Import:           self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),
+            # ImportFrom:       self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),
+            # Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
+            # Nonlocal:         glbucket,
+            # 'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
+            # 'and':            self.Bucket('values', None, 2, 2, True, FST('a and b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
+            # 'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
+            # Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare), self.transfer_Compare),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
+            # 'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
+            # # 'keywords':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes')),
+            # 'arglikes':       self.Bucket(None, None, 0, 0, False, FST('', '_arglikes'), self.transfer_arglikes),
+            # 'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
+            # comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
+            arguments:        self.Bucket(None, None, 0, 5, True, FST('a, b, c, d, e', arguments), self.transfer_arguments),
+            # MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
+            # MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
+            # MatchClass:       self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
+            # MatchOr:          self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
         }
 
-        if PYGE12:
-            buckets.update({
-                'type_params': self.Bucket('type_params', None, 0, 0, False, FST('', '_type_params')),
-            })
+        # if PYGE12:
+        #     buckets.update({
+        #         'type_params': self.Bucket('type_params', None, 0, 0, False, FST('', '_type_params')),
+        #     })
 
         exprlikes = []  # [('cat', FST), ...]
 

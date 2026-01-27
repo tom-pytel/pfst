@@ -725,7 +725,7 @@ def _fix_arguments_copy(self: fst.FST) -> None:
                 assert src == ','
 
                 if lines[-1]:  # non-own-line last keyword arg
-                    self._put_src(' /', end_ln, end_col, end_ln, end_col)  # we don't have to offset because after last node and arguments has calculated location
+                    self._put_src(' /', end_ln, end_col + 1, end_ln, end_col + 1)  # we don't have to offset because after last node and arguments has calculated location
                 else:
                     self._put_src(f'{lines[ln][:col]}/,', end_ln + 1, 0, end_ln + 1, 0)
 
@@ -798,7 +798,7 @@ def _fix_arguments_del(self: fst.FST) -> None:
             aa_ln, aa_col, src = frag
             aa_col += 1
 
-            assert src == ','  # has to be this
+            assert src.startswith(',')  # has to be this
 
             if frag := next_frag(lines, aa_ln, aa_col, self_end_ln, self_end_col):  # something after?
                 next_ln, next_col, src = frag
