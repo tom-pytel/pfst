@@ -809,7 +809,11 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
     if is_del:
         len_fst = None
-        put_lines = [del_indent] if del_indent and put_end_col else None
+
+        if del_indent and put_end_col and put_end_col != len(lines[put_end_ln]):  # the last check means if line ends on put end then don't add indentation
+            put_lines = [del_indent]
+        else:
+            put_lines = None
 
         if sep:
             self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)

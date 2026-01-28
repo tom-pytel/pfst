@@ -188,7 +188,6 @@ from .fst_get_slice import (
     _fix_MatchSequence,
     _fix_MatchOr,
     _fix_stmt_end,
-    _get_slice_arguments,
 )
 
 from .fst_put_one import _fix_With_items
@@ -2329,20 +2328,24 @@ def _put_slice_arguments(
         if not len_slice:
             return
 
-        _get_slice_arguments(self, start, stop, field, True, options)._unmake_fst_tree()  # TODO: this, this is lazy and slower, but for now we don't want to deal with different methods and want delete to come out exactly as a cut
+        fst_allargs = []
+        fst_idx_slash = None
+        exp_left_into_slash = exp_right_into_star = False
 
-        return
+    else:
+        ast_ = fst_.a
+        fst_allargs, fst_idx_slash, _, _, _ = _make_arguments_allargs_w_markers(fst_, 1)
+        exp_left_into_slash = bool(ast_.posonlyargs)
+        exp_right_into_star = bool(ast_.vararg or ast_.kwonlyargs or ast_.kwarg)
 
-    ast_ = fst_.a
-    fst_allargs, fst_idx_slash, _, _, _ = _make_arguments_allargs_w_markers(fst_, 1)
     allargs, _, _, aa_start, aa_stop = _make_arguments_allargs_w_markers(self, 0, start, stop,
-        exp_left_into_slash = bool(ast_.posonlyargs),
-        exp_right_into_star = bool(ast_.vararg or ast_.kwonlyargs or ast_.kwarg),
-    )
+                                                                         exp_left_into_slash, exp_right_into_star)
 
 
     # TODO: fst_: 'argsas' or whatever option to adapt posargs/args/kwargs if possible
 
+
+    # validate and get some marker info
 
     try:
         new_allargs = allargs.copy()
@@ -2379,15 +2382,13 @@ def _put_slice_arguments(
                     raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} without defaults cannot follow'
                                     f'{_ARG_CAT2NAME[prev_arg_cat]} with defaults')
 
-                if not arg_cat:
+                if not arg_cat and a is not new_allargs[-1]:
                     next_a = new_allargs[i + 1]  # this should not fail because otherwise it would have been a pure delete
 
                     if (next_a._is_star if next_a.__class__ is Pass else next_a.f.pfield.name != 'posonlyargs'):
                         need_slash_idx = i
 
-            elif arg_cat == 3 and prev_arg_cat < 3:  # transition from pre-kwonlyargs to kwonlyargs, make sure there is an appropriate marker
-                assert i  # this should not fail because otherwise it would have been a pure delete which does not get here
-
+            elif i and arg_cat == 3 and prev_arg_cat < 3:  # transition from pre-kwonlyargs to kwonlyargs, make sure there is an appropriate marker
                 prev_a = new_allargs[i - 1]
 
                 if (not prev_a._is_star if prev_a.__class__ is Pass else prev_a.f.pfield.name != 'vararg'):
@@ -2397,36 +2398,48 @@ def _put_slice_arguments(
 
     except Exception:
         _remove_arguments_allargs_markers(self)
-        _remove_arguments_allargs_markers(fst_)  # yeah, we say this is consumed but lets be nice
+
+        if fst_:
+            _remove_arguments_allargs_markers(fst_)  # yeah, we say this is consumed but lets be nice
 
         raise
+
+    # do source put
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     locabst = _LocationAbstract_arguments(allargs)
-    fst_locabst = _LocationAbstract_arguments(fst_allargs)
 
-    assert len(fst_markers_to_delete) < 2  # we only ever expect 1 marker to delete, but just in case, TODO: future, don't need list for this
+    if not fst_:
+        end_params = put_slice_sep_begin(self, aa_start, aa_stop, locabst, None, None,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, ',', 0)
 
-    while fst_markers_to_delete:  # if we need to delete redundant `/` and / or `*` markers it will be in the fst_
-        idx = fst_markers_to_delete.pop()
+    else:
+        fst_locabst = _LocationAbstract_arguments(fst_allargs)
 
-        end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
+        assert len(fst_markers_to_delete) < 2  # we only ever expect 1 marker to delete, but just in case, TODO: future, don't need list for this
 
-        field, idx_field = fst_allargs[idx].f.pfield
+        while fst_markers_to_delete:  # if we need to delete redundant `/` and / or `*` markers it will be in the fst_
+            idx = fst_markers_to_delete.pop()
 
-        if field == 'posonlyargs':
-            _remove_arguments_allargs_markers(fst_, idx_posonly=idx_field, idx_kwonly=None)
-        else:  # field == 'kwonlyargs'
-            _remove_arguments_allargs_markers(fst_, idx_posonly=None, idx_kwonly=idx_field)
+            end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
 
-        del fst_allargs[idx]
-        del new_allargs[idx + aa_start]
+            field, idx_field = fst_allargs[idx].f.pfield
 
-        put_slice_sep_end(fst_, end_params)
+            if field == 'posonlyargs':
+                _remove_arguments_allargs_markers(fst_, idx_posonly=idx_field, idx_kwonly=None)
+            else:  # field == 'kwonlyargs'
+                _remove_arguments_allargs_markers(fst_, idx_posonly=None, idx_kwonly=idx_field)
 
-    end_params = put_slice_sep_begin(self, aa_start, aa_stop, locabst, fst_locabst, fst_,
-                                     bound_ln, bound_col, bound_end_ln, bound_end_col, options, ',', 0)
+            del fst_allargs[idx]
+            del new_allargs[idx + aa_start]
+
+            put_slice_sep_end(fst_, end_params)
+
+        end_params = put_slice_sep_begin(self, aa_start, aa_stop, locabst, fst_locabst, fst_,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, ',', 0)
+
+    # move nodes to self AST
 
     locabst.body = new_allargs
     new_fields = {
@@ -2459,11 +2472,14 @@ def _put_slice_arguments(
 
     put_slice_sep_end(self, end_params)
 
+    # cleanup
+
     _remove_arguments_allargs_markers(self)  # there can only be one `/` or `*` marker at end of `posonlyargs` or start of `kwonlyargs` because if there was another that could have been a duplicate then it was removed from fst_ above
 
-    fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
+    if fst_:
+        fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
 
-    if need_slash_idx is not None or need_star_idx is not None:  # TODO: LAZY, could use the actual indices to do more efficiently
+    if not fst_ or need_slash_idx is not None or need_star_idx is not None:  # TODO: LAZY, could use the actual indices to do more efficiently
         _fix_arguments_del(self)
 
     if is_lambda:  # if arguments of Lambda then may need some fixes
