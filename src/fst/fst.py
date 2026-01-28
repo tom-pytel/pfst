@@ -740,14 +740,14 @@ class FST:
                 specified then will attempt to parse this type and if fails then the exception will propagate. If
                 guessing then it may take more than one attempt so it is always better to specify what you expect to get
                 if you know it.
-            - `AST`: If `mode` this is `None` then the mode defaults to the type of the `AST`, which will always succeed
-                in generating valid source unless the `AST` itself is in an invalid state (like an empty `Set`).
-                Anything else you pass here will be passed on as the `mode` to `fromast()`, but it really doesn't make
-                much sense to specify anything else (except if you will be splitting hairs on what TYPE of expression
-                you want to allow).
+            - `AST`: If `mode` is `None` then defaults to the type of the `AST`, which will always succeed in generating
+                valid source unless the `AST` itself is in an invalid state (like an empty `Set`). Anything else you
+                pass here will be passed on as the `mode` to `fromast()`, but it really doesn't make much sense to
+                specify anything else (except if you will be splitting hairs on what TYPE of expression you want to
+                allow).
             - `FST`: `mode` should be specified and will be the type of node you want to coerce the `FST` you pass in
-                to. If you leave it at default then you will just get either the same `FST` or a copy of it.
-            `'all'` to allow parsing anything.
+                to. If you leave it at the default `None` then you will just get either the same `FST` or a copy of it,
+                depending on the `copy` kwarg.
         - `kwargs`: `options` if coercing from another `FST` or extra parameters, mostly for internal use documented
             below. One extra parameter relevant to this use case is:
             - `copy`: If coercing from another `FST`, this parameter is what will be passed to `as_()`. It defaults to
@@ -795,8 +795,8 @@ class FST:
         >>> try:
         ...     FST('start:stop:step', 'strict')
         ... except Exception as exc:
-        ...     print(repr(exc))
-        SyntaxError('invalid syntax', ('<FST>', 1, 11, 'start:stop:step\n', 1, 12))
+        ...     print(str(exc))
+        invalid syntax (<FST>, line 1)
 
         You can also pass an `AST` and the source will be generated from it.
 
@@ -1059,15 +1059,19 @@ class FST:
     @staticmethod
     def fromast(
         ast: AST,
-        mode: Mode | None | Literal[False] = None,
+        mode: Mode | None = None,
         *,
         coerce: bool = True,
         filename: builtins.str = _DEFAULT_FILENAME,
         type_comments: bool = False,
         feature_version: tuple[int, int] | None = None,
     ) -> FST:
-        r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
-        Will attempt to coerce `ast` to the requested `mode` if is not `None`.
+        r"""Convert an `AST` tree to a full `FST` tree. This can take the existing node and just create the `FST` nodes
+        for it (unparsing to get source code). Or if `mode` is specified, will try to coerce the `AST` node to this type
+        and create the `FST` tree for that.
+
+        The passed `ast` node is not actually consumed. It is unparsed and reparsed to a new `AST` since we need to make
+        sure the locations are all correct.
 
         **WARNING!** The `type_comments` parameter is `False` by default and no guarantees are made if you turn it on.
         It is provided just in case but really shouldn't be used as `fst` takes care of comments anyway, this just turns
@@ -1075,9 +1079,10 @@ class FST:
         nodes failing to reparse to themselves on operations.
 
         **Parameters:**
-        - `ast`: The root `AST` node.
-        - `mode`: Parse mode to allow coercion, see `fst.parsex.Mode`. If `None` then will just use the `AST` as-is and
-            make an `FST` for it.
+        - `ast`: The root `AST` node. This is **NOT** consumed and will **NOT** become the actual `AST` node of the
+            `FST` tree.
+        - `mode`: Parse mode to enable coercion, see `fst.parsex.Mode`. If `None` then will just use the given `ast`
+            type and make an `FST` using that type.
         - `coerce`: This exists to allow you to turn **OFF** coercion for some reason as by default coerce is attempted.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.

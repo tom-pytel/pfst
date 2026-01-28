@@ -276,7 +276,11 @@ Mode = Literal[
     '_type_params',        # noqa: PYI051
 ] | str | type[AST]
 
-"""Extended parse modes:
+"""Extended parse modes. This can be either an actual `AST` type or the string name of that type or a custom string name
+to select specific parsing rules, like `'expr_slice'` to allow only expressions as they would appear in a
+`Subscript.slice` field. This is needed because not all expression syntaxes are valid in all contexts, not to mention
+other non-expression parse modes. For example a `Slice` `start:stop:step` is valid in `'expr_slice'` mode but not in
+most other locations which take expressions.
 - `'all'`: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will
     never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Since this attempts many parses before
     failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an

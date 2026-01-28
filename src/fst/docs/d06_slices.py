@@ -498,19 +498,38 @@ and the elements specified from `start` to `stop` will be replaced with the elem
 In this case the elements `x, y` replaced the element `b` in the target. If instead of replacing with the elements of
 the node being put you wish to just put the node itself then specify `one=True`.
 
->>> print(FST('[a, b, c]').put_slice('[x, y]', 1, 2, one=True).src)
-[a, [x, y], c]
+>>> print(FST('[a, b, c]').put_slice('x, y', 1, 2, one=True).src)
+[a, (x, y), c]
 
 The same thing could have been accomplished just by putting the node with a normal `put()` to the second element of the
 target. The reason the `one` option exists is when you want to replace multiple elements with a single "one" instead of
 using that one as a slice.
 
->>> print(FST('[a, b, c]').put_slice('[x, y]', 1, 3, one=True).src)
-[a, [x, y]]
+>>> print(FST('[a, b, c]').put_slice('x, y', 1, 3, one=True).src)
+[a, (x, y)]
 
 This is allowed anywhere where the single element being put would be allowed to replace multiple elements.
 
 >>> print(FST('del a, b, c, d').put_slice('x, y', 1, 3, one=True).src)
+del a, (x, y), d
+
+You can do this implicitly if you are putting source just by making sure your sequence has delimiters.
+
+>>> print(FST('del a, b, c, d').put_slice('(x, y)', 1, 3).src)
+del a, (x, y), d
+
+Because otherwise it is treated as a sequence to be spliced into the target sequence.
+
+>>> print(FST('del a, b, c, d').put_slice('x, y', 1, 3).src)
+del a, x, y, d
+
+This was all with respect to putting text source. If putting nodes then no implicit checking of delimiters is done and
+rather the node type and value of the `one` parameter determines if treated as a single element or not.
+
+>>> print(FST('del a, b, c, d').put_slice(FST('(x, y)', 'Tuple'), 1, 3).src)
+del a, x, y, d
+
+>>> print(FST('del a, b, c, d').put_slice(FST('(x, y)', 'Tuple'), 1, 3, one=True).src)
 del a, (x, y), d
 
 The `one=True` slice put mode overlaps with some coerce usage and that is covered in its own section in

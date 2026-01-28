@@ -458,10 +458,10 @@ a == c < b
 a < c != b
 
 
-## Special options
+## Non-global options
 
-There are some options which can be passed to certain functions which are contextual and don't have global defaults,
-such as the `'to'` option when putting a single element in raw mode.
+There are some options which can be passed to certain functions which are contextual and don't and can't have global
+defaults, such as the `to` option when putting a single element in raw mode.
 
 >>> 'to' in FST.get_options()
 False
@@ -474,7 +474,7 @@ False
 >>> print(f.src)
 [a, zzz, f]
 
-Or the `'op'` option when doing `Compare` slice operations as noted above.
+Or the `op` option when doing `Compare` slice put operations and providing an operator for just that single put.
 
 For more information on `to` see `fst.docs.d11_raw` and for `op` see `fst.docs.d06_slices`.
 """

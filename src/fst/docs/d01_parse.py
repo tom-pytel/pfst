@@ -196,6 +196,27 @@ Slice - ROOT 0,0..0,5
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
 
+If you just pass an `AST` node and no `mode` parameter then the `AST` node is just converted into `FST`. You can however
+pass a `mode` parameter to either restrict the context for the `AST` node, such as a standard expression which should
+not be a `Slice`.
+
+>>> FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c')), 'expr')
+Traceback (most recent call last):
+...
+SyntaxError: invalid syntax
+
+If you want to allow this, the mode is `'expr_slice'`.
+
+>>> FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c')), 'expr_slice')
+<Slice ROOT 0,0..0,5>
+
+Or if coercion is possible to a different type of node then this can be done.
+
+>>> _ = FST(Name(id='name'), 'arg').dump('n')
+0: name
+arg - ROOT 0,0..0,4
+  .arg 'name'
+
 
 ## Underlying functions
 
