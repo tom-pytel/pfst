@@ -853,7 +853,16 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                 put_end_ln += 1  # overwrite comment on put because we copy it into slice body
                 put_end_col = 0
 
+                ast_ = fst_.a  # TODO: this shouldn't be needed, need to preserve container start because if not and it moves onto the next line then redent_lns() below can make its column go negative
+                lineno = ast_.lineno
+                col_offset = ast_.col_offset
+
                 fst_._put_src([comment, ''], 0, 0, not put_lines[0], 0, True)  # either overwrite first newline or insert before non-newlined body
+
+                ast_.lineno = lineno
+                ast_.col_offset = col_offset
+
+                fst_._touch()
 
         # maybe redent fst_ elements to match self element indentation
 

@@ -1668,6 +1668,20 @@ c  # comment
         self.assertEqual('(c) = b = z', (f := FST('a = b = z')).put_slice('\\\n  \\\n (c) =', 0, 1, 'targets').src)
         f.verify()
 
+        # misc arguments
+
+        f = FST('def as_rgb_tuple(self,*,alpha:Optional[bool]=None)->ColorTuple: pass')
+        g = f.args.get_slice(0, 2, cut=True)
+        f.args.put_slice(g, 0, 0)
+        self.assertEqual('def as_rgb_tuple(self,*,alpha:Optional[bool]=None)->ColorTuple: pass', f.src)
+        f.verify()
+
+        f = FST('a,start=None,stop=np._NoValue,step=None,/', arguments)
+        g = f.get_slice(3, 4, cut=True)
+        f.put_slice(g, 3, 3)
+        self.assertEqual('a,start=None,stop=np._NoValue, step=None,/', f.src)
+        f.verify()
+
     def test_slice_special_BoolOp(self):
         # joined alnum
 

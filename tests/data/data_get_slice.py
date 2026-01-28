@@ -22989,6 +22989,37 @@ arguments - ROOT 0,0..3,41
    0] Name '_Unset' Load - 2,29..2,35
    1] Name 'ά中o文кκц' Load - 3,34..3,41
 '''),
+
+('value.args', 0, 2, '_all', {}, (None, r'''
+a =\
+ lambda a, \
+*args, \
+b,: 0
+'''),
+'a =\\\n (lambda \n*,\nb,: 0)', r'''
+Assign - ROOT 0,0..3,6
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+  .value Lambda - 1,2..3,5
+    .args arguments - 1,9..3,2
+      .kwonlyargs[1]
+       0] arg - 3,0..3,1
+         .arg 'b'
+      .kw_defaults[1]
+       0] None
+    .body Constant 0 - 3,4..3,5
+''', r'''
+a, \
+*args, \
+
+''', r'''
+arguments - ROOT 0,0..2,0
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 1,1..1,5
+    .arg 'args'
+'''),
 ],
 
 'arguments_markers': [  # ................................................................................

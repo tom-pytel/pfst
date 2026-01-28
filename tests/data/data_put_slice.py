@@ -37014,6 +37014,193 @@ r'''a, b, c'''), ('arguments',
 r''''''),
 r'''''',
 r'''arguments - ROOT 0,0..0,0'''),
+
+('args', 1, 2, '_all', {}, (None, r'''
+def __init__(self,\
+ document: document, /) -> None:
+    self.document: document = document
+'''),
+r'''**DEL**''', r'''
+def __init__(self, /,\
+ ) -> None:
+    self.document: document = document
+''', r'''
+FunctionDef - ROOT 0,0..2,38
+  .name '__init__'
+  .args arguments - 0,13..1,1
+    .posonlyargs[1]
+     0] arg - 0,13..0,17
+       .arg 'self'
+  .body[1]
+   0] AnnAssign - 2,4..2,38
+     .target Attribute - 2,4..2,17
+       .value Name 'self' Load - 2,4..2,8
+       .attr 'document'
+       .ctx Store
+     .annotation Name 'document' Load - 2,19..2,27
+     .value Name 'document' Load - 2,30..2,38
+     .simple 0
+  .returns Constant None - 1,6..1,10
+'''),
+
+('args', 1, 2, '_all', {}, (None, r'''
+def __init__(                                    *,
+        json_indent:Optional[Union[بкodทл,рUνźoل]]=None,
+            json_indent:Optional[Union[بкodทл,рUνźoل]]=None
+    )->None: pass
+'''), ('arguments', r'''
+                                                                                *,
+                                                                                json_indent:Optional[Union[بкodทл,рUνźoل]]=None,
+                    json_indent:Optional[Union[بкodทл,рUνźoل]]=None
+'''), r'''
+def __init__(                                    *,
+        json_indent:Optional[Union[بкodทл,рUνźoل]]=None,
+                                                                                            json_indent:Optional[Union[بкodทл,рUνźoل]]=None,
+        json_indent:Optional[Union[بкodทл,рUνźoل]]=None
+    )->None: pass
+''', r'''
+def __init__(                                    *,
+        json_indent:Optional[Union[بкodทл,рUνźoل]]=None,
+            json_indent: Optional[Union[بкodทл, рUνźoل]]=None, json_indent: Optional[Union[بкodทл, рUνźoل]]=None
+    )->None: pass
+''', r'''
+FunctionDef - ROOT 0,0..4,17
+  .name '__init__'
+  .args arguments - 0,13..4,4
+    .kwonlyargs[3]
+     0] arg - 1,8..1,50
+       .arg 'json_indent'
+       .annotation Subscript - 1,20..1,50
+         .value Name 'Optional' Load - 1,20..1,28
+         .slice Subscript - 1,29..1,49
+           .value Name 'Union' Load - 1,29..1,34
+           .slice Tuple - 1,35..1,48
+             .elts[2]
+              0] Name 'بкodทл' Load - 1,35..1,41
+              1] Name 'рUνźoل' Load - 1,42..1,48
+             .ctx Load
+           .ctx Load
+         .ctx Load
+     1] arg - 2,92..2,134
+       .arg 'json_indent'
+       .annotation Subscript - 2,104..2,134
+         .value Name 'Optional' Load - 2,104..2,112
+         .slice Subscript - 2,113..2,133
+           .value Name 'Union' Load - 2,113..2,118
+           .slice Tuple - 2,119..2,132
+             .elts[2]
+              0] Name 'بкodทл' Load - 2,119..2,125
+              1] Name 'рUνźoل' Load - 2,126..2,132
+             .ctx Load
+           .ctx Load
+         .ctx Load
+     2] arg - 3,8..3,50
+       .arg 'json_indent'
+       .annotation Subscript - 3,20..3,50
+         .value Name 'Optional' Load - 3,20..3,28
+         .slice Subscript - 3,29..3,49
+           .value Name 'Union' Load - 3,29..3,34
+           .slice Tuple - 3,35..3,48
+             .elts[2]
+              0] Name 'بкodทл' Load - 3,35..3,41
+              1] Name 'рUνźoل' Load - 3,42..3,48
+             .ctx Load
+           .ctx Load
+         .ctx Load
+    .kw_defaults[3]
+     0] Constant None - 1,51..1,55
+     1] Constant None - 2,135..2,139
+     2] Constant None - 3,51..3,55
+  .body[1]
+   0] Pass - 4,13..4,17
+  .returns Constant None - 4,7..4,11
+'''),
+
+('args', 1, 2, '_all', {}, (None, r'''
+def _unpack_annotated(
+    annotation:Any,/,*,unpack_type_aliases:Literal['skip','lenient','eager']='eager'
+)->tuple[Any,list[Any]]: pass
+
+'''), ('arguments',
+r''''''), r'''
+def _unpack_annotated(
+    annotation:Any,/
+)->tuple[Any,list[Any]]: pass
+
+''', r'''
+FunctionDef - ROOT 0,0..2,29
+  .name '_unpack_annotated'
+  .args arguments - 0,22..2,0
+    .posonlyargs[1]
+     0] arg - 1,4..1,18
+       .arg 'annotation'
+       .annotation Name 'Any' Load - 1,15..1,18
+  .body[1]
+   0] Pass - 2,25..2,29
+  .returns Subscript - 2,3..2,23
+    .value Name 'tuple' Load - 2,3..2,8
+    .slice Tuple - 2,9..2,22
+      .elts[2]
+       0] Name 'Any' Load - 2,9..2,12
+       1] Subscript - 2,13..2,22
+         .value Name 'list' Load - 2,13..2,17
+         .slice Name 'Any' Load - 2,18..2,21
+         .ctx Load
+      .ctx Load
+    .ctx Load
+'''),
+
+('args', 1, 2, '_all', {}, (None, r'''
+def filter(
+        self,
+        excinfo_or_fn:bцทдв語źยи[BaseException]|국Źлdи[[Ε中e],bool],
+        /,
+    )->Traceback: pass
+
+'''), ('arguments',
+r''''''), r'''
+def filter(
+        self,
+        /
+    )->Traceback: pass
+
+''', r'''
+FunctionDef - ROOT 0,0..3,22
+  .name 'filter'
+  .args arguments - 0,11..3,4
+    .posonlyargs[1]
+     0] arg - 1,8..1,12
+       .arg 'self'
+  .body[1]
+   0] Pass - 3,18..3,22
+  .returns Name 'Traceback' Load - 3,7..3,16
+'''),
+
+('args', 1, 2, '_all', {}, (None, r'''
+def filter(
+        self,
+        excinfo_or_fn:bцทдв語źยи[BaseException]|국Źлdи[[Ε中e],bool],
+        /,
+    )->Traceback: pass
+
+'''), ('arguments',
+r''''''), r'''
+def filter(
+        self,
+        /
+    )->Traceback: pass
+
+''', r'''
+FunctionDef - ROOT 0,0..3,22
+  .name 'filter'
+  .args arguments - 0,11..3,4
+    .posonlyargs[1]
+     0] arg - 1,8..1,12
+       .arg 'self'
+  .body[1]
+   0] Pass - 3,18..3,22
+  .returns Name 'Traceback' Load - 3,7..3,16
+'''),
 ],
 
 'arguments_markers': [  # ................................................................................

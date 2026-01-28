@@ -37,6 +37,7 @@ from .asttypes import (
     ImportFrom,
     Interactive,
     JoinedStr,
+    Lambda,
     List,
     ListComp,
     Load,
@@ -2409,6 +2410,12 @@ def _get_slice_arguments(
 
     if cut:
         _fix_arguments_del(self)
+
+        if (parent := self.parent) and parent.a.__class__ is Lambda:  # Lambda may need parenthesization
+            ln, _, end_ln, _ = self.loc
+
+            if end_ln != ln and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
+                parent._parenthesize_grouping()
 
 
     # TODO: fst_: 'argsas' or whatever option to move arguments to '.args' if possible, convert to just normal args if possible (no '/' or '*')
