@@ -5187,7 +5187,6 @@ class FST:
         _loc_match_case,
         _loc_op,
         _loc_block_header_end,
-        _loc_arguments_empty,
         _loc_comprehension_if,
         _loc_argument,
         _loc_decorator,

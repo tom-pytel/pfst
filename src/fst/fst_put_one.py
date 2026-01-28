@@ -1017,7 +1017,6 @@ def _put_one_FunctionDef_arguments(
 
     return _put_one_exprlike_required(self, code or '', idx, field, child, static, options,
                                       target=None if not (args := self.a.args.f).is_empty_arguments() else args.loc)
-                                    #   target=None if (args := self.a.args.f).loc else args._loc_arguments_empty())
 
 
 def _put_one_ClassDef_bases(
@@ -2237,7 +2236,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
         return oneinfo(', *', fstloc(ln, col, ln, col))
 
-    loc = self.loc  # _loc_arguments_empty()
+    loc = self.loc
     prefix = ' *' if (parent := self.parent) and parent.a.__class__ is Lambda else '*'
 
     return oneinfo(prefix, loc)
@@ -2877,13 +2876,6 @@ def _put_one_raw(
         if childf:
             if (loc := childf.pars(shared=False) if pars else childf.bloc) is None:
                 pass  # noop
-                # if child.__class__ is arguments:  # empty arguments need special loc get
-                #     loc = childf._loc_arguments_empty()
-
-                #     if ast_cls is Lambda:  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
-                #         if not put_lines[0][:1].isspace():
-                #             put_lines[0] =  ' ' + put_lines[0]
-
             elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 loc = non_shared_loc
 
@@ -2905,10 +2897,6 @@ def _put_one_raw(
 
         if (to_loc := to.pars(shared=False) if pars else to.bloc) is None:
             raise ValueError("'to' node must have a location")
-            # if to.a.__class__ is arguments:  # empty arguments need special loc get
-            #     to_loc = to.loc  # _loc_arguments_empty()
-            # else:
-            #     raise ValueError("'to' node must have a location")
 
         if not pars and to._is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:  # solo GeneratorExp argument in Call which shares parentheses
             to_loc = non_shared_loc

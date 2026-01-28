@@ -131,7 +131,8 @@ def _loc_maybe_key(
 
 
 def _loc_arguments(self: fst.FST) -> fstloc | None:  # TODO: merge with _loc_arugments_empty()
-    """`arguments` location from children. Called from `.loc`. Returns `None` when there are no arguments.
+    """`arguments` location. Empty `arguments` may return a zero-length location. For a `Lambda`, empty `arguments` will
+    be the entire location from end of the `lambda` keyword to the `:`.
 
     **Note:** This function is explicitly safe to use from `FST.loc`.
     """
@@ -141,36 +142,44 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:  # TODO: merge with _loc_aru
     if not (parent := self.parent):  # arguments at root have location of whole source, both because they are used as a slice and because root should always have a location
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
 
-    if not (last_child := self.last_child()):
-        return self._loc_arguments_empty()
-
     lines = self.root._lines
-    last_ln = len(lines) - 1
+    last_child = self.last_child()
+    ln, col, end_ln, end_col = parent.loc
     parenta = parent.a
     parent_cls = parenta.__class__
-    _, _, end_ln, end_col = last_child.loc
 
     if parent_cls is Lambda:
-        ln, col, _, _ = parent.loc
         col += 6
 
-        if lines[ln][col : col + 1].isspace():
-            col += 1
+        if last_child:
+            _, _, last_ln, last_col = last_child.loc
 
-        end_ln, end_col = next_find(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff, ':')  # must be there
+            if lines[ln][col : col + 1].isspace():  # we only increment if there are children because otherwise if there is whitespace then probably it is being deleted
+                col += 1
+
+        else:
+            last_ln = ln
+            last_col = col
+
+        end_ln, end_col = next_find(lines, last_ln, last_col, end_ln, end_col, ':')  # must be there
 
     else:
         assert parent_cls in ASTS_LEAF_FUNCDEF
 
-        first_child = self.first_child()
-        _, _, first_end_ln, first_end_col = first_child.loc
-        ln, col = self._prev_bound()
+        if type_params := getattr(parenta, 'type_params', None):  # doesn't exist in py < 3.12
+            _, _, ln, col = type_params[-1].f.loc
 
-        ln, col = next_find(lines, ln, col, first_end_ln, first_end_col, '(')  # must be there
+        ln, col = next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
         col += 1
 
-        next_ln, next_col = self._next_bound()
-        end_ln, end_col = prev_find(lines, end_ln, end_col, next_ln, next_col, ')')  # must be there
+        if last_child:
+            _, _, last_ln, last_col = last_child.loc
+        else:
+            last_ln = ln
+            last_col = col
+
+        end_ln, end_col = self._next_bound()
+        end_ln, end_col = prev_find(lines, last_ln, last_col, end_ln, end_col, ')')
 
     return fstloc(ln, col, end_ln, end_col)
 
@@ -428,37 +437,6 @@ def _loc_block_header_end(
     assert src.startswith('else' if field == 'orelse' else 'finally')
 
     return ln, col, colon_ln, colon_col + 1  # block header start and end location just past the ':'
-
-
-def _loc_arguments_empty(self: fst.FST) -> fstloc:  # TODO: merge with _loc_arugments()
-    """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!
-
-    **Note:** This function is explicitly safe to use from `FST.loc`.
-    """
-
-    assert self.a.__class__ is arguments
-
-    if not (parent := self.parent):
-        return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))  # parent=None means we are root
-
-    ln, col, end_ln, end_col = parent.loc
-    lines = self.root._lines
-
-    if (parenta := parent.a).__class__ is Lambda:
-        col += 6
-        end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')
-
-    else:
-        assert parenta.__class__ in ASTS_LEAF_FUNCDEF
-
-        if type_params := getattr(parenta, 'type_params', None):  # doesn't exist in py < 3.12
-            _, _, ln, col = type_params[-1].f.loc
-
-        ln, col = next_find(lines, ln, col, end_ln, end_col, '(')
-        col += 1
-        end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ')')
-
-    return fstloc(ln, col, end_ln, end_col)
 
 
 def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:

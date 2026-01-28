@@ -1659,19 +1659,19 @@ if 1:
         self.assertIsNone(f.body[0]._loc_block_header_end('finalbody'))
 
     def test__loc_arguments_empty(self):
-        self.assertEqual((0, 0, 0, 6), FST('# test', 'arguments')._loc_arguments_empty())
-        self.assertEqual((0, 6, 0, 6), FST('lambda: None').args._loc_arguments_empty())
-        self.assertEqual((0, 6, 0, 8), FST('lambda  : None').args._loc_arguments_empty())
-        self.assertEqual((0, 6, 0, 6), FST('def f(): pass').args._loc_arguments_empty())
-        self.assertEqual((0, 6, 0, 8), FST('def f(  ): pass').args._loc_arguments_empty())
+        self.assertEqual((0, 0, 0, 6), FST('# test', 'arguments')._loc_arguments())
+        self.assertEqual((0, 6, 0, 6), FST('lambda: None').args._loc_arguments())
+        self.assertEqual((0, 6, 0, 8), FST('lambda  : None').args._loc_arguments())
+        self.assertEqual((0, 6, 0, 6), FST('def f(): pass').args._loc_arguments())
+        self.assertEqual((0, 6, 0, 8), FST('def f(  ): pass').args._loc_arguments())
 
         if PYGE12:
-            self.assertEqual((0, 14, 0, 14), FST('def f[T: int](): pass').args._loc_arguments_empty())
-            self.assertEqual((0, 14, 0, 16), FST('def f[T: int](  ): pass').args._loc_arguments_empty())
+            self.assertEqual((0, 14, 0, 14), FST('def f[T: int](): pass').args._loc_arguments())
+            self.assertEqual((0, 14, 0, 16), FST('def f[T: int](  ): pass').args._loc_arguments())
 
         if PYGE13:
-            self.assertEqual((0, 21, 0, 21), FST('def f[T: int = bool](): pass').args._loc_arguments_empty())
-            self.assertEqual((0, 21, 0, 23), FST('def f[T: int = bool](  ): pass').args._loc_arguments_empty())
+            self.assertEqual((0, 21, 0, 21), FST('def f[T: int = bool](): pass').args._loc_arguments())
+            self.assertEqual((0, 21, 0, 23), FST('def f[T: int = bool](  ): pass').args._loc_arguments())
 
     def test__loc_decorator(self):
         self.assertEqual((1, 2, 1, 10), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, pars=False))
