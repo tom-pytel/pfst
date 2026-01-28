@@ -25,6 +25,7 @@
 - `FST.as_(mode)` for explicit coercion directly to `mode` (which can be an explicit `type[AST]` or a parse mode)
 - `FST(FST, mode)` for constructor default non-destructive coerce copy from other `FST` node, a-la `list(other_list) is not other_list`
 - `FST(AST, mode)` and `FST.fromast(AST, type[AST] or mode)` can use the new coercion to convert `AST`
+  - with these changes, `FST(x[, mode])` now works like `list(x)` in that it converts source, `AST` or `FST` to the given mode `FST` if possible, or just AN `FST` if mode not provided
 - put slice as `one=True` for `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems`, `_type_params` and `_expr_arglikes`
 - prescribed slicing for `MatchClass.patterns`
 - prescribed slicing for `arguments._all`, e.g. `FunctionDefFST.args[x:y] = 'a: int, /, b=c'`
@@ -39,7 +40,7 @@
 - REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
 - improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
 - parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
-- BREAKING CHANGE for consistency
+- **BREAKING CHANGE** for consistency
   - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked
   - previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
 - empty `arguments` now always have a location, having potentially zero-length `arguments` is less ugly than having arguments with no location

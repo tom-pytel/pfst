@@ -841,7 +841,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
         # adjust line interface between target previous element and slice first element, specifically if there is a line comment on put start line AESTHETIC
 
-        if start and sep == ',':  # there is a previous element, only do this for comma-separated sequences (this last one is a quick HACK condition, TODO: figure out better)
+        if is_ins and start and sep == ',':  # there is a previous element, only do this for comma-separated sequences (this last one is a quick HACK condition, TODO: figure out better)
             if not is_dictlike:
                 prev_ln, prev_col, prev_end_ln, _ = locabst.loc_head(start - 1)
             else:
