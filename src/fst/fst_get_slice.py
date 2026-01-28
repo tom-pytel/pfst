@@ -80,7 +80,6 @@ from .astutil import re_identifier, bistr, copy_ast
 
 from .common import (
     re_empty_space,
-    re_line_end_ws_cont_or_comment,
     NodeError,
     astfield,
     fstloc,
@@ -993,19 +992,21 @@ def _fix_arguments_del(self: fst.FST) -> None:
     # posonlyargs '/'
 
     if not posonlyargs:  # remove leading '/' if exists, helps that we know that there is some node following it (otherwise would be empty)
-        if (frag := next_frag(lines, self_ln, self_col, self_end_ln, self_end_col)) and frag.src.startswith('/'):
-            ln, col, _ = frag
-            end_ln, end_col, src = next_frag(lines, ln, col + 1, self_end_ln, self_end_col)  # must be there
-            end_col += 1
+        # if (frag := next_frag(lines, self_ln, self_col, self_end_ln, self_end_col)) and frag.src.startswith('/'):
+        #     ln, col, _ = frag
+        #     end_ln, end_col, src = next_frag(lines, ln, col + 1, self_end_ln, self_end_col)  # must be there
+        #     end_col += 1
 
-            if src == ',':
-                end_ln, end_col, src = next_frag(lines, end_ln, end_col, self_end_ln, self_end_col)  # must be there
-            else:  # next element right after comma without space
-                assert src.startswith(',')
+        #     if src == ',':
+        #         end_ln, end_col, src = next_frag(lines, end_ln, end_col, self_end_ln, self_end_col)  # must be there
+        #     else:  # next element right after comma without space
+        #         assert src.startswith(',')
 
-            self._put_src(None, ln, col, end_ln, end_col, True)
+        #     self._put_src(None, ln, col, end_ln, end_col, True)
 
-            self_ln, self_col, self_end_ln, self_end_col = self.loc  # for the new end location
+        #     self_ln, self_col, self_end_ln, self_end_col = self.loc  # for the new end location
+        assert not (
+            (frag := next_frag(lines, self_ln, self_col, self_end_ln, self_end_col)) and frag.src.startswith('/'))  # the above should not be needed anymore because there should never be a starting '/' without posonlyargs after a delete
 
         aa_ln = self_ln  # aa = "after args", we may need this position for '*' processing
         aa_col = self_col
@@ -1095,41 +1096,42 @@ def _fix_arguments_del(self: fst.FST) -> None:
                     col += 1
 
         if not kwonlyargs:  # remove '*' if exists and not needed
-            if frag and not src.startswith('**'):  # this means there is a standalone '*'
-                if not (frag := next_frag(lines, ln, col + 1, self_end_ln, self_end_col)):
-                    end_ln = ln
-                    end_col = col + 1
+            # if frag and not src.startswith('**'):  # this means there is a standalone '*'
+            #     if not (frag := next_frag(lines, ln, col + 1, self_end_ln, self_end_col)):
+            #         end_ln = ln
+            #         end_col = col + 1
 
-                else:
-                    next_ln, next_col, src = frag
+            #     else:
+            #         next_ln, next_col, src = frag
 
-                    if not src.startswith(','):
-                        end_ln = ln
-                        end_col = col + 1
-                    else:
-                        end_ln = next_ln
-                        end_col = next_col + 1
+            #         if not src.startswith(','):
+            #             end_ln = ln
+            #             end_col = col + 1
+            #         else:
+            #             end_ln = next_ln
+            #             end_col = next_col + 1
 
-                    if src == ',':
-                        if frag := next_frag(lines, next_ln, next_col + 1, self_end_ln, self_end_col):
-                            next_ln, next_col, src = frag
-                    else:
-                        src = src[1:]
-                        next_col += 1
+            #         if src == ',':
+            #             if frag := next_frag(lines, next_ln, next_col + 1, self_end_ln, self_end_col):
+            #                 next_ln, next_col, src = frag
+            #         else:
+            #             src = src[1:]
+            #             next_col += 1
 
-                if frag:  # there is a '**kwarg', just delete up to it
-                    self._put_src(None, ln, col, next_ln, next_col, False)
-                elif aa_ln == ln:  # previous element ends on same line so just delete from its end to '*' end
-                    self._put_src(None, aa_ln, aa_col, end_ln, end_col, True)
-                elif end_ln < self_end_ln:  # '*' does not end on last line and starts its own, delete whole line
-                    self._put_src(None, ln, 0, end_ln + 1, 0, True)
+            #     if frag:  # there is a '**kwarg', just delete up to it
+            #         self._put_src(None, ln, col, next_ln, next_col, False)
+            #     elif aa_ln == ln:  # previous element ends on same line so just delete from its end to '*' end
+            #         self._put_src(None, aa_ln, aa_col, end_ln, end_col, True)
+            #     elif end_ln < self_end_ln:  # '*' does not end on last line and starts its own, delete whole line
+            #         self._put_src(None, ln, 0, end_ln + 1, 0, True)
 
-                else:  # ends on last line, delete from end of '*' (and comma) to start of previous line whitespace (possibly with line continuation)
-                    ln -= 1
-                    m = re_line_end_ws_cont_or_comment.search(lines[ln])
-                    col = m.end() if (g := m.group(1)) and g.startswith('#') else m.start()  # if comment then just del to end of that, otherwise to start of whitespace
+            #     else:  # ends on last line, delete from end of '*' (and comma) to start of previous line whitespace (possibly with line continuation)
+            #         ln -= 1
+            #         m = re_line_end_ws_cont_or_comment.search(lines[ln])
+            #         col = m.end() if (g := m.group(1)) and g.startswith('#') else m.start()  # if comment then just del to end of that, otherwise to start of whitespace
 
-                    self._put_src(None, ln, col, end_ln, end_col, True)
+            #         self._put_src(None, ln, col, end_ln, end_col, True)
+            assert not frag or src.startswith('**')  # the above should not happen anymoreas a standalone '*' should not be left on delete if all kwonlyargs were removed
 
         else:  # there are kwonlyargs, make sure there is a '*'
             if not src.startswith('*'):  # we know there is a frag and this exists because there are kwonlyargs, if not star then is first keyword

@@ -2475,13 +2475,10 @@ def _put_slice_arguments(
             if len(l := lines[ln]) > col and not l[col].isspace():  # joined alnums
                 parent._put_src(' ', ln, col, ln, col, False)
 
-            ln, _, end_ln, _ = self.loc
+        ln, _, end_ln, _ = self.loc
 
-            if end_ln != ln and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
-                parent._parenthesize_grouping()
-
-        else:  # we know was not empty because would have returned early
-            parent._put_src(None, *parent._loc_Lambda_args_entire(), False)
+        if end_ln != ln and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
+            parent._parenthesize_grouping()
 
 
 class _LocationAbstract_BoolOp_values(_LocationAbstract):

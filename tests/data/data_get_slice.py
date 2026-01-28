@@ -22792,6 +22792,19 @@ _comprehension_ifs - ROOT 0,0..0,14
 
 'arguments': [  # ................................................................................
 
+('', 1, 1, None, {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+''',
+r'''''',
+r'''arguments - ROOT 0,0..0,0'''),
+
 ('', 0, 'end', None, {}, ('arguments',
 r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''),
 r'''''',
@@ -23023,6 +23036,129 @@ arguments - ROOT 0,0..2,0
 ],
 
 'arguments_markers': [  # ................................................................................
+
+('', 0, 1, None, {}, ('arguments',
+r'''a,b,/,*,c'''),
+r'''b,/,*,c''', r'''
+arguments - ROOT 0,0..0,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .kwonlyargs[1]
+   0] arg - 0,6..0,7
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+''',
+r'''a, /''', r'''
+arguments - ROOT 0,0..0,4
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 1, None, {}, ('arguments', r'''
+a,
+b, /
+'''),
+r'''b, /''', r'''
+arguments - ROOT 0,0..0,4
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+''', r'''
+a,
+/
+''', r'''
+arguments - ROOT 0,0..1,1
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 1, None, {}, ('arguments',
+r'''a, b, /'''),
+r'''b, /''', r'''
+arguments - ROOT 0,0..0,4
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+''',
+r'''a, /''', r'''
+arguments - ROOT 0,0..0,4
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 1, None, {}, ('arguments', r'''
+a,  # a
+b,  # b
+/,  # /
+'''), r'''
+b,  # b
+/,  # /
+''', r'''
+arguments - ROOT 0,0..1,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+''', r'''
+a,  # a
+/,
+''', r'''
+arguments - ROOT 0,0..1,2
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 2, None, {}, ('arguments', r'''
+a, b, # b
+c, /
+'''),
+r'''c, /''', r'''
+arguments - ROOT 0,0..0,4
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'c'
+''', r'''
+a, b, / # b
+
+''', r'''
+arguments - ROOT 0,0..1,0
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 2, None, {}, ('arguments', r'''
+a,  # a
+b,  # b
+c,  # c
+/,  # /
+'''), r'''
+c,  # c
+/,  # /
+''', r'''
+arguments - ROOT 0,0..1,7
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'c'
+''', r'''
+a,  # a
+b,  # b
+/,
+''', r'''
+arguments - ROOT 0,0..2,2
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 1,0..1,1
+     .arg 'b'
+'''),
 
 ('', 0, 2, None, {}, ('arguments',
 r'''a, b, /, c'''),

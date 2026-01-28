@@ -37201,6 +37201,23 @@ FunctionDef - ROOT 0,0..3,22
    0] Pass - 3,18..3,22
   .returns Name 'Traceback' Load - 3,7..3,16
 '''),
+
+('', 1, 2, '_all', {}, ('arguments',
+r'''a=1, b=2'''), ('arguments',
+r'''c'''),
+r'''**NodeError('args without defaults cannot followargs with defaults')**'''),
+
+('', 0, 'end', '_all', {'raw': True}, ('arguments',
+r'''a=1, b=2, c=3'''), ('arguments',
+r'''d=4'''),
+r'''d=4''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'd'
+  .defaults[1]
+   0] Constant 4 - 0,2..0,3
+'''),
 ],
 
 'arguments_markers': [  # ................................................................................
