@@ -667,7 +667,7 @@ Module - ROOT 0,0..0,23
       0] Pass - 0,19..0,23
 """),
 
-(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r"""""", r"""def f(): pass""", r"""def f(): pass""", r"""
+(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r"""""", r"""""", r"""def f(): pass""", r"""
 Module - ROOT 0,0..0,13
   .body[1]
    0] FunctionDef - 0,0..0,13
@@ -676,7 +676,7 @@ Module - ROOT 0,0..0,13
       0] Pass - 0,9..0,13
 """),
 
-(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r""" """, r"""def f( ): pass""", r"""def f( ): pass""", r"""
+(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r""" """, r""" """, r"""def f( ): pass""", r"""
 Module - ROOT 0,0..0,14
   .body[1]
    0] FunctionDef - 0,0..0,14
@@ -685,7 +685,7 @@ Module - ROOT 0,0..0,14
       0] Pass - 0,10..0,14
 """),
 
-(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r"""**DEL**""", r"""def f(): pass""", r"""def f(): pass""", r"""
+(r"""def f(a, *b, **c): pass""", '', (0, 6, 0, 16), {}, r"""**DEL**""", r"""""", r"""def f(): pass""", r"""
 Module - ROOT 0,0..0,13
   .body[1]
    0] FunctionDef - 0,0..0,13

@@ -4790,42 +4790,27 @@ class cls(a, b=c):
 
         f = FST('def f(): pass')
         self.assertIsNone(f.body[0].prev(False))
-        self.assertIsNone(f.body[0].prev(False))
-        self.assertIsNone(f.body[0].prev('loc'))
-        self.assertIsNone(f.body[0].prev('loc'))
-        self.assertIs(f.args, f.body[0].prev(True))
+        self.assertIs(f.args, f.body[0].prev('loc'))
         self.assertIs(f.args, f.body[0].prev(True))
 
         f = FST('-a')
         self.assertIsNone(f.operand.prev(False))
-        self.assertIsNone(f.operand.prev(False))
         self.assertIs(f.op, f.operand.prev('loc'))
-        self.assertIs(f.op, f.operand.prev('loc'))
-        self.assertIs(f.op, f.operand.prev(True))
         self.assertIs(f.op, f.operand.prev(True))
 
         f = FST('a + b')
         self.assertIs(f.right, f.left.next(False))
-        self.assertIs(f.right, f.left.next(False))
         self.assertIs(f.op, f.left.next('loc'))
-        self.assertIs(f.op, f.left.next('loc'))
-        self.assertIs(f.op, f.left.next(True))
         self.assertIs(f.op, f.left.next(True))
 
         f = FST('a < b')
         self.assertIs(f.comparators[0], f.left.next(False))
-        self.assertIs(f.comparators[0], f.left.next(False))
         self.assertIs(f.ops[0], f.left.next('loc'))
-        self.assertIs(f.ops[0], f.left.next('loc'))
-        self.assertIs(f.ops[0], f.left.next(True))
         self.assertIs(f.ops[0], f.left.next(True))
 
         f = FST('a and b')
         self.assertIs(f.values[1], f.values[0].next(False))
-        self.assertIs(f.values[1], f.values[0].next(False))
         self.assertIs(f.values[1], f.values[0].next('loc'))
-        self.assertIs(f.values[1], f.values[0].next('loc'))
-        self.assertIs(f.values[1], f.values[0].next(True))
         self.assertIs(f.values[1], f.values[0].next(True))
 
         # last_header_child
@@ -5227,8 +5212,8 @@ class cls(a, b=c):
         nodes = {
             Module:             ('a\nb', ['a', 'b']),
             Interactive:        ('a; b', ['a', 'b']),
-            FunctionDef:        ('def f(): a; b', ['a', 'b']),
-            AsyncFunctionDef:   ('async def f(): a; b', ['a', 'b']),
+            FunctionDef:        ('def f(): a; b', ['', 'a', 'b']),
+            AsyncFunctionDef:   ('async def f(): a; b', ['', 'a', 'b']),
             ClassDef:           ('class cls(a, b, c=c, d=d): e; f', ['a', 'b', 'c=c', 'd=d', 'e', 'f']),
             Delete:             ('del a, b', ['a', 'b']),
             Assign:             ('a = b = c', ['a', 'b', 'c']),
@@ -5276,8 +5261,8 @@ class cls(a, b=c):
 
         if PYGE12:
             nodes.update({
-                FunctionDef:      ('def f[a, *b, **c]() -> d: e', ['a', '*b', '**c', 'd', 'e']),
-                AsyncFunctionDef: ('async def f[a, *b, **c]() -> d: e', ['a', '*b', '**c', 'd', 'e']),
+                FunctionDef:      ('def f[a, *b, **c]() -> d: e', ['a', '*b', '**c', '', 'd', 'e']),
+                AsyncFunctionDef: ('async def f[a, *b, **c]() -> d: e', ['a', '*b', '**c', '', 'd', 'e']),
                 ClassDef:         ('class cls[a, *b, **c](d, e, f=f, g=g): h', ['a', '*b', '**c', 'd', 'e', 'f=f', 'g=g', 'h']),
                 TypeAlias:        ('type t[a, *b, **c] = d', ['t', 'a', '*b', '**c', 'd']),
                 JoinedStr:        ('f"a{b}c"', ['a', '{b}', 'c']),

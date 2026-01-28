@@ -2232,6 +2232,8 @@ class FST:
         >>> f = FST('def f(a, /, b, *c, **d) -> int: pass')
 
         >>> f.args.posonlyargs[0].replace(')', to=f.returns, raw=True)  # raw reparse
+        <arguments 0,6..0,6>
+
         >>> f.src
         'def f(): pass'
         """

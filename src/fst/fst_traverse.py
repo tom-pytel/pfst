@@ -35,9 +35,9 @@ from .traverse_next import NEXT_FUNCS
 from .traverse_prev import PREV_FUNCS
 
 
-_ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP = {arguments,} | ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP
-_ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_OP     = (_ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP | ASTS_LEAF_OPERATOR |
-                                                  ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP)
+_ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP          =  ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP
+_ASTS_LEAF_EXPR_CONTEXT_OR_OP_OR_ARGUMENTS = (_ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP | ASTS_LEAF_OPERATOR |
+                                              ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP | {arguments})
 
 _ASTS_LEAF_WALK_SCOPE = ASTS_LEAF_FUNCDEF | ASTS_LEAF_TYPE_PARAM | {ClassDef, Lambda, ListComp, SetComp, DictComp,
                                                                     GeneratorExp, comprehension, arguments, arg}  # used in walk(scope=True) for a little optimization
@@ -51,17 +51,13 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
 
     if all is False:
         return (
-            fst_.a.__class__ not in _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_OP
+            fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_OP_OR_ARGUMENTS
             or ((a := fst_.a).__class__ is arguments
                 and (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs)
         ))
 
     if all == 'loc':
-        return (
-            fst_.a.__class__ not in _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP
-            or ((a := fst_.a).__class__ is arguments
-                and (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs)
-        ))
+        return fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP
 
     if hasattr(all, '__contains__'):
         return fst_.a.__class__ in all
@@ -72,11 +68,13 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
 # ----------------------------------------------------------------------------------------------------------------------
 # private FST class methods
 
-def _next_bound(self: fst.FST) -> tuple[int, int]:
+def _next_bound(
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = 'loc'
+) -> tuple[int, int]:
     """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
     self then return end of parent. If no parent then return end of source."""
 
-    if next := self.next('loc'):
+    if next := self.next(all):
         return next.bloc[:2]
     elif parent := self.parent:
         return parent.bloc[2:]
@@ -84,11 +82,13 @@ def _next_bound(self: fst.FST) -> tuple[int, int]:
     return len(ls := self.root._lines) - 1, len(ls[-1])
 
 
-def _prev_bound(self: fst.FST) -> tuple[int, int]:
+def _prev_bound(
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = 'loc'
+) -> tuple[int, int]:
     """Get a prev bound for search after any previous ASTs for this object within parent. If no siblings found before
     self then return start of parent. If no parent then return (0, 0)."""
 
-    if prev := self.prev('loc'):
+    if prev := self.prev(all):
         return prev.bloc[2:]
     elif parent := self.parent:
         return parent.bloc[:2]
@@ -96,19 +96,23 @@ def _prev_bound(self: fst.FST) -> tuple[int, int]:
     return 0, 0
 
 
-def _next_bound_step(self: fst.FST) -> tuple[int, int]:
+def _next_bound_step(
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = 'loc'
+) -> tuple[int, int]:
     """Get a next bound for search before any following ASTs for this object using `step_fwd()`."""
 
-    if next := self.step_fwd('loc', False):
+    if next := self.step_fwd(all, False):
         return next.bloc[:2]
 
     return len(ls := self.root._lines) - 1, len(ls[-1])
 
 
-def _prev_bound_step(self: fst.FST) -> tuple[int, int]:
+def _prev_bound_step(
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = 'loc'
+) -> tuple[int, int]:
     """Get a prev bound for search after any previous ASTs for this object using `step_back()`."""
 
-    if prev := self.step_back('loc', False):
+    if prev := self.step_back(all, False):
         return prev.bloc[2:]
 
     return 0, 0
@@ -126,8 +130,9 @@ def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -172,8 +177,9 @@ def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -218,8 +224,9 @@ def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Containe
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -265,8 +272,9 @@ def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -312,8 +320,9 @@ def last_header_child(
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -366,8 +375,9 @@ def next_child(
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -427,8 +437,9 @@ def prev_child(
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -487,8 +498,9 @@ def step_fwd(
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -582,8 +594,9 @@ def step_back(
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
@@ -679,8 +692,9 @@ def walk(
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
             arguments present). Operators are not returned (even though they have calculated location).
-        - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
-            do not always have a well defined location).
+        - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
+            operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
+            location).
         - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
             are returned.
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
