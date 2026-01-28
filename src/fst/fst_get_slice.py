@@ -607,28 +607,34 @@ def _make_arguments_allargs_w_markers(
     return allargs, idx_slash, idx_star, start, stop
 
 
-def _remove_arguments_allargs_markers(self: fst.FST) -> None:
+def _remove_arguments_allargs_markers(self: fst.FST, idx_posonly: int | None = -1, idx_kwonly: int | None = 0) -> None:
     """Remove `/` and `*` markers from `arguments` `posonlyargs` and `kwonlyargs`, along with any needed default nodes
     that were added for them."""
 
     ast = self.a
 
-    if (posonlyargs := ast.posonlyargs) and posonlyargs[-1].__class__ is Pass:  # if '/' marker present then remove
+    if (posonlyargs := ast.posonlyargs) and (a := posonlyargs[idx_posonly]).__class__ is Pass:  # if '/' marker present then remove
         defaults = ast.defaults
 
-        del posonlyargs[-1]
+        if g := a.f.next():
+            field, idx = g.pfield
 
-        if (i := len(defaults) - len(ast.args)) > 0:  # if has default then remove that too
-            del defaults[i - 1]
+            if field == 'defaults':
+                del defaults[idx]
 
-        for i, a in enumerate(defaults):  # reset all pfields for deleted default element
-            a.f.pfield = astfield('defaults', i)
+            for i, a in enumerate(defaults):  # reset all pfields for deleted default element
+                a.f.pfield = astfield('defaults', i)
 
-    if (kwonlyargs := ast.kwonlyargs) and kwonlyargs[0].__class__ is Pass:  # if '*' marker present then remove
+        del posonlyargs[idx_posonly]
+
+        # if (i := len(defaults) - len(ast.args)) > 0:  # if has default then remove that too
+        #     del defaults[i - 1]
+
+    if (kwonlyargs := ast.kwonlyargs) and kwonlyargs[idx_kwonly].__class__ is Pass:  # if '*' marker present then remove
         kw_defaults = ast.kw_defaults
 
-        del kwonlyargs[0]
-        del kw_defaults[0]
+        del kwonlyargs[idx_kwonly]
+        del kw_defaults[idx_kwonly]
 
         for i, (k, d) in enumerate(zip(kwonlyargs, kw_defaults, strict=True)):  # reset all pfields for deleted element
             k.f.pfield = astfield('kwonlyargs', i)
@@ -937,17 +943,17 @@ def _fix_arguments_copy(self: fst.FST) -> None:
                     src = src[1:]
 
                 if not src.startswith('/'):  # only add if not already there
-                    if lines[-1]:  # non-own-line last keyword arg
+                    if lines[-1] or ((l := lines[ln][:col]) and not l.isspace()):  # non-own-line last keyword arg, or we don't start line?
                         self._put_src(' /', end_ln, end_col + 1, end_ln, end_col + 1)  # we don't have to offset because after last node and arguments has calculated location
                     else:
-                        self._put_src(f'{lines[ln][:col]}/,', end_ln + 1, 0, end_ln + 1, 0)
+                        self._put_src(f'{l}/,', end_ln + 1, 0, end_ln + 1, 0)
 
-            elif lines[-1]:  # no trailing comma
+            elif lines[-1] or ((l := lines[ln][:col]) and not l.isspace()):  # no trailing comma, or we don't start line?
                 self._put_src(', /', end_ln, end_col, end_ln, end_col)
 
             else:
                 self._put_src(',', end_ln, end_col, end_ln, end_col)  # may be comment after
-                self._put_src(f'{lines[ln][:col]}/', end_ln + 1, 0, end_ln + 1, 0)
+                self._put_src(f'{l}/', end_ln + 1, 0, end_ln + 1, 0)
 
             self._touch()  # because we didn't offset
 
@@ -1009,6 +1015,8 @@ def _fix_arguments_del(self: fst.FST) -> None:
 
         if (g := f.next()) and g.pfield.name == 'defaults':
             _, _, aa_ln, aa_col = g.pars()  # defaults can has pars
+        else:
+            g = f
 
         if frag := next_frag(lines, aa_ln, aa_col, self_end_ln, self_end_col):  # something after?
             aa_ln, aa_col, src = frag
@@ -1024,39 +1032,38 @@ def _fix_arguments_del(self: fst.FST) -> None:
                     aa_col = next_col + 1
 
                 else:
-                    if next_ln == aa_ln:  # next element on same line as comma?
+                    if next_ln == aa_ln or ((l := lines[ln][:col]) and not l.isspace()):  # next element on same line as comma? or we don't start line?
                         self._put_src(' /,', aa_ln, aa_col, aa_ln, aa_col, True)
 
                         aa_col += 3
 
                     else:
-                        self._put_src(f'{lines[ln][:col]}/,\n', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True)
+                        self._put_src(f'{l}/,\n', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True)
 
                         aa_ln += 1
                         aa_col = 0
 
-            elif self_end_ln == aa_ln:
+            elif self_end_ln == aa_ln or ((l := lines[ln][:col]) and not l.isspace()):
                 self._put_src(' /,', aa_ln, aa_col, aa_ln, aa_col, True)
 
                 aa_col += 3
 
             else:
-                self._put_src(f'{lines[ln][:col]}/,\n', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True)
+                self._put_src(f'{l}/,\n', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True)
 
                 aa_ln += 1
                 aa_col = 0
 
-        elif self_end_ln == aa_ln:  # nothing follow, not comma or anything
+        elif self_end_ln == aa_ln or ((l := lines[ln][:col]) and not l.isspace()):  # nothing follow, not comma or anything or we don't start line
             self._put_src(', /', aa_ln, aa_col, aa_ln, aa_col, True,
-                          exclude=f, offset_excluded=False)  # we may be exactly at end of previous posonly node, make sure we don't extend its size
+                          exclude=g, offset_excluded=False)  # we may be exactly at end of previous posonly node, make sure we don't extend its size
 
             aa_col += 3
 
         else:
-            self._put_src(f',\n{lines[ln][:col]}/', (aa_ln := aa_ln + 1), 0, aa_ln, 0, True,
-                          exclude=f, offset_excluded=False)
+            self._put_src(f',\n{l}/', aa_ln, aa_col, aa_ln, aa_col, True, exclude=g, offset_excluded=False)
 
-            aa_ln += 1
+            aa_ln += 2
             aa_col = 0
 
         self_ln, self_col, self_end_ln, self_end_col = self.loc
@@ -2305,6 +2312,11 @@ def _get_slice_arguments(
         return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
                        [''], None, from_=self)
 
+    body, _, _, start, stop = _make_arguments_allargs_w_markers(self, None, start, stop)
+    len_body = len(body)
+    loc_first = body[start].f._loc_argument(True)
+    loc_last = loc_first if start == stop - 1 else body[stop - 1].f._loc_argument(True)
+
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     if start:
@@ -2314,11 +2326,6 @@ def _get_slice_arguments(
             f = g
 
         _, _, bound_ln, bound_col = f.pars()
-
-    body, _, _, start, stop = _make_arguments_allargs_w_markers(self, None, start, stop)
-    len_body = len(body)
-    loc_first = body[start].f._loc_argument(True)
-    loc_last = loc_first if start == stop - 1 else body[stop - 1].f._loc_argument(True)
 
     ret_ast = arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[])
 

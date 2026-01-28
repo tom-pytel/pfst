@@ -2334,65 +2334,72 @@ def _put_slice_arguments(
         return
 
     ast_ = fst_.a
+    fst_allargs, fst_idx_slash, _, _, _ = _make_arguments_allargs_w_markers(fst_, 1)
     allargs, _, _, aa_start, aa_stop = _make_arguments_allargs_w_markers(self, 0, start, stop,
         exp_left_into_slash = bool(ast_.posonlyargs),
         exp_right_into_star = bool(ast_.vararg or ast_.kwonlyargs or ast_.kwarg),
     )
-    fst_allargs, fst_idx_slash, _, _, _ = _make_arguments_allargs_w_markers(fst_, 1)
 
 
     # TODO: fst_: 'argsas' or whatever option to adapt posargs/args/kwargs if possible
 
 
-    new_allargs = allargs.copy()
-    new_allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
-    prev_arg_cat = -1  # 0 = posonlyargs, 1 = args, 2 = vararg, 3 = kwonlyargs, 4 = kwarg
-    fst_markers_to_delete = []  # indices of `Pass` `/` or `*` extra markers that need to be deleted
-    need_slash_idx = None  # if we need to insert a `/` marker, if not None then it should at be after this idx (in new_allargs)
-    need_star_idx = None  # if we need to insert a `*` marker, if not None then it should at be before this idx (in new_allargs)
-    defaults_started = False
+    try:
+        new_allargs = allargs.copy()
+        new_allargs[aa_start : aa_stop] = fst_allargs  # what was there will be unmade when _set_field() is called on self
+        prev_arg_cat = -1  # 0 = posonlyargs, 1 = args, 2 = vararg, 3 = kwonlyargs, 4 = kwarg
+        fst_markers_to_delete = []  # indices of `Pass` `/` or `*` extra markers that need to be deleted
+        need_slash_idx = None  # if we need to insert a `/` marker, if not None then it should at be after this idx (in new_allargs)
+        need_star_idx = None  # if we need to insert a `*` marker, if not None then it should at be before this idx (in new_allargs)
+        defaults_started = False
 
-    for i, a in enumerate(new_allargs):  # validate list of arguments that will result from operation
-        if a.__class__ is Pass:  # standin `/` or `*`
-            if a._is_star:
-                if prev_arg_cat > 1:  # can only be fst_ `*` because in invalid place, self stars will have been eaten or be in valid spot
-                    fst_markers_to_delete.append(0)
+        for i, a in enumerate(new_allargs):  # validate list of arguments that will result from operation
+            if a.__class__ is Pass:  # standin `/` or `*`
+                if a._is_star:
+                    if prev_arg_cat > 1:  # can only be fst_ `*` because in invalid place, self stars will have been eaten or be in valid spot
+                        fst_markers_to_delete.append(0)
 
-            elif not a._tag and fst_idx_slash is not None:  # `not a._tag` means our own `/` so was not overwritten and if there is also an `fst_` `/` then that one must be deleted because it will precede our own
-                fst_markers_to_delete.append(fst_idx_slash)
+                elif not a._tag and fst_idx_slash is not None:  # `not a._tag` means our own `/` so was not overwritten and if there is also an `fst_` `/` then that one must be deleted because it will precede our own
+                    fst_markers_to_delete.append(fst_idx_slash)
 
-            continue
+                continue
 
-        f = a.f
-        arg_cat = _ARG_NAME2CAT[f.pfield.name]
+            f = a.f
+            arg_cat = _ARG_NAME2CAT[f.pfield.name]
 
-        if arg_cat < prev_arg_cat:
-            raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} cannot follow {_ARG_CAT2NAME[prev_arg_cat]}')
-        elif arg_cat == prev_arg_cat and arg_cat in (2, 4):
-            raise NodeError(f'would result in two {_ARG_CAT2NAME[arg_cat]}s')
+            if arg_cat < prev_arg_cat:
+                raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} cannot follow {_ARG_CAT2NAME[prev_arg_cat]}')
+            elif arg_cat == prev_arg_cat and arg_cat in (2, 4):
+                raise NodeError(f'would result in two {_ARG_CAT2NAME[arg_cat]}s')
 
-        if arg_cat < 2:
-            if (g := f.next()) and g.pfield.name == 'defaults':
-                defaults_started = True
-            elif defaults_started:
-                raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} without defaults cannot follow'
-                                f'{_ARG_CAT2NAME[prev_arg_cat]} with defaults')
+            if arg_cat < 2:
+                if (g := f.next()) and g.pfield.name == 'defaults':
+                    defaults_started = True
+                elif defaults_started:
+                    raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} without defaults cannot follow'
+                                    f'{_ARG_CAT2NAME[prev_arg_cat]} with defaults')
 
-            if not arg_cat:
-                next_a = new_allargs[i + 1]  # this should not fail because otherwise it would have been a pure delete
+                if not arg_cat:
+                    next_a = new_allargs[i + 1]  # this should not fail because otherwise it would have been a pure delete
 
-                if (next_a._is_star if next_a.__class__ is Pass else next_a.f.pfield.name != 'posonlyargs'):
-                    need_slash_idx = i
+                    if (next_a._is_star if next_a.__class__ is Pass else next_a.f.pfield.name != 'posonlyargs'):
+                        need_slash_idx = i
 
-        elif arg_cat == 3 and prev_arg_cat < 3:  # transition from pre-kwonlyargs to kwonlyargs, make sure there is an appropriate marker
-            assert i  # this should not fail because otherwise it would have been a pure delete which does not get here
+            elif arg_cat == 3 and prev_arg_cat < 3:  # transition from pre-kwonlyargs to kwonlyargs, make sure there is an appropriate marker
+                assert i  # this should not fail because otherwise it would have been a pure delete which does not get here
 
-            prev_a = new_allargs[i - 1]
+                prev_a = new_allargs[i - 1]
 
-            if (not prev_a._is_star if prev_a.__class__ is Pass else prev_a.f.pfield.name != 'vararg'):
-                need_star_idx = i
+                if (not prev_a._is_star if prev_a.__class__ is Pass else prev_a.f.pfield.name != 'vararg'):
+                    need_star_idx = i
 
-        prev_arg_cat = arg_cat
+            prev_arg_cat = arg_cat
+
+    except Exception:
+        _remove_arguments_allargs_markers(self)
+        _remove_arguments_allargs_markers(fst_)  # yeah, we say this is consumed but lets be nice
+
+        raise
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -2406,7 +2413,14 @@ def _put_slice_arguments(
 
         end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
 
-        del fst_allargs[idx]  # don't need to remove from arguments nodes because harmless there, the allargs are what determine the sequence for our purposes
+        field, idx_field = fst_allargs[idx].f.pfield
+
+        if field == 'posonlyargs':
+            _remove_arguments_allargs_markers(fst_, idx_posonly=idx_field, idx_kwonly=None)
+        else:  # field == 'kwonlyargs'
+            _remove_arguments_allargs_markers(fst_, idx_posonly=None, idx_kwonly=idx_field)
+
+        del fst_allargs[idx]
         del new_allargs[idx + aa_start]
 
         put_slice_sep_end(fst_, end_params)
