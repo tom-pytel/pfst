@@ -449,7 +449,7 @@ def _make_arguments_allargs_w_markers(
     We use the `Pass` node as marker for the standins as it doesn't have any children and doesn't normally appear
     outside of statement blocks. The markers are inserted into the actual `arguments` node as if they were `arg` nodes
     at those locations for easier processing. The `/` marker node may also get an empty `defaults` node inserted if
-    would be needed for correct sequence of the `arguments` as a whole. The default node for `kwonlyargs` is just
+    would be needed for correct sequence of the `arguments` as a whole. The `kw_defaults` node for `kwonlyargs` is just
     inserted as a `None`.
 
     **Returns:**
@@ -461,8 +461,8 @@ def _make_arguments_allargs_w_markers(
             `vararg` is not considered this and in fact will cause this to be `None`.
         - `new_start`, `new_stop`: `start` and `stop` indices passed in offset according to whatever markers were
             inserted and expanded to include those markers if wound up alongside them.
-        - `exp_left_into_slash`: Whether to allow expand of start to the left into a `/` marker or not.
-        - `exp_right_into_star`: Whether to allow expand of stop to the right into a `*` marker or not.
+        - `exp_left_into_slash`: Whether to expand start index to the left into a `/` marker or not.
+        - `exp_right_into_star`: Whether to expand stop index to the right into a `*` marker or not.
     """
 
     lines = self.root._lines
@@ -501,25 +501,22 @@ def _make_arguments_allargs_w_markers(
         a = Pass(lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=end_col_offset)
         a._is_star = False
         a._tag = tag
+        defaults = ast.defaults
 
         fst.FST(a, self, astfield('posonlyargs', idx_slash))  # throwaway standin for '/'
 
         posonlyargs.append(a)
         allargs.append(a)
 
-        defaults = ast.defaults
-        len_defaults = len(defaults)
-        len_args = len(args)
-
-        if len_defaults > len_args:  # if defaults extend into posonlyargs then need to insert an empty one of those for correctness
+        if (idx := len(defaults) - len(args)) > 0:  # if defaults extend into posonlyargs then need to insert an empty one of those for correctness
             a = Pass(lineno=lineno, col_offset=end_col_offset, end_lineno=lineno, end_col_offset=end_col_offset)
 
-            fst.FST(a, self, astfield('defaults', -1))  # throwaway standin for '/' default value
+            fst.FST(a, self, astfield('defaults', idx))  # throwaway standin for '/' default value
 
-            defaults.insert(len_defaults - len_args, a)
+            defaults.insert(idx, a)
 
-            for i, a in enumerate(defaults):  # reset all pfields for inserted default element
-                a.f.pfield = astfield('defaults', i)
+            for i in range(idx + 1, len(defaults)):  # reset all pfields for inserted default element
+                defaults[i].f.pfield = astfield('defaults', i)
 
     allargs.extend(args)
 
@@ -558,11 +555,11 @@ def _make_arguments_allargs_w_markers(
             kw_defaults.insert(0, None)
             kwonlyargs.insert(0, a)
 
-            for i, (k, d) in enumerate(zip(kwonlyargs, kw_defaults, strict=True)):  # reset all pfields for inserted element, don't really need to do this for the processing that follows but lets be correct
-                k.f.pfield = astfield('kwonlyargs', i)
+            for i in range(1, len(kwonlyargs)):
+                kwonlyargs[i].f.pfield = astfield('kwonlyargs', i)
 
-                if d:
-                    d.f.pfield = astfield('kw_defaults', i)
+                if kw_defaults[i]:
+                    kw_defaults[i].f.pfield = astfield('kw_defaults', i)
 
         allargs.extend(kwonlyargs)
 
@@ -622,13 +619,10 @@ def _remove_arguments_allargs_markers(self: fst.FST, idx_posonly: int | None = -
             if field == 'defaults':
                 del defaults[idx]
 
-            for i, a in enumerate(defaults):  # reset all pfields for deleted default element
-                a.f.pfield = astfield('defaults', i)
+            for i in range(idx , len(defaults)):  # reset all pfields for deleted default element
+                defaults[i].f.pfield = astfield('defaults', i)
 
         del posonlyargs[idx_posonly]
-
-        # if (i := len(defaults) - len(ast.args)) > 0:  # if has default then remove that too
-        #     del defaults[i - 1]
 
     if (kwonlyargs := ast.kwonlyargs) and kwonlyargs[idx_kwonly].__class__ is Pass:  # if '*' marker present then remove
         kw_defaults = ast.kw_defaults
@@ -636,11 +630,11 @@ def _remove_arguments_allargs_markers(self: fst.FST, idx_posonly: int | None = -
         del kwonlyargs[idx_kwonly]
         del kw_defaults[idx_kwonly]
 
-        for i, (k, d) in enumerate(zip(kwonlyargs, kw_defaults, strict=True)):  # reset all pfields for deleted element
-            k.f.pfield = astfield('kwonlyargs', i)
+        for i in range(idx_kwonly, len(kwonlyargs)):
+            kwonlyargs[i].f.pfield = astfield('kwonlyargs', i)
 
-            if d:
-                d.f.pfield = astfield('kw_defaults', i)
+            if kw_defaults[i]:
+                kw_defaults[i].f.pfield = astfield('kw_defaults', i)
 
 
 def _add_MatchMapping_rest_as_real_node(self: fst.FST) -> fst.FST:
@@ -2306,12 +2300,10 @@ def _get_slice_arguments(
     `/` and `*` indicators afterwards."""
 
     ast = self.a
-    body = self._cached_allargs()
-    len_body = len(body)
+    len_body = len(self._cached_allargs())
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice = stop - start
 
-    if not len_slice:
+    if start == stop:
         return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
                        [''], None, from_=self)
 

@@ -37,7 +37,7 @@ logger.info(  # just checking
 )
 ```
 
-The tree is just normal `AST` with metadata.
+The tree is just normal `AST` with metadata, so if you know `AST`, you know `FST`.
 
 ```py
 >>> import ast
@@ -46,7 +46,7 @@ The tree is just normal `AST` with metadata.
 logger.info(f'not a {thing}', id=CID, extra=extra)
 ```
 
-`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided) which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
+`fst` works by adding `FST` nodes to existing standard Python `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided) which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
 
 
 ## Links

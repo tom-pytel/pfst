@@ -2172,7 +2172,7 @@ class FST:
         try:
             ret = tmpf._get_one(0, 'body', False, options)
 
-            self._unmake_fst_parents()  # unmake the tmpf, can still use as `from_` below since the unmake just breaks .f/.a links
+            tmpf._unmake_fst_parents(True)  # unmake the tmpf, can still use as `from_` below since the unmake just breaks .f/.a links
 
         finally:  # in case of error try to remake self anyway to leave in valid state
             FST(ast, lines, None, from_=tmpf, lcopy=False, tmake=False)  # recreate self as root node
