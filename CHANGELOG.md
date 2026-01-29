@@ -1,19 +1,7 @@
 ## 0.2.6 - alpha - ????-??-??
 
-### Fixed
-
-- fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized
-- `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
-- fixed delimit of whole node at root when degenerate last line has line continuation without trailing newline
-- fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
-- fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
-- don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
-- don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
-- allow put `Starred` to `TypeVarTuple.default_value`
-- fixed parse `withitem` of a solo `GeneratorExp`
-- will not parenthesize `arg` or `arguments` if putting multiline to a `Lambda` but instead parenthesize the `Lambda`
-- will not parenthesize multiline `withitem` put to `With.items` with existing `items` but rather the whole `items` field
-- fixed `unpar(node=True)` node if first and or last elements are parenthesized
+### Breaking Changes
+  - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked, previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
 
 ### Added
 
@@ -31,7 +19,7 @@
 - prescribed slicing for `arguments._all`, e.g. `FunctionDefFST.args[x:y] = 'a: int, /, b=c'`
 - `unpar('invalid')` can remove delimiters from `List`, `Set`, `Dict`, `MatchMapping`, `ListComp`, `SetComp`, `DictComp` and `GeneratorExp`, if needed for some reason
 
-### Updated
+### Changed
 
 - `FST.dump()` returns `self` when not returning str or lines and those are now specified with `out='str'` or `out='lines'`
 - concretized behavior of put slice with `one=True` for custom special slices, will not put multiple elements now in this mode when one requested
@@ -40,11 +28,24 @@
 - REMOVED `norm_put` option as was too annoying to maintain everywhere needed for the little good it did, `norm_self` and `norm_get` remain
 - improved put multiline slice aesthetics, specifically better needs-own-line detection and keeping line comment on pre-insert element line instead of moving it
 - parse `withitem` and `_withitems` no longer accept single unparenthesized `Yield`, `NamedExpr` or `Tuple` as a convenience, causes too many problems downstream
-- **BREAKING CHANGE** for consistency
-  - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked
-  - previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
 - empty `arguments` now always have a location, having potentially zero-length `arguments` is less ugly than having arguments with no location
 - `Dict` and `MatchMapping` slice views dereferenced with a single index will now return a view of that single key:value pair instead of raising
+
+### Fixed
+
+- fixed `comprehension_ifs` and `_arglikes` coercions where unparenthesized tuple needed to be parenthesized
+- `FST.dump()` will no longer output trailing whitespace on lines when the line is completely empty, better for tests
+- fixed delimit of whole node at root when degenerate last line has line continuation without trailing newline
+- fixed parse location correction of multiline unparenthesized tuple with group parenthesized first and / or last elements
+- fixed parse of unparenthesized tuple with trailing comma to `_Assign_targets`
+- don't accept `Starred` node for a `withitem`, `_withitems` normal or `_comprehension_ifs` coerce
+- don't try to parse `*starred = value` as `TypeVarTuple` in place of `Assign` on py < 3.13
+- allow put `Starred` to `TypeVarTuple.default_value`
+- fixed parse `withitem` of a solo `GeneratorExp`
+- will not parenthesize `arg` or `arguments` if putting multiline to a `Lambda` but instead parenthesize the `Lambda`
+- will not parenthesize multiline `withitem` put to `With.items` with existing `items` but rather the whole `items` field
+- fixed `unpar(node=True)` node if first and or last elements are parenthesized
+
 
 ## 0.2.5 - alpha - 2026-01-06
 

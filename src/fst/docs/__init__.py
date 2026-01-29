@@ -15,7 +15,7 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d07_views`: Slice views and virtual fields
 
-`fst.docs.d08_coerce`: Coercion and slice put as `one=True`
+`fst.docs.d08_coerce`: Coercion and slice put as `one`
 
 `fst.docs.d09_parentheses`: Parentheses handling
 

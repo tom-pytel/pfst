@@ -198,20 +198,23 @@ Or.
 
 >>> slc = FST('[i for a, b, c in j if a if b if c]').generators[0].get_slice('ifs')
 
->>> _ = slc.dump()
+>>> _ = slc.dump('s')
+0: if a if b if c
 _comprehension_ifs - ROOT 0,0..0,14
   .ifs[3]
    0] Name 'a' Load - 0,3..0,4
    1] Name 'b' Load - 0,8..0,9
    2] Name 'c' Load - 0,13..0,14
 
->>> _ = slc.get_slice(1, 3).dump()
+>>> _ = slc.get_slice(1, 3).dump('s')
+0: if b if c
 _comprehension_ifs - ROOT 0,0..0,9
   .ifs[2]
    0] Name 'b' Load - 0,3..0,4
    1] Name 'c' Load - 0,8..0,9
 
->>> _ = slc.put_slice('if x if y', 1, 2).dump()
+>>> _ = slc.put_slice('if x if y', 1, 2).dump('s')
+0: if a if x if y if c
 _comprehension_ifs - ROOT 0,0..0,19
   .ifs[4]
    0] Name 'a' Load - 0,3..0,4
@@ -223,7 +226,7 @@ _comprehension_ifs - ROOT 0,0..0,19
 if a if x if y if c
 
 
-## BoolOp and Compare "slices"
+## `BoolOp` and `Compare` "slices"
 
 You can also slice these node types as they contain lists of child nodes, though there are some extra parameters since
 the children are separated by operators (same operator in the case of `BoolOp` and possibly different ones for
@@ -324,6 +327,61 @@ a == x > c
 
 >>> print(FST('a < b > c').put_slice('x', 1, 2, op_side='right', op='==').src)
 a < x == c
+
+
+## `arguments` slices
+
+The `arguments` node can contain multiple arguments of different types and it can also be sliced. The slice node of an
+`arguments` is just another `arguments`.
+
+>>> slc = FST('a, /, b=1, *c, d=2, **e', 'arguments').get_slice(1, 4)
+
+>>> print(slc)
+<arguments ROOT 0,0..0,12>
+
+>>> print(slc.src)
+b=1, *c, d=2
+
+When putting an `arguments` node as a slice to another `arguments` node, it must be put to a syntactically valid
+location, meaning position-only, normal and keyword arguments must all match up and there can be no more than one
+`vararg` or `kwarg` after the put.
+
+>>> FST('a, b, /, c, d', 'arguments').put_slice('x, /', 2, 3).src
+'a, b, x, /, d'
+
+>>> FST('a, b, /, c, d', 'arguments').put_slice('x, /', 3, 4)
+Traceback (most recent call last):
+...
+fst.NodeError: posonlyargs cannot follow args
+
+>>> FST('a, b, *c', 'arguments').append('*e')
+Traceback (most recent call last):
+...
+fst.NodeError: would result in two varargs
+
+Default values must also wind up without any gaps for `posonlyargs` and `args`.
+
+>>> FST('a, b, c=1, d=2', 'arguments').insert('x=0', 2).src
+'a, b, x=0, c=1, d=2'
+
+>>> FST('a, b, c=1, d=2', 'arguments').insert('x=0', 1)
+Traceback (most recent call last):
+...
+fst.NodeError: args without defaults cannot followargs with defaults
+
+>>> FST('a, b, c=1, d=2', 'arguments').insert('x', 3)
+Traceback (most recent call last):
+...
+fst.NodeError: args without defaults cannot followargs with defaults
+
+
+
+
+TODO: args_as
+
+
+
+
 
 
 ## Normalization

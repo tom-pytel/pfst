@@ -1272,19 +1272,19 @@ class FST:
 
     def dump(
         self,
-        src: Literal['stmt', 'all'] | None = None,
+        src: Literal['stmt', 'all'] | str | None = None,  # noqa: PYI051
         full: bool = False,
-        expand: bool = False,
         *,
+        expand: bool = False,
         indent: int = 2,
         list_indent: int | bool = 1,
         loc: bool = True,
         color: bool | None = None,
-        out: Literal['print', 'str', 'lines'] | Callable | TextIO = 'print',
+        out: Literal['print', 'str', 'lines'] | Callable[[str], None] | TextIO = 'print',
         eol: builtins.str | None = None,
     ) -> FST | builtins.str | list[builtins.str]:  # -> self if not returning str or lines
-        r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
-        call a provided function once with each line of the output.
+        r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list[str]` of lines,
+        or call a provided function once with each line of the output.
 
         **Parameters:**
         - `src`: Either what level of source to show along with the nodes or a shorthand string which can specify almost
@@ -1298,7 +1298,9 @@ class FST:
             - `str`: Can be a string for shortcut specification of source and flags by first letter, `'s+feL'` would be
                 equivalent to `.dump(src='stmt+', full=True, expand=True, loc=False)`.
                 - `'s'` or `'s+'` means `src='stmt'` or `src='stmt+'`
-                - `'n'` or '`n+'` means `src='node'` or `src='node+'`
+                - `'S'` same as `'s+'`
+                - `'n'` or `'n+'` means `src='node'` or `src='node+'`
+                - `'N'` same as `'N+'`
                 - `'f'` means `full=True`
                 - `'e'` means `expand=True`
                 - `'i'` means `list_indent=indent`
@@ -1308,7 +1310,7 @@ class FST:
                 - `'C'` means `color=False`
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
-        - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
+        - `expand`: If `False` then the output is a nice compact representation. If `True` then it is ugly and wasteful.
         - `indent`: Indentation per level as an integer (number of spaces) or a string.
         - `list_indent`: Extra indentation for elements of lists as an integer or string (added to indent). If `True`
             then will be same as `indent`.
@@ -1317,9 +1319,10 @@ class FST:
             can be overridden with environment variables `FORCE_COLOR` and `NO_COLOR`.
         - `out`: `'print'` means print to stdout, `'lines'` returns a list of lines and `'str'` returns a whole string.
             A `TextIO` object here will use the `write` method for each line of output. Otherwise a
-            `Callable[[str], None]` which is called for each line of output individually. If `str` or `list` then that
-            is returned, otherwise `self` is returned.
-        - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
+            `Callable[[str], None]` which is called for each line of output individually. If `'str'` or `'lines'` then
+            that is returned, otherwise `self` is returned for chaining.
+        - `eol`: What to put at the end of each text line, `None` means newline for a `TextIO` out and nothing for other
+            types of `out`.
 
         **Returns:**
         - `str`: If was requested with `out='str'`, string of entire dump, lines ended with `eol`.

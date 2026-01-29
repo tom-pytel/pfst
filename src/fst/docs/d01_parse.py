@@ -200,7 +200,7 @@ If you just pass an `AST` node and no `mode` parameter then the `AST` node is ju
 pass a `mode` parameter to either restrict the context for the `AST` node, such as a standard expression which should
 not be a `Slice`.
 
->>> FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c')), 'expr')
+>>> _ = FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c')), 'expr')
 Traceback (most recent call last):
 ...
 SyntaxError: invalid syntax
@@ -218,10 +218,38 @@ arg - ROOT 0,0..0,4
   .arg 'name'
 
 
+## From `FST` nodes
+
+You can pass existing `FST` nodes to `FST()` and it will try to convert the node to the type you request via the `mode`
+parameter. If you omit the `mode` parameter, you will just get a copy of the `FST` passed in.
+
+>>> _ = FST(FST('(1, 2)')).dump('s')
+0: (1, 2)
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,4..0,5
+  .ctx Load
+
+>>> _ = FST(FST('(1, 2)'), '_comprehension_ifs').dump('s')
+0: if 1 if 2
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Constant 1 - 0,3..0,4
+   1] Constant 2 - 0,8..0,9
+
+These three modes allow the `FST()` constructor to act like the Python `list()` object in that it will convert whatever
+you pass in to either the type of `FST` tree it already is or should be in the case of source, or to something else you
+specify via the `mode` parameter (if possible).
+
+In the case of `FST` nodes passed in, the conversion or returned node is a copy and the original node is not modified,
+so you can be certain of the safety of using `FST()` to try to get the kind of node you are expecting.
+
+
 ## Underlying functions
 
-The `FST(...)` syntax used in the above examples is just a shortcut for the functions `fst.fst.FST.fromsrc()` and
-`fst.fst.FST.fromast()`.
+The `FST(...)` syntax used in the above examples is just a shortcut for the functions `fst.fst.FST.fromsrc()`,
+`fst.fst.FST.fromast()` and `fst.fst.FST.as_()`.
 
 >>> _ = FST.fromsrc('i = 1').dump()
 Module - ROOT 0,0..0,5
@@ -231,7 +259,8 @@ Module - ROOT 0,0..0,5
       0] Name 'i' Store - 0,0..0,1
      .value Constant 1 - 0,4..0,5
 
-Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
+Except that `fromsrc()` defaults to `mode='exec'` as shown above instead of minimal node. If you want minimal node
+representation then you should pass one of the other modes.
 
 >>> _ = FST.fromsrc('i = 1', 'strict').dump()
 Assign - ROOT 0,0..0,5
@@ -241,15 +270,23 @@ Assign - ROOT 0,0..0,5
 
 `FST.fromast()` works the same as when passing an `AST` to `FST()`.
 
->>> _ = FST.fromast(Slice(
-...     lower=Name(id='a'),
-...     upper=Name(id='b'),
-...     step=Name(id='c'),
-... )).dump()
-Slice - ROOT 0,0..0,5
+>>> _ = FST.fromast(Slice(lower=Name(id='a'), upper=Name(id='b'))).dump('s')
+0: a:b
+Slice - ROOT 0,0..0,3
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
-  .step Name 'c' Load - 0,4..0,5
+
+The last of these is a coercion function which is more fully explained in`fst.docs.d08_coerce`. It allows conversion
+from one type of `FST` to another, if possible.
+
+>>> _ = FST('{a, b, c}').as_(List).dump('s')
+0: [a, b, c]
+List - ROOT 0,0..0,9
+  .elts[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'c' Load - 0,7..0,8
+  .ctx Load
 
 
 ## Source
