@@ -3396,8 +3396,8 @@ f'd{t"e{f=!s:0.1f<1}"=}'
 
         self.assertRaises(NodeError, FST('def f(): pass').put, 'x', 'type_comment')
 
-        from fst.fst_put_one import _put_one_raw
-        self.assertEqual('{x: y}', _put_one_raw(FST('{a: b}'), 'x: y', 0, '_all', [], None, {}).root.src)
+        # from fst.fst_put_one import _put_one_raw
+        # self.assertEqual('{x: y}', _put_one_raw(FST('{a: b}'), 'x: y', 0, '_all', [], None, {}).root.src)
 
         # misc
 

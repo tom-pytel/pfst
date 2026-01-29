@@ -2717,32 +2717,32 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprlike_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_fmtval_slice)),  # expr?
 
-    (Module, '_body'):                    (True,  None, None),  # stmt*  - without docstr
-    (Interactive, '_body'):               (True,  None, None),  # stmt*
-    (FunctionDef, '_body'):               (True,  None, None),  # stmt*
-    (AsyncFunctionDef, '_body'):          (True,  None, None),  # stmt*
-    (ClassDef, '_body'):                  (True,  None, None),  # stmt*
-    (For, '_body'):                       (True,  None, None),  # stmt*
-    (AsyncFor, '_body'):                  (True,  None, None),  # stmt*
-    (While, '_body'):                     (True,  None, None),  # stmt*
-    (If, '_body'):                        (True,  None, None),  # stmt*
-    (With, '_body'):                      (True,  None, None),  # stmt*
-    (AsyncWith, '_body'):                 (True,  None, None),  # stmt*
-    (Try, '_body'):                       (True,  None, None),  # stmt*
-    (TryStar, '_body'):                   (True,  None, None),  # stmt*
-    (ExceptHandler, '_body'):             (True,  None, None),  # stmt*
-    (match_case, '_body'):                (True,  None, None),  # stmt*
+    (Module, '_body'):                    (True, None, None),  # stmt*  - without docstr
+    (Interactive, '_body'):               (True, None, None),  # stmt*
+    (FunctionDef, '_body'):               (True, None, None),  # stmt*
+    (AsyncFunctionDef, '_body'):          (True, None, None),  # stmt*
+    (ClassDef, '_body'):                  (True, None, None),  # stmt*
+    (For, '_body'):                       (True, None, None),  # stmt*
+    (AsyncFor, '_body'):                  (True, None, None),  # stmt*
+    (While, '_body'):                     (True, None, None),  # stmt*
+    (If, '_body'):                        (True, None, None),  # stmt*
+    (With, '_body'):                      (True, None, None),  # stmt*
+    (AsyncWith, '_body'):                 (True, None, None),  # stmt*
+    (Try, '_body'):                       (True, None, None),  # stmt*
+    (TryStar, '_body'):                   (True, None, None),  # stmt*
+    (ExceptHandler, '_body'):             (True, None, None),  # stmt*
+    (match_case, '_body'):                (True, None, None),  # stmt*
 
-    (_ExceptHandlers, 'handlers'):        (True,  None, None),  # stmt*,  # ExceptHandler*
-    (_match_cases, 'cases'):              (True,  None, None),  # stmt*,  # match_case*
-    (_Assign_targets, 'targets'):         (True,  _put_one_exprlike_required, _onestatic_target),  # expr*
-    (_decorator_list, 'decorator_list'):  (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
-    (_arglikes, 'arglikes'):              (True,  _put_one__arglikes_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
-    (_comprehensions, 'generators'):      (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
-    (_comprehension_ifs, 'ifs'):          (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
-    (_aliases, 'names'):                  (True,  _put_one_exprlike_required, _onestatic_alias_required),  # alias*
-    (_withitems, 'items'):                (True,  _put_one_exprlike_required, _onestatic_withitem_required),  # withitem*
-    (_type_params, 'type_params'):        (True,  _put_one_exprlike_required, _onestatic_type_param_required),  # type_param*
+    (_ExceptHandlers, 'handlers'):        (True, None, None),  # stmt*,  # ExceptHandler*
+    (_match_cases, 'cases'):              (True, None, None),  # stmt*,  # match_case*
+    (_Assign_targets, 'targets'):         (True, _put_one_exprlike_required, _onestatic_target),  # expr*
+    (_decorator_list, 'decorator_list'):  (True, _put_one_exprlike_required, _onestatic_expr_required),  # expr*
+    (_arglikes, 'arglikes'):              (True, _put_one__arglikes_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
+    (_comprehensions, 'generators'):      (True, _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
+    (_comprehension_ifs, 'ifs'):          (True, _put_one_exprlike_required, _onestatic_expr_required),  # expr*
+    (_aliases, 'names'):                  (True, _put_one_exprlike_required, _onestatic_alias_required),  # alias*
+    (_withitems, 'items'):                (True, _put_one_exprlike_required, _onestatic_withitem_required),  # withitem*
+    (_type_params, 'type_params'):        (True, _put_one_exprlike_required, _onestatic_type_param_required),  # type_param*
 
 
     # NOT DONE:
@@ -2808,8 +2808,8 @@ def _put_one_raw(
             idx = fixup_one_index(len(child), idx)
             loc = self._loc_maybe_key(idx, pars, child, body2)  # maybe the key is a '**'
 
-            if not to:  # does not currently get here without a `to` in normal operation because in that case it is handled by slice operations in _put_one()
-                to = body2[idx].f
+            # if not to:  # does not currently get here without a `to` in normal operation because in that case it is handled by slice operations in _put_one()
+            #     to = body2[idx].f
 
         elif ast_cls is Compare:
             idx, field, child = _params_Compare(self, idx)
@@ -2820,6 +2820,14 @@ def _put_one_raw(
         elif ast_cls in (Call, ClassDef):
             child = self._cached_arglikes()
             idx = fixup_one_index(len(child), idx)
+
+        elif ast_cls is arguments:
+            child = self._cached_allargs()
+            idx = fixup_one_index(len(child), idx)
+
+            # if not to:  # does not currently get here without a `to`
+            #     if (f := child.f.next()) and f.pfield.name in ('defaults', 'kw_defaults'):
+            #         to = f
 
         elif ast_cls is MatchMapping:
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
@@ -2832,8 +2840,8 @@ def _put_one_raw(
                 field = 'keys'
                 loc = child[idx].f.loc  # these cannot have pars
 
-                if not to:  # does not currently get here without a `to`
-                    to = body2[idx].f
+                # if not to:  # does not currently get here without a `to`
+                #     to = body2[idx].f
 
             else:  # rest
                 ln, col, end_ln, end_col = self._loc_MatchMapping_rest()

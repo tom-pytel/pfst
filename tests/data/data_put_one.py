@@ -16294,6 +16294,52 @@ Dict - ROOT 0,0..0,6
 r'''def f() -> int: pass'''), (None,
 r'''**DEL**'''),
 r'''**ValueError('cannot delete in raw put')**'''),
+
+('', 1, None, '_all', {'raw': True}, ('arguments',
+r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), (None,
+r'''z: tuple'''),
+r'''a: int = ( 1 ), z: tuple, c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )''', r'''
+_type_params - ROOT 0,0..0,86
+  .type_params[5]
+   0] TypeVar - 0,0..0,14
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+     .default_value Constant 1 - 0,11..0,12
+   1] TypeVar - 0,16..0,24
+     .name 'z'
+     .bound Name 'tuple' Load - 0,19..0,24
+   2] TypeVar - 0,26..0,44
+     .name 'c'
+     .bound Name 'float' Load - 0,29..0,34
+     .default_value Constant 3.0 - 0,39..0,42
+   3] TypeVar - 0,46..0,65
+     .name 'd'
+     .bound Name 'bytes' Load - 0,49..0,54
+     .default_value Constant b'z' - 0,59..0,63
+   4] TypeVar - 0,67..0,86
+     .name 'e'
+     .bound Name 'complex' Load - 0,70..0,77
+     .default_value Constant 1j - 0,82..0,84
+'''),
+
+('', 1, None, '_all', {'raw': True, 'to': 'defaults[3]'}, ('arguments',
+r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), (None,
+r'''z: tuple'''),
+r'''a: int = ( 1 ), z: tuple, e: complex = ( 1j )''', r'''
+_type_params - ROOT 0,0..0,45
+  .type_params[3]
+   0] TypeVar - 0,0..0,14
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+     .default_value Constant 1 - 0,11..0,12
+   1] TypeVar - 0,16..0,24
+     .name 'z'
+     .bound Name 'tuple' Load - 0,19..0,24
+   2] TypeVar - 0,26..0,45
+     .name 'e'
+     .bound Name 'complex' Load - 0,29..0,36
+     .default_value Constant 1j - 0,41..0,43
+'''),
 ],
 
 'f-string': [  # ................................................................................
