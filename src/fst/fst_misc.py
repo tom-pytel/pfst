@@ -1633,7 +1633,7 @@ def _fix_joined_alnums(
     end_ln: int | None = None,
     end_col: int | None = None,
     *,
-    lines: list[str] | None = None,
+    lines: list[str] | None = None,  # misc optimization so don't need to walk parent chain to get this since most likely outcome of this function doesn't have to call _put_src()
 ) -> None:
     """Check if location(s) `lines[ln][col-1 : col+1]` and optionally `lines[end_ln][end_col-1 : end_col+1] is / are
     alphanumeric and if so separate them with a space. This is for operations that may inadvertantly join two distinct

@@ -40,7 +40,8 @@ To get a list of all global options defaults do.
  'norm_self': None,
  'norm_get': None,
  'set_norm': 'star',
- 'op_side': 'left'}
+ 'op_side': 'left',
+ 'args_as': None}
 
 For example the option `pars` defaults to `'auto'` which will (among other things) strip parentheses when copying from a
 node which has them.
@@ -437,9 +438,11 @@ set()
 
 This option specifies which side of an operand an operator lives on by default. This option is a hint and if the
 operation cannot be carried out with the operator on this side it will be carried out with the operator on the other or
-none if no side possible. This option currently only applies to operations on `Compare` and `BoolOp` nodes and really
-only needs to exist for `Compare`, for `BoolOp` it is more of an aesthetic selection of which side operator to modify if
-they are even different. For more information on this option see `fst.docs.d06_slices`.
+none if no side possible.
+
+This option currently only applies to operations on `Compare` and `BoolOp` nodes and really only needs to exist for
+`Compare`, for `BoolOp` it is more of an aesthetic selection of which side operator to modify if they are even
+different. For more information on this option see `fst.docs.d06_slices`.
 
 For delete it specifies which side (of the slice being deleted) an extra operator is deleted as well.
 
@@ -456,6 +459,63 @@ a == c < b
 
 >>> print(FST('a < b').put_slice('c', 1, 1, op='!=', op_side='right').src)
 a < c != b
+
+
+## `args_as` options
+
+This option allows conversion of arguments between `posonlyargs`, `args` and `kwonlyargs` when doing slice operations on
+an `arguments` node. When getting a slice it is applied after the get on the slice to be returned. When putting a slice
+it is applied on the slice being put before the put is attempted. This option is global in order to to allow
+`with FST.options(args_as=?)` usage but is really meant to be specified on a per-call basis.
+
+>>> print(FST('a, /, b, *, c').get_slice(args_as='pos').src)
+a, b, c, /
+
+>>> print(FST('a, /, b, *, c').get_slice(args_as='arg').src)
+a, b, c
+
+>>> print(FST('a, /, b, *, c').get_slice(args_as='kw').src)
+*, a, b, c
+
+>>> print(FST('a, /, b, *c').get_slice(args_as='arg').src)
+a, b, *c
+
+>>> print(FST('a, /, b, *c').get_slice(args_as='arg_only').src)
+Traceback (most recent call last):
+...
+fst.NodeError: cannot have vararg for args_as='arg_only'
+
+>>> print(FST('a, /, b, *, c, **d').get_slice(args_as='kw').src)
+*, a, b, c, **d
+
+>>> print(FST('a, /, b, *, c, **d').get_slice(args_as='kw_only').src)
+Traceback (most recent call last):
+...
+fst.NodeError: cannot have kwarg for args_as='kw_only'
+
+>>> print(FST('a, /, b, *c, d, **e').get_slice(args_as='pos').src)
+Traceback (most recent call last):
+...
+fst.NodeError: cannot have vararg for args_as='pos'
+
+>>> print(FST('a, /, b, *c, d, **e').get_slice(args_as='pos_maybe').src)
+a, b, /, *c, d, **e
+
+>>> print(FST('a, /, b, *c, d, **e').get_slice(args_as='arg').src)
+Traceback (most recent call last):
+...
+fst.NodeError: cannot have keywords following vararg for args_as='arg'
+
+>>> print(FST('a, /, b, *c, d, **e').get_slice(args_as='arg_maybe').src)
+a, b, *c, d, **e
+
+>>> print(FST('a, /, b, *c, d, **e').get_slice(args_as='kw').src)
+Traceback (most recent call last):
+...
+fst.NodeError: cannot have vararg for args_as='kw'
+
+>>> print(FST('a, /, b, *c, d, **e').get_slice(args_as='kw_maybe').src)
+a, b, *c, d, **e
 
 
 ## Non-global options

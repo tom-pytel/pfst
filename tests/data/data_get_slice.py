@@ -24430,6 +24430,1206 @@ arguments - ROOT 0,0..3,8
 '''),
 ],
 
+'arguments_as': [  # ................................................................................
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''*a, b'''),
+r'''**NodeError("cannot have keywords following vararg for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''*a, **b'''),
+r'''**NodeError("cannot have kwarg for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''*a'''),
+r'''**NodeError("cannot have vararg for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''*a'''),
+r'''**NodeError("cannot have vararg for args_as='kw'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_only', '_del': False}, ('arguments',
+r'''*a'''),
+r'''**NodeError("cannot have vararg for args_as='arg_only'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw_only', '_del': False}, ('arguments',
+r'''*a'''),
+r'''**NodeError("cannot have vararg for args_as='kw_only'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''**a'''),
+r'''**NodeError("cannot have kwarg for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''**a'''),
+r'''**NodeError("cannot have kwarg for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_only', '_del': False}, ('arguments',
+r'''**a'''),
+r'''**NodeError("cannot have kwarg for args_as='arg_only'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw_only', '_del': False}, ('arguments',
+r'''**a'''),
+r'''**NodeError("cannot have kwarg for args_as='kw_only'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /''', r'''
+arguments - ROOT 0,0..0,6
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, /, *b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /, *b''', r'''
+arguments - ROOT 0,0..0,10
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,9..0,10
+    .arg 'b'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, /, **b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /, **b''', r'''
+arguments - ROOT 0,0..0,11
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwarg arg - 0,10..0,11
+    .arg 'b'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, /''', r'''
+arguments - ROOT 0,0..0,11
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, /''', r'''
+arguments - ROOT 0,0..0,11
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, c=3, /''', r'''
+arguments - ROOT 0,0..0,16
+  .posonlyargs[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+   2] arg - 0,10..0,11
+     .arg 'c'
+  .defaults[3]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+   2] Constant 3 - 0,12..0,13
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /''', r'''
+arguments - ROOT 0,0..0,6
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''*, a=1'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /''', r'''
+arguments - ROOT 0,0..0,6
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, /''', r'''
+arguments - ROOT 0,0..0,11
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *d, c=3'''),
+r'''**NodeError("cannot have vararg for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c=3, **d'''),
+r'''**NodeError("cannot have kwarg for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *d, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, /, *d, c=3''', r'''
+arguments - ROOT 0,0..0,20
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .vararg arg - 0,14..0,15
+    .arg 'd'
+  .kwonlyargs[1]
+   0] arg - 0,17..0,18
+     .arg 'c'
+  .kw_defaults[1]
+   0] Constant 3 - 0,19..0,20
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c=3, **d'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, c=3, /, **d''', r'''
+arguments - ROOT 0,0..0,21
+  .posonlyargs[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+   2] arg - 0,10..0,11
+     .arg 'c'
+  .kwarg arg - 0,20..0,21
+    .arg 'd'
+  .defaults[3]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+   2] Constant 3 - 0,12..0,13
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a''', r'''
+arguments - ROOT 0,0..0,1
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a, *b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a''', r'''
+arguments - ROOT 0,0..0,1
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a, *b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a, *b, **c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, *b, **c''', r'''
+arguments - ROOT 0,0..0,10
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+  .kwarg arg - 0,9..0,10
+    .arg 'c'
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a=1, /, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2''', r'''
+arguments - ROOT 0,0..0,8
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''b=2, *, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''b=2, c=3''', r'''
+arguments - ROOT 0,0..0,8
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'b'
+   1] arg - 0,5..0,6
+     .arg 'c'
+  .defaults[2]
+   0] Constant 2 - 0,2..0,3
+   1] Constant 3 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, c=3''', r'''
+arguments - ROOT 0,0..0,13
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+   2] arg - 0,10..0,11
+     .arg 'c'
+  .defaults[3]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+   2] Constant 3 - 0,12..0,13
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''b=2, *d, c=3'''),
+r'''**NodeError("cannot have keywords following vararg for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''b=2, *, c=3, **d'''),
+r'''**NodeError("cannot have kwarg for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''b=2, *d, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''b=2, *d, c=3''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .vararg arg - 0,6..0,7
+    .arg 'd'
+  .kwonlyargs[1]
+   0] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[1]
+   0] Constant 3 - 0,11..0,12
+  .defaults[1]
+   0] Constant 2 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''b=2, *, c=3, **d'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''b=2, c=3, **d''', r'''
+arguments - ROOT 0,0..0,13
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'b'
+   1] arg - 0,5..0,6
+     .arg 'c'
+  .kwarg arg - 0,12..0,13
+    .arg 'd'
+  .defaults[2]
+   0] Constant 2 - 0,2..0,3
+   1] Constant 3 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''*, a'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a''', r'''
+arguments - ROOT 0,0..0,4
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'a'
+  .kw_defaults[1]
+   0] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''*, a, **b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, **b''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'a'
+  .kw_defaults[1]
+   0] None
+  .kwarg arg - 0,8..0,9
+    .arg 'b'
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''**a'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''**a''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'a'
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''b=2, *, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, b=2, c=3''', r'''
+arguments - ROOT 0,0..0,11
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'b'
+   1] arg - 0,8..0,9
+     .arg 'c'
+  .kw_defaults[2]
+   0] Constant 2 - 0,5..0,6
+   1] Constant 3 - 0,10..0,11
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, *, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, c=3''', r'''
+arguments - ROOT 0,0..0,11
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'c'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 3 - 0,10..0,11
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b=2, c=3''', r'''
+arguments - ROOT 0,0..0,16
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+   2] arg - 0,13..0,14
+     .arg 'c'
+  .kw_defaults[3]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 2 - 0,10..0,11
+   2] Constant 3 - 0,15..0,16
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''b=2, **d'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, b=2, **d''', r'''
+arguments - ROOT 0,0..0,11
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'b'
+  .kw_defaults[1]
+   0] Constant 2 - 0,5..0,6
+  .kwarg arg - 0,10..0,11
+    .arg 'd'
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, **d'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, **d''', r'''
+arguments - ROOT 0,0..0,11
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'a'
+  .kw_defaults[1]
+   0] Constant 1 - 0,5..0,6
+  .kwarg arg - 0,10..0,11
+    .arg 'd'
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, b=2, **d'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b=2, **d''', r'''
+arguments - ROOT 0,0..0,16
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 2 - 0,10..0,11
+  .kwarg arg - 0,15..0,16
+    .arg 'd'
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''b=2, *d, c=3'''),
+r'''**NodeError("cannot have vararg for args_as='kw'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, *d, c=3'''),
+r'''**NodeError("cannot have vararg for args_as='kw'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *d, c=3'''),
+r'''**NodeError("cannot have vararg for args_as='kw'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''b=2, *d, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''b=2, *d, c=3''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .vararg arg - 0,6..0,7
+    .arg 'd'
+  .kwonlyargs[1]
+   0] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[1]
+   0] Constant 3 - 0,11..0,12
+  .defaults[1]
+   0] Constant 2 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a=1, /, *d, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, *d, c=3''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,6..0,7
+    .arg 'd'
+  .kwonlyargs[1]
+   0] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[1]
+   0] Constant 3 - 0,11..0,12
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *d, c=3'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, *d, c=3''', r'''
+arguments - ROOT 0,0..0,17
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .vararg arg - 0,11..0,12
+    .arg 'd'
+  .kwonlyargs[1]
+   0] arg - 0,14..0,15
+     .arg 'c'
+  .kw_defaults[1]
+   0] Constant 3 - 0,16..0,17
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, *, b'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, /, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /, *, b''', r'''
+arguments - ROOT 0,0..0,12
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,11..0,12
+     .arg 'b'
+  .kw_defaults[1]
+   0] None
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a=1, /, *, b'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a=1, /, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, *, b''', r'''
+arguments - ROOT 0,0..0,9
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[1]
+   0] None
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a=1, /, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, *, b'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /, *, b''', r'''
+arguments - ROOT 0,0..0,12
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,11..0,12
+     .arg 'b'
+  .kw_defaults[1]
+   0] None
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a=1, *, b'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a=1, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, *, b''', r'''
+arguments - ROOT 0,0..0,9
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[1]
+   0] None
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a=1, *, b'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+  .kw_defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, /, *, c''', r'''
+arguments - ROOT 0,0..0,17
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .kwonlyargs[1]
+   0] arg - 0,16..0,17
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, b=2, *, c''', r'''
+arguments - ROOT 0,0..0,14
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .kwonlyargs[1]
+   0] arg - 0,13..0,14
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,7..0,8
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b=2, c''', r'''
+arguments - ROOT 0,0..0,14
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+   2] arg - 0,13..0,14
+     .arg 'c'
+  .kw_defaults[3]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 2 - 0,10..0,11
+   2] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a=1, /, b=2, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1, b=2, c''', r'''
+arguments - ROOT 0,0..0,14
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,8..0,9
+     .arg 'b'
+   2] arg - 0,13..0,14
+     .arg 'c'
+  .kw_defaults[3]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 2 - 0,10..0,11
+   2] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a, /, b=2, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, b=2, c''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+   2] arg - 0,11..0,12
+     .arg 'c'
+  .kw_defaults[3]
+   0] None
+   1] Constant 2 - 0,8..0,9
+   2] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a, /, b=2, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, b=2, c''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+   2] arg - 0,11..0,12
+     .arg 'c'
+  .kw_defaults[3]
+   0] None
+   1] Constant 2 - 0,8..0,9
+   2] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, b=2, /''', r'''
+arguments - ROOT 0,0..0,9
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Constant 2 - 0,5..0,6
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, b=2, /''', r'''
+arguments - ROOT 0,0..0,9
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Constant 2 - 0,5..0,6
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, b=2''', r'''
+arguments - ROOT 0,0..0,6
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Constant 2 - 0,5..0,6
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, b=2''', r'''
+arguments - ROOT 0,0..0,6
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Constant 2 - 0,5..0,6
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, b=2''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+  .kw_defaults[2]
+   0] None
+   1] Constant 2 - 0,8..0,9
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a, /, *, b=2'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, b=2''', r'''
+arguments - ROOT 0,0..0,9
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+  .kw_defaults[2]
+   0] None
+   1] Constant 2 - 0,8..0,9
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a, /, *, b=2, c'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a, /, *, b=2, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, /, *, b=2, c''', r'''
+arguments - ROOT 0,0..0,15
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[2]
+   0] arg - 0,9..0,10
+     .arg 'b'
+   1] arg - 0,14..0,15
+     .arg 'c'
+  .kw_defaults[2]
+   0] Constant 2 - 0,11..0,12
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a, /, *, b=2, c'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a, /, *, b=2, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, *, b=2, c''', r'''
+arguments - ROOT 0,0..0,12
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwonlyargs[2]
+   0] arg - 0,6..0,7
+     .arg 'b'
+   1] arg - 0,11..0,12
+     .arg 'c'
+  .kw_defaults[2]
+   0] Constant 2 - 0,8..0,9
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a, /, *, b=2, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, b=2, c''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+   2] arg - 0,11..0,12
+     .arg 'c'
+  .kw_defaults[3]
+   0] None
+   1] Constant 2 - 0,8..0,9
+   2] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a, /, *, b=2, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, b=2, c''', r'''
+arguments - ROOT 0,0..0,12
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+   2] arg - 0,11..0,12
+     .arg 'c'
+  .kw_defaults[3]
+   0] None
+   1] Constant 2 - 0,8..0,9
+   2] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a=1, /'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a=1''', r'''
+arguments - ROOT 0,0..0,6
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'a'
+  .kw_defaults[1]
+   0] Constant 1 - 0,5..0,6
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''*, a=1'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a=1, /''', r'''
+arguments - ROOT 0,0..0,6
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Constant 1 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, c, /''', r'''
+arguments - ROOT 0,0..0,7
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'c'
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, c''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'c'
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a, *, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''*, a, c''', r'''
+arguments - ROOT 0,0..0,7
+  .kwonlyargs[2]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'c'
+  .kw_defaults[2]
+   0] None
+   1] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'pos', '_del': False}, ('arguments',
+r'''a, *b, c'''),
+r'''**NodeError("cannot have vararg for args_as='pos'")**'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False}, ('arguments',
+r'''a, *b, c'''),
+r'''**NodeError("cannot have keywords following vararg for args_as='arg'")**'''),
+
+('', 0, 'end', None, {'args_as': 'kw', '_del': False}, ('arguments',
+r'''a, *b, c'''),
+r'''**NodeError("cannot have vararg for args_as='kw'")**'''),
+
+('', 0, 'end', None, {'args_as': 'pos_maybe', '_del': False}, ('arguments',
+r'''a, *b, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, /, *b, c''', r'''
+arguments - ROOT 0,0..0,11
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,7..0,8
+    .arg 'b'
+  .kwonlyargs[1]
+   0] arg - 0,10..0,11
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg_maybe', '_del': False}, ('arguments',
+r'''a, *b, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, *b, c''', r'''
+arguments - ROOT 0,0..0,8
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+  .kwonlyargs[1]
+   0] arg - 0,7..0,8
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'kw_maybe', '_del': False}, ('arguments',
+r'''a, *b, c'''),
+r'''''',
+r'''arguments - ROOT 0,0..0,0''',
+r'''a, *b, c''', r'''
+arguments - ROOT 0,0..0,8
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+  .kwonlyargs[1]
+   0] arg - 0,7..0,8
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+'''),
+
+('', 0, 'end', None, {'args_as': 'arg', '_del': False, '_verify': False}, ('arguments', r'''
+    config=None,
+    *,
+    etype,
+    long_version: bool = False,
+    config=None
+'''),
+r'''**NodeError("cannot have args with defaults following args without defaults for args_as='arg'")**'''),
+],
+
 'MatchMapping': [  # ................................................................................
 
 ('', 0, 0, None, {}, ('pattern',

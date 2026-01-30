@@ -69,7 +69,6 @@ from .asttypes import (
     With,
     Yield,
     YieldFrom,
-    arg,
     comprehension,
     keyword,
     match_case,
@@ -165,6 +164,7 @@ from .slice_exprlike import (
 )
 
 from .fst_get_slice import (
+    _LocationAbstract_arguments,
     _get_option_op_side,
     _bounds_Delete_targets,
     _bounds_Assign_targets,
@@ -177,6 +177,7 @@ from .fst_get_slice import (
     _move_Compare_left_into_comparators,
     _make_arguments_allargs_w_markers,
     _remove_arguments_allargs_markers,
+    _arguments_as,
     _add_MatchMapping_rest_as_real_node,
     _remove_MatchMapping_rest_real_node,
     _fix_BoolOp,
@@ -1077,8 +1078,6 @@ def _code_to_slice_arguments(
 
         if len_body != 1:
             raise ValueError(f"expecting single argument for put as 'one=True', got {len_body}")
-
-    _set_loc_whole(fst_)
 
     return fst_
 
@@ -2277,26 +2276,6 @@ def _put_slice_comprehension_ifs(
                 self._fix_joined_alnums(ln, col)
 
 
-class _LocationAbstract_arguments(_LocationAbstract):
-    """Gives the location of each `arguments` `arg` along with its default value if it has one. The tail node is always
-    the default if present, otherwise the arg."""
-
-    def tail_node(self, idx: int) -> AST:
-        a = self.body[idx]
-        f = a.f
-
-        if a.__class__ is arg and (g := f.next()) and g.pfield.name in ('defaults', 'kw_defaults'):
-            return g.a
-
-        return a
-
-    def loc_head(self, idx: int) -> fstloc:
-        a = self.body[idx]
-        f = a.f
-
-        return f.loc if a.__class__ is Pass else f._loc_argument(True)
-
-
 def _put_slice_arguments(
     self: fst.FST,
     code: Code | None,
@@ -2333,6 +2312,8 @@ def _put_slice_arguments(
         exp_left_into_slash = exp_right_into_star = False
 
     else:
+        _arguments_as(fst_, fst.FST.get_option('args_as', options))
+
         ast_ = fst_.a
         fst_allargs, fst_idx_slash, _, _, _ = _make_arguments_allargs_w_markers(fst_, 1)
         exp_left_into_slash = bool(ast_.posonlyargs)
@@ -2340,10 +2321,6 @@ def _put_slice_arguments(
 
     allargs, _, _, aa_start, aa_stop = _make_arguments_allargs_w_markers(self, 0, start, stop,
                                                                          exp_left_into_slash, exp_right_into_star)
-
-
-    # TODO: fst_: 'argsas' or whatever option to adapt posargs/args/kwargs if possible
-
 
     # validate and get some marker info
 
@@ -2422,14 +2399,15 @@ def _put_slice_arguments(
         while fst_markers_to_delete:  # if we need to delete redundant `/` and / or `*` markers it will be in the fst_
             idx = fst_markers_to_delete.pop()
 
-            end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc, options, ',', 0)
+            end_params = put_slice_sep_begin(fst_, idx, idx + 1, fst_locabst, None, None, *fst_.loc,
+                                             {'trivia': (False, 'line')}, ',', 0)
 
             field, idx_field = fst_allargs[idx].f.pfield
 
             if field == 'posonlyargs':
-                _remove_arguments_allargs_markers(fst_, idx_posonly=idx_field, idx_kwonly=None)
+                _remove_arguments_allargs_markers(fst_, idx_slash=idx_field, idx_star=None)
             else:  # field == 'kwonlyargs'
-                _remove_arguments_allargs_markers(fst_, idx_posonly=None, idx_kwonly=idx_field)
+                _remove_arguments_allargs_markers(fst_, idx_slash=None, idx_star=idx_field)
 
             del fst_allargs[idx]
             del new_allargs[idx + aa_start]

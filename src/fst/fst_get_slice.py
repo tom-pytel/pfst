@@ -57,6 +57,7 @@ from .asttypes import (
     Tuple,
     While,
     With,
+    arg,
     arguments,
     comprehension,
     keyword,
@@ -96,11 +97,39 @@ from .fst_misc import (
 )
 
 from .slice_stmtlike import get_slice_stmtlike
-from .slice_exprlike import get_slice_sep, get_slice_nosep
+
+from .slice_exprlike import (
+    _LocationAbstract,
+    get_slice_sep,
+    get_slice_nosep,
+    put_slice_sep_begin,
+    put_slice_sep_end,
+)
 
 
 _re_empty_line_start_maybe_cont_0 = re.compile(r'[ \t]*\\?')  # empty line start with maybe continuation
 _re_empty_line_start_maybe_cont_1 = re.compile(r'[ \t]+\\?')  # empty line start with maybe continuation WITH AT LEAST 1 leading whitespace
+
+
+class _LocationAbstract_arguments(_LocationAbstract):
+    """Gives the location of each `arguments` `arg` along with its default value if it has one. The tail node is always
+    the default if present, otherwise the arg. The `body` here should be created using
+    `_make_arguments_allargs_w_markers()`."""
+
+    def tail_node(self, idx: int) -> AST:
+        a = self.body[idx]
+        f = a.f
+
+        if a.__class__ is arg and (g := f.next()) and g.pfield.name in ('defaults', 'kw_defaults'):
+            return g.a
+
+        return a
+
+    def loc_head(self, idx: int) -> fstloc:
+        a = self.body[idx]
+        f = a.f
+
+        return f.loc if a.__class__ is Pass else f._loc_argument(True)
 
 
 # ......................................................................................................................
@@ -604,13 +633,25 @@ def _make_arguments_allargs_w_markers(
     return allargs, idx_slash, idx_star, start, stop
 
 
-def _remove_arguments_allargs_markers(self: fst.FST, idx_posonly: int | None = -1, idx_kwonly: int | None = 0) -> None:
+def _remove_arguments_allargs_markers(self: fst.FST, idx_slash: int | None = -1, idx_star: int | None = 0) -> None:
     """Remove `/` and `*` markers from `arguments` `posonlyargs` and `kwonlyargs`, along with any needed default nodes
     that were added for them."""
 
     ast = self.a
 
-    if (posonlyargs := ast.posonlyargs) and (a := posonlyargs[idx_posonly]).__class__ is Pass:  # if '/' marker present then remove
+    if idx_star is not None and (kwonlyargs := ast.kwonlyargs) and kwonlyargs[idx_star].__class__ is Pass:  # if '*' marker present then remove
+        kw_defaults = ast.kw_defaults
+
+        del kwonlyargs[idx_star]
+        del kw_defaults[idx_star]
+
+        for i in range(idx_star, len(kwonlyargs)):
+            kwonlyargs[i].f.pfield = astfield('kwonlyargs', i)
+
+            if kw_defaults[i]:
+                kw_defaults[i].f.pfield = astfield('kw_defaults', i)
+
+    if idx_slash is not None and (posonlyargs := ast.posonlyargs) and (a := posonlyargs[idx_slash]).__class__ is Pass:  # if '/' marker present then remove
         defaults = ast.defaults
 
         if g := a.f.next():
@@ -619,22 +660,214 @@ def _remove_arguments_allargs_markers(self: fst.FST, idx_posonly: int | None = -
             if field == 'defaults':
                 del defaults[idx]
 
-            for i in range(idx , len(defaults)):  # reset all pfields for deleted default element
-                defaults[i].f.pfield = astfield('defaults', i)
+                for i in range(idx, len(defaults)):  # reset all pfields for deleted default element
+                    defaults[i].f.pfield = astfield('defaults', i)
 
-        del posonlyargs[idx_posonly]
+        del posonlyargs[idx_slash]
 
-    if (kwonlyargs := ast.kwonlyargs) and kwonlyargs[idx_kwonly].__class__ is Pass:  # if '*' marker present then remove
-        kw_defaults = ast.kw_defaults
 
-        del kwonlyargs[idx_kwonly]
-        del kw_defaults[idx_kwonly]
+def _arguments_as(
+    self: fst.FST,
+    args_as: Literal['pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe'] | None = None,
+) -> None:
+    """Convert arguments to the requested type. Will raise for conversion which can not be carried out unless the
+    conversion is a `'maybe'`, which just converts as much as possible and doesn't raise for anything that can't be
+    converted. An `args_as=None` will just return without changing anything."""
 
-        for i in range(idx_kwonly, len(kwonlyargs)):
+    if not args_as:
+        return
+
+    ast = self.a
+    vararg = ast.vararg
+    kwonlyargs = ast.kwonlyargs
+    kwarg = ast.kwarg
+    is_maybe = args_as.endswith('_maybe')
+
+    # reject impossible conversions
+
+    if vararg:
+        if args_as == 'arg':
+            if kwonlyargs:
+                raise NodeError("cannot have keywords following vararg for args_as='arg'")
+
+        elif not is_maybe:
+            raise NodeError(f'cannot have vararg for args_as={args_as!r}')
+
+    if kwarg and not (is_maybe or args_as == 'kw'):
+        raise NodeError(f'cannot have kwarg for args_as={args_as!r}')
+
+    # figure out which changes and marker deletions need to be made, exit early if no changes needed
+
+    posonlyargs = ast.posonlyargs
+    args = ast.args
+    defaults = ast.defaults
+    kw_defaults = ast.kw_defaults
+    do_kw = kwonlyargs and not vararg
+    del_slash = del_star = False
+
+    if as_arg := args_as.startswith('arg'):
+        if posonlyargs:
+            del_slash = True
+        elif not kwonlyargs:
+            return
+
+        del_star = kwonlyargs and not vararg
+
+    elif as_pos := args_as.startswith('pos'):
+        if kwonlyargs:
+            del_star = not vararg
+        elif not args:
+            return
+
+        del_slash = bool(posonlyargs)
+
+    else:  # args_as.startswith('kw')
+        if posonlyargs:
+            del_slash = True
+        elif not args:
+            return
+
+        if not vararg:
+            del_star = bool(kwonlyargs)
+        else:  # is_maybe
+            do_kw = False
+            as_arg = True
+
+    # make sure the defaults are in an allowed state for this operation
+
+    if do_kw:  # need to check that kw_defaults is ok to merge with defaults, going in either direction (if not blocked by vararg)
+        if None not in kw_defaults:
+            first_kw_default = kw_defaults[0]
+
+        elif as_arg or as_pos:
+            for a in (itr := iter(kw_defaults)):
+                if a:
+                    for b in itr:
+                        if not b:
+                            first_kw_default = False
+
+                            break
+
+                    else:
+                        first_kw_default = a
+
+                    break
+
+            else:
+                first_kw_default = None
+
+            if ((not first_kw_default or not kw_defaults[0]) if defaults else first_kw_default is False):
+                if not is_maybe:
+                    raise NodeError(f'cannot have args with defaults following args without defaults for args_as={args_as!r}')
+
+                do_kw = del_star = False
+
+    # delete slash and / or star if needed
+
+    if del_slash or del_star:
+        allargs, idx_slash, idx_star, _, _ = _make_arguments_allargs_w_markers(self)
+        locabst = _LocationAbstract_arguments(allargs)
+
+        if del_star:
+            end_params = put_slice_sep_begin(self, idx_star, idx_star + 1, locabst, None, None, *self.loc,
+                                             {'trivia': (False, 'line')}, ',', 0)
+            _remove_arguments_allargs_markers(self, idx_slash=None, idx_star=0)
+
+            del allargs[idx_star]
+
+            put_slice_sep_end(self, end_params)
+
+        if del_slash:
+            end_params = put_slice_sep_begin(self, idx_slash, idx_slash + 1, locabst, None, None, *self.loc,
+                                             {'trivia': (False, 'line')}, ',', 0)
+            _remove_arguments_allargs_markers(self, idx_slash=-1, idx_star=None)
+
+            del allargs[idx_slash]
+
+            put_slice_sep_end(self, end_params)
+
+        if not del_star:  # if were added but not deleted explicitly then we need to remove them
+            if idx_star is not None:
+                _remove_arguments_allargs_markers(self, idx_slash=None, idx_star=0)
+
+        elif not del_slash and idx_slash is not None:  # only either one or neither of del_star or del_slash can be False, not both
+            _remove_arguments_allargs_markers(self, idx_slash=-1, idx_star=None)
+
+    # move nodes between the different argument type lists
+
+    if as_arg:
+        if posonlyargs:
+            args[0:0] = posonlyargs
+            posonlyargs.clear()
+
+            for i in range(0, len(args)):
+                args[i].f.pfield = astfield('args', i)
+
+        if do_kw:
+            idx = len(args)
+            idx_defaults = len(defaults)
+
+            args.extend(kwonlyargs)
+            kwonlyargs.clear()
+
+            for i in range(idx, len(args)):
+                args[i].f.pfield = astfield('args', i)
+
+            if first_kw_default:
+                defaults.extend(kw_defaults[first_kw_default.f.pfield.idx:])
+
+                for i in range(idx_defaults, len(defaults)):
+                    defaults[i].f.pfield = astfield('defaults', i)
+
+            kw_defaults.clear()
+
+    elif as_pos:
+        if args:
+            idx = len(posonlyargs)
+
+            posonlyargs.extend(args)
+            args.clear()
+
+            for i in range(idx, len(posonlyargs)):
+                posonlyargs[i].f.pfield = astfield('posonlyargs', i)
+
+        if do_kw:
+            idx = len(posonlyargs)
+            idx_defaults = len(defaults)
+
+            posonlyargs.extend(kwonlyargs)
+            kwonlyargs.clear()
+
+            for i in range(idx, len(posonlyargs)):
+                posonlyargs[i].f.pfield = astfield('posonlyargs', i)
+
+            if first_kw_default:
+                defaults.extend(kw_defaults[first_kw_default.f.pfield.idx:])
+
+                for i in range(idx_defaults, len(defaults)):
+                    defaults[i].f.pfield = astfield('defaults', i)
+
+            kw_defaults.clear()
+
+    else:  # as_kw
+        posonlyargs.extend(args)
+
+        kwonlyargs[0:0] = posonlyargs
+        kw_defaults[0:0] = [None] * (len(posonlyargs) - len(defaults)) + defaults
+
+        posonlyargs.clear()
+        args.clear()
+        defaults.clear()
+
+        for i in range(0, len(kwonlyargs)):
             kwonlyargs[i].f.pfield = astfield('kwonlyargs', i)
 
-            if kw_defaults[i]:
-                kw_defaults[i].f.pfield = astfield('kw_defaults', i)
+            if a := kw_defaults[i]:
+                a.f.pfield = astfield('kw_defaults', i)
+
+    # add any newly needed `/` or `*` and done
+
+    _fix_arguments_del(self)
 
 
 def _add_MatchMapping_rest_as_real_node(self: fst.FST) -> fst.FST:
@@ -1125,7 +1358,7 @@ def _fix_arguments_del(self: fst.FST) -> None:
             #         col = m.end() if (g := m.group(1)) and g.startswith('#') else m.start()  # if comment then just del to end of that, otherwise to start of whitespace
 
             #         self._put_src(None, ln, col, end_ln, end_col, True)
-            assert not frag or src.startswith('**')  # the above should not happen anymoreas a standalone '*' should not be left on delete if all kwonlyargs were removed
+            assert not frag or src.startswith('**')  # the above should not happen anymore as a standalone '*' should not be left on delete if all kwonlyargs were removed
 
         else:  # there are kwonlyargs, make sure there is a '*'
             if not src.startswith('*'):  # we know there is a frag and this exists because there are kwonlyargs, if not star then is first keyword
@@ -1135,7 +1368,8 @@ def _fix_arguments_del(self: fst.FST) -> None:
                     end_ln, end_col, _ = frag
                     end_col += 1
 
-                if ((m := re_empty_space.match(lines[ln], 0, col))
+                if (ln > self_ln
+                    and (m := re_empty_space.match(lines[ln], 0, col))
                     and not next_frag(lines, end_ln, end_col, end_ln,
                                       0x7fffffffffffffff if end_ln < self_end_ln else self_end_col)  # because could be '**\n'
                 ):  # if first keyword starts own line and does not share lines with next node then we put '*' on own line too
@@ -2411,9 +2645,7 @@ def _get_slice_arguments(
             if end_ln != ln and not self._is_enclosed_in_parents():  # if we created multiline args for an unenclosed Lambda then parenthesize it
                 parent._parenthesize_grouping()
 
-
-    # TODO: fst_: 'argsas' or whatever option to move arguments to '.args' if possible, convert to just normal args if possible (no '/' or '*')
-
+    _arguments_as(fst_, fst.FST.get_option('args_as', options))
 
     return fst_
 

@@ -2189,9 +2189,9 @@ class SliceExprlike(Fuzzy):
             print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
             print('   PRE SRC: ', src, src.src)
             print('   PRE DST: ', dst, dst.src)
-            if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
-            if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
-            # src.dump()
+            # if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
+            # # src.dump()
 
     def debug_slice(self, slice: FST) -> None:
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
@@ -2358,7 +2358,7 @@ class SliceExprlike(Fuzzy):
 
         self.debug_pre(dir, cat, cut, one, src, src_start, src_stop, src_len, min_src, src_trivia, dst, dst_start, dst_stop, dst_len, min_dst, dst_trivia)
 
-        src_elts = src_body[src_start : src_stop]
+        # src_elts = src_body[src_start : src_stop]
         src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
         src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
 
@@ -2370,7 +2370,11 @@ class SliceExprlike(Fuzzy):
 
         # slice_elts = slice._cached_allargs()
 
-        self.debug_slice(slice)
+        args_as = None if randint(0, 2) else choice(('pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe'))
+
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   SLICE:   ', slice, slice.src)
+            print('   ARGS_AS: ', args_as)
 
         dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
         dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
@@ -2378,7 +2382,7 @@ class SliceExprlike(Fuzzy):
         try:
             slice_bck = slice.copy()
 
-            dst.put_slice(slice, dst_start_, dst_stop_, field='_all', one=one, trivia=dst_trivia)
+            dst.put_slice(slice, dst_start_, dst_stop_, field='_all', one=one, trivia=dst_trivia, args_as=args_as)
 
         except NodeError as exc:  # positional stuff, put thing back if we cut it
             if cut:

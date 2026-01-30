@@ -33,8 +33,9 @@ _DEFAULT_OPTIONS = {
     'norm':          False,   # True | False
     'norm_self':     None,    # True | False | None
     'norm_get':      None,    # True | False | None
-    'set_norm':     'star',   # False | 'star' | 'call'
-    'op_side':      'left',   # 'left' | 'right'
+    'set_norm':      'star',  # False | 'star' | 'call'
+    'op_side':       'left',  # 'left' | 'right'
+    'args_as':       None,    # 'pos' |'arg' |'kw' |'arg_only' |'kw_only' |'pos_maybe' |'arg_maybe' |'kw_maybe' | None
 }
 
 _ALL_OPTIONS = {*_DEFAULT_OPTIONS, 'to', 'op', 'ins_ln'}  # including dynamic non-global options
@@ -211,7 +212,8 @@ def get_options() -> dict[str, Any]:
      'norm_self': None,
      'norm_get': None,
      'set_norm': 'star',
-     'op_side': 'left'}
+     'op_side': 'left',
+     'args_as': None}
     """
 
     return _OPTIONS.__dict__.copy()
@@ -403,6 +405,29 @@ def options(**options) -> Iterator[dict[str, Any]]:
         to insert.
         - `'left'`: Delete preceding operator on left side of slice or insert before preceding operator. **DEFAULT**
         - `'right'`: Delete trailing operator on right side of slice or insert after preceding operator.
+    - `args_as`: Conversion or argument types on `argument` node slice operations. This is mostly meant for use in
+        individual calls but is a global option in order to allow `with options(args_as=?)` usage. When used on a slice
+        get it converts the gotten slice. When used on a slice put, it converts the slice being put before the attempted
+        put.
+        - `pos`: Convert all arguments to `posonlyargs` if possible, if not then error. If `vararg` or `kwarg` present
+            then will error.
+        - `arg`: Convert all arguments to `args` if possible, if not then error. A `vararg` is allowed but if present
+            then will prevent any present `kwonlyargs` from being converted and in this case will error. If `kwarg` is
+            present then will error.
+        - `kw`: Convert all arguments to `kwonlyargs` if possible, if not then error. A `kwarg` is allowed and
+            will not prevent any conversion as it is always follows all other arguments. If `vararg` is present then
+            will error.
+        - `arg_only`: Same as `arg` except does not allow a `vararg` and if present will error.
+        - `kw_only`: Same as `kw` except does not allow a `kwarg` and if present will error.
+        - `pos_maybe`: Attempt to convert all arguments to `posonlyargs`. `args` can always be converted but if
+            `kwonlyargs` cannot be because of a `vararg` or default value incompatibilities then they will not be
+            converted and there will not be an error. `kwarg` is left in place.
+        - `arg_maybe`: Attempt to convert all arguments to `args`. `posonlyargs` can always be converted but if
+            `kwonlyargs` cannot be because of a `vararg` or default value incompatibilities then they will not be
+            converted and there will not be an error. `kwarg` is left in place.
+        - `kw_maybe`: Attempt to convert all arguments to `kwonlyargs`. If `vararg` is present the `posonlyargs` and
+            `args` are not converted, but a `posonlyargs` will be converted in this case to `args`. `kwarg` is left in
+            place.
 
     **Note:** `pars` behavior:
     ```

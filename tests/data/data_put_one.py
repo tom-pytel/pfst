@@ -16296,49 +16296,53 @@ r'''**DEL**'''),
 r'''**ValueError('cannot delete in raw put')**'''),
 
 ('', 1, None, '_all', {'raw': True}, ('arguments',
-r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), (None,
-r'''z: tuple'''),
-r'''a: int = ( 1 ), z: tuple, c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )''', r'''
-_type_params - ROOT 0,0..0,86
-  .type_params[5]
-   0] TypeVar - 0,0..0,14
-     .name 'a'
-     .bound Name 'int' Load - 0,3..0,6
-     .default_value Constant 1 - 0,11..0,12
-   1] TypeVar - 0,16..0,24
-     .name 'z'
-     .bound Name 'tuple' Load - 0,19..0,24
-   2] TypeVar - 0,26..0,44
-     .name 'c'
-     .bound Name 'float' Load - 0,29..0,34
-     .default_value Constant 3.0 - 0,39..0,42
-   3] TypeVar - 0,46..0,65
-     .name 'd'
-     .bound Name 'bytes' Load - 0,49..0,54
-     .default_value Constant b'z' - 0,59..0,63
-   4] TypeVar - 0,67..0,86
-     .name 'e'
-     .bound Name 'complex' Load - 0,70..0,77
-     .default_value Constant 1j - 0,82..0,84
+r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), ('arguments',
+r'''z: tuple = 1j'''),
+r'''a: int = ( 1 ), z: tuple = 1j, c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )''', r'''
+arguments - ROOT 0,0..0,91
+  .args[5]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+   1] arg - 0,16..0,24
+     .arg 'z'
+     .annotation Name 'tuple' Load - 0,19..0,24
+   2] arg - 0,31..0,39
+     .arg 'c'
+     .annotation Name 'float' Load - 0,34..0,39
+   3] arg - 0,51..0,59
+     .arg 'd'
+     .annotation Name 'bytes' Load - 0,54..0,59
+   4] arg - 0,72..0,82
+     .arg 'e'
+     .annotation Name 'complex' Load - 0,75..0,82
+  .defaults[5]
+   0] Constant 1 - 0,11..0,12
+   1] Constant 1j - 0,27..0,29
+   2] Constant 3.0 - 0,44..0,47
+   3] Constant b'z' - 0,64..0,68
+   4] Constant 1j - 0,87..0,89
 '''),
 
 ('', 1, None, '_all', {'raw': True, 'to': 'defaults[3]'}, ('arguments',
-r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), (None,
-r'''z: tuple'''),
-r'''a: int = ( 1 ), z: tuple, e: complex = ( 1j )''', r'''
-_type_params - ROOT 0,0..0,45
-  .type_params[3]
-   0] TypeVar - 0,0..0,14
-     .name 'a'
-     .bound Name 'int' Load - 0,3..0,6
-     .default_value Constant 1 - 0,11..0,12
-   1] TypeVar - 0,16..0,24
-     .name 'z'
-     .bound Name 'tuple' Load - 0,19..0,24
-   2] TypeVar - 0,26..0,45
-     .name 'e'
-     .bound Name 'complex' Load - 0,29..0,36
-     .default_value Constant 1j - 0,41..0,43
+r'''a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )'''), ('arguments',
+r'''z: tuple = 1j'''),
+r'''a: int = ( 1 ), z: tuple = 1j, e: complex = ( 1j )''', r'''
+arguments - ROOT 0,0..0,50
+  .args[3]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+   1] arg - 0,16..0,24
+     .arg 'z'
+     .annotation Name 'tuple' Load - 0,19..0,24
+   2] arg - 0,31..0,41
+     .arg 'e'
+     .annotation Name 'complex' Load - 0,34..0,41
+  .defaults[3]
+   0] Constant 1 - 0,11..0,12
+   1] Constant 1j - 0,27..0,29
+   2] Constant 1j - 0,46..0,48
 '''),
 ],
 
