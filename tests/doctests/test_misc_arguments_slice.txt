@@ -1,0 +1,834 @@
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+
+>>> (f := FST('def f(a, b, /, *, c, d): pass')).args.get_slice(1, 3, cut=True).dump('N')
+0: b, /, *, c
+arguments - ROOT 0,0..0,10
+  .posonlyargs[1]
+0: b
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .kwonlyargs[1]
+0:          c
+   0] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+<arguments ROOT 0,0..0,10>
+
+>>> f.dump('N')
+0: def f(a, /, *, d):
+FunctionDef - ROOT 0,0..0,23
+  .name 'f'
+0:       a, /, *, d
+  .args arguments - 0,6..0,16
+    .posonlyargs[1]
+0:       a
+     0] arg - 0,6..0,7
+       .arg 'a'
+    .kwonlyargs[1]
+0:                d
+     0] arg - 0,15..0,16
+       .arg 'd'
+    .kw_defaults[1]
+     0] None
+  .body[1]
+0:                    pass
+   0] Pass - 0,19..0,23
+<FunctionDef ROOT 0,0..0,23>
+
+>>> FST('def f(a, b, /, *, c, d): pass').args.loc
+fstloc(0, 6, 0, 22)
+
+>>> FST('lambda a, b, /, *, c, d: None').args.loc
+fstloc(0, 7, 0, 23)
+
+>>> FST('a, b, /, *, c, d').loc
+fstloc(0, 0, 0, 16)
+
+>>> FST('\na, b, /, *, c, d\n ').loc
+fstloc(0, 0, 2, 1)
+
+>>> FST('a, b, c, d').put_slice('''
+...   a, # a
+...   b, # b
+...   c, # c
+...   d, # d
+... ''', 2, 2).src
+'(a, b,\n  a, # a\n  b, # b\n  c, # c\n  d, # d\nc, d)'
+
+>>> (f := FST('''
+...     a,
+...     b,
+... ''')).put_slice('''
+...   c, # c
+...   d, # d
+... ''', 1, 1)
+<Tuple ROOT 0,0..5,1>
+
+>>> print(f.src)
+(
+    a,
+    c, # c
+    d, # d
+    b,
+)
+
+>>> f = FST("def f(a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )): pass")
+
+>>> f.args.put_slice('x=0, y=0, z=0', 1, -1, raw=True)
+<arguments 0,6..0,56>
+
+>>> f.dump('N').verify()
+0: def f(a: int = ( 1 ), x=0, y=0, z=0, e: complex = ( 1j )):
+FunctionDef - ROOT 0,0..0,63
+  .name 'f'
+0:       a: int = ( 1 ), x=0, y=0, z=0, e: complex = ( 1j )
+  .args arguments - 0,6..0,56
+    .args[5]
+0:       a: int
+     0] arg - 0,6..0,12
+       .arg 'a'
+0:          int
+       .annotation Name 'int' Load - 0,9..0,12
+0:                       x
+     1] arg - 0,22..0,23
+       .arg 'x'
+0:                            y
+     2] arg - 0,27..0,28
+       .arg 'y'
+0:                                 z
+     3] arg - 0,32..0,33
+       .arg 'z'
+0:                                      e: complex
+     4] arg - 0,37..0,47
+       .arg 'e'
+0:                                         complex
+       .annotation Name 'complex' Load - 0,40..0,47
+    .defaults[5]
+0:                  1
+     0] Constant 1 - 0,17..0,18
+0:                         0
+     1] Constant 0 - 0,24..0,25
+0:                              0
+     2] Constant 0 - 0,29..0,30
+0:                                   0
+     3] Constant 0 - 0,34..0,35
+0:                                                     1j
+     4] Constant 1j - 0,52..0,54
+  .body[1]
+0:                                                            pass
+   0] Pass - 0,59..0,63
+<FunctionDef ROOT 0,0..0,63>
+
+>>> cd.code_as_arguments('a=b', keyword).dump('N')
+0: a=b
+arguments - ROOT 0,0..0,3
+  .args[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+0:   b
+   0] Name 'b' Load - 0,2..0,3
+<arguments ROOT 0,0..0,3>
+
+>>> g = (f := FST("def f(a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )): pass")).args.get(0, cut=True).dump('N').verify()
+0: a: int = ( 1 )
+arguments - ROOT 0,0..0,14
+  .args[1]
+0: a: int
+   0] arg - 0,0..0,6
+     .arg 'a'
+0:    int
+     .annotation Name 'int' Load - 0,3..0,6
+  .defaults[1]
+0:            1
+   0] Constant 1 - 0,11..0,12
+
+>>> f.dump('N').verify()
+0: def f(b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )):
+FunctionDef - ROOT 0,0..0,91
+  .name 'f'
+0:       b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )
+  .args arguments - 0,6..0,84
+    .args[4]
+0:       b: str
+     0] arg - 0,6..0,12
+       .arg 'b'
+0:          str
+       .annotation Name 'str' Load - 0,9..0,12
+0:                         c: float
+     1] arg - 0,24..0,32
+       .arg 'c'
+0:                            float
+       .annotation Name 'float' Load - 0,27..0,32
+0:                                             d: bytes
+     2] arg - 0,44..0,52
+       .arg 'd'
+0:                                                bytes
+       .annotation Name 'bytes' Load - 0,47..0,52
+0:                                                                  e: complex
+     3] arg - 0,65..0,75
+       .arg 'e'
+0:                                                                     complex
+       .annotation Name 'complex' Load - 0,68..0,75
+    .defaults[4]
+0:                  '2'
+     0] Constant '2' - 0,17..0,20
+0:                                      3.0
+     1] Constant 3.0 - 0,37..0,40
+0:                                                          b'z'
+     2] Constant b'z' - 0,57..0,61
+0:                                                                                 1j
+     3] Constant 1j - 0,80..0,82
+  .body[1]
+0:                                                                                        pass
+   0] Pass - 0,87..0,91
+<FunctionDef ROOT 0,0..0,91>
+
+0: def f(b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )):
+FunctionDef - ROOT 0,0..0,91
+  .name 'f'
+0:       b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )
+  .args arguments - 0,6..0,84
+    .args[4]
+0:       b: str
+     0] arg - 0,6..0,12
+       .arg 'b'
+0:          str
+       .annotation Name 'str' Load - 0,9..0,12
+0:                         c: float
+     1] arg - 0,24..0,32
+       .arg 'c'
+0:                            float
+       .annotation Name 'float' Load - 0,27..0,32
+0:                                             d: bytes
+     2] arg - 0,44..0,52
+       .arg 'd'
+0:                                                bytes
+       .annotation Name 'bytes' Load - 0,47..0,52
+0:                                                                  e: complex
+     3] arg - 0,65..0,75
+       .arg 'e'
+0:                                                                     complex
+       .annotation Name 'complex' Load - 0,68..0,75
+    .defaults[4]
+0:                  '2'
+     0] Constant '2' - 0,17..0,20
+0:                                      3.0
+     1] Constant 3.0 - 0,37..0,40
+0:                                                          b'z'
+     2] Constant b'z' - 0,57..0,61
+0:                                                                                 1j
+     3] Constant 1j - 0,80..0,82
+  .body[1]
+0:                                                                                        pass
+   0] Pass - 0,87..0,91
+<FunctionDef ROOT 0,0..0,91>
+
+>>> FST('a=0, b=1, c=2', arguments).put('x=-1', 1)
+<arguments ROOT 0,0..0,14>
+
+>>> FST("def f(a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )): pass").args._all
+<<arguments 0,6..0,100>._all <arg 0,6..0,12>=<Constant 0,17..0,18>, <arg 0,22..0,28>=<Constant 0,33..0,36>, <arg 0,40..0,48>=<Constant 0,53..0,56>, <arg 0,60..0,68>=<Constant 0,73..0,77>, <arg 0,81..0,91>=<Constant 0,96..0,98>>
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all
+<<arguments 0,6..0,84>._all <arg 0,6..0,12>=<Constant 0,17..0,18>, <arg 0,25..0,31>=<Constant 0,36..0,39>, <arg 0,44..0,52>, <arg 0,54..0,62>=<Constant 0,67..0,71>, <arg 0,77..0,84>>
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[0].copy().src
+'a: int = ( 1 ), /'
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[1].copy().src
+"b: str = ( '2' )"
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[2].copy().src
+'*c: tuple'
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[3].copy().src
+"*, d: bytes = ( b'z' )"
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[4].copy().src
+'**e: dict'
+
+>>> FST('call(a, b, c, d, e)')._args[1:-1]
+<<Call ROOT 0,0..0,19>.__args[1:4] (<Name 0,8..0,9>, <Name 0,11..0,12>, <Name 0,14..0,15>)>
+
+>>> FST('(a, b, c, d, e)').elts[1:-1]
+<<Tuple ROOT 0,0..0,15>.elts[1:4] [<Name 0,4..0,5>, <Name 0,7..0,8>, <Name 0,10..0,11>]>
+
+>>> FST('a;b;c;d;e')._body[1:-1]
+<<Module ROOT 0,0..0,9>._body[1:4] [<Expr 0,2..0,3>, <Expr 0,4..0,5>, <Expr 0,6..0,7>]>
+
+>>> FST('a<b<c<d<e')._all[1:-1]
+<<Compare ROOT 0,0..0,9>._all[1:4] <Name 0,2..0,3> < <Name 0,4..0,5> < <Name 0,6..0,7>>
+
+>>> FST('{a:a, b:b, c:c, d:d, e:e}')._all[1:-1]
+<<Dict ROOT 0,0..0,25>._all[1:4] {<Name 0,6..0,7>: <Name 0,8..0,9>, <Name 0,11..0,12>: <Name 0,13..0,14>, <Name 0,16..0,17>: <Name 0,18..0,19>}>
+
+>>> FST('{a:a, b:b, c:c, d:d, e:e}')._all[2]
+<<Dict ROOT 0,0..0,25>._all[2:3] {<Name 0,11..0,12>: <Name 0,13..0,14>}>
+
+>>> FST('{1:a, 2:b, 3:c, 4:d, 5:e}', pattern)._all[1:-1]
+<<MatchMapping ROOT 0,0..0,25>._all[1:4] {<Constant 0,6..0,7>: <MatchAs 0,8..0,9>, <Constant 0,11..0,12>: <MatchAs 0,13..0,14>, <Constant 0,16..0,17>: <MatchAs 0,18..0,19>}>
+
+>>> FST('{1:a, 2:b, 3:c, 4:d, 5:e}', pattern)._all[2]
+<<MatchMapping ROOT 0,0..0,25>._all[2:3] {<Constant 0,11..0,12>: <MatchAs 0,13..0,14>}>
+
+>>> FST('{1:a, 2:b, 3:c, 4:d, 5:e, **rest}', pattern)._all[-1].copy().src
+'{**rest}'
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[1:-1]
+<<arguments 0,6..0,84>._all[1:4] <arg 0,25..0,31>=<Constant 0,36..0,39>, <arg 0,44..0,52>, <arg 0,54..0,62>=<Constant 0,67..0,71>>
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[2]
+<<arguments 0,6..0,84>._all[2:3] <arg 0,44..0,52>>
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[2].copy().src
+'*c: tuple'
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args[1]
+<<arguments 0,6..0,84>._all[1:2] <arg 0,25..0,31>=<Constant 0,36..0,39>>
+
+>>> (f := FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass")).args[2] = 'z: int = -1'
+
+>>> f.src
+"def f(a: int = ( 1 ), /, b: str = ( '2' ), z: int = -1, *, d: bytes = ( b'z' ), **e: dict): pass"
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args[:2].copy().src
+"a: int = ( 1 ), /, b: str = ( '2' )"
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args[-2:].copy().src
+"*, d: bytes = ( b'z' ), **e: dict"
+
+>>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args[2:-2].copy().src
+'*c: tuple'
+
+>>> f = FST('def f(): pass')
+>>> f.args.replace('a, b', raw=True)
+<arguments 0,6..0,10>
+
+>>> f.dump('N')
+0: def f(a, b):
+FunctionDef - ROOT 0,0..0,17
+  .name 'f'
+0:       a, b
+  .args arguments - 0,6..0,10
+    .args[2]
+0:       a
+     0] arg - 0,6..0,7
+       .arg 'a'
+0:          b
+     1] arg - 0,9..0,10
+       .arg 'b'
+  .body[1]
+0:              pass
+   0] Pass - 0,13..0,17
+<FunctionDef ROOT 0,0..0,17>
+
+>>> f = FST('lambda : None')
+>>> f.put('a, b', 'args', raw=True)
+<Lambda ROOT 0,0..0,17>
+
+>>> f.dump('N')
+0: lambda a, b: None
+Lambda - ROOT 0,0..0,17
+0:        a, b
+  .args arguments - 0,7..0,11
+    .args[2]
+0:        a
+     0] arg - 0,7..0,8
+       .arg 'a'
+0:           b
+     1] arg - 0,10..0,11
+       .arg 'b'
+0:              None
+  .body Constant None - 0,13..0,17
+<Lambda ROOT 0,0..0,17>
+
+>>> f = FST('lambda: None')
+>>> f.put('a, b', 'args', raw=True)
+<Lambda ROOT 0,0..0,17>
+
+>>> f.dump('N')
+0: lambda a, b: None
+Lambda - ROOT 0,0..0,17
+0:        a, b
+  .args arguments - 0,7..0,11
+    .args[2]
+0:        a
+     0] arg - 0,7..0,8
+       .arg 'a'
+0:           b
+     1] arg - 0,10..0,11
+       .arg 'b'
+0:              None
+  .body Constant None - 0,13..0,17
+<Lambda ROOT 0,0..0,17>
+
+>>> (f := FST('(lambda: None)')).args = FST('\na\n', arguments)
+>>> f.dump('N')
+0:  lambda <*END*
+1: a
+2: : None
+Lambda - ROOT 0,1..2,6
+0:         <*END*
+1: a
+2:
+  .args arguments - 0,8..2,0
+    .args[1]
+1: a
+     0] arg - 1,0..1,1
+       .arg 'a'
+2:   None
+  .body Constant None - 2,2..2,6
+<Lambda ROOT 0,1..2,6>
+
+>>> FST('a, b, c', arguments).get().src
+'a, b, c'
+
+>>> FST('a, *, c', 'arguments').get_slice(args_as='arg').dump('N').verify()
+0: a, c
+arguments - ROOT 0,0..0,4
+  .args[2]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+0:    c
+   1] arg - 0,3..0,4
+     .arg 'c'
+<arguments ROOT 0,0..0,4>
+
+>>> FST('a, *b, c', 'arguments').get_slice(args_as='pos_maybe').dump('N').verify()
+0: a, /, *b, c
+arguments - ROOT 0,0..0,11
+  .posonlyargs[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+0:        b
+  .vararg arg - 0,7..0,8
+    .arg 'b'
+  .kwonlyargs[1]
+0:           c
+   0] arg - 0,10..0,11
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+<arguments ROOT 0,0..0,11>
+
+>>> FST('a, *b, c, **d', 'arguments').get_slice(args_as='pos_maybe').dump('N').verify()
+0: a, /, *b, c, **d
+arguments - ROOT 0,0..0,16
+  .posonlyargs[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+0:        b
+  .vararg arg - 0,7..0,8
+    .arg 'b'
+  .kwonlyargs[1]
+0:           c
+   0] arg - 0,10..0,11
+     .arg 'c'
+  .kw_defaults[1]
+   0] None
+0:                d
+  .kwarg arg - 0,15..0,16
+    .arg 'd'
+<arguments ROOT 0,0..0,16>
+
+>>> FST('a, c, **d', 'arguments').get_slice(args_as='pos_maybe').dump('N').verify()
+0: a, c, /, **d
+arguments - ROOT 0,0..0,12
+  .posonlyargs[2]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+0:    c
+   1] arg - 0,3..0,4
+     .arg 'c'
+0:            d
+  .kwarg arg - 0,11..0,12
+    .arg 'd'
+<arguments ROOT 0,0..0,12>
+
+>>> cd.code_as_arguments(FST('a, b, *c'), coerce=True).dump('N')
+0: a, b, *c
+arguments - ROOT 0,0..0,8
+  .args[2]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+0:    b
+   1] arg - 0,3..0,4
+     .arg 'b'
+0:        c
+  .vararg arg - 0,7..0,8
+    .arg 'c'
+<arguments ROOT 0,0..0,8>
+
+>>> cd.code_as_arguments(FST('a=b', keyword).a, coerce=True).dump('N')
+0: a=b
+arguments - ROOT 0,0..0,3
+  .args[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+0:   b
+   0] Name 'b' Load - 0,2..0,3
+<arguments ROOT 0,0..0,3>
+
+>>> cd.code_as_arguments(FST('**b', keyword).a, coerce=True).dump('N').verify()
+0: **b
+arguments - ROOT 0,0..0,3
+0:   b
+  .kwarg arg - 0,2..0,3
+    .arg 'b'
+<arguments ROOT 0,0..0,3>
+
+>>> cd.code_as_arguments(FST('**a', keyword), coerce=True).dump('N')
+0: **a
+arguments - ROOT 0,0..0,3
+0:   a
+  .kwarg arg - 0,2..0,3
+    .arg 'a'
+<arguments ROOT 0,0..0,3>
+
+>>> cd.code_as_arguments(FST('a=b', keyword).a, coerce=True).dump('N').verify()
+0: a=b
+arguments - ROOT 0,0..0,3
+  .args[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+0:   b
+   0] Name 'b' Load - 0,2..0,3
+<arguments ROOT 0,0..0,3>
+
+>>> cd.code_as_arguments(FST('a=b', keyword), coerce=True).dump('N').verify()
+0: a=b
+arguments - ROOT 0,0..0,3
+  .args[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+0:   b
+   0] Name 'b' Load - 0,2..0,3
+<arguments ROOT 0,0..0,3>
+
+>>> cd.code_as_arguments(FST('''a={
+...                          1:2,
+...                          3:4,
+...                          5:6}''', keyword), coerce=True).dump('N').verify()
+0: a={
+1:                          1:2,
+2:                          3:4,
+3:                          5:6}
+arguments - ROOT 0,0..3,29
+  .args[1]
+0: a
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+0:   {
+1:                          1:2,
+2:                          3:4,
+3:                          5:6}
+   0] Dict - 0,2..3,29
+     .keys[3]
+1:                          1
+      0] Constant 1 - 1,25..1,26
+2:                          3
+      1] Constant 3 - 2,25..2,26
+3:                          5
+      2] Constant 5 - 3,25..3,26
+     .values[3]
+1:                            2
+      0] Constant 2 - 1,27..1,28
+2:                            4
+      1] Constant 4 - 2,27..2,28
+3:                            6
+      2] Constant 6 - 3,27..3,28
+<arguments ROOT 0,0..3,29>
+
+>>> FST('lambda a, b, c: None').args.put_slice(None).root.src
+'lambda: None'
+
+>>> f = FST('''def f(
+...     a = 1,
+...     b = 2,
+...     c = 3,
+... ): pass''')
+>>> g = FST('''def g(
+...         x = -1,
+...         y = -2,
+...         z = -3,
+... ): pass''')
+>>> f.args.put_slice(g.args.get_slice(1, 2), 1, 1).root.dump('N').verify()
+0: def f(
+1:     a = 1,
+2:     y = -2,
+3:     b = 2,
+4:     c = 3,
+5: ):
+FunctionDef - ROOT 0,0..5,7
+  .name 'f'
+0:       <*END*
+1:     a = 1,
+2:     y = -2,
+3:     b = 2,
+4:     c = 3,
+5:
+  .args arguments - 0,6..5,0
+    .args[4]
+1:     a
+     0] arg - 1,4..1,5
+       .arg 'a'
+2:     y
+     1] arg - 2,4..2,5
+       .arg 'y'
+3:     b
+     2] arg - 3,4..3,5
+       .arg 'b'
+4:     c
+     3] arg - 4,4..4,5
+       .arg 'c'
+    .defaults[4]
+1:         1
+     0] Constant 1 - 1,8..1,9
+2:         -2
+     1] UnaryOp - 2,8..2,10
+2:         -
+       .op USub - 2,8..2,9
+2:          2
+       .operand Constant 2 - 2,9..2,10
+3:         2
+     2] Constant 2 - 3,8..3,9
+4:         3
+     3] Constant 3 - 4,8..4,9
+  .body[1]
+5:    pass
+   0] Pass - 5,3..5,7
+<FunctionDef ROOT 0,0..5,7>
+
+>>> f = FST('''def f(a = 1, b = 2, c = 3,): pass''')
+>>> g = FST('''def g(x = -1, y = -2, z = -3,): pass''')
+>>> f.args.put_slice(g.args.get_slice(1, 2), 1, 1).root.dump('N').verify()
+0: def f(a = 1, y = -2, b = 2, c = 3,):
+FunctionDef - ROOT 0,0..0,41
+  .name 'f'
+0:       a = 1, y = -2, b = 2, c = 3,
+  .args arguments - 0,6..0,34
+    .args[4]
+0:       a
+     0] arg - 0,6..0,7
+       .arg 'a'
+0:              y
+     1] arg - 0,13..0,14
+       .arg 'y'
+0:                      b
+     2] arg - 0,21..0,22
+       .arg 'b'
+0:                             c
+     3] arg - 0,28..0,29
+       .arg 'c'
+    .defaults[4]
+0:           1
+     0] Constant 1 - 0,10..0,11
+0:                  -2
+     1] UnaryOp - 0,17..0,19
+0:                  -
+       .op USub - 0,17..0,18
+0:                   2
+       .operand Constant 2 - 0,18..0,19
+0:                          2
+     2] Constant 2 - 0,25..0,26
+0:                                 3
+     3] Constant 3 - 0,32..0,33
+  .body[1]
+0:                                      pass
+   0] Pass - 0,37..0,41
+<FunctionDef ROOT 0,0..0,41>
+
+>>> f = FST('''def f(
+...     a = 1,
+...     b = 2,
+...     c = 3,
+... ): pass''')
+>>> g = FST('''def g(
+...         x = -1,
+...         y = -2,
+...         z = -3,
+... ): pass''')
+>>> f.args.put_slice(g.args.get_slice(1, 2, args_as='kw'), 3, 3).root.dump('N').verify()
+0: def f(
+1:     a = 1,
+2:     b = 2,
+3:     c = 3,
+4:     *,
+5:     y = -2
+6: ):
+FunctionDef - ROOT 0,0..6,7
+  .name 'f'
+0:       <*END*
+1:     a = 1,
+2:     b = 2,
+3:     c = 3,
+4:     *,
+5:     y = -2
+6:
+  .args arguments - 0,6..6,0
+    .args[3]
+1:     a
+     0] arg - 1,4..1,5
+       .arg 'a'
+2:     b
+     1] arg - 2,4..2,5
+       .arg 'b'
+3:     c
+     2] arg - 3,4..3,5
+       .arg 'c'
+    .kwonlyargs[1]
+5:     y
+     0] arg - 5,4..5,5
+       .arg 'y'
+    .kw_defaults[1]
+5:         -2
+     0] UnaryOp - 5,8..5,10
+5:         -
+       .op USub - 5,8..5,9
+5:          2
+       .operand Constant 2 - 5,9..5,10
+    .defaults[3]
+1:         1
+     0] Constant 1 - 1,8..1,9
+2:         2
+     1] Constant 2 - 2,8..2,9
+3:         3
+     2] Constant 3 - 3,8..3,9
+  .body[1]
+6:    pass
+   0] Pass - 6,3..6,7
+<FunctionDef ROOT 0,0..6,7>
+
+>>> f = FST('''def f(a = 1, b = 2, c = 3,): pass''')
+>>> g = FST('''def g(x = -1, y = -2, z = -3,): pass''')
+>>> f.args.put_slice(g.args.get_slice(1, 2, args_as='kw'), 3, 3).root.dump('N').verify()
+0: def f(a = 1, b = 2, c = 3, *, y = -2):
+FunctionDef - ROOT 0,0..0,43
+  .name 'f'
+0:       a = 1, b = 2, c = 3, *, y = -2
+  .args arguments - 0,6..0,36
+    .args[3]
+0:       a
+     0] arg - 0,6..0,7
+       .arg 'a'
+0:              b
+     1] arg - 0,13..0,14
+       .arg 'b'
+0:                     c
+     2] arg - 0,20..0,21
+       .arg 'c'
+    .kwonlyargs[1]
+0:                               y
+     0] arg - 0,30..0,31
+       .arg 'y'
+    .kw_defaults[1]
+0:                                   -2
+     0] UnaryOp - 0,34..0,36
+0:                                   -
+       .op USub - 0,34..0,35
+0:                                    2
+       .operand Constant 2 - 0,35..0,36
+    .defaults[3]
+0:           1
+     0] Constant 1 - 0,10..0,11
+0:                  2
+     1] Constant 2 - 0,17..0,18
+0:                         3
+     2] Constant 3 - 0,24..0,25
+  .body[1]
+0:                                        pass
+   0] Pass - 0,39..0,43
+<FunctionDef ROOT 0,0..0,43>
+
+>>> f = FST('''def f(
+...     a = 1,
+...     b = 2,
+...     c = 3,
+... ): pass''')
+>>> g = FST('''def g(
+...         x = -1,
+...         y = -2,
+...         z = -3,
+... ): pass''')
+>>> f.args.put_slice(g.args.get_slice(1, 2, args_as='kw'), 0, 2, args_as='pos').root.dump('N').verify()
+0: def f(
+1:     y = -2,
+2:     /,
+3:     c = 3,
+4: ):
+FunctionDef - ROOT 0,0..4,7
+  .name 'f'
+0:       <*END*
+1:     y = -2,
+2:     /,
+3:     c = 3,
+4:
+  .args arguments - 0,6..4,0
+    .posonlyargs[1]
+1:     y
+     0] arg - 1,4..1,5
+       .arg 'y'
+    .args[1]
+3:     c
+     0] arg - 3,4..3,5
+       .arg 'c'
+    .defaults[2]
+1:         -2
+     0] UnaryOp - 1,8..1,10
+1:         -
+       .op USub - 1,8..1,9
+1:          2
+       .operand Constant 2 - 1,9..1,10
+3:         3
+     1] Constant 3 - 3,8..3,9
+  .body[1]
+4:    pass
+   0] Pass - 4,3..4,7
+<FunctionDef ROOT 0,0..4,7>
+
+>>> f = FST('''def f(a = 1, b = 2, c = 3,): pass''')
+>>> g = FST('''def g(x = -1, y = -2, z = -3,): pass''')
+>>> f.args.put_slice(g.args.get_slice(1, 2, args_as='kw'), 0, 2, args_as='pos').root.dump('N').verify()
+0: def f(y = -2, /, c = 3,):
+FunctionDef - ROOT 0,0..0,30
+  .name 'f'
+0:       y = -2, /, c = 3,
+  .args arguments - 0,6..0,23
+    .posonlyargs[1]
+0:       y
+     0] arg - 0,6..0,7
+       .arg 'y'
+    .args[1]
+0:                  c
+     0] arg - 0,17..0,18
+       .arg 'c'
+    .defaults[2]
+0:           -2
+     0] UnaryOp - 0,10..0,12
+0:           -
+       .op USub - 0,10..0,11
+0:            2
+       .operand Constant 2 - 0,11..0,12
+0:                      3
+     1] Constant 3 - 0,21..0,22
+  .body[1]
+0:                           pass
+   0] Pass - 0,26..0,30
+<FunctionDef ROOT 0,0..0,30>

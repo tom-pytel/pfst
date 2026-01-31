@@ -23069,8 +23069,9 @@ arguments - ROOT 0,0..0,4
 ''', r'''
 a,
 /
+
 ''', r'''
-arguments - ROOT 0,0..1,1
+arguments - ROOT 0,0..2,0
   .posonlyargs[1]
    0] arg - 0,0..0,1
      .arg 'a'
@@ -23106,8 +23107,9 @@ arguments - ROOT 0,0..1,7
 ''', r'''
 a,  # a
 /,
+
 ''', r'''
-arguments - ROOT 0,0..1,2
+arguments - ROOT 0,0..2,0
   .posonlyargs[1]
    0] arg - 0,0..0,1
      .arg 'a'
@@ -23123,7 +23125,7 @@ arguments - ROOT 0,0..0,4
    0] arg - 0,0..0,1
      .arg 'c'
 ''', r'''
-a, b, / # b
+a, b, /, # b
 
 ''', r'''
 arguments - ROOT 0,0..1,0
@@ -23151,8 +23153,9 @@ arguments - ROOT 0,0..1,7
 a,  # a
 b,  # b
 /,
+
 ''', r'''
-arguments - ROOT 0,0..2,2
+arguments - ROOT 0,0..3,0
   .posonlyargs[2]
    0] arg - 0,0..0,1
      .arg 'a'

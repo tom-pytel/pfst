@@ -185,7 +185,7 @@ from .fst_get_slice import (
     _fix_Assign_target0,
     _fix_decorator_list_trailing_newline,
     _fix_decorator_list_del,
-    _fix_arguments_del,
+    _fix_arguments,
     _fix_MatchSequence,
     _fix_MatchOr,
     _fix_stmt_end,
@@ -2458,7 +2458,7 @@ def _put_slice_arguments(
         fst_._unmake_fst_parents(True)  # all the children have been put in self so unmake just the arguments container
 
     if not fst_ or need_slash_idx is not None or need_star_idx is not None:  # TODO: LAZY, could use the actual indices to do more efficiently
-        _fix_arguments_del(self)
+        _fix_arguments(self)
 
     if is_lambda:  # if arguments of Lambda then may need some fixes
         if fst_:

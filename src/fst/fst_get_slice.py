@@ -867,7 +867,7 @@ def _arguments_as(
 
     # add any newly needed `/` or `*` and done
 
-    _fix_arguments_del(self)
+    _fix_arguments(self)
 
 
 def _add_MatchMapping_rest_as_real_node(self: fst.FST) -> fst.FST:
@@ -1137,67 +1137,9 @@ def _fix_decorator_list_del(
             root._offset(bound_ln, 0, 1, 0)
 
 
-def _fix_arguments_copy(self: fst.FST) -> None:
-    """Fix copied `arguments` slice. Add needed `/` positional and / or `*` keyword indicators to end or start of
-    copied arguments. Will only add them to end or beginning of `arguments` as if they were inside then they should have
-    been copied along with the args themselves."""
-
-    assert not self.parent  # self.is_root
-
-    ast = self.a
-    lines = self._lines
-
-    if posonlyargs := ast.posonlyargs:  # may need to add trailing ',/' to indicate position-only arguments
-        if not (ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg):  # only if there is nothing following
-            f = posonlyargs[-1].f
-            ln, col, end_ln, end_col = f.loc  # args can't has pars
-
-            if (g := f.next()) and g.pfield.name == 'defaults':
-                _, _, end_ln, end_col = g.pars()  # defaults can has pars
-
-            if frag := next_frag(lines, end_ln, end_col, len(lines) - 1, 0x7fffffffffffffff):  # trailing comma?
-                end_ln, end_col, src = frag
-
-                assert src.startswith(',')
-
-                if src == ',':
-                    if frag := next_frag(lines, end_ln, end_col + 1, len(lines) - 1, 0x7fffffffffffffff):  # may be trailing '/'
-                        end_ln, end_col, src = frag
-
-                        assert src.startswith('/')  # can only be this
-
-                else:
-                    src = src[1:]
-
-                if not src.startswith('/'):  # only add if not already there
-                    if lines[-1] or ((l := lines[ln][:col]) and not l.isspace()):  # non-own-line last keyword arg, or we don't start line?
-                        self._put_src(' /', end_ln, end_col + 1, end_ln, end_col + 1)  # we don't have to offset because after last node and arguments has calculated location
-                    else:
-                        self._put_src(f'{l}/,', end_ln + 1, 0, end_ln + 1, 0)
-
-            elif lines[-1] or ((l := lines[ln][:col]) and not l.isspace()):  # no trailing comma, or we don't start line?
-                self._put_src(', /', end_ln, end_col, end_ln, end_col)
-
-            else:
-                self._put_src(',', end_ln, end_col, end_ln, end_col)  # may be comment after
-                self._put_src(f'{l}/', end_ln + 1, 0, end_ln + 1, 0)
-
-            self._touch()  # because we didn't offset
-
-    elif (kwonlyargs := ast.kwonlyargs) and not (ast.args or ast.vararg):  # may need to add leading '*,' to indicate keyword-only arguments
-        ln, col, end_ln, end_col = self.loc
-
-        if not next_frag(lines, ln, col, end_ln, end_col).src.startswith('*'):  # only add if not already there
-            ln, col, _, _ = kwonlyargs[0].f.loc
-
-            if lines[0]:
-                self._put_src('*, ', ln, col, ln, col, False)
-            else:  # need to put '*' on its own line
-                self._put_src(f'{lines[ln][:col]}*,\n', ln, 0, ln, 0, False)
-
-
-def _fix_arguments_del(self: fst.FST) -> None:
-    """Fix `arguments` after a slice deletion. May need to replace removed `/` or `*` or may need to remove them."""
+def _fix_arguments(self: fst.FST) -> None:
+    """Fix `arguments` markers after an operation. Currently just adds missing markers because removals are handled in
+    all current callers of this function."""
 
     lines = self.root._lines
     ast = self.a
@@ -2634,10 +2576,10 @@ def _get_slice_arguments(
 
     _remove_arguments_allargs_markers(fst_)
     _remove_arguments_allargs_markers(self)
-    _fix_arguments_copy(fst_)
+    _fix_arguments(fst_)
 
     if cut:
-        _fix_arguments_del(self)
+        _fix_arguments(self)
 
         if (parent := self.parent) and parent.a.__class__ is Lambda:  # Lambda may need parenthesization
             ln, _, end_ln, _ = self.loc
