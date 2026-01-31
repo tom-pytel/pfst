@@ -1,4 +1,13 @@
-## 0.2.6 - alpha - ????-??-??
+## 0.2.7 - alpha - ????-??-??
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## 0.2.6 - alpha - 2026-01-31
 
 ### Breaking Changes
   - when putting source instead of an `FST` or `AST` node directly as a slice to an expression, if the source is a delimited sequence then it will always be put as one node and not unpacked, previous behavior of `.put_slice('[1, 2, 3]')` being put as a slice of three distinct elements can be selected by passing `one=None`
