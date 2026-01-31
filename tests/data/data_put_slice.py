@@ -38716,7 +38716,6 @@ arguments - ROOT 0,0..0,14
 r'''a=1, **c'''), ('arguments',
 r'''*, x=1j'''),
 r'''**NodeError('args cannot follow kwonlyargs')**'''),
-
 ],
 
 'MatchSequence': [  # ................................................................................

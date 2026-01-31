@@ -9090,6 +9090,33 @@ Module - ROOT 0,0..3,2
 '''),
 ],
 
+'arguments': [  # ................................................................................
+
+('', 0, 0, 'arguments', {}, ('keyword',
+r'''a=b'''),
+r'''a=b''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'arguments', {}, ('keyword',
+r'''**b'''),
+r'''**b''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('keyword',
+r'''**(a + b)'''),
+r'''FST: **NodeError('expecting arguments, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got keyword, could not coerce')**'''),
+],
+
 '_withitems': [  # ................................................................................
 
 ('', 0, 0, '_withitems', {}, ('Tuple',

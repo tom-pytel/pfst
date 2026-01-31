@@ -1846,12 +1846,13 @@ def _coerce_to_seq(
     """
 
     ast = code
-    ast_cls = code.__class__
-    is_FST = False
+    ast_cls = ast.__class__
 
-    if not (ast_cls in _ASTS_LEAF_EXPRISH_SEQ
-        or (is_FST := (ast_cls is fst.FST and (ast_cls := (ast := code.a).__class__) in _ASTS_LEAF_EXPRISH_SEQ))
-    ):
+    if is_FST := ast_cls is fst.FST:
+        ast = code.a
+        ast_cls = ast.__class__
+
+    if ast_cls not in _ASTS_LEAF_EXPRISH_SEQ:
         return None  # TODO: add coerce from Expr Tuple / List / Set?
 
     if ast_cls not in ASTS_LEAF_TUPLE_LIST_OR_SET:
@@ -1959,69 +1960,6 @@ def _coerce_to__aliases_common(
                 ln, col, _ = frag
 
                 fst_._put_src(None, ln, col, ln, col + 1, True)
-
-    return fst_._sanitize() if sanitize else fst_
-
-
-def _coerce_to_arguments_common(
-    code: Code,
-    options: Mapping[str, Any],
-    parse_params: Mapping[str, Any],
-    parse: Callable[[Code, Mapping[str, Any]], AST],
-    expecting: str,
-    sanitize: bool,
-) -> fst.FST | None:
-    """Common to `arguments`, both normal and lambda."""
-
-    codea = getattr(code, 'a', None)
-    elts = _coerce_to_seq(code, options, parse_params, parse, arguments, True, True)
-
-    if elts is None:  # sequence as sequence?
-        return None
-
-    elts, is_FST = elts
-
-    if not is_FST:
-        src = unparse(Tuple(elts=elts))[1:-1]
-        ast = parse(src, parse_params)
-
-        return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
-
-    ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
-                end_col_offset=ls[-1].lenbytes)
-    tmp = fst.FST(ast, ls, None, from_=code, lcopy=False)  # temporary Tuple so that we can unparenthesize everything
-    args = []
-    ast = arguments(posonlyargs=[], args=args, vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
-
-    for e in elts:
-        e.f._unparenthesize_grouping(False)  # args can't have pars
-
-        if (e_cls := e.__class__) is Name:
-            args.append(arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
-                            end_col_offset=e.end_col_offset))
-
-        elif e_cls is Starred:
-            if ast.vararg:
-                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                f', could not coerce, multiple Starred')
-
-            if (e := e.value).__class__ is not Name:
-                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                f', could not coerce, Starred is {e.__class__.__name__}, must be Name')
-
-            ast.vararg = arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
-                             end_col_offset=e.end_col_offset)
-            args = ast.kwonlyargs
-
-        else:
-            raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                            f', could not coerce, found {e_cls.__name__}')
-
-    ast.kw_defaults = [None] * len(ast.kwonlyargs)
-
-    tmp._unmake_fst_tree()
-
-    fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
     return fst_._sanitize() if sanitize else fst_
 
@@ -2726,20 +2664,121 @@ def _coerce_to__ImportFrom_names(
 
 
 def _coerce_to_arguments(
-    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False
-) -> fst.FST:
-    """See `_coerce_to__Assign_targets()`."""
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    parse: Callable[[Code, Mapping[str, Any]], AST] = parse_arguments,
+) -> fst.FST | None:
+    """See `_coerce_to__Assign_targets()`. Common to `arguments`, both normal and lambda."""
 
-    if fst_ := _coerce_to_arguments_common(code, options, parse_params, parse_arguments, 'arguments', sanitize):  # sequence as arguments?
-        return fst_
+    codea = getattr(code, 'a', code)
+    is_lambda = parse is parse_arguments_lambda
+    expecting = 'lambda arguments' if is_lambda else 'arguments'
+
+    elts = _coerce_to_seq(code, options, parse_params, parse, arguments, True, True)
+
+    if elts is not None:  # sequence as sequence?
+        elts, is_FST = elts
+
+        if not is_FST:
+            src = unparse(Tuple(elts=elts))[1:-1]
+            ast = parse(src, parse_params)
+
+            return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+        ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                    end_col_offset=ls[-1].lenbytes)
+        tmp = fst.FST(ast, ls, None, from_=code, lcopy=False)  # temporary Tuple so that we can unparenthesize everything
+        args = []
+        ast = arguments(posonlyargs=[], args=args, vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
+
+        for e in elts:
+            e.f._unparenthesize_grouping(False)  # args can't have pars
+
+            if (e_cls := e.__class__) is Name:
+                args.append(arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                                end_col_offset=e.end_col_offset))
+
+            elif e_cls is Starred:
+                if ast.vararg:
+                    raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
+                                    f', could not coerce, multiple Starred')
+
+                if (e := e.value).__class__ is not Name:
+                    raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
+                                    f', could not coerce, Starred is {e.__class__.__name__}, must be Name')
+
+                ast.vararg = arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
+                                end_col_offset=e.end_col_offset)
+                args = ast.kwonlyargs
+
+            else:
+                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
+                                f', could not coerce, found {e_cls.__name__}')
+
+        ast.kw_defaults = [None] * len(ast.kwonlyargs)
+
+        tmp._unmake_fst_tree()
+
+        fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+
+        return fst_._sanitize() if sanitize else fst_  # TODO; sanitize undelimited containerslike arguments on the inside because currently sanitize doesn't do anything here
 
     # single element as arguments
 
+    if codea.__class__ is keyword:
+        arg_ = codea.arg
+        value = codea.value
+        is_kwarg = arg_ is None
+
+        if is_kwarg and value.__class__ is not Name:  # we need this check below anyways so might as well be more descriptive before an AST parse if this error occurs
+            raise NodeError(f"expecting {expecting}, got keyword, could not coerce, '**' value must be Name")
+
+        if codea is code:  # is AST
+            src = unparse(codea)
+            ast = parse(src, parse_params)  # should never fail
+
+            return fst.FST(ast, src.split('\n'), None)  # this is already sanitized
+
+        if is_kwarg:  # **kwarg
+            lineno = value.lineno
+            col_offset = value.col_offset
+            name = value.id
+            args = []
+            kwarg = arg(arg=name, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+                        end_col_offset=col_offset + len(name.encode()))
+
+        else:  # arg=value
+            lineno = codea.lineno
+            col_offset = codea.col_offset
+            args = [arg(arg=arg_, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+                        end_col_offset=col_offset + len(arg_.encode()))]
+            kwarg = None
+            codea.value = None
+
+        ast = arguments(posonlyargs=[], args=args, vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=kwarg, defaults=[])
+        fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
+
+        if not is_kwarg:
+            fst_._set_field([value], 'defaults', True, False)
+
+        code._unmake_fst_tree()
+
+        return fst_._sanitize() if sanitize else fst_
+
+    # not keyword, try all coercions to arg which we then use for arguments
+
     fst_ = code_as_arg(code, options, parse_params, sanitize=sanitize, coerce=True)
+    ast_ = fst_.a
+
+    if is_lambda and ast_.annotation:
+        raise NodeError('lambda arguments cannot have annotations')
 
     ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
 
-    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'args', True, False)
+    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([ast_], 'args', True, False)
 
 
 def _coerce_to_arguments_lambda(
@@ -2747,20 +2786,7 @@ def _coerce_to_arguments_lambda(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    if fst_ := _coerce_to_arguments_common(code, options, parse_params, parse_arguments, 'lambda arguments', sanitize):  # sequence as arguments?
-        return fst_
-
-    # single element as arguments
-
-    fst_ = code_as_arg(code, options, parse_params, sanitize=sanitize, coerce=True)
-    ast_ = fst_.a
-
-    if ast_.annotation:
-        raise NodeError('lambda arguments cannot have annotations')
-
-    ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
-
-    return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'args', True, False)
+    return _coerce_to_arguments(code, options, parse_params, sanitize=sanitize, parse=parse_arguments_lambda)
 
 
 def _coerce_to_withitem(
@@ -2990,25 +3016,6 @@ def _coerce_to__expr_arglikes(
 
 # ......................................................................................................................
 
-# This is meant for export but it doesn't deserver a non-underscore start, so its here
-def _code_as_lines(code: Code | None) -> list[str]:
-    """Get list of lines of `code` if is `FST`, unparse `AST`, split `str` or just return `list[str]` if is that.
-    `code=None` is returned as `['']`."""
-
-    if isinstance(code, str):
-        return code.split('\n')
-    elif code is None:
-        return ['']
-    elif isinstance(code, list):
-        return code
-    elif isinstance(code, AST):
-        return unparse(code).split('\n')
-    elif code.parent:  # not code.is_root:  # isinstance(code, fst.FST
-        raise ValueError('expecting root node')
-    else:
-        return code._lines
-
-
 def _code_as(
     code: Code,
     options: Mapping[str, Any],
@@ -3221,6 +3228,24 @@ def _code_as_op(
         code = fst.FST(parse(src, parse_params), lines, None, parse_params=parse_params)
 
     return code._sanitize() if sanitize else code
+
+
+def _code_as_lines(code: Code | None) -> list[str]:  # This is meant for export but it doesn't deserve a non-underscore start, so its here
+    """Get list of lines of `code` if is `FST`, unparse `AST`, split `str` or just return `list[str]` if is that.
+    `code=None` is returned as `['']`."""
+
+    if isinstance(code, str):
+        return code.split('\n')
+    elif code is None:
+        return ['']
+    elif isinstance(code, list):
+        return code
+    elif isinstance(code, AST):
+        return unparse(code).split('\n')
+    elif code.parent:  # not code.is_root:  # isinstance(code, fst.FST
+        raise ValueError('expecting root node')
+    else:
+        return code._lines
 
 
 # ----------------------------------------------------------------------------------------------------------------------
