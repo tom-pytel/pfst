@@ -10,6 +10,7 @@
   - custom slice types `_Assign_targets`, `_decorator_list`, `_arglikes`, `_comprehension_ifs`, `_aliases`, `_withitems` and `_type_params` to `Tuple`, `List` or `Set`
   - all sequence types, custom and standard, to custom slice types
   - all expressions and custom slice types to `pattern`
+  - `keyword` to `arguments`
 - `FST.as_(mode)` for explicit coercion directly to `mode` (which can be an explicit `type[AST]` or a parse mode)
 - `FST(FST, mode)` for constructor default non-destructive coerce copy from other `FST` node, a-la `list(other_list) is not other_list`
 - `FST(AST, mode)` and `FST.fromast(AST, type[AST] or mode)` can use the new coercion to convert `AST`

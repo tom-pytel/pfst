@@ -439,6 +439,44 @@ z = []
 def f(): pass
 
 
+## Putting source vs. nodes
+
+Put operations will accept source code as a string or list of lines or an `FST` or `AST` node. There is a bit of
+difference in how source puts are handled vs. node puts. When a node is put the type of the node is known and if it is a
+slice type for the target then it is put as a sequence, possibly adding multiple elements to the target.
+
+>>> FST('[a, b]').put_slice(FST('[x, y]'), 1, 1).src
+'[a, x, y, b]'
+
+>>> FST('[a, b]').put_slice(FST('[x, y]').a, 1, 1).src
+'[a, x, y, b]'
+
+If the slice is passed as source however, it is treated as the actual source you might want to see at the target so for
+the case above you will wind up putting a single list element if specified as source.
+
+>>> FST('[a, b]').put_slice('[x, y]', 1, 1).src
+'[a, [x, y], b]'
+
+If you want to specify multiple elements to be put as a slice when passing source then either leave out the delimiters.
+
+>>> FST('[a, b]').put_slice('x, y', 1, 1).src
+'[a, x, y, b]'
+
+Or pass `one=None`.
+
+>>> FST('[a, b]').put_slice('[x, y]', 1, 1, one=None).src
+'[a, x, y, b]'
+
+The `one=None` trick only applies if putting expression slices to an expression target `Tuple`, `List` or `Set`.
+Otherwise its the delimiters that decide between a single element and multiple in the case of source puts for all other
+node targets.
+
+**Note:** This does not apply to `Dict` and `MatchMapping` delimiters since you cannot put those as a single element
+across the `key:value` fields yet. Source puts with delimiters for those are always treated as a sequence.
+
+This is covered in more detail in `fst.docs.d08_coerce`.
+
+
 ## `put_src()`
 
 Unlike `get_src()` which is a very simple function, `put_src()` (`fst.fst.FST.put_src()`) doesn't just put text to the

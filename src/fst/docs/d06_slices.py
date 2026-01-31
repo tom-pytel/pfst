@@ -342,8 +342,8 @@ The `arguments` node can contain multiple arguments of different types and it ca
 >>> print(slc.src)
 b=1, *c, d=2
 
-When putting an `arguments` node as a slice to another `arguments` node, it must be put to a syntactically valid
-location, meaning position-only, normal and keyword arguments must all match up and there can be no more than one
+When putting an `arguments` node as a slice to another `arguments` node it must be put to a syntactically valid
+location. Meaning position-only, normal and keyword arguments must all match up and there can be no more than one
 `vararg` or `kwarg` after the put.
 
 >>> FST('a, b, /, c, d', 'arguments').put_slice('x, /', 2, 3).src
@@ -374,14 +374,87 @@ Traceback (most recent call last):
 ...
 fst.NodeError: args without defaults cannot followargs with defaults
 
+Matching argument types may not always be possible so for this reason `fst` provides a mechanism for converting the
+different types of arguments to each other. The `args_as` option can be specified on a slice get or a slice put and
+indicates that you want the returned slice or the slice to be put converted to that type of arguments.
 
+For example, if you have a function with only positional arguments but you want to copy them to another function as
+normal arguments you can do it one of two ways. Either you can convert the arguments on the slice get.
 
+>>> slc = FST('def f(a, b, /): pass').args.get_slice(args_as='arg')
 
-TODO: args_as
+>>> _ = slc.dump('S')
+0: a, b
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
 
+>>> FST('def g(): pass').args.put_slice(slc).root.src
+'def g(a, b): pass'
 
+Or you can convert on the slice put.
 
+>>> slc = FST('def f(a, b, /): pass').args.get_slice()
 
+>>> _ = slc.dump('S')
+0: a, b, /
+arguments - ROOT 0,0..0,7
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+
+>>> FST('def g(): pass').args.put_slice(slc, args_as='arg').root.src
+'def g(a, b): pass'
+
+This option can be used to convert an `arguments` node to a desired type just by getting a whole slice from that node
+and specifying this option.
+
+>>> f = FST('a, /, b, *, c', 'arguments')
+
+>>> _ = f.get(args_as='pos').dump('S')
+0: a, b, c, /
+arguments - ROOT 0,0..0,10
+  .posonlyargs[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+   2] arg - 0,6..0,7
+     .arg 'c'
+
+>>> _ = f.get(args_as='arg').dump('S')
+0: a, b, c
+arguments - ROOT 0,0..0,7
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+   2] arg - 0,6..0,7
+     .arg 'c'
+
+>>> _ = f.get(args_as='kw').dump('S')
+0: *, a, b, c
+arguments - ROOT 0,0..0,10
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'a'
+   1] arg - 0,6..0,7
+     .arg 'b'
+   2] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[3]
+   0] None
+   1] None
+   2] None
+
+The possible values for this option are `'pos'`, `'arg'`, `'kw'`, `'arg_only'`, `'kw_only'`, `'pos_maybe'`,
+`'arg_maybe'` and `'kw_maybe'`. For a full explanation of what each does see this option in `fst.docs.d10_options`.
 
 
 ## Normalization

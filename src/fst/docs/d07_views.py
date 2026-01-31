@@ -109,8 +109,8 @@ If you want to assign the element as a slice, you must use slice indexing.
 >>> print(f.src)
 [x, y, [a, b], c, d]
 
-Or assign directly to the field name, replacing the entire slice, but this is not a view operation but rather a property
-setter of the `FST` class itself.
+Or assign directly to the field name, replacing the entire slice, though this is not a view operation but rather a
+property setter of the `FST` class itself.
 
 >>> f.elts = 't, u, v'
 
@@ -140,7 +140,7 @@ used and truncates them to the actual size of the target field.
 
 ## Other operations
 
-With the exception if `insert()`, these operations don't take indices but rather are meant to be executed on a
+With the exception of `insert()`, these operations don't take indices but rather are meant to be executed on a
 particular indexed view which selects their range in the list.
 
 >>> print(FST('[a, b, c]').elts.replace('[x, y]').base.src)
@@ -342,6 +342,32 @@ b == c
 
 When carrying out slice operations on a `Compare` though there are extra considerations to take into account for the
 operators. This is explained in more detail in the section on slices `fst.docs.d06_slices`.
+
+`_all` is also the default field for an `arguments` node and allows access to all the different types of arguments as
+if they existed in a single list.
+
+>>> f = FST('def f(a, /, b=2, *c, d=3, **e): pass')
+
+>>> print(f.args._all[1:-1].copy().src)
+b=2, *c, d=3
+
+Since the `_all` field is the default field for the `arguments` node type you can omit it from the indexing access.
+
+>>> print(f.args[-2:].copy().src)
+*, d=3, **e
+
+This allows you to deal with function arguments in an intuitive way without having to deal too much with the details of
+the different argument types and markers which are needed to delimit them.
+
+>>> f.args[:1] = 'x=1, y=2'
+
+>>> print(f.src)
+def f(x=1, y=2, b=2, *c, d=3, **e): pass
+
+>>> del f.args[3]
+
+>>> print(f.src)
+def f(x=1, y=2, b=2, *, d=3, **e): pass
 
 
 ## `_body` virtual field
