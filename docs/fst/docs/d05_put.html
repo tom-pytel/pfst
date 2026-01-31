@@ -33,6 +33,7 @@
     <li><a href="#put-and-put_slice"><code>put()</code> and <code>put_slice()</code></a></li>
     <li><a href="#insert-append-extend-prepend-and-prextend"><code>insert()</code>, <code>append()</code>, <code>extend()</code>, <code>prepend()</code> and <code>prextend()</code></a></li>
     <li><a href="#by-attribute">By attribute</a></li>
+    <li><a href="#putting-source-vs-nodes">Putting source vs. nodes</a></li>
     <li><a href="#put_src"><code>put_src()</code></a></li>
   </ul></li>
 </ul>
@@ -83,7 +84,7 @@ their locations are correct. Source code in the form of a list of line strings i
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;i&#39;</span><span class="p">)],</span>
-<span class="gp">... </span>                       <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
+<span class="gp">... </span>                         <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;i = 1&#39;</span>
 </code></pre>
 </div>
@@ -182,7 +183,7 @@ tree through the root node (<code><a href="../fst.html#FST.replace">fst.fst.FST.
 </code></pre>
 </div>
 
-<p>Notice the parentheses were added atomatically (because they are needed).</p>
+<p>Notice the parentheses were added automatically (because they are needed).</p>
 
 <p>The <code>replace()</code> function returns the new replaced node. This is because the actual final new <code>FST</code> node in the tree
 (regardless of the contents) can be different from both the <code>FST</code> node put <strong>AND</strong> the original <code>FST</code> at this location
@@ -271,7 +272,7 @@ In this case, <code>None</code> is returned as the new node.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">BinOp - ROOT 0,0..0,9</span>
 <span class="go">  .left Constant &#39;a&#39; - 0,0..0,3</span>
 <span class="go">  .op Add - 0,4..0,5</span>
@@ -286,7 +287,7 @@ In this case, <code>None</code> is returned as the new node.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
 <span class="go">0: &quot;a&quot; \</span>
 <span class="go">1:  &quot;b&quot;</span>
 <span class="go">Constant &#39;ab&#39; - ROOT 0,0..1,4</span>
@@ -337,19 +338,19 @@ not vice versa.</p>
 element, not as a slice. You can specify slice operation via the <code>one</code> parameter, which is normally <code>True</code> for <code>put()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;a, b, c&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
 <span class="go">&lt;List ROOT 0,0..0,14&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[1, [a, b, c]]</span>
+<span class="go">[1, (a, b, c)]</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;a, b, c&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">&lt;List ROOT 0,0..0,12&gt;</span>
 </code></pre>
 </div>
@@ -402,21 +403,7 @@ possibly at the start, end or between other elements (<code><a href="../fst.html
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">&lt;List ROOT 0,0..0,9&gt;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[1, x, c]</span>
-</code></pre>
-</div>
-
-<p><code>put_slice()</code> doesn't need <code>one=False</code> as that is the default there.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[y]&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">&lt;List ROOT 0,0..0,12&gt;</span>
 </code></pre>
 </div>
@@ -427,17 +414,31 @@ possibly at the start, end or between other elements (<code><a href="../fst.html
 </code></pre>
 </div>
 
-<p>The special <code>'end'</code> index allows you to put at the end without knowing how long the field is.</p>
+<p><code>put_slice()</code> doesn't need <code>one=False</code> as that is the default there.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[4,5,6]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
-<span class="go">&lt;List ROOT 0,0..0,19&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;u, v&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..0,18&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[1, x, y, c, 4,5,6]</span>
+<span class="go">[1, x, u, v, y, c]</span>
+</code></pre>
+</div>
+
+<p>The special <code>'end'</code> index allows you to put at the end without knowing how long the field is.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;4,5,6&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..0,25&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, x, u, v, y, c, 4,5,6]</span>
 </code></pre>
 </div>
 
@@ -478,7 +479,7 @@ possibly at the start, end or between other elements (<code><a href="../fst.html
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[1, 2, x, y]</span>
 </code></pre>
 </div>
@@ -557,7 +558,7 @@ order to continue operating on the same element in the tree you need the new <co
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Constant b&#39;bytes&#39; - ROOT 0,0..0,8</span>
 </code></pre>
 </div>
@@ -569,7 +570,7 @@ order to continue operating on the same element in the tree you need the new <co
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Constant 2.5 - ROOT 0,0..0,3</span>
 </code></pre>
 </div>
@@ -619,13 +620,13 @@ not provided they operate on the default field of the node (assuming it is a lis
 <p>Or you can insert as a slice:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[1, x, y, 2, 3]</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[1, x, y, 2, 3]</span>
 </code></pre>
 </div>
@@ -647,13 +648,13 @@ not provided they operate on the default field of the node (assuming it is a lis
 <p>Likewise <code>extend()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[1, 2, 3, x, y]</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[1, 2, 3, x, y]</span>
 </code></pre>
 </div>
@@ -675,13 +676,13 @@ not provided they operate on the default field of the node (assuming it is a lis
 <p>And <code>prextend()</code> is the same for <code>extend()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[x, y, 1, 2, 3]</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="go">[x, y, 1, 2, 3]</span>
 </code></pre>
 </div>
@@ -811,6 +812,58 @@ movements and <code>AST</code> setting will be done automatically. Under the hoo
 </code></pre>
 </div>
 
+<h2 id="putting-source-vs-nodes">Putting source vs. nodes</h2>
+
+<p>Put operations will accept source code as a string or list of lines or an <code>FST</code> or <code>AST</code> node. There is a bit of
+difference in how source puts are handled vs. node puts. When a node is put the type of the node is known and if it is a
+slice type for the target then it is put as a sequence, possibly adding multiple elements to the target.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[a, x, y, b]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[a, x, y, b]&#39;</span>
+</code></pre>
+</div>
+
+<p>If the slice is passed as source however, it is treated as the actual source you might want to see at the target so for
+the case above you will wind up putting a single list element if specified as source.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[a, [x, y], b]&#39;</span>
+</code></pre>
+</div>
+
+<p>If you want to specify multiple elements to be put as a slice when passing source then either leave out the delimiters.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[a, x, y, b]&#39;</span>
+</code></pre>
+</div>
+
+<p>Or pass <code>one=None</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[a, x, y, b]&#39;</span>
+</code></pre>
+</div>
+
+<p>The <code>one=None</code> trick only applies if putting expression slices to an expression target <code>Tuple</code>, <code>List</code> or <code>Set</code>.
+Otherwise its the delimiters that decide between a single element and multiple in the case of source puts for all other
+node targets.</p>
+
+<p><strong>Note:</strong> This does not apply to <code>Dict</code> and <code>MatchMapping</code> delimiters since you cannot put those as a single element
+across the <code>key:value</code> fields yet. Source puts with delimiters for those are always treated as a sequence.</p>
+
+<p>This is covered in more detail in <code><a href="d08_coerce.html">fst.docs.d08_coerce</a></code>.</p>
+
 <h2 id="put_src"><code>put_src()</code></h2>
 
 <p>Unlike <code>get_src()</code> which is a very simple function, <code>put_src()</code> (<code><a href="../fst.html#FST.put_src">fst.fst.FST.put_src()</a></code>) doesn't just put text to the
@@ -838,7 +891,8 @@ you specify it.</p>
 <p>If the changes are not valid then neither the tree nor the source is actually changed. <code><a href="../../fst.html">fst</a></code> attempts to minimize the
 amount of code which is reparsed and the minimum elemenent that can be reparsed is a single statement or block statement
 header. Though multiple statements or even entire blocks may be reparsed if the changes span those blocks. Whatever is
-reparsed will have its <code>FST</code> nodes changed, except the root node.</p>
+reparsed will have its <code>FST</code> nodes changed (invalidating any variables referring to those nodes themselves), except the
+root node which will always remain the same even if its <code>AST</code> changes.</p>
 
 <p>The actual location for the reparse is not restricted in any way. It doesn't have to fall on node boundaries and can
 extend over the entire source code if need be. Like <code>get_src()</code>, it doesn't matter what node of the tree this function
@@ -852,6 +906,12 @@ is called on in this mode, the domain is always over the entire tree.</p>
 <span class="gp">... </span><span class="s1">    else:</span>
 <span class="gp">... </span><span class="s1">        t()</span>
 <span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">(&lt;Lt 0,5..0,6&gt;, &lt;Lt 1,9..1,10&gt;)</span>
 </code></pre>
 </div>
 
@@ -871,6 +931,12 @@ is called on in this mode, the domain is always over the entire tree.</p>
 <span class="go">        s()</span>
 <span class="go">    else:</span>
 <span class="go">        t()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">(&lt;LtE 0,5..0,7&gt;, &lt;NotEq 1,9..1,11&gt;)</span>
 </code></pre>
 </div>
 
@@ -952,7 +1018,7 @@ any changes to things which are actually stored inside <code>AST</code> nodes mu
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Tuple - ROOT 0,0..0,9</span>
 <span class="go">  .elts[3]</span>
 <span class="go">   0] Name &#39;a&#39; Load - 0,1..0,2</span>
@@ -975,7 +1041,7 @@ any changes to things which are actually stored inside <code>AST</code> nodes mu
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Tuple - ROOT 0,0..0,11</span>
 <span class="go">  .elts[3]</span>
 <span class="go">   0] Name &#39;a&#39; Load - 0,1..0,2</span>
@@ -1012,7 +1078,7 @@ the <code>a</code> child we would be increasing the size of that and wind up wit
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># note the location of the Name &#39;a&#39; node is wrong</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># note the location of the Name &#39;a&#39; node is wrong</span>
 <span class="go">Tuple - ROOT 0,0..0,11</span>
 <span class="go">  .elts[3]</span>
 <span class="go">   0] Name &#39;a&#39; Load - 0,1..0,4</span>
@@ -1056,7 +1122,7 @@ change).</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># note the locations of everything except &#39;a&#39; are wrong</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># note the locations of everything except &#39;a&#39; are wrong</span>
 <span class="go">Tuple - ROOT 0,0..0,9</span>
 <span class="go">  .elts[3]</span>
 <span class="go">   0] Name &#39;a&#39; Load - 0,1..0,2</span>

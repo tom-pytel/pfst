@@ -152,13 +152,16 @@
                                 <a class="function" href="#FST.options">options</a>
                         </li>
                         <li>
+                                <a class="function" href="#FST.as_">as_</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#FST.reparse">reparse</a>
                         </li>
                         <li>
-                                <a class="function" href="#FST.dump">dump</a>
+                                <a class="function" href="#FST.verify">verify</a>
                         </li>
                         <li>
-                                <a class="function" href="#FST.verify">verify</a>
+                                <a class="function" href="#FST.dump">dump</a>
                         </li>
                         <li>
                                 <a class="function" href="#FST.mark">mark</a>
@@ -1155,7 +1158,7 @@ extended <code><a href="../fst.html">fst</a></code> parse mode parameter which a
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Module - ROOT 0,0..1,7</span>
 <span class="go">  .body[1]</span>
 <span class="go">   0] If - 0,0..1,7</span>
@@ -1375,29 +1378,48 @@ any direction.</p>
                             <div id="FST.__init__" class="classattr">
                                 <div class="attr function">
             
-        <span class="name">FST</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast_or_src</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;_expr_arglikes&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">pfield</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="common.html#astfield">fst.common.astfield</a></span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">/</span>,</span><span class="param">	<span class="o">**</span><span class="n">kwargs</span></span>)</span>
+        <span class="name">FST</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src_or_ast_or_fst</span><span class="p">:</span> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">pfield</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="common.html#astfield">fst.common.astfield</a></span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">/</span>,</span><span class="param">	<span class="o">**</span><span class="n">kwargs</span></span>)</span>
 
         
     </div>
     <a class="headerlink" href="#FST.__init__"></a>
     
             <div class="docstring"><p>Create a new individual <code><a href="#FST">FST</a></code> node or full tree. The main way to use this constructor is as a shortcut for
-<code><a href="#FST.fromsrc">FST.fromsrc()</a></code> or <code><a href="#FST.fromast">FST.fromast()</a></code>, the usage is:</p>
+<code><a href="#FST.fromsrc">FST.fromsrc()</a></code>, <code><a href="#FST.fromast">FST.fromast()</a></code> or <code><a href="#FST.as_">FST.as_()</a></code>, the usage is:</p>
 
-<p><strong><code>FST(ast_or_src, mode=None)</code></strong></p>
+<p><strong><code>FST(src_or_ast_or_fst, mode=None)</code></strong></p>
 
-<p>This will create an <code><a href="#FST">FST</a></code> from either an <code>AST</code> or source code in the form of a string or list of lines. The
-first parameter can be <code>None</code> instead of an <code>AST</code> or source to indicate a blank new module of one of the three
-types <code>'exec'</code>, <code>'eval'</code> or <code>'single'</code>. Otherwise if there is <code>source</code> or an <code>AST</code> then <code>mode</code> specifies how it
-will be parsed / reparsed and it can take any of the values from <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</p>
+<p>This will create an <code><a href="#FST">FST</a></code> from either an <code>AST</code> or source code in the form of a string or list of lines, or it
+will attempt to coerce an existing <code><a href="#FST">FST</a></code> to the type you want specified by <code>mode</code>.</p>
+
+<p><strong>WARNING!</strong> In normal usage, you should always leave <code><a href="#FST.pfield">pfield</a></code> at its default as anything else will select other
+modes of opertation for this constructor.</p>
 
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>ast_or_src</code>: Source code or an <code>AST</code> node.</li>
-<li><code>mode</code>: See <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. If this is <code>None</code> then if <code>ast_or_src</code> is an <code>AST</code> the mode defaults to the
-type of the <code>AST</code>. Otherwise if the <code>ast_or_src</code> is actual source code then <code>mode</code> used is <code>'all'</code> to allow
-parsing anything.</li>
+<li><code>src_or_ast_or_fst</code>: Source code or an <code>AST</code> or <code><a href="#FST">FST</a></code> node.</li>
+<li><code>mode</code>: See <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. Has the following meanings when the <code>src_or_ast_or_fst</code> parameter is:
+<ul>
+<li><code><a href="#FST.src">src</a></code>: If <code>mode</code> is <code>None</code> then we will try to guess what the source is and parse it accordingly. If
+specified then will attempt to parse this type and if fails then the exception will propagate. If
+guessing then it may take more than one attempt so it is always better to specify what you expect to get
+if you know it.</li>
+<li><code>AST</code>: If <code>mode</code> is <code>None</code> then defaults to the type of the <code>AST</code>, which will always succeed in generating
+valid source unless the <code>AST</code> itself is in an invalid state (like an empty <code>Set</code>). Anything else you
+pass here will be passed on as the <code>mode</code> to <code><a href="#FST.fromast">fromast()</a></code>. In which case if the <code>AST</code> is this then the
+<code><a href="#FST">FST</a></code> tree is just build for it and otherwise coercion will be attempted to this type.</li>
+<li><code><a href="#FST">FST</a></code>: <code>mode</code> should be specified and will be the type of node you want to coerce the <code><a href="#FST">FST</a></code> you pass in
+to. If you leave it at the default <code>None</code> then you will just get either the same <code><a href="#FST">FST</a></code> or a copy of it,
+depending on the <code><a href="#FST.copy">copy</a></code> kwarg.</li>
+</ul></li>
+<li><code>kwargs</code>: <code><a href="#FST.options">options</a></code> if coercing from another <code><a href="#FST">FST</a></code> or extra parameters, mostly for internal use documented
+below. One extra parameter relevant to this use case is:
+<ul>
+<li><code><a href="#FST.copy">copy</a></code>: If coercing from another <code><a href="#FST">FST</a></code>, this parameter is what will be passed to <code><a href="#FST.as_">as_()</a></code>. It defaults to
+<code>True</code> here so that <code>FST(other_FST)</code> works in the same way as <code>list(other_list)</code>, meaning it doesn't
+alter the source object, which is the opposite of what the default for the <code><a href="#FST.as_">as_()</a></code> function is.</li>
+</ul></li>
 </ul>
 
 <p><strong>Examples:</strong></p>
@@ -1463,8 +1485,8 @@ expect to get when you can.</p>
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;start:stop:step&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
-<span class="go">SyntaxError(&#39;invalid syntax&#39;, (&#39;&lt;fst&gt;&#39;, 1, 11, &#39;start:stop:step\n&#39;, 1, 12))</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
+<span class="go">invalid syntax (&lt;FST&gt;, line 1)</span>
 </code></pre>
 </div>
 
@@ -1482,19 +1504,74 @@ expect to get when you can.</p>
 </code></pre>
 </div>
 
+<p>Coercion is straightforward.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;expr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">(&lt;Name ROOT 0,0..0,4&gt;, &#39;expr&#39;)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">src</span>
+<span class="go">(&lt;Expr ROOT 0,0..0,4&gt;, &#39;expr&#39;)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;Name&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="n">g</span> <span class="ow">is</span> <span class="n">f</span>
+<span class="go">(&lt;Name ROOT 0,0..0,4&gt;, &#39;expr&#39;, False)</span>
+</code></pre>
+</div>
+
+<p>Turn off <code><a href="#FST.copy">copy</a></code> to return the same node if it is the type you are requesting.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;Name&#39;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="n">g</span> <span class="ow">is</span> <span class="n">f</span>
+<span class="go">(&lt;Name ROOT 0,0..0,4&gt;, &#39;expr&#39;, True)</span>
+</code></pre>
+</div>
+
+<p>But still coerces if is not.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="n">g</span> <span class="ow">is</span> <span class="n">f</span>
+<span class="go">(&lt;arg ROOT 0,0..0,4&gt;, &#39;expr&#39;, False)</span>
+</code></pre>
+</div>
+
+<p>Same <code><a href="#FST.options">options</a></code> apply as to all other operations.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[]&#39;</span><span class="p">),</span> <span class="s1">&#39;Set&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># will give invalid empty Set node</span>
+<span class="go">&#39;{}&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[]&#39;</span><span class="p">),</span> <span class="s1">&#39;Set&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;{*()}&#39;</span>
+</code></pre>
+</div>
+
 <p>The other forms of this function are meant for internal use, their parameters are below for reference just in
 case:</p>
 
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>ast_or_src</code>: <code>AST</code> node for <code><a href="#FST">FST</a></code> or source code in the form of a <code><a href="#FST.str">str</a></code> or a list of lines. If an <code>AST</code> then
+<li><code>src_or_ast_or_fst</code>: <code>AST</code> node for <code><a href="#FST">FST</a></code> or source code in the form of a <code><a href="#FST.str">str</a></code> or a list of lines. If an <code>AST</code> then
 will be processed differently depending on if creating child node, top level node or using this as a
 shortcut for a full <code><a href="#FST.fromsrc">fromsrc()</a></code> or <code><a href="#FST.fromast">fromast()</a></code>. If left as empty default then just creates a new empty
 <code>Module</code>.</li>
 <li><code>mode</code>: Is really <code>mode_or_lines_or_parent</code>. Parent node for this child node or lines for a root node creating
 a new tree. If <code><a href="#FST.pfield">pfield</a></code> is <code>False</code> then this is a shortcut to create a full tree from an <code>AST</code> node or
-source provided in <code>ast_or_src</code>.</li>
+source provided in <code>src_or_ast_or_fst</code>.</li>
 <li><code><a href="#FST.pfield">pfield</a></code>: <code><a href="common.html#astfield">fst.common.astfield</a></code> indication position in parent of this node. If provided then creating a simple
 child node and it is created with the <code>self.parent</code> set to <code>mode</code> node and <code>self.pfield</code> set to this. If
 <code>None</code> then it means the creation of a full new <code><a href="#FST">FST</a></code> tree and this is the root node with <code>mode</code> providing
@@ -1502,7 +1579,7 @@ the source. If <code>False</code> then this is a shortcut for <code><a href="#FS
 <li><code>kwargs</code>: Contextual parameters:
 <ul>
 <li><code>from_</code>: If this is provided then it must be an <code><a href="#FST">FST</a></code> node from which this node is being created. This
-allows to copy parse parameters and already determined default indentation.</li>
+allows to copy parse parameters and already determined default indentation. Does not have to be root.</li>
 <li><code><a href="#FST.parse_params">parse_params</a></code>: A <code>dict</code> with values for <code>filename</code>, <code>type_comments</code> and <code>feature_version</code> which will be
 used for any <code>AST</code> reparse done on this tree. Only valid when creating a root node.</li>
 <li><code><a href="#FST.indent">indent</a></code>: Indentation string to use as default indentation. If not provided and not gotten from <code>from_</code>
@@ -1567,7 +1644,7 @@ node for a specific existing <code><a href="#FST">FST</a></code> tree. Useful fo
     </div>
     <a class="headerlink" href="#FST.parse_params"></a>
     
-            <div class="docstring"><p>The parameters to use for any <code>ast.parse()</code> that needs to be done (filename, type_comments, feature_version), root node only.</p>
+            <div class="docstring"><p>The parameters to use for any <code>ast.parse()</code> (filename, type_comments, feature_version). Exists mostly for passing filename and future-proofing.</p>
 </div>
 
 
@@ -1580,7 +1657,7 @@ node for a specific existing <code><a href="#FST">FST</a></code> tree. Useful fo
     </div>
     <a class="headerlink" href="#FST.indent"></a>
     
-            <div class="docstring"><p>The default single level block indentation string for this tree when not available from context, root node only.</p>
+            <div class="docstring"><p>The default single level block indentation string for this tree when not available from context.</p>
 </div>
 
 
@@ -1955,7 +2032,7 @@ will include any leading decorators and a trailing line comment on the last chil
                     <div class="decorator decorator-staticmethod">@staticmethod</div>
 
         <span class="def">def</span>
-        <span class="name">fromsrc</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;_expr_arglikes&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;exec&#39;</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;fst&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">fromsrc</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;exec&#39;</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;FST&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
@@ -1972,7 +2049,9 @@ nodes failing to reparse to themselves on operations.</p>
 
 <ul>
 <li><code><a href="#FST.src">src</a></code>: The source to parse as a single <code><a href="#FST.str">str</a></code> or list of individual line strings (without newlines).</li>
-<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, See <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</li>
+<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, see <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. If you know what kind of node you
+are expecting then it is always better to pass in this parameter because otherwise several different parse
+attempts may be made to try to find the type.</li>
 <li><code>filename</code>: <code>ast.parse()</code> parameter.</li>
 <li><code>type_comments</code>: <code>ast.parse()</code> parameter. Don't use this, see warning above.</li>
 <li><code>feature_version</code>: <code>ast.parse()</code> parameter. Don't use this either, here just in case.</li>
@@ -1987,7 +2066,7 @@ nodes failing to reparse to themselves on operations.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
 <span class="go">Module - ROOT 0,0..0,3</span>
 <span class="go">  .body[1]</span>
 <span class="go">   0] Expr - 0,0..0,3</span>
@@ -1996,20 +2075,20 @@ nodes failing to reparse to themselves on operations.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stmt&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;stmt&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
 <span class="go">Expr - ROOT 0,0..0,3</span>
 <span class="go">  .value Name &#39;var&#39; Load - 0,0..0,3</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;expr&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;expr&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
 <span class="go">Name &#39;var&#39; Load - ROOT 0,0..0,3</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;except Exception: pass&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;except Exception: pass&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
 <span class="go">ExceptHandler - ROOT 0,0..0,22</span>
 <span class="go">  .type Name &#39;Exception&#39; Load - 0,7..0,16</span>
 <span class="go">  .body[1]</span>
@@ -2018,7 +2097,7 @@ nodes failing to reparse to themselves on operations.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;case f(a=1): pass&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;case f(a=1): pass&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
 <span class="go">match_case - ROOT 0,0..0,17</span>
 <span class="go">  .pattern MatchClass - 0,5..0,11</span>
 <span class="go">    .cls Name &#39;f&#39; Load - 0,5..0,6</span>
@@ -2034,7 +2113,7 @@ nodes failing to reparse to themselves on operations.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Slice</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromsrc">FST.fromsrc</a></span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Slice</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
 <span class="go">Slice - ROOT 0,0..0,3</span>
 <span class="go">  .lower Name &#39;a&#39; Load - 0,0..0,1</span>
 <span class="go">  .upper Name &#39;b&#39; Load - 0,2..0,3</span>
@@ -2049,13 +2128,18 @@ nodes failing to reparse to themselves on operations.</p>
                     <div class="decorator decorator-staticmethod">@staticmethod</div>
 
         <span class="def">def</span>
-        <span class="name">fromast</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;_expr_arglikes&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;fst&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">fromast</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">coerce</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;FST&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
     <a class="headerlink" href="#FST.fromast"></a>
     
-            <div class="docstring"><p>Unparse and reparse an <code>AST</code> for new <code><a href="#FST">FST</a></code> (the reparse is necessary to make sure locations are correct).</p>
+            <div class="docstring"><p>Convert an <code>AST</code> tree to a full <code><a href="#FST">FST</a></code> tree. This can take the existing node and just create the <code><a href="#FST">FST</a></code> nodes
+for it (unparsing to get source code). Or if <code>mode</code> is specified, will try to coerce the <code>AST</code> node to this type
+and create the <code><a href="#FST">FST</a></code> tree for that.</p>
+
+<p>The passed <code>ast</code> node is not actually consumed. It is unparsed and reparsed to a new <code>AST</code> since we need to make
+sure the locations are all correct.</p>
 
 <p><strong>WARNING!</strong> The <code>type_comments</code> parameter is <code>False</code> by default and no guarantees are made if you turn it on.
 It is provided just in case but really shouldn't be used as <code><a href="../fst.html">fst</a></code> takes care of comments anyway, this just turns
@@ -2065,21 +2149,14 @@ nodes failing to reparse to themselves on operations.</p>
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>ast</code>: The root <code>AST</code> node.</li>
-<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, see <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. Two special values are added:
-<ul>
-<li><code>None</code>: This will attempt to reparse to the same node type as was passed in. This is the default and all
-other values should be considered overrides for special cases.</li>
-<li><code>False</code>: This will skip the reparse and just <code>ast.unparse()</code> the <code>AST</code> to generate source for the <code><a href="#FST">FST</a></code>.
-Use this only if you are absolutely certain that the <code>AST</code> unparsed source will correspond with the
-locations already present in the <code>AST</code>. This is almost never the case unless the <code>AST</code> was
-<code>ast.parse()</code>d from an explicitly <code>ast.unparse()</code>d <code>AST</code>.</li>
-</ul></li>
+<li><code>ast</code>: The root <code>AST</code> node. This is <strong>NOT</strong> consumed and will <strong>NOT</strong> become the actual <code>AST</code> node of the
+<code><a href="#FST">FST</a></code> tree.</li>
+<li><code>mode</code>: Parse mode to enable coercion, see <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. If <code>None</code> then will just use the given <code>ast</code>
+type and make an <code><a href="#FST">FST</a></code> using that type.</li>
+<li><code>coerce</code>: This exists to allow you to turn <strong>OFF</strong> coercion for some reason as by default coerce is attempted.</li>
 <li><code>filename</code>: <code>ast.parse()</code> parameter.</li>
 <li><code>type_comments</code>: <code>ast.parse()</code> parameter. Don't use this, see warning above.</li>
 <li><code>feature_version</code>: <code>ast.parse()</code> parameter. Don't use this either, here just in case.</li>
-<li><code><a href="#FST.ctx">ctx</a></code>: Whether to make sure that the <code><a href="#FST.ctx">ctx</a></code> field of the reparsed <code>AST</code> matches or not. <code>False</code> for
-convenience, <code>True</code> if you're feeling pedantic.</li>
 </ul>
 
 <p><strong>Returns:</strong></p>
@@ -2092,13 +2169,13 @@ convenience, <code>True</code> if you're feeling pedantic.</li>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ast</span><span class="w"> </span><span class="kn">import</span> <span class="n">Assign</span><span class="p">,</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">Constant</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ast</span><span class="w"> </span><span class="kn">import</span> <span class="n">Assign</span><span class="p">,</span> <span class="n">Constant</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Name</span><span class="p">,</span> <span class="n">Slice</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;var&#39;</span><span class="p">)],</span>
-<span class="gp">... </span>                   <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">123</span><span class="p">)))<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;var&#39;</span><span class="p">)],</span>
+<span class="gp">... </span>                       <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">123</span><span class="p">)))<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
 <span class="go">0: var = 123</span>
 <span class="go">Assign - ROOT 0,0..0,9</span>
 <span class="go">  .targets[1]</span>
@@ -2108,7 +2185,39 @@ convenience, <code>True</code> if you're feeling pedantic.</li>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if 1:</span><span class="se">\n</span><span class="s1">    j = 5&#39;</span><span class="p">))<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>                      <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;step&#39;</span><span class="p">)))<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;node&#39;</span><span class="p">)</span>
+<span class="go">0: 1::step</span>
+<span class="go">Slice - ROOT 0,0..0,7</span>
+<span class="go">0: 1</span>
+<span class="go">  .lower Constant 1 - 0,0..0,1</span>
+<span class="go">0:    step</span>
+<span class="go">  .step Name &#39;step&#39; Load - 0,3..0,7</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">List</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;var&#39;</span><span class="p">)]),</span>
+<span class="gp">... </span>                <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<span class="go">0: [var]</span>
+<span class="go">MatchSequence - ROOT 0,0..0,5</span>
+<span class="go">  .patterns[1]</span>
+<span class="go">   0] MatchAs - 0,1..0,4</span>
+<span class="go">     .name &#39;var&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">List</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;var&#39;</span><span class="p">)]),</span>
+<span class="gp">... </span>                <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="n">coerce</span><span class="o">=</span><span class="kc">False</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">expecting pattern, got List, coerce disabled</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if 1:</span><span class="se">\n</span><span class="s1">    j = 5&#39;</span><span class="p">))<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
 <span class="go">Module - ROOT 0,0..1,9</span>
 <span class="go">  .body[1]</span>
 <span class="go">0: if 1:</span>
@@ -2120,17 +2229,6 @@ convenience, <code>True</code> if you're feeling pedantic.</li>
 <span class="go">        .targets[1]</span>
 <span class="go">         0] Name &#39;j&#39; Store - 1,4..1,5</span>
 <span class="go">        .value Constant 5 - 1,8..1,9</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.fromast">FST.fromast</a></span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;step&#39;</span><span class="p">)))<a href="#dump">.dump</a></span><span class="p">(</span><span class="s1">&#39;node&#39;</span><span class="p">)</span>
-<span class="go">0: 1::step</span>
-<span class="go">Slice - ROOT 0,0..0,7</span>
-<span class="go">0: 1</span>
-<span class="go">  .lower Constant 1 - 0,0..0,1</span>
-<span class="go">0:    step</span>
-<span class="go">  .step Name &#39;step&#39; Load - 0,3..0,7</span>
 </code></pre>
 </div>
 </div>
@@ -2148,9 +2246,9 @@ convenience, <code>True</code> if you're feeling pedantic.</li>
     </div>
     <a class="headerlink" href="#FST.get_options"></a>
     
-            <div class="docstring"><p>Get a dictionary of ALL global options. These are the same <code><a href="#FST.options">options</a></code> that can be passed to operations and this
-function returns their global defaults which are used when those options are not passed to operations or if they
-are passed with a value of <code>None</code></p>
+            <div class="docstring"><p>Get a dictionary of <strong>ALL</strong> global options. These are the same <code><a href="#FST.options">options</a></code> that can be passed to operations and
+this function returns their global defaults which are used when those options are not passed to operations or if
+they are passed with a value of <code>None</code></p>
 
 <p><strong>Returns:</strong></p>
 
@@ -2175,9 +2273,9 @@ are passed with a value of <code>None</code></p>
 <span class="go"> &#39;norm&#39;: False,</span>
 <span class="go"> &#39;norm_self&#39;: None,</span>
 <span class="go"> &#39;norm_get&#39;: None,</span>
-<span class="go"> &#39;norm_put&#39;: None,</span>
-<span class="go"> &#39;set_norm&#39;: &#39;both&#39;,</span>
-<span class="go"> &#39;op_side&#39;: &#39;left&#39;}</span>
+<span class="go"> &#39;set_norm&#39;: &#39;star&#39;,</span>
+<span class="go"> &#39;op_side&#39;: &#39;left&#39;,</span>
+<span class="go"> &#39;args_as&#39;: None}</span>
 </code></pre>
 </div>
 </div>
@@ -2223,12 +2321,6 @@ default value for <code>option</code>.</li>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.get_option">FST.get_option</a></span><span class="p">(</span><span class="s1">&#39;pars&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
 <span class="go">True</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n"><a href="#FST.get_option">FST.get_option</a></span><span class="p">(</span><span class="s1">&#39;pars&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
-<span class="go">&#39;auto&#39;</span>
 </code></pre>
 </div>
 </div>
@@ -2406,27 +2498,27 @@ aesthetic option as <code><a href="../fst.html">fst</a></code> can deal with unp
 <li><code>False</code>: Do not parenthesize cut / copied <code>NamedExpr</code> walrus expressions. <strong>DEFAULT</strong></li>
 <li><code>None</code>: Parenthesize according to the <code><a href="#FST.pars">pars</a></code> option (<code>True</code> and <code>'auto'</code> parenthesize, <code>False</code> does not).</li>
 </ul></li>
-<li><code>pars_arglike</code>: Whether to <strong>ADD</strong> parentheses to argumentlike expressions (<code>*not a</code>, <code>*b or c</code>) when cut /
+<li><code>pars_arglike</code>: Whether to <strong>ADD</strong> parentheses to argumentlike-only expressions (<code>*not a</code>, <code>*b or c</code>) when cut /
 copied either as single element or as part of a slice. If parentheses were already present then setting this
-to <code>False</code> will not remove them. Unlike <code>pars_walrus</code> this is not mostly an aesthetic option as unparenthesized
-arglike expressions are invalid everywhere except in <code>Call.args</code>, <code>ClassDef.bases</code> or an unparenthesized
-<code>Subscript.slice</code> <code>Tuple</code>.
+to <code>False</code> will not remove them. Unlike <code>pars_walrus</code> this is <strong>NOT</strong> mostly an aesthetic option as
+unparenthesized arglike-only expressions are invalid everywhere except in <code>Call.args</code>, <code>ClassDef.bases</code> or an
+unparenthesized <code>Subscript.slice</code> <code>Tuple</code>.
 <ul>
 <li><code>True</code>: Parenthesize cut / copied argumentlike expressions. <strong>DEFAULT</strong></li>
 <li><code>False</code>: Do not parenthesize cut / copied argumentlike expressions.</li>
 <li><code>None</code>: Parenthesize according to the <code><a href="#FST.pars">pars</a></code> option (<code>True</code> and <code>'auto'</code> parenthesize, <code>False</code> does not).</li>
 </ul></li>
-<li><code>norm</code>: Default normalize option for puts, gets and self target. Determines how <code>AST</code>s which would otherwise
-be invalid because of an operation are handled. Mostly how zero or sometimes one-length elements which
-normally cannot be zero or one length are left / put / returned, e.g. zero-length <code>Set</code>. This option can be
-overridden individually for the three cases of <code>norm_self</code> (target), <code>norm_get</code> (return from any get operation)
-and <code>norm_put</code> (what is being put if it is an alternate representation).
+<li><code>norm</code>: Default normalize option for return from <code><a href="#FST.get">get()</a></code> functions and <code>self</code> target. Determines how <code>AST</code>s which
+would otherwise be invalid because of an operation are handled. Mostly how zero or sometimes one-length
+sequences which normally cannot be zero or one length are left or returned, e.g. zero-length <code>Set</code>. This option
+can be overridden individually for the two cases of <code>norm_self</code> (target) and <code>norm_get</code> (return from any get
+operation).
 <ul>
 <li><code>False</code>: Allow the <code>AST</code> to go to an unsupported length or state and become invalid. A <code>Set</code> will result
 in empty curlies which reparse to a <code>Dict</code>. A <code>MatchOr</code> can go to 1 or zero length. Other <code>AST</code> types
 can also go to zero length. Useful for easier editing. <strong>DEFAULT</strong></li>
 <li><code>True</code>: Do not allow the <code>AST</code> to go to an unsupported length or state. Can result in an exception being
-thrown if no alternative exists. E.g. A <code>Set</code> which results in zero length gets converted to <code>{*()}</code>.</li>
+thrown if no alternative exists. A <code>Set</code> which results in zero length gets converted to <code>{*()}</code>.</li>
 <li><code><a href="#FST.str">str</a></code>: In some cases an alternate representation can be specified instead of just <code>True</code>, e.g. <code>'call'</code>
 for <code>Set</code> operations.</li>
 </ul></li>
@@ -2434,17 +2526,12 @@ for <code>Set</code> operations.</li>
 out. If this is <code>None</code> then <code>norm</code> is used.</li>
 <li><code>norm_get</code>: Override for <code>norm</code> which only applies to the return value from any get operation. If this is <code>None</code>
 then <code>norm</code> is used.</li>
-<li><code>norm_put</code>: Override for <code>norm</code> which only applies to the value to put for any put operation. If this is <code>None</code>
-then <code>norm</code> is used.</li>
 <li><code>set_norm</code>: The alternate representation for an empty <code>Set</code> normalization by <code>norm</code>. This can also be set to
 <code>False</code> to disable normalization for all operations on a <code>Set</code> (unless one of the <code>norm</code> options is set to
 one of these string modes).
 <ul>
-<li><code>'star'</code>: Starred sequence <code>{*()}</code> returned, this or other starred sequences <code>{*[]}</code> and <code>{*{}}</code> accepted
-to mean empty set on put operations. <strong>DEFAULT</strong></li>
-<li><code>'call'</code>: <code>set()</code> call returned and recognized as empty.</li>
-<li><code>'both'</code>: Both <code>'star'</code> and <code>'call'</code> recognized on put as empty, <code>'star'</code> used for return from get
-operation and normalization of <code>self</code>.</li>
+<li><code>'star'</code>: Starred sequence <code>{*()}</code> returned or used for empty <code>self</code>. <strong>DEFAULT</strong></li>
+<li><code>'call'</code>: <code>set()</code> call returned and used for empty <code>self</code>.</li>
 <li><code>False</code>: No <code>Set</code> normalization regardless of <code>norm</code> or <code>norm_*</code> options, just leave or return an invalid
 <code>Set</code> object.</li>
 </ul></li>
@@ -2460,6 +2547,30 @@ to insert.
 <ul>
 <li><code>'left'</code>: Delete preceding operator on left side of slice or insert before preceding operator. <strong>DEFAULT</strong></li>
 <li><code>'right'</code>: Delete trailing operator on right side of slice or insert after preceding operator.</li>
+</ul></li>
+<li><code>args_as</code>: Conversion for argument types on <code>argument</code> node slice operations. This is mostly meant for per-call
+use but is a global option in order to allow <code>with options(args_as=?): ...</code>. When used on a slice get it
+converts the gotten slice. When used on a slice put, it converts the slice being put before the attempted put.
+<ul>
+<li><code>'pos'</code>: Convert all arguments to <code><a href="#FST.posonlyargs">posonlyargs</a></code> if possible, if not then error. If <code><a href="#FST.vararg">vararg</a></code> or <code><a href="#FST.kwarg">kwarg</a></code> present
+then will error.</li>
+<li><code>'arg'</code>: Convert all arguments to <code><a href="#FST.args">args</a></code> if possible, if not then error. A <code><a href="#FST.vararg">vararg</a></code> is allowed but if present
+then will prevent any present <code><a href="#FST.kwonlyargs">kwonlyargs</a></code> from being converted and in this case will error. If <code><a href="#FST.kwarg">kwarg</a></code> is
+present then will error.</li>
+<li><code>'kw'</code>: Convert all arguments to <code><a href="#FST.kwonlyargs">kwonlyargs</a></code> if possible, if not then error. A <code><a href="#FST.kwarg">kwarg</a></code> is allowed and
+will not prevent any conversion as it is always follows all other arguments. If <code><a href="#FST.vararg">vararg</a></code> is present then
+will error.</li>
+<li><code>'arg_only'</code>: Same as <code><a href="#FST.arg">arg</a></code> except does not allow a <code><a href="#FST.vararg">vararg</a></code> and if present will error.</li>
+<li><code>'kw_only'</code>: Same as <code>kw</code> except does not allow a <code><a href="#FST.kwarg">kwarg</a></code> and if present will error.</li>
+<li><code>'pos_maybe'</code>: Attempt to convert all arguments to <code><a href="#FST.posonlyargs">posonlyargs</a></code>. <code><a href="#FST.args">args</a></code> can always be converted but if
+<code><a href="#FST.kwonlyargs">kwonlyargs</a></code> cannot be because of a <code><a href="#FST.vararg">vararg</a></code> or default value incompatibilities then they will not be
+converted and there will not be an error. <code><a href="#FST.kwarg">kwarg</a></code> is left in place.</li>
+<li><code>'arg_maybe'</code>: Attempt to convert all arguments to <code><a href="#FST.args">args</a></code>. <code><a href="#FST.posonlyargs">posonlyargs</a></code> can always be converted but if
+<code><a href="#FST.kwonlyargs">kwonlyargs</a></code> cannot be because of a <code><a href="#FST.vararg">vararg</a></code> or default value incompatibilities then they will not be
+converted and there will not be an error. <code><a href="#FST.kwarg">kwarg</a></code> is left in place.</li>
+<li><code>'kw_maybe'</code>: Attempt to convert all arguments to <code><a href="#FST.kwonlyargs">kwonlyargs</a></code>. If <code><a href="#FST.vararg">vararg</a></code> is present the <code><a href="#FST.posonlyargs">posonlyargs</a></code> and
+<code><a href="#FST.args">args</a></code> are not converted, but <code><a href="#FST.posonlyargs">posonlyargs</a></code> will be converted in this case to <code><a href="#FST.args">args</a></code>. <code><a href="#FST.kwarg">kwarg</a></code> is left in
+place.</li>
 </ul></li>
 </ul>
 
@@ -2506,6 +2617,91 @@ number is specified and just a <code>'-'</code> then all empty lines will be del
 
 
                             </div>
+                            <div id="FST.as_" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">as_</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.as_"></a>
+    
+            <div class="docstring"><p>Attempt to coerce <code>self</code> to the type of node given by <code>mode</code>. If <code>self</code> is already the requested type of node
+at root level then will do nothing and return <code>self</code>. If is not at root level then will copy the node first and
+then attempt to coerce.</p>
+
+<p>If <code>self</code> is not the type requested then will attempt to coerce, which is a destructive operation to the
+original node (<code>self</code>) even if it fails, rendering <code>self</code> unusable. For this reason the <code><a href="#FST.copy">copy</a></code> parameter allows
+you to specify that <code>self</code> must be copied first before coerce is attempted, leaving the original node intact.
+Note that a copy is always made regardless if <code>self</code> is not a root node so the original node will be unharmed in
+that case.</p>
+
+<p><strong>Note:</strong> If <code>self</code> is a subclass of the type you request then it counts as a match and <code>self</code> is returned
+unchanged, e.g. <code>Assign</code> and you request a <code>stmt</code>.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li><code>mode</code>: The type of node you want, <code>None</code> means no coerce and just return <code>self</code>, see <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</li>
+<li><code><a href="#FST.copy">copy</a></code>: This only matters if you are calling this function on a root node, in which case a copy is made before
+coerce is attempted in order to make sure the node you are calling remains valid.</li>
+<li><code><a href="#FST.options">options</a></code>: See <code><a href="#FST.options">options()</a></code>. These same options will be used for both a possible copy and for coercion.</li>
+</ul>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code><a href="#FST">FST</a></code>: Coerced node.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;expr&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span>
+<span class="go">&lt;Name ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">))</span>
+<span class="go">&lt;Expr ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="go">&lt;Module ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if a if b&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="n">expr</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<span class="go">Tuple - ROOT 0,0..0,4</span>
+<span class="go">  .elts[2]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,0..0,1</span>
+<span class="go">   1] Name &#39;b&#39; Load - 0,3..0,4</span>
+<span class="go">  .ctx Load</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case [a, cls(b)]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="n">expr</span><span class="p">)<a href="#dump">.dump</a></span><span class="p">()</span>
+<span class="go">List - ROOT 0,0..0,11</span>
+<span class="go">  .elts[2]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,1..0,2</span>
+<span class="go">   1] Call - 0,4..0,10</span>
+<span class="go">     .func Name &#39;cls&#39; Load - 0,4..0,7</span>
+<span class="go">     .args[1]</span>
+<span class="go">      0] Name &#39;b&#39; Load - 0,8..0,9</span>
+<span class="go">  .ctx Load</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
                             <div id="FST.reparse" class="classattr">
                                 <div class="attr function">
             
@@ -2517,14 +2713,15 @@ number is specified and just a <code>'-'</code> then all empty lines will be del
     <a class="headerlink" href="#FST.reparse"></a>
     
             <div class="docstring"><p>Force a reparse of this node to synchronize the <code>AST</code> tree with the source in case the source was changed
-with non-native or non-synchronous operations such as <code><a href="#FST.put_src">put_src()</a></code> with only offset. Usage of this function
-should not be necessary unless doing things which are not explicitly supported by <code><a href="../fst.html">fst</a></code>.</p>
+with non-native or non-synchronous operations such as <code><a href="#FST.put_src">put_src()</a></code> with only offset. Can use on any node, not
+just root.</p>
 
 <p><strong>Returns:</strong></p>
 
 <ul>
-<li><code>self</code>: New self after reparse, if possible, otherwise <code>None</code> if could not be found. May also be another
-neighbor node if the source of <code>self</code> was structurally changed too much.</li>
+<li><code>self</code>: New <code>self</code> after reparse, if possible, otherwise <code>None</code> if could not be found. May also be another
+neighbor node if the source of <code>self</code> was structurally changed too much. If used on root node then <code>self</code>
+will not change.</li>
 </ul>
 
 <p><strong>Examples:</strong></p>
@@ -2535,7 +2732,7 @@ neighbor node if the source of <code>self</code> was structurally changed too mu
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># loc=False because of py &lt; 3.12</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># loc=False because of py &lt; 3.12</span>
 <span class="go">0: f&quot;{expr}&quot;</span>
 <span class="go">JoinedStr - ROOT</span>
 <span class="go">  .values[1]</span>
@@ -2552,7 +2749,7 @@ neighbor node if the source of <code>self</code> was structurally changed too mu
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">0: f&quot;{expr=}&quot;</span>
 <span class="go">JoinedStr - ROOT</span>
 <span class="go">  .values[1]</span>
@@ -2563,12 +2760,24 @@ neighbor node if the source of <code>self</code> was structurally changed too mu
 </div>
 
 <div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="go">False</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reparse</span><span class="p">()</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="go">True</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">0: f&quot;{expr=}&quot;</span>
 <span class="go">JoinedStr - ROOT</span>
 <span class="go">  .values[2]</span>
@@ -2582,154 +2791,11 @@ neighbor node if the source of <code>self</code> was structurally changed too mu
 
 
                             </div>
-                            <div id="FST.dump" class="classattr">
-                                <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">dump</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">src</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">full</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">expand</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>,</span><span class="param">	<span class="n">list_indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">=</span> <span class="mi">1</span>,</span><span class="param">	<span class="n">loc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">color</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">out</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">built</span><span class="o">-</span><span class="ow">in</span> <span class="n">function</span> <span class="nb">print</span><span class="o">&gt;</span>,</span><span class="param">	<span class="n">eol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#FST.dump"></a>
-    
-            <div class="docstring"><p>Dump a representation of the tree to stdout or other <code>TextIO</code> or return as a <code><a href="#FST.str">str</a></code> or <code>list</code> of lines, or
-call a provided function once with each line of the output.</p>
-
-<p><strong>Parameters:</strong></p>
-
-<ul>
-<li><code><a href="#FST.src">src</a></code>: Either what level of source to show along with the nodes or a shorthand string which can specify almost
-all the formatting parameters as a string of characters.
-<ul>
-<li><code>'stmt'</code> or <code>'stmt+'</code> means output statement source lines (including <code>ExceptHandler</code> and <code>match_case</code>)
-or top level source if level is below statement. The <code>+</code> means put all lines of source including
-non-coding ones so that whole source is shown.</li>
-<li><code>'node'</code> or <code>'node+'</code> means output source for each individual node. The <code>+</code> means the same as for
-<code>'stmt+'</code>.</li>
-<li><code>None</code> does not output any source.</li>
-<li><code><a href="#FST.str">str</a></code>: Can be a string for shortcut specification of source and flags by first letter, <code>'s+feL'</code> would be
-equivalent to <code><a href="#dump">.dump</a>(src='stmt+', full=True, expand=True, loc=False)</code>.
-<ul>
-<li><code>'s'</code> or <code>'s+'</code> means <code>src='stmt'</code> or <code>src='stmt+'</code></li>
-<li><code>'n'</code> or '<code>n+'</code> means <code>src='node'</code> or <code>src='node+'</code></li>
-<li><code>'f'</code> means <code>full=True</code></li>
-<li><code>'e'</code> means <code>expand=True</code></li>
-<li><code>'i'</code> means <code>list_indent=indent</code></li>
-<li><code>'I'</code> means <code>list_indent=False</code></li>
-<li><code>'L'</code> means <code>loc=False</code></li>
-<li><code>'c'</code> means <code>color=True</code></li>
-<li><code>'C'</code> means <code>color=False</code></li>
-</ul></li>
-</ul></li>
-<li><code>full</code>: If <code>True</code> then will list all fields in nodes including empty ones, otherwise will exclude most empty
-fields.</li>
-<li><code>expand</code>: If <code>True</code> then the output is a nice compact representation. If <code>False</code> then it is ugly and wasteful.</li>
-<li><code><a href="#FST.indent">indent</a></code>: Indentation per level as an integer (number of spaces) or a string.</li>
-<li><code>list_indent</code>: Extra indentation for elements of lists as an integer or string (added to indent). If <code>True</code>
-then will be same as <code><a href="#FST.indent">indent</a></code>.</li>
-<li><code><a href="#FST.loc">loc</a></code>: Whether to dump locations of nodes or not.</li>
-<li><code>color</code>: <code>True</code> or <code>False</code> means whether to use ANSI color codes or not. If <code>None</code> then will autodetect, which
-can be overridden with environment variables <code>FORCE_COLOR</code> and <code>NO_COLOR</code>.</li>
-<li><code>out</code>: <code>print</code> means print to stdout, <code>list</code> returns a list of lines and <code><a href="#FST.str">str</a></code> returns a whole string. A
-<code>TextIO</code> object here will use the <code>write</code> method for each line of output. Otherwise a
-<code>Callable[[str], None]</code> which is called for each line of output individually.</li>
-<li><code>eol</code>: What to put at the end of each text line, <code>None</code> means newline for <code>TextIO</code> out and nothing for other.</li>
-</ul>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>str | list[str]</code>: If those were requested with <code>out=str</code> or <code>out=list</code> else <code>None</code> and the output is sent one
-line at a time to <code>linefunc</code>, which by default is <code>print</code>.</li>
-<li><code>None</code>: Otherwise.</li>
-</ul>
-
-<p><strong>Examples:</strong></p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">... </span><span class="s1">if 1:</span>
-<span class="gp">... </span><span class="s1">    call(a=b, **c)</span>
-<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="go">If - ROOT 0,0..1,18</span>
-<span class="go">  .test Constant 1 - 0,3..0,4</span>
-<span class="go">  .body[1]</span>
-<span class="go">   0] Expr - 1,4..1,18</span>
-<span class="go">     .value Call - 1,4..1,18</span>
-<span class="go">       .func Name &#39;call&#39; Load - 1,4..1,8</span>
-<span class="go">       .keywords[2]</span>
-<span class="go">        0] keyword - 1,9..1,12</span>
-<span class="go">          .arg &#39;a&#39;</span>
-<span class="go">          .value Name &#39;b&#39; Load - 1,11..1,12</span>
-<span class="go">        1] keyword - 1,14..1,17</span>
-<span class="go">          .value Name &#39;c&#39; Load - 1,16..1,17</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">list_indent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">0: if 1:</span>
-<span class="go">If - ROOT 0,0..1,18</span>
-<span class="go">0:    1</span>
-<span class="go">   .test Constant 1 - 0,3..0,4</span>
-<span class="go">   .body[1]</span>
-<span class="go">1:     call(a=b, **c)</span>
-<span class="go">      0] Expr - 1,4..1,18</span>
-<span class="go">         .value Call - 1,4..1,18</span>
-<span class="go">1:     call</span>
-<span class="go">            .func Name &#39;call&#39; Load - 1,4..1,8</span>
-<span class="go">            .keywords[2]</span>
-<span class="go">1:          a=b</span>
-<span class="go">               0] keyword - 1,9..1,12</span>
-<span class="go">                  .arg &#39;a&#39;</span>
-<span class="go">1:            b</span>
-<span class="go">                  .value Name &#39;b&#39; Load - 1,11..1,12</span>
-<span class="go">1:               **c</span>
-<span class="go">               1] keyword - 1,14..1,17</span>
-<span class="go">1:                 c</span>
-<span class="go">                  .value Name &#39;c&#39; Load - 1,16..1,17</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">)[:</span><span class="mi">64</span><span class="p">]</span>
-<span class="go">&#39;If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n   &#39;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pp</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">list</span><span class="p">))</span>
-<span class="go">[&#39;0: if 1:&#39;,</span>
-<span class="go"> &#39;If - ROOT&#39;,</span>
-<span class="go"> &#39;  .test Constant 1&#39;,</span>
-<span class="go"> &#39;  .body[1]&#39;,</span>
-<span class="go"> &#39;1:     call(a=b, **c)&#39;,</span>
-<span class="go"> &#39;   0] Expr&#39;,</span>
-<span class="go"> &#39;     .value Call&#39;,</span>
-<span class="go"> &quot;       .func Name &#39;call&#39; Load&quot;,</span>
-<span class="go"> &#39;       .keywords[2]&#39;,</span>
-<span class="go"> &#39;        0] keyword&#39;,</span>
-<span class="go"> &quot;          .arg &#39;a&#39;&quot;,</span>
-<span class="go"> &quot;          .value Name &#39;b&#39; Load&quot;,</span>
-<span class="go"> &#39;        1] keyword&#39;,</span>
-<span class="go"> &quot;          .value Name &#39;c&#39; Load&quot;]</span>
-</code></pre>
-</div>
-</div>
-
-
-                            </div>
                             <div id="FST.verify" class="classattr">
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">verify</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;_expr_arglikes&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">reparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">locs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">raise_</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">verify</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple_elt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;_decorator_list&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;_arglikes&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehensions&#39;</span><span class="p">,</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">reparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">locs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">raise_</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -2745,13 +2811,13 @@ block statements with empty bodies will not.</p>
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>mode</code>: Parse mode to use, otherwise if <code>None</code> then use the top level AST node type for the mode. Depending on
-how this is set will determine whether the verification is checking if is parsable by python (<code>'exec'</code> or
+<li><code>mode</code>: Parse mode to use, otherwise if <code>None</code> then use the top level <code>AST</code> node type for the mode. Depending
+on how this is set will determine whether the verification is checking if is parsable by python (<code>'exec'</code> or
 <code>'strict'</code> for example), or if the node itself is just in a valid state (<code>None</code> specifies this). See
 <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</li>
-<li><code><a href="#FST.reparse">reparse</a></code>: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
-to a structure check that all children have <code><a href="#FST">FST</a></code> nodes which are all liked correctly to their parents.
-<code>reparse=True</code> only allowed on root node.</li>
+<li><code><a href="#FST.reparse">reparse</a></code>: Whether to reparse the source and compare <code>AST</code>s (including location). Otherwise the check is
+limited to a structure check that all children have <code><a href="#FST">FST</a></code> nodes which are all liked correctly to their
+parents. <code>reparse=True</code> only allowed on root node.</li>
 <li><code>locs</code>: Whether to compare locations after reparse or not.</li>
 <li><code><a href="#FST.ctx">ctx</a></code>: Whether to compare <code><a href="#FST.ctx">ctx</a></code> nodes after reparse or not.</li>
 <li><code>raise_</code>: Whether to raise an exception on verify failed or return <code>None</code>.</li>
@@ -2792,6 +2858,167 @@ to a structure check that all children have <code><a href="#FST">FST</a></code> 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if a if b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="go">False</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + b&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">(0, 3)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.astutil.WalkFail</span>: <span class="n">child classes differ in BinOp.op, Sub vs. Add, locs (&#39;?&#39;, &#39;?&#39;, &#39;?&#39;, &#39;?&#39;) / (&#39;?&#39;, &#39;?&#39;, &#39;?&#39;, &#39;?&#39;)</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.dump" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">dump</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">src</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">],</span> <span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">full</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">expand</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>,</span><span class="param">	<span class="n">list_indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">=</span> <span class="mi">1</span>,</span><span class="param">	<span class="n">loc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">color</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">out</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;print&#39;</span><span class="p">,</span> <span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="s1">&#39;lines&#39;</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span><span class="o">&gt;</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">],</span> <span class="n">TextIO</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;print&#39;</span>,</span><span class="param">	<span class="n">eol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.dump"></a>
+    
+            <div class="docstring"><p>Dump a representation of the tree to stdout or other <code>TextIO</code> or return as a <code><a href="#FST.str">str</a></code> or <code>list[str]</code> of lines,
+or call a provided function once with each line of the output.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li><code><a href="#FST.src">src</a></code>: Either what level of source to show along with the nodes or a shorthand string which can specify almost
+all the formatting parameters as a string of characters.
+<ul>
+<li><code>'stmt'</code> or <code>'stmt+'</code> means output statement source lines (including <code>ExceptHandler</code> and <code>match_case</code>)
+or top level source if level is below statement. The <code>+</code> means put all lines of source including
+non-coding ones so that whole source is shown.</li>
+<li><code>'node'</code> or <code>'node+'</code> means output source for each individual node. The <code>+</code> means the same as for
+<code>'stmt+'</code>.</li>
+<li><code>None</code> does not output any source.</li>
+<li><code><a href="#FST.str">str</a></code>: Can be a string for shortcut specification of source and flags by first letter, <code>'s+feL'</code> would be
+equivalent to <code><a href="#dump">.dump</a>(src='stmt+', full=True, expand=True, loc=False)</code>.
+<ul>
+<li><code>'s'</code> or <code>'s+'</code> means <code>src='stmt'</code> or <code>src='stmt+'</code></li>
+<li><code>'S'</code> same as <code>'s+'</code></li>
+<li><code>'n'</code> or <code>'n+'</code> means <code>src='node'</code> or <code>src='node+'</code></li>
+<li><code>'N'</code> same as <code>'N+'</code></li>
+<li><code>'f'</code> means <code>full=True</code></li>
+<li><code>'e'</code> means <code>expand=True</code></li>
+<li><code>'i'</code> means <code>list_indent=indent</code></li>
+<li><code>'I'</code> means <code>list_indent=False</code></li>
+<li><code>'L'</code> means <code>loc=False</code></li>
+<li><code>'c'</code> means <code>color=True</code></li>
+<li><code>'C'</code> means <code>color=False</code></li>
+</ul></li>
+</ul></li>
+<li><code>full</code>: If <code>True</code> then will list all fields in nodes including empty ones, otherwise will exclude most empty
+fields.</li>
+<li><code>expand</code>: If <code>False</code> then the output is a nice compact representation. If <code>True</code> then it is ugly and wasteful.</li>
+<li><code><a href="#FST.indent">indent</a></code>: Indentation per level as an integer (number of spaces) or a string.</li>
+<li><code>list_indent</code>: Extra indentation for elements of lists as an integer or string (added to indent). If <code>True</code>
+then will be same as <code><a href="#FST.indent">indent</a></code>.</li>
+<li><code><a href="#FST.loc">loc</a></code>: Whether to dump locations of nodes or not.</li>
+<li><code>color</code>: <code>True</code> or <code>False</code> means whether to use ANSI color codes or not. If <code>None</code> then will autodetect, which
+can be overridden with environment variables <code>FORCE_COLOR</code> and <code>NO_COLOR</code>.</li>
+<li><code>out</code>: <code>'print'</code> means print to stdout, <code>'lines'</code> returns a list of lines and <code>'str'</code> returns a whole string.
+A <code>TextIO</code> object here will use the <code>write</code> method for each line of output. Otherwise a
+<code>Callable[[str], None]</code> which is called for each line of output individually. If <code>'str'</code> or <code>'lines'</code> then
+that is returned, otherwise <code>self</code> is returned for chaining.</li>
+<li><code>eol</code>: What to put at the end of each text line, <code>None</code> means newline for a <code>TextIO</code> out and nothing for other
+types of <code>out</code>.</li>
+</ul>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code><a href="#FST.str">str</a></code>: If was requested with <code>out='str'</code>, string of entire dump, lines ended with <code>eol</code>.</li>
+<li><code>list[str]</code>: If was requested with <code>out='lines'</code>, list of lines ended wiith <code>eol</code>.</li>
+<li><code>self</code>: If <code>out</code> is anything else, for convenience.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if 1:</span>
+<span class="gp">... </span><span class="s1">    call(a=b, **c)</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">If - ROOT 0,0..1,18</span>
+<span class="go">  .test Constant 1 - 0,3..0,4</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] Expr - 1,4..1,18</span>
+<span class="go">     .value Call - 1,4..1,18</span>
+<span class="go">       .func Name &#39;call&#39; Load - 1,4..1,8</span>
+<span class="go">       .keywords[2]</span>
+<span class="go">        0] keyword - 1,9..1,12</span>
+<span class="go">          .arg &#39;a&#39;</span>
+<span class="go">          .value Name &#39;b&#39; Load - 1,11..1,12</span>
+<span class="go">        1] keyword - 1,14..1,17</span>
+<span class="go">          .value Name &#39;c&#39; Load - 1,16..1,17</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">list_indent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">0: if 1:</span>
+<span class="go">If - ROOT 0,0..1,18</span>
+<span class="go">0:    1</span>
+<span class="go">   .test Constant 1 - 0,3..0,4</span>
+<span class="go">   .body[1]</span>
+<span class="go">1:     call(a=b, **c)</span>
+<span class="go">      0] Expr - 1,4..1,18</span>
+<span class="go">         .value Call - 1,4..1,18</span>
+<span class="go">1:     call</span>
+<span class="go">            .func Name &#39;call&#39; Load - 1,4..1,8</span>
+<span class="go">            .keywords[2]</span>
+<span class="go">1:          a=b</span>
+<span class="go">               0] keyword - 1,9..1,12</span>
+<span class="go">                  .arg &#39;a&#39;</span>
+<span class="go">1:            b</span>
+<span class="go">                  .value Name &#39;b&#39; Load - 1,11..1,12</span>
+<span class="go">1:               **c</span>
+<span class="go">               1] keyword - 1,14..1,17</span>
+<span class="go">1:                 c</span>
+<span class="go">                  .value Name &#39;c&#39; Load - 1,16..1,17</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="s1">&#39;str&#39;</span><span class="p">)[:</span><span class="mi">64</span><span class="p">]</span>
+<span class="go">&#39;If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n   &#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">))</span>
+<span class="go">[&#39;0: if 1:&#39;,</span>
+<span class="go"> &#39;If - ROOT&#39;,</span>
+<span class="go"> &#39;  .test Constant 1&#39;,</span>
+<span class="go"> &#39;  .body[1]&#39;,</span>
+<span class="go"> &#39;1:     call(a=b, **c)&#39;,</span>
+<span class="go"> &#39;   0] Expr&#39;,</span>
+<span class="go"> &#39;     .value Call&#39;,</span>
+<span class="go"> &quot;       .func Name &#39;call&#39; Load&quot;,</span>
+<span class="go"> &#39;       .keywords[2]&#39;,</span>
+<span class="go"> &#39;        0] keyword&#39;,</span>
+<span class="go"> &quot;          .arg &#39;a&#39;&quot;,</span>
+<span class="go"> &quot;          .value Name &#39;b&#39; Load&quot;,</span>
+<span class="go"> &#39;        1] keyword&#39;,</span>
+<span class="go"> &quot;          .value Name &#39;c&#39; Load&quot;]</span>
 </code></pre>
 </div>
 </div>
@@ -3066,8 +3293,14 @@ values.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[5]&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;5&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[5, 3]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[5]&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[[5], 3]&#39;</span>
 </code></pre>
 </div>
 
@@ -3078,14 +3311,26 @@ values.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="s1">&#39;[6]&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="s1">&#39;6&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, 6]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="s1">&#39;[6]&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, [6]]&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[:]</span> <span class="o">=</span> <span class="s1">&#39;7, 8&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[7, 8]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))[:]</span> <span class="o">=</span> <span class="s1">&#39;[7, 8]&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[[7, 8]]&#39;</span>
 </code></pre>
 </div>
 
@@ -3182,7 +3427,7 @@ The copy also does trivia, we do not here (yet).</p>
 
 <p><strong>WARNING!</strong> With the exception of the <code>elif</code> fix, you get just the text that is there so you will get
 unparsable source if you get for example a string <code>Constant</code> from the <code><a href="#FST.values">values</a></code> field of a <code>JoinedStr</code>, or a
-'format_spec'.</p>
+<code><a href="#FST.format_spec">format_spec</a></code>.</p>
 
 <p><strong>Parameters:</strong></p>
 
@@ -3283,7 +3528,7 @@ The copy also does trivia, we do not here (yet).</p>
 
 <p><strong>WARNING!</strong> With the exception of the <code>elif</code> fix, you get just the text that is there so you will get
 unparsable source if you get for example a string <code>Constant</code> from the <code><a href="#FST.values">values</a></code> field of a <code>JoinedStr</code>, or a
-'format_spec'.</p>
+<code><a href="#FST.format_spec">format_spec</a></code>.</p>
 
 <p><strong>Parameters:</strong></p>
 
@@ -3350,7 +3595,7 @@ is also completely dedented just like <code>.own_src()</code>.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">ast_src</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x7c2417902570</span><span class="o">&gt;</span>:</span></span>
+        <span class="name">ast_src</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x7f590550ea20</span><span class="o">&gt;</span>:</span></span>
 
         
     </div>
@@ -3586,7 +3831,7 @@ node.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">replace</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">replace</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -3638,7 +3883,12 @@ corresponding new node could not be found.</li>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">posonlyargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">returns</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># raw reparse</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&lt;arguments 0,6..0,6&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;def f(): pass&#39;</span>
 </code></pre>
 </div>
@@ -3680,7 +3930,7 @@ corresponding new node could not be found.</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">insert</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">insert</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
@@ -3719,21 +3969,39 @@ function for <code>self.put_slice()</code>.</p>
 </div>
 
 <div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, (4, 5), 1, 2, 3]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, (4, 5), 1, 2, 3]&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, 1, 2, 3, 4, 5]&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, 1, 2, 3, (4, 5)]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># same as &#39;end&#39; but &#39;end&#39; is always &#39;end&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, 1, 2, 3, 4, 5]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, 1, 2, 3, (4, 5)]&#39;</span>
 </code></pre>
 </div>
 
@@ -3801,7 +4069,7 @@ function for <code>self.put_slice()</code>.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">extend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">extend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
@@ -3834,14 +4102,26 @@ This is a convenience function for <code>self.put_slice()</code>.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, 1, 2, 3, 4, 5]&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, 1, 2, 3, (4, 5)]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, 1, 2, 4, 5, 3]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, 1, 2, (4, 5), 3]&#39;</span>
 </code></pre>
 </div>
 </div>
@@ -3902,7 +4182,7 @@ is a convenience function for <code>self.put_slice()</code>.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">prextend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="view.html#fstview">fst.view.fstview</a></span>:</span></span>
+        <span class="name">prextend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="view.html#fstview">fst.view.fstview</a></span>:</span></span>
 
         
     </div>
@@ -3935,14 +4215,26 @@ field if <code>field=None</code>. This is a convenience function for <code>self.
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[4, 5, 0, 1, 2, 3]&#39;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[(4, 5), 0, 1, 2, 3]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;[0, 4, 5, 1, 2, 3]&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[0, (4, 5), 1, 2, 3]&#39;</span>
 </code></pre>
 </div>
 </div>
@@ -4073,7 +4365,7 @@ element field or the entire slice from a list field. If passed in <code>stop</co
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">put</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ellipsis</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">stop</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">put</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ellipsis</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">stop</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -4300,7 +4592,7 @@ is present and <code>stop</code> is assumed to be <code>'end'</code>.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">put_slice</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">start</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>,</span><span class="param">	<span class="n">stop</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;end&#39;</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">put_slice</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">start</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>,</span><span class="param">	<span class="n">stop</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;end&#39;</span>,</span><span class="param">	<span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -5009,7 +5301,7 @@ still have the count of parentheses in an attribute <code>.n</code>.</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">par</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">force</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;safe&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">whole</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">par</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">force</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;invalid&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">whole</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
@@ -5020,7 +5312,7 @@ or nodes which are not <code><a href="#FST.is_parenthesizable">is_parenthesizabl
 unparenthesized <code>Tuple</code> and brackets to unbracketed <code>MatchSequence</code>, adjusting the node location. If dealing with
 a <code>Starred</code> then the parentheses are applied to the child.</p>
 
-<p><strong>WARNING!</strong> If you unsafe-force-parenthesize something that shouldn't be parenthesized, and you wind up poking
+<p><strong>WARNING!</strong> If you invalid-force-parenthesize something that shouldn't be parenthesized, and you wind up poking
 an eye out, that's on you.</p>
 
 <p><strong>Parameters:</strong></p>
@@ -5034,7 +5326,7 @@ atom which can be split over multiple lines (in which case it would need parenth
 if allowed by syntax, e.g. this won't parenthesize an <code><a href="#FST.arg">arg</a></code>, <code>withitem</code> any kind of <code>statement</code> or
 anything which would cause a syntax error with the parentheses there, so no <code>Slice</code>s or f-string
 <code>Constant</code>s either.</li>
-<li><code>'unsafe'</code>: Add a layer of parentheses regardless if any already present or even syntactically allowed.</li>
+<li><code>'invalid'</code>: Add a layer of parentheses regardless if any already present or even syntactically allowed.</li>
 </ul></li>
 <li><code>whole</code>: If at root then parenthesize whole source instead of just node, if <code>False</code> then only node.</li>
 </ul>
@@ -5090,7 +5382,7 @@ anything which would cause a syntax error with the parentheses there, so no <cod
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b:c&#39;</span><span class="p">,</span> <span class="s1">&#39;Slice&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="s1">&#39;unsafe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># can still force</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b:c&#39;</span><span class="p">,</span> <span class="s1">&#39;Slice&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="s1">&#39;invalid&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># can still force</span>
 <span class="go">&#39;(a:b:c)&#39;</span>
 </code></pre>
 </div>
@@ -5121,16 +5413,18 @@ anything which would cause a syntax error with the parentheses there, so no <cod
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">unpar</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">node</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>, </span><span class="param"><span class="o">*</span>, </span><span class="param"><span class="n">shared</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">unpar</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">node</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;invalid&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">shared</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
     <a class="headerlink" href="#FST.unpar"></a>
     
-            <div class="docstring"><p>Remove all parentheses if present. Normally removes just grouping parentheses but can also remove <code>Tuple</code>
-parentheses and <code>MatchSequence</code> parentheses or brackets intrinsic to the node if <code>node=True</code>. If dealing with a
-<code>Starred</code> then the parentheses are checked in and removed from the child. If <code>shared=None</code> then will also remove
-parentheses which do not belong to this node but enclose it directly, this is meant for internal use.</p>
+            <div class="docstring"><p>Remove all parentheses if present. Normally removes just grouping parentheses but can also remove intrinsic
+<code>Tuple</code> node parentheses and <code>MatchSequence</code> parentheses or brackets if <code>node=True</code>. If dealing with a <code>Starred</code>
+then the parentheses are checked in and removed from the child.</p>
+
+<p>If <code>shared=None</code> then will also remove parentheses which do not belong to this node but enclose it directly,
+this is meant for internal use.</p>
 
 <p><strong>WARNING!</strong> This function doesn't do any higher level parsability validation. So if you unparenthesize
 something that shouldn't be unparenthesized, and you wind up poking an eye out, that's on you.</p>
@@ -5138,9 +5432,15 @@ something that shouldn't be unparenthesized, and you wind up poking an eye out, 
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>node</code>: If <code>True</code> then will remove intrinsic parentheses from a parenthesized <code>Tuple</code> and parentheses /
-brackets from parenthesized / bracketed <code>MatchSequence</code>, otherwise only removes grouping parentheses if
-present. Also from a parentesized <code>Starred</code> arglike expression which can cause it to become unparsable.</li>
+<li><code>node</code>: What to remove.
+<ul>
+<li><code>False</code>: Only grouping parentheses.</li>
+<li><code>True</code>: Grouping parentheses and also remove intrinsic parentheses from a parenthesized <code>Tuple</code> and
+parentheses / brackets from parenthesized / bracketed <code>MatchSequence</code>. Also from a parentesized
+<code>Starred</code> arglike-only expression which can cause it to become unparsable, e.g. <code>*(a or b)</code>.</li>
+<li><code>'invalid'</code>: Remove intrinsic delimiters also from <code>List</code>, <code>Set</code>, <code>Dict</code>, <code>MatchMapping</code>, <code>ListComp</code>,
+<code>SetComp</code>, <code>DictComp</code> and <code>GeneratorExp</code>.</li>
+</ul></li>
 <li><code>shared</code>: Whether to allow merge of parentheses of single call argument generator expression with <code>Call</code>
 parentheses or not. If <code>None</code> then will attempt to unparenthesize <strong>ANY</strong> enclosing parentheses, whether
 they belong to this node or not (meant for internal use).</li>
@@ -5227,24 +5527,41 @@ they belong to this node or not (meant for internal use).</li>
 </code></pre>
 </div>
 
+<p>Not just root node.</p>
+
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># not just root node</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i = (1 + 2))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i = (1 + 2))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;call(i = 1 + 2)&#39;</span>
 </code></pre>
 </div>
 
+<p>By default allows sharing.</p>
+
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># by default allows sharing</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;call(i for i in j)&#39;</span>
 </code></pre>
 </div>
 
+<p>Unless told not to.</p>
+
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># unless told not to</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;call((i for i in j))&#39;</span>
+</code></pre>
+</div>
+
+<p>Invalid stuff.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1: a, **rest}&#39;</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="s1">&#39;invalid&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;1: a, **rest&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j if i]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="s1">&#39;invalid&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;i for i in j if i&#39;</span>
 </code></pre>
 </div>
 </div>
@@ -5404,7 +5721,7 @@ non-Comprehension enclosing scope. For this reason, when a walk recurses into a 
 <code><a href="#FST.target">target</a></code> nodes are still returned even though everything else belongs to the Comprehension scope and is not returned
 (except for the first <code>comprehension.iter</code>, which also belongs to the enclosing scope). This remains true for
 whatever level of nesting of Comprehensions is recursed into. One quirk, if starting a scope walk on a
-Comprehension, any walrus <code><a href="#FST.targets">targets</a></code> <strong>WILL</strong> be returned, the first iterator though will not. This is on purpose.</p>
+Comprehension, any walrus <code><a href="#FST.target">target</a></code>s <strong>WILL</strong> be returned, the first iterator though will not. This is on purpose.</p>
 
 <p><strong>Parameters:</strong></p>
 
@@ -5415,8 +5732,9 @@ Comprehension, any walrus <code><a href="#FST.targets">targets</a></code> <stron
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -5619,8 +5937,9 @@ the walk. After the walk though, all nodes which were replaced have their new va
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -5677,8 +5996,9 @@ are returned.</li>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -5735,8 +6055,9 @@ are returned.</li>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -5799,8 +6120,9 @@ are returned.</li>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -5858,8 +6180,9 @@ are returned.</li>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -5935,8 +6258,9 @@ as the replaced node and its parent is used for the following call.</p>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -6007,8 +6331,9 @@ as the replaced node and its parent is used for the following call.</p>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -6078,8 +6403,9 @@ thing.</p>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -6213,8 +6539,9 @@ of the whole thing.</p>
 <li><code>False</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger calculated location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present). Operators are not returned (even though they have calculated location).</li>
-<li><code>'loc'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
-do not always have a well defined location).</li>
+<li><code>'loc'</code>: Same as <code>True</code> but always returns <code>arguments</code> even if empty (as it has a location even then). Also
+operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do not always have a well defined
+location).</li>
 <li><code>type[AST]</code>: A singe <strong>LEAF</strong> <code>AST</code> type to return. This will not constrain the walk, just filter which nodes
 are returned.</li>
 <li><code>Container[type[AST]]</code>: A container of <strong>LEAF</strong> <code>AST</code> types to return. Best container type is a <code>set</code>,
@@ -9555,7 +9882,7 @@ answer even for top-level <code>ExceptHandler</code> nodes cut out of their bloc
     </div>
     <a class="headerlink" href="#FST._all"></a>
     
-            <div class="docstring"><p>Virtual <code><a href="#FST._all">_all</a></code> field view for <code>Dict</code>, <code>MatchMapping</code> and <code>Compare</code>.</p>
+            <div class="docstring"><p>Virtual <code><a href="#FST._all">_all</a></code> field view for <code>Dict</code>, <code>MatchMapping</code>, <code>Compare</code> and <code>arguments</code>.</p>
 
 <p><strong>Examples:</strong></p>
 
@@ -9574,6 +9901,12 @@ answer even for top-level <code>ExceptHandler</code> nodes cut out of their bloc
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b == c &gt; d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;b == c&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a=1, *b, c: int = 3, **d): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;*, c: int = 3, **d&#39;</span>
 </code></pre>
 </div>
 </div>

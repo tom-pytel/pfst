@@ -364,8 +364,8 @@ element itself.</p>
 </code></pre>
 </div>
 
-<p>Both <code>get()</code> and <code>get_slice()</code> can specify slice beginning and end points as. Passing <code>'end'</code> as an index specifies the
-end of the body however long it may be.</p>
+<p>Both <code>get()</code> and <code>get_slice()</code> can specify slice beginning and end points. Passing <code>'end'</code> as an index specifies the end
+of the body however long it may be.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
@@ -397,9 +397,9 @@ slicing behavior which slices across the multiple fields and gives a new <code>D
 </code></pre>
 </div>
 
-<p>The <code>field=None</code> is just a shortcut for specifying the "virtual" field <code>'_all'</code>, which exists for <code>Dict</code>, <code>MatchMapping</code>
-and <code>Compare</code> in order to allow access to combined elements which are not normally accessible by themselves as <code>AST</code>
-nodes.</p>
+<p>The <code>field=None</code> is just a shortcut for specifying the "virtual" field <code>'_all'</code>, which exists for <code>Dict</code>,
+<code>MatchMapping</code>, <code>Compare</code> and <code>arguments</code> in order to allow access to combined elements which are not normally
+accessible by themselves as <code>AST</code> nodes, or treat multiple different sequential fields as a single sequence.</p>
 
 <p>Note that the first <code>a</code> in the <code>Compare</code> below is normally not part of a <code>list</code> field but can be sliced as if it were by
 using the <code>'_all'</code> virtual field (which is the default field for <code>Compare</code> but we include it explicitly for
@@ -451,7 +451,7 @@ for this purpose. This is not a valid <code>AST</code> object of course, but wor
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">_ExceptHandlers - ROOT 0,0..3,9</span>
 <span class="go">  .handlers[2]</span>
 <span class="go">   0] ExceptHandler - 0,0..1,9</span>
@@ -515,7 +515,7 @@ for this purpose. This is not a valid <code>AST</code> object of course, but wor
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Global - ROOT 0,0..0,14</span>
 <span class="go">  .names[3]</span>
 <span class="go">   0] &#39;a&#39;</span>
@@ -530,7 +530,7 @@ for this purpose. This is not a valid <code>AST</code> object of course, but wor
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Tuple - ROOT 0,0..0,7</span>
 <span class="go">  .elts[3]</span>
 <span class="go">   0] Name &#39;a&#39; Load - 0,0..0,1</span>

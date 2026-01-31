@@ -74,7 +74,7 @@
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">FunctionDef - ROOT 1,0..2,16</span>
 <span class="go">  .name &#39;func&#39;</span>
 <span class="go">  .args arguments - 1,9..1,10</span>
@@ -174,7 +174,6 @@ in <code>FST</code> nodes, like <code>arguments</code> or <code>operators</code>
 <p>The only <code>AST</code> nodes which don't get locations like this are:</p>
 
 <ol>
-<li>Empty <code>arguments</code> nodes since that could allow zero-length locations which are a pain to deal with.</li>
 <li><code>boolop</code> nodes because a single <code>AST</code> may correspond to multiple locations in the expression.</li>
 <li><code>expr_context</code> nodes which don't have parsable source.</li>
 </ol>
@@ -294,7 +293,7 @@ offsets are in characters and not encoded bytes.</p>
 
 <p><code>FST</code> nodes also provide the same <code>lineno</code> ... <code>end_col_offset</code> attributes as <code>AST</code> nodes and return the locations in
 <code>AST</code> coordinates (1 based line, column byte offsets) as a convenience for all nodes, providing these to <code>AST</code> nodes
-which don't normally have them.</p>
+which don't normally have them (keep in mind these calculated attributes are on the <code>FST</code> node, not the <code>AST</code> node).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -370,7 +369,7 @@ the source code.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">If - ROOT 0,0..1,8</span>
 <span class="go">  .test Compare - 0,3..0,8</span>
 <span class="go">    .left Name &#39;a&#39; Load - 0,3..0,4</span>

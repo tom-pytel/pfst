@@ -38,10 +38,11 @@
     <li><a href="#pars-option"><code>pars</code> option</a></li>
     <li><a href="#pars_walrus-option"><code>pars_walrus</code> option</a></li>
     <li><a href="#pars_arglike-option"><code>pars_arglike</code> option</a></li>
-    <li><a href="#norm-norm_self-norm_get-and-norm_put-options"><code>norm</code>, <code>norm_self</code>, <code>norm_get</code> and <code>norm_put</code> options</a></li>
+    <li><a href="#norm-norm_self-and-norm_get-options"><code>norm</code>, <code>norm_self</code> and <code>norm_get</code> options</a></li>
     <li><a href="#set_norm-option"><code>set_norm</code> option</a></li>
     <li><a href="#op_side-option"><code>op_side</code> option</a></li>
-    <li><a href="#special-options">Special options</a></li>
+    <li><a href="#args_as-options"><code>args_as</code> options</a></li>
+    <li><a href="#non-global-options">Non-global options</a></li>
   </ul></li>
 </ul>
 
@@ -110,9 +111,9 @@ values they have when you first import <code><a href="../../fst.html">fst</a></c
 <span class="go"> &#39;norm&#39;: False,</span>
 <span class="go"> &#39;norm_self&#39;: None,</span>
 <span class="go"> &#39;norm_get&#39;: None,</span>
-<span class="go"> &#39;norm_put&#39;: None,</span>
-<span class="go"> &#39;set_norm&#39;: &#39;both&#39;,</span>
-<span class="go"> &#39;op_side&#39;: &#39;left&#39;}</span>
+<span class="go"> &#39;set_norm&#39;: &#39;star&#39;,</span>
+<span class="go"> &#39;op_side&#39;: &#39;left&#39;,</span>
+<span class="go"> &#39;args_as&#39;: None}</span>
 </code></pre>
 </div>
 
@@ -214,7 +215,7 @@ documentation is for that, here we just show their usage.</p>
 
 <p>This option specifies whether normal prescribed put operations are done (<code>raw=False</code>), raw source reparse operations are
 done instead (<code>raw=True</code>), or whether raw source reparse is used as a fallback if the prescribed operation fails
-(<code>raw='auto'</code>). For information on how raw operations work see <code><a href="d08_raw.html">fst.docs.d08_raw</a></code>.</p>
+(<code>raw='auto'</code>). For information on how raw operations work see <code><a href="d11_raw.html">fst.docs.d11_raw</a></code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># default</span>
@@ -304,7 +305,7 @@ behavior <strong>OFF</strong> if you want strict type checking since it is on by
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;mismatch&#39;</span><span class="p">,</span> <span class="s1">&#39;Name&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">coerce</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="gr">fst.NodeError</span>: <span class="n">expecting alias, got Name</span>
+<span class="gr">fst.NodeError</span>: <span class="n">expecting alias, got Name, coerce disabled</span>
 </code></pre>
 </div>
 
@@ -497,10 +498,6 @@ expressions that are copied out to root level or not (<code><a href="../../fst.h
 expression source). This is apart from the <code>pars</code> option and any explicit <code>par()</code> or walrus expressions explicitly
 created with parentheses.</p>
 
-<p><strong>Note:</strong> This option breaks the convention that passing <code>None</code> to a function uses the global default value. If you pass
-an explicit <code>None</code> for this option to a function it really means ignore the global default for <code>pars_walrus</code> and use the
-value of <code>pars</code>, either passed in or global.</p>
-
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;b, c := d, e&#39;</span><span class="p">)</span>
 </code></pre>
@@ -542,10 +539,6 @@ value of <code>pars</code>, either passed in or global.</p>
 or <code>Subscript.slice</code>. The behavior is identical to the <code>pars_walrus</code> option but for these otherwise
 invalid-if-not-parenthesized expressions instead of walruses.</p>
 
-<p><strong>Note:</strong> This option breaks the convention that passing <code>None</code> to a function uses the global default value. If you pass
-an explicit <code>None</code> for this option to a function it really means ignore the global default for <code>pars_arglike</code> and use
-the value of <code>pars</code>, either passed in or global.</p>
-
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(*a or b)&#39;</span><span class="p">)</span>
 </code></pre>
@@ -581,20 +574,16 @@ the value of <code>pars</code>, either passed in or global.</p>
 </code></pre>
 </div>
 
-<h2 id="norm-norm_self-norm_get-and-norm_put-options"><code>norm</code>, <code>norm_self</code>, <code>norm_get</code> and <code>norm_put</code> options</h2>
+<h2 id="norm-norm_self-and-norm_get-options"><code>norm</code>, <code>norm_self</code> and <code>norm_get</code> options</h2>
 
 <p>These options specify whether normalization should take place for operations or not. Normalization ensures that the
 resulting <code>AST</code> trees are valid. <code><a href="../../fst.html">fst</a></code> allows you to create invalid trees during editing by deleting all or most
 elements from nodes which don't normally allow it for the sake of simplifying editing. For more information on
 normalization see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
 
-<p><strong>Note:</strong> The <code>norm_self</code>, <code>norm_get</code> and <code>norm_put</code> options break the convention that passing <code>None</code> to a function uses
-the global default value. If you pass an explicit <code>None</code> for any of these options to a function it really means ignore
-the global default for that option and use the value of <code>norm</code>, either passed in or global.</p>
-
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">norm_self</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
 <span class="go">0: {*()}</span>
 <span class="go">Set - ROOT 0,0..0,5</span>
 <span class="go">  .elts[1]</span>
@@ -607,7 +596,7 @@ the global default for that option and use the value of <code>norm</code>, eithe
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">norm_self</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>  <span class="c1"># invalid empty set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>  <span class="c1"># invalid empty set</span>
 <span class="go">0: {}</span>
 <span class="go">Set - ROOT 0,0..0,2</span>
 </code></pre>
@@ -617,7 +606,7 @@ the global default for that option and use the value of <code>norm</code>, eithe
 has been demonstrated we can leave it out in the further examples.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_get</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_get</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
 <span class="go">0: {*()}</span>
 <span class="go">Set - ROOT 0,0..0,5</span>
 <span class="go">  .elts[1]</span>
@@ -629,33 +618,21 @@ has been demonstrated we can leave it out in the further examples.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_get</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>  <span class="c1"># invalid</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_get</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>  <span class="c1"># invalid</span>
 <span class="go">0: {}</span>
 <span class="go">Set - ROOT 0,0..0,2</span>
 </code></pre>
 </div>
 
-<p><code>norm_put</code> currently only applies to putting a semantically empty set.</p>
+<p><code>norm_self</code> and <code>norm_get</code> exist for fine-grained control. <code>norm</code> exists as a convenience to set both of these at once.</p>
 
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, b]</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, *(), b]</span>
-</code></pre>
-</div>
-
-<p><code>norm_self</code>, <code>norm_get</code> and <code>norm_put</code> exist for fine-grained control. <code>norm</code> exists as a convenience to set these all
-at once.</p>
+<p>When using for an operation on a <code>Set</code>, a <code>set_norm</code> option value from below can be passed directly in any of the <code>norm</code>
+options as a truthy value and will override current <code>set_norm</code>.</p>
 
 <h2 id="set_norm-option"><code>set_norm</code> option</h2>
 
-<p>This options specifies what the empty set representation for the normalization should be (both to create for <code>self</code> or
-<code>get</code> and to recognize on <code>put</code>).</p>
+<p>This options specifies what the empty set representation for the normalization should be, both to create for <code>self</code> and
+return for <code>get</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">set_norm</span><span class="o">=</span><span class="s1">&#39;call&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
@@ -676,43 +653,15 @@ at once.</p>
 </code></pre>
 </div>
 
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;set()&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">set_norm</span><span class="o">=</span><span class="s1">&#39;call&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, b]</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">set_norm</span><span class="o">=</span><span class="s1">&#39;call&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, *(), b]</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;set()&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">set_norm</span><span class="o">=</span><span class="s1">&#39;star&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, set(), b]</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">set_norm</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, b]</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;set()&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">set_norm</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[a, b]</span>
-</code></pre>
-</div>
-
 <h2 id="op_side-option"><code>op_side</code> option</h2>
 
 <p>This option specifies which side of an operand an operator lives on by default. This option is a hint and if the
 operation cannot be carried out with the operator on this side it will be carried out with the operator on the other or
-none if no side possible. This option currently only applies to operations on <code>Compare</code> and <code>BoolOp</code> nodes and really
-only needs to exist for <code>Compare</code>, for <code>BoolOp</code> it is more of an aesthetic selection of which side operator to modify if
-they are even different. For more information on this option see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
+none if no side possible.</p>
+
+<p>This option currently only applies to operations on <code>Compare</code> and <code>BoolOp</code> nodes and really only needs to exist for
+<code>Compare</code>, for <code>BoolOp</code> it is more of an aesthetic selection of which side operator to modify if they are even
+different. For more information on this option see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
 
 <p>For delete it specifies which side (of the slice being deleted) an extra operator is deleted as well.</p>
 
@@ -742,10 +691,105 @@ they are even different. For more information on this option see <code><a href="
 </code></pre>
 </div>
 
-<h2 id="special-options">Special options</h2>
+<h2 id="args_as-options"><code>args_as</code> options</h2>
 
-<p>There are some options which can be passed to certain functions which are contextual and don't have global defaults,
-such as the <code>'to'</code> option when putting a single element in raw mode.</p>
+<p>This option allows conversion of arguments between <code>posonlyargs</code>, <code>args</code> and <code>kwonlyargs</code> when doing slice operations on
+an <code>arguments</code> node. When getting a slice it is applied after the get on the slice to be returned. When putting a slice
+it is applied on the slice being put before the put is attempted. This option is global in order to to allow
+<code>with FST.options(args_as=?)</code> usage but is really meant to be specified on a per-call basis.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, c, /</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;arg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;kw&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">*, a, b, c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;arg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, *c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;arg_only&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">cannot have vararg for args_as=&#39;arg_only&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *, c, **d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;kw&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">*, a, b, c, **d</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *, c, **d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;kw_only&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">cannot have kwarg for args_as=&#39;kw_only&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c, d, **e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">cannot have vararg for args_as=&#39;pos&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c, d, **e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;pos_maybe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, /, *c, d, **e</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c, d, **e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;arg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">cannot have keywords following vararg for args_as=&#39;arg&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c, d, **e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;arg_maybe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, *c, d, **e</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c, d, **e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;kw&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">fst.NodeError</span>: <span class="n">cannot have vararg for args_as=&#39;kw&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, /, b, *c, d, **e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">args_as</span><span class="o">=</span><span class="s1">&#39;kw_maybe&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, *c, d, **e</span>
+</code></pre>
+</div>
+
+<h2 id="non-global-options">Non-global options</h2>
+
+<p>There are some options which can be passed to certain functions which are contextual and don't and can't have global
+defaults, such as the <code>to</code> option when putting a single element in raw mode.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;to&#39;</span> <span class="ow">in</span> <span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>
@@ -770,9 +814,9 @@ such as the <code>'to'</code> option when putting a single element in raw mode.<
 </code></pre>
 </div>
 
-<p>Or the <code>'op'</code> option when doing <code>Compare</code> slice operations as noted above.</p>
+<p>Or the <code>op</code> option when doing <code>Compare</code> slice put operations and providing an operator for just that single put.</p>
 
-<p>For more information on <code>to</code> see <code><a href="d08_raw.html">fst.docs.d08_raw</a></code> and for <code>op</code> see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
+<p>For more information on <code>to</code> see <code><a href="d11_raw.html">fst.docs.d11_raw</a></code> and for <code>op</code> see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
 </div>
 
                 

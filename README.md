@@ -2,7 +2,7 @@
 
 **High-level Python AST/CST manipulation that preserves formatting**
 
-[![PyPI version](https://img.shields.io/badge/pypi-0.2.5-orange.svg)](https://pypi.org/project/pfst/)
+[![PyPI version](https://img.shields.io/badge/pypi-0.2.6-orange.svg)](https://pypi.org/project/pfst/)
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
@@ -17,7 +17,7 @@ This module exists in order to facilitate quick and easy high level editing of P
 - Various Python version-specific syntax quirks
 - Lots more...
 
-See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples.
 
 ```py
 >>> import fst  # pip install pfst, import fst

@@ -312,7 +312,8 @@ operations.
 >>> print(f.get_slice(1, 3, '_all').src)
 {2: b, **c}
 
-`_all` is the default field for `Dict`, `MatchMapping` and `Compare` so you don't need to include it as a parameter.
+`_all` is the default field for `Dict`, `MatchMapping`, `Compare` and `arguments` so you don't need to include it as a
+parameter.
 
 >>> f.put_slice('{-1: x, -2: y, **z}', 1, 3)
 <MatchMapping ROOT 0,0..0,25>

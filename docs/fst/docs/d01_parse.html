@@ -33,6 +33,7 @@
     <li><a href="#unparse">Unparse</a></li>
     <li><a href="#simpler-parse">Simpler parse</a></li>
     <li><a href="#from-ast-nodes">From <code>AST</code> nodes</a></li>
+    <li><a href="#from-fst-nodes">From <code>FST</code> nodes</a></li>
     <li><a href="#underlying-functions">Underlying functions</a></li>
     <li><a href="#source">Source</a></li>
   </ul></li>
@@ -91,7 +92,7 @@
 <p>But it has an <code>FST</code> node at <code>.f</code>, we can <code>dump()</code> it to stdout (<code><a href="../fst.html#FST.dump">fst.fst.FST.dump()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Module - ROOT 0,0..0,22</span>
 <span class="go">  .body[1]</span>
 <span class="go">   0] If - 0,0..0,11</span>
@@ -110,7 +111,7 @@
 <code>FST</code> node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Assign - 0,6..0,11</span>
 <span class="go">  .targets[1]</span>
 <span class="go">   0] Name &#39;i&#39; Store - 0,6..0,7</span>
@@ -190,7 +191,7 @@ more information on structure see <code><a href="d03_structure.html">fst.docs.d0
 <p>Quicker way to parse which gives the same thing but returns the <code>FST</code> node (<code><a href="../fst.html#FST">fst.fst.FST()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Module - ROOT 0,0..0,11</span>
 <span class="go">  .body[1]</span>
 <span class="go">   0] If - 0,0..0,11</span>
@@ -208,7 +209,7 @@ parameter to <code>ast.parse()</code>. If you leave it out you will get the mini
 just the <code>If</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">If - ROOT 0,0..0,11</span>
 <span class="go">  .test Constant 1 - 0,3..0,4</span>
 <span class="go">  .body[1]</span>
@@ -269,7 +270,7 @@ just the <code>If</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">))</span>
-<span class="go">&lt;arguments ROOT&gt;</span>
+<span class="go">&lt;arguments ROOT 0,0..0,0&gt;</span>
 </code></pre>
 </div>
 
@@ -286,7 +287,7 @@ their usual context. The below is not normally parsable in an expression context
 starred arguments. For a full list of parse modes see <code><a href="../parsex.html#Mode">fst.parsex.Mode</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Starred - ROOT 0,0..0,7</span>
 <span class="go">  .value BoolOp - 0,1..0,7</span>
 <span class="go">    .op Or</span>
@@ -299,8 +300,8 @@ starred arguments. For a full list of parse modes see <code><a href="../parsex.h
 
 <h2 id="from-ast-nodes">From <code>AST</code> nodes</h2>
 
-<p>You can also pass <code>AST</code> nodes, which are then unparsed and reparsed (because otherwise we couldn't trust the location
-information in them). When used like this, the <code>AST</code> nodes are <strong>NOT CONSUMED</strong>.</p>
+<p>You can also pass <code>AST</code> nodes, which are then unparsed (to get the source) and reparsed (because otherwise we couldn't
+trust the location information in them). When used like this, the <code>AST</code> nodes are <strong>NOT CONSUMED</strong>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
@@ -308,7 +309,7 @@ information in them). When used like this, the <code>AST</code> nodes are <stron
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Assign - ROOT 0,0..0,5</span>
 <span class="go">  .targets[1]</span>
 <span class="go">   0] Name &#39;x&#39; Store - 0,0..0,1</span>
@@ -325,7 +326,8 @@ information in them). When used like this, the <code>AST</code> nodes are <stron
 <p>This also allows normally non-parsable nodes.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+<span class="go">0: a:b:c</span>
 <span class="go">Slice - ROOT 0,0..0,5</span>
 <span class="go">  .lower Name &#39;a&#39; Load - 0,0..0,1</span>
 <span class="go">  .upper Name &#39;b&#39; Load - 0,2..0,3</span>
@@ -333,13 +335,76 @@ information in them). When used like this, the <code>AST</code> nodes are <stron
 </code></pre>
 </div>
 
-<h2 id="underlying-functions">Underlying functions</h2>
-
-<p>The <code>FST(...)</code> syntax used in the above examples is just a shortcut for the functions <code><a href="../fst.html#FST.fromsrc">fst.fst.FST.fromsrc()</a></code> and
-<code><a href="../fst.html#FST.fromast">fst.fst.FST.fromast()</a></code>.</p>
+<p>If you just pass an <code>AST</code> node and no <code>mode</code> parameter then the <code>AST</code> node is just converted into <code>FST</code>. You can however
+pass a <code>mode</code> parameter to either restrict the context for the <code>AST</code> node, such as a standard expression which should
+not be a <code>Slice</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)),</span> <span class="s1">&#39;expr&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">SyntaxError</span>: <span class="n">invalid syntax</span>
+</code></pre>
+</div>
+
+<p>If you want to allow this, the mode is <code>'expr_slice'</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)),</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">)</span>
+<span class="go">&lt;Slice ROOT 0,0..0,5&gt;</span>
+</code></pre>
+</div>
+
+<p>Or if coercion is possible to a different type of node then this can be done.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">),</span> <span class="s1">&#39;arg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+<span class="go">0: name</span>
+<span class="go">arg - ROOT 0,0..0,4</span>
+<span class="go">  .arg &#39;name&#39;</span>
+</code></pre>
+</div>
+
+<h2 id="from-fst-nodes">From <code>FST</code> nodes</h2>
+
+<p>You can pass existing <code>FST</code> nodes to <code>FST()</code> and it will try to convert the node to the type you request via the <code>mode</code>
+parameter. If you omit the <code>mode</code> parameter, you will just get a copy of the <code>FST</code> passed in.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2)&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+<span class="go">0: (1, 2)</span>
+<span class="go">Tuple - ROOT 0,0..0,6</span>
+<span class="go">  .elts[2]</span>
+<span class="go">   0] Constant 1 - 0,1..0,2</span>
+<span class="go">   1] Constant 2 - 0,4..0,5</span>
+<span class="go">  .ctx Load</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2)&#39;</span><span class="p">),</span> <span class="s1">&#39;_comprehension_ifs&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+<span class="go">0: if 1 if 2</span>
+<span class="go">_comprehension_ifs - ROOT 0,0..0,9</span>
+<span class="go">  .ifs[2]</span>
+<span class="go">   0] Constant 1 - 0,3..0,4</span>
+<span class="go">   1] Constant 2 - 0,8..0,9</span>
+</code></pre>
+</div>
+
+<p>These three modes allow the <code>FST()</code> constructor to act like the Python <code>list()</code> object in that it will convert whatever
+you pass in to either the type of <code>FST</code> tree it already is or should be in the case of source, or to something else you
+specify via the <code>mode</code> parameter (if possible).</p>
+
+<p>In the case of <code>FST</code> nodes passed in, the conversion or returned node is a copy and the original node is not modified,
+so you can be certain of the safety of using <code>FST()</code> to try to get the kind of node you are expecting.</p>
+
+<h2 id="underlying-functions">Underlying functions</h2>
+
+<p>The <code>FST(...)</code> syntax used in the above examples is just a shortcut for the functions <code><a href="../fst.html#FST.fromsrc">fst.fst.FST.fromsrc()</a></code>,
+<code><a href="../fst.html#FST.fromast">fst.fst.FST.fromast()</a></code> and <code><a href="../fst.html#FST.as_">fst.fst.FST.as_()</a></code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Module - ROOT 0,0..0,5</span>
 <span class="go">  .body[1]</span>
 <span class="go">   0] Assign - 0,0..0,5</span>
@@ -349,10 +414,11 @@ information in them). When used like this, the <code>AST</code> nodes are <stron
 </code></pre>
 </div>
 
-<p>Except that <code>fromsrc()</code> defaults to <code>mode='exec'</code> instead of minimal node.</p>
+<p>Except that <code>fromsrc()</code> defaults to <code>mode='exec'</code> as shown above instead of minimal node. If you want minimal node
+representation then you should pass one of the other modes.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="go">Assign - ROOT 0,0..0,5</span>
 <span class="go">  .targets[1]</span>
 <span class="go">   0] Name &#39;i&#39; Store - 0,0..0,1</span>
@@ -363,11 +429,26 @@ information in them). When used like this, the <code>AST</code> nodes are <stron
 <p><code>FST.fromast()</code> works the same as when passing an <code>AST</code> to <code>FST()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">fromast</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="go">Slice - ROOT 0,0..0,5</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromast</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+<span class="go">0: a:b</span>
+<span class="go">Slice - ROOT 0,0..0,3</span>
 <span class="go">  .lower Name &#39;a&#39; Load - 0,0..0,1</span>
 <span class="go">  .upper Name &#39;b&#39; Load - 0,2..0,3</span>
-<span class="go">  .step Name &#39;c&#39; Load - 0,4..0,5</span>
+</code></pre>
+</div>
+
+<p>The last of these is a coercion function which is more fully explained in<code><a href="d08_coerce.html">fst.docs.d08_coerce</a></code>. It allows conversion
+from one type of <code>FST</code> to another, if possible.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">as_</span><span class="p">(</span><span class="n">List</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+<span class="go">0: [a, b, c]</span>
+<span class="go">List - ROOT 0,0..0,9</span>
+<span class="go">  .elts[3]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,1..0,2</span>
+<span class="go">   1] Name &#39;b&#39; Load - 0,4..0,5</span>
+<span class="go">   2] Name &#39;c&#39; Load - 0,7..0,8</span>
+<span class="go">  .ctx Load</span>
 </code></pre>
 </div>
 
@@ -439,7 +520,7 @@ and the <code>copy().src</code> is that the former executes much faster (and you
 <p>The <code>FST.dump()</code> method can be useful in visualizing the source along with the actual nodes it corresponds to.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
 <span class="go">0: def f(a):</span>
 <span class="go">FunctionDef - ROOT 0,0..4,17</span>
 <span class="go">  .name &#39;f&#39;</span>

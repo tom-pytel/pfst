@@ -51,7 +51,7 @@
                     <h1 class="modulename">
 fst    </h1>
 
-                        <div class="docstring"><p>Version 0.2.5</p>
+                        <div class="docstring"><p>Version 0.2.6</p>
 
 <h1 id="overview">Overview</h1>
 
@@ -73,35 +73,36 @@ with the details of:</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">fst</span>  <span class="c1"># pip install pfst, import fst</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ext_ast</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if a: b = c, d  # comment&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ext_ast</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">... logger.info(  # just checking</span>
+<span class="s1">...     f&#39;not a </span><span class="si">{thing}</span><span class="s1">&#39;, extra=extra,  # blah</span>
+<span class="s1">... )&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ext_ast</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;u,</span><span class="se">\n</span><span class="s1">v  # blah&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ext_ast</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">id=CID  # comment&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span>
-          <span class="n">v</span><span class="p">,</span>  <span class="c1"># blah</span>
-          <span class="n">d</span><span class="p">)</span>  <span class="c1"># comment</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>  <span class="c1"># just checking</span>
+    <span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="n">CID</span><span class="p">,</span>  <span class="c1"># comment</span>
+    <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>  <span class="c1"># blah</span>
+<span class="p">)</span>
 </code></pre>
 </div>
 
-<p>The tree is just normal <code>AST</code> with metadata.</p>
+<p>The tree is just normal <code>AST</code> with metadata, so if you know <code>AST</code>, you know <code>FST</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">CID</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p><code><a href="">fst</a></code> works by adding <code>FST</code> nodes to existing <code>AST</code> nodes as an <code>.f</code> attribute (type-safe accessor <code>castf()</code> provided)
-which keep extra structure information, the original source, and provide the interface to format-preserving operations.
-Each operation through <code><a href="">fst</a></code> is a simultaneous edit of the <code>AST</code> tree and the source code and those are kept
-synchronized so that the current source will always parse to the current tree.</p>
-
-<p>Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs
-no implicit normalization or stylistic rewriting.</p>
+<p><code><a href="">fst</a></code> works by adding <code>FST</code> nodes to existing standard Python <code>AST</code> nodes as an <code>.f</code> attribute (type-safe accessor
+<code>castf()</code> provided) which keep extra structure information, the original source, and provide the interface to
+format-preserving operations. Each operation through <code><a href="">fst</a></code> is a simultaneous edit of the <code>AST</code> tree and the source code
+and those are kept synchronized so that the current source will always parse to the current tree.</p>
 
 <h1 id="index">Index</h1>
 
