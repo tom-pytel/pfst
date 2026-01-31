@@ -77,9 +77,8 @@ fstloc(2, 13, 2, 14)
 
 The only `AST` nodes which don't get locations like this are:
 
-1. Empty `arguments` nodes since that could allow zero-length locations which are a pain to deal with.
-2. `boolop` nodes because a single `AST` may correspond to multiple locations in the expression.
-3. `expr_context` nodes which don't have parsable source.
+1. `boolop` nodes because a single `AST` may correspond to multiple locations in the expression.
+2. `expr_context` nodes which don't have parsable source.
 
 Other nodes that normally don't have locations like `comprehension`, `withitem`, `match_case` and other operators all
 have locations calculated for them by `FST`.
@@ -156,7 +155,7 @@ fstloc(0, 0, 0, 5)
 
 `FST` nodes also provide the same `lineno` ... `end_col_offset` attributes as `AST` nodes and return the locations in
 `AST` coordinates (1 based line, column byte offsets) as a convenience for all nodes, providing these to `AST` nodes
-which don't normally have them.
+which don't normally have them (keep in mind these calculated attributes are on the `FST` node, not the `AST` node).
 
 >>> f = FST('[i for i in j]').generators[0]
 

@@ -742,9 +742,8 @@ class FST:
                 if you know it.
             - `AST`: If `mode` is `None` then defaults to the type of the `AST`, which will always succeed in generating
                 valid source unless the `AST` itself is in an invalid state (like an empty `Set`). Anything else you
-                pass here will be passed on as the `mode` to `fromast()`, but it really doesn't make much sense to
-                specify anything else (except if you will be splitting hairs on what TYPE of expression you want to
-                allow).
+                pass here will be passed on as the `mode` to `fromast()`. In which case if the `AST` is this then the
+                `FST` tree is just build for it and otherwise coercion will be attempted to this type.
             - `FST`: `mode` should be specified and will be the type of node you want to coerce the `FST` you pass in
                 to. If you leave it at the default `None` then you will just get either the same `FST` or a copy of it,
                 depending on the `copy` kwarg.
@@ -997,7 +996,9 @@ class FST:
 
         **Parameters:**
         - `src`: The source to parse as a single `str` or list of individual line strings (without newlines).
-        - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.parsex.Mode`.
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. If you know what kind of node you
+            are expecting then it is always better to pass in this parameter because otherwise several different parse
+            attempts may be made to try to find the type.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
         - `feature_version`: `ast.parse()` parameter. Don't use this either, here just in case.
@@ -1151,7 +1152,7 @@ class FST:
     options = fst_options.options
 
     def as_(self, mode: Mode | None = None, copy: bool = False, **options) -> FST:
-        """Attempt to coerce `self` to the type of node given my `mode`. If `self` is already the requested type of node
+        """Attempt to coerce `self` to the type of node given by `mode`. If `self` is already the requested type of node
         at root level then will do nothing and return `self`. If is not at root level then will copy the node first and
         then attempt to coerce.
 
@@ -1160,10 +1161,6 @@ class FST:
         you to specify that `self` must be copied first before coerce is attempted, leaving the original node intact.
         Note that a copy is always made regardless if `self` is not a root node so the original node will be unharmed in
         that case.
-
-        Not all possible coercions are covered currently, mostly to and from `expr` and `pattern`. A `MatchSequence` for
-        example always coerces to a `List`, so if you request that or and `expr` you are fine, but if you request a
-        `Tuple` you will get an error.
 
         **Note:** If `self` is a subclass of the type you request then it counts as a match and `self` is returned
         unchanged, e.g. `Assign` and you request a `stmt`.
@@ -1183,7 +1180,7 @@ class FST:
         >>> f
         <Name ROOT 0,0..0,4>
 
-        >>> (f := f.as_('stmt'))  # remember that you can't count on original node remaining
+        >>> (f := f.as_('stmt'))
         <Expr ROOT 0,0..0,4>
 
         >>> f.as_('exec')
@@ -1216,12 +1213,13 @@ class FST:
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed
-        with non-native or non-synchronous operations such as `put_src()` with only offset. Usage of this function
-        should not be necessary unless doing things which are not explicitly supported by `fst`.
+        with non-native or non-synchronous operations such as `put_src()` with only offset. Can use on any node, not
+        just root.
 
         **Returns:**
-        - `self`: New self after reparse, if possible, otherwise `None` if could not be found. May also be another
-            neighbor node if the source of `self` was structurally changed too much.
+        - `self`: New `self` after reparse, if possible, otherwise `None` if could not be found. May also be another
+            neighbor node if the source of `self` was structurally changed too much. If used on root node then `self`
+            will not change.
 
         **Examples:**
 
@@ -1246,7 +1244,13 @@ class FST:
              .value Name 'expr' Load
              .conversion -1
 
+        >>> bool(f.verify(raise_=False))
+        False
+
         >>> f = f.reparse()
+
+        >>> bool(f.verify(raise_=False))
+        True
 
         >>> _ = f.dump('stmt', loc=False)
         0: f"{expr=}"
@@ -1269,6 +1273,112 @@ class FST:
             return new
 
         return self.find_loc(ln, col, end_ln, end_col, True)
+
+    def verify(
+        self,
+        mode: Mode | None = None,
+        reparse: bool = True,
+        *,
+        locs: bool = True,
+        ctx: bool = True,
+        raise_: bool = True,
+    ) -> FST | None:
+        """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
+        links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
+        everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
+
+        SPECIAL SLICEs like `_decorator_list` will verify ok with reparse but invalid nodes like an empty `Set` or
+        block statements with empty bodies will not.
+
+        **Parameters:**
+        - `mode`: Parse mode to use, otherwise if `None` then use the top level `AST` node type for the mode. Depending
+            on how this is set will determine whether the verification is checking if is parsable by python (`'exec'` or
+            `'strict'` for example), or if the node itself is just in a valid state (`None` specifies this). See
+            `fst.parsex.Mode`.
+        - `reparse`: Whether to reparse the source and compare `AST`s (including location). Otherwise the check is
+            limited to a structure check that all children have `FST` nodes which are all liked correctly to their
+            parents. `reparse=True` only allowed on root node.
+        - `locs`: Whether to compare locations after reparse or not.
+        - `ctx`: Whether to compare `ctx` nodes after reparse or not.
+        - `raise_`: Whether to raise an exception on verify failed or return `None`.
+
+        **Returns:**
+        - `None` on failure to verify (if not `raise_`), otherwise `self`.
+
+        **Examples:**
+
+        >>> FST('var = 123').verify()
+        <Assign ROOT 0,0..0,9>
+
+        >>> FST('a:b:c').verify()
+        <Slice ROOT 0,0..0,5>
+
+        >>> bool(FST('a:b:c').verify('exec', raise_=False))
+        False
+
+        >>> FST('if a if b').verify()
+        <_comprehension_ifs ROOT 0,0..0,9>
+
+        >>> bool(FST('if a if b').verify('strict', raise_=False))
+        False
+
+        >>> (f := FST('a + b')).put_src('-', 0, 2, 0, 3, action=None)
+        (0, 3)
+
+        >>> f.verify()
+        Traceback (most recent call last):
+        ...
+        fst.astutil.WalkFail: child classes differ in BinOp.op, Sub vs. Add, locs ('?', '?', '?', '?') / ('?', '?', '?', '?')
+        """
+
+        # validate tree links
+
+        ast = self.a
+        stack = [(ast, self.parent, self.pfield)]  # [(AST, parent FST, pfield), ...]
+
+        while stack:
+            a, parent, pfield = stack.pop()
+
+            if not (f := getattr(a, 'f', None)) or f.parent is not parent or f.pfield != pfield or f.a is not a:
+                if not raise_:
+                    return None
+
+                path = self.child_path(parent) + [pfield] if a is not ast else []
+                path = '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+                reason = ', no AST.f node' if not f else ', bad parent' if f.parent is not parent else ', bad pfield'
+
+                raise WalkFail(f'invalid child {a.__class__.__name__} at {path if path else "self"}{reason}')
+
+            for field, child in iter_fields(a):
+                if isinstance(child, AST):
+                    stack.append((child, f, astfield(field)))
+                elif isinstance(child, list):
+                    stack.extend((c, f, astfield(field, i)) for i, c in enumerate(child) if isinstance(c, AST))
+
+        if not reparse:
+            return self
+
+        # reparse
+
+        if not self.is_root:
+            raise ValueError('verify with reparse can only be called on root node')
+
+        parse_params = self.parse_params
+
+        try:
+            astp = parsex.parse(self.src, mode or self._get_parse_mode(), parse_params=parse_params)
+
+        except SyntaxError:
+            if raise_:
+                raise
+
+            return None
+
+        if not compare_asts(astp, ast, locs=locs, ctx=ctx, type_comments=parse_params.get('type_comments', False),
+                            raise_=raise_):
+            return None
+
+        return self
 
     def dump(
         self,
@@ -1457,104 +1567,6 @@ class FST:
         st.linefunc = out
 
         self._dump(st, src_plus)
-
-        return self
-
-    def verify(
-        self,
-        mode: Mode | None = None,
-        reparse: bool = True,
-        *,
-        locs: bool = True,
-        ctx: bool = True,
-        raise_: bool = True,
-    ) -> FST | None:
-        """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
-        links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
-        everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
-
-        SPECIAL SLICEs like `_decorator_list` will verify ok with reparse but invalid nodes like an empty `Set` or
-        block statements with empty bodies will not.
-
-        **Parameters:**
-        - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
-            how this is set will determine whether the verification is checking if is parsable by python (`'exec'` or
-            `'strict'` for example), or if the node itself is just in a valid state (`None` specifies this). See
-            `fst.parsex.Mode`.
-        - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
-            to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
-            `reparse=True` only allowed on root node.
-        - `locs`: Whether to compare locations after reparse or not.
-        - `ctx`: Whether to compare `ctx` nodes after reparse or not.
-        - `raise_`: Whether to raise an exception on verify failed or return `None`.
-
-        **Returns:**
-        - `None` on failure to verify (if not `raise_`), otherwise `self`.
-
-        **Examples:**
-
-        >>> FST('var = 123').verify()
-        <Assign ROOT 0,0..0,9>
-
-        >>> FST('a:b:c').verify()
-        <Slice ROOT 0,0..0,5>
-
-        >>> bool(FST('a:b:c').verify('exec', raise_=False))
-        False
-
-        >>> FST('if a if b').verify()
-        <_comprehension_ifs ROOT 0,0..0,9>
-
-        >>> bool(FST('if a if b').verify('strict', raise_=False))
-        False
-        """
-
-        # validate tree links
-
-        ast = self.a
-        stack = [(ast, self.parent, self.pfield)]  # [(AST, parent FST, pfield), ...]
-
-        while stack:
-            a, parent, pfield = stack.pop()
-
-            if not (f := getattr(a, 'f', None)) or f.parent is not parent or f.pfield != pfield or f.a is not a:
-                if not raise_:
-                    return None
-
-                path = self.child_path(parent) + [pfield] if a is not ast else []
-                path = '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
-                reason = ', no AST.f node' if not f else ', bad parent' if f.parent is not parent else ', bad pfield'
-
-                raise WalkFail(f'invalid child {a.__class__.__name__} at {path if path else "self"}{reason}')
-
-            for field, child in iter_fields(a):
-                if isinstance(child, AST):
-                    stack.append((child, f, astfield(field)))
-                elif isinstance(child, list):
-                    stack.extend((c, f, astfield(field, i)) for i, c in enumerate(child) if isinstance(c, AST))
-
-        if not reparse:
-            return self
-
-        # reparse
-
-        if not self.is_root:
-            raise ValueError('verify with reparse can only be called on root node')
-
-        parse_params = self.parse_params
-
-        try:
-            astp = parsex.parse(self.src, mode or self._get_parse_mode(), parse_params=parse_params)
-
-        except SyntaxError:
-            if raise_:
-                raise
-
-            return None
-
-        if not compare_asts(astp, ast, locs=locs, ctx=ctx, type_comments=parse_params.get('type_comments', False),
-                            raise_=raise_):
-            return None
 
         return self
 
@@ -5316,7 +5328,7 @@ class FST:
 
     @property
     def _all(self: FST) -> fstview:
-        """Virtual `_all` field view for `Dict`, `MatchMapping` and `Compare`.
+        """Virtual `_all` field view for `Dict`, `MatchMapping`, `Compare` and `arguments`.
 
         **Examples:**
 
@@ -5329,8 +5341,8 @@ class FST:
         >>> FST('a < b == c > d')._all[1:3].copy().src
         'b == c'
 
-        >>> FST('def f(a=1, *b, c: int = 3, **d): pass').args._all[1:3].copy().src
-        '*b, c: int = 3'
+        >>> FST('def f(a=1, *b, c: int = 3, **d): pass').args._all[-2:].copy().src
+        '*, c: int = 3, **d'
 
         @public
         """

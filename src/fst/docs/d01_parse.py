@@ -174,8 +174,8 @@ Starred - ROOT 0,0..0,7
 
 ## From `AST` nodes
 
-You can also pass `AST` nodes, which are then unparsed and reparsed (because otherwise we couldn't trust the location
-information in them). When used like this, the `AST` nodes are **NOT CONSUMED**.
+You can also pass `AST` nodes, which are then unparsed (to get the source) and reparsed (because otherwise we couldn't
+trust the location information in them). When used like this, the `AST` nodes are **NOT CONSUMED**.
 
 >>> f = FST(Assign(targets=[Name(id='x')], value=Constant(value=1)))
 
@@ -190,7 +190,8 @@ x = 1
 
 This also allows normally non-parsable nodes.
 
->>> _ = FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump()
+>>> _ = FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump('S')
+0: a:b:c
 Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
@@ -212,7 +213,7 @@ If you want to allow this, the mode is `'expr_slice'`.
 
 Or if coercion is possible to a different type of node then this can be done.
 
->>> _ = FST(Name(id='name'), 'arg').dump('n')
+>>> _ = FST(Name(id='name'), 'arg').dump('S')
 0: name
 arg - ROOT 0,0..0,4
   .arg 'name'

@@ -14,7 +14,7 @@ This module exists in order to facilitate quick and easy high level editing of P
 - Indentation and line continuations
 - Commas, semicolons, and tuple edge cases
 - Comments and docstrings
-- Various Python version–specific syntax quirks
+- Various Python version-specific syntax quirks
 - Lots more...
 
 See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
@@ -27,7 +27,7 @@ See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.htm
 ...     f'not a {thing}', extra=extra,  # blah
 ... )'''.strip())
 
->>> ext_ast.f.body[0].value._args.insert('\nid=CID  # comment', -1, trivia=(False, False))
+>>> ext_ast.f.body[0].value.insert('\nid=CID  # comment', -1, trivia=(False, False))
 
 >>> print(fst.unparse(ext_ast))
 logger.info(  # just checking
@@ -262,46 +262,13 @@ a < b
 
 >>> f = FST('call(a, b=c, *d)')
 
->>> f._args[1:] = '*e, f=g, **h'
+>>> f[1:] = '*e, f=g, **h'
 
 >>> print(f.src)
 call(a, *e, f=g, **h)
-```
 
-Can zero out bodies.
-
-```py
->>> f = FST("""
-... def func(self):  # comment
-...     pass
-... """.strip())
-
->>> del f.body
-
->>> print(f.src)
-def func(self):  # comment
-
->>> f.body.append('pass')
-
->>> print(f.src)
-def func(self):  # comment
-    pass
-```
-
-Including non-statement.
-
-```py
->>> f = FST('[i for i in j]')
-
->>> del f.generators
-
->>> print(f.src)
-[i]
-
->>> f.generators.extend('for a in b for i in a')
-
->>> print(f.src)
-[i for a in b for i in a]
+>>> print(FST('def f(a, /, b=2, *c, d=4, **e): pass').args[-2:].copy().src)
+*, d=4, **e
 ```
 
 Use native AST.
@@ -315,25 +282,6 @@ Use native AST.
 
 >>> print(f.src)
 j[x:y] = [a, d]
-```
-
-Don't have to care if docstrings are there or not.
-
-```py
->>> f = FST("""
-... class cls:
-...     \"\"\"docstring\"\"\"
-...     a = b
-...     c = d
-... """.strip())
-
->>> f._body[0] = 'pass'
-
->>> print(f.src)
-class cls:
-    """docstring"""
-    pass
-    c = d
 ```
 
 Traversal is in syntactic order.

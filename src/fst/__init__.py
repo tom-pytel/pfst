@@ -14,38 +14,39 @@ with the details of:
 - Various Python version-specific syntax quirks
 - Lots more...
 
-See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples.
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
 
 ```py
 >>> import fst  # pip install pfst, import fst
 
->>> ext_ast = fst.parse('if a: b = c, d  # comment')
+>>> ext_ast = fst.parse('''
+... logger.info(  # just checking
+...     f'not a {thing}', extra=extra,  # blah
+... )'''.strip())
 
->>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
+>>> ext_ast.f.body[0].value.insert('\nid=CID  # comment', -1, trivia=(False, False))
 
 >>> print(fst.unparse(ext_ast))
-if a: b = (c, u,
-          v,  # blah
-          d)  # comment
+logger.info(  # just checking
+    f'not a {thing}',
+    id=CID,  # comment
+    extra=extra,  # blah
+)
 ```
 
-The tree is just normal `AST` with metadata.
+The tree is just normal `AST` with metadata, so if you know `AST`, you know `FST`.
 
 ```py
 >>> import ast
 
 >>> print(ast.unparse(ext_ast))
-if a:
-    b = (c, u, v, d)
+logger.info(f'not a {thing}', id=CID, extra=extra)
 ```
 
-`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided)
-which keep extra structure information, the original source, and provide the interface to format-preserving operations.
-Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept
-synchronized so that the current source will always parse to the current tree.
-
-Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs
-no implicit normalization or stylistic rewriting.
+`fst` works by adding `FST` nodes to existing standard Python `AST` nodes as an `.f` attribute (type-safe accessor
+`castf()` provided) which keep extra structure information, the original source, and provide the interface to
+format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code
+and those are kept synchronized so that the current source will always parse to the current tree.
 
 # Index
 

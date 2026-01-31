@@ -8,9 +8,9 @@ To be able to execute the examples, import this.
 
 ## Links
 
-For an fst-parsed `AST` tree, each node will have its own `FST` node. The `FST` nodes contain the tree structure missing
-in the `AST` nodes, specifically a reference to the parent `FST` node and the field and index of this node in the
-parent.
+For an `fst`-parsed `AST` tree, each node will have its own `FST` node. The `FST` nodes contain the tree structure
+missing in the `AST` nodes, specifically a reference to the parent `FST` node and the field and index of this node in
+the parent.
 
 >>> f = FST('i = 1')
 

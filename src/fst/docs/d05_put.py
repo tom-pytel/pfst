@@ -20,7 +20,7 @@ their locations are correct. Source code in the form of a list of line strings i
 'i = 1'
 
 >>> FST().body.append(Assign(targets=[Name(id='i')],
-...                        value=Constant(value=1))).base.src
+...                          value=Constant(value=1))).base.src
 'i = 1'
 
 >>> FST().body.append(FST('i = 1')).base.src
@@ -76,7 +76,7 @@ tree through the root node (`fst.fst.FST.replace()`).
 >>> print(f.src)
 [(j := 3), a(), blah()]
 
-Notice the parentheses were added atomatically (because they are needed).
+Notice the parentheses were added automatically (because they are needed).
 
 The `replace()` function returns the new replaced node. This is because the actual final new `FST` node in the tree
 (regardless of the contents) can be different from both the `FST` node put **AND** the original `FST` at this location
@@ -168,11 +168,11 @@ not vice versa.
 Notice how it replaced two elements with a single one. This is because the normal mode of `put()` is to put as a single
 element, not as a slice. You can specify slice operation via the `one` parameter, which is normally `True` for `put()`.
 
->>> f.put('[a, b, c]', 1, 'end')
+>>> f.put('a, b, c', 1, 'end')
 <List ROOT 0,0..0,14>
 
 >>> print(f.src)
-[1, [a, b, c]]
+[1, (a, b, c)]
 
 >>> f.put('a, b, c', 1, 'end', one=False)
 <List ROOT 0,0..0,12>
@@ -203,27 +203,27 @@ possibly at the start, end or between other elements (`fst.fst.FST.put_slice()`)
 
 >>> f = FST('[1, c]')
 
->>> f.put('x', 1, 1, one=False)
-<List ROOT 0,0..0,9>
-
->>> print(f.src)
-[1, x, c]
-
-`put_slice()` doesn't need `one=False` as that is the default there.
-
->>> f.put_slice('y', 2, 2)
+>>> f.put('x, y', 1, 1, one=False)
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)
 [1, x, y, c]
 
+`put_slice()` doesn't need `one=False` as that is the default there.
+
+>>> f.put_slice('u, v', 2, 2)
+<List ROOT 0,0..0,18>
+
+>>> print(f.src)
+[1, x, u, v, y, c]
+
 The special `'end'` index allows you to put at the end without knowing how long the field is.
 
 >>> f.put_slice('4,5,6', 'end')
-<List ROOT 0,0..0,19>
+<List ROOT 0,0..0,25>
 
 >>> print(f.src)
-[1, x, y, c, 4,5,6]
+[1, x, u, v, y, c, 4,5,6]
 
 Just like with `get()`, a field can be specified.
 

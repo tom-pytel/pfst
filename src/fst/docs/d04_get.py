@@ -205,8 +205,8 @@ element itself.
 >>> print(FST('[1, 2, 3]').get(1).src)
 2
 
-Both `get()` and `get_slice()` can specify slice beginning and end points as. Passing `'end'` as an index specifies the
-end of the body however long it may be.
+Both `get()` and `get_slice()` can specify slice beginning and end points. Passing `'end'` as an index specifies the end
+of the body however long it may be.
 
 >>> print(FST('[1, 2, 3]').get_slice(1, 'end').src)
 [2, 3]
@@ -226,9 +226,9 @@ slicing behavior which slices across the multiple fields and gives a new `Dict`.
 >>> print(FST('{1:2, 3:4, 5:6}').get_slice(1, 3).src)
 {3:4, 5:6}
 
-The `field=None` is just a shortcut for specifying the "virtual" field `'_all'`, which exists for `Dict`, `MatchMapping`
-and `Compare` in order to allow access to combined elements which are not normally accessible by themselves as `AST`
-nodes.
+The `field=None` is just a shortcut for specifying the "virtual" field `'_all'`, which exists for `Dict`,
+`MatchMapping`, `Compare` and `arguments` in order to allow access to combined elements which are not normally
+accessible by themselves as `AST` nodes, or treat multiple different sequential fields as a single sequence.
 
 Note that the first `a` in the `Compare` below is normally not part of a `list` field but can be sliced as if it were by
 using the `'_all'` virtual field (which is the default field for `Compare` but we include it explicitly for
