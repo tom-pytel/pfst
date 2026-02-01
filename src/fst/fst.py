@@ -204,6 +204,7 @@ _LOC_FUNCS = {  # quick lookup table for FST.loc
     NotIn:         _loc_op,
 }
 
+_ASTS_LEAF_CLASSDEF      = frozenset([ClassDef])
 _ASTS_LEAF_SCOPE_SYMBOLS = ASTS_LEAF_DEF | ASTS_LEAF_TYPE_PARAM | {Name, arg, AugAssign, Import, ImportFrom, Nonlocal,
                                                                    Global}  # used in scope_symbols() to optimize walk a tiny bit
 
@@ -4281,7 +4282,7 @@ class FST:
 
         **Parameters:**
         - `path`: Path to child as a list of `astfield`s or string.
-        - `last_valid`: If `True` then return the last valid node along the path, will not fail, can return `self`.
+        - `last_valid`: If `True` then return the last valid node along the path. Will not fail, can return `self`.
 
         **Returns:**
         - `FST`: Child node if path is valid, otherwise `False` if path invalid. `False` and not `None` because `None`
@@ -4323,37 +4324,177 @@ class FST:
 
         return self
 
-    def repath(self) -> FST:
+    def repath(self, last_valid: bool = False) -> FST:
         """Recalculate `self` from path from root. Useful if `self` has been replaced by another node by some operation.
         When nodes are deleted the corresponding `FST.a` and `AST.f` attributes are set to `None`. The `parent` and
         `pfield` attributes are left so that things like this can work. Useful when a node has been deleted but you want
         to know where it was and what may be there now.
+
+        **Parameters:**
+        - `last_valid`: If `True` then return the last valid node along the path from root to where `self` is or was. W
+            Will not fail, can return root.
 
         **Returns:**
         - `FST`: Possibly `self` or the node which took our place at our relative position from `root`.
 
         **Examples:**
 
-        >>> f = FST('[0, 1, 2, 3]')
-        >>> g = f.elts[1]
+        >>> f = FST('[a, b, c, d]')
+        >>> g = f.elts[2]
+        >>> print(g.is_alive, g.src)
+        True c
 
-        >>> print(type(g.a), g.root)
-        <class 'ast.Constant'> <List ROOT 0,0..0,12>
-
-        >>> f.put('x', 1, raw=True)  # raw forces reparse at List
-        <List ROOT 0,0..0,12>
-
-        >>> print(g.is_alive, g.a, g.root)
-        False None <List ROOT 0,0..0,12>
+        >>> del f.elts[2]
+        >>> print(g.is_alive)
+        False
 
         >>> g = g.repath()
-        >>> print(g.is_alive, type(g.a), g.root)
-        True <class 'ast.Name'> <List ROOT 0,0..0,12>
+        >>> print(g.is_alive, g.src)
+        True d
+
+        >>> print(f.src)
+        [a, b, d]
+
+        >>> del f.elts[2]
+        >>> print(g.is_alive)
+        False
+
+        After the previous delete there is now nothing at the previous list location of `g`.
+
+        >>> g.repath()
+        False
+
+        So we get the last valid node along the chain from root.
+
+        >>> g = g.repath(last_valid=True)
+        >>> print(g.is_alive, g.src)
+        True [a, b]
+
+        >>> print(f.src)
+        [a, b]
         """
 
         root = self.root
 
-        return root.child_from_path(root.child_path(self))
+        return root.child_from_path(root.child_path(self), last_valid)
+
+    def find_def(self, spec: builtins.str, prev_found: FST | None = None) -> FST | None:
+        r"""Find function and / or class definition in current scope. Can specify multiple levels of scopes to recurse
+        into. This will find the elements in the **SCOPE** of `self` (and recursed scopes for dotted names). So it can
+        be a few children down for nested `if`, `while` and others from the last scope.
+
+        **Parameters:**
+        - `spec`: Possibly qualified dotted name path to find. Can be a single name to find in this node scope or
+            dotted list of individual names to recurse into the scopes of. Each individual name can be prefixed with
+            `'def'` or `'class'` to indicate match function or class definition or not prefixed to indicate match both.
+        - `prev_found`: If `None` then find the first instance of `spec`, otherwise search starts with this last node
+            which was found. Used for iterating over multiple definitions with the same name (`@overload` maybe?).
+            Removal or replacement is not currently supported while iterating.
+
+        **Returns:**
+        - `FST | None`: Node found if any.
+
+        **Examples:**
+
+        >>> print(FST('def f(): pass').find_def('nonexistent'))
+        None
+
+        >>> print(FST('def f(): pass\ndef g(): pass').find_def('g').src)
+        def g(): pass
+
+        >>> print(FST('def f(): pass\nclass f: pass').find_def('f').src)
+        def f(): pass
+
+        >>> print(FST('def f(): pass\nclass f: pass').find_def('class f').src)
+        class f: pass
+
+        >>> f = FST('''
+        ... class pre: pass
+        ... class cls:
+        ...     def f(): pass
+        ...     class g: pass
+        ...     if something:
+        ...         def g():
+        ...             class inner: pass
+        ...     def h(): pass
+        ... '''.strip())
+
+        >>> print(f.find_def('cls.def g.inner').src)
+        class inner: pass
+
+        >>> f = FST('''
+        ... @overload
+        ... def parse(data: bytes) -> bytes: ...
+        ... @overload
+        ... def parse(data: str) -> str: ...
+        ...
+        ... def parse(data):
+        ...     return data
+        ... '''.strip())
+
+        >>> prev_found = None
+        >>> while prev_found := f.find_def('parse', prev_found):
+        ...     print(prev_found, prev_found.args.src)
+        <FunctionDef 1,0..1,36> data: bytes
+        <FunctionDef 3,0..3,32> data: str
+        <FunctionDef 5,0..6,15> data
+        """
+
+        stack = []
+
+        for s in reversed(spec.split('.')):
+            if s.startswith('def '):
+                stack.append((ASTS_LEAF_FUNCDEF, s[4:]))
+            elif s.startswith('class '):
+                stack.append((_ASTS_LEAF_CLASSDEF, s[6:]))
+            else:
+                stack.append((ASTS_LEAF_DEF, s))
+
+        if prev_found:  # if iterating then we just find pre-last scope normally
+            last = stack.pop(0)
+
+        scope = self
+
+        while stack:
+            which_def, name = stack.pop()
+
+            for scope in scope.walk(which_def, self_=False, scope=True):  # noqa: B020
+                if scope.a.name == name:
+                    break
+            else:
+                return None
+
+        if not prev_found:  # if not iterating then we found the last element
+            return scope
+
+        # scope is now the parent scope we will be iterating to find other nodes starting at the location of prev_found (even if deleted)
+
+        if not prev_found.a:
+            raise RuntimeError('cannot remove or replace previous node found when iterating with find_def()')
+
+        if scope not in prev_found.parents():  # this can happen if prev_found or parent block statement was cut (regardless of if put somewhere else or not)
+            raise RuntimeError('cannot cut previous node found when iterating with find_def()')
+
+        which_def, name = last
+        cur = prev_found
+
+        while True:
+            while not (f := cur.next(ASTS_LEAF_BLOCK)):
+                if (cur := cur.parent) is scope:
+                    return None
+
+            cur = f
+
+            while True:
+                if (cur_cls := cur.a.__class__) in which_def and cur.a.name == name:
+                    return cur
+
+                if (cur_cls in ASTS_LEAF_DEF
+                    or not (f := cur.first_child(ASTS_LEAF_BLOCK))
+                ):
+                    break
+
+                cur = f
 
     def find_contains_loc(
         self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True

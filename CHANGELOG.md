@@ -3,6 +3,7 @@
 ### Added
 
 - trivia shorthand `()` for `(False, False)`
+- `FST.find_def()` to easily find (possibly nested) function and class definitions by name in a given scope
 
 ### Changed
 

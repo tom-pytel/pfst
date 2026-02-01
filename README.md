@@ -271,17 +271,35 @@ call(a, *e, f=g, **h)
 *, d=4, **e
 ```
 
-Use native AST.
+One-liner fun.
 
 ```py
->>> f = FST('i = [a, b, c]')
+src = '''
+class myclass:
+    def first_method(self):
+        something
 
->>> f.targets[0] = Subscript(Name('j'), Slice(Name('x'), Name('y')))
+    @bad_decorator()
+    def bad_method(self):
+        something_bad
 
->>> f.value.elts[1:] = Name('d')
+    def last_method(self):
+        something_else
+'''.strip()
 
->>> print(f.src)
-j[x:y] = [a, d]
+print(FST(src, 'exec')
+      .find_def('myclass.bad_method')
+      .replace('def good_method(self):\n    return "YAY!"')
+      .root.src)
+class myclass:
+    def first_method(self):
+        something
+
+    def good_method(self):
+        return "YAY!"
+
+    def last_method(self):
+        something_else
 ```
 
 Traversal is in syntactic order.

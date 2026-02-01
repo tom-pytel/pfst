@@ -392,7 +392,7 @@ def _loc_block_header_end(
         child in the header (sans closing pars) and the position of the `:` of the the block statement header (just past
         it). If there is no last child (like in a `Try`, `TryStar` or maybe simple `FunctionDef`) then returns start of
         `self` for this loction.
-    - `(start of block header ln, start of block header col, after colon ln, after  colon col)`:
+    - `(start of block header ln, start of block header col, after colon ln, after colon col)`:
         If `field='orelse'` or `'field='finalbody'` then returns location from start of the `else` or `finally` to just
         past the `:` of the block header.
     """
