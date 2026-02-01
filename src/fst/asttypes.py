@@ -330,6 +330,7 @@ __all__ = [
     'ASTS_LEAF_YIELD',
     'ASTS_LEAF_TUPLE_LIST_OR_SET',
     'ASTS_LEAF_TUPLE_OR_LIST',
+    'ASTS_LEAF_TUPLE_OR_MATCHSEQ',
     'ASTS_LEAF_LIST_OR_SET',
     'ASTS_LEAF_COMP',
     'ASTS_LEAF_FTSTR',
@@ -406,6 +407,7 @@ ASTS_LEAF_YIELD              = frozenset([Yield, YieldFrom])
 
 ASTS_LEAF_TUPLE_LIST_OR_SET  = frozenset([Tuple, List, Set])
 ASTS_LEAF_TUPLE_OR_LIST      = frozenset([Tuple, List])
+ASTS_LEAF_TUPLE_OR_MATCHSEQ  = frozenset([Tuple, MatchSequence])
 ASTS_LEAF_LIST_OR_SET        = frozenset([List, Set])
 
 ASTS_LEAF_COMP               = frozenset([ListComp, SetComp, DictComp, GeneratorExp])

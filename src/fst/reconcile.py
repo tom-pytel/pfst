@@ -36,7 +36,7 @@ from .asttypes import (
 )
 
 from .common import NodeError, astfield
-from .fst_misc import Trivia
+from .fst_trivia import Trivia
 
 __all__ = ['Reconcile']
 

@@ -153,7 +153,8 @@ from .view import (
 )
 
 from .reconcile import Reconcile
-from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
+from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
+from .fst_trivia import Trivia
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
 from .fst_options import check_options, filter_options
 
@@ -5188,7 +5189,9 @@ class FST:
         _undelimit_node,
         _trim_delimiters,
         _normalize_block,
+    )
 
+    from .fst_trivia import (
         _getput_line_comment,
     )
 

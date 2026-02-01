@@ -26,7 +26,7 @@ from .common import (
 )
 
 from .fst_core import _ParamsOffset
-from .fst_misc import Trivia, leading_trivia, trailing_trivia, get_trivia_params
+from .fst_trivia import Trivia, leading_trivia, trailing_trivia, get_trivia_params
 
 __all__ = [
     'get_slice_sep',

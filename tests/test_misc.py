@@ -6,7 +6,7 @@ import unittest
 from fst import *
 
 from fst.common import PYGE12, PYGE13
-from fst.fst_misc import get_trivia_params
+from fst.fst_trivia import get_trivia_params
 
 
 class TestMisc(unittest.TestCase):
@@ -200,7 +200,7 @@ b # word
         self.assertEqual(None, next_find_re(lines, 4, 0, 6, 0, pat, True, comment=True, lcont=True))
 
     def test_leading_trivia(self):
-        from fst.fst_misc import leading_trivia
+        from fst.fst_trivia import leading_trivia
 
         self.assertEqual(((0, 0), None, ''), leading_trivia(['a'], 0, 0, 0, 0, 'all', True))
 
@@ -439,7 +439,7 @@ b # word
         self.assertEqual(((0, 0), None, ' '), leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, True))
 
     def test_trailing_trivia(self):
-        from fst.fst_misc import trailing_trivia
+        from fst.fst_trivia import trailing_trivia
 
         self.assertEqual(((0, 1), (0, 4), True), trailing_trivia(['a   '], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 4), True), trailing_trivia(['a  \\'], 0, 4, 0, 1, 'all', True))

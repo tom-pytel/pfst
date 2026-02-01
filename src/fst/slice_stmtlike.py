@@ -35,7 +35,8 @@ from .asttypes import (
 from .astutil import copy_ast
 from .common import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as__ExceptHandlers, code_as__match_cases
-from .fst_misc import get_trivia_params, fixup_slice_indices
+from .fst_misc import fixup_slice_indices
+from .fst_trivia import get_trivia_params
 
 # ----------------------------------------------------------------------------------------------------------------------
 # srcedit_old.py
@@ -1452,7 +1453,7 @@ def put_slice_stmtlike(
     options: Mapping[str, Any],
 ) -> None:
     old_last_line = self.root._lines[-1]
-    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), True)
+    ld_comms, ld_space, _, tr_comms, tr_space, _ = get_trivia_params(options.get('trivia'), True)
 
     options = dict(options,
         precomms=(ld_comms
