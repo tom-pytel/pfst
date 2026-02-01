@@ -21445,4 +21445,145 @@ Import - ROOT 0,0..0,10
 '''),
 ],
 
+'py_3_15_comprehension_unpacking': [  # ................................................................................
+
+('', None, None, 'elt', {'_ver': 15}, (None,
+r'''[i for i in j]'''), (None,
+r'''*s'''),
+r'''[*s for i in j]''', r'''
+ListComp - ROOT 0,0..0,15
+  .elt Starred - 0,1..0,3
+    .value Name 's' Load - 0,2..0,3
+    .ctx Load
+  .generators[1]
+   0] comprehension - 0,4..0,14
+     .target Name 'i' Store - 0,8..0,9
+     .iter Name 'j' Load - 0,13..0,14
+     .is_async 0
+'''),
+
+('', None, None, 'elt', {'_ver': 15}, (None,
+r'''[*s for i in j]'''), (None,
+r'''i'''),
+r'''[i for i in j]''', r'''
+ListComp - ROOT 0,0..0,14
+  .elt Name 'i' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,13
+     .target Name 'i' Store - 0,7..0,8
+     .iter Name 'j' Load - 0,12..0,13
+     .is_async 0
+'''),
+
+('', None, None, 'elt', {'_ver': 15}, (None,
+r'''{i for i in j}'''), (None,
+r'''*s'''),
+r'''{*s for i in j}''', r'''
+SetComp - ROOT 0,0..0,15
+  .elt Starred - 0,1..0,3
+    .value Name 's' Load - 0,2..0,3
+    .ctx Load
+  .generators[1]
+   0] comprehension - 0,4..0,14
+     .target Name 'i' Store - 0,8..0,9
+     .iter Name 'j' Load - 0,13..0,14
+     .is_async 0
+'''),
+
+('', None, None, 'elt', {'_ver': 15}, (None,
+r'''[*s for i in j]'''), (None,
+r'''i'''),
+r'''[i for i in j]''', r'''
+ListComp - ROOT 0,0..0,14
+  .elt Name 'i' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,13
+     .target Name 'i' Store - 0,7..0,8
+     .iter Name 'j' Load - 0,12..0,13
+     .is_async 0
+'''),
+
+('', None, None, 'elt', {'_ver': 15}, (None,
+r'''(i for i in j)'''), (None,
+r'''*s'''),
+r'''(*s for i in j)''', r'''
+GeneratorExp - ROOT 0,0..0,15
+  .elt Starred - 0,1..0,3
+    .value Name 's' Load - 0,2..0,3
+    .ctx Load
+  .generators[1]
+   0] comprehension - 0,4..0,14
+     .target Name 'i' Store - 0,8..0,9
+     .iter Name 'j' Load - 0,13..0,14
+     .is_async 0
+'''),
+
+('', None, None, 'elt', {'_ver': 15}, (None,
+r'''[*s for i in j]'''), (None,
+r'''i'''),
+r'''[i for i in j]''', r'''
+ListComp - ROOT 0,0..0,14
+  .elt Name 'i' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,13
+     .target Name 'i' Store - 0,7..0,8
+     .iter Name 'j' Load - 0,12..0,13
+     .is_async 0
+'''),
+
+('', None, None, 'value', {'_ver': 15}, (None,
+r'''{i: j for _ in k}'''), (None,
+r'''l'''),
+r'''{i: l for _ in k}''', r'''
+DictComp - ROOT 0,0..0,17
+  .key Name 'i' Load - 0,1..0,2
+  .value Name 'l' Load - 0,4..0,5
+  .generators[1]
+   0] comprehension - 0,6..0,16
+     .target Name '_' Store - 0,10..0,11
+     .iter Name 'k' Load - 0,15..0,16
+     .is_async 0
+'''),
+
+('', None, None, 'value', {'_ver': 15}, (None,
+r'''{i: j for _ in k}'''), (None,
+r'''**DEL**'''),
+r'''{**i for _ in k}''', r'''
+DictComp - ROOT 0,0..0,16
+  .key Name 'i' Load - 0,3..0,4
+  .generators[1]
+   0] comprehension - 0,5..0,15
+     .target Name '_' Store - 0,9..0,10
+     .iter Name 'k' Load - 0,14..0,15
+     .is_async 0
+'''),
+
+('', None, None, 'value', {'_ver': 15}, (None,
+r'''{**i for _ in k}'''), (None,
+r'''**DEL**'''),
+r'''{**i for _ in k}''', r'''
+DictComp - ROOT 0,0..0,16
+  .key Name 'i' Load - 0,3..0,4
+  .generators[1]
+   0] comprehension - 0,5..0,15
+     .target Name '_' Store - 0,9..0,10
+     .iter Name 'k' Load - 0,14..0,15
+     .is_async 0
+'''),
+
+('', None, None, 'value', {'_ver': 15}, (None,
+r'''{**i for _ in k}'''), (None,
+r'''j'''),
+r'''{i: j for _ in k}''', r'''
+DictComp - ROOT 0,0..0,17
+  .key Name 'i' Load - 0,1..0,2
+  .value Name 'j' Load - 0,4..0,5
+  .generators[1]
+   0] comprehension - 0,6..0,16
+     .target Name '_' Store - 0,10..0,11
+     .iter Name 'k' Load - 0,15..0,16
+     .is_async 0
+'''),
+],
+
 }

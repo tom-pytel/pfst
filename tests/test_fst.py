@@ -33,7 +33,7 @@ from fst.astutil import (
     compare_asts,
 )
 
-from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
+from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, PYGE15, astfield, fstloc
 from fst.code import *
 from fst.view import fstview, fstview_dummy
 
@@ -4891,6 +4891,13 @@ class cls(a, b=c):
         test2('call(a, b=1, *c, d=2, **e)')
         test2('system_message(message, level=level, type=type,*children, **kwargs)')
 
+        if PYGE15:
+            test2('[*i for i in j]')
+            test2('{*i for i in j}')
+            test2('(*i for i in j)')
+            test2('{i: j for i, j in k}')
+            test2('{**i for i, j in k}')
+
     def test_walk_vs_next_prev_tricky_nodes(self):
         def test(fst_, expect):
             expect_back = expect[::-1]
@@ -5354,6 +5361,12 @@ match a:
         test('''
 with a as b, c as d:
     pass
+            ''')
+
+        if PYGE15:
+            test('''
+{i: k for i, j in k}
+{**i for i, j in k}
             ''')
 
     def test_child_path(self):

@@ -32,7 +32,7 @@ from fst.astutil import (
     compare_asts,
 )
 
-from fst.common import PYLT11, PYLT14, PYGE11, PYGE12, PYGE13
+from fst.common import PYLT11, PYLT14, PYLT15, PYGE11, PYGE12, PYGE13
 
 from fst.code import *
 
@@ -958,7 +958,7 @@ def regen_parse_autogen_data():
     for tests, _ver in ((PARSE_TESTS_10, 10), (PARSE_TESTS_11, 11), (PARSE_TESTS_12, 12), (PARSE_TESTS_13, 13)):
         for mode, func, res, src in tests:
             mode_str = repr(mode) if isinstance(mode, str) else mode.__name__
-            options = '{}' if _ver < 11 else "{'_ver': 11}" if _ver == 11 else "{'_ver': 12}" if _ver == 12 else "{'_ver': 13}"
+            options = '{}' if _ver < 11 else "{'_ver': 11}" if _ver == 11 else "{'_ver': 12}" if _ver == 12 else "{'_ver': 13}" if _ver == 13 else "{'_ver': 14}"
 
             lines.extend(('\n', f'({func.__name__!r}, 0, 0, {res.__name__!r}, {options}, ({mode_str}, {src!r})),\n'))  # need the extra leading newline for lineno counting in support.py
 
@@ -1265,7 +1265,7 @@ class TestParse(unittest.TestCase):
         if not cases_found:
             raise RuntimeError("'all_basic' cases not found at start of DATA_GET_ONE")
 
-    @unittest.skipUnless(PYGE13, 'only valid for py >= 3.13')
+    @unittest.skipUnless(PYGE13 and PYLT15, 'only valid for 3.13 <= py <= 3.14')
     def test_parse_syntax_errors(self):
         with open(FNM_SYNTAX_ERRORS) as fp:
             src = fp.read()

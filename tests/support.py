@@ -79,6 +79,12 @@ def _clean_options(options: dict[str, Any]) -> dict[str, Any]:
     return {o: v for o, v in options.items() if o in _ALL_TEST_OPTIONS}
 
 
+def _check_version(options: dict[str, Any] | int) -> bool:
+    """Is the version supported or not."""
+
+    return not (v := options.get('_ver')) or (_PYVER >= v if v >= 0 else _PYVER < -v)
+
+
 class BaseCase(NamedTuple):
     lineno:  int
     key:     str
@@ -173,7 +179,7 @@ class BaseCases(dict):
         try:
             for cases in self.values():
                 for case in cases:
-                    if not (v := case.options.get('_ver')) or v <= _PYVER:
+                    if _check_version(case.options):  # not (v := case.options.get('_ver')) or (_PYVER >= v if v >= 0 else _PYVER < -v):
                         yield (case, self.exec(case)) if gen else case
 
         except Exception:
@@ -183,7 +189,8 @@ class BaseCases(dict):
 
     def generate(self):
         for case, rest in self.iterate(True):
-            self[case.key][case.idx] = BaseCase(*case[:-1], rest)
+            if _check_version(case.options):
+                self[case.key][case.idx] = BaseCase(*case[:-1], rest)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
         raise NotImplementedError('this must be implemented in a subclass')

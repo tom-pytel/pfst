@@ -46300,10 +46300,15 @@ Dict - ROOT 0,0..0,17
    2] Name 'f' Load - 0,15..0,16
 '''),
 
-('pattern', 1, 2, None, {'raw': True}, ('match_case',
+('pattern', 1, 2, None, {'raw': True, '_ver': -15}, ('match_case',
 r'''case {1: b, 3: d, 5: f}: pass'''), (None,
 r'''**z'''),
 r'''**SyntaxError('invalid syntax')**'''),
+
+('pattern', 1, 2, None, {'raw': True, '_ver': 15}, ('match_case',
+r'''case {1: b, 3: d, 5: f}: pass'''), (None,
+r'''**z'''),
+r'''**SyntaxError('double star pattern must be the last (right-most) subpattern in the mapping pattern')**'''),
 
 ('pattern', 1, 2, None, {'raw': True}, ('match_case',
 r'''case {1: b, 3: d, 5: f}: pass'''), (None,

@@ -1155,9 +1155,27 @@ r'''**ValueError('cannot delete DictComp.key')**''',
 r'''key''',
 r'''Name 'key' Load - ROOT 0,0..0,3'''),
 
-('', None, None, 'value', {}, (DictComp,
+('', None, None, 'value', {'_ver': -15}, (DictComp,
 r'''{key: val for key, val in iter}'''),
 r'''**ValueError('cannot delete DictComp.value')**''',
+r'''val''',
+r'''Name 'val' Load - ROOT 0,0..0,3'''),
+
+('', None, None, 'value', {'_ver': 15}, (DictComp,
+r'''{key: val for key, val in iter}'''),
+r'''{**key for key, val in iter}''', r'''
+DictComp - ROOT 0,0..0,28
+  .key Name 'key' Load - 0,3..0,6
+  .generators[1]
+   0] comprehension - 0,7..0,27
+     .target Tuple - 0,11..0,19
+       .elts[2]
+        0] Name 'key' Store - 0,11..0,14
+        1] Name 'val' Store - 0,16..0,19
+       .ctx Store
+     .iter Name 'iter' Load - 0,23..0,27
+     .is_async 0
+''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
