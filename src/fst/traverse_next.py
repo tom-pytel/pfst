@@ -990,7 +990,13 @@ def _next_DictComp_START(ast: AST, idx: int | None) -> _NextPrevRet:
 
 
 def _next_DictComp_key(ast: AST, idx: int | None) -> _NextPrevRet:
-    return ast.value.f
+    if a := ast.value:
+        return a.f
+
+    if a := ast.generators:
+        return a[0].f
+
+    return None
 
 
 def _next_DictComp_value(ast: AST, idx: int | None) -> _NextPrevRet:

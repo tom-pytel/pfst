@@ -2,8 +2,11 @@
 
 ### Added
 
-- trivia shorthand `()` for `(False, False)`
+- Python 3.15a support
+  - unpacking in comprehensions, `[*st for st in itr]`, `{**key for key in itr}`
+  - lazy imports not on main branch yet
 - `FST.find_def()` to easily find (possibly nested) function and class definitions by name in a given scope
+- trivia shorthand `()` for `(False, False)`
 
 ### Changed
 

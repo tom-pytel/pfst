@@ -143,6 +143,7 @@ from .astutil import (
 from .common import (
     PYLT11,
     PYGE14,
+    PYGE15,
     NodeError,
     astfield,
     fstloc,
@@ -205,6 +206,7 @@ class oneinfo(NamedTuple):
     loc_prim:   fstloc | None = None  # location of primitive, mostly identifier
     suffix:     str           = ''    # or ': ' for dict '**'
     delstr:     str           = ''    # or '**'
+    loc_delstr: fstloc | None = None  # location for delstr if it is different from loc_insdel (thank u py 3.15)
 
 
 def _validate_put(
@@ -980,7 +982,12 @@ def _put_one_exprlike_optional(
         if not loc:
             raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field} in this state')
 
-        self._put_src(info.delstr or None, *loc, True)
+        if loc_delstr := info.loc_delstr:
+            self._put_src(None, *loc, True)
+            self._put_src(info.delstr or None, *loc_delstr, True)  # we do in this order because specific to py 3.15 DictComp, maybe change in future to completely general
+        else:
+            self._put_src(info.delstr or None, *loc, True)
+
         set_field(self.a, None, field, idx)
         child.f._unmake_fst_tree()
 
@@ -1000,6 +1007,9 @@ def _put_one_exprlike_optional(
 
     if deferred_par:  # we need to do this after the put completes to have the complete parent for the operation (With.items is the culprit)
         _fix_deferred_make_exprlike_fst_par(self)
+
+    if loc_delstr := info.loc_delstr:
+        self._put_src(info.delstr or None, *loc_delstr, True)
 
     return put_fst
 
@@ -2038,7 +2048,6 @@ def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | Non
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
 
 def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-
     idx = fixup_one_index(len(self.a.names), idx)
 
     return oneinfo('', None, self._loc_Global_Nonlocal_names(idx))
@@ -2050,6 +2059,25 @@ def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field:
     ln, col, _, _ = self._loc_maybe_key(idx)
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
+
+def _one_info_DictComp_value(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ast = self.a
+    key_ln, key_col, key_end_ln, key_end_col = ast.key.f.pars()
+
+    if value := self.a.value:
+        _, _, val_end_ln, val_end_col = value.f.pars()
+
+        return oneinfo('', fstloc(key_end_ln, key_end_col, val_end_ln, val_end_col), None, '', '**',
+                       fstloc(key_ln, key_col, key_ln, key_col))
+
+    ln, col, _, _ = self.loc
+    ln, col, src = prev_frag(self.root._lines, ln, col, key_ln, key_col)  # must be there
+    col += len(src) - 2
+
+    assert src.endswith('**')
+
+    return oneinfo(': ', fstloc(key_end_ln, key_end_col, key_end_ln, key_end_col), None, '', '',
+                   fstloc(ln, col, key_ln, key_col))
 
 def _one_info_Yield_value(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return oneinfo(' ', fstloc((loc := self.loc).ln, loc.col + 5, loc.end_ln, loc.end_col))
@@ -2619,14 +2647,18 @@ _PUT_ONE_HANDLERS = {
     (Dict, 'values'):                     (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr*
     (Dict, '_all'):                       (True,  None, None),  # expr*
     (Set, 'elts'):                        (True,  _put_one_exprlike_required, _onestatic_expr_required_w_starred),  # expr*
-    (ListComp, 'elt'):                    (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
+    (ListComp, 'elt'):                    (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred if PYGE15 else _onestatic_expr_required),  # expr
     (ListComp, 'generators'):             (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
-    (SetComp, 'elt'):                     (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
+    (SetComp, 'elt'):                     (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred if PYGE15 else _onestatic_expr_required),  # expr
     (SetComp, 'generators'):              (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (DictComp, 'key'):                    (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
-    (DictComp, 'value'):                  (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
+
+    (DictComp, 'value'):                  (False, _put_one_exprlike_optional, onestatic(_one_info_DictComp_value, _restrict_default))
+                                          if PYGE15 else
+                                          (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
+
     (DictComp, 'generators'):             (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
-    (GeneratorExp, 'elt'):                (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
+    (GeneratorExp, 'elt'):                (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred if PYGE15 else _onestatic_expr_required),  # expr
     (GeneratorExp, 'generators'):         (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (Await, 'value'):                     (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Yield, 'value'):                     (False, _put_one_exprlike_optional, onestatic(_one_info_Yield_value, _restrict_fmtval_slice)),  # expr?

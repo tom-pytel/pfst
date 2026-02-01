@@ -991,14 +991,20 @@ def _prev_DictComp_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.generators:
         return a[-1].f
 
-    return ast.value.f
+    if a := ast.value:
+        return a.f
+
+    return ast.key.f
 
 
 def _prev_DictComp_generators(ast: AST, idx: int | None) -> _NextPrevRet:
     if (idx := idx - 1) >= 0:
         return  ast.generators[idx].f
 
-    return ast.value.f
+    if a := ast.value:
+        return a.f
+
+    return ast.key.f
 
 
 def _prev_DictComp_value(ast: AST, idx: int | None) -> _NextPrevRet:

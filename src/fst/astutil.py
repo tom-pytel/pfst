@@ -237,7 +237,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
     (Set,                      (('elts', 'expr*'),)),
     (ListComp,                 (('elt', 'expr'), ('generators', 'comprehension*'))),
     (SetComp,                  (('elt', 'expr'), ('generators', 'comprehension*'))),
-    (DictComp,                 (('key', 'expr'), ('value', 'expr'), ('generators', 'comprehension*'))),
+    (DictComp,                 (('key', 'expr'), ('value', 'expr?'), ('generators', 'comprehension*'))),  # value expr? starting with py 3.15, harmless for py < 3.15
     (GeneratorExp,             (('elt', 'expr'), ('generators', 'comprehension*'))),
     (Await,                    (('value', 'expr'),)),
     (Yield,                    (('value', 'expr?'),)),
@@ -1376,7 +1376,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     Set:                _syntax_ordered_children_elts,
     ListComp:           _syntax_ordered_children_comp,
     SetComp:            _syntax_ordered_children_comp,
-    DictComp:           lambda ast: [ast.key, ast.value, *ast.generators],
+    DictComp:           lambda ast: [ast.key, value, *ast.generators] if (value := ast.value) else [ast.key, *ast.generators],
     GeneratorExp:       _syntax_ordered_children_comp,
     Await:              _syntax_ordered_children_value,
     Yield:              _syntax_ordered_children_value,
