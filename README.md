@@ -252,12 +252,12 @@ if not a:
 Higher level slice abstraction.
 
 ```py
->>> print(FST('a < b < c')._all[:2].copy().src)
+>>> print(FST('a < b < c')[:2].copy().src)
 a < b
 
 >>> f = FST('case {1: a, 2: b, **c}: pass')  # match_case
 
->>> print(f.pattern.get_slice(1, 3, '_all').src)
+>>> print(f.pattern.get_slice(1, 'end').src)
 {2: b, **c}
 
 >>> f = FST('call(a, b=c, *d)')

@@ -26381,12 +26381,12 @@ ClassDef - ROOT 0,0..3,7
 ('', 0, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''), (None,
 r'''x,'''),
-r'''**NodeError("cannot put to ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot put to ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 1, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''), (None,
 r'''x,'''),
-r'''**NodeError("cannot put to ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot put to ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 0, 1, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''), (None,
@@ -27397,7 +27397,7 @@ ClassDef - ROOT 0,0..5,7
 ('', 0, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls [T, *U, **V] (a, b=c, *d): pass'''), (None,
 r'''x,'''),
-r'''**NodeError("cannot put to ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot put to ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 1, 2, 'bases', {'_ver': 12}, (None, r'''
 class cls [T,
@@ -27406,7 +27406,7 @@ class cls [T,
 ] (a, b=c, *d): pass
 '''), (None,
 r'''x,'''),
-r'''**NodeError("cannot put to ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot put to ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 0, 1, 'bases', {'_ver': 12}, (None,
 r'''class cls[T,](a, b=c, *d): pass'''), (None,
@@ -28269,7 +28269,7 @@ ClassDef - ROOT 0,0..0,37
 ('', -2, 'end', 'keywords', {}, (None,
 r'''class cls(a, b=c, *d, **e): pass'''), ('_arglikes',
 r'''f=g, **h'''),
-r'''**NodeError("cannot put to ClassDef.keywords slice because it includes bases, try the '_bases' field")**'''),
+r'''**NodeError("cannot put to ClassDef.keywords slice because it precedes bases, try the '_bases' field")**'''),
 
 ('', 'end', 'end', 'keywords', {}, (None,
 r'''class cls: pass'''), ('_arglikes',
@@ -32525,12 +32525,12 @@ Call - ROOT 0,0..3,1
 ('', 0, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''), (None,
 r'''x,'''),
-r'''**NodeError("cannot put to Call.args slice because it includes keywords, try the '_args' field")**'''),
+r'''**NodeError("cannot put to Call.args slice because it follows keywords, try the '_args' field")**'''),
 
 ('', 1, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''), (None,
 r'''x,'''),
-r'''**NodeError("cannot put to Call.args slice because it includes keywords, try the '_args' field")**'''),
+r'''**NodeError("cannot put to Call.args slice because it follows keywords, try the '_args' field")**'''),
 
 ('', 0, 1, 'args', {}, (None,
 r'''call(a, b=c, *d)'''), (None,
@@ -33161,7 +33161,7 @@ Call - ROOT 0,0..0,26
 ('', -2, 'end', 'keywords', {}, (None,
 r'''call(a, b=c, *d, **e)'''), ('_arglikes',
 r'''f=g, **h'''),
-r'''**NodeError("cannot put to Call.keywords slice because it includes args, try the '_args' field")**'''),
+r'''**NodeError("cannot put to Call.keywords slice because it precedes args, try the '_args' field")**'''),
 
 ('', 'end', 'end', 'keywords', {}, (None,
 r'''call()'''), ('_arglikes',

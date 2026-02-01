@@ -16379,11 +16379,11 @@ Tuple - ROOT 0,0..5,1
 
 ('', 0, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''),
-r'''**NodeError("cannot get ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot get ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 1, 2, 'bases', {}, (None,
 r'''class cls(a, b=c, *d): pass'''),
-r'''**NodeError("cannot get ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot get ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 0, 1, 'bases', {}, (None,
 r'''class cls(a, b, c=d, *e): pass'''),
@@ -17284,11 +17284,11 @@ Tuple - ROOT 0,0..5,1
 
 ('', 0, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls[T](a, b=c, *d): pass'''),
-r'''**NodeError("cannot get ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot get ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 
 ('', 1, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls[T](a, b=c, *d): pass'''),
-r'''**NodeError("cannot get ClassDef.bases slice because it includes keywords, try the '_bases' field")**'''),
+r'''**NodeError("cannot get ClassDef.bases slice because it follows keywords, try the '_bases' field")**'''),
 ],
 
 'ClassDef_keywords': [  # ................................................................................
@@ -17343,7 +17343,7 @@ _arglikes - ROOT 0,0..0,3
 
 ('', -2, 'end', 'keywords', {}, (None,
 r'''class cls(a, b=c, *d, **e): pass'''),
-r'''**NodeError("cannot get ClassDef.keywords slice because it includes bases, try the '_bases' field")**'''),
+r'''**NodeError("cannot get ClassDef.keywords slice because it precedes bases, try the '_bases' field")**'''),
 ],
 
 'ClassDef__bases': [  # ................................................................................
@@ -20192,11 +20192,11 @@ Tuple - ROOT 0,0..5,1
 
 ('', 0, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''),
-r'''**NodeError("cannot get Call.args slice because it includes keywords, try the '_args' field")**'''),
+r'''**NodeError("cannot get Call.args slice because it follows keywords, try the '_args' field")**'''),
 
 ('', 1, 2, 'args', {}, (None,
 r'''call(a, b=c, *d)'''),
-r'''**NodeError("cannot get Call.args slice because it includes keywords, try the '_args' field")**'''),
+r'''**NodeError("cannot get Call.args slice because it follows keywords, try the '_args' field")**'''),
 
 ('', 0, 1, 'args', {}, (None,
 r'''call(a, b, c=d, *e)'''),
@@ -20416,7 +20416,7 @@ _arglikes - ROOT 0,0..0,3
 
 ('', -2, 'end', 'keywords', {}, (None,
 r'''call(a, b=c, *d, **e)'''),
-r'''**NodeError("cannot get Call.keywords slice because it includes args, try the '_args' field")**'''),
+r'''**NodeError("cannot get Call.keywords slice because it precedes args, try the '_args' field")**'''),
 ],
 
 'Call__args': [  # ................................................................................

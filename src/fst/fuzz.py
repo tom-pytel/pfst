@@ -973,7 +973,8 @@ def can_replace_ast(
 class Fuzzy:
     syspyfnms = None
     name = 'Fuzzy'
-    forever = False
+    forever = False  # whether should be run forever (because is not deterministic and each run can test different cases)
+    standard = True  # whether is part of the "standard" set which is good at finding errors or non-"standard" but thorough for checking less often changing stuff
 
     def __init__(self, args: dict[str, Any]) -> None:
         self.args = args
@@ -1518,6 +1519,69 @@ class ReconcileSame(Fuzzy):
 
 
 # forever
+
+class WalkDel(Fuzzy):
+    name = 'walk_del'
+    forever = True
+    standard = False
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        fs = list(fst.walk(True))
+
+        try:
+            for f in fst.walk(True):
+                g = None
+
+                if not f.a:
+                    raise RuntimeError('walked into deleted node')
+                if getattr(f.a, '_invalid', False):
+                    raise RuntimeError('walked into invalid node')
+
+                while True:
+                    i = randint(0, len(fs) - 1)
+
+                    if (g := fs[i]).a:
+                        break
+
+                    del fs[i]
+
+                    if not fs:
+                        break
+
+                ast = g.a
+
+                try:
+                    g.remove(norm=True)
+
+                except NotImplementedError:
+                    pass
+
+                except ValueError as exc:
+                    if not (str(exc).startswith('cannot delete')):
+                        raise
+
+                except NodeError as exc:
+                    s = str(exc)
+
+                    if not ((str(exc).startswith('cannot put')
+                             and ('slice because it follows keywords' in s or 'slice because it precedes' in s))
+                    ):
+                        raise
+
+                else:
+                    for a in walk(ast):
+                        a._invalid=True
+
+        except Exception:
+            if g:
+                g.parent.dump('S')
+                print()
+                print(g.parent.src)
+                print()
+                print(g.pfield)
+
+            raise
+
 
 class ReputSrc(Fuzzy):
     name = 'reput_src'
@@ -2853,10 +2917,12 @@ def main():
                         help='path of file or directory of files to use')
     parser.add_argument('-f', '--fuzz', action='append', default=[],
                         help='which fuzzies to run')
-    parser.add_argument('-R', '--fuzz-rnd', action='store_true', default=False,
-                        help='select all randomized fuzzies to run')
     parser.add_argument('-D', '--fuzz-det', action='store_true', default=False,
                         help='select all deterministic fuzzies to run')
+    parser.add_argument('-R', '--fuzz-rnd', action='store_true', default=False,
+                        help='select standard randomized fuzzies to run')
+    parser.add_argument('-r', '--fuzz-rnd-all', action='store_true', default=False,
+                        help='select all randomized fuzzies to run')
     parser.add_argument('-b', '--batch', type=int, default=None,
                         help='batch size override')
     parser.add_argument('-g', '--debug', default=False, action='store_true',
@@ -2901,17 +2967,22 @@ def main():
     print(f'{args = }')
 
     fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[])
-                         if args.fuzz or args.fuzz_rnd or args.fuzz_det else
+                         if args.fuzz or args.fuzz_det or args.fuzz_rnd or args.fuzz_rnd_all else
                          (f for f in FUZZIES if f != 'dump'))
-
-    if args.fuzz_rnd:
-        for n, f in FUZZIES.items():
-            if f.forever:
-                fuzz[n] = f
 
     if args.fuzz_det:
         for n, f in FUZZIES.items():
             if not f.forever and f is not Dump:
+                fuzz[n] = f
+
+    if args.fuzz_rnd:
+        for n, f in FUZZIES.items():
+            if f.forever and f.standard:
+                fuzz[n] = f
+
+    if args.fuzz_rnd_all:
+        for n, f in FUZZIES.items():
+            if f.forever:
                 fuzz[n] = f
 
     print(f'fuzz = {", ".join(fuzz)}')
