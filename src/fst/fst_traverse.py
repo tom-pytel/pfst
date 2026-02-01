@@ -59,10 +59,10 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
     if all == 'loc':
         return fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP
 
-    if hasattr(all, '__contains__'):
-        return fst_.a.__class__ in all
+    if all.__class__ is type and issubclass(all, AST):
+        return fst_.a.__class__ is all
 
-    return fst_.a.__class__ is all
+    return fst_.a.__class__ in all
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -666,17 +666,21 @@ def walk(
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
-    Node replacement and removal during the walk is supported with some caveats, the rules are:
+    Node **REPLACEMENT** and **DELETION** during the walk is supported with some caveats, the rules are:
     - `raw` operations can change a lot of nodes and cause the walk to miss some you thought would get walked, but they
         will not cause the walk to break.
-    - The current node can always be removed, replaced or inserted before (if list field). If replaced the new children
+    - The current node can always be deleted, replaced or inserted before (if list field). If replaced the new children
         will be walked next unless you explicitly `send(False)` to the generator.
     - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
-    - Previously walked nodes can likewise be removed, replaced or inserted before.
-    - Replacing or removing a node in the current parent chain is allowed and will cause the walk to continue at its
+    - Previously walked nodes can likewise be deleted, replaced or inserted before.
+    - Replacing or deleting a node in the current parent chain is allowed and will cause the walk to continue at its
         following siblings which were not modified.
-    - Sibling nodes of either this node or any parents which have not been walked yet can be removed, replaced or
-        inserted before but the new nodes will not be walked (and neither will any removed nodes).
+    - Sibling nodes of either this node or any parents which have not been walked yet can be deleted, replaced or
+        inserted before but the new nodes will not be walked (and neither will any deleted nodes).
+    - The header said replacement and deletion, so `del`, `remove()`, `replace()`, `put()` over, etc... Not `.cut()` or
+        `get(..., cut=True)`, with or without inserting them somewhere else. The cut or moved nodes may still be walked,
+        even if transferred to a different tree. If you wish to do this kind of operation during a walk then either
+        explicitly copy then delete the node(s), or defer the cut and move until after the walk.
 
     **Note:** About scopes, the `NamedExpr` (walrus) expression is treated specially in a Comprehension (capital 'C' to
     differentiate from the node type `comprehension`). The `target` of the operation actually belongs to the first
