@@ -142,7 +142,7 @@ You want to add a `correlation_id=CID` keyword argument to all `logger.info()` c
 ...             and f.func.value.id == 'logger'
 ...             and not any(kw.arg == 'correlation_id' for kw in f.keywords)
 ...         ):
-...             f.append('correlation_id=CID', trivia=(False, False))
+...             f.append('correlation_id=CID', trivia=())
 ...
 ...     return fst.src
 ```
@@ -734,11 +734,11 @@ the `with ctx():` could be preserved explicitly but not doing it here, eventuall
 ...     for f in fst.walk(With):  # we only get With nodes
 ...         while f.body[0].is_With:  # first child is another With
 ...             # append child items to ours
-...             f.items.extend(f.body[0].items.copy(), trivia=(False, False))
+...             f.items.extend(f.body[0].items.copy(), trivia=())
 ...
 ...             f.put_slice(  # copy child body into our own
 ...                 f.body[0].get_slice(trivia=('all+', 'block'), cut=True),
-...                 trivia=(False, False),
+...                 trivia=(),
 ...             )
 ...
 ...     return fst.src
@@ -962,11 +962,8 @@ We build up a body and replace the original comprehension `Assign` statement wit
 ...             # the ffor is the last one processed above (the innermost)
 ...             fcur.body[-1].replace(f'{var}.append({fcomp.elt.own_src()})')
 ...
-...             f.replace(
-...                 ftop,
-...                 one=False,  # this allows to replace a single element with multiple
-...                 trivia=(False, False)
-...             )
+...             # 'one=False' allows to replace a single element with multiple
+...             f.replace(ftop, one=False, trivia=())
 ...
 ...     return fst.src
 ```

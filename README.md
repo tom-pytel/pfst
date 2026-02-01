@@ -27,7 +27,7 @@ See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.htm
 ...     f'not a {thing}', extra=extra,  # blah
 ... )'''.strip())
 
->>> ext_ast.f.body[0].value.insert('\nid=CID  # comment', -1, trivia=(False, False))
+>>> ext_ast.f.body[0].value.insert('\nid=CID  # comment', -1, trivia=())
 
 >>> print(fst.unparse(ext_ast))
 logger.info(  # just checking

@@ -2,6 +2,8 @@
 
 ### Added
 
+- trivia shorthand `()` for `(False, False)`
+
 ### Changed
 
 ### Fixed
