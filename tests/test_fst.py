@@ -7633,6 +7633,42 @@ opts.ignore_module = [mod.strip()
         self.assertEqual('l', g[4].src)
         self.assertEqual('i\nj\nk\nh\nl', f.src)
 
+    def test_find_def(self):
+        def test(fst_, path, recurse=False):
+            ret = []
+            prev_found = None
+
+            while prev_found := fst_.find_def(path, prev_found, recurse=recurse):
+                ret.append(prev_found)
+
+            return ret
+
+        f = FST('''
+class pre: pass
+def f(): pass
+class g: pass
+if something:
+    pass
+    def g():
+        class inner: pass
+def h(): pass
+def g(): pass
+'''.strip())
+
+        self.assertEqual([f.body[2], f.body[3].body[1], f.body[5]], test(f, 'g', True))
+        self.assertEqual([f.body[2], f.body[5]], test(f, 'g', False))
+
+        self.assertEqual([f.body[3].body[1].body[0]], test(f, 'def g.class inner', True))
+        self.assertEqual([f.body[3].body[1].body[0]], test(f, 'def g.class inner', False))
+
+        # on a non-scope block statement node
+
+        self.assertEqual([f.body[3].body[1].body[0]], test(f.body[3], 'g.inner', True))
+        self.assertEqual([f.body[3].body[1].body[0]], test(f.body[3], 'g.inner', False))
+
+        self.assertEqual([f.body[3].body[1]], test(f.body[3], 'g', True))
+        self.assertEqual([f.body[3].body[1]], test(f.body[3], 'g', False))
+
     def test_find_loc_in(self):
         f    = parse('abc += xyz').f
         fass = f.body[0]

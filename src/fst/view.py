@@ -143,6 +143,37 @@ class fstview:
 
         return start, stop, len_field
 
+    def _fixup_item_indices(self, idx: int | slice) -> tuple[int, int, int, int, int | None]:
+        """Convert the index passed to a __???item__() function to proper index or indices depending on if individual or
+        slice operation.
+
+        **Returns:**
+        - `(start, stop, len_field, idx_start, idx_stop | None)`:
+            - `start`, `stop` and `len_field`: These come from `_get_indices()`.
+            - `idx_start` and `idx_stop`: If `idx_stop` is `None` it indicates a single-element operation and
+                `idx_start` is the index of that operation. Otherwise these are the indices from a `slice` object fixed
+                up for the bounds of this view for a slice operation, including converting `None` elements to the proper
+                bounds.
+        """
+
+        start, stop, len_field = self._get_indices()
+
+        if isinstance(idx, slice):
+            if idx.step is not None:
+                raise IndexError('step slicing not supported')
+
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
+                                                      'end' if (i := idx.stop) is None else i)
+
+            return start, stop, len_field, idx_start, idx_stop
+
+        if isinstance(idx, int):
+            idx = fixup_one_index(stop - start, idx)
+
+            return start, stop, len_field, idx, None
+
+        raise IndexError(f'invalid index {idx!r}')
+
     def __init__(self, base: fst.FST, field: str, start: int = 0, stop: int | None = None) -> None:
         """@private"""
 
@@ -206,22 +237,12 @@ class fstview:
         @public
         """
 
-        start, stop, _ = self._get_indices()
+        start, _, _, idx_start, idx_stop = self._fixup_item_indices(idx)
 
-        if isinstance(idx, slice):
-            if idx.step is not None:
-                raise IndexError('step slicing not supported')
-
-            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
-                                                      'end' if (i := idx.stop) is None else i)
-
+        if idx_stop is not None:
             return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
 
-        assert isinstance(idx, int)
-
-        idx = fixup_one_index(stop - start, idx)
-
-        return a.f if isinstance(a := self._deref_one(start + idx), AST) else a
+        return a.f if isinstance(a := self._deref_one(start + idx_start), AST) else a
 
     def __setitem__(self, idx: int | slice, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
@@ -266,15 +287,9 @@ class fstview:
         @public
         """
 
-        start, stop, len_before = self._get_indices()
+        start, _, len_before, idx_start, idx_stop = self._fixup_item_indices(idx)
 
-        if isinstance(idx, slice):
-            if idx.step is not None:
-                raise IndexError('step slicing not supported')
-
-            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
-                                                      'end' if (i := idx.stop) is None else i)
-
+        if idx_stop is not None:
             self.base = self.base._put_slice(code, start + idx_start, start + idx_stop, self.field)
 
             if self._stop is not None:
@@ -282,11 +297,7 @@ class fstview:
 
             return
 
-        assert isinstance(idx, int)
-
-        idx = fixup_one_index(stop - start, idx)
-
-        self.base = self.base._put_one(code, start + idx, self.field, ret_child=False)
+        self.base = self.base._put_one(code, start + idx_start, self.field, ret_child=False)
 
         if self._stop is not None:
             self._stop += self._len_field() - len_before
@@ -320,15 +331,9 @@ class fstview:
         @public
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _, idx_start, idx_stop = self._fixup_item_indices(idx)
 
-        if isinstance(idx, slice):
-            if idx.step is not None:
-                raise IndexError('step slicing not supported')
-
-            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
-                                                      'end' if (i := idx.stop) is None else i)
-
+        if idx_stop is not None:
             self.base = self.base._put_slice(None, start + idx_start, start + idx_stop, self.field)
 
             if self._stop is not None:
@@ -336,11 +341,7 @@ class fstview:
 
             return
 
-        assert isinstance(idx, int)
-
-        idx = fixup_one_index(stop - start, idx)
-
-        self.base = self.base._put_slice(None, start + idx, start + idx + 1, self.field)
+        self.base = self.base._put_slice(None, start + idx_start, start + idx_start + 1, self.field)
 
         if self._stop is not None:
             self._stop = max(start, stop - 1)

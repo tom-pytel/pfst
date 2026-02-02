@@ -4378,18 +4378,21 @@ class FST:
 
         return root.child_from_path(root.child_path(self), last_valid)
 
-    def find_def(self, spec: builtins.str, prev_found: FST | None = None) -> FST | None:
+    def find_def(self, path: builtins.str, prev_found: FST | None = None, *, recurse: bool = True) -> FST | None:
         r"""Find function and / or class definition in current scope. Can specify multiple levels of scopes to recurse
         into. This will find the elements in the **SCOPE** of `self` (and recursed scopes for dotted names). So it can
         be a few children down for nested `if`, `while` and others from the last scope.
 
         **Parameters:**
-        - `spec`: Possibly qualified dotted name path to find. Can be a single name to find in this node scope or
+        - `path`: Possibly qualified dotted name path to find. Can be a single name to find in this node scope or
             dotted list of individual names to recurse into the scopes of. Each individual name can be prefixed with
             `'def'` or `'class'` to indicate match function or class definition or not prefixed to indicate match both.
-        - `prev_found`: If `None` then find the first instance of `spec`, otherwise search starts with this last node
+        - `prev_found`: If `None` then find the first instance of `path`, otherwise search starts with this last node
             which was found. Used for iterating over multiple definitions with the same name (`@overload` maybe?).
             Removal or replacement is not currently supported while iterating.
+        - `recurse`: Whether to recurse past the first level of children by default. This only applies to the last scope
+            in `path` and determines whether only direct children of that scope are checked for the last name or if
+            recursion is allowed into block statements which are part of the scope.
 
         **Returns:**
         - `FST | None`: Node found if any.
@@ -4428,8 +4431,9 @@ class FST:
         ... @overload
         ... def parse(data: str) -> str: ...
         ...
-        ... def parse(data):
-        ...     return data
+        ... if VERSION:
+        ...     def parse(data):
+        ...         return data
         ... '''.strip())
 
         >>> prev_found = None
@@ -4437,12 +4441,18 @@ class FST:
         ...     print(prev_found, prev_found.args.src)
         <FunctionDef 1,0..1,36> data: bytes
         <FunctionDef 3,0..3,32> data: str
-        <FunctionDef 5,0..6,15> data
+        <FunctionDef 6,4..7,19> data
+
+        >>> prev_found = None
+        >>> while prev_found := f.find_def('parse', prev_found, recurse=False):
+        ...     print(prev_found, prev_found.args.src)
+        <FunctionDef 1,0..1,36> data: bytes
+        <FunctionDef 3,0..3,32> data: str
         """
 
         stack = []
 
-        for s in reversed(spec.split('.')):
+        for s in reversed(path.split('.')):
             if s.startswith('def '):
                 stack.append((ASTS_LEAF_FUNCDEF, s[4:]))
             elif s.startswith('class '):
@@ -4450,15 +4460,16 @@ class FST:
             else:
                 stack.append((ASTS_LEAF_DEF, s))
 
-        if prev_found:  # if iterating then we just find pre-last scope normally
-            last = stack.pop(0)
-
         scope = self
+        last = stack[0]
+
+        if prev_found:  # if iterating then we just find pre-last scope normally
+            del stack[0]
 
         while stack:
-            which_def, name = stack.pop()
+            which_def, name = p = stack.pop()
 
-            for scope in scope.walk(which_def, self_=False, scope=True):  # noqa: B020
+            for scope in scope.walk(which_def, self_=False, scope=True, recurse=p is not last or recurse):  # noqa: B020
                 if scope.a.name == name:
                     break
             else:
@@ -4477,24 +4488,16 @@ class FST:
 
         which_def, name = last
         cur = prev_found
+        recurse_self = False
 
         while True:
-            while not (f := cur.next(ASTS_LEAF_BLOCK)):
-                if (cur := cur.parent) is scope:
-                    return None
+            if not (cur := cur.step_fwd(ASTS_LEAF_BLOCK, recurse_self, top=scope)):
+                return None
 
-            cur = f
+            if (cur_cls := cur.a.__class__) in which_def and cur.a.name == name:
+                return cur
 
-            while True:
-                if (cur_cls := cur.a.__class__) in which_def and cur.a.name == name:
-                    return cur
-
-                if (cur_cls in ASTS_LEAF_DEF
-                    or not (f := cur.first_child(ASTS_LEAF_BLOCK))
-                ):
-                    break
-
-                cur = f
+            recurse_self = recurse and cur_cls not in ASTS_LEAF_DEF
 
     def find_contains_loc(
         self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True

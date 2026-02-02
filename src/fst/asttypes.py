@@ -395,8 +395,8 @@ ASTS_LEAF_SCOPE_NAMED_OR_MOD = ASTS_LEAF_SCOPE_NAMED | ASTS_LEAF_MOD
 ASTS_LEAF_SCOPE_ANON         = frozenset([Lambda, ListComp, SetComp, DictComp, GeneratorExp])
 
 ASTS_LEAF_FUNCDEF            = frozenset([FunctionDef, AsyncFunctionDef])
-ASTS_LEAF_DEF                = ASTS_LEAF_FUNCDEF | {ClassDef}
-ASTS_LEAF_DEF_OR_MOD         = ASTS_LEAF_DEF | ASTS_LEAF_MOD
+ASTS_LEAF_DEF                = ASTS_LEAF_SCOPE_NAMED
+ASTS_LEAF_DEF_OR_MOD         = ASTS_LEAF_SCOPE_NAMED_OR_MOD
 ASTS_LEAF_FOR                = frozenset([For, AsyncFor])
 ASTS_LEAF_WITH               = frozenset([With, AsyncWith])
 ASTS_LEAF_TRY                = frozenset([Try, TryStar])
