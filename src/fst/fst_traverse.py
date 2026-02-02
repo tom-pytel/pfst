@@ -486,7 +486,12 @@ def prev_child(
 
 
 def step_fwd(
-    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False, recurse_self: bool = True
+    self: fst.FST,
+    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False,
+    recurse_self: bool = True,
+    *,
+    top: fst.FST | None = None,
+    stop_at: fst.FST | Container[fst.FST] | None = None,
 ) -> fst.FST | None:
     """Step forward in the tree in syntactic order, as if `walk()`ing forward, **NOT** the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
@@ -507,6 +512,15 @@ def step_fwd(
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes of
         `self` on start.
+    - `top`: If present, specifies the top of the container we are walking. This is only checked on the way up out of
+        children out and not returned when encountered, rather `None` is returned. Passing this allows you to restrict
+        a walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
+        without problem.
+    - `stop_at`: If present, can be a single `FST` or a container of `FST` nodes to stop the walk at and return the
+        node. This is provided since the stop node(s) may not fit the `all` criteria so the caller would not have the
+        chance to look for them in that case. If one of these nodes is reached then it is returned regardless of if it
+        fits `all` or not. The walk can continue from that node afterwards (`self` is not checked against `stop_at` on
+        entry).
 
     **Returns:**
     - `None` if last valid node in tree, otherwise next node in order.
@@ -569,20 +583,65 @@ def step_fwd(
 
     >>> print(f.src)
     [new_pre_parent, [new_pre_self, [new_child], new_post_self], new_post_parent]
+
+    >>> g = f = FST('[a, [b, c], d]')
+
+    >>> while g := g.step_fwd(Name, top=f.elts[1]):
+    ...     print(g.src)
+    a
+    b
+    c
+
+    >>> g = f = FST('[a, [c], [2, 3, [b]]]')
+
+    >>> while g := g.step_fwd(Name, stop_at={f.elts[1], f.elts[2].elts[1]}):
+    ...     print(g.src)
+    a
+    [c]
+    c
+    3
+    b
     """
 
-    if recurse_self and (fst_ := self.first_child(all)):
-        return fst_
+    if top is None:
+        top = (None,)
+    else:
+        top = (top, None,)
 
-    while not (fst_ := self.next(all)):
-        if not (self := self.parent):
-            return None
+    if stop_at is None:
+        stop_at = ()
+    elif stop_at.__class__ is fst.FST:
+        stop_at = {stop_at}
 
-    return fst_
+    if recurse_self:
+        while fst_ := self.first_child(True):
+            if _check_all_param(fst_, all) or fst_ in stop_at:
+                return fst_
+
+            self = fst_
+
+    while True:
+        while not (fst_ := self.next(True)):
+            if (self := self.parent) in top:
+                return None
+
+        while True:
+            if _check_all_param(fst_, all) or fst_ in stop_at:
+                return fst_
+
+            self = fst_
+
+            if not (fst_ := self.first_child(True)):
+                break
 
 
 def step_back(
-    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False, recurse_self: bool = True
+    self: fst.FST,
+    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False,
+    recurse_self: bool = True,
+    *,
+    top: fst.FST | None = None,
+    stop_at: fst.FST | Container[fst.FST] | None = None,
 ) -> fst.FST | None:
     """Step backward in the tree in syntactic order, as if `walk()`ing backward, **NOT** the inverse of `step_fwd()`.
     Will walk up parents and down children to get the next node, returning `None` only when we are at the beginning
@@ -603,6 +662,15 @@ def step_back(
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to previous nodes
         of `self` on start.
+    - `top`: If present, specifies the top of the container we are walking. This is only checked on the way up out of
+        children out and not returned when encountered, rather `None` is returned. Passing this allows you to restrict
+        a walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
+        without problem.
+    - `stop_at`: If present, can be a single `FST` or a container of `FST` nodes to stop the walk at and return the
+        node. This is provided since the stop node(s) may not fit the `all` criteria so the caller would not have the
+        chance to look for them in that case. If one of these nodes is reached then it is returned regardless of if it
+        fits `all` or not. The walk can continue from that node afterwards (`self` is not checked against `stop_at` on
+        entry).
 
     **Returns:**
     - `None` if first valid node in tree, otherwise previous node in order.
@@ -635,16 +703,56 @@ def step_back(
     ...         break
     >>> f.src
     '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
+
+    >>> g = f = FST('[a, [b, c], d]')
+
+    >>> while g := g.step_back(Name, top=f.elts[1]):
+    ...     print(g.src)
+    d
+    c
+    b
+
+    >>> g = f = FST('[a, [c], [2, 3, [b]]]')
+
+    >>> while g := g.step_back(Name, stop_at={f.elts[1], f.elts[2].elts[1]}):
+    ...     print(g.src)
+    b
+    3
+    [c]
+    c
+    a
     """
 
-    if recurse_self and (fst_ := self.last_child(all)):
-        return fst_
+    if top is None:
+        top = (None,)
+    else:
+        top = (top, None,)
 
-    while not (fst_ := self.prev(all)):
-        if not (self := self.parent):
-            return None
+    if stop_at is None:
+        stop_at = ()
+    elif stop_at.__class__ is fst.FST:
+        stop_at = {stop_at}
 
-    return fst_
+    if recurse_self:
+        while fst_ := self.last_child(True):
+            if _check_all_param(fst_, all) or fst_ in stop_at:
+                return fst_
+
+            self = fst_
+
+    while True:
+        while not (fst_ := self.prev(True)):
+            if (self := self.parent) in top:
+                return None
+
+        while True:
+            if _check_all_param(fst_, all) or fst_ in stop_at:
+                return fst_
+
+            self = fst_
+
+            if not (fst_ := self.last_child(True)):
+                break
 
 
 def walk(

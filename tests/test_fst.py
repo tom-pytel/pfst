@@ -5324,7 +5324,7 @@ class cls(a, b=c):
                 raise
 
     def test_step_vs_walk(self):
-        def test(src):
+        def test(src, all=None):
             fst = FST.fromsrc(src.strip())
 
             f, l = fst, []
@@ -5347,6 +5347,17 @@ class cls(a, b=c):
                 l.append(f)
             self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
 
+            if all is not None:
+                f, l = fst, []
+                while f := f.step_fwd(all):
+                    l.append(f)
+                self.assertEqual(l, list(fst.walk(all, self_=False)))
+
+                f, l = fst, []
+                while f := f.step_back(all):
+                    l.append(f)
+                self.assertEqual(l, list(fst.walk(all, self_=False, back=True)))
+
         test('''
 def f(a=1, b=2) -> int:
     i = [[k for k in range(j)] for i in range(5) if i for j in range(i) if j]
@@ -5365,9 +5376,15 @@ with a as b, c as d:
 
         if PYGE15:
             test('''
+[*s for s in t]
+{*s for s in t}
+(*s for s in t)
 {i: k for i, j in k}
 {**i for i, j in k}
             ''')
+
+        test('[a, [c], [2, 3, [b]]]', Name)
+        test('[a, [c], [2, 3, [b]]]', Constant)
 
     def test_child_path(self):
         f = parse('if 1: a = (1, 2, {1: 2})').f

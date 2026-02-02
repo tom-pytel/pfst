@@ -6,11 +6,14 @@
   - unpacking in comprehensions, `[*st for st in itr]`, `{**key for key in itr}`
   - lazy imports not on main branch yet
 - `FST.find_def()` to easily find (possibly nested) function and class definitions by name in a given scope
+- added `top` and `stop_at` parameters to `step_fwd/back()`
 - trivia shorthand `()` for `(False, False)`
 
 ### Changed
 
 ### Fixed
+
+- fixed `step_fwd/back()` for anything that wasn't `all=True/False/'loc'`
 
 
 ## 0.2.6 - alpha - 2026-01-31
