@@ -7,6 +7,7 @@ from typing import Literal
 
 from . import fst
 
+from .asttypes import ASTS_LEAF_BLOCK_OR_MOD
 from .astutil import OPCLS2STR, AST
 from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
@@ -143,17 +144,24 @@ class fstview:
 
         return start, stop, len_field
 
-    def _fixup_item_indices(self, idx: int | slice) -> tuple[int, int, int, int, int | None]:
+    def _fixup_item_indices(self, idx: int | slice | str) -> tuple[int, int, int, int, int | None]:
         """Convert the index passed to a __???item__() function to proper index or indices depending on if individual or
-        slice operation.
+        slice operation. Also handled a `str` name lookup, which can return the index in this view if is a direct child
+        or the grand+ child node itself if is not. `find_def()` is used for this.
+
+        **Parameters:**
+        - `idx`: The index or `slice` where to get the element(s) from. Or a `str` for a single-element name search.
 
         **Returns:**
-        - `(start, stop, len_field, idx_start, idx_stop | None)`:
+        - `(start, stop, len_field, idx_start | FST, idx_stop | None)`:
             - `start`, `stop` and `len_field`: These come from `_get_indices()`.
-            - `idx_start` and `idx_stop`: If `idx_stop` is `None` it indicates a single-element operation and
-                `idx_start` is the index of that operation. Otherwise these are the indices from a `slice` object fixed
-                up for the bounds of this view for a slice operation, including converting `None` elements to the proper
-                bounds.
+            - `idx_stop`: If `None` it indicates a single-element operation. Otherwise this and `idx_start` are the
+                indices from a `slice` object fixed up for the bounds of this view for a slice operation, including
+                converting `None` elements to the proper `int` bounds.
+            - `idx_start`: If `int` then is an index for either slice or single element operation on elements of this
+                view. If is an `FST` node then it was gotten from a `find_def()` on a string name search and is not
+                a direct child of this view so safe to do whatever operation on it without updating `self`. If a `str`
+                name search results in an element of this view then it is returned as an `int` index instead.
         """
 
         start, stop, len_field = self._get_indices()
@@ -171,6 +179,31 @@ class fstview:
             idx = fixup_one_index(stop - start, idx)
 
             return start, stop, len_field, idx, None
+
+        if isinstance(idx, str):  # this is very handy so we allow search for function or class in single-element indexing
+            base = self.base
+            field = self.field
+            ast = base.a
+
+            if ast.__class__ not in ASTS_LEAF_BLOCK_OR_MOD or field not in ('body', '_body', 'orelse', 'finalbody'):
+                raise IndexError(f'name indexing not supported on {ast.__class__.__name__}.{field}')
+
+            if field == '_body':  # special casing a specific subclass fstview__body behavior here to keep things simple, this is less ugly than abstracting it
+                field = 'body'
+                idx_off = base.has_docstr
+            else:
+                idx_off = 0
+
+            asts = getattr(ast, field)[start + idx_off : stop + idx_off]
+            found = base.find_def(idx, asts=asts)
+
+            if not found:
+                raise IndexError(f'name index {idx!r} not found')
+
+            if found.parent is base:  # direct child so we return its index in the view
+                return start, stop, len_field, found.pfield.idx - start - idx_off, None
+
+            return start, stop, len_field, found, None
 
         raise IndexError(f'invalid index {idx!r}')
 
@@ -193,7 +226,7 @@ class fstview:
 
         return stop - start
 
-    def __getitem__(self, idx: int | slice) -> fstview | fst.FST | str | None:
+    def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
         r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
@@ -202,7 +235,7 @@ class fstview:
         return values which may be `None` or may not be `FST` nodes.
 
         **Parameters:**
-        - `idx`: The index or `slice` where to get the element(s) from.
+        - `idx`: The index or `slice` where to get the element(s) from. Or a `str` for a single-element name search.
 
         **Returns:**
         - `fstview | FST | str | None`: Either a single `FST` node if accessing a single item or a new `fstview` view
@@ -239,12 +272,15 @@ class fstview:
 
         start, _, _, idx_start, idx_stop = self._fixup_item_indices(idx)
 
-        if idx_stop is not None:
+        if idx_stop is not None:  # slice
             return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
 
-        return a.f if isinstance(a := self._deref_one(start + idx_start), AST) else a
+        if idx_start.__class__ is not fst.FST:  # single element child of this view
+            return a.f if isinstance(a := self._deref_one(start + idx_start), AST) else a
 
-    def __setitem__(self, idx: int | slice, code: Code | None) -> None:
+        return idx_start  # the actual node found for the str search
+
+    def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
@@ -252,7 +288,7 @@ class fstview:
         values.
 
         **Parameters:**
-        - `idx`: The index or `slice` where to put the element(s).
+        - `idx`: The index or `slice` where to put the element(s). Or a `str` for a single-element name search.
 
         **Examples:**
 
@@ -289,20 +325,22 @@ class fstview:
 
         start, _, len_before, idx_start, idx_stop = self._fixup_item_indices(idx)
 
-        if idx_stop is not None:
+        if idx_stop is not None:  # slice
             self.base = self.base._put_slice(code, start + idx_start, start + idx_stop, self.field)
 
             if self._stop is not None:
                 self._stop += self._len_field() - len_before
 
-            return
+        elif idx_start.__class__ is not fst.FST:  # single element child of this view
+            self.base = self.base._put_one(code, start + idx_start, self.field, ret_child=False)
 
-        self.base = self.base._put_one(code, start + idx_start, self.field, ret_child=False)
+            if self._stop is not None:
+                self._stop += self._len_field() - len_before
 
-        if self._stop is not None:
-            self._stop += self._len_field() - len_before
+        else:  # the actual node found for the str search
+            idx_start.replace(code)
 
-    def __delitem__(self, idx: int | slice) -> None:
+    def __delitem__(self, idx: int | slice | str) -> None:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
@@ -310,7 +348,7 @@ class fstview:
         values.
 
         **Parameters:**
-        - `idx`: The index or `slice` to delete.
+        - `idx`: The index or `slice` to delete. Or a `str` for a single-element name search.
 
         **Examples:**
 
@@ -333,7 +371,7 @@ class fstview:
 
         start, stop, _, idx_start, idx_stop = self._fixup_item_indices(idx)
 
-        if idx_stop is not None:
+        if idx_stop is not None:  # slice
             self.base = self.base._put_slice(None, start + idx_start, start + idx_stop, self.field)
 
             if self._stop is not None:
@@ -341,10 +379,14 @@ class fstview:
 
             return
 
-        self.base = self.base._put_slice(None, start + idx_start, start + idx_start + 1, self.field)
+        elif idx_start.__class__ is not fst.FST:  # single element child of this view
+            self.base = self.base._put_slice(None, start + idx_start, start + idx_start + 1, self.field)
 
-        if self._stop is not None:
-            self._stop = max(start, stop - 1)
+            if self._stop is not None:
+                self._stop = max(start, stop - 1)
+
+        else:  # the actual node found for the str search
+            idx_start.remove()
 
     def copy(self, **options) -> fst.FST:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.

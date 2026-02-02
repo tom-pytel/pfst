@@ -274,7 +274,7 @@ call(a, *e, f=g, **h)
 One-liner fun.
 
 ```py
-src = '''
+>>> src = '''
 class myclass:
     def first_method(self):
         something
@@ -287,10 +287,10 @@ class myclass:
         something_else
 '''.strip()
 
-print(FST(src, 'exec')
-      .find_def('myclass.bad_method')
-      .replace('def good_method(self):\n    return "YAY!"')
-      .root.src)
+>>> print(FST(src, 'exec')
+...       .find_def('myclass.bad_method')
+...       .replace('def good_method(self):\n    return "YAY!"')
+...       .root.src)
 class myclass:
     def first_method(self):
         something

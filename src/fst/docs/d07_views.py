@@ -138,6 +138,68 @@ used and truncates them to the actual size of the target field.
 <<List ROOT 0,0..0,2>.elts[:0] []>
 
 
+## Name indexing
+
+If you are accessing a statement or module `body`, `orelse` or `finalbody` field then you can index this using a name
+or path of names of function or class definitions. This allows easy access to functions or nodes you know exist in a
+given block.
+
+>>> f = FST('''
+... class first_cls:
+...     def first_meth1(self): pass
+...     def first_meth2(self): pass
+...
+... class second_cls:
+...     def second_meth1(self): pass
+...     def second_meth2(self):
+...         class subcls: pass
+...     def second_meth3(self): pass
+... ''')
+
+>>> print(f['second_cls'].src)
+class second_cls:
+    def second_meth1(self): pass
+    def second_meth2(self):
+        class subcls: pass
+    def second_meth3(self): pass
+
+>>> del f['second_cls.second_meth1']
+
+>>> print(f['second_cls'].src)
+class second_cls:
+    def second_meth2(self):
+        class subcls: pass
+    def second_meth3(self): pass
+
+>>> print(f['first_cls.first_meth2'].src)
+def first_meth2(self): pass
+
+>>> print(f['second_cls.second_meth2.subcls'].src)
+class subcls: pass
+
+>>> with FST.options(pep8space=False):
+...     f['first_cls.first_meth2'] = 'def new_meth2(): pass'
+
+>>> print(f['first_cls'].src)
+class first_cls:
+    def first_meth1(self): pass
+    def new_meth2(): pass
+
+This only applies to single element indexing, not slices.
+
+>>> f['first_cls' : 'second_cls']
+Traceback (most recent call last):
+...
+TypeError: '>' not supported between instances of 'str' and 'int'
+
+And it also only applies to statement or module fields which are themselves lists of statements.
+
+>>> FST('[a, b, c]').elts['b']
+Traceback (most recent call last):
+...
+IndexError: name indexing not supported on List.elts
+
+
 ## Other operations
 
 With the exception of `insert()`, these operations don't take indices but rather are meant to be executed on a

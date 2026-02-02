@@ -513,8 +513,8 @@ def step_fwd(
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes of
         `self` on start.
     - `top`: If present, specifies the top of the container we are walking. This is only checked on the way up out of
-        children out and not returned when encountered, rather `None` is returned. Passing this allows you to restrict
-        a walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
+        children and not returned when encountered, rather `None` is returned. Passing this allows you to restrict a
+        walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
         without problem.
     - `stop_at`: If present, can be a single `FST` or a container of `FST` nodes to stop the walk at and return the
         node. This is provided since the stop node(s) may not fit the `all` criteria so the caller would not have the
@@ -663,8 +663,8 @@ def step_back(
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to previous nodes
         of `self` on start.
     - `top`: If present, specifies the top of the container we are walking. This is only checked on the way up out of
-        children out and not returned when encountered, rather `None` is returned. Passing this allows you to restrict
-        a walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
+        children and not returned when encountered, rather `None` is returned. Passing this allows you to restrict a
+        walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
         without problem.
     - `stop_at`: If present, can be a single `FST` or a container of `FST` nodes to stop the walk at and return the
         node. This is provided since the stop node(s) may not fit the `all` criteria so the caller would not have the
@@ -763,6 +763,7 @@ def walk(
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
+    asts: list[AST] | None = None
 ) -> Generator[fst.FST, bool, None]:
     r"""Walk `self` and descendants in syntactic order.
 
@@ -824,6 +825,12 @@ def walk(
         them unless `send(True)` is done for that child.
     - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
+    - `asts`: If this is provided as a list of `AST` nodes then this is used for the initial list of nodes to walk and
+        recurse into (if recurse allowed). In this case `self_` is ignored and no setup is done in case of `scope`,
+        though child scopes are not recursed into by default in this case. `recurse` and `back` are honored (`back`
+        will reverse the order of the walk for the given `asts` as expected). No syntax ordering is done on this list,
+        it is walked "as-is", so it may just be a collection of different nodes to walk individually. The `asts` list is
+        not consumed.
 
     **Examples:**
 
@@ -935,89 +942,103 @@ def walk(
     >>> print(f.src)
     [pre_grand, post_grand]
 
+    >>> f = FST('[0, 1, [2, 3], 4, 5]')
+
+    >>> print(list(g.src for g in f.walk(asts=f.a.elts[1:-2])))
+    ['1', '[2, 3]', '2', '3']
+
+    >>> print(list(g.src for g in f.walk(asts=f.a.elts[1:-2], back=True)))
+    ['[2, 3]', '3', '2', '1']
+
     """
 
     ast = self.a
 
-    if self_:
-        if _check_all_param(self, all):
-            recurse_ = 1
+    if asts is not None:
+        scope_args = is_def = False  # scope stuff
+        skip_iter = None
+        stack = asts[:] if back else asts[::-1]
 
-            while (sent := (yield self)) is not None:
-                recurse_ = sent
+    else:
+        if self_:
+            if _check_all_param(self, all):
+                recurse_ = 1
 
-            if not recurse_:
-                return
+                while (sent := (yield self)) is not None:
+                    recurse_ = sent
 
-            if not (ast := self.a):  # if deleted this node then we are done
-                return
+                if not recurse_:
+                    return
 
-            if recurse_ is True:  # user changed their mind?!?
-                recurse = True
-                scope = False
+                if not (ast := self.a):  # if deleted this node then we are done
+                    return
 
-    stack = None
+                if recurse_ is True:  # user changed their mind?!?
+                    recurse = True
+                    scope = False
 
-    # if we are walking scope then we may need to exclude some parts of the top-level node
+        stack = None
 
-    if scope:  # some parts of functions or classes or the various comprehensions are outside their scope
-        scope_args = False  # can't use None because root node may have None as a parent
-        ast_cls = ast.__class__
+        # if we are walking scope then we may need to exclude some parts of the top-level node
 
-        if (is_def := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
-            scope_args = ast.args  # will need these in the loop to exclude annotations and defaults
+        if scope:  # some parts of functions or classes or the various comprehensions are outside their scope
+            scope_args = False  # can't use None because root node may have None as a parent
+            ast_cls = ast.__class__
 
-            if back:
-                stack = []
+            if (is_def := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
+                scope_args = ast.args  # will need these in the loop to exclude annotations and defaults
 
-                if type_params := getattr(ast, 'type_params', None):
-                    stack.extend(type_params)
+                if back:
+                    stack = []
 
-                stack.append(scope_args)  # this is so that the arguments node is included in the scope walk, could skip it and just do the args themselves but arguments node might be useful for signaling args of scope
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params)
 
-                if is_def:
-                    stack.extend(ast.body)
+                    stack.append(scope_args)  # this is so that the arguments node is included in the scope walk, could skip it and just do the args themselves but arguments node might be useful for signaling args of scope
+
+                    if is_def:
+                        stack.extend(ast.body)
+                    else:
+                        stack.append(ast.body)
+
                 else:
-                    stack.append(ast.body)
+                    stack = ast.body[::-1] if is_def else [ast.body]
 
-            else:
-                stack = ast.body[::-1] if is_def else [ast.body]
+                    stack.append(scope_args)
 
-                stack.append(scope_args)
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params[::-1])
 
-                if type_params := getattr(ast, 'type_params', None):
-                    stack.extend(type_params[::-1])
+            elif ast_cls is ClassDef:
+                is_def = True  # for handling exclusion of type_params annotations and default_values from this walk
 
-        elif ast_cls is ClassDef:
-            is_def = True  # for handling exclusion of type_params annotations and default_values from this walk
+                if back:
+                    stack = []
 
-            if back:
-                stack = []
+                    if type_params := getattr(ast, 'type_params', None):  # getattr() because we may be pre py 3.12
+                        stack.extend(type_params)
 
-                if type_params := getattr(ast, 'type_params', None):  # getattr() because we may be pre py 3.12
-                    stack.extend(type_params)
+                    stack.extend(ast.body)
 
-                stack.extend(ast.body)
+                else:
+                    stack = ast.body[::-1]
 
-            else:
-                stack = ast.body[::-1]
+                    if type_params := getattr(ast, 'type_params', None):
+                        stack.extend(type_params[::-1])
 
-                if type_params := getattr(ast, 'type_params', None):
-                    stack.extend(type_params[::-1])
+            elif (is_elt := (ast_cls in (ListComp, SetComp, GeneratorExp))) or ast_cls is DictComp:
+                if back:
+                    stack = ([ast.elt] if is_elt else [ast.key, ast.value]) + (generators := ast.generators)
+                else:
+                    stack = (generators := ast.generators)[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
 
-        elif (is_elt := (ast_cls in (ListComp, SetComp, GeneratorExp))) or ast_cls is DictComp:
-            if back:
-                stack = ([ast.elt] if is_elt else [ast.key, ast.value]) + (generators := ast.generators)
-            else:
-                stack = (generators := ast.generators)[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
+                skip_iter = generators[0].iter if generators else None  # maybe the user deleted all generators
 
-            skip_iter = generators[0].iter if generators else None  # maybe the user deleted all generators
+        if stack is None:  # nothing excluded so just add all children
+            stack = syntax_ordered_children(ast)
 
-    if stack is None:  # nothing excluded so just add all children
-        stack = syntax_ordered_children(ast)
-
-        if not back:
-            stack = stack[::-1]
+            if not back:
+                stack = stack[::-1]
 
     # loop
 

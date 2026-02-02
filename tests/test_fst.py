@@ -7634,11 +7634,11 @@ opts.ignore_module = [mod.strip()
         self.assertEqual('i\nj\nk\nh\nl', f.src)
 
     def test_find_def(self):
-        def test(fst_, path, recurse=False):
+        def test(fst_, path, recurse=True, asts=None):
             ret = []
             prev_found = None
 
-            while prev_found := fst_.find_def(path, prev_found, recurse=recurse):
+            while prev_found := fst_.find_def(path, prev_found, recurse=recurse, asts=asts):
                 ret.append(prev_found)
 
             return ret
@@ -7668,6 +7668,26 @@ def g(): pass
 
         self.assertEqual([f.body[3].body[1]], test(f.body[3], 'g', True))
         self.assertEqual([f.body[3].body[1]], test(f.body[3], 'g', False))
+
+        # explicit list of asts
+
+        f = FST('''
+if 1:
+    def f(): pass
+    def g(): pass
+    class f: pass
+else:
+    class f(h): pass
+    def h(): pass
+    def f(i): pass
+'''.strip())
+
+        self.assertEqual([f.body[0], f.body[2], f.orelse[0], f.orelse[2]], test(f, 'f'))
+        self.assertEqual([f.body[0], f.body[2]], test(f, 'f', asts=f.a.body))
+        self.assertEqual([f.orelse[0], f.orelse[2]], test(f, 'f', asts=f.a.orelse))
+
+        self.assertEqual([f.body[0], f.orelse[2]], test(f, 'f', asts=[f.a.body[0], f.a.body[1], f.a.orelse[1], f.a.orelse[2]]))
+        self.assertEqual([f.body[2], f.orelse[0]], test(f, 'f', asts=[f.a.body[2], f.a.body[1], f.a.orelse[1], f.a.orelse[0]]))
 
     def test_find_loc_in(self):
         f    = parse('abc += xyz').f
@@ -8150,6 +8170,57 @@ class cls:
         self.assertRaises(IndexError, setitem)
         def delitem(): del v[::2]
         self.assertRaises(IndexError, delitem)
+
+    def test_fstview_named_indexing(self):
+        f = FST('''
+if 1:                     # ln 0
+    def f(a): pass        # ln 1
+    def g(b): pass        # ln 2
+    class f(c): pass      # ln 3
+else:                     # ln 4
+    class f(d):           # ln 5
+        def g(e): pass    # ln 6
+    def h(f): pass        # ln 7
+    try:                  # ln 8
+        def i(g): pass    # ln 9
+    except:               # ln 10
+        def j(h): pass    # ln 11
+    else:                 # ln 12
+        class i(i): pass  # ln 13
+    finally:              # ln 14
+        class j(j): pass  # ln 15
+def h(k): pass            # ln 16
+'''.strip())
+
+        self.assertEqual('<FunctionDef 7,4..7,18>', str(f['h']))
+        self.assertEqual('<FunctionDef 7,4..7,18>', str(f.body['h']))
+
+        self.assertEqual('<FunctionDef 1,4..1,18>', str(f['f']))
+        self.assertEqual('<FunctionDef 1,4..1,18>', str(f.body['f']))
+        self.assertEqual('<FunctionDef 1,4..1,18>', str(f.body[0].body['f']))
+        self.assertEqual('<ClassDef 5,4..6,22>', str(f.body[0].orelse['f']))
+
+        self.assertEqual('<FunctionDef 6,8..6,22>', str(f.body[0].orelse['f.g']))
+
+        self.assertEqual('<FunctionDef 2,4..2,18>', str(f['g']))
+        self.assertEqual('<FunctionDef 2,4..2,18>', str(f.body['g']))
+        self.assertEqual('<FunctionDef 2,4..2,18>', str(f.body[0].body['g']))
+        self.assertRaises(IndexError, lambda: f.body[0].orelse['g'])
+        self.assertEqual('<FunctionDef 7,4..7,18>', str(f.body[0].orelse['h']))
+
+        self.assertEqual('<FunctionDef 9,8..9,22>', str(f['i']))
+        self.assertEqual('<FunctionDef 9,8..9,22>', str(f.body['i']))
+        self.assertEqual('<FunctionDef 9,8..9,22>', str(f.body[0].orelse['i']))
+        self.assertEqual('<FunctionDef 9,8..9,22>', str(f.body[0].orelse[2].body['i']))
+
+        self.assertEqual('<FunctionDef 11,8..11,22>', str(f['j']))
+        self.assertEqual('<FunctionDef 11,8..11,22>', str(f.body['j']))
+        self.assertEqual('<FunctionDef 11,8..11,22>', str(f.body[0].orelse['j']))
+        self.assertEqual('<FunctionDef 11,8..11,22>', str(f.body[0].orelse[2].handlers[0].body['j']))
+
+        self.assertEqual('<ClassDef 13,8..13,24>', str(f.body[0].orelse[2].orelse['i']))
+
+        self.assertEqual('<ClassDef 15,8..15,24>', str(f.body[0].orelse[2].finalbody['j']))
 
     def test_options(self):
         new = dict(

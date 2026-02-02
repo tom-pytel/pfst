@@ -4378,7 +4378,14 @@ class FST:
 
         return root.child_from_path(root.child_path(self), last_valid)
 
-    def find_def(self, path: builtins.str, prev_found: FST | None = None, *, recurse: bool = True) -> FST | None:
+    def find_def(
+        self,
+        path: builtins.str,
+        prev_found: FST | None = None,
+        *,
+        recurse: bool = True,
+        asts: list[AST] | None = None,
+    ) -> FST | None:
         r"""Find function and / or class definition in current scope. Can specify multiple levels of scopes to recurse
         into. This will find the elements in the **SCOPE** of `self` (and recursed scopes for dotted names). So it can
         be a few children down for nested `if`, `while` and others from the last scope.
@@ -4393,6 +4400,8 @@ class FST:
         - `recurse`: Whether to recurse past the first level of children by default. This only applies to the last scope
             in `path` and determines whether only direct children of that scope are checked for the last name or if
             recursion is allowed into block statements which are part of the scope.
+        - `asts`: If this is provided then it is walked as the first scope of the path instead of all of `self`. `self`
+            must still be a parent of these nodes (not necessarily a direct parent).
 
         **Returns:**
         - `FST | None`: Node found if any.
@@ -4448,6 +4457,13 @@ class FST:
         ...     print(prev_found, prev_found.args.src)
         <FunctionDef 1,0..1,36> data: bytes
         <FunctionDef 3,0..3,32> data: str
+
+        >>> asts = [f.a.body[0], f.a.body[-1]]
+        >>> prev_found = None
+        >>> while prev_found := f.find_def('parse', prev_found, asts=asts):
+        ...     print(prev_found, prev_found.args.src)
+        <FunctionDef 1,0..1,36> data: bytes
+        <FunctionDef 6,4..7,19> data
         """
 
         stack = []
@@ -4469,22 +4485,28 @@ class FST:
         while stack:
             which_def, name = p = stack.pop()
 
-            for scope in scope.walk(which_def, self_=False, scope=True, recurse=p is not last or recurse):  # noqa: B020
+            for scope in scope.walk(which_def, self_=False, scope=True, recurse=p is not last or recurse, asts=asts):  # noqa: B020
                 if scope.a.name == name:
                     break
             else:
                 return None
 
+            asts = None
+
         if not prev_found:  # if not iterating then we found the last element
             return scope
 
         # scope is now the parent scope we will be iterating to find other nodes starting at the location of prev_found (even if deleted)
+        # we do this by hand if `prev_found` was provided because we need to start the search at that node
 
         if not prev_found.a:
             raise RuntimeError('cannot remove or replace previous node found when iterating with find_def()')
 
         if scope not in prev_found.parents():  # this can happen if prev_found or parent block statement was cut (regardless of if put somewhere else or not)
             raise RuntimeError('cannot cut previous node found when iterating with find_def()')
+
+        if asts is not None:
+            asts = set(asts)
 
         which_def, name = last
         cur = prev_found
@@ -4495,7 +4517,17 @@ class FST:
                 return None
 
             if (cur_cls := cur.a.__class__) in which_def and cur.a.name == name:
-                return cur
+                if asts is None:
+                    return cur
+
+                else:  # this is the first scope and a of `asts` was passed so we need to make sure we are in it
+                    parent = cur
+
+                    while parent is not scope:
+                        if parent.a in asts:
+                            return cur
+
+                        parent = parent.parent
 
             recurse_self = recurse and cur_cls not in ASTS_LEAF_DEF
 

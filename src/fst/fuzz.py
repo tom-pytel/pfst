@@ -1521,6 +1521,8 @@ class ReconcileSame(Fuzzy):
 # forever
 
 class WalkDel(Fuzzy):
+    """Delete while walking. Intermittently deleting using named indexing to test that as well."""
+
     name = 'walk_del'
     forever = True
     standard = False
@@ -1528,59 +1530,78 @@ class WalkDel(Fuzzy):
     def fuzz_one(self, fst, fnm) -> bool:
         fs = list(fst.walk(True))
 
-        try:
-            for f in fst.walk(True):
-                g = None
+        with FST.options(norm=True):
+            try:
+                for f in fst.walk(True):
+                    g = None
 
-                if not f.a:
-                    raise RuntimeError('walked into deleted node')
-                if getattr(f.a, '_invalid', False):
-                    raise RuntimeError('walked into invalid node')
+                    if not f.a:
+                        raise RuntimeError('walked into deleted node')
+                    if getattr(f.a, '_invalid', False):
+                        raise RuntimeError('walked into invalid node')
 
-                while True:
-                    i = randint(0, len(fs) - 1)
+                    while True:
+                        i = randint(0, len(fs) - 1)
 
-                    if (g := fs[i]).a:
-                        break
+                        if (g := fs[i]).a:
+                            break
 
-                    del fs[i]
+                        del fs[i]
 
-                    if not fs:
-                        break
+                        if not fs:
+                            break
 
-                ast = g.a
+                    ast = g.a
 
-                try:
-                    g.remove(norm=True)
+                    try:
+                        if not (ast.__class__ in ASTS_LEAF_DEF and randint(0, 1) and (scope := g.parent_named_scope())):
+                            g.remove()
 
-                except NotImplementedError:
-                    pass
+                        else:  # just for more testing, delete through name indexing
+                            path = g.name
 
-                except ValueError as exc:
-                    if not (str(exc).startswith('cannot delete')):
-                        raise
+                            while randint(0, 1) and (h := scope.parent_named_scope()):
+                                path = f'{scope.name}.{path}'
+                                scope = h
 
-                except NodeError as exc:
-                    s = str(exc)
+                            field = scope.child_path(g)[0].name
 
-                    if not ((str(exc).startswith('cannot put')
-                             and ('slice because it follows keywords' in s or 'slice because it precedes' in s))
-                    ):
-                        raise
+                            if scope.find_def(path, asts=getattr(scope.a, field)) is g:  # body[path] only gets the first one, there may be multiple duplicate names so we need to make sure the one accessed by the indexing will be the one we want
+                                del getattr(scope, field)[path]
+                            else:
+                                g.remove()
 
-                else:
-                    for a in walk(ast):
-                        a._invalid=True
+                    except NotImplementedError:
+                        pass
 
-        except Exception:
-            if g:
-                g.parent.dump('S')
-                print()
-                print(g.parent.src)
-                print()
-                print(g.pfield)
+                    except ValueError as exc:
+                        if not (str(exc).startswith('cannot delete')):
+                            raise
 
-            raise
+                    except NodeError as exc:
+                        s = str(exc)
+
+                        if not ((str(exc).startswith('cannot put')
+                                and ('slice because it follows keywords' in s or 'slice because it precedes' in s))
+                        ):
+                            raise
+
+                    else:
+                        for a in walk(ast):
+                            a._invalid=True
+
+                    if self.verify:
+                        fst.verify()
+
+            except Exception:
+                if g and self.debug:
+                    g.parent.dump('S')
+                    print()
+                    print(g.parent.src)
+                    print()
+                    print(g.pfield)
+
+                raise
 
 
 class ReputSrc(Fuzzy):
