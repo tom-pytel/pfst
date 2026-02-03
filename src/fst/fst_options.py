@@ -5,9 +5,10 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+import re
 import threading
 from contextlib import contextmanager
-from types import MappingProxyType
+from types import MappingProxyType, NoneType
 from typing import Any, Generator, Mapping
 
 from . import fst
@@ -17,42 +18,164 @@ __all__ = ['check_options', 'filter_options']
 
 class _ThreadOptions(threading.local):
     def __init__(self) -> None:
-        self.__dict__.update(_DEFAULT_OPTIONS)
+        self.__dict__.update(_GLOBAL_OPTIONS_W_DEFAULTS)
 
 
-_DEFAULT_OPTIONS = {
-    'raw':           False,   # True | False | 'auto'
-    'trivia':        True,    # True | False | 'all?' | 'block?' | 'none?' | (True | False | 'all?' | 'block?' | 'none?', True | False | 'all?' | 'block?' | 'none?' | 'line')  - 'all', 'block' and 'none' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
-    'coerce':        True,    # True | False
-    'elif_':         True,    # True | False
-    'pep8space':     True,    # True | False | 1
-    'docstr':        True,    # True | False | 'strict'
-    'pars':          'auto',  # True | False | 'auto'
-    'pars_walrus':   False,   # True | False | None
-    'pars_arglike':  True,    # True | False | None
-    'norm':          False,   # True | False
-    'norm_self':     None,    # True | False | None
-    'norm_get':      None,    # True | False | None
-    'set_norm':      'star',  # False | 'star' | 'call'
+_GLOBAL_OPTIONS_W_DEFAULTS = {
+    'raw':           False,   # bool | 'auto'
+    'trivia':        True,    # bool | 'all?' | 'block?' | 'none?' | int | (True | False | 'all?' | 'block?' | 'none?' | int, True | False | 'all?' | 'block?' | 'none?' | 'line?' | int)  - 'all', 'block' and 'none' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
+    'coerce':        True,    # bool
+    'elif_':         True,    # bool
+    'pep8space':     True,    # bool | 1
+    'docstr':        True,    # bool | 'strict'
+    'pars':          'auto',  # bool | 'auto'
+    'pars_walrus':   False,   # bool | None
+    'pars_arglike':  True,    # bool | None
+    'norm':          False,   # bool        | any possible `?_norm` value like 'star' or 'call'
+    'norm_self':     None,    # bool | None | any possible `?_norm` value like 'star' or 'call'
+    'norm_get':      None,    # bool | None | any possible `?_norm` value like 'star' or 'call'
+    'set_norm':      'star',  # 'star' | 'call'
     'op_side':       'left',  # 'left' | 'right'
-    'args_as':       None,    # 'pos' |'arg' |'kw' |'arg_only' |'kw_only' |'pos_maybe' |'arg_maybe' |'kw_maybe' | None
+    'args_as':       None,    # 'pos' | 'arg' | 'kw' | 'arg_only' | 'kw_only' | 'pos_maybe' | 'arg_maybe' | 'kw_maybe' | None
 }
 
-_ALL_OPTIONS = {*_DEFAULT_OPTIONS, 'to', 'op', 'ins_ln'}  # including dynamic non-global options
+_DYN_OPTIONS = {'op', 'to', 'ins_ln'}
+_ALL_OPTIONS = {*_GLOBAL_OPTIONS_W_DEFAULTS, *_DYN_OPTIONS}  # including dynamic non-global options
+_ALL_OPT_OBJ_NORM_VALUES = frozenset(['star', 'call'])
 
 _OPTIONS = _ThreadOptions()
 
 _SENTINEL = object()
 
+_re_trivia_leading  = re.compile(r'(?:all|block|none|)      (?:[+-] (?:\d+)? )? $', re.VERBOSE)
+_re_trivia_trailing = re.compile(r'(?:all|block|none|line|) (?:[+-] (?:\d+)? )? $', re.VERBOSE)
 
-def check_options(options: Mapping[str, Any]) -> None:
-    """Make sure all options are actual options. Does not validate their actual values, just that there are no unknown
-    options."""
 
-    for o in options:
-        if o not in _ALL_OPTIONS:
-            raise ValueError(f'invalid option {o!r}')
+# ......................................................................................................................
 
+def _check_opt_bool(option: str, value: object) -> tuple | None:
+    return 'a bool' if not isinstance(value, bool) else None
+
+def _check_opt_bool_or_None(option: str, value: object) -> tuple | None:
+    return 'a bool or None' if not isinstance(value, (bool, NoneType)) else None
+
+def _check_opt_bool_or_auto(option: str, value: object) -> tuple | None:
+    return "a bool or 'auto'" if value != 'auto' and not isinstance(value, bool) else None
+
+def _check_opt_norm(option: str, value: object) -> tuple | None:
+    if isinstance(value, bool) or value in _ALL_OPT_OBJ_NORM_VALUES:
+        return None
+
+    return "a bool or any '?_norm' option value"
+
+def _check_opt_norm_specific(option: str, value: object) -> tuple | None:
+    if isinstance(value, (bool, NoneType)) or value in _ALL_OPT_OBJ_NORM_VALUES:
+        return None
+
+    return "a bool, None or any '?_norm' option value"
+
+def _check_opt_trivia(option: str, value: object) -> tuple | None:
+    if (isinstance(value, int)  # or bool
+        or (isinstance(value, str) and _re_trivia_leading.match(value))
+        or (isinstance(value, tuple)
+            and (
+                not value
+                or ((l := len(value)) == 1
+                    and (
+                        isinstance(t0 := value[0], int)
+                        or (isinstance(t0, str) and _re_trivia_trailing.match(t0))
+                    )
+                )
+                or (l == 2
+                    and (
+                        isinstance(t0 := value[0], int)
+                        or (isinstance(t0, str) and _re_trivia_leading.match(t0))
+                    )
+                    and (
+                        isinstance(t1 := value[1], int)
+                        or (isinstance(t1, str) and _re_trivia_trailing.match(t1))
+                    )
+                )
+            )
+        )
+    ):
+        return None
+
+    return "one of or 0/1/2-tuple of (bool, 'all', 'block', 'none', 'line', int)"
+
+def _check_opt_pep8space(option: str, value: object) -> tuple | None:
+    return 'a bool or 1' if value != True and value is not False else None  # noqa: E712
+
+def _check_opt_docstr(option: str, value: object) -> tuple | None:
+    return "a bool or 'strict'" if value != 'strict' and not isinstance(value, bool) else None
+
+def _check_opt_set_norm(option: str, value: object) -> tuple | None:
+    return "'star' or 'call'" if value not in ('star', 'call') else None
+
+def _check_opt_op_side(option: str, value: object) -> tuple | None:
+    return "'left' or 'right'" if value not in ('left', 'right') else None
+
+def _check_opt_args_as(option: str, value: object) -> tuple | None:
+    return (
+        "one of ('pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe') or None"
+        if value not in ('pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe', None) else
+        None
+    )
+
+def _check_opt_op(option: str, value: object) -> tuple | None:
+    return None  # TODO: finalize this
+
+def _check_opt_to(option: str, value: object) -> tuple | None:
+    return 'an FST' if value.__class__ is not fst.FST else None
+
+def _check_opt_ins_ln(option: str, value: object) -> tuple | None:
+    return 'an int' if not isinstance(value, int) else None
+
+_ALL_OPTION_CHECK_FUNCS = {
+    'raw':          _check_opt_bool_or_auto,
+    'trivia':       _check_opt_trivia,
+    'coerce':       _check_opt_bool,
+    'elif_':        _check_opt_bool,
+    'pep8space':    _check_opt_pep8space,
+    'docstr':       _check_opt_docstr,
+    'pars':         _check_opt_bool_or_auto,
+    'pars_walrus':  _check_opt_bool_or_None,
+    'pars_arglike': _check_opt_bool_or_None,
+    'norm':         _check_opt_norm,
+    'norm_self':    _check_opt_norm_specific,
+    'norm_get':     _check_opt_norm_specific,
+    'set_norm':     _check_opt_set_norm,
+    'op_side':      _check_opt_op_side,
+    'args_as':      _check_opt_args_as,
+    'op':           _check_opt_op,
+    'to':           _check_opt_to,
+    'ins_ln':       _check_opt_ins_ln,
+}
+
+_GLOBAL_OPTION_CHECK_FUNCS = {o: v for o, v in _ALL_OPTION_CHECK_FUNCS.items() if o in _GLOBAL_OPTIONS_W_DEFAULTS}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+def check_options(options: Mapping[str, Any], all: bool = True) -> None:
+    """Make sure all options are actual options and do a quick check on their values. Not a full validation as does not
+    check if the options are even used for whatever they are being called for or are fully correct for that.
+
+    **Parameters:**
+    - `options`: The options to check.
+    - `all`: Which options to allow and check.
+        - `True`: All options, including call-only.
+        - `False: Only global options.
+    """
+
+    option_check_func =_ALL_OPTION_CHECK_FUNCS if all else _GLOBAL_OPTION_CHECK_FUNCS
+
+    for option, value in options.items():
+        if not (check := option_check_func.get(option)):
+            raise ValueError(f'invalid option {option!r}')
+
+        if (res := check(option, value)) is not None:
+            raise ValueError(f"invalid {option!r} option value {value!r}, must be {res}")
 
 def filter_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Copy just actual options from `options` and return."""
@@ -276,6 +399,8 @@ def set_options(**options) -> dict[str, Any]:
     {'pars': 'auto', 'raw': False, 'docstr': True}
     """
 
+    check_options(options, False)
+
     _options = _OPTIONS.__dict__
 
     try:
@@ -309,6 +434,8 @@ def options(**options) -> Generator[Mapping[str, Any], None, None]:
         - `False`: Same as `('none', 'line')`.
         - `'all[+/-[#]]'`: Same as `('all[+/-[#]]', 'line')`.
         - `'block[+/-[#]]'`: Same as `('block[+/-[#]]', 'line')`.
+        - `'none[+/-[#]]'`: Same as `('none[+/-[#]]', 'line')`.
+        - `'+/-[#]'`: Same as `('block[+/-[#]]', 'line')`.
         - `int`: Same as `(int, 'line')`.
         - `()`: Same as `('none', 'none')`.
         - `(trailing,)`: Same as `(True, trailing)`.

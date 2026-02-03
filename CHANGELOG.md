@@ -9,7 +9,8 @@
   - added usage of this in indexing (single-element only, not slice): `method = module['class.method']`, `del someclass['method']`, etc...
 - added `top` and `stop_at` parameters to `step_fwd/back()`
 - `walk()` can take explicit list of nodes to walk instead of just "all children of self"
-- trivia shorthand `()` for `(False, False)`
+- finally validating options on call
+- trivia option shorthand `()` for `(False, False)`
 
 ### Changed
 

@@ -7344,7 +7344,7 @@ finally:
 
         # recover from error
 
-        self.assertRaises(KeyError, (f := FST('a = b')).copy, False, trivia='bad')
+        self.assertRaises(ValueError, (f := FST('a = b')).copy, False, trivia='bad')
         self.assertEqual('a = b', f.src)
         f.verify()
 
@@ -8224,18 +8224,19 @@ def h(k): pass            # ln 16
 
     def test_options(self):
         new = dict(
-            docstr    = 'test_docstr',
-            trivia    = 'test_trivia',
-            pep8space = 'test_pep8space',
-            pars      = 'test_pars',
-            elif_     = 'test_elif_',
-            raw       = 'test_raw',
+            docstr    = 'strict',
+            trivia    = 'none-5',
+            pep8space = False,
+            pars      = False,
+            elif_     = False,
+            raw       = 'auto',
         )
 
         old    = FST.set_options(**new)
         newset = FST.set_options(**old)
         oldset = FST.set_options(**old)
 
+        self.assertNotEqual(old, new)
         self.assertEqual(newset, new)
         self.assertEqual(oldset, old)
 
