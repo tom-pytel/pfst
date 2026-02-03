@@ -2213,10 +2213,10 @@ if 1:
         # invalid
 
         self.assertRaises(SyntaxError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op='?')
-        self.assertRaises(NodeError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=Mult)
+        self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=Mult)
         self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=list)
         self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=Mult())
-        self.assertRaises(NodeError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=FST('*', Mult))
+        self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=FST('*', Mult))
         self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=FST('a + b').left)
 
         # insert

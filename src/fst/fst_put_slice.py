@@ -652,37 +652,37 @@ def _code_to_slice_Compare__all_maybe_dangling(
         op_lines = op.split('\n')
         op_ast = parse_cmpop(op)
 
-    elif op.__class__ in ASTS_LEAF_CMPOP:
-        op_lines = [OPCLS2STR[op_cls := op.__class__]]
+    elif (op_cls := op.__class__) in ASTS_LEAF_CMPOP:
+        op_lines = [OPCLS2STR[op_cls]]
         op_ast = op_cls()
 
-    elif isinstance(op, fst.FST):
+    elif issubclass(op_cls, fst.FST):
         if not op.is_root:
             raise ValueError("expecting root node for 'op' option")
 
-        op_lines = op._lines
-        op_ast = op.a  # this is fine like this and no unmake because it is just reset in FST() below
+        if (op_ast_cls := op.a.__class__) not in ASTS_LEAF_CMPOP:
+            raise NodeError(f"expecting cmpop for 'op' option, got {op_ast_cls.__name__}")
 
-        if op_ast.__class__ not in ASTS_LEAF_CMPOP:
-            raise NodeError(f"expecting cmpop for 'op' option, got {op_ast.__class__.__name__}")
+        op_lines = op._lines[:]  # because may be global option
+        op_ast = op_ast_cls()
 
-    elif isinstance(op, list):
-        op_lines = op
+    elif issubclass(op_cls, list):
+        op_lines = op[:]  # because may be global option
         op_ast = parse_cmpop('\n'.join(op))
 
-    elif isinstance(op, type):
+    elif issubclass(op_cls, type):
         if op in ASTS_LEAF_CMPOP:
             op_lines = [OPCLS2STR[op]]
             op_ast = op()
 
         else:
             raise (NodeError if issubclass(op, AST) else ValueError)(
-                    "expecting cmpop source, AST, FST or AST type for 'op' option, "
-                    f"got {op.__qualname__}")
+                    "expecting cmpop source, AST, FST or AST type for 'op' option"
+                    f", got {op.__qualname__}")
 
     else:
-        raise ValueError("expecting cmpop source, AST, FST or AST type for 'op' option, "
-                        f"got {op.__class__.__qualname__}")
+        raise ValueError("expecting cmpop source, AST, FST or AST type for 'op' option"
+                        f", got {op_cls.__qualname__}")
 
     ast_ = fst_.a
     ops = ast_.ops

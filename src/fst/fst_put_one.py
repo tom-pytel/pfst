@@ -2821,6 +2821,8 @@ def _put_one_raw(
     put_lines = _code_as_lines(code)
     loc = None
 
+    assert isinstance(to, (NoneType, fst.FST))
+
     if field.startswith('_'):  # special case field
         if field == '_body':
             field = 'body'

@@ -13,6 +13,8 @@ from typing import Any, Generator, Mapping
 
 from . import fst
 
+from .asttypes import ASTS_LEAF_CMPOP
+
 __all__ = ['check_options', 'filter_options']
 
 
@@ -117,13 +119,19 @@ def _check_opt_op_side(option: str, value: object) -> tuple | None:
 
 def _check_opt_args_as(option: str, value: object) -> tuple | None:
     return (
-        "one of ('pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe') or None"
+        "'pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe' or None"
         if value not in ('pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe', None) else
         None
     )
 
 def _check_opt_op(option: str, value: object) -> tuple | None:
-    return None  # TODO: finalize this
+    if (getattr(value, 'a', value).__class__ in ASTS_LEAF_CMPOP  # FST() or AST() cmpop
+        or (value.__class__ is type and value in ASTS_LEAF_CMPOP)  # cmpop AST type
+        or isinstance(value, (str, list))  # source
+    ):
+        return None
+
+    return "cmpop source, AST, FST or AST type"
 
 def _check_opt_to(option: str, value: object) -> tuple | None:
     return 'an FST' if not isinstance(value, fst.FST) else None

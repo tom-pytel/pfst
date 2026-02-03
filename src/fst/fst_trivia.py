@@ -30,8 +30,7 @@ __all__ = [
  ]
 
 
-_Trivia = tuple[bool | str | int, bool | str | int]  # actual value trivia that is used, regardless of what is passed or set as global option
-Trivia  = bool | str | int | tuple[bool | str | int | None, bool | str | int | None] | tuple[()]  # human interface trivia parameter as passed to functions with None indicating to use global value
+Trivia = bool | str | int | tuple[bool | str | int, bool | str | int] | tuple[bool | str | int] | tuple[()]  # human interface trivia parameter as passed to functions with None indicating to use global value
 
 _re_stmt_line_comment  = re.compile(r'(\s*;)?(\s*\#(.*)$)?')  # a line comment with optional leading whitespace and maybe a single inert semicolon before, or indicate if there is a trailing semicolon
 
@@ -325,7 +324,9 @@ def trailing_trivia(
     return (text_pos, None if space_pos == text_pos else space_pos, True)
 
 
-def get_trivia_params(trivia: Trivia, neg: bool = False) -> _Trivia:
+def get_trivia_params(
+    trivia: Trivia, neg: bool = False
+) -> tuple[str | int, bool | int, bool, str | int, bool | int, bool]:
     """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
 
     This conversion is fairly loose and will accept shorthand '+/-#' for 'block+/-#' / 'line+/-#'.
