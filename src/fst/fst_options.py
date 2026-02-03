@@ -158,8 +158,10 @@ _GLOBAL_OPTION_CHECK_FUNCS = {o: v for o, v in _ALL_OPTION_CHECK_FUNCS.items() i
 # ----------------------------------------------------------------------------------------------------------------------
 
 def check_options(options: Mapping[str, Any], all: bool = True) -> None:
-    """Make sure all options are actual options and do a quick check on their values. Not a full validation as does not
-    check if the options are even used for whatever they are being called for or are fully correct for that.
+    """Make sure all options are actual options and do a quick check on their values. Since some options depend on
+    context (`norm`) or require more expensive validation (`op`), this function does not do that. It is not a full
+    validation but rather screens out values which can never be correct. Final validation is done wherever the options
+    are actually used.
 
     **Parameters:**
     - `options`: The options to check.
@@ -517,13 +519,9 @@ def options(**options) -> Generator[Mapping[str, Any], None, None]:
         out. If this is `None` then `norm` is used.
     - `norm_get`: Override for `norm` which only applies to the return value from any get operation. If this is `None`
         then `norm` is used.
-    - `set_norm`: The alternate representation for an empty `Set` normalization by `norm`. This can also be set to
-        `False` to disable normalization for all operations on a `Set` (unless one of the `norm` options is set to
-        one of these string modes).
+    - `set_norm`: The alternate representation for an empty `Set` normalization by `norm`.
         - `'star'`: Starred sequence `{*()}` returned or used for empty `self`. **DEFAULT**
         - `'call'`: `set()` call returned and used for empty `self`.
-        - `False`: No `Set` normalization regardless of `norm` or `norm_*` options, just leave or return an invalid
-            `Set` object.
     - `op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side
         operator is to be deleted or inserted before or after. This can take the values of `'left'` or `'right'` and
         specifies which side operator to delete for delete operations. For insert operations this specifies whether

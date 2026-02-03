@@ -2338,6 +2338,9 @@ if 1:
         self.assertEqual('a is not x < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op=['is not']).src)
         f.verify()
 
+        self.assertEqual('(a\nis\nnot\nx < b)', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op=['', 'is', 'not', '']).src)
+        f.verify()
+
     def test_get_slice_special(self):
         f = FST('''(
             TI(string="case"),
