@@ -16,6 +16,7 @@ from . import parsex
 from . import code
 from . import fst_traverse
 from . import fst_options
+from . import match
 from . import fst_type_predicates
 
 from .asttypes import (
@@ -1738,7 +1739,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Edit
 
-    def __getitem__(self, idx: int | builtins.slice | str) -> fstview | FST | builtins.str | None:
+    def __getitem__(self, idx: int | builtins.slice | builtins.str) -> fstview | FST | builtins.str | None:
         r"""Get a single item or a slice view from the default field of `self`. This is just an access, not a cut or a
         copy, so if you want a copy you must explicitly do `.copy()` on the returned value.
 
@@ -1786,7 +1787,7 @@ class FST:
 
         return getattr(self, field)[idx]
 
-    def __setitem__(self, idx: int | builtins.slice | str, code: Code | None) -> None:
+    def __setitem__(self, idx: int | builtins.slice | builtins.str, code: Code | None) -> None:
         """Set a single item or a slice view in the default field of `self`.
 
         Same as `self.default_field[idx] = code`.
@@ -1837,7 +1838,7 @@ class FST:
 
         getattr(self, field)[idx] = code
 
-    def __delitem__(self, idx: int | builtins.slice | str) -> None:
+    def __delitem__(self, idx: int | builtins.slice | builtins.str) -> None:
         """Delete a single item or a slice from default field of `self`.
 
         Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
@@ -4378,6 +4379,11 @@ class FST:
         root = self.root
 
         return root.child_from_path(root.child_path(self), last_valid)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Search and match
+
+    match = match.match
 
     def find_def(
         self,

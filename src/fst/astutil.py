@@ -126,6 +126,7 @@ from .asttypes import (
     pattern,
     stmt,
     type_ignore,
+    type_param,
     unaryop,
     withitem,
     TryStar,
@@ -193,6 +194,7 @@ re_identifier_alias_only   = re.compile(rf'^(?:\*|{pat_identifier}(?:\.{pat_iden
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
 #   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
 
+# WARNING! DO NOT CHANGE THE ORDER OF FIELDS! they are in relatively syntactish order and expect to be so
 FIELDS = dict([  # only leaf node types which get instantiated and checked with `is` and `in`, not base stuff like `cmpop` or `excepthandler`
     (Module,                   (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,              (('body', 'stmt*'),)),
@@ -352,6 +354,7 @@ AST_BASES = (  # non-leaf base types
     excepthandler,
     pattern,
     type_ignore,
+    type_param,
     _slice,  # our own base SPECIAL SLICE
 )
 

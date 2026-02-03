@@ -70,6 +70,6 @@ if __name__ == "__main__":
         template_directory=None,
     )
 
-    fst.__all__ = ['docs', 'fst', 'view', 'common', 'parsex']#, 'astutil']
+    fst.__all__ = ['docs', 'fst', 'view', 'common', 'parsex', 'match']#, 'astutil']
 
     pdoc('fst', output_directory=Path('docs'))
