@@ -1970,7 +1970,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-1')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-1',)}, ('exec', r'''
 if 1:
     i ; j
 
@@ -1997,7 +1997,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-2')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-2',)}, ('exec', r'''
 if 1:
     i ; j
 
@@ -2023,7 +2023,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-3')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-3',)}, ('exec', r'''
 if 1:
     i ; j
 
@@ -2049,7 +2049,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-',)}, ('exec', r'''
 if 1:
     i ; j
 
@@ -2075,7 +2075,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 0, 1, None, {'trivia': ('line-',)}, ('exec', r'''
 if 1:
     i ; j
 
@@ -2129,7 +2129,7 @@ Module - ROOT 0,0..1,9
         .value Name 'j' Load - 1,8..1,9
 '''),
 
-('', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('', 0, 1, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i ; j
 
@@ -2152,7 +2152,7 @@ Module - ROOT 0,0..1,9
         .value Name 'j' Load - 1,8..1,9
 '''),
 
-('body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 0, 1, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i
     \
@@ -2177,7 +2177,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i; j
     \
@@ -2205,7 +2205,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 0, 1, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i
 
@@ -2231,7 +2231,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i; j
 
@@ -2260,7 +2260,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-('body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 0, 1, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i
     \
@@ -2287,7 +2287,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-('body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+('body[0]', 1, 2, None, {'trivia': ('line-',)}, ('exec', r'''
 def f():
     i; j
     \
@@ -5097,6 +5097,44 @@ Tuple - ROOT 0,0..0,8
 '''), r'''
 [
     1,
+    # post
+
+    3,
+]
+''', r'''
+Module - ROOT 0,0..5,1
+  .body[1]
+   0] Expr - 0,0..5,1
+     .value List - 0,0..5,1
+       .elts[2]
+        0] Constant 1 - 1,4..1,5
+        1] Constant 3 - 4,4..4,5
+       .ctx Load
+''', r'''
+[
+    # pre
+    2, # line
+]
+''', r'''
+List - ROOT 0,0..3,1
+  .elts[1]
+   0] Constant 2 - 2,4..2,5
+  .ctx Load
+'''),
+
+('body[0].value', 1, 2, None, {'trivia': ('none-1', 'none-1')}, ('exec', r'''
+[
+    1,
+
+    # pre
+    2, # line
+    # post
+
+    3,
+]
+'''), r'''
+[
+    1,
 
     # pre
     # line
@@ -5716,7 +5754,7 @@ MatchAs - ROOT 2,0..2,1
   .name 'b'
 '''),
 
-('body[0].cases[0].pattern', 1, 3, None, {'trivia': (None, 'block')}, ('exec', r'''
+('body[0].cases[0].pattern', 1, 3, None, {'trivia': ('block',)}, ('exec', r'''
 match a:
  case (a |
 # pre
@@ -6167,7 +6205,7 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
-('', 1, 2, None, {'trivia': ('+1', False)}, (None, r'''
+('', 1, 2, None, {'trivia': ('none+1', False)}, (None, r'''
 [a,
 # 1
 b]
@@ -6185,6 +6223,29 @@ r'''[b]''', r'''
 List - ROOT 0,0..0,3
   .elts[1]
    0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'trivia': ('+1', False)}, (None, r'''
+[a,
+# 1
+b]
+'''), r'''
+[a
+]
+''', r'''
+List - ROOT 0,0..1,1
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+''', r'''
+[
+# 1
+b]
+''', r'''
+List - ROOT 0,0..2,2
+  .elts[1]
+   0] Name 'b' Load - 2,0..2,1
   .ctx Load
 '''),
 
@@ -6927,7 +6988,7 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
-('', 0, 1, None, {'trivia': (False, '+1')}, (None, r'''
+('', 0, 1, None, {'trivia': (False, 'none+1')}, (None, r'''
 [a, # 1
 b]
 '''), r'''
@@ -6941,6 +7002,27 @@ List - ROOT 0,0..1,2
 ''',
 r'''[a]''', r'''
 List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, '+1')}, (None, r'''
+[a, # 1
+b]
+'''), r'''
+[
+b]
+''', r'''
+List - ROOT 0,0..1,2
+  .elts[1]
+   0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+''', r'''
+[a, # 1
+]
+''', r'''
+List - ROOT 0,0..1,1
   .elts[1]
    0] Name 'a' Load - 0,1..0,2
   .ctx Load
@@ -7949,7 +8031,7 @@ Module - ROOT 0,0..0,1
      .value Name 'b' Load - 0,0..0,1
 '''),
 
-('', 1, 2, None, {'trivia': ('+1', False)}, (None, r'''
+('', 1, 2, None, {'trivia': ('none+1', False)}, (None, r'''
 a
 # 1
 b
@@ -7967,6 +8049,26 @@ Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 2, None, {'trivia': ('+1', False)}, (None, r'''
+a
+# 1
+b
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+''', r'''
+# 1
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[1]
+   0] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
 '''),
 
 ('', 1, 2, None, {'trivia': ('+1', False)}, (None, r'''
@@ -8641,7 +8743,7 @@ Module - ROOT 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 '''),
 
-('', 0, 1, None, {'trivia': (False, '+1')}, (None, r'''
+('', 0, 1, None, {'trivia': (False, 'none+1')}, (None, r'''
 a # 1
 b
 '''), r'''
@@ -8655,6 +8757,23 @@ Module - ROOT 0,0..1,1
 ''',
 r'''a''', r'''
 Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 1, None, {'trivia': (False, '+1')}, (None, r'''
+a # 1
+b
+'''),
+r'''b''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'b' Load - 0,0..0,1
+''',
+r'''a # 1''', r'''
+Module - ROOT 0,0..0,5
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -21351,7 +21470,7 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'c' Load - 0,1..0,2
 '''),
 
-('', 0, 2, 'decorator_list', {'trivia': (None, 'all+')}, (None, r'''
+('', 0, 2, 'decorator_list', {'trivia': ('all+',)}, (None, r'''
 @a
 
 # pre

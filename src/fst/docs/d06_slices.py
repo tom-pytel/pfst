@@ -864,8 +864,8 @@ This is similar to leading trivia but has an extra option `'line'` which specifi
 line as the element or last element of the slice, not any other comments of a following block.
 
 Trailing trivia can be specified by passing a full tuple for leading and trailing as the `trivia` option of the form
-`trivia=(leading, trailing)`. You can pass `None` for the leading element in order to use the currenly set default which
-is normally `'block'` for leading trivia.
+`trivia=(leading, trailing)`. If you pass a singleton tuple of the form `(trailing,)` then it will be treated as a
+`(True, trailing)` full trivia with `True` for the leading trivia (which means `'block'` trivia).
 
 >>> pp = lambda f: print('\n'.join(repr(l) for l in f.lines))  # helper
 
@@ -888,19 +888,19 @@ The default trailing trivia is `'line'`.
 
 You can turn that off.
 
->>> pp(parent.get(0, trivia=(None, False)))
+>>> pp(parent.get(0, trivia=(False,)))
 'target_stmt'
 
 Trailing block comment.
 
->>> pp(parent.get(0, trivia=(None, 'block')))
+>>> pp(parent.get(0, trivia=('block',)))
 'target_stmt  # line-comment'
 '# post-comment 1a'
 '# post-comment 1b'
 
 With space.
 
->>> pp(parent.get(0, trivia=(None, 'block+1')))
+>>> pp(parent.get(0, trivia=('block+1',)))
 'target_stmt  # line-comment'
 '# post-comment 1a'
 '# post-comment 1b'
@@ -908,7 +908,7 @@ With space.
 
 All.
 
->>> pp(parent.get(0, trivia=(None, 'all+')))
+>>> pp(parent.get(0, trivia=('all+',)))
 'target_stmt  # line-comment'
 '# post-comment 1a'
 '# post-comment 1b'

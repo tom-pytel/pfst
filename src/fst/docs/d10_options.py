@@ -130,10 +130,8 @@ can handle most stuff anyway.
 
 ## `trivia` option
 
-This option specifies how comments and whitespace are handled on copies, deletions and replacements. There is a small
-difference on what can be set globally and what can be passed to a function in that a function can take `None` values
-for the leading or trailing trivia specifier to indicate that global default should be used for that particular trivia.
-For more information on trivia see `fst.docs.d06_slices`.
+This option specifies how comments and whitespace are handled on copies, deletions and replacements. For more
+information on trivia see `fst.docs.d06_slices` and `fst.fst.FST.options()`.
 
 >>> f = FST('''
 ... statement1
@@ -155,7 +153,7 @@ For more information on trivia see `fst.docs.d06_slices`.
 '# block comment'
 'statement2'
 
->>> plines(f.get(1, trivia=(None, 'all')).lines)
+>>> plines(f.get(1, trivia=('all',)).lines)
 '# block comment'
 'statement2  # line comment'
 '# trailing block comment'

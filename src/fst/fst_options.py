@@ -8,7 +8,7 @@ from __future__ import annotations
 import threading
 from contextlib import contextmanager
 from types import MappingProxyType
-from typing import Any, Iterator, Mapping
+from typing import Any, Generator, Mapping
 
 from . import fst
 
@@ -290,7 +290,7 @@ def set_options(**options) -> dict[str, Any]:
 
 @staticmethod
 @contextmanager
-def options(**options) -> Iterator[dict[str, Any]]:
+def options(**options) -> Generator[Mapping[str, Any], None, None]:
     """Context manager to temporarily set specified global options defaults for a group of operations.
 
     **WARNING!** Only the options specified in the call to this function will be returned to their original values
@@ -303,27 +303,30 @@ def options(**options) -> Iterator[dict[str, Any]]:
         - `True`: Only do raw source operations.
         - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
     - `trivia`: What comments and empty lines to copy / delete / overwrite when doing operations on elements which may
-        have leading or trailing comments and / or empty lines. These are the values as interpreted **WHEN SET
-        GLOBALLY**. If passed as a parameter to a function then if a non-tuple is passed then that becomes the leading
-        trivia parameter. If a tuple is passed then both the leading and trailing from the tuple are used, unless they
-        are `None` in which case the global value for that particular parameter is used.
-        - `False`: Same as `(False, 'line')`.
+        have leading or trailing comments and / or empty lines. The full trivia value that is used internally has a
+        leading and a trailing component, but shorthand allows passing a single element to specify both.
         - `True`: Same as `('block', 'line')`. **DEFAULT**
-        - `'all'`: Same as `('all', 'line')`.
-        - `'block'`: Same as `('block', 'line')`.
+        - `False`: Same as `('none', 'line')`.
+        - `'all[+/-[#]]'`: Same as `('all[+/-[#]]', 'line')`.
+        - `'block[+/-[#]]'`: Same as `('block[+/-[#]]', 'line')`.
+        - `int`: Same as `(int, 'line')`.
+        - `()`: Same as `('none', 'none')`.
+        - `(trailing,)`: Same as `(True, trailing)`.
         - `(leading, trailing)`: Tuple specifying individual behavior for leading and trailing trivia. The text
             options can also have a suffix of the form `'+/-[#]'`, meaning plus or minus an optional integer which
             indicates to include this number of leading / trailing empty lines in the trivia. The values for each
             element of the tuple can be:
-            - `False`: Don't copy / delete / overwrite any trivia.
+            - `False`: Means `'none'` for both leading and trailing trivia.
             - `True`: Means `'block'` for leading trivia, `'line'` for trailing.
             - `'all[+/-[#]]'`: Copy / delete / overwrite all leading or trailing comments regardless of if they are
                 contiguous or not.
             - `'block[+/-[#]]'`: Copy / delete / overwrite a single contiguous leading or trailing block of comments
                 where an empty line ends the block.
-            - `'line'`: Only valid for trailing trivia, means just the comment on the last line of the element. Except
+            - `'none[+/-[#]]'`: Don't copy / delete / overwrite any trivia.
+            - `'line[+/-[#]]'`: Only valid for trailing trivia, means just the comment on the last line of the element. Except
                 for block statements where the last line is a child node where that comment belongs to the child
                 regardless of this parameter and so will be copied / deleted / overwritten along with the block.
+            - `'+/-[#]'`: Means `'block[+/-[#]]'` for leading trivia and `'line[+/-[#]]'` for trailing.
             - `int`: A specific line number (starting at 0) indicating the first or last line that can be copied /
                 deleted / overwritten. If not interrupted by other code, will always return from / to this line
                 inclusive. For trailing trivia, if this number is the last line of the element (where the line comment

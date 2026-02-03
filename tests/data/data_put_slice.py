@@ -13250,7 +13250,7 @@ Module - ROOT 0,0..0,4
         0] Name 'a' Load - 0,2..0,3
 '''),
 
-('body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
+('body[0].value', 1, 1, None, {'trivia': (False,)}, ('exec', r'''
 [a# comment
 ]
 '''), (None,
@@ -13268,7 +13268,7 @@ Module - ROOT 0,0..1,1
        .ctx Load
 '''),
 
-('body[0].value', 1, 1, None, {'one': None, 'trivia': (None, False)}, ('exec', r'''
+('body[0].value', 1, 1, None, {'one': None, 'trivia': (False,)}, ('exec', r'''
 [a# comment
 ]
 '''), (None,
@@ -13286,7 +13286,7 @@ Module - ROOT 0,0..1,1
        .ctx Load
 '''),
 
-('body[0].value', 1, 1, None, {'one': None, 'trivia': (None, False)}, ('exec', r'''
+('body[0].value', 1, 1, None, {'one': None, 'trivia': (False,)}, ('exec', r'''
 [a,  # test
 ]
 '''), (None,
@@ -13304,7 +13304,7 @@ Module - ROOT 0,0..1,1
        .ctx Load
 '''),
 
-('body[0].value', 1, 1, None, {'one': None, 'trivia': (None, False)}, ('exec', r'''
+('body[0].value', 1, 1, None, {'one': None, 'trivia': (False,)}, ('exec', r'''
 [a,  # test
 ]
 '''), (None,
@@ -33900,7 +33900,7 @@ ClassDef - ROOT 4,0..4,15
    1] Name 'y' Load - 1,1..1,2
 '''),
 
-('', 0, 1, 'decorator_list', {'trivia': (None, '+')}, (None,
+('', 0, 1, 'decorator_list', {'trivia': ('+',)}, (None,
 '@a\n  \n# pre\nclass cls: pass'), ('_decorator_list', r'''
 @x
 @y
@@ -33919,7 +33919,7 @@ ClassDef - ROOT 3,0..3,15
    1] Name 'y' Load - 1,1..1,2
 '''),
 
-('', 0, 1, 'decorator_list', {'trivia': (None, 'all+')}, (None,
+('', 0, 1, 'decorator_list', {'trivia': ('all+',)}, (None,
 '@a\n  \n# pre\nclass cls: pass'), ('_decorator_list', r'''
 @x
 @y
@@ -34072,7 +34072,7 @@ FunctionDef - ROOT 6,0..6,13
    3] Name 'y' Load - 5,1..5,2
 '''),
 
-('', 0, 2, 'decorator_list', {'trivia': (None, 'all+')}, (None, r'''
+('', 0, 2, 'decorator_list', {'trivia': ('all+',)}, (None, r'''
 @a
 
 # pre

@@ -6,7 +6,7 @@
 
 delete
 
->>> def test_del_gens(fst_, start, stop, trivia=None):
+>>> def test_del_gens(fst_, start, stop, trivia=True):
 ...     generators = fst_.a.generators
 ...
 ...     _, _, bound_ln, bound_col = fst_.elt.pars()
@@ -140,7 +140,7 @@ replace
 ...                      end_lineno=len(ls), end_col_offset=len(ls[-1])),
 ...                ls, None, lcopy=False)
 
->>> def test_rep_gens(fst_, start, stop, new, trivia=None):
+>>> def test_rep_gens(fst_, start, stop, new, trivia=True):
 ...     body = fst_.a.generators
 ...     new_body = new.a.elts
 ...
@@ -269,7 +269,7 @@ trailing newlines
 
 replace
 
->>> def test_ins_gens(fst_, idx, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+>>> def test_ins_gens(fst_, idx, new, trivia=True, off=1, field='elts', sep=',', self_tail_sep=None):
 ...     body = fst_.a.generators
 ...     new_body = new.a.elts
 ...

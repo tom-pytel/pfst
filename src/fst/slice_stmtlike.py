@@ -1421,7 +1421,8 @@ def get_slice_stmtlike(
     one: bool = False,
 ) -> fst.FST:
     old_last_line = self.root._lines[-1]
-    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), True)
+    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = (
+        get_trivia_params(fst.FST.get_option('trivia', options), True))
 
     options = dict(options,
         precomms=(ld_comms
@@ -1453,7 +1454,8 @@ def put_slice_stmtlike(
     options: Mapping[str, Any],
 ) -> None:
     old_last_line = self.root._lines[-1]
-    ld_comms, ld_space, _, tr_comms, tr_space, _ = get_trivia_params(options.get('trivia'), True)
+    ld_comms, ld_space, _, tr_comms, tr_space, _ = (
+        get_trivia_params(fst.FST.get_option('trivia', options), True))
 
     options = dict(options,
         precomms=(ld_comms

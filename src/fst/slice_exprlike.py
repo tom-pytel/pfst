@@ -580,7 +580,7 @@ def get_slice_sep(
 
     copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice(lines, is_first, is_last, loc_first, loc_last,
                                                              bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                                             options.get('trivia'), sep, cut)
+                                                             fst.FST.get_option('trivia', options), sep, cut)
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
     del_ln, _, del_end_ln, del_end_col = del_loc
@@ -734,7 +734,6 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
         return elts_indent_cached
 
-    trivia = options.get('trivia')  # finalized with global option in lower level functions
     ins_ln = fst.FST.get_option('ins_ln', options)
     root = self.root
     lines = root._lines
@@ -801,7 +800,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
     copy_loc, del_loc, del_indent, _ = _locs_slice(lines, is_first, is_last, loc_first, loc_last,
                                                    bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                                   trivia, sep, True)  # is_del)
+                                                   fst.FST.get_option('trivia', options), sep, True)  # is_del)
 
     put_ln, put_col, put_end_ln, put_end_col = del_loc
 
