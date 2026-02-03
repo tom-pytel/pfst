@@ -2985,7 +2985,7 @@ def _put_one(
 
     if code is self.root:  # don't allow own root to be put to self
         raise ValueError('circular put detected')
-    if code.__class__ is fst.FST and not code.a:
+    if (is_FST := isinstance(code, fst.FST)) and not code.a:
         raise ValueError('this FST has already been consumed or deleted')
 
     ast = self.a
@@ -3053,7 +3053,7 @@ def _put_one(
     nonraw_exc = None
 
     if raw is not True:
-        preserved_code = code.copy() if raw and code.__class__ is fst.FST else code  # attempt at put may be destructive so need to make a copy of an FST if raw fallback is a possibility on fail
+        preserved_code = code.copy() if raw and is_FST else code  # attempt at put may be destructive so need to make a copy of an FST if raw fallback is a possibility on fail
 
         try:
             if to:

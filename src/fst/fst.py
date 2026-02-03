@@ -873,7 +873,7 @@ class FST:
         """
 
         if pfield is False:  # top level shortcut
-            if src_or_ast_or_fst.__class__ is FST:
+            if isinstance(src_or_ast_or_fst, FST):
                 return src_or_ast_or_fst.as_(mode, kwargs.get('copy', True), **filter_options(kwargs))
 
             parse_params = {k: v for k in ('filename', 'type_comments', 'feature_version')

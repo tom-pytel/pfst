@@ -1848,7 +1848,7 @@ def _coerce_to_seq(
     ast = code
     ast_cls = ast.__class__
 
-    if is_FST := ast_cls is fst.FST:
+    if is_FST := issubclass(ast_cls, fst.FST):
         ast = code.a
         ast_cls = ast.__class__
 
@@ -2004,7 +2004,7 @@ def _coerce_to_stmts(
 
     code_cls = code.__class__
 
-    if code_cls is fst.FST:
+    if issubclass(code_cls, fst.FST):
         codea = code.a
         codea_cls = codea.__class__
 
@@ -2051,7 +2051,7 @@ def _coerce_to__match_cases(
 
     code_cls = code.__class__
 
-    if code_cls is fst.FST:
+    if issubclass(code_cls, fst.FST):
         codea = code.a
         codea_cls = codea.__class__
 
@@ -2378,7 +2378,7 @@ def _coerce_to__arglike(
 
     code_cls = code.__class__
 
-    if code_cls is keyword or (code_cls is fst.FST and code.a.__class__ is keyword):
+    if code_cls is keyword or (issubclass(code_cls, fst.FST) and code.a.__class__ is keyword):
         return code_as_keyword(code, options, parse_params, sanitize=sanitize)  # pragma: no cover  # can't get here normally because _code_as() will see the keyword first and accept it
 
     fst_ = code_as_expr_arglike(code, options, parse_params, sanitize=sanitize, coerce=True)
@@ -2853,7 +2853,7 @@ def _coerce_to_pattern(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This is essentially the pattern version of `_coerce_to_expr_ast()`."""
 
-    if is_FST := code.__class__ is fst.FST:
+    if is_FST := isinstance(code, fst.FST):
         ast = code.a
     else:
         ast = code
@@ -3670,7 +3670,7 @@ def code_as__arglike(
                     _coerce_to__arglike if coerce else False,
                     name='expression (arglike)')
 
-    if code.__class__ is fst.FST:  # if anything else then these conditions will have been rejected by parse__arglike
+    if isinstance(code, fst.FST):  # if anything else then these conditions will have been rejected by parse__arglike
         ast_ = fst_.a
         ast_cls = ast_.__class__
 

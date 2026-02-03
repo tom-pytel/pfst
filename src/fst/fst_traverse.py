@@ -610,7 +610,7 @@ def step_fwd(
 
     if stop_at is None:
         stop_at = ()
-    elif stop_at.__class__ is fst.FST:
+    elif isinstance(stop_at, fst.FST):
         stop_at = {stop_at}
 
     if recurse_self:
@@ -730,7 +730,7 @@ def step_back(
 
     if stop_at is None:
         stop_at = ()
-    elif stop_at.__class__ is fst.FST:
+    elif isinstance(stop_at, fst.FST):
         stop_at = {stop_at}
 
     if recurse_self:

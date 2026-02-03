@@ -275,7 +275,7 @@ class fstview:
         if idx_stop is not None:  # slice
             return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
 
-        if idx_start.__class__ is not fst.FST:  # single element child of this view
+        if not isinstance(idx_start, fst.FST):  # single element child of this view
             return a.f if isinstance(a := self._deref_one(start + idx_start), AST) else a
 
         return idx_start  # the actual node found for the str search
@@ -331,7 +331,7 @@ class fstview:
             if self._stop is not None:
                 self._stop += self._len_field() - len_before
 
-        elif idx_start.__class__ is not fst.FST:  # single element child of this view
+        elif not isinstance(idx_start, fst.FST):  # single element child of this view
             self.base = self.base._put_one(code, start + idx_start, self.field, ret_child=False)
 
             if self._stop is not None:
@@ -379,7 +379,7 @@ class fstview:
 
             return
 
-        elif idx_start.__class__ is not fst.FST:  # single element child of this view
+        elif not isinstance(idx_start, fst.FST):  # single element child of this view
             self.base = self.base._put_slice(None, start + idx_start, start + idx_start + 1, self.field)
 
             if self._stop is not None:

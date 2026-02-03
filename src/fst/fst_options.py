@@ -126,7 +126,7 @@ def _check_opt_op(option: str, value: object) -> tuple | None:
     return None  # TODO: finalize this
 
 def _check_opt_to(option: str, value: object) -> tuple | None:
-    return 'an FST' if value.__class__ is not fst.FST else None
+    return 'an FST' if not isinstance(value, fst.FST) else None
 
 def _check_opt_ins_ln(option: str, value: object) -> tuple | None:
     return 'an int' if not isinstance(value, int) else None

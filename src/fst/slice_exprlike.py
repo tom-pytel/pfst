@@ -645,7 +645,7 @@ def get_slice_sep(
             bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
                                                                 params_offset)
 
-            if field_or_new_last.__class__ is fst.FST:
+            if isinstance(field_or_new_last, fst.FST):
                 _, _, last_end_ln, last_end_col = field_or_new_last.loc
             elif isinstance(last := getattr(self.a, field_or_new_last)[-1], AST):
                 _, _, last_end_ln, last_end_col = last.f.loc
