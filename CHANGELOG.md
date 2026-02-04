@@ -5,7 +5,7 @@
 - Python 3.15a support
   - unpacking in comprehensions, `[*st for st in itr]`, `{**key for key in itr}`
   - lazy imports not on main branch yet
-- `FST.matches()` structural pattern matching
+- `FST.match()` structural pattern matching
 - `FST.find_def()` to easily find (possibly nested) function and class definitions by name in a given scope
   - added usage of this in indexing (single-element only, not slice): `method = module['class.method']`, `del someclass['method']`, etc...
 - added `top` and `stop_at` parameters to `step_fwd/back()`

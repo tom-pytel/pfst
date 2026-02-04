@@ -3,6 +3,7 @@
 import ast
 import builtins
 import os
+import re
 import threading
 import tokenize
 import unittest
@@ -36,6 +37,9 @@ from fst.astutil import (
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, PYGE15, astfield, fstloc
 from fst.code import *
 from fst.view import fstview, fstview_dummy
+from fst.match import *
+
+from support import assertRaises
 
 from test_parse import PARSE_TESTS
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
@@ -7632,6 +7636,254 @@ opts.ignore_module = [mod.strip()
         self.assertEqual('h', g[3].src)
         self.assertEqual('l', g[4].src)
         self.assertEqual('i\nj\nk\nh\nl', f.src)
+
+    def test_match_FST(self):
+        self.assertTrue(FST(Load()).match, ...)
+
+        # expr_context
+
+        self.assertTrue(FST(Load()).match(Load))
+        self.assertTrue(FST(Load()).match(MLoad))
+        self.assertTrue(FST(Load()).match(expr_context))
+        self.assertTrue(FST(Load()).match(Mexpr_context))
+        self.assertTrue(FST(Load()).match(AST))
+        self.assertTrue(FST(Load()).match(MAST))
+        self.assertFalse(FST(Load()).match(Store))
+        self.assertFalse(FST(Load()).match(MStore))
+        self.assertFalse(FST(Load()).match(stmt))
+        self.assertFalse(FST(Load()).match(Mstmt))
+
+        # type
+
+        self.assertTrue(FST('a = 1').match(Assign))
+        self.assertTrue(FST('a = 1').match(MAssign))
+        self.assertTrue(FST('a = 1').match(stmt))
+        self.assertTrue(FST('a = 1').match(Mstmt))
+        self.assertTrue(FST('a = 1').match(AST))
+        self.assertTrue(FST('a = 1').match(MAST))
+        self.assertFalse(FST('a = 1').match(expr))
+        self.assertFalse(FST('a = 1').match(Mexpr))
+
+        # ctx
+
+        self.assertTrue(FST(Load()).match(Load()))
+        self.assertTrue(FST(Load()).match(Store()))
+        self.assertTrue(FST(Load()).match(Del()))
+        self.assertTrue(FST(Load()).match(Load(), ctx=True))
+        self.assertFalse(FST(Load()).match(Store(), ctx=True))
+        self.assertFalse(FST(Load()).match(Del(), ctx=True))
+        self.assertTrue(FST(Load()).match(MLoad()))
+        self.assertFalse(FST(Load()).match(MStore()))
+        self.assertFalse(FST(Load()).match(MDel()))
+
+        self.assertTrue(FST(Name('i')).match(Name('i', Load())))
+        self.assertTrue(FST(Name('i')).match(Name('i', Store())))
+        self.assertTrue(FST(Name('i')).match(Name('i', Del())))
+        self.assertTrue(FST(Name('i')).match(Name('i', Load()), ctx=True))
+        self.assertFalse(FST(Name('i')).match(Name('i', Store()), ctx=True))
+        self.assertFalse(FST(Name('i')).match(Name('i', Del()), ctx=True))
+
+        # str
+
+        self.assertTrue(FST(Name('i')).match('i'))
+        self.assertTrue(FST(arg('i')).match('i'))
+        self.assertTrue(FST('i', 'withitem').match('i'))
+        self.assertTrue(FST('a, /, b, *, c', 'arguments').match('a, /, b, *, c'))
+
+        # re.Pattern
+
+        self.assertTrue(FST(Name('i')).match(re.compile('i')))
+        self.assertFalse(FST(Name('j')).match(re.compile('i')))
+        self.assertTrue(FST(Name('i')).match(Name(re.compile('i'))))
+        self.assertFalse(FST(Name('j')).match(Name(re.compile('i'))))
+        self.assertTrue(FST(Name('i')).match(MName(re.compile('i'))))
+        self.assertFalse(FST(Name('j')).match(MName(re.compile('i'))))
+
+        # numbers
+
+        self.assertTrue(FST(Constant(False)).match(Constant(False)))
+        self.assertFalse(FST(Constant(False)).match(Constant(0)))
+        self.assertFalse(FST(Constant(False)).match(Constant(0.0)))
+        self.assertFalse(FST(Constant(False)).match(Constant(0j)))
+
+        self.assertFalse(FST(Constant(0)).match(Constant(False)))
+        self.assertTrue(FST(Constant(0)).match(Constant(0)))
+        self.assertFalse(FST(Constant(0)).match(Constant(0.0)))
+        self.assertFalse(FST(Constant(0)).match(Constant(0j)))
+
+        self.assertFalse(FST(Constant(0.0)).match(Constant(False)))
+        self.assertFalse(FST(Constant(0.0)).match(Constant(0)))
+        self.assertTrue(FST(Constant(0.0)).match(Constant(0.0)))
+        self.assertFalse(FST(Constant(0.0)).match(Constant(0j)))
+
+        self.assertFalse(FST(Constant(0j)).match(Constant(False)))
+        self.assertFalse(FST(Constant(0j)).match(Constant(0)))
+        self.assertFalse(FST(Constant(0j)).match(Constant(0.0)))
+        self.assertTrue(FST(Constant(0j)).match(Constant(0j)))
+
+        # MTAG
+
+        f = FST('i = j')
+        self.assertEqual({'obj': f.a.value}, f.match(Assign(..., MTAG(obj='j'))))
+        self.assertEqual({'is_obj': True}, f.match(Assign(..., MTAG('j', is_obj=True))))
+        self.assertEqual({'obj': f.a.targets[0], 'is_j': 'yay', 'is_j2': 'hoho'}, f.match(Assign([MTAG(obj=...)], MTAG('j', is_j='yay', is_j2='hoho'))))
+        self.assertEqual({'obj': f.a.targets, 'obj2': f.a.value}, f.match(Assign(MTAG(obj=...), MTAG(obj2=...))))
+
+        # MOR
+
+        pat = MTAG(obj=MOR(Constant, Name))
+        self.assertFalse(FST('a + b').match(pat))
+        self.assertFalse(FST('a = b').match(pat))
+        self.assertEqual({'obj': (f := FST('name')).a}, f.match(pat))
+        self.assertEqual({'obj': (f := FST('123')).a}, f.match(pat))
+
+        self.assertFalse(FST('a').match(MOR('b', 'c')))
+        self.assertTrue(FST('b').match(MOR('b', 'c')))
+        self.assertTrue(FST('c').match(MOR('b', 'c')))
+        self.assertFalse(FST('a').match(MOR('b', 'c')))
+
+        self.assertFalse(FST('1').match(MOR(Constant(2), Constant(3))))
+        self.assertTrue(FST('2').match(MOR(Constant(2), Constant(3))))
+        self.assertTrue(FST('3').match(MOR(Constant(2), Constant(3))))
+        self.assertFalse(FST('4').match(MOR(Constant(2), Constant(3))))
+
+        self.assertFalse(FST('a, b').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+        self.assertTrue(FST('b, c').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+        self.assertTrue(FST('c, d').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+        self.assertFalse(FST('d, e').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+
+        # MOR passthrough tags
+
+        pat = MTAG(MOR(MTAG('a', is_a=True), MTAG('b', is_b=True)), is_one=True)
+        self.assertEqual({'is_a': True, 'is_one': True}, FST('a').match(pat))
+        self.assertEqual({'is_b': True, 'is_one': True}, FST('b').match(pat))
+        self.assertFalse(FST('c').match(pat))
+
+        # list
+
+        f = FST('[a, b, c]')
+        self.assertTrue(f.match(List(['a', 'b', 'c'])))
+        self.assertFalse(f.match(List(['a'])))
+        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([MTAG(obj='a'), ...])))
+        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([..., MTAG(obj='a'), ...])))
+        self.assertEqual({'obj': f.a.elts[1]}, f.match(List([..., MTAG(obj='b'), ...])))
+        self.assertFalse(f.match(List([..., MTAG(obj='b')])))
+        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., MTAG(obj='c'), ...])))
+        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., MTAG(obj='c')])))
+        self.assertTrue(f.match(List([..., 'a', ..., 'b', ..., 'c', ...])))
+
+        # single element wildcard ...
+
+        f = FST('a + b')
+        self.assertTrue(f.match(BinOp(..., ..., ...)))
+        self.assertTrue(f.match(BinOp('a', ..., 'b')))
+        self.assertFalse(f.match(BinOp('z', ..., 'b')))
+        self.assertFalse(f.match(BinOp('a', ..., 'z')))
+        self.assertTrue(f.match(BinOp(..., '+', ...)))
+        self.assertFalse(f.match(BinOp(..., '-', ...)))
+
+        # wildcard ... is concrete value for Constant
+
+        self.assertTrue(FST(Constant(...)).match(Constant(...)))
+        self.assertFalse(FST(Constant(1)).match(Constant(...)))
+        self.assertFalse(FST(Constant(...)).match(Constant(1)))
+
+        # non-list pattern in list field position
+
+        f = FST('[]')
+        assertRaises(ValueError('MRE can never match a list field'), f.match, List(MRE('')))
+        assertRaises(ValueError('list can never match a non-list field'), f.match, List([], []))
+        assertRaises(ValueError('str can never match a list field'), f.match, List('str'))
+        assertRaises(ValueError('int can never match a list field'), f.match, List(1))
+        assertRaises(ValueError('Pass can never match a list field'), f.match, List(Pass()))
+        assertRaises(ValueError('Constant can never match a list field'), f.match, List(Constant(1)))
+        assertRaises(ValueError('Load can never match a list field'), f.match, List(Load()))
+        assertRaises(ValueError('type can never match a list field'), f.match, List(stmt))
+        assertRaises(ValueError('re.Pattern can never match a list field'), f.match, List(re.compile('i')))
+        assertRaises(ValueError('None can never match a list field'), f.match, List(None))
+
+    def test_match_M_Pattern(self):
+        # re.Pattern
+
+        self.assertTrue(MOR(re.compile('i')).match(FST(Name('i')).a))
+        self.assertFalse(MOR(re.compile('i')).match(FST(Name('j')).a))
+        self.assertTrue(MOR(re.compile('i')).match(Name('i')))
+        self.assertFalse(MOR(re.compile('i')).match(Name('j')))
+        self.assertTrue(MOR(re.compile('i')).match('i'))
+        self.assertFalse(MOR(re.compile('i')).match('j'))
+        self.assertFalse(MOR(re.compile('i')).match(b'i'))
+        self.assertTrue(MOR(re.compile(b'i')).match(b'i'))
+        self.assertFalse(MOR(re.compile(b'i')).match(b'j'))
+        self.assertFalse(MOR(re.compile(b'i')).match('i'))
+
+        # MRE
+
+        self.assertTrue(MRE(re.compile('i')).match(FST(Name('i')).a))
+        self.assertFalse(MRE(re.compile('i')).match(FST(Name('j')).a))
+        self.assertTrue(MRE(re.compile('i')).match(Name('i')))
+        self.assertFalse(MRE(re.compile('i')).match(Name('j')))
+        self.assertTrue(MRE(re.compile('i')).match('i'))
+        self.assertFalse(MRE(re.compile('i')).match('j'))
+        self.assertFalse(MRE(re.compile('i')).match(b'i'))
+        self.assertTrue(MRE(re.compile(b'i')).match(b'i'))
+        self.assertFalse(MRE(re.compile(b'i')).match(b'j'))
+        self.assertFalse(MRE(re.compile(b'i')).match('i'))
+
+        self.assertTrue(MRE('i').match(FST(Name('i')).a))
+        self.assertFalse(MRE('i').match(FST(Name('j')).a))
+        self.assertTrue(MRE('i').match(Name('i')))
+        self.assertFalse(MRE('i').match(Name('j')))
+        self.assertTrue(MRE('i').match('i'))
+        self.assertFalse(MRE('i').match('j'))
+        self.assertFalse(MRE('i').match(b'i'))
+        self.assertTrue(MRE(b'i').match(b'i'))
+        self.assertFalse(MRE(b'i').match(b'j'))
+        self.assertFalse(MRE(b'i').match('i'))
+
+        self.assertTrue(MRE('i').match('i'))
+        self.assertFalse(MRE('i').match('j'))
+        self.assertFalse(MRE('i').match('ai'))
+        self.assertTrue(MRE('i', search=True).match('ai'))
+        self.assertFalse(MRE('i j').match('ij'))
+        self.assertTrue(MRE('i j', re.VERBOSE).match('ij'))
+
+        m = MRE(tag='i').match('i')
+        self.assertEqual(['tag'], list(m))
+        self.assertEqual('i', m['tag'].group())
+
+        m = MRE(tag='i', search=True).match('ai')
+        self.assertEqual(['tag'], list(m))
+        self.assertEqual('i', m['tag'].group())
+
+        m = MRE(tag='i j', flags=re.VERBOSE).match('ij')
+        self.assertEqual(['tag'], list(m))
+        self.assertEqual('ij', m['tag'].group())
+
+        # MOR
+
+        pat = MTAG(obj=MOR(Constant, Name))
+        self.assertIsNone(pat.match(FST('a + b').a))
+        self.assertIsNone(pat.match(FST('a = b').a))
+        self.assertEqual({'obj': (f := FST('name')).a}, pat.match(f.a))
+        self.assertEqual({'obj': (f := FST('123')).a}, pat.match(f.a))
+
+        pat = MOR('b', 'c')
+        self.assertFalse(pat.match(FST('a').a))
+        self.assertTrue(pat.match(FST('b').a))
+        self.assertTrue(pat.match(FST('c').a))
+        self.assertFalse(pat.match(FST('a').a))
+
+        pat = MOR(Constant(2), Constant(3))
+        self.assertFalse(pat.match(FST('1').a))
+        self.assertTrue(pat.match(FST('2').a))
+        self.assertTrue(pat.match(FST('3').a))
+        self.assertFalse(pat.match(FST('4').a))
+
+        pat = MTuple(MOR(['b', 'c'], ['c', 'd']))
+        self.assertFalse(pat.match(FST('a, b').a))
+        self.assertTrue(pat.match(FST('b, c').a))
+        self.assertTrue(pat.match(FST('c, d').a))
+        self.assertFalse(pat.match(FST('d, e').a))
 
     def test_find_def(self):
         def test(fst_, path, recurse=True, asts=None):

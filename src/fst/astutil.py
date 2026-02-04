@@ -235,7 +235,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
     (UnaryOp,                  (('op', 'unaryop'), ('operand', 'expr'))),
     (Lambda,                   (('args', 'arguments'), ('body', 'expr'))),
     (IfExp,                    (('body', 'expr'), ('test', 'expr'), ('orelse', 'expr'))),
-    (Dict,                     (('keys', 'expr*'), ('values', 'expr*'))),
+    (Dict,                     (('keys', 'expr?*'), ('values', 'expr*'))),
     (Set,                      (('elts', 'expr*'),)),
     (ListComp,                 (('elt', 'expr'), ('generators', 'comprehension*'))),
     (SetComp,                  (('elt', 'expr'), ('generators', 'comprehension*'))),
@@ -296,7 +296,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
 
     (ExceptHandler,            (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
 
-    (arguments,                (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr*'), ('kwarg', 'arg?'))),
+    (arguments,                (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr?*'), ('kwarg', 'arg?'))),
     (arg,                      (('arg', 'identifier'), ('annotation', 'expr?'), ('type_comment', 'string?'))),
     (keyword,                  (('arg', 'identifier?'), ('value', 'expr'))),
     (alias,                    (('name', 'identifier'), ('asname', 'identifier?'))),

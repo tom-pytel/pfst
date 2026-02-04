@@ -17,10 +17,9 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
-This is just a print helper function for this documentation, you can ignore it.
+Now some helper functions just for this documentation, you can ignore their usage.
 
->>> def pprint(src):  # helper
-...     print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
+>>> from fst.docs import pprint, py_version_ok_then_exec_else_print
 
 
 ## Type annotations to type comments
@@ -702,6 +701,7 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
 Processed:
 
 ```py
+>>> pprint(isinstance_to_class_check(src))
 def is_valid_target(asts: AST | list[AST]) -> bool:
     """Check if `asts` is a valid target for `Assign` or `For`
     operations. Must be `Name`, `Attribute`, `Subscript`
@@ -1232,6 +1232,8 @@ f"""{(  # =========================
 Processed:
 
 ```py
+>>> if py_version_ok_then_exec_else_print(12, __file__, 'PRINT_START', 'PRINT_STOP'):
+...     pprint(self_document_fstring_expressions(src))  # PRINT_START
 f'added here {a=}, and here { ( b )= }'
  
 f'not added here {c=}'
@@ -1240,6 +1242,8 @@ f"""{(  # =========================
     d,  # commented out =, so added
 )=}, {e
     =} <- not commented out so not added"""
+
+# PRINT_STOP
 ```
 
 
@@ -1300,6 +1304,7 @@ aligned!!! \U0001F92a
 Processed:
 
 ```py
+>>> pprint(normalize_docstrings(src))
 class cls:
     """Some
     unformatted

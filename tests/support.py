@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import Any, Generator, Literal, NamedTuple
+from typing import Any, Callable, Generator, Literal, NamedTuple
 
 from fst import FST
 from fst.astutil import copy_ast, compare_asts
@@ -9,7 +9,7 @@ from fst.fst_options import _ALL_OPTIONS
 
 from ast import AST
 
-__all__ = ['ParseCases', 'CoerceCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases']
+__all__ = ['ParseCases', 'CoerceCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases', 'assertRaises']
 
 
 _PYVER = sys.version_info[1]
@@ -452,6 +452,26 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
 class PutSliceCases(PutCases):
     def __init__(self, fnm) -> None:
         super().__init__(fnm, FST.put_slice)
+
+
+def assertRaises(exc_type_or_inst: Exception | type[Exception], func: Callable, *args: Any, **kwargs) -> None:
+    if is_inst := isinstance(exc_type_or_inst, BaseException):  # instance
+        exc_type = exc_type_or_inst.__class__
+        exc_repr = repr(exc_type_or_inst)
+
+    else:  # type
+        exc_type = exc_type_or_inst
+        exc_repr = exc_type_or_inst.__qualname__
+
+    try:
+        func(*args, **kwargs)
+
+    except exc_type as exc:
+        if is_inst and repr(exc) != exc_repr:
+            raise
+
+    else:
+        raise AssertionError(f'{exc_repr} not raised by {func}')
 
 
 # if __name__ == '__main__':

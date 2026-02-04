@@ -59,3 +59,45 @@ __all__ = [
     'd12_reconcile',
     'd13_examples',
 ]
+
+
+# Some helpers for maintaining the documentation readable and testable.
+
+import sys
+
+
+def pprint(src: str) -> None:
+    print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
+
+
+_FILE_CACHE = {}  # {'fnm': list[str], ...}
+
+def py_version_ok_then_exec_else_print(version: int, __file__: str, start_marker: str, stop_marker: str) -> bool:
+    """If python version high enough then do nothing, otherwise print what would have been printed."""
+
+    if sys.version_info[1] >= version:
+        return True
+
+    if (lines := _FILE_CACHE.get(__file__)) is None:
+        with open(__file__) as fp:
+            lines = _FILE_CACHE[__file__] = fp.readlines()
+
+    start_marker += '\n'
+    stop_marker += '\n'
+    itr = iter(enumerate(lines))
+
+    for start, line in itr:  # noqa: B007
+        if line.endswith(start_marker):
+            break
+    else:
+        raise RuntimeError(f'start marker {start_marker[:-1]} not found')
+
+    for stop, line in itr:  # noqa: B007
+        if line.endswith(stop_marker):
+            break
+    else:
+        raise RuntimeError(f'stop marker {stop_marker[:-1]} not found')
+
+    print(''.join(lines[start + 1 : stop])[:-1], end='')
+
+    return False
