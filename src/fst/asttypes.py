@@ -125,7 +125,7 @@ from ast import (
 
 # create standin dummy AST types if they don't exist, mostly for isinstance() checks
 
-class _ASTStandin(AST):
+class _ASTDummy(AST):
     def __init__(self, *args: object, **kwargs) -> None:
         raise RuntimeError("this is a standin class for an AST type that doesn't exist in this version of python, "
                            "it should not be instantiated")  # pragma: no cover
@@ -133,22 +133,22 @@ class _ASTStandin(AST):
 if sys.version_info[:2] >= (3, 11):
     from ast import TryStar
 else:
-    class TryStar(_ASTStandin): """Standin."""  # should we try to duplicate params? opening up possible can of descent into madness there
+    class TryStar(_ASTDummy): """Dummy."""  # should we try to duplicate params? opening up possible can of descent into madness there
 
 if sys.version_info[:2] >= (3, 12):
     from ast import TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple
 else:
-    class TypeAlias(_ASTStandin): """Standin."""
-    class type_param(_ASTStandin): """Standin."""
-    class TypeVar(_ASTStandin): """Standin."""
-    class ParamSpec(_ASTStandin): """Standin."""
-    class TypeVarTuple(_ASTStandin): """Standin."""
+    class TypeAlias(_ASTDummy): """Dummy."""
+    class type_param(_ASTDummy): """Dummy."""
+    class TypeVar(_ASTDummy): """Dummy."""
+    class ParamSpec(_ASTDummy): """Dummy."""
+    class TypeVarTuple(_ASTDummy): """Dummy."""
 
 if sys.version_info[:2] >= (3, 14):
     from ast import TemplateStr, Interpolation
 else:
-    class TemplateStr(_ASTStandin): """Standin."""
-    class Interpolation(_ASTStandin): """Standin."""
+    class TemplateStr(_ASTDummy): """Dummy."""
+    class Interpolation(_ASTDummy): """Dummy."""
 
 __all__ = [
     'AST',
@@ -297,7 +297,6 @@ __all__ = [
     'ASTS_LEAF_STMTMOD',
     'ASTS_LEAF_STMT',
     'ASTS_LEAF_EXPR',
-    'ASTS_LEAF_EXPR_STD',
     'ASTS_LEAF_EXPR_CONTEXT',
     'ASTS_LEAF_BOOLOP',
     'ASTS_LEAF_OPERATOR',
@@ -305,8 +304,11 @@ __all__ = [
     'ASTS_LEAF_CMPOP',
     'ASTS_LEAF_PATTERN',
     'ASTS_LEAF_TYPE_PARAM',
+    'ASTS_LEAF_MISC',
+    'ASTS_LEAF_ALL',
     'ASTS_LEAF_STMT_OR_MOD',
     'ASTS_LEAF_STMT_OR_STMTMOD',
+    'ASTS_LEAF_EXPR_STD',
     'ASTS_LEAF_EXPR_OR_PATTERN',
     'ASTS_LEAF_EXPR_STMT_OR_MOD',
     'ASTS_LEAF_EXPR_CHAIN',
@@ -344,6 +346,8 @@ __all__ = [
     'ASTS_LEAF_CMPOP_ONE_WORD',
     'ASTS_LEAF_MAYBE_DOCSTR',
     'ASTS_LEAF__SLICE',
+    'ASTS_LEAF__ALL',
+    'AST2ASTSLEAF',
 ]
 
 
@@ -362,8 +366,6 @@ ASTS_LEAF_EXPR               = frozenset([BoolOp, NamedExpr, BinOp, UnaryOp, Lam
                                           FormattedValue, Interpolation, JoinedStr, TemplateStr, Constant, Attribute,
                                           Subscript, Starred, Name, List, Tuple, Slice])
 
-ASTS_LEAF_EXPR_STD           = ASTS_LEAF_EXPR - frozenset([FormattedValue, Interpolation, Slice])
-
 ASTS_LEAF_EXPR_CONTEXT       = frozenset([Load, Store, Del])
 ASTS_LEAF_BOOLOP             = frozenset([And, Or])
 ASTS_LEAF_OPERATOR           = frozenset([Add, Sub, Mult, MatMult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd,
@@ -373,9 +375,16 @@ ASTS_LEAF_CMPOP              = frozenset([Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot
 ASTS_LEAF_PATTERN            = frozenset([MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass,
                                           MatchStar, MatchAs, MatchOr])
 ASTS_LEAF_TYPE_PARAM         = frozenset([TypeVar, ParamSpec, TypeVarTuple])
+ASTS_LEAF_MISC               = frozenset([FunctionType, TypeIgnore])
+
+ASTS_LEAF_ALL                = (ASTS_LEAF_MOD | ASTS_LEAF_STMT | ASTS_LEAF_EXPR | ASTS_LEAF_EXPR_CONTEXT |
+                                ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP |
+                                ASTS_LEAF_PATTERN | ASTS_LEAF_TYPE_PARAM | ASTS_LEAF_MISC |
+                                {comprehension, ExceptHandler, arguments, arg, keyword, alias, withitem, match_case})
 
 ASTS_LEAF_STMT_OR_MOD        = ASTS_LEAF_STMT | ASTS_LEAF_MOD
 ASTS_LEAF_STMT_OR_STMTMOD    = ASTS_LEAF_STMT_OR_MOD - {Expression}
+ASTS_LEAF_EXPR_STD           = ASTS_LEAF_EXPR - frozenset([FormattedValue, Interpolation, Slice])
 ASTS_LEAF_EXPR_OR_PATTERN    = ASTS_LEAF_EXPR | ASTS_LEAF_PATTERN
 ASTS_LEAF_EXPR_STMT_OR_MOD   = ASTS_LEAF_EXPR | ASTS_LEAF_STMT | ASTS_LEAF_MOD
 ASTS_LEAF_EXPR_CHAIN         = ASTS_LEAF_EXPR | {comprehension, arguments, arg, keyword}  # can be in expression chain (have expressions ABOVE as well as below), this excludes withitem and patterns
@@ -666,28 +675,168 @@ class _type_params(_slice):
 
 ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _arglikes,
                               _comprehensions, _comprehension_ifs, _aliases, _withitems, _type_params])
+ASTS_LEAF__ALL = ASTS_LEAF_ALL | ASTS_LEAF__SLICE
 
+AST2ASTSLEAF = {  # convert a possibly non-leaf AST to a frozenset of all the leaf AST nodes that it can be
+    Module:             frozenset([Module]),
+    Interactive:        frozenset([Interactive]),
+    Expression:         frozenset([Expression]),
+    FunctionType:       frozenset([FunctionType]),
+    FunctionDef:        frozenset([FunctionDef]),
+    AsyncFunctionDef:   frozenset([AsyncFunctionDef]),
+    ClassDef:           frozenset([ClassDef]),
+    Return:             frozenset([Return]),
+    Delete:             frozenset([Delete]),
+    Assign:             frozenset([Assign]),
+    TypeAlias:          frozenset([TypeAlias]),
+    AugAssign:          frozenset([AugAssign]),
+    AnnAssign:          frozenset([AnnAssign]),
+    For:                frozenset([For]),
+    AsyncFor:           frozenset([AsyncFor]),
+    While:              frozenset([While]),
+    If:                 frozenset([If]),
+    With:               frozenset([With]),
+    AsyncWith:          frozenset([AsyncWith]),
+    Match:              frozenset([Match]),
+    Raise:              frozenset([Raise]),
+    Try:                frozenset([Try]),
+    TryStar:            frozenset([TryStar]),
+    Assert:             frozenset([Assert]),
+    Import:             frozenset([Import]),
+    ImportFrom:         frozenset([ImportFrom]),
+    Global:             frozenset([Global]),
+    Nonlocal:           frozenset([Nonlocal]),
+    Expr:               frozenset([Expr]),
+    Pass:               frozenset([Pass]),
+    Break:              frozenset([Break]),
+    Continue:           frozenset([Continue]),
+    BoolOp:             frozenset([BoolOp]),
+    NamedExpr:          frozenset([NamedExpr]),
+    BinOp:              frozenset([BinOp]),
+    UnaryOp:            frozenset([UnaryOp]),
+    Lambda:             frozenset([Lambda]),
+    IfExp:              frozenset([IfExp]),
+    Dict:               frozenset([Dict]),
+    Set:                frozenset([Set]),
+    ListComp:           frozenset([ListComp]),
+    SetComp:            frozenset([SetComp]),
+    DictComp:           frozenset([DictComp]),
+    GeneratorExp:       frozenset([GeneratorExp]),
+    Await:              frozenset([Await]),
+    Yield:              frozenset([Yield]),
+    YieldFrom:          frozenset([YieldFrom]),
+    Compare:            frozenset([Compare]),
+    Call:               frozenset([Call]),
+    FormattedValue:     frozenset([FormattedValue]),
+    Interpolation:      frozenset([Interpolation]),
+    JoinedStr:          frozenset([JoinedStr]),
+    TemplateStr:        frozenset([TemplateStr]),
+    Constant:           frozenset([Constant]),
+    Attribute:          frozenset([Attribute]),
+    Subscript:          frozenset([Subscript]),
+    Starred:            frozenset([Starred]),
+    Name:               frozenset([Name]),
+    List:               frozenset([List]),
+    Tuple:              frozenset([Tuple]),
+    Slice:              frozenset([Slice]),
+    Load:               frozenset([Load]),
+    Store:              frozenset([Store]),
+    Del:                frozenset([Del]),
+    And:                frozenset([And]),
+    Or:                 frozenset([Or]),
+    Add:                frozenset([Add]),
+    Sub:                frozenset([Sub]),
+    Mult:               frozenset([Mult]),
+    MatMult:            frozenset([MatMult]),
+    Div:                frozenset([Div]),
+    Mod:                frozenset([Mod]),
+    Pow:                frozenset([Pow]),
+    LShift:             frozenset([LShift]),
+    RShift:             frozenset([RShift]),
+    BitOr:              frozenset([BitOr]),
+    BitXor:             frozenset([BitXor]),
+    BitAnd:             frozenset([BitAnd]),
+    FloorDiv:           frozenset([FloorDiv]),
+    Invert:             frozenset([Invert]),
+    Not:                frozenset([Not]),
+    UAdd:               frozenset([UAdd]),
+    USub:               frozenset([USub]),
+    Eq:                 frozenset([Eq]),
+    NotEq:              frozenset([NotEq]),
+    Lt:                 frozenset([Lt]),
+    LtE:                frozenset([LtE]),
+    Gt:                 frozenset([Gt]),
+    GtE:                frozenset([GtE]),
+    Is:                 frozenset([Is]),
+    IsNot:              frozenset([IsNot]),
+    In:                 frozenset([In]),
+    NotIn:              frozenset([NotIn]),
+    comprehension:      frozenset([comprehension]),
+    ExceptHandler:      (_asts_leaf_excepthandler := frozenset([ExceptHandler])),
+    arguments:          frozenset([arguments]),
+    arg:                frozenset([arg]),
+    keyword:            frozenset([keyword]),
+    alias:              frozenset([alias]),
+    withitem:           frozenset([withitem]),
+    match_case:         frozenset([match_case]),
+    MatchValue:         frozenset([MatchValue]),
+    MatchSingleton:     frozenset([MatchSingleton]),
+    MatchSequence:      frozenset([MatchSequence]),
+    MatchMapping:       frozenset([MatchMapping]),
+    MatchClass:         frozenset([MatchClass]),
+    MatchStar:          frozenset([MatchStar]),
+    MatchAs:            frozenset([MatchAs]),
+    MatchOr:            frozenset([MatchOr]),
+    TypeIgnore:         (_asts_leaf_type_ignore := frozenset([TypeIgnore])),
+    TypeVar:            frozenset([TypeVar]),
+    ParamSpec:          frozenset([ParamSpec]),
+    TypeVarTuple:       frozenset([TypeVarTuple]),
+    _ExceptHandlers:    frozenset([_ExceptHandlers]),
+    _match_cases:       frozenset([_match_cases]),
+    _Assign_targets:    frozenset([_Assign_targets]),
+    _decorator_list:    frozenset([_decorator_list]),
+    _arglikes:          frozenset([_arglikes]),
+    _comprehensions:    frozenset([_comprehensions]),
+    _comprehension_ifs: frozenset([_comprehension_ifs]),
+    _aliases:           frozenset([_aliases]),
+    _withitems:         frozenset([_withitems]),
+    _type_params:       frozenset([_type_params]),
+    mod:                ASTS_LEAF_MOD,
+    stmt:               ASTS_LEAF_STMT,
+    expr:               ASTS_LEAF_EXPR,
+    expr_context:       ASTS_LEAF_EXPR_CONTEXT,
+    boolop:             ASTS_LEAF_BOOLOP,
+    operator:           ASTS_LEAF_OPERATOR,
+    unaryop:            ASTS_LEAF_UNARYOP,
+    cmpop:              ASTS_LEAF_CMPOP,
+    excepthandler:      _asts_leaf_excepthandler,
+    pattern:            ASTS_LEAF_PATTERN,
+    type_ignore:        _asts_leaf_type_ignore,
+    type_param:         ASTS_LEAF_TYPE_PARAM,
+    _slice:             ASTS_LEAF__SLICE,
+    AST:                ASTS_LEAF__ALL,
+}
 
-# remove nonexistent nodes in lower versions of python from ASTS_LEAF_* sets
+# # remove nonexistent nodes in lower versions of python from ASTS_LEAF_* sets
 
-if sys.version_info[:2] < (3, 11):
-    _REMOVE = {TemplateStr, Interpolation,
-               TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple,
-               TryStar}
+# if sys.version_info[:2] < (3, 11):
+#     _REMOVE = {TemplateStr, Interpolation,
+#                TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple,
+#                TryStar}
 
-elif sys.version_info[:2] < (3, 12):
-    _REMOVE = {TemplateStr, Interpolation,
-               TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple}
+# elif sys.version_info[:2] < (3, 12):
+#     _REMOVE = {TemplateStr, Interpolation,
+#                TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple}
 
-elif sys.version_info[:2] < (3, 14):
-    _REMOVE = {TemplateStr, Interpolation}
+# elif sys.version_info[:2] < (3, 14):
+#     _REMOVE = {TemplateStr, Interpolation}
 
-else:
-    _REMOVE = None
+# else:
+#     _REMOVE = None
 
-if _REMOVE:
-    _GLOBALS = globals()
+# if _REMOVE:
+#     _GLOBALS = globals()
 
-    for _n, _v in list(_GLOBALS.items()):
-        if _n.startswith('ASTS_LEAF_'):
-            _GLOBALS[_n] = _v - _REMOVE
+#     for _n, _v in list(_GLOBALS.items()):
+#         if _n.startswith('ASTS_LEAF_'):
+#             _GLOBALS[_n] = _v - _REMOVE

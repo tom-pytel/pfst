@@ -7721,55 +7721,17 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(FST(Constant(0j)).match(Constant(0.0)))
         self.assertTrue(FST(Constant(0j)).match(Constant(0j)))
 
-        # MTAG
-
-        f = FST('i = j')
-        self.assertEqual({'obj': f.a.value}, f.match(Assign(..., MTAG(obj='j'))))
-        self.assertEqual({'is_obj': True}, f.match(Assign(..., MTAG('j', is_obj=True))))
-        self.assertEqual({'obj': f.a.targets[0], 'is_j': 'yay', 'is_j2': 'hoho'}, f.match(Assign([MTAG(obj=...)], MTAG('j', is_j='yay', is_j2='hoho'))))
-        self.assertEqual({'obj': f.a.targets, 'obj2': f.a.value}, f.match(Assign(MTAG(obj=...), MTAG(obj2=...))))
-
-        # MOR
-
-        pat = MTAG(obj=MOR(Constant, Name))
-        self.assertFalse(FST('a + b').match(pat))
-        self.assertFalse(FST('a = b').match(pat))
-        self.assertEqual({'obj': (f := FST('name')).a}, f.match(pat))
-        self.assertEqual({'obj': (f := FST('123')).a}, f.match(pat))
-
-        self.assertFalse(FST('a').match(MOR('b', 'c')))
-        self.assertTrue(FST('b').match(MOR('b', 'c')))
-        self.assertTrue(FST('c').match(MOR('b', 'c')))
-        self.assertFalse(FST('a').match(MOR('b', 'c')))
-
-        self.assertFalse(FST('1').match(MOR(Constant(2), Constant(3))))
-        self.assertTrue(FST('2').match(MOR(Constant(2), Constant(3))))
-        self.assertTrue(FST('3').match(MOR(Constant(2), Constant(3))))
-        self.assertFalse(FST('4').match(MOR(Constant(2), Constant(3))))
-
-        self.assertFalse(FST('a, b').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
-        self.assertTrue(FST('b, c').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
-        self.assertTrue(FST('c, d').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
-        self.assertFalse(FST('d, e').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
-
-        # MOR passthrough tags
-
-        pat = MTAG(MOR(MTAG('a', is_a=True), MTAG('b', is_b=True)), is_one=True)
-        self.assertEqual({'is_a': True, 'is_one': True}, FST('a').match(pat))
-        self.assertEqual({'is_b': True, 'is_one': True}, FST('b').match(pat))
-        self.assertFalse(FST('c').match(pat))
-
         # list
 
         f = FST('[a, b, c]')
         self.assertTrue(f.match(List(['a', 'b', 'c'])))
         self.assertFalse(f.match(List(['a'])))
-        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([MTAG(obj='a'), ...])))
-        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([..., MTAG(obj='a'), ...])))
-        self.assertEqual({'obj': f.a.elts[1]}, f.match(List([..., MTAG(obj='b'), ...])))
-        self.assertFalse(f.match(List([..., MTAG(obj='b')])))
-        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., MTAG(obj='c'), ...])))
-        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., MTAG(obj='c')])))
+        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([M(obj='a'), ...])).tags)
+        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([..., M(obj='a'), ...])).tags)
+        self.assertEqual({'obj': f.a.elts[1]}, f.match(List([..., M(obj='b'), ...])).tags)
+        self.assertFalse(f.match(List([..., M(obj='b')])))
+        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., M(obj='c'), ...])).tags)
+        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., M(obj='c')])).tags)
         self.assertTrue(f.match(List([..., 'a', ..., 'b', ..., 'c', ...])))
 
         # single element wildcard ...
@@ -7801,6 +7763,176 @@ opts.ignore_module = [mod.strip()
         assertRaises(ValueError('type can never match a list field'), f.match, List(stmt))
         assertRaises(ValueError('re.Pattern can never match a list field'), f.match, List(re.compile('i')))
         assertRaises(ValueError('None can never match a list field'), f.match, List(None))
+
+        # M
+
+        assertRaises(ValueError('M requires pattern'), M)
+        self.assertTrue(M(None))
+        self.assertTrue(M(tag=None))
+
+        f = FST('i = j')
+        self.assertEqual({'obj': f.a.value}, f.match(Assign(..., M(obj='j'))).tags)
+        self.assertEqual({'is_obj': True}, f.match(Assign(..., M('j', is_obj=True))).tags)
+        self.assertEqual({'obj': f.a.targets[0], 'is_j': 'yay', 'is_j2': 'hoho'}, f.match(Assign([M(obj=...)], M('j', is_j='yay', is_j2='hoho'))).tags)
+        self.assertEqual({'obj': f.a.targets, 'obj2': f.a.value}, f.match(Assign(M(obj=...), M(obj2=...))).tags)
+
+        f = FST('a')
+        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MName('a'), b=True)).tags)
+        self.assertFalse(f.match(M(a=MName('b'), b=True)))
+        self.assertEqual({'a': 'a', 'b': True}, f.match(MName(M(a='a', b=True))).tags)
+        self.assertFalse(f.match(MName(M(a='b', b=True))))
+        self.assertEqual({'a': f.a.ctx, 'b': True}, f.match(MName('a', M(a=MLoad(), b=True))).tags)
+        self.assertFalse(f.match(MName('a', M(a=MStore(), b=True))))
+        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=Mexpr(), b=True)).tags)
+        self.assertFalse(f.match(M(a=Mstmt(), b=True)))
+
+        f = FST('1')
+        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant(1), b=True)).tags)
+        self.assertFalse(f.match(M(a=MConstant(2), b=True)))
+        self.assertEqual({'a': 1, 'b': True}, f.match(MConstant(M(a=1, b=True))).tags)
+        self.assertFalse(f.match(MConstant(M(a=2, b=True))))
+
+        f = FST('u"a"')
+        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant('a', ...), b=True)).tags)
+        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant('a', 'u'), b=True)).tags)
+        self.assertFalse(f.match(M(a=MConstant('a', None), b=True)))
+        self.assertFalse(f.match(M(a=MConstant('b'), b=True)))
+        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant('a', MOR(None, 'u')), b=True)).tags)
+
+        # MNOT
+
+        assertRaises(ValueError('MNOT requires pattern'), MNOT)
+        self.assertTrue(MNOT(None))
+        self.assertTrue(MNOT(tag=None))
+
+        f = FST('a')
+        self.assertFalse(f.match(MNOT(a=MName('a'), b=True)))
+        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MName('b'), b=True)).tags)
+        self.assertFalse(f.match(MName(MNOT(a='a', b=True))))
+        self.assertEqual({'a': 'a', 'b': True}, f.match(MName(MNOT(a='b', b=True))).tags)
+        self.assertFalse(f.match(MName('a', MNOT(a=MLoad(), b=True))))
+        self.assertEqual({'a': f.a.ctx, 'b': True}, f.match(MName('a', MNOT(a=MStore(), b=True))).tags)
+        self.assertFalse(f.match(MNOT(a=Mexpr(), b=True)))
+        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=Mstmt(), b=True)).tags)
+
+        f = FST('1')
+        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MConstant(2), b=True)).tags)
+        self.assertFalse(f.match(MNOT(a=MConstant(1), b=True)))
+        self.assertEqual({'a': 1, 'b': True}, f.match(MConstant(MNOT(a=2, b=True))).tags)
+        self.assertFalse(f.match(MConstant(MNOT(a=1, b=True))))
+
+        f = FST('u"a"')
+        self.assertFalse(f.match(MNOT(a=MConstant('a', ...), b=True)))
+        self.assertFalse(f.match(MNOT(a=MConstant('a', 'u'), b=True)))
+        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MConstant('a', None), b=True)).tags)
+        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MConstant('b'), b=True)).tags)
+        self.assertFalse(f.match(MNOT(a=MConstant('a', MOR(None, 'u')), b=True)))
+
+        # MOR
+
+        assertRaises(ValueError('MOR requires at least one pattern'), MOR)
+        self.assertTrue(MOR(None))
+        self.assertTrue(MOR(tag=None))
+
+        pat = M(obj=MOR(Constant, Name))
+        self.assertFalse(FST('a + b').match(pat))
+        self.assertFalse(FST('a = b').match(pat))
+        self.assertEqual({'obj': (f := FST('name')).a}, f.match(pat).tags)
+        self.assertEqual({'obj': (f := FST('123')).a}, f.match(pat).tags)
+
+        self.assertFalse(FST('a').match(MOR('b', 'c')))
+        self.assertTrue(FST('b').match(MOR('b', 'c')))
+        self.assertTrue(FST('c').match(MOR('b', 'c')))
+        self.assertFalse(FST('a').match(MOR('b', 'c')))
+
+        self.assertFalse(FST('1').match(MOR(Constant(2), Constant(3))))
+        self.assertTrue(FST('2').match(MOR(Constant(2), Constant(3))))
+        self.assertTrue(FST('3').match(MOR(Constant(2), Constant(3))))
+        self.assertFalse(FST('4').match(MOR(Constant(2), Constant(3))))
+
+        self.assertFalse(FST('a, b').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+        self.assertTrue(FST('b, c').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+        self.assertTrue(FST('c, d').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+        self.assertFalse(FST('d, e').match(Tuple(MOR(['b', 'c'], ['c', 'd']))))
+
+        # MOR tagged patterns
+
+        pat = List([MOR(a='a', b='b', c='c')])
+        self.assertEqual({'a': (f := FST('[a]')).a.elts[0]}, f.match(pat).tags)
+        self.assertEqual({'b': (f := FST('[b]')).a.elts[0]}, f.match(pat).tags)
+        self.assertEqual({'c': (f := FST('[c]')).a.elts[0]}, f.match(pat).tags)
+
+        # MOR passthrough tags
+
+        pat = M(MOR(M('a', is_a=True), M('b', is_b=True)), is_one=True)
+        self.assertEqual({'is_a': True, 'is_one': True}, FST('a').match(pat).tags)
+        self.assertEqual({'is_b': True, 'is_one': True}, FST('b').match(pat).tags)
+        self.assertFalse(FST('c').match(pat))
+
+        # MAND
+
+        assertRaises(ValueError('MAND requires at least one pattern'), MAND)
+        self.assertTrue(MAND(None))
+        self.assertTrue(MAND(tag=None))
+
+        f = FST('a + b')
+        self.assertTrue(f.match(MAND(BinOp('a', ..., ...), BinOp(..., '+', ...), BinOp(..., ..., 'b'))))
+        self.assertFalse(f.match(MAND(BinOp('z', ..., ...), BinOp(..., '+', ...), BinOp(..., ..., 'b'))))
+        self.assertFalse(f.match(MAND(BinOp('a', ..., ...), BinOp(..., 'z', ...), BinOp(..., ..., 'b'))))
+        self.assertFalse(f.match(MAND(BinOp('a', ..., ...), BinOp(..., '+', ...), BinOp(..., ..., 'z'))))
+
+        self.assertEqual({'a': f.a, 'plus': f.a, 'b': f.a}, f.match(MAND(a=BinOp('a', ..., ...), plus=BinOp(..., '+', ...), b=BinOp(..., ..., 'b'))).tags)
+        self.assertEqual({'a': f.a.left, 'plus': f.a.op, 'b': f.a.right}, f.match(MAND(BinOp(M(a='a'), ..., ...), BinOp(..., M(plus='+'), ...), BinOp(..., ..., M(b='b')))).tags)
+
+        # MRE
+
+        assertRaises(ValueError('MRE requires pattern'), MRE)
+        assertRaises(ValueError('MRE requires pattern'), MRE, None)
+
+        # non-leaf arbitrary fields
+
+        pat = MAST(elts=['a', ...])
+        self.assertTrue(FST('a,').match(pat))
+        self.assertTrue(FST('(a, b)').match(pat))
+        self.assertTrue(FST('[a]').match(pat))
+        self.assertTrue(FST('{a}').match(pat))
+        self.assertFalse(FST('{a: b}').match(pat))
+
+        pat = Mstmt(body=[..., 'a', ...])
+        self.assertTrue(FST('if 1:\n a\n b').match(pat))
+        self.assertTrue(FST('while 1: c;a;b').match(pat))
+        self.assertTrue(FST('for _ in _:\n c\n a').match(pat))
+        self.assertTrue(FST('try:\n c\n a\n b\nfinally: pass').match(pat))
+        self.assertFalse(FST('a if b else c').match(pat))
+
+        pat = MAST(body=[..., 'a', ...])
+        self.assertTrue(FST('if 1:\n a\n b').match(pat))
+        self.assertFalse(FST('a if b else c').match(pat))  # this is not a list field, ensure non-match instead of error
+
+        # MANY
+
+        pat = MANY((If, For), body=[..., 'a', ...])
+        self.assertTrue(FST('if 1:\n a\n b').match(pat))
+        self.assertFalse(FST('while 1: c;a;b').match(pat))
+        self.assertTrue(FST('for _ in _:\n c\n a').match(pat))
+        self.assertFalse(FST('try:\n c\n a\n b\nfinally: pass').match(pat))
+        self.assertFalse(FST('a if b else c').match(pat))
+
+    def test_match_M_Match(self):
+        # match object attribute access
+
+        self.assertIs(FST('a').match(M(Name('a'), tag=True)).tag, True)
+        self.assertIs(FST('a').match(M(Name('a'), tag=True)).noexist, M_Match.NoTag)
+        self.assertIs(FST('a').match(M(Name('a'), __tag__=True)).__tag__, True)
+        self.assertRaises(AttributeError, lambda: FST('a').match(M(Name('a'), __tag__=True)).__noexist__)
+
+        # get FST node
+
+        f = FST('a = b')
+        pat = MAssign(value='b')
+        self.assertIs(f.match(pat).fst, f)
+        self.assertIs(pat.match(f.a).fst, f)
+        self.assertIsNone(pat.match(Assign(Name('a'), Name('b'))).fst, f)
 
     def test_match_M_Pattern(self):
         # re.Pattern
@@ -7848,24 +7980,42 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(MRE('i j', re.VERBOSE).match('ij'))
 
         m = MRE(tag='i').match('i')
-        self.assertEqual(['tag'], list(m))
-        self.assertEqual('i', m['tag'].group())
+        self.assertEqual(['tag'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
 
         m = MRE(tag='i', search=True).match('ai')
-        self.assertEqual(['tag'], list(m))
-        self.assertEqual('i', m['tag'].group())
+        self.assertEqual(['tag'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
 
         m = MRE(tag='i j', flags=re.VERBOSE).match('ij')
-        self.assertEqual(['tag'], list(m))
-        self.assertEqual('ij', m['tag'].group())
+        self.assertEqual(['tag'], list(m.tags))
+        self.assertEqual('ij', m.tags['tag'].group())
+
+        m = MRE(tag='i', t2=2, t3='3').match('i')
+        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
+        self.assertEqual(2, m.tags['t2'])
+        self.assertEqual('3', m.tags['t3'])
+
+        m = MRE(tag='i', search=True, t2=2, t3='3').match('ai')
+        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
+        self.assertEqual(2, m.tags['t2'])
+        self.assertEqual('3', m.tags['t3'])
+
+        m = MRE(tag='i j', flags=re.VERBOSE, t2=2, t3='3').match('ij')
+        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
+        self.assertEqual('ij', m.tags['tag'].group())
+        self.assertEqual(2, m.tags['t2'])
+        self.assertEqual('3', m.tags['t3'])
 
         # MOR
 
-        pat = MTAG(obj=MOR(Constant, Name))
+        pat = M(obj=MOR(Constant, Name))
         self.assertIsNone(pat.match(FST('a + b').a))
         self.assertIsNone(pat.match(FST('a = b').a))
-        self.assertEqual({'obj': (f := FST('name')).a}, pat.match(f.a))
-        self.assertEqual({'obj': (f := FST('123')).a}, pat.match(f.a))
+        self.assertEqual({'obj': (f := FST('name')).a}, pat.match(f.a).tags)
+        self.assertEqual({'obj': (f := FST('123')).a}, pat.match(f.a).tags)
 
         pat = MOR('b', 'c')
         self.assertFalse(pat.match(FST('a').a))

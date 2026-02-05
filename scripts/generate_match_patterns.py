@@ -17,12 +17,12 @@ for ast_cls in FIELDS:
     if ast_cls is Constant:
         m_patterns.append('''
 class MConstant(MAST):
-    ast_cls = Constant
+    _types = Constant
 
     def __init__(
         self,
-        value: _Pattern,  # Ellipsis here is not a wildcard but a concrete value to match
-        kind: _Pattern = ...,
+        value: _Patterns,  # Ellipsis here is not a wildcard but a concrete value to match
+        kind: _Patterns = ...,
     ) -> None:
         self._fields = fields = ['value']
         self.value = value
@@ -36,7 +36,7 @@ class MConstant(MAST):
 
     name = ast_cls.__name__
     fields = ast_cls._fields
-    args = ''.join(f'\n        {f}: _Pattern = ...,' for f in fields)
+    args = ''.join(f'\n        {f}: _Patterns = ...,' for f in fields)
     set_ = ''.join(f'\n\n        if {f} is not ...:\n            self.{f} = {f}\n            fields.append({f!r})' for f in ast_cls._fields)
 
     if args:
@@ -46,7 +46,7 @@ class MConstant(MAST):
 
     m_patterns.append(f'''
 class M{name}(MAST):
-    ast_cls = {name}{init}
+    _types = {name}{init}
 '''.strip())
 
 for ast_cls in AST_BASES:
@@ -54,7 +54,7 @@ for ast_cls in AST_BASES:
 
     m_patterns.append(f'''
 class M{name}(MAST):
-    ast_cls = {name}
+    _types = {name}
 '''.strip())
 
 print('\n\n'.join(m_patterns))

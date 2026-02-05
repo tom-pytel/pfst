@@ -29,6 +29,7 @@ from unicodedata import normalize
 # )
 
 from .asttypes import *
+from .asttypes import _ASTDummy
 from .astutil import *
 from .astutil import re_alnumdot_alnum
 from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
@@ -2819,7 +2820,10 @@ class SliceCoerce(Fuzzy):
                 if not ((count := count + 1) % 100):
                     sys.stdout.write('.'); sys.stdout.flush()
 
-                mode = choice(self.TO)
+                while True:
+                    if not isinstance(mode := choice(self.TO), type) or not issubclass(mode, _ASTDummy):
+                        break
+
                 mode3 = mode2 = f_copy = g = h = k = None
 
                 try:
@@ -2841,7 +2845,13 @@ class SliceCoerce(Fuzzy):
 
                     g.verify()  # coerce forward
 
-                    mode2 = choice(self.TO) if randint(0, 1) else f.a.__class__  # randomly coerce back to original type or new random type
+                    if randint(0, 1):  # randomly coerce back to original type or new random type
+                        mode2 = f.a.__class__
+
+                    else:
+                        while True:
+                            if not isinstance(mode2 := choice(self.TO), type) or not issubclass(mode2, _ASTDummy):
+                                break
 
                     try:
                         h = g.as_(mode2, copy=True, norm_get=True)
@@ -2865,7 +2875,9 @@ class SliceCoerce(Fuzzy):
 
                     h.verify()  # coerce back
 
-                    mode3 = choice(self.TO)  # third time, just for the lols
+                    while True:
+                        if not isinstance(mode3 := choice(self.TO), type) or not issubclass(mode3, _ASTDummy):  # third time, just for the lols
+                            break
 
                     try:
                         k = h.as_(mode3, copy=True, norm_get=True)

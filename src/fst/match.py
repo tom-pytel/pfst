@@ -7,19 +7,25 @@ quick use normal `AST` types should be fine. Also you need to use the pattern ty
 nodes or fields which do not exist in the version of the running Python.
 
 It should be obvious but, don't use the functional `M*` pattern types in real `AST` trees... %|
+
+**Note:** Annoyingly this module breaks the convention that anything that has `FST` class methods imported into the main
+`FST` class has a filename that starts with `fst_`. This is so that `from fst.match import *` and
+`from fst import match as m` is cleaner.
 """
 
 from __future__ import annotations
 
 import re
 from re import Pattern as re_Pattern
-from collections import defaultdict
-from types import EllipsisType, NoneType
-from typing import Any, Mapping, Union
+from types import EllipsisType, MappingProxyType, NoneType
+from typing import Any, Generator, Iterable, Literal, Mapping, Set as tp_Set, Union
 
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF__ALL,
+    AST2ASTSLEAF,
+
     AST,
     Add,
     And,
@@ -167,7 +173,9 @@ from .astutil import constant
 from .parsex import unparse
 
 __all__ = [
+    'M_Match',
     'M_Pattern',
+
     'MAST',
 
     'MAdd',
@@ -311,48 +319,83 @@ __all__ = [
     'M_withitems',
     'M_type_params',
 
-    'MTAG',
+    'M',
+    'MNOT',
     'MOR',
+    'MAND',
+    'MANY',
     'MRE',
 ]
 
 
-_TargetElement = AST | constant
-_Target = list[_TargetElement] | _TargetElement  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
+_SENTINEL = object()
+_EMPTY_DICT = {}
+_EMPTY_SET = set()
+_LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
 
-_PatternElement = Union[_TargetElement, type[Union['M_Pattern', AST]], 'M_Pattern', re_Pattern, EllipsisType]  # `str` here may also be a match for target node source, not just a primitive
-_Pattern = list[_PatternElement] | _PatternElement
+_Target = AST | constant
+_Targets = list[_Target] | _Target  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
+
+_Pattern = Union[_Target, type[Union['M_Pattern', AST]], 'M_Pattern', re_Pattern, EllipsisType]  # `str` here may also be a match for target node source, not just a primitive
+_Patterns = list[_Pattern] | _Pattern
 
 
-class M_Match(defaultdict):
-    """Successful match object. Can look up tags directly on this object. Nonexistent tags will not raise but return a
-    falsey `M_Match.NotSet`."""
+class M_Match:
+    """Successful match object. Can look up tags directly on this object as attributes (as long as the name doesnt't
+    collide with a name that already exists). Nonexistent tags will not raise but return a falsey `M_Match.NoTag`."""
 
-    class _NotSet:  # so that we can check value of any tag without needing to check if they exist first
+    tags: Mapping[str, Any]
+    pattern: _Pattern
+    target: _Targets  # could have matched against multiple _Targets through M_Pattern.match()
+
+    class _NoTag:  # so that we can check value of any tag without needing to check if it exists first
         __slots__ = ()
 
-        def __new__(cls) -> M_Match._NotSet:
-            return M_Match.NotSet
+        def __new__(cls) -> M_Match._NoTag:
+            return M_Match.NoTag
 
         def __bool__(self) -> bool:
             return False
 
-    NotSet = object.__new__(_NotSet)
+        def __repr__(self) -> str:
+            return 'M_Match.NoTag'
 
-    def __init__(self, *args: object, **kwargs) -> None:
-        defaultdict.__init__(self, M_Match._NotSet, *args, **kwargs)
+    NoTag = object.__new__(_NoTag)
 
-    def __bool__(self) -> bool:  # so that even an empty dict evaluates to true for easier return checking
-        return True
+    def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, target: _Target) -> None:
+        self.tags = MappingProxyType(tags)
+        self.pattern = pattern
+        self.target = target
 
     def __repr__(self) -> str:
-        return f'<fst.Match {dict.__repr__(self)}>'
+        return f'<M_Match {self.tags}>'
+
+    def __getattr__(self, name: str) -> object:
+        if (v := self.tags.get(name, _SENTINEL)) is not _SENTINEL:
+            return v
+
+        if not name.startswith('__'):
+            return self.NoTag
+
+        raise AttributeError(name)  # nonexistence of dunders should not be masked
+
+    @property
+    def fst(self) -> fst.FST | None:
+        """Return the `FST` node of a match if it exists."""
+
+        return f if isinstance(t := self.target, AST) and (f := getattr(t, 'f', None)) else None
+
+    def get(self, tag: str, default: object = None, /) -> object:
+        """A `dict.get()` function for the match tags."""
+
+        return self.tags.get(tag, default)
 
 
 class M_Pattern:
-    _fields = ()
+    _fields = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
+    _types = AST
 
-    def match(self, tgt: _Target, *, ctx: bool = False) -> M_Match | None:
+    def match(self, tgt: _Targets, *, ctx: bool = False) -> M_Match | None:
         """TODO: document
 
         **Parameters:**
@@ -368,23 +411,37 @@ class M_Pattern:
 
         m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, dict(ctx=ctx))
 
-        return None if m is None else M_Match(m)
+        return None if m is None else M_Match(m, self, tgt)
 
 
 class MAST(M_Pattern):
-    ast_cls = AST
+    """This exists in order to group all `AST` M patterns under a single base class.
+
+    Can also be used as an arbitrary field(s) pattern. Can match one or more fields (list or not witout list type
+    errors). Any non-leaf `AST` patterns inherit this behavior, e.g. `Mstmt(body=[something, ...])`.
+
+    **Parameters:**
+    - `fields`: If provided then is an arbitrary list of fields to match. Otherwise will match any `AST`.
+    """
+
+    def __init__(self, **fields: _Patterns) -> None:
+        if fields:
+            self._fields = fields
+
+            for field, value in fields.items():
+                setattr(self, field, value)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Generated pattern classes
 
 class MModule(MAST):
-    ast_cls = Module
+    _types = Module
 
     def __init__(
         self,
-        body: _Pattern = ...,
-        type_ignores: _Pattern = ...,
+        body: _Patterns = ...,
+        type_ignores: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -397,11 +454,11 @@ class MModule(MAST):
             fields.append('type_ignores')
 
 class MInteractive(MAST):
-    ast_cls = Interactive
+    _types = Interactive
 
     def __init__(
         self,
-        body: _Pattern = ...,
+        body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -410,11 +467,11 @@ class MInteractive(MAST):
             fields.append('body')
 
 class MExpression(MAST):
-    ast_cls = Expression
+    _types = Expression
 
     def __init__(
         self,
-        body: _Pattern = ...,
+        body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -423,12 +480,12 @@ class MExpression(MAST):
             fields.append('body')
 
 class MFunctionType(MAST):
-    ast_cls = FunctionType
+    _types = FunctionType
 
     def __init__(
         self,
-        argtypes: _Pattern = ...,
-        returns: _Pattern = ...,
+        argtypes: _Patterns = ...,
+        returns: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -441,17 +498,17 @@ class MFunctionType(MAST):
             fields.append('returns')
 
 class MFunctionDef(MAST):
-    ast_cls = FunctionDef
+    _types = FunctionDef
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        args: _Pattern = ...,
-        body: _Pattern = ...,
-        decorator_list: _Pattern = ...,
-        returns: _Pattern = ...,
-        type_comment: _Pattern = ...,
-        type_params: _Pattern = ...,
+        name: _Patterns = ...,
+        args: _Patterns = ...,
+        body: _Patterns = ...,
+        decorator_list: _Patterns = ...,
+        returns: _Patterns = ...,
+        type_comment: _Patterns = ...,
+        type_params: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -484,17 +541,17 @@ class MFunctionDef(MAST):
             fields.append('type_params')
 
 class MAsyncFunctionDef(MAST):
-    ast_cls = AsyncFunctionDef
+    _types = AsyncFunctionDef
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        args: _Pattern = ...,
-        body: _Pattern = ...,
-        decorator_list: _Pattern = ...,
-        returns: _Pattern = ...,
-        type_comment: _Pattern = ...,
-        type_params: _Pattern = ...,
+        name: _Patterns = ...,
+        args: _Patterns = ...,
+        body: _Patterns = ...,
+        decorator_list: _Patterns = ...,
+        returns: _Patterns = ...,
+        type_comment: _Patterns = ...,
+        type_params: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -527,16 +584,16 @@ class MAsyncFunctionDef(MAST):
             fields.append('type_params')
 
 class MClassDef(MAST):
-    ast_cls = ClassDef
+    _types = ClassDef
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        bases: _Pattern = ...,
-        keywords: _Pattern = ...,
-        body: _Pattern = ...,
-        decorator_list: _Pattern = ...,
-        type_params: _Pattern = ...,
+        name: _Patterns = ...,
+        bases: _Patterns = ...,
+        keywords: _Patterns = ...,
+        body: _Patterns = ...,
+        decorator_list: _Patterns = ...,
+        type_params: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -565,11 +622,11 @@ class MClassDef(MAST):
             fields.append('type_params')
 
 class MReturn(MAST):
-    ast_cls = Return
+    _types = Return
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -578,11 +635,11 @@ class MReturn(MAST):
             fields.append('value')
 
 class MDelete(MAST):
-    ast_cls = Delete
+    _types = Delete
 
     def __init__(
         self,
-        targets: _Pattern = ...,
+        targets: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -591,13 +648,13 @@ class MDelete(MAST):
             fields.append('targets')
 
 class MAssign(MAST):
-    ast_cls = Assign
+    _types = Assign
 
     def __init__(
         self,
-        targets: _Pattern = ...,
-        value: _Pattern = ...,
-        type_comment: _Pattern = ...,
+        targets: _Patterns = ...,
+        value: _Patterns = ...,
+        type_comment: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -614,13 +671,13 @@ class MAssign(MAST):
             fields.append('type_comment')
 
 class MTypeAlias(MAST):
-    ast_cls = TypeAlias
+    _types = TypeAlias
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        type_params: _Pattern = ...,
-        value: _Pattern = ...,
+        name: _Patterns = ...,
+        type_params: _Patterns = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -637,13 +694,13 @@ class MTypeAlias(MAST):
             fields.append('value')
 
 class MAugAssign(MAST):
-    ast_cls = AugAssign
+    _types = AugAssign
 
     def __init__(
         self,
-        target: _Pattern = ...,
-        op: _Pattern = ...,
-        value: _Pattern = ...,
+        target: _Patterns = ...,
+        op: _Patterns = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -660,14 +717,14 @@ class MAugAssign(MAST):
             fields.append('value')
 
 class MAnnAssign(MAST):
-    ast_cls = AnnAssign
+    _types = AnnAssign
 
     def __init__(
         self,
-        target: _Pattern = ...,
-        annotation: _Pattern = ...,
-        value: _Pattern = ...,
-        simple: _Pattern = ...,
+        target: _Patterns = ...,
+        annotation: _Patterns = ...,
+        value: _Patterns = ...,
+        simple: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -688,15 +745,15 @@ class MAnnAssign(MAST):
             fields.append('simple')
 
 class MFor(MAST):
-    ast_cls = For
+    _types = For
 
     def __init__(
         self,
-        target: _Pattern = ...,
-        iter: _Pattern = ...,
-        body: _Pattern = ...,
-        orelse: _Pattern = ...,
-        type_comment: _Pattern = ...,
+        target: _Patterns = ...,
+        iter: _Patterns = ...,
+        body: _Patterns = ...,
+        orelse: _Patterns = ...,
+        type_comment: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -721,15 +778,15 @@ class MFor(MAST):
             fields.append('type_comment')
 
 class MAsyncFor(MAST):
-    ast_cls = AsyncFor
+    _types = AsyncFor
 
     def __init__(
         self,
-        target: _Pattern = ...,
-        iter: _Pattern = ...,
-        body: _Pattern = ...,
-        orelse: _Pattern = ...,
-        type_comment: _Pattern = ...,
+        target: _Patterns = ...,
+        iter: _Patterns = ...,
+        body: _Patterns = ...,
+        orelse: _Patterns = ...,
+        type_comment: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -754,13 +811,13 @@ class MAsyncFor(MAST):
             fields.append('type_comment')
 
 class MWhile(MAST):
-    ast_cls = While
+    _types = While
 
     def __init__(
         self,
-        test: _Pattern = ...,
-        body: _Pattern = ...,
-        orelse: _Pattern = ...,
+        test: _Patterns = ...,
+        body: _Patterns = ...,
+        orelse: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -777,13 +834,13 @@ class MWhile(MAST):
             fields.append('orelse')
 
 class MIf(MAST):
-    ast_cls = If
+    _types = If
 
     def __init__(
         self,
-        test: _Pattern = ...,
-        body: _Pattern = ...,
-        orelse: _Pattern = ...,
+        test: _Patterns = ...,
+        body: _Patterns = ...,
+        orelse: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -800,13 +857,13 @@ class MIf(MAST):
             fields.append('orelse')
 
 class MWith(MAST):
-    ast_cls = With
+    _types = With
 
     def __init__(
         self,
-        items: _Pattern = ...,
-        body: _Pattern = ...,
-        type_comment: _Pattern = ...,
+        items: _Patterns = ...,
+        body: _Patterns = ...,
+        type_comment: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -823,13 +880,13 @@ class MWith(MAST):
             fields.append('type_comment')
 
 class MAsyncWith(MAST):
-    ast_cls = AsyncWith
+    _types = AsyncWith
 
     def __init__(
         self,
-        items: _Pattern = ...,
-        body: _Pattern = ...,
-        type_comment: _Pattern = ...,
+        items: _Patterns = ...,
+        body: _Patterns = ...,
+        type_comment: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -846,12 +903,12 @@ class MAsyncWith(MAST):
             fields.append('type_comment')
 
 class MMatch(MAST):
-    ast_cls = Match
+    _types = Match
 
     def __init__(
         self,
-        subject: _Pattern = ...,
-        cases: _Pattern = ...,
+        subject: _Patterns = ...,
+        cases: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -864,12 +921,12 @@ class MMatch(MAST):
             fields.append('cases')
 
 class MRaise(MAST):
-    ast_cls = Raise
+    _types = Raise
 
     def __init__(
         self,
-        exc: _Pattern = ...,
-        cause: _Pattern = ...,
+        exc: _Patterns = ...,
+        cause: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -882,14 +939,14 @@ class MRaise(MAST):
             fields.append('cause')
 
 class MTry(MAST):
-    ast_cls = Try
+    _types = Try
 
     def __init__(
         self,
-        body: _Pattern = ...,
-        handlers: _Pattern = ...,
-        orelse: _Pattern = ...,
-        finalbody: _Pattern = ...,
+        body: _Patterns = ...,
+        handlers: _Patterns = ...,
+        orelse: _Patterns = ...,
+        finalbody: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -910,14 +967,14 @@ class MTry(MAST):
             fields.append('finalbody')
 
 class MTryStar(MAST):
-    ast_cls = TryStar
+    _types = TryStar
 
     def __init__(
         self,
-        body: _Pattern = ...,
-        handlers: _Pattern = ...,
-        orelse: _Pattern = ...,
-        finalbody: _Pattern = ...,
+        body: _Patterns = ...,
+        handlers: _Patterns = ...,
+        orelse: _Patterns = ...,
+        finalbody: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -938,12 +995,12 @@ class MTryStar(MAST):
             fields.append('finalbody')
 
 class MAssert(MAST):
-    ast_cls = Assert
+    _types = Assert
 
     def __init__(
         self,
-        test: _Pattern = ...,
-        msg: _Pattern = ...,
+        test: _Patterns = ...,
+        msg: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -956,11 +1013,11 @@ class MAssert(MAST):
             fields.append('msg')
 
 class MImport(MAST):
-    ast_cls = Import
+    _types = Import
 
     def __init__(
         self,
-        names: _Pattern = ...,
+        names: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -969,13 +1026,13 @@ class MImport(MAST):
             fields.append('names')
 
 class MImportFrom(MAST):
-    ast_cls = ImportFrom
+    _types = ImportFrom
 
     def __init__(
         self,
-        module: _Pattern = ...,
-        names: _Pattern = ...,
-        level: _Pattern = ...,
+        module: _Patterns = ...,
+        names: _Patterns = ...,
+        level: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -992,11 +1049,11 @@ class MImportFrom(MAST):
             fields.append('level')
 
 class MGlobal(MAST):
-    ast_cls = Global
+    _types = Global
 
     def __init__(
         self,
-        names: _Pattern = ...,
+        names: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1005,11 +1062,11 @@ class MGlobal(MAST):
             fields.append('names')
 
 class MNonlocal(MAST):
-    ast_cls = Nonlocal
+    _types = Nonlocal
 
     def __init__(
         self,
-        names: _Pattern = ...,
+        names: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1018,11 +1075,11 @@ class MNonlocal(MAST):
             fields.append('names')
 
 class MExpr(MAST):
-    ast_cls = Expr
+    _types = Expr
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1031,21 +1088,21 @@ class MExpr(MAST):
             fields.append('value')
 
 class MPass(MAST):
-    ast_cls = Pass
+    _types = Pass
 
 class MBreak(MAST):
-    ast_cls = Break
+    _types = Break
 
 class MContinue(MAST):
-    ast_cls = Continue
+    _types = Continue
 
 class MBoolOp(MAST):
-    ast_cls = BoolOp
+    _types = BoolOp
 
     def __init__(
         self,
-        op: _Pattern = ...,
-        values: _Pattern = ...,
+        op: _Patterns = ...,
+        values: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1058,12 +1115,12 @@ class MBoolOp(MAST):
             fields.append('values')
 
 class MNamedExpr(MAST):
-    ast_cls = NamedExpr
+    _types = NamedExpr
 
     def __init__(
         self,
-        target: _Pattern = ...,
-        value: _Pattern = ...,
+        target: _Patterns = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1076,13 +1133,13 @@ class MNamedExpr(MAST):
             fields.append('value')
 
 class MBinOp(MAST):
-    ast_cls = BinOp
+    _types = BinOp
 
     def __init__(
         self,
-        left: _Pattern = ...,
-        op: _Pattern = ...,
-        right: _Pattern = ...,
+        left: _Patterns = ...,
+        op: _Patterns = ...,
+        right: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1099,12 +1156,12 @@ class MBinOp(MAST):
             fields.append('right')
 
 class MUnaryOp(MAST):
-    ast_cls = UnaryOp
+    _types = UnaryOp
 
     def __init__(
         self,
-        op: _Pattern = ...,
-        operand: _Pattern = ...,
+        op: _Patterns = ...,
+        operand: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1117,12 +1174,12 @@ class MUnaryOp(MAST):
             fields.append('operand')
 
 class MLambda(MAST):
-    ast_cls = Lambda
+    _types = Lambda
 
     def __init__(
         self,
-        args: _Pattern = ...,
-        body: _Pattern = ...,
+        args: _Patterns = ...,
+        body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1135,13 +1192,13 @@ class MLambda(MAST):
             fields.append('body')
 
 class MIfExp(MAST):
-    ast_cls = IfExp
+    _types = IfExp
 
     def __init__(
         self,
-        test: _Pattern = ...,
-        body: _Pattern = ...,
-        orelse: _Pattern = ...,
+        test: _Patterns = ...,
+        body: _Patterns = ...,
+        orelse: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1158,12 +1215,12 @@ class MIfExp(MAST):
             fields.append('orelse')
 
 class MDict(MAST):
-    ast_cls = Dict
+    _types = Dict
 
     def __init__(
         self,
-        keys: _Pattern = ...,
-        values: _Pattern = ...,
+        keys: _Patterns = ...,
+        values: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1176,11 +1233,11 @@ class MDict(MAST):
             fields.append('values')
 
 class MSet(MAST):
-    ast_cls = Set
+    _types = Set
 
     def __init__(
         self,
-        elts: _Pattern = ...,
+        elts: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1189,12 +1246,12 @@ class MSet(MAST):
             fields.append('elts')
 
 class MListComp(MAST):
-    ast_cls = ListComp
+    _types = ListComp
 
     def __init__(
         self,
-        elt: _Pattern = ...,
-        generators: _Pattern = ...,
+        elt: _Patterns = ...,
+        generators: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1207,12 +1264,12 @@ class MListComp(MAST):
             fields.append('generators')
 
 class MSetComp(MAST):
-    ast_cls = SetComp
+    _types = SetComp
 
     def __init__(
         self,
-        elt: _Pattern = ...,
-        generators: _Pattern = ...,
+        elt: _Patterns = ...,
+        generators: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1225,13 +1282,13 @@ class MSetComp(MAST):
             fields.append('generators')
 
 class MDictComp(MAST):
-    ast_cls = DictComp
+    _types = DictComp
 
     def __init__(
         self,
-        key: _Pattern = ...,
-        value: _Pattern = ...,
-        generators: _Pattern = ...,
+        key: _Patterns = ...,
+        value: _Patterns = ...,
+        generators: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1248,12 +1305,12 @@ class MDictComp(MAST):
             fields.append('generators')
 
 class MGeneratorExp(MAST):
-    ast_cls = GeneratorExp
+    _types = GeneratorExp
 
     def __init__(
         self,
-        elt: _Pattern = ...,
-        generators: _Pattern = ...,
+        elt: _Patterns = ...,
+        generators: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1266,11 +1323,11 @@ class MGeneratorExp(MAST):
             fields.append('generators')
 
 class MAwait(MAST):
-    ast_cls = Await
+    _types = Await
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1279,11 +1336,11 @@ class MAwait(MAST):
             fields.append('value')
 
 class MYield(MAST):
-    ast_cls = Yield
+    _types = Yield
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1292,11 +1349,11 @@ class MYield(MAST):
             fields.append('value')
 
 class MYieldFrom(MAST):
-    ast_cls = YieldFrom
+    _types = YieldFrom
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1305,13 +1362,13 @@ class MYieldFrom(MAST):
             fields.append('value')
 
 class MCompare(MAST):
-    ast_cls = Compare
+    _types = Compare
 
     def __init__(
         self,
-        left: _Pattern = ...,
-        ops: _Pattern = ...,
-        comparators: _Pattern = ...,
+        left: _Patterns = ...,
+        ops: _Patterns = ...,
+        comparators: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1328,13 +1385,13 @@ class MCompare(MAST):
             fields.append('comparators')
 
 class MCall(MAST):
-    ast_cls = Call
+    _types = Call
 
     def __init__(
         self,
-        func: _Pattern = ...,
-        args: _Pattern = ...,
-        keywords: _Pattern = ...,
+        func: _Patterns = ...,
+        args: _Patterns = ...,
+        keywords: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1351,13 +1408,13 @@ class MCall(MAST):
             fields.append('keywords')
 
 class MFormattedValue(MAST):
-    ast_cls = FormattedValue
+    _types = FormattedValue
 
     def __init__(
         self,
-        value: _Pattern = ...,
-        conversion: _Pattern = ...,
-        format_spec: _Pattern = ...,
+        value: _Patterns = ...,
+        conversion: _Patterns = ...,
+        format_spec: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1374,14 +1431,14 @@ class MFormattedValue(MAST):
             fields.append('format_spec')
 
 class MInterpolation(MAST):
-    ast_cls = Interpolation
+    _types = Interpolation
 
     def __init__(
         self,
-        value: _Pattern = ...,
-        str: _Pattern = ...,
-        conversion: _Pattern = ...,
-        format_spec: _Pattern = ...,
+        value: _Patterns = ...,
+        str: _Patterns = ...,
+        conversion: _Patterns = ...,
+        format_spec: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1402,11 +1459,11 @@ class MInterpolation(MAST):
             fields.append('format_spec')
 
 class MJoinedStr(MAST):
-    ast_cls = JoinedStr
+    _types = JoinedStr
 
     def __init__(
         self,
-        values: _Pattern = ...,
+        values: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1415,11 +1472,11 @@ class MJoinedStr(MAST):
             fields.append('values')
 
 class MTemplateStr(MAST):
-    ast_cls = TemplateStr
+    _types = TemplateStr
 
     def __init__(
         self,
-        values: _Pattern = ...,
+        values: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1428,12 +1485,12 @@ class MTemplateStr(MAST):
             fields.append('values')
 
 class MConstant(MAST):
-    ast_cls = Constant
+    _types = Constant
 
     def __init__(
         self,
-        value: _Pattern,  # Ellipsis here is not a wildcard but a concrete value to match
-        kind: _Pattern = ...,
+        value: _Patterns,  # Ellipsis here is not a wildcard but a concrete value to match
+        kind: _Patterns = ...,
     ) -> None:
         self._fields = fields = ['value']
         self.value = value
@@ -1443,13 +1500,13 @@ class MConstant(MAST):
             fields.append('kind')
 
 class MAttribute(MAST):
-    ast_cls = Attribute
+    _types = Attribute
 
     def __init__(
         self,
-        value: _Pattern = ...,
-        attr: _Pattern = ...,
-        ctx: _Pattern = ...,
+        value: _Patterns = ...,
+        attr: _Patterns = ...,
+        ctx: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1466,13 +1523,13 @@ class MAttribute(MAST):
             fields.append('ctx')
 
 class MSubscript(MAST):
-    ast_cls = Subscript
+    _types = Subscript
 
     def __init__(
         self,
-        value: _Pattern = ...,
-        slice: _Pattern = ...,
-        ctx: _Pattern = ...,
+        value: _Patterns = ...,
+        slice: _Patterns = ...,
+        ctx: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1489,12 +1546,12 @@ class MSubscript(MAST):
             fields.append('ctx')
 
 class MStarred(MAST):
-    ast_cls = Starred
+    _types = Starred
 
     def __init__(
         self,
-        value: _Pattern = ...,
-        ctx: _Pattern = ...,
+        value: _Patterns = ...,
+        ctx: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1507,12 +1564,12 @@ class MStarred(MAST):
             fields.append('ctx')
 
 class MName(MAST):
-    ast_cls = Name
+    _types = Name
 
     def __init__(
         self,
-        id: _Pattern = ...,
-        ctx: _Pattern = ...,
+        id: _Patterns = ...,
+        ctx: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1525,12 +1582,12 @@ class MName(MAST):
             fields.append('ctx')
 
 class MList(MAST):
-    ast_cls = List
+    _types = List
 
     def __init__(
         self,
-        elts: _Pattern = ...,
-        ctx: _Pattern = ...,
+        elts: _Patterns = ...,
+        ctx: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1543,12 +1600,12 @@ class MList(MAST):
             fields.append('ctx')
 
 class MTuple(MAST):
-    ast_cls = Tuple
+    _types = Tuple
 
     def __init__(
         self,
-        elts: _Pattern = ...,
-        ctx: _Pattern = ...,
+        elts: _Patterns = ...,
+        ctx: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1561,13 +1618,13 @@ class MTuple(MAST):
             fields.append('ctx')
 
 class MSlice(MAST):
-    ast_cls = Slice
+    _types = Slice
 
     def __init__(
         self,
-        lower: _Pattern = ...,
-        upper: _Pattern = ...,
-        step: _Pattern = ...,
+        lower: _Patterns = ...,
+        upper: _Patterns = ...,
+        step: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1584,110 +1641,110 @@ class MSlice(MAST):
             fields.append('step')
 
 class MLoad(MAST):
-    ast_cls = Load
+    _types = Load
 
 class MStore(MAST):
-    ast_cls = Store
+    _types = Store
 
 class MDel(MAST):
-    ast_cls = Del
+    _types = Del
 
 class MAnd(MAST):
-    ast_cls = And
+    _types = And
 
 class MOr(MAST):
-    ast_cls = Or
+    _types = Or
 
 class MAdd(MAST):
-    ast_cls = Add
+    _types = Add
 
 class MSub(MAST):
-    ast_cls = Sub
+    _types = Sub
 
 class MMult(MAST):
-    ast_cls = Mult
+    _types = Mult
 
 class MMatMult(MAST):
-    ast_cls = MatMult
+    _types = MatMult
 
 class MDiv(MAST):
-    ast_cls = Div
+    _types = Div
 
 class MMod(MAST):
-    ast_cls = Mod
+    _types = Mod
 
 class MPow(MAST):
-    ast_cls = Pow
+    _types = Pow
 
 class MLShift(MAST):
-    ast_cls = LShift
+    _types = LShift
 
 class MRShift(MAST):
-    ast_cls = RShift
+    _types = RShift
 
 class MBitOr(MAST):
-    ast_cls = BitOr
+    _types = BitOr
 
 class MBitXor(MAST):
-    ast_cls = BitXor
+    _types = BitXor
 
 class MBitAnd(MAST):
-    ast_cls = BitAnd
+    _types = BitAnd
 
 class MFloorDiv(MAST):
-    ast_cls = FloorDiv
+    _types = FloorDiv
 
 class MInvert(MAST):
-    ast_cls = Invert
+    _types = Invert
 
 class MNot(MAST):
-    ast_cls = Not
+    _types = Not
 
 class MUAdd(MAST):
-    ast_cls = UAdd
+    _types = UAdd
 
 class MUSub(MAST):
-    ast_cls = USub
+    _types = USub
 
 class MEq(MAST):
-    ast_cls = Eq
+    _types = Eq
 
 class MNotEq(MAST):
-    ast_cls = NotEq
+    _types = NotEq
 
 class MLt(MAST):
-    ast_cls = Lt
+    _types = Lt
 
 class MLtE(MAST):
-    ast_cls = LtE
+    _types = LtE
 
 class MGt(MAST):
-    ast_cls = Gt
+    _types = Gt
 
 class MGtE(MAST):
-    ast_cls = GtE
+    _types = GtE
 
 class MIs(MAST):
-    ast_cls = Is
+    _types = Is
 
 class MIsNot(MAST):
-    ast_cls = IsNot
+    _types = IsNot
 
 class MIn(MAST):
-    ast_cls = In
+    _types = In
 
 class MNotIn(MAST):
-    ast_cls = NotIn
+    _types = NotIn
 
 class Mcomprehension(MAST):
-    ast_cls = comprehension
+    _types = comprehension
 
     def __init__(
         self,
-        target: _Pattern = ...,
-        iter: _Pattern = ...,
-        ifs: _Pattern = ...,
-        is_async: _Pattern = ...,
+        target: _Patterns = ...,
+        iter: _Patterns = ...,
+        ifs: _Patterns = ...,
+        is_async: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1708,13 +1765,13 @@ class Mcomprehension(MAST):
             fields.append('is_async')
 
 class MExceptHandler(MAST):
-    ast_cls = ExceptHandler
+    _types = ExceptHandler
 
     def __init__(
         self,
-        type: _Pattern = ...,
-        name: _Pattern = ...,
-        body: _Pattern = ...,
+        type: _Patterns = ...,
+        name: _Patterns = ...,
+        body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1731,17 +1788,17 @@ class MExceptHandler(MAST):
             fields.append('body')
 
 class Marguments(MAST):
-    ast_cls = arguments
+    _types = arguments
 
     def __init__(
         self,
-        posonlyargs: _Pattern = ...,
-        args: _Pattern = ...,
-        vararg: _Pattern = ...,
-        kwonlyargs: _Pattern = ...,
-        kw_defaults: _Pattern = ...,
-        kwarg: _Pattern = ...,
-        defaults: _Pattern = ...,
+        posonlyargs: _Patterns = ...,
+        args: _Patterns = ...,
+        vararg: _Patterns = ...,
+        kwonlyargs: _Patterns = ...,
+        kw_defaults: _Patterns = ...,
+        kwarg: _Patterns = ...,
+        defaults: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1774,13 +1831,13 @@ class Marguments(MAST):
             fields.append('defaults')
 
 class Marg(MAST):
-    ast_cls = arg
+    _types = arg
 
     def __init__(
         self,
-        arg: _Pattern = ...,
-        annotation: _Pattern = ...,
-        type_comment: _Pattern = ...,
+        arg: _Patterns = ...,
+        annotation: _Patterns = ...,
+        type_comment: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1797,12 +1854,12 @@ class Marg(MAST):
             fields.append('type_comment')
 
 class Mkeyword(MAST):
-    ast_cls = keyword
+    _types = keyword
 
     def __init__(
         self,
-        arg: _Pattern = ...,
-        value: _Pattern = ...,
+        arg: _Patterns = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1815,12 +1872,12 @@ class Mkeyword(MAST):
             fields.append('value')
 
 class Malias(MAST):
-    ast_cls = alias
+    _types = alias
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        asname: _Pattern = ...,
+        name: _Patterns = ...,
+        asname: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1833,12 +1890,12 @@ class Malias(MAST):
             fields.append('asname')
 
 class Mwithitem(MAST):
-    ast_cls = withitem
+    _types = withitem
 
     def __init__(
         self,
-        context_expr: _Pattern = ...,
-        optional_vars: _Pattern = ...,
+        context_expr: _Patterns = ...,
+        optional_vars: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1851,13 +1908,13 @@ class Mwithitem(MAST):
             fields.append('optional_vars')
 
 class Mmatch_case(MAST):
-    ast_cls = match_case
+    _types = match_case
 
     def __init__(
         self,
-        pattern: _Pattern = ...,
-        guard: _Pattern = ...,
-        body: _Pattern = ...,
+        pattern: _Patterns = ...,
+        guard: _Patterns = ...,
+        body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1874,11 +1931,11 @@ class Mmatch_case(MAST):
             fields.append('body')
 
 class MMatchValue(MAST):
-    ast_cls = MatchValue
+    _types = MatchValue
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1887,11 +1944,11 @@ class MMatchValue(MAST):
             fields.append('value')
 
 class MMatchSingleton(MAST):
-    ast_cls = MatchSingleton
+    _types = MatchSingleton
 
     def __init__(
         self,
-        value: _Pattern = ...,
+        value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1900,11 +1957,11 @@ class MMatchSingleton(MAST):
             fields.append('value')
 
 class MMatchSequence(MAST):
-    ast_cls = MatchSequence
+    _types = MatchSequence
 
     def __init__(
         self,
-        patterns: _Pattern = ...,
+        patterns: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1913,13 +1970,13 @@ class MMatchSequence(MAST):
             fields.append('patterns')
 
 class MMatchMapping(MAST):
-    ast_cls = MatchMapping
+    _types = MatchMapping
 
     def __init__(
         self,
-        keys: _Pattern = ...,
-        patterns: _Pattern = ...,
-        rest: _Pattern = ...,
+        keys: _Patterns = ...,
+        patterns: _Patterns = ...,
+        rest: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1936,14 +1993,14 @@ class MMatchMapping(MAST):
             fields.append('rest')
 
 class MMatchClass(MAST):
-    ast_cls = MatchClass
+    _types = MatchClass
 
     def __init__(
         self,
-        cls: _Pattern = ...,
-        patterns: _Pattern = ...,
-        kwd_attrs: _Pattern = ...,
-        kwd_patterns: _Pattern = ...,
+        cls: _Patterns = ...,
+        patterns: _Patterns = ...,
+        kwd_attrs: _Patterns = ...,
+        kwd_patterns: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1964,11 +2021,11 @@ class MMatchClass(MAST):
             fields.append('kwd_patterns')
 
 class MMatchStar(MAST):
-    ast_cls = MatchStar
+    _types = MatchStar
 
     def __init__(
         self,
-        name: _Pattern = ...,
+        name: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1977,12 +2034,12 @@ class MMatchStar(MAST):
             fields.append('name')
 
 class MMatchAs(MAST):
-    ast_cls = MatchAs
+    _types = MatchAs
 
     def __init__(
         self,
-        pattern: _Pattern = ...,
-        name: _Pattern = ...,
+        pattern: _Patterns = ...,
+        name: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1995,11 +2052,11 @@ class MMatchAs(MAST):
             fields.append('name')
 
 class MMatchOr(MAST):
-    ast_cls = MatchOr
+    _types = MatchOr
 
     def __init__(
         self,
-        patterns: _Pattern = ...,
+        patterns: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2008,12 +2065,12 @@ class MMatchOr(MAST):
             fields.append('patterns')
 
 class MTypeIgnore(MAST):
-    ast_cls = TypeIgnore
+    _types = TypeIgnore
 
     def __init__(
         self,
-        lineno: _Pattern = ...,
-        tag: _Pattern = ...,
+        lineno: _Patterns = ...,
+        tag: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2026,13 +2083,13 @@ class MTypeIgnore(MAST):
             fields.append('tag')
 
 class MTypeVar(MAST):
-    ast_cls = TypeVar
+    _types = TypeVar
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        bound: _Pattern = ...,
-        default_value: _Pattern = ...,
+        name: _Patterns = ...,
+        bound: _Patterns = ...,
+        default_value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2049,12 +2106,12 @@ class MTypeVar(MAST):
             fields.append('default_value')
 
 class MParamSpec(MAST):
-    ast_cls = ParamSpec
+    _types = ParamSpec
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        default_value: _Pattern = ...,
+        name: _Patterns = ...,
+        default_value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2067,12 +2124,12 @@ class MParamSpec(MAST):
             fields.append('default_value')
 
 class MTypeVarTuple(MAST):
-    ast_cls = TypeVarTuple
+    _types = TypeVarTuple
 
     def __init__(
         self,
-        name: _Pattern = ...,
-        default_value: _Pattern = ...,
+        name: _Patterns = ...,
+        default_value: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2085,11 +2142,11 @@ class MTypeVarTuple(MAST):
             fields.append('default_value')
 
 class M_ExceptHandlers(MAST):
-    ast_cls = _ExceptHandlers
+    _types = _ExceptHandlers
 
     def __init__(
         self,
-        handlers: _Pattern = ...,
+        handlers: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2098,11 +2155,11 @@ class M_ExceptHandlers(MAST):
             fields.append('handlers')
 
 class M_match_cases(MAST):
-    ast_cls = _match_cases
+    _types = _match_cases
 
     def __init__(
         self,
-        cases: _Pattern = ...,
+        cases: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2111,11 +2168,11 @@ class M_match_cases(MAST):
             fields.append('cases')
 
 class M_Assign_targets(MAST):
-    ast_cls = _Assign_targets
+    _types = _Assign_targets
 
     def __init__(
         self,
-        targets: _Pattern = ...,
+        targets: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2124,11 +2181,11 @@ class M_Assign_targets(MAST):
             fields.append('targets')
 
 class M_decorator_list(MAST):
-    ast_cls = _decorator_list
+    _types = _decorator_list
 
     def __init__(
         self,
-        decorator_list: _Pattern = ...,
+        decorator_list: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2137,11 +2194,11 @@ class M_decorator_list(MAST):
             fields.append('decorator_list')
 
 class M_arglikes(MAST):
-    ast_cls = _arglikes
+    _types = _arglikes
 
     def __init__(
         self,
-        arglikes: _Pattern = ...,
+        arglikes: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2150,11 +2207,11 @@ class M_arglikes(MAST):
             fields.append('arglikes')
 
 class M_comprehensions(MAST):
-    ast_cls = _comprehensions
+    _types = _comprehensions
 
     def __init__(
         self,
-        generators: _Pattern = ...,
+        generators: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2163,11 +2220,11 @@ class M_comprehensions(MAST):
             fields.append('generators')
 
 class M_comprehension_ifs(MAST):
-    ast_cls = _comprehension_ifs
+    _types = _comprehension_ifs
 
     def __init__(
         self,
-        ifs: _Pattern = ...,
+        ifs: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2176,11 +2233,11 @@ class M_comprehension_ifs(MAST):
             fields.append('ifs')
 
 class M_aliases(MAST):
-    ast_cls = _aliases
+    _types = _aliases
 
     def __init__(
         self,
-        names: _Pattern = ...,
+        names: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2189,11 +2246,11 @@ class M_aliases(MAST):
             fields.append('names')
 
 class M_withitems(MAST):
-    ast_cls = _withitems
+    _types = _withitems
 
     def __init__(
         self,
-        items: _Pattern = ...,
+        items: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2202,11 +2259,11 @@ class M_withitems(MAST):
             fields.append('items')
 
 class M_type_params(MAST):
-    ast_cls = _type_params
+    _types = _type_params
 
     def __init__(
         self,
-        type_params: _Pattern = ...,
+        type_params: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2215,126 +2272,268 @@ class M_type_params(MAST):
             fields.append('type_params')
 
 class Mmod(MAST):
-    ast_cls = mod
+    _types = mod
 
 class Mstmt(MAST):
-    ast_cls = stmt
+    _types = stmt
 
 class Mexpr(MAST):
-    ast_cls = expr
+    _types = expr
 
 class Mexpr_context(MAST):
-    ast_cls = expr_context
+    _types = expr_context
 
 class Mboolop(MAST):
-    ast_cls = boolop
+    _types = boolop
 
 class Moperator(MAST):
-    ast_cls = operator
+    _types = operator
 
 class Munaryop(MAST):
-    ast_cls = unaryop
+    _types = unaryop
 
 class Mcmpop(MAST):
-    ast_cls = cmpop
+    _types = cmpop
 
 class Mexcepthandler(MAST):
-    ast_cls = excepthandler
+    _types = excepthandler
 
 class Mpattern(MAST):
-    ast_cls = pattern
+    _types = pattern
 
 class Mtype_ignore(MAST):
-    ast_cls = type_ignore
+    _types = type_ignore
 
 class Mtype_param(MAST):
-    ast_cls = type_param
+    _types = type_param
 
 class M_slice(MAST):
-    ast_cls = _slice
+    _types = _slice
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-_SENTINEL = object()
-_EMPTY_DICT = {}
-
-
-class MTAG(M_Pattern):
+class M(M_Pattern):
     """Tagging pattern container. If the given pattern matches then tags specified here will be returned in the
-    `M_Match` result object. The tags can be specified with fixed values but also the matched `AST` node can be returned
-    in a given tag name.
+    `M_Match` result object. The tags can be specified with static values but also the matched `AST` node can be
+    returned in a given tag name.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched `AST` is not returned in tags. If this is
-        missing (default `None`) then there must be at least one element in `tags` and the first key:value pair there
-        will be taken to be the pattern to match and the name of the tag to use for the matched `AST`.
-    - `tags`: Any fixed tags to return on a successful match.
+        missing then there must be at least one element in `tags` and the first key:value pair there will be taken to be
+        the pattern to match and the name of the tag to use for the matched `AST`.
+    - `tags`: Any static tags to return on a successful match.
     """
 
-    def __init__(self, anon_pat: _Pattern = None, /, **tags) -> None:
-        if anon_pat:
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+        if anon_pat is not _SENTINEL:
             self.pat = anon_pat
             self.pat_tag = None
-            self.tags = tags
+            self.static_tags = tags
 
-        elif (pat_tag := next(iter(tags), None)) is None:
-            raise ValueError('MTAG missing pattern')
+        elif (pat_tag := next(iter(tags), _SENTINEL)) is _SENTINEL:
+            raise ValueError(f'{self.__class__.__qualname__} requires pattern')
 
         else:
             self.pat = tags.pop(pat_tag)
             self.pat_tag = pat_tag
-            self.tags = tags
+            self.static_tags = tags
 
     @staticmethod
-    def _match(self: MTAG, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+    def _match(self: M, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
         m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions)
 
         if m is None:
             return None
 
-        pat_tag = self.pat_tag
+        if pat_tag := self.pat_tag:
+            if m:
+                return {**m, pat_tag: tgt, **self.static_tags}
+
+            return {pat_tag: tgt, **self.static_tags}
 
         if m:
-            if pat_tag:
-                return {**m, pat_tag: tgt, **self.tags}
+            return dict(m, **self.static_tags)
 
-            return dict(m, **self.tags)
+        return self.static_tags
 
-        if pat_tag:
-            return {pat_tag: tgt, **self.tags}
+    @staticmethod
+    def _leaf_asts(self: M) -> tp_Set[type[AST]]:
+        return _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
 
-        return self.tags
+
+class MNOT(M):
+    """Tagging NOT logic pattern container. If the given pattern **DOES NOT** match then tags specified here will be
+    returned in the `M_Match` result object. The tags can be specified with static values but also the unmatched `AST`
+    node can be returned in a given tag name.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to not match is provided in this then the unmatched `AST` is not returned in tags. If
+        this is missing (default `None`) then there must be at least one element in `tags` and the first key:value pair
+        there will be taken to be the pattern to not match and the name of the tag to use for the unmatched `AST`.
+    - `tags`: Any static tags to return on an unsuccessful match.
+    """
+
+    @staticmethod
+    def _match(self: MNOT, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions)
+
+        if m is not None:
+            return None
+
+        if pat_tag := self.pat_tag:
+            return {pat_tag: tgt, **self.static_tags}
+
+        return self.static_tags
+
+    @staticmethod
+    def _leaf_asts(self: M) -> tp_Set[type[AST]]:
+        leaf_asts = _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
+
+        if not leaf_asts:
+            return ASTS_LEAF__ALL
+        elif len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:
+            return _EMPTY_SET
+
+        return ASTS_LEAF__ALL - leaf_asts
 
 
 class MOR(M_Pattern):
     """Simple OR pattern. Matches if any of the given patterns matches.
 
     **Parameters:**
-    - `pats`: Patterns that constitute a successful match. Only need one to match, checked in order.
+    - `anon_pats`: Patterns that constitute a successful match, only need one to match. Checked in order.
+    - `tagged_pats`: Patterns that constitute a successful match, only need one to match. Checked in order. These
+        patterns will be returned with the given tags on success.
     """
 
-    def __init__(self, *pats: _Pattern) -> None:
-        if not pats:
-            raise ValueError('at least one pattern required for MOR')
+    def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
+        if anon_pats:
+            pats = anon_pats
+            pat_tags = [None] * len(pats)
+
+            if tagged_pats:
+                pats.extend(tagged_pats.values())
+                pat_tags.extend(tagged_pats.keys())
+
+        elif tagged_pats:
+            pats = list(tagged_pats.values())
+            pat_tags = list(tagged_pats.keys())
+
+        else:
+            raise ValueError(f'{self.__class__.__qualname__} requires at least one pattern')
 
         self.pats = pats
+        self.pat_tags = pat_tags
 
     @staticmethod
-    def _match(self: MOR, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
-        for p in self.pats:
+    def _match(self: MOR, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        for i, p in enumerate(self.pats):
             m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions)
 
             if m is not None:
+                if pat_tag := self.pat_tags[i]:
+                    return {pat_tag: tgt, **m}
+
                 return m
 
         return None
 
+    @staticmethod
+    def _leaf_asts(self: MOR) -> tp_Set[type[AST]]:
+        leaf_asts = set()
+
+        for pat in self.pats:
+            la = _LEAF_ASTS_FUNCS.get(pat.__class__, _leaf_asts_default)(pat)
+
+            if len(la) >= _LEN_ASTS_LEAF__ALL:  # early out because we hit all possible types
+                return la
+
+            leaf_asts.update(la)
+
+            if len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:  # another early out
+                return leaf_asts
+
+        return leaf_asts
+
+
+class MAND(MOR):
+    """Simple AND pattern. Matches only if all of the given patterns match.
+
+    **Parameters:**
+    - `anon_pats`: Patterns that need to match to constitute a success. Checked in order.
+    - `tagged_pats`: Patterns that need to match to constitute a success. Checked in order. These patterns will be
+        returned with the given tags on success.
+    """
+
+    @staticmethod
+    def _match(self: MAND, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        tagss = []
+
+        for i, p in enumerate(self.pats):
+            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions)
+
+            if m is None:
+                return None
+
+            if pat_tag := self.pat_tags[i]:
+                tagss.append({pat_tag: tgt, **m})
+            elif m:
+                tagss.append(m)
+
+        # combine all tags and return
+
+        if not tagss:
+            tags = _EMPTY_DICT
+        if len(tagss) == 1:
+            tags = tagss[0]
+
+        else:
+            tags = {}
+
+            for ts in tagss:
+                tags.update(ts)
+
+        return tags
+
+
+class MANY(MAST):
+    """This pattern matches any one of the given types and arbitrary fields."""
+
+    def __init__(self, types: Iterable[type[AST]], **fields: _Patterns) -> None:
+        self._types = types = tuple(types)
+
+        if not types:
+            raise ValueError('MANY requires at least one AST type to match')
+
+        if fields:
+            self._fields = fields
+
+            for field, value in fields.items():
+                setattr(self, field, value)
+
+    @staticmethod
+    def _leaf_asts(self: MANY) -> tp_Set[type[AST]]:
+        leaf_asts = set()
+
+        for p in self._types:
+            la = _LEAF_ASTS_FUNCS.get(p.__class__, _leaf_asts_default)(p)
+
+            if len(la) >= _LEN_ASTS_LEAF__ALL:  # early out because we hit all possible types
+                return la
+
+            leaf_asts.update(la)
+
+            if len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:  # another early out
+                return leaf_asts
+
+        return leaf_asts
+
 
 class MRE(M_Pattern):
-    """Tagging regex pattern. Normal `re.Pattern` can be used and thos will just be checked using `.match()` and the
+    """Tagging regex pattern. Normal `re.Pattern` can be used and that will just be checked using `.match()` and the
     `re.Match` object is lost. If this pattern is used instead the can specify `.match()` or `.search()` as well as
-    allowing the `re.Match` object to be returned as a tag if specified."""
+    allowing the `re.Match` object to be returned as a tag."""
 
     def __init__(
         self, anon_re_pat: str | re_Pattern | None = None, /, flags: int = 0, search: bool = False, **tags  # can only be one tag which will be the name for the pattern, in which case anon_re_pat must be None
@@ -2342,19 +2541,17 @@ class MRE(M_Pattern):
         if anon_re_pat is not None:
             pat_tag = None
         elif (pat_tag := next(iter(tags), None)) is None:
-            raise ValueError('MRE missing pattern')
+            raise ValueError('MRE requires pattern')
         else:
             anon_re_pat = tags.pop(pat_tag)
-
-        if tags:
-            raise ValueError('MRE does not take extra tags')
 
         self.re_pat = anon_re_pat if isinstance(anon_re_pat, re_Pattern) else re.compile(anon_re_pat, flags)
         self.pat_tag = pat_tag
         self.search = search
+        self.static_tags = tags
 
     @staticmethod
-    def _match(self: MRE, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+    def _match(self: MRE, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
         """Regex match or search pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will
         use `FST` source from the tree and unparse a non-`FST` `AST` node for the check. Returns `re.Match` object if is
         requested."""
@@ -2382,23 +2579,29 @@ class MRE(M_Pattern):
             if not isinstance(re_pat.pattern, bytes) or not (m := func(tgt)):
                 return None
 
-        elif isinstance(tgt, list):
+        elif isinstance(tgt, list) and moptions.get('list_check', True):
             raise ValueError('MRE can never match a list field')
 
         else:
             return None
 
-        return _EMPTY_DICT if (tag := self.pat_tag) is None else {tag: m}
+        if pat_tag := self.pat_tag:
+            return {pat_tag: m, **self.static_tags}
+
+        return self.static_tags
 
 
 # ......................................................................................................................
 
-def _match_default(pat: _Pattern, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
 
     if isinstance(pat, list):
         if not isinstance(tgt, list):
-            raise ValueError('list can never match a non-list field')
+            if moptions.get('list_check', True):
+                raise ValueError('list can never match a non-list field')
+
+            return None
 
         tagss = []
         iter_pat = iter(pat)
@@ -2459,12 +2662,12 @@ def _match_default(pat: _Pattern, tgt: _Target, moptions: Mapping[str, Any]) -> 
         if len(tagss) == 1:
             return tagss[0]
 
-        ret = {}
+        tags = {}
 
-        for tags in tagss:
-            ret.update(tags)
+        for ts in tagss:
+            tags.update(ts)
 
-        return ret
+        return tags
 
     # got here through subclass of a primitive type
 
@@ -2473,7 +2676,7 @@ def _match_default(pat: _Pattern, tgt: _Target, moptions: Mapping[str, Any]) -> 
 
     return _match_primitive(pat, tgt, moptions)
 
-def _match_str(pat: constant, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     if isinstance(tgt, str):
         if tgt != pat:
             return None
@@ -2487,7 +2690,7 @@ def _match_str(pat: constant, tgt: _Target, moptions: Mapping[str, Any]) -> Mapp
         if src != pat:  # match source against exact string
             return None
 
-    elif isinstance(tgt, list):
+    elif isinstance(tgt, list) and moptions.get('list_check', True):
         raise ValueError('str can never match a list field')
 
     else:
@@ -2495,7 +2698,7 @@ def _match_str(pat: constant, tgt: _Target, moptions: Mapping[str, Any]) -> Mapp
 
     return _EMPTY_DICT
 
-def _match_primitive(pat: constant, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_primitive(pat: constant, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """Primitive value comparison. We explicitly disallow equality of different types so 0 != 0.0 != 0j != False. We do
     all this to account for the possibility of subclassed primary types. This will not compare a `str` pattern against
     source."""
@@ -2522,20 +2725,21 @@ def _match_primitive(pat: constant, tgt: _Target, moptions: Mapping[str, Any]) -
             return None
 
     elif tgt != pat:
-        if issubclass(tgt_cls, list):
+        if issubclass(tgt_cls, list) and moptions.get('list_check', True):
             raise ValueError(f'{pat_cls.__qualname__} can never match a list field')
 
         return None
 
     return _EMPTY_DICT
 
-def _match_node(pat: M_Pattern | AST, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_node(pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
 
-    ast_cls = pat.ast_cls if isinstance(pat, M_Pattern) else pat.__class__
+    is_mpat = isinstance(pat, M_Pattern)
+    types = pat._types if is_mpat else pat.__class__
 
-    if not isinstance(tgt, ast_cls):
-        if isinstance(tgt, list):
+    if not isinstance(tgt, types):
+        if isinstance(tgt, list) and moptions.get('list_check', True):
             raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
@@ -2548,7 +2752,7 @@ def _match_node(pat: M_Pattern | AST, tgt: _Target, moptions: Mapping[str, Any])
         if p is ...:  # ellipsis handled here without dispatching for various reasons
             continue
 
-        t = getattr(tgt, field,_SENTINEL)  # field may not exist in target because pattern may have fields from a greater python version than we are running
+        t = getattr(tgt, field, _SENTINEL)  # for MF, but also field may not exist in target because pattern may have fields from a greater python version than we are running
 
         if t is _SENTINEL:
             return None
@@ -2567,70 +2771,92 @@ def _match_node(pat: M_Pattern | AST, tgt: _Target, moptions: Mapping[str, Any])
     if len(tagss) == 1:
         return tagss[0]
 
-    ret = {}
+    tags = {}
 
-    for tags in tagss:
-        ret.update(tags)
+    for ts in tagss:
+        tags.update(ts)
 
-    return ret
+    return tags
 
-def _match_node_Constant(pat: MConstant | Constant, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_node_Constant(
+    pat: MConstant | Constant, tgt: _Targets, moptions: Mapping[str, Any]
+) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
 
-    if (tgt.__class__ is not Constant
-        or (t := tgt.value) != (p := pat.value)  # this is just an early out of the value comparison even if equal they can still be unequal
-        or ((kind := getattr(pat, 'kind', ...)) is not ... and tgt.kind != kind)
-    ):
-        if isinstance(tgt, list):
+    if not isinstance(tgt, Constant):
+        if isinstance(tgt, list) and moptions.get('list_check', True):
             raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
-    return _match_primitive(p, t, moptions)
+    tagss = []
 
-def _match_node_expr_context(pat: Load | Store | Del, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+    if (p := getattr(pat, 'value', _SENTINEL)) is not _SENTINEL:  # missing value acts as implicit ... wildcard, while the real ... is a concrete value here
+        f = _match_primitive if p is ... else _MATCH_FUNCS.get(p.__class__, _match_default)
+
+        if (m := f(p, tgt.value, moptions)) is None:
+            return None
+        if m:
+            tagss.append(m)
+
+    if (p := getattr(pat, 'kind', ...)) is not ...:
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, moptions)) is None:
+            return None
+        if m:
+            tagss.append(m)
+
+    # combine all tags and return
+
+    if not tagss:
+        return _EMPTY_DICT
+    if len(tagss) == 1:
+        return tagss[0]
+
+    tags = {}
+
+    for ts in tagss:
+        tags.update(ts)
+
+    return tags
+
+def _match_node_expr_context(
+pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any]
+) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
     the match option `ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
     `None` must also match one of these successfully for py < 3.13."""
 
     if not isinstance(tgt, expr_context) or (moptions.get('ctx') and tgt.__class__ is not pat.__class__):
-        if isinstance(tgt, list):
+        if isinstance(tgt, list) and moptions.get('list_check', True):
             raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
     return _EMPTY_DICT
 
-def _match_node_nonleaf(pat: M_Pattern | AST, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
-    """`AST` non-leaf node (actual instance of something like `stmt()`, etc..., whatever, we take it). We just check
-    that the type is correct."""
+def _match_node_arbitrary_fields(
+pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
+) -> Mapping[str, Any] | None:
+    """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches."""
 
-    ast_cls = pat.ast_cls if isinstance(pat, M_Pattern) else pat.__class__
+    return _match_node(pat, tgt, {**moptions, 'list_check': False})
 
-    if not isinstance(tgt, ast_cls):
-        if isinstance(tgt, list):
-            raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
-
-        return None
-
-    return _EMPTY_DICT
-
-def _match_type(pat: type, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
 
     if issubclass(pat, M_Pattern):
-        pat = pat.ast_cls
+        pat = pat._types
 
     if not isinstance(tgt, pat):
-        if isinstance(tgt, list):
+        if isinstance(tgt, list) and moptions.get('list_check', True):
             raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
     return _EMPTY_DICT
 
-def _match_re_Pattern(pat: re_Pattern, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_re_Pattern(pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """Regex pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will use `FST` source
     from the tree and unparse a non-`FST` `AST` node for the check."""
 
@@ -2654,7 +2880,7 @@ def _match_re_Pattern(pat: re_Pattern, tgt: _Target, moptions: Mapping[str, Any]
         if not isinstance(pat.pattern, bytes) or not pat.match(tgt):
             return None
 
-    elif isinstance(tgt, list):
+    elif isinstance(tgt, list) and moptions.get('list_check', True):
         raise ValueError('re.Pattern can never match a list field')
 
     else:
@@ -2662,14 +2888,14 @@ def _match_re_Pattern(pat: re_Pattern, tgt: _Target, moptions: Mapping[str, Any]
 
     return _EMPTY_DICT
 
-def _match_Ellipsis(pat: EllipsisType, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """Always succeeds."""
 
     return _EMPTY_DICT
 
-def _match_None(pat: NoneType, tgt: _Target, moptions: Mapping[str, Any]) -> Mapping | None:
+def _match_None(pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     if tgt is not None:
-        if isinstance(tgt, list):
+        if isinstance(tgt, list) and moptions.get('list_check', True):
             raise ValueError('None can never match a list field')
 
         return None
@@ -2677,10 +2903,13 @@ def _match_None(pat: NoneType, tgt: _Target, moptions: Mapping[str, Any]) -> Map
     return _EMPTY_DICT
 
 _MATCH_FUNCS = {
-    MTAG:                MTAG._match,
+    M:                   M._match,
+    MNOT:                MNOT._match,
     MOR:                 MOR._match,
+    MAND:                MAND._match,
+    MANY:                _match_node,
     MRE:                 MRE._match,
-    AST:                 _match_node,
+    AST:                 _match_node,  # _match_node_nonleaf,
     Add:                 _match_node,
     And:                 _match_node,
     AnnAssign:           _match_node,
@@ -2786,27 +3015,27 @@ _MATCH_FUNCS = {
     boolop:              _match_node,
     cmpop:               _match_node,
     comprehension:       _match_node,
-    excepthandler:       _match_node_nonleaf,
-    expr:                _match_node_nonleaf,
-    expr_context:        _match_node_nonleaf,
+    excepthandler:       _match_node,  # _match_node_nonleaf,
+    expr:                _match_node,  # _match_node_nonleaf,
+    expr_context:        _match_node,  # _match_node_nonleaf,
     keyword:             _match_node,
     match_case:          _match_node,
-    mod:                 _match_node_nonleaf,
+    mod:                 _match_node,  # _match_node_nonleaf,
     operator:            _match_node,
-    pattern:             _match_node_nonleaf,
-    stmt:                _match_node_nonleaf,
-    type_ignore:         _match_node_nonleaf,
+    pattern:             _match_node,  # _match_node_nonleaf,
+    stmt:                _match_node,  # _match_node_nonleaf,
+    type_ignore:         _match_node,  # _match_node_nonleaf,
     unaryop:             _match_node,
     withitem:            _match_node,
     TryStar:             _match_node,
     TypeAlias:           _match_node,
-    type_param:          _match_node_nonleaf,
+    type_param:          _match_node,  # _match_node_nonleaf,
     TypeVar:             _match_node,
     ParamSpec:           _match_node,
     TypeVarTuple:        _match_node,
     TemplateStr:         _match_node,
     Interpolation:       _match_node,
-    _slice:              _match_node_nonleaf,
+    _slice:              _match_node,  # _match_node_nonleaf,
     _ExceptHandlers:     _match_node,
     _match_cases:        _match_node,
     _Assign_targets:     _match_node,
@@ -2817,6 +3046,7 @@ _MATCH_FUNCS = {
     _aliases:            _match_node,
     _withitems:          _match_node,
     _type_params:        _match_node,
+    MAST:                _match_node_arbitrary_fields,
     MAdd:                _match_node,
     MAnd:                _match_node,
     MAnnAssign:          _match_node,
@@ -2922,27 +3152,27 @@ _MATCH_FUNCS = {
     Mboolop:             _match_node,
     Mcmpop:              _match_node,
     Mcomprehension:      _match_node,
-    Mexcepthandler:      _match_node_nonleaf,
-    Mexpr:               _match_node_nonleaf,
-    Mexpr_context:       _match_node_nonleaf,
+    Mexcepthandler:      _match_node_arbitrary_fields,
+    Mexpr:               _match_node_arbitrary_fields,
+    Mexpr_context:       _match_node_arbitrary_fields,
     Mkeyword:            _match_node,
     Mmatch_case:         _match_node,
-    Mmod:                _match_node_nonleaf,
+    Mmod:                _match_node_arbitrary_fields,
     Moperator:           _match_node,
-    Mpattern:            _match_node_nonleaf,
-    Mstmt:               _match_node_nonleaf,
-    Mtype_ignore:        _match_node_nonleaf,
+    Mpattern:            _match_node_arbitrary_fields,
+    Mstmt:               _match_node_arbitrary_fields,
+    Mtype_ignore:        _match_node_arbitrary_fields,
     Munaryop:            _match_node,
     Mwithitem:           _match_node,
     MTryStar:            _match_node,
     MTypeAlias:          _match_node,
-    Mtype_param:         _match_node_nonleaf,
+    Mtype_param:         _match_node_arbitrary_fields,
     MTypeVar:            _match_node,
     MParamSpec:          _match_node,
     MTypeVarTuple:       _match_node,
     MTemplateStr:        _match_node,
     MInterpolation:      _match_node,
-    M_slice:             _match_node_nonleaf,
+    M_slice:             _match_node_arbitrary_fields,
     M_ExceptHandlers:    _match_node,
     M_match_cases:       _match_node,
     M_Assign_targets:    _match_node,
@@ -2963,6 +3193,56 @@ _MATCH_FUNCS = {
     bytes:               _match_primitive,
     bool:                _match_primitive,
     NoneType:            _match_None,
+}
+
+
+# ......................................................................................................................
+# get all leaf AST types that can possible match a given _Pattern
+
+def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]]:
+    if isinstance(pat, M_Pattern):
+        return AST2ASTSLEAF[pat._types]  # will be a single type here
+
+    if isinstance(pat, AST):
+        return AST2ASTSLEAF[pat.__class__]
+
+    if isinstance(pat, str):
+        return ASTS_LEAF__ALL
+
+    if isinstance(pat, list):
+        raise ValueError('unexpected list')
+
+    return _EMPTY_SET
+
+def _leaf_asts_all(pat: _Pattern) -> tp_Set[type[AST]]:
+    return ASTS_LEAF__ALL
+
+def _leaf_asts_none(pat: _Pattern) -> tp_Set[type[AST]]:
+    return _EMPTY_SET
+
+def _leaf_asts_type(pat: type) -> tp_Set[type[AST]]:
+    if issubclass(pat, M_Pattern):
+        pat = pat._types
+
+    return AST2ASTSLEAF[pat]
+
+_LEAF_ASTS_FUNCS = {
+    M:            M._leaf_asts,
+    MNOT:         MNOT._leaf_asts,
+    MOR:          MOR._leaf_asts,
+    MAND:         MAND._leaf_asts,
+    MANY:         MANY._leaf_asts,
+    MRE:          _leaf_asts_all,
+    type:         _leaf_asts_type,
+    re_Pattern:   _leaf_asts_all,
+    EllipsisType: _leaf_asts_all,
+    int:          _leaf_asts_none,
+    float:        _leaf_asts_none,
+    complex:      _leaf_asts_none,
+    str:          _leaf_asts_all,
+    bytes:        _leaf_asts_none,
+    bool:         _leaf_asts_none,
+    NoneType:     _leaf_asts_none,
 }
 
 
@@ -2990,4 +3270,54 @@ def match(
 
     m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, dict(ctx=ctx))
 
-    return None if m is None else M_Match(m)
+    return None if m is None else M_Match(m, pat, self.a)
+
+
+def search(
+    self: fst.FST,
+    pat: _Pattern,
+    *,
+    ctx: bool = False,
+    self_: bool = True,
+    recurse: bool = True,
+    scope: bool = False,
+    back: bool = False,
+    asts: list[AST] | None = None,
+) -> Generator[M_Match, bool, None]:
+    """TODO: document
+
+    **Parameters:**
+    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not. Defaults to `False` because when
+        creating `AST` nodes the `ctx` field may be created automatically if you don't specify it so may
+        inadvertantly break any matches. Will always check `ctx` field for `M_Pattern` patterns because there it is
+        well behaved and if not specified is set to wildcard.
+    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `fst.fst.FST.walk()`
+        function, see that for their meaning.
+
+    **Returns:**
+    - `Generator`: This is a `walk()` generator set up for matching. You can interact with this generator in the same
+        way as a normal `walk()` generator in that you can send `True` or `False` to control recursion into child nodes.
+        You can also delete and replace nodes in the same way as a normal walk.
+    """
+
+    pat_cls = pat.__class__
+    asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)
+    match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
+    moptions = dict(ctx=ctx)
+
+    if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
+        def walk_all(fst_: fst.FST) -> M_Match | Literal[False]:
+            m = match_func(pat, fst_.a, moptions)
+
+            return False if m is None else M_Match(m, pat, self.a)
+
+    else:
+        def walk_all(fst_: fst.FST) -> M_Match | Literal[False]:
+            if fst_.a.__class__ not in asts_leaf:
+                return False
+
+            m = match_func(pat, fst_.a, moptions)
+
+            return False if m is None else M_Match(m, pat, fst_.a)
+
+    return self.walk(walk_all, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)

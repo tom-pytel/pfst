@@ -150,6 +150,8 @@ class fstloc(NamedTuple):
 class fstlocn(fstloc):
     """Version of `fstloc` with a namespace, used for `pars().n`."""
 
+    n: int  ; """For the type checkers, only used for return from `pars()`"""
+
     def __repr__(self) -> str:
         ln, col, end_ln, end_col = self
         ns = ', '.join(f'{n}={v!r}' for n, v in self.__dict__.items())

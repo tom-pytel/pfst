@@ -5,7 +5,7 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
-from typing import Container, Generator, Literal
+from typing import Callable, Container, Generator, Literal
 
 from . import fst
 
@@ -53,7 +53,7 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
         return (
             fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_OP_OR_ARGUMENTS
             or ((a := fst_.a).__class__ is arguments
-                and (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs)
+                and (True if (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs) else False)
         ))
 
     if all == 'loc':
@@ -63,6 +63,35 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
         return fst_.a.__class__ is all
 
     return fst_.a.__class__ in all
+
+
+def _all_param_func(
+    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] | Callable[[fst.FST], object]
+) -> Callable[[fst.FST], object]:
+    """Create a standalone function to check an `FST` against the given value of `all` parameter. Unlike
+    `_check_all_param()` this can also accept a `Callable` for an external checker, which is returned unchanged in
+    case `all` is one of these."""
+
+    if all is True:
+        return lambda fst_: True
+
+    if all is False:
+        return lambda fst_: (
+            fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_OP_OR_ARGUMENTS
+            or ((a := fst_.a).__class__ is arguments
+                and (True if (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs) else False)
+        ))
+
+    if all == 'loc':
+        return lambda fst_: fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP
+
+    if all.__class__ is type and issubclass(all, AST):
+        return lambda fst_: fst_.a.__class__ is all
+
+    if not callable(all):
+        return lambda fst_: fst_.a.__class__ in all
+
+    return all
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -757,14 +786,14 @@ def step_back(
 
 def walk(
     self: fst.FST,
-    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] = False,
+    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] | Callable[[fst.FST], bool] = False,
     *,
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
-    asts: list[AST] | None = None
-) -> Generator[fst.FST, bool, None]:
+    asts: list[AST] | None = None,
+) -> Generator[fst.FST, bool, None]:  # it says yields fst.FST but that may not always the case with user supplied `all` callbacks
     r"""Walk `self` and descendants in syntactic order.
 
     When walking, you can `send(False)` to the generator to skip recursion into the current child. `send(True)` will
@@ -813,6 +842,9 @@ def walk(
         - `Container[type[AST]]`: A container of **LEAF** `AST` types to return. Best container type is a `set`,
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks. This will not
             constrain the walk, just filter which nodes are returned.
+        - `Callable[[fst.FST], object]`: Call out to an external function for each node which should return a `bool` for
+            whether the node matches or not. **IMPORTANT** if this `Callable` returns a truthy value that is not exactly
+            `True` then this value replaces the `FST` node that will be yielded at that point of the walk!
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the first level of children by default, `send(True)` for a given node will
@@ -953,6 +985,7 @@ def walk(
     """
 
     ast = self.a
+    check_all_param = _all_param_func(all)
 
     if asts is not None:
         scope_args = is_def = False  # scope stuff
@@ -961,10 +994,10 @@ def walk(
 
     else:
         if self_:
-            if _check_all_param(self, all):
+            if check := check_all_param(self):
                 recurse_ = 1
 
-                while (sent := (yield self)) is not None:
+                while (sent := (yield self if check is True else check)) is not None:
                     recurse_ = sent
 
                 if not recurse_:
@@ -1049,10 +1082,10 @@ def walk(
         if not (fst_ := ast.f):  # if node was removed or replaced somewhere else then just continue walk
             continue
 
-        if _check_all_param(fst_, all):
+        if check := check_all_param(fst_):
             recurse_ = recurse
 
-            while (sent := (yield fst_)) is not None:
+            while (sent := (yield fst_ if check is True else check)) is not None:
                 recurse_ = 1 if sent else False
 
             if not recurse_:  # either send(False) or wasn't going to recurse anyways
@@ -1215,8 +1248,8 @@ def walk(
                         while (sent := (yield f)) is not None:
                             subrecurse = sent
 
-                        if subrecurse and _check_all_param(f := a.ctx.f, all):  # truly pedantic, but maybe the user really really really wants that .ctx?
-                            while (yield f) is not None:  # eat all the user's send()s
+                        if subrecurse and (check := check_all_param(f := a.ctx.f)):  # truly pedantic, but maybe the user really really really wants that .ctx?
+                            while (yield f if check is True else check) is not None:  # eat all the user's send()s
                                 pass
 
                         gen.send(False)  # we processed this node here so don't recurse into it
