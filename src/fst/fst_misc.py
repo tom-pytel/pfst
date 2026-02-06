@@ -148,6 +148,9 @@ try:
 except Exception:  # pragma: no cover
     IPYTHON_COLOR = False
 
+
+_SENTINEL = object()
+
 DEFAULT_COLOR = (
     False if os.environ.get("NO_COLOR") else
     True if os.environ.get("FORCE_COLOR") else
@@ -645,13 +648,13 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if field is None:
-        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body is just a sentinel value here
+        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, _SENTINEL)) is _SENTINEL:
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
     if field.startswith('_'):  # virtual field like Dict._all
         return field, []
 
-    if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
+    if (body := getattr(ast, field, _SENTINEL)) is _SENTINEL:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):

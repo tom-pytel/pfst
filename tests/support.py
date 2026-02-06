@@ -12,6 +12,8 @@ from ast import AST
 __all__ = ['ParseCases', 'CoerceCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases', 'assertRaises']
 
 
+_SENTINEL = object()
+
 _PYVER = sys.version_info[1]
 # VERBOSE = False  # any(arg == '-v' or arg == '--verbose' for arg in sys.argv)
 
@@ -278,7 +280,7 @@ class GetCases(BaseCases):
         func = self.func
         rest = None
         h    = None
-        g    = exec  # sentinel
+        g    = _SENTINEL
         f    = _make_fst(case.code, case.attr)
         opts = _clean_options(case.options)
 
@@ -296,7 +298,7 @@ class GetCases(BaseCases):
         if rest is None:
             rest = [f.root.src, f.root.dump(out='str')]
 
-        if g is exec:  # exec is just a sentinel value here
+        if g is _SENTINEL:
             pass  # noop
         elif g is None:
             rest.append('**None**')

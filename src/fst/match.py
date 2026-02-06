@@ -173,6 +173,7 @@ from .asttypes import (
 
 from .astutil import constant
 from .parsex import unparse
+from .code import Code, code_as_all
 
 __all__ = [
     'MatchError',
@@ -3957,6 +3958,8 @@ def match(
     always fail (as `self` is an `FST`) and matching against a wildcard ellipsis `...` will always succeed.
 
     **Parameters:**
+    - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
+        functional patterns of these). Because you're matching against a node, otherwise nothing will match.
     - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -4062,6 +4065,8 @@ def search(
     objects. You can get the matched nodes from these objects using the `fst` attribute, e.g. `match.fst`.
 
     **Parameters:**
+    - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
+        functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
     - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -4118,13 +4123,13 @@ def search(
     moptions = dict(ctx=ctx)
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
-        def walk_all(fst_: fst.FST) -> M_Match | Literal[False]:
+        def all_func(fst_: fst.FST) -> M_Match | Literal[False]:
             m = match_func(pat, fst_.a, moptions)
 
             return False if m is None else M_Match(m, pat, fst_.a)
 
     else:
-        def walk_all(fst_: fst.FST) -> M_Match | Literal[False]:
+        def all_func(fst_: fst.FST) -> M_Match | Literal[False]:
             if fst_.a.__class__ not in asts_leaf:
                 return False
 
@@ -4132,4 +4137,87 @@ def search(
 
             return False if m is None else M_Match(m, pat, fst_.a)
 
-    return self.walk(walk_all, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+    return self.walk(all_func, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+
+
+def sub(
+    self: fst.FST,
+    pat: _Pattern,
+    repl: Code | Callable[[M_Match], Code],
+    nest: bool = False,
+    *,
+    ctx: bool = False,
+    self_: bool = True,
+    recurse: bool = True,
+    scope: bool = False,
+    back: bool = False,
+    asts: list[AST] | None = None,
+    **options,
+) -> int:
+    r"""TODO document
+
+    **Parameters:**
+    - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
+        functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
+    - `repl`: TODO document
+    - `nest: TODO document
+    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+        Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
+        don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
+        Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
+        is set to wildcard.
+    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
+        function for their meanings.
+    - `options`: The options to use for the `replace()` calls. See `options()`.
+
+    **Returns:**
+    - `int`: Number of substitutions made (by this function, user function could have done others, but that is on the
+        user).
+
+    **Examples:**
+
+    >>> from fst.match import *
+
+    """
+
+    is_func = callable(repl)
+
+    if not is_func:
+        repl = code_as_all(repl, options, self.root.parse_params)
+        paths = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
+
+        for f in repl.walk(Name):
+            if (n := f.a.id).startswith('__fst_'):
+                paths.append((n[6:], repl.child_path(f)))
+
+    count = 0
+    gen = self.search(pat, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+
+    for m in gen:
+        f = m.fst
+
+        if is_func:
+            r = repl(m)
+
+        else:
+            r = repl.copy()
+
+            for tag, path in paths:
+                if not tag:
+                    g = f.copy()
+                elif (g := m.tags.get(tag, _SENTINEL)) is _SENTINEL:
+                    raise RuntimeError(f'{tag!r} tag not found for substitution')
+                elif isinstance(f, fst.FST):
+                    g = g.copy()
+
+                r.child_from_path(path).replace(g, **options)
+
+        if r is not f:
+            f.replace(r, **options)
+
+            count += 1
+
+        if not nest:
+            gen.send(False)
+
+    return count

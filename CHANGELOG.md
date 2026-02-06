@@ -7,6 +7,7 @@
   - lazy imports not on main branch yet
 - `FST.match()` for structural pattern matching
 - `FST.search()` for structural pattern searching
+- `FST.sub()` for structural pattern substitution
 - `FST.find_def()` to easily find (possibly nested) function and class definitions by name in a given scope by dotted name
   - added usage of this in indexing (single-element only, not slice): `method = module['class.method']`, `del someclass['method']`, etc...
 - added `top` and `stop_at` parameters to `step_fwd/back()`

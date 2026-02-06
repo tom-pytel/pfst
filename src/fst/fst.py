@@ -165,6 +165,8 @@ __all__ = [
 ]
 
 
+_SENTINEL = object()
+
 _DEFAULT_FILENAME = '<FST>'
 _DEFAULT_PARSE_PARAMS = dict(filename=_DEFAULT_FILENAME, type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
@@ -878,7 +880,7 @@ class FST:
                 return src_or_ast_or_fst.as_(mode, kwargs.get('copy', True), **filter_options(kwargs))
 
             parse_params = {k: v for k in ('filename', 'type_comments', 'feature_version')
-                            if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
+                            if (v := kwargs.get(k, _SENTINEL)) is not _SENTINEL}
             indent = None
 
             if from_ := kwargs.get('from_'): # copy parse_params from source tree
@@ -4261,9 +4263,6 @@ class FST:
         ''
         """
 
-        if child.root is not self.root:
-            raise ValueError('child is not part of same tree')
-
         path = []
 
         while child is not self:
@@ -4274,7 +4273,7 @@ class FST:
 
         path.reverse()
 
-        return path if not as_str else '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+        return '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path) if as_str else path
 
     def child_from_path(self, path: list[astfield] | builtins.str, last_valid: bool = False) -> FST | Literal[False]:
         """Get child node specified by `path` if it exists. If succeeds then it doesn't mean that the child node is
@@ -4385,6 +4384,7 @@ class FST:
 
     match = fst_match.match
     search = fst_match.search
+    sub = fst_match.sub
 
     def find_def(
         self,

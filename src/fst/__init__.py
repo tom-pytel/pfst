@@ -94,6 +94,7 @@ from ast import *  # noqa: F403  - make everything from ast module available her
 from .fst import FST, parse, unparse, dump, castf, gastf  # noqa: F401
 from .common import NodeError, astfield, fstloc  # noqa: F401
 from .parsex import ParseError
+from .code import Code  # noqa: F401
 from .asttypes import *  # noqa: F403  - import standins for some AST classes which may not exist in ast module and our own _slice classes
 from .match import *  # noqa: F403  - match classes for each AST class
 
