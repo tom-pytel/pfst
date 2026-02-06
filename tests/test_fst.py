@@ -7753,16 +7753,16 @@ opts.ignore_module = [mod.strip()
         # non-list pattern in list field position
 
         f = FST('[]')
-        assertRaises(ValueError('MRE can never match a list field'), f.match, List(MRE('')))
-        assertRaises(ValueError('list can never match a non-list field'), f.match, List([], []))
-        assertRaises(ValueError('str can never match a list field'), f.match, List('str'))
-        assertRaises(ValueError('int can never match a list field'), f.match, List(1))
-        assertRaises(ValueError('Pass can never match a list field'), f.match, List(Pass()))
-        assertRaises(ValueError('Constant can never match a list field'), f.match, List(Constant(1)))
-        assertRaises(ValueError('Load can never match a list field'), f.match, List(Load()))
-        assertRaises(ValueError('type can never match a list field'), f.match, List(stmt))
-        assertRaises(ValueError('re.Pattern can never match a list field'), f.match, List(re.compile('i')))
-        assertRaises(ValueError('None can never match a list field'), f.match, List(None))
+        assertRaises(MatchError('MRE can never match a list field'), f.match, List(MRE('')))
+        assertRaises(MatchError('list can never match a non-list field'), f.match, List([], []))
+        assertRaises(MatchError('str can never match a list field'), f.match, List('str'))
+        assertRaises(MatchError('int can never match a list field'), f.match, List(1))
+        assertRaises(MatchError('Pass can never match a list field'), f.match, List(Pass()))
+        assertRaises(MatchError('Constant can never match a list field'), f.match, List(Constant(1)))
+        assertRaises(MatchError('Load can never match a list field'), f.match, List(Load()))
+        assertRaises(MatchError('type can never match a list field'), f.match, List(stmt))
+        assertRaises(MatchError('re.Pattern can never match a list field'), f.match, List(re.compile('i')))
+        assertRaises(MatchError('None can never match a list field'), f.match, List(None))
 
         # M
 
@@ -7918,6 +7918,24 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(FST('try:\n c\n a\n b\nfinally: pass').match(pat))
         self.assertFalse(FST('a if b else c').match(pat))
 
+        # MCB
+
+        pat = MCB(lambda a: a.id == 'x')
+        self.assertEqual({}, FST('x').match(pat).tags)
+        self.assertFalse(FST('y').match(pat))
+
+        pat = MCB(lambda f: f.a.id == 'x', True)
+        self.assertEqual({}, FST('x').match(pat).tags)
+        self.assertFalse(FST('y').match(pat))
+
+        pat = MCB(tag=lambda a: a.id == 'x' and a, tag_call_ret=True)
+        self.assertEqual({'tag': (f := FST('x')).a}, f.match(pat).tags)
+        self.assertFalse(FST('y').match(pat))
+
+        pat = MCB(tag=lambda f: f.a.id == 'x' and f, call_with_FST=True, tag_call_ret=True)
+        self.assertEqual({'tag': (f := FST('x'))}, f.match(pat).tags)
+        self.assertFalse(FST('y').match(pat))
+
     def test_match_M_Match(self):
         # match object attribute access
 
@@ -8034,6 +8052,25 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(pat.match(FST('b, c').a))
         self.assertTrue(pat.match(FST('c, d').a))
         self.assertFalse(pat.match(FST('d, e').a))
+
+        # misc
+
+        pat = MAST(value=MCall)
+        self.assertTrue(pat.match(FST('return f()').a))
+        self.assertTrue(pat.match(FST('await something(a, b, c)').a))
+        self.assertFalse(pat.match(FST('yield x').a))
+        self.assertFalse(pat.match(FST('*(a, b, c)').a))
+
+        pat = Mstmt(body=[MExpr(MConstant(str)), ...])
+        self.assertTrue(pat.match(FST('def f(): "doc"; pass').a))
+        self.assertTrue(pat.match(FST('class cls: "doc"').a))
+        self.assertFalse(pat.match(FST('class cls: 1').a))
+        self.assertFalse(pat.match(FST('class cls: 1; "doc"').a))
+        self.assertFalse(pat.match(FST('class cls: pass').a))
+
+        f = FST('a')
+        f.a = None
+        assertRaises(ValueError('Mstmt.match() got a dead FST node'), pat.match, f)
 
     def test_find_def(self):
         def test(fst_, path, recurse=True, asts=None):

@@ -63,10 +63,10 @@ def load_tests(loader, tests, ignore):
 
 class TestDocTest(unittest.TestCase):
     def test_fst_module(self):
-        fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not (k.startswith('_') or k == 'walk')}  # walk() is an evil special case that shadows fst.fst_traverse.walk()
+        fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not (k.startswith('_') or k == 'walk' or k == 'match')}  # "walk" and "match" are evil special cases that shadow, fst.fst_traverse.walk() and fst.match.match()
         options = fst.FST.get_options()
 
-        for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs, fst.fst_traverse, fst.fst_options):
+        for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs, fst.fst_traverse, fst.fst_options, fst.match):
             mod.__dict__.update(fst_mod_dict)  # this is so that `FST` and other misc things are available to the doctests, fst.fst also needs some AST types which are not normally imported there
 
             cleanup_docstrs(mod)

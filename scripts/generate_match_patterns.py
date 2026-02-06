@@ -17,6 +17,7 @@ for ast_cls in FIELDS:
     if ast_cls is Constant:
         m_patterns.append('''
 class MConstant(MAST):
+    """"""
     _types = Constant
 
     def __init__(
@@ -42,10 +43,11 @@ class MConstant(MAST):
     if args:
         init = f'\n\n    def __init__(\n        self,{args}\n    ) -> None:\n        self._fields = fields = []{set_}'
     else:
-        init = ''
+        init = '\n\n    def __init__(self) -> None:\n        pass'
 
     m_patterns.append(f'''
 class M{name}(MAST):
+    """"""
     _types = {name}{init}
 '''.strip())
 
@@ -54,7 +56,10 @@ for ast_cls in AST_BASES:
 
     m_patterns.append(f'''
 class M{name}(MAST):
+    """"""
     _types = {name}
 '''.strip())
 
 print('\n\n'.join(m_patterns))
+
+    # match = M_Pattern.match  ; """@private"""

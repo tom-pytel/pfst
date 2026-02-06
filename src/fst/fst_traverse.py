@@ -805,20 +805,21 @@ def walk(
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
     Node **REPLACEMENT** and **DELETION** during the walk is supported with some caveats, the rules are:
-    - `raw` operations can change a lot of nodes and cause the walk to miss some you thought would get walked, but they
-        will not cause the walk to break.
-    - The current node can always be deleted, replaced or inserted before (if list field). If replaced the new children
-        will be walked next unless you explicitly `send(False)` to the generator.
+    - The current node can always be deleted, replaced or inserted before or after (if list field). If replaced the new
+        children will be walked next unless you explicitly `send(False)` to the generator. Sibling nodes inserted after
+        this one will not be walked.
     - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
     - Previously walked nodes can likewise be deleted, replaced or inserted before.
     - Replacing or deleting a node in the current parent chain is allowed and will cause the walk to continue at its
         following siblings which were not modified.
     - Sibling nodes of either this node or any parents which have not been walked yet can be deleted, replaced or
         inserted before but the new nodes will not be walked (and neither will any deleted nodes).
-    - The header said replacement and deletion, so `del`, `remove()`, `replace()`, `put()` over, etc... Not `.cut()` or
+    - The header said replacement and deletion, so `del`, `remove()`, `replace()`, `put()`, etc... Not `.cut()` or
         `get(..., cut=True)`, with or without inserting them somewhere else. The cut or moved nodes may still be walked,
         even if transferred to a different tree. If you wish to do this kind of operation during a walk then either
         explicitly copy then delete the node(s), or defer the cut and move until after the walk.
+    - `raw` operations can change a lot of nodes and cause the walk to miss some you thought would get walked, but they
+        will not cause the walk to break.
 
     **Note:** About scopes, the `NamedExpr` (walrus) expression is treated specially in a Comprehension (capital 'C' to
     differentiate from the node type `comprehension`). The `target` of the operation actually belongs to the first
@@ -833,7 +834,7 @@ def walk(
         - `True`: All nodes will be returned.
         - `False`: Only nodes which have intrinsic `AST` locations and also larger calculated location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators are not returned (even though they have calculated location).
+            arguments present). Operators are not returned (even though they have calculated locations).
         - `'loc'`: Same as `True` but always returns `arguments` even if empty (as it has a location even then). Also
             operators with calculated locations (excluding `and` and `or` since they do not always have a well defined
             location).
@@ -843,8 +844,9 @@ def walk(
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks. This will not
             constrain the walk, just filter which nodes are returned.
         - `Callable[[fst.FST], object]`: Call out to an external function for each node which should return a `bool` for
-            whether the node matches or not. **IMPORTANT** if this `Callable` returns a truthy value that is not exactly
-            `True` then this value replaces the `FST` node that will be yielded at that point of the walk!
+            whether the node matches or not. **IMPORTANT!** If this `Callable` returns a truthy value that is not
+            exactly `True` then this value becomes what will be yielded at that point of the walk, instead of the actual
+            current `FST` node!
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the first level of children by default, `send(True)` for a given node will
@@ -863,6 +865,11 @@ def walk(
         will reverse the order of the walk for the given `asts` as expected). No syntax ordering is done on this list,
         it is walked "as-is", so it may just be a collection of different nodes to walk individually. The `asts` list is
         not consumed.
+
+    **Returns:**
+    - `Generator`: This will yield the nodes which fit the parametes. Can also `send(True)` or `send(False)` to this
+        generator to explicitly indicate whether to recurse or not into the yielded node. Sending to the generator does
+        not advance the iteration and can be done an arbitrary number of times before continuing with the iteration.
 
     **Examples:**
 

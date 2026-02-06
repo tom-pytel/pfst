@@ -1,12 +1,14 @@
-"""FST matcher. Uses `AST` nodes for patterns but supplies some new `AST` types to allow creation of base types without
-having to provide all the needed fields. Ellipsis is used in patterns as a wildcard and several extra functional types
-are provided for setting tags, regex string matching and matching any one of several provided patterns (or).
+"""Structural node pattern matching. Uses `AST`-like and even `AST` nodes themselves for patterns. Ellipsis is used in
+patterns as a wildcard and several extra functional types are provided for setting tags, regex string matching, logic
+operations and match check callbacks.
 
 To be completely safe and future-proofed, you may want to only use the `M*` pattern types from this submodule, but for
 quick use normal `AST` types should be fine. Also you need to use the pattern types provided here if you will be using
 nodes or fields which do not exist in the version of the running Python.
 
-It should be obvious but, don't use the functional `M*` pattern types in real `AST` trees... %|
+In the examples here you will see `AST` nodes used interchangeably with their `MAST` pattern counterparts. For the most
+part this is fine and there are only a few small differences between using the two. Except if you are using a type
+checker...
 
 **Note:** Annoyingly this module breaks the convention that anything that has `FST` class methods imported into the main
 `FST` class has a filename that starts with `fst_`. This is so that `from fst.match import *` and
@@ -18,7 +20,7 @@ from __future__ import annotations
 import re
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
-from typing import Any, Generator, Iterable, Literal, Mapping, Set as tp_Set, Union
+from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Set as tp_Set, Union
 
 from . import fst
 
@@ -173,11 +175,19 @@ from .astutil import constant
 from .parsex import unparse
 
 __all__ = [
+    'MatchError',
     'M_Match',
     'M_Pattern',
 
-    'MAST',
+    'M',
+    'MNOT',
+    'MOR',
+    'MAND',
+    'MANY',
+    'MRE',
+    'MCB',
 
+    'MAST',
     'MAdd',
     'MAnd',
     'MAnnAssign',
@@ -318,13 +328,6 @@ __all__ = [
     'M_aliases',
     'M_withitems',
     'M_type_params',
-
-    'M',
-    'MNOT',
-    'MOR',
-    'MAND',
-    'MANY',
-    'MRE',
 ]
 
 
@@ -356,13 +359,18 @@ def _rpr(o: object) -> str:
     )
 
 
+class MatchError(RuntimeError):
+    """An error during matching."""
+
+
 class M_Match:
     """Successful match object. Can look up tags directly on this object as attributes (as long as the name doesnt't
     collide with a name that already exists). Nonexistent tags will not raise but return a falsey `M_Match.NoTag`."""
 
-    tags: Mapping[str, Any]
-    pattern: _Pattern
-    target: _Targets  # could have matched against multiple _Targets through M_Pattern.match()
+    tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
+    pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
+    target: _Targets  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged. Also possibly arbitrary return values from `MCB` callbacks."""
+    fst: fst.FST | None  ; """If the matched target is an `AST` node and it has an `FST` node then this is it."""
 
     class _NoTag:  # so that we can check value of any tag without needing to check if it exists first
         __slots__ = ()
@@ -376,15 +384,16 @@ class M_Match:
         def __repr__(self) -> str:
             return 'M_Match.NoTag'
 
-    NoTag = object.__new__(_NoTag)
+    NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute. Can check for existence of tag using `match.tag is match.NoTag`"""
 
     def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, target: _Target) -> None:
         self.tags = MappingProxyType(tags)
         self.pattern = pattern
         self.target = target
+        self.fst = f if isinstance(target, AST) and (f := getattr(target, 'f', None)) else None
 
     def __repr__(self) -> str:
-        return f'<M_Match {self.tags}>'
+        return f'<M_Match {{{", ".join(f"{k!r}: {_rpr(v)}" for k, v in self.tags.items())}}}>'
 
     def __getattr__(self, name: str) -> object:
         if (v := self.tags.get(name, _SENTINEL)) is not _SENTINEL:
@@ -395,35 +404,40 @@ class M_Match:
 
         raise AttributeError(name)  # nonexistence of dunders should not be masked
 
-    @property
-    def fst(self) -> fst.FST | None:
-        """Return the `FST` node of a match if it exists."""
-
-        return f if isinstance(t := self.target, AST) and (f := getattr(t, 'f', None)) else None
-
     def get(self, tag: str, default: object = None, /) -> object:
-        """A `dict.get()` function for the match tags."""
+        """A `dict.get()` function for the match tags. Just a shortcut for `match.tags.get(tag, default)`."""
 
         return self.tags.get(tag, default)
 
 
 class M_Pattern:
-    _fields = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
-    _types = AST
+    """The base class for all non-primitive match patterns. The two main classes being `MAST` node matchers and the
+    functional matchers like `MOR` and `MRE`."""
 
-    def match(self, tgt: _Targets, *, ctx: bool = False) -> M_Match | None:
-        """TODO: document
+    _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
+    _types: type[AST] | tuple[type[AST]] = AST  # only the MANY pattern has a tuple here
+
+    def match(self, tgt: _Targets | fst.FST, *, ctx: bool = False) -> M_Match | None:
+        """Match this pattern against given target. This can take `FST` nodes or `AST` (whether they are part of an
+        `FST` tree or not, meaning it can match against pure `AST` trees). Can also match primitives and lists of nodes
+        if the pattern is set up for that.
 
         **Parameters:**
-        - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not. Defaults to `False` because when
-            creating `AST` nodes the `ctx` field may be created automatically if you don't specify it so may
-            inadvertantly break any matches. Will always check `ctx` field for `M_Pattern` patterns because there it is
-            well behaved and if not specified is set to wildcard.
+        - `tgt`: The target to match. Can be an `AST` or `FST` node or constant or a list of `AST` nodes or constants.
+        - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+            Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
+            don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
+            Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
+            is set to wildcard.
 
         **Returns:**
-        - `M_Match`: Successful match, the match object can be indexed directly with tag names.
+        - `M_Match`: The match object on successful match.
         - `None`: Did not match.
         """
+
+        if isinstance(tgt, fst.FST):
+            if not (tgt := tgt.a):
+                raise ValueError(f'{self.__class__.__qualname__}.match() got a dead FST node')
 
         m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, dict(ctx=ctx))
 
@@ -431,13 +445,53 @@ class M_Pattern:
 
 
 class MAST(M_Pattern):
-    """This exists in order to group all `AST` M patterns under a single base class.
+    """This class (and its non-leaf subclasses like `Mstmt` and `Mexpr`) can be used as an arbitrary field(s) pattern.
+    Can match one or more fields (list or not, without list type errors), as long as the type matches (e.g. an `Assign`
+    matches an `Mstmt` but not an `Mexpr`). This arbitrary field matching behavior is unique to non-leaf `AST` types,
+    concrete types like `MAssign` always have fixed fields.
 
-    Can also be used as an arbitrary field(s) pattern. Can match one or more fields (list or not witout list type
-    errors). Any non-leaf `AST` patterns inherit this behavior, e.g. `Mstmt(body=[something, ...])`.
+    **Note:** Since there are several fields which can be either an individual element or list of elements, usage of
+    arbitrary fields in this node does not raise an error on list vs. non-list mismatch and instead just considers it a
+    non-match.
 
     **Parameters:**
-    - `fields`: If provided then is an arbitrary list of fields to match. Otherwise will match any `AST`.
+    - `fields`: If provided then is an arbitrary list of fields to match. Otherwise will just match based on type.
+
+    **Examples:**
+
+    Will match any `AST` node which has a `value` which is a `Call`. So will match `return f()`,
+    `await something(a, b, c)` and just an `Expr` `call(args)`, but not `yield x` or `*(a, b, c)`.
+
+    >>> pat = MAST(value=Call)
+
+    >>> pat.match(FST('return f()'))
+    <M_Match {}>
+
+    >>> pat.match(FST('await something(a, b, c)'))
+    <M_Match {}>
+
+    >>> pat.match(FST('call(args)', Expr))
+    <M_Match {}>
+
+    >>> pat.match(FST('yield x'))
+
+    >>> pat.match(FST('*(a, b, c)'))
+
+    Will match any statement which has a `Constant` string as the first element of its body, in other words a docstring.
+
+    >>> pat = Mstmt(body=[Expr(MConstant(str)), ...])
+
+    >>> pat.match(FST('def f(): "docstr"; pass'))
+    <M_Match {}>
+
+    >>> pat.match(FST('class cls: "docstr"'))
+    <M_Match {}>
+
+    >>> pat.match(FST('class cls: 1'))
+
+    >>> pat.match(FST('class cls: 1; "NOTdocstr"'))
+
+    >>> pat.match(FST('class cls: pass'))
     """
 
     def __init__(self, **fields: _Patterns) -> None:
@@ -454,10 +508,11 @@ class MAST(M_Pattern):
         return f'{name}({fields})'
 
 
-# ----------------------------------------------------------------------------------------------------------------------
+# ......................................................................................................................
 # Generated pattern classes
 
 class MModule(MAST):
+    """"""
     _types = Module
 
     def __init__(
@@ -476,6 +531,7 @@ class MModule(MAST):
             fields.append('type_ignores')
 
 class MInteractive(MAST):
+    """"""
     _types = Interactive
 
     def __init__(
@@ -489,6 +545,7 @@ class MInteractive(MAST):
             fields.append('body')
 
 class MExpression(MAST):
+    """"""
     _types = Expression
 
     def __init__(
@@ -502,6 +559,7 @@ class MExpression(MAST):
             fields.append('body')
 
 class MFunctionType(MAST):
+    """"""
     _types = FunctionType
 
     def __init__(
@@ -520,6 +578,7 @@ class MFunctionType(MAST):
             fields.append('returns')
 
 class MFunctionDef(MAST):
+    """"""
     _types = FunctionDef
 
     def __init__(
@@ -563,6 +622,7 @@ class MFunctionDef(MAST):
             fields.append('type_params')
 
 class MAsyncFunctionDef(MAST):
+    """"""
     _types = AsyncFunctionDef
 
     def __init__(
@@ -606,6 +666,7 @@ class MAsyncFunctionDef(MAST):
             fields.append('type_params')
 
 class MClassDef(MAST):
+    """"""
     _types = ClassDef
 
     def __init__(
@@ -644,6 +705,7 @@ class MClassDef(MAST):
             fields.append('type_params')
 
 class MReturn(MAST):
+    """"""
     _types = Return
 
     def __init__(
@@ -657,6 +719,7 @@ class MReturn(MAST):
             fields.append('value')
 
 class MDelete(MAST):
+    """"""
     _types = Delete
 
     def __init__(
@@ -670,6 +733,7 @@ class MDelete(MAST):
             fields.append('targets')
 
 class MAssign(MAST):
+    """"""
     _types = Assign
 
     def __init__(
@@ -693,6 +757,7 @@ class MAssign(MAST):
             fields.append('type_comment')
 
 class MTypeAlias(MAST):
+    """"""
     _types = TypeAlias
 
     def __init__(
@@ -716,6 +781,7 @@ class MTypeAlias(MAST):
             fields.append('value')
 
 class MAugAssign(MAST):
+    """"""
     _types = AugAssign
 
     def __init__(
@@ -739,6 +805,7 @@ class MAugAssign(MAST):
             fields.append('value')
 
 class MAnnAssign(MAST):
+    """"""
     _types = AnnAssign
 
     def __init__(
@@ -767,6 +834,7 @@ class MAnnAssign(MAST):
             fields.append('simple')
 
 class MFor(MAST):
+    """"""
     _types = For
 
     def __init__(
@@ -800,6 +868,7 @@ class MFor(MAST):
             fields.append('type_comment')
 
 class MAsyncFor(MAST):
+    """"""
     _types = AsyncFor
 
     def __init__(
@@ -833,6 +902,7 @@ class MAsyncFor(MAST):
             fields.append('type_comment')
 
 class MWhile(MAST):
+    """"""
     _types = While
 
     def __init__(
@@ -856,6 +926,7 @@ class MWhile(MAST):
             fields.append('orelse')
 
 class MIf(MAST):
+    """"""
     _types = If
 
     def __init__(
@@ -879,6 +950,7 @@ class MIf(MAST):
             fields.append('orelse')
 
 class MWith(MAST):
+    """"""
     _types = With
 
     def __init__(
@@ -902,6 +974,7 @@ class MWith(MAST):
             fields.append('type_comment')
 
 class MAsyncWith(MAST):
+    """"""
     _types = AsyncWith
 
     def __init__(
@@ -925,6 +998,7 @@ class MAsyncWith(MAST):
             fields.append('type_comment')
 
 class MMatch(MAST):
+    """"""
     _types = Match
 
     def __init__(
@@ -943,6 +1017,7 @@ class MMatch(MAST):
             fields.append('cases')
 
 class MRaise(MAST):
+    """"""
     _types = Raise
 
     def __init__(
@@ -961,6 +1036,7 @@ class MRaise(MAST):
             fields.append('cause')
 
 class MTry(MAST):
+    """"""
     _types = Try
 
     def __init__(
@@ -989,6 +1065,7 @@ class MTry(MAST):
             fields.append('finalbody')
 
 class MTryStar(MAST):
+    """"""
     _types = TryStar
 
     def __init__(
@@ -1017,6 +1094,7 @@ class MTryStar(MAST):
             fields.append('finalbody')
 
 class MAssert(MAST):
+    """"""
     _types = Assert
 
     def __init__(
@@ -1035,6 +1113,7 @@ class MAssert(MAST):
             fields.append('msg')
 
 class MImport(MAST):
+    """"""
     _types = Import
 
     def __init__(
@@ -1048,6 +1127,7 @@ class MImport(MAST):
             fields.append('names')
 
 class MImportFrom(MAST):
+    """"""
     _types = ImportFrom
 
     def __init__(
@@ -1071,6 +1151,7 @@ class MImportFrom(MAST):
             fields.append('level')
 
 class MGlobal(MAST):
+    """"""
     _types = Global
 
     def __init__(
@@ -1084,6 +1165,7 @@ class MGlobal(MAST):
             fields.append('names')
 
 class MNonlocal(MAST):
+    """"""
     _types = Nonlocal
 
     def __init__(
@@ -1097,6 +1179,7 @@ class MNonlocal(MAST):
             fields.append('names')
 
 class MExpr(MAST):
+    """"""
     _types = Expr
 
     def __init__(
@@ -1110,15 +1193,28 @@ class MExpr(MAST):
             fields.append('value')
 
 class MPass(MAST):
+    """"""
     _types = Pass
 
+    def __init__(self) -> None:
+        pass
+
 class MBreak(MAST):
+    """"""
     _types = Break
 
+    def __init__(self) -> None:
+        pass
+
 class MContinue(MAST):
+    """"""
     _types = Continue
 
+    def __init__(self) -> None:
+        pass
+
 class MBoolOp(MAST):
+    """"""
     _types = BoolOp
 
     def __init__(
@@ -1137,6 +1233,7 @@ class MBoolOp(MAST):
             fields.append('values')
 
 class MNamedExpr(MAST):
+    """"""
     _types = NamedExpr
 
     def __init__(
@@ -1155,6 +1252,7 @@ class MNamedExpr(MAST):
             fields.append('value')
 
 class MBinOp(MAST):
+    """"""
     _types = BinOp
 
     def __init__(
@@ -1178,6 +1276,7 @@ class MBinOp(MAST):
             fields.append('right')
 
 class MUnaryOp(MAST):
+    """"""
     _types = UnaryOp
 
     def __init__(
@@ -1196,6 +1295,7 @@ class MUnaryOp(MAST):
             fields.append('operand')
 
 class MLambda(MAST):
+    """"""
     _types = Lambda
 
     def __init__(
@@ -1214,6 +1314,7 @@ class MLambda(MAST):
             fields.append('body')
 
 class MIfExp(MAST):
+    """"""
     _types = IfExp
 
     def __init__(
@@ -1237,6 +1338,7 @@ class MIfExp(MAST):
             fields.append('orelse')
 
 class MDict(MAST):
+    """"""
     _types = Dict
 
     def __init__(
@@ -1255,6 +1357,7 @@ class MDict(MAST):
             fields.append('values')
 
 class MSet(MAST):
+    """"""
     _types = Set
 
     def __init__(
@@ -1268,6 +1371,7 @@ class MSet(MAST):
             fields.append('elts')
 
 class MListComp(MAST):
+    """"""
     _types = ListComp
 
     def __init__(
@@ -1286,6 +1390,7 @@ class MListComp(MAST):
             fields.append('generators')
 
 class MSetComp(MAST):
+    """"""
     _types = SetComp
 
     def __init__(
@@ -1304,6 +1409,7 @@ class MSetComp(MAST):
             fields.append('generators')
 
 class MDictComp(MAST):
+    """"""
     _types = DictComp
 
     def __init__(
@@ -1327,6 +1433,7 @@ class MDictComp(MAST):
             fields.append('generators')
 
 class MGeneratorExp(MAST):
+    """"""
     _types = GeneratorExp
 
     def __init__(
@@ -1345,6 +1452,7 @@ class MGeneratorExp(MAST):
             fields.append('generators')
 
 class MAwait(MAST):
+    """"""
     _types = Await
 
     def __init__(
@@ -1358,6 +1466,7 @@ class MAwait(MAST):
             fields.append('value')
 
 class MYield(MAST):
+    """"""
     _types = Yield
 
     def __init__(
@@ -1371,6 +1480,7 @@ class MYield(MAST):
             fields.append('value')
 
 class MYieldFrom(MAST):
+    """"""
     _types = YieldFrom
 
     def __init__(
@@ -1384,6 +1494,7 @@ class MYieldFrom(MAST):
             fields.append('value')
 
 class MCompare(MAST):
+    """"""
     _types = Compare
 
     def __init__(
@@ -1407,6 +1518,7 @@ class MCompare(MAST):
             fields.append('comparators')
 
 class MCall(MAST):
+    """"""
     _types = Call
 
     def __init__(
@@ -1430,6 +1542,7 @@ class MCall(MAST):
             fields.append('keywords')
 
 class MFormattedValue(MAST):
+    """"""
     _types = FormattedValue
 
     def __init__(
@@ -1453,6 +1566,7 @@ class MFormattedValue(MAST):
             fields.append('format_spec')
 
 class MInterpolation(MAST):
+    """"""
     _types = Interpolation
 
     def __init__(
@@ -1481,6 +1595,7 @@ class MInterpolation(MAST):
             fields.append('format_spec')
 
 class MJoinedStr(MAST):
+    """"""
     _types = JoinedStr
 
     def __init__(
@@ -1494,6 +1609,7 @@ class MJoinedStr(MAST):
             fields.append('values')
 
 class MTemplateStr(MAST):
+    """"""
     _types = TemplateStr
 
     def __init__(
@@ -1507,6 +1623,7 @@ class MTemplateStr(MAST):
             fields.append('values')
 
 class MConstant(MAST):
+    """"""
     _types = Constant
 
     def __init__(
@@ -1522,6 +1639,7 @@ class MConstant(MAST):
             fields.append('kind')
 
 class MAttribute(MAST):
+    """"""
     _types = Attribute
 
     def __init__(
@@ -1545,6 +1663,7 @@ class MAttribute(MAST):
             fields.append('ctx')
 
 class MSubscript(MAST):
+    """"""
     _types = Subscript
 
     def __init__(
@@ -1568,6 +1687,7 @@ class MSubscript(MAST):
             fields.append('ctx')
 
 class MStarred(MAST):
+    """"""
     _types = Starred
 
     def __init__(
@@ -1586,6 +1706,7 @@ class MStarred(MAST):
             fields.append('ctx')
 
 class MName(MAST):
+    """"""
     _types = Name
 
     def __init__(
@@ -1604,6 +1725,7 @@ class MName(MAST):
             fields.append('ctx')
 
 class MList(MAST):
+    """"""
     _types = List
 
     def __init__(
@@ -1622,6 +1744,7 @@ class MList(MAST):
             fields.append('ctx')
 
 class MTuple(MAST):
+    """"""
     _types = Tuple
 
     def __init__(
@@ -1640,6 +1763,7 @@ class MTuple(MAST):
             fields.append('ctx')
 
 class MSlice(MAST):
+    """"""
     _types = Slice
 
     def __init__(
@@ -1663,102 +1787,231 @@ class MSlice(MAST):
             fields.append('step')
 
 class MLoad(MAST):
+    """"""
     _types = Load
 
+    def __init__(self) -> None:
+        pass
+
 class MStore(MAST):
+    """"""
     _types = Store
 
+    def __init__(self) -> None:
+        pass
+
 class MDel(MAST):
+    """"""
     _types = Del
 
+    def __init__(self) -> None:
+        pass
+
 class MAnd(MAST):
+    """"""
     _types = And
 
+    def __init__(self) -> None:
+        pass
+
 class MOr(MAST):
+    """"""
     _types = Or
 
+    def __init__(self) -> None:
+        pass
+
 class MAdd(MAST):
+    """"""
     _types = Add
 
+    def __init__(self) -> None:
+        pass
+
 class MSub(MAST):
+    """"""
     _types = Sub
 
+    def __init__(self) -> None:
+        pass
+
 class MMult(MAST):
+    """"""
     _types = Mult
 
+    def __init__(self) -> None:
+        pass
+
 class MMatMult(MAST):
+    """"""
     _types = MatMult
 
+    def __init__(self) -> None:
+        pass
+
 class MDiv(MAST):
+    """"""
     _types = Div
 
+    def __init__(self) -> None:
+        pass
+
 class MMod(MAST):
+    """"""
     _types = Mod
 
+    def __init__(self) -> None:
+        pass
+
 class MPow(MAST):
+    """"""
     _types = Pow
 
+    def __init__(self) -> None:
+        pass
+
 class MLShift(MAST):
+    """"""
     _types = LShift
 
+    def __init__(self) -> None:
+        pass
+
 class MRShift(MAST):
+    """"""
     _types = RShift
 
+    def __init__(self) -> None:
+        pass
+
 class MBitOr(MAST):
+    """"""
     _types = BitOr
 
+    def __init__(self) -> None:
+        pass
+
 class MBitXor(MAST):
+    """"""
     _types = BitXor
 
+    def __init__(self) -> None:
+        pass
+
 class MBitAnd(MAST):
+    """"""
     _types = BitAnd
 
+    def __init__(self) -> None:
+        pass
+
 class MFloorDiv(MAST):
+    """"""
     _types = FloorDiv
 
+    def __init__(self) -> None:
+        pass
+
 class MInvert(MAST):
+    """"""
     _types = Invert
 
+    def __init__(self) -> None:
+        pass
+
 class MNot(MAST):
+    """"""
     _types = Not
 
+    def __init__(self) -> None:
+        pass
+
 class MUAdd(MAST):
+    """"""
     _types = UAdd
 
+    def __init__(self) -> None:
+        pass
+
 class MUSub(MAST):
+    """"""
     _types = USub
 
+    def __init__(self) -> None:
+        pass
+
 class MEq(MAST):
+    """"""
     _types = Eq
 
+    def __init__(self) -> None:
+        pass
+
 class MNotEq(MAST):
+    """"""
     _types = NotEq
 
+    def __init__(self) -> None:
+        pass
+
 class MLt(MAST):
+    """"""
     _types = Lt
 
+    def __init__(self) -> None:
+        pass
+
 class MLtE(MAST):
+    """"""
     _types = LtE
 
+    def __init__(self) -> None:
+        pass
+
 class MGt(MAST):
+    """"""
     _types = Gt
 
+    def __init__(self) -> None:
+        pass
+
 class MGtE(MAST):
+    """"""
     _types = GtE
 
+    def __init__(self) -> None:
+        pass
+
 class MIs(MAST):
+    """"""
     _types = Is
 
+    def __init__(self) -> None:
+        pass
+
 class MIsNot(MAST):
+    """"""
     _types = IsNot
 
+    def __init__(self) -> None:
+        pass
+
 class MIn(MAST):
+    """"""
     _types = In
 
+    def __init__(self) -> None:
+        pass
+
 class MNotIn(MAST):
+    """"""
     _types = NotIn
 
+    def __init__(self) -> None:
+        pass
+
 class Mcomprehension(MAST):
+    """"""
     _types = comprehension
 
     def __init__(
@@ -1787,6 +2040,7 @@ class Mcomprehension(MAST):
             fields.append('is_async')
 
 class MExceptHandler(MAST):
+    """"""
     _types = ExceptHandler
 
     def __init__(
@@ -1810,6 +2064,7 @@ class MExceptHandler(MAST):
             fields.append('body')
 
 class Marguments(MAST):
+    """"""
     _types = arguments
 
     def __init__(
@@ -1853,6 +2108,7 @@ class Marguments(MAST):
             fields.append('defaults')
 
 class Marg(MAST):
+    """"""
     _types = arg
 
     def __init__(
@@ -1876,6 +2132,7 @@ class Marg(MAST):
             fields.append('type_comment')
 
 class Mkeyword(MAST):
+    """"""
     _types = keyword
 
     def __init__(
@@ -1894,6 +2151,7 @@ class Mkeyword(MAST):
             fields.append('value')
 
 class Malias(MAST):
+    """"""
     _types = alias
 
     def __init__(
@@ -1912,6 +2170,7 @@ class Malias(MAST):
             fields.append('asname')
 
 class Mwithitem(MAST):
+    """"""
     _types = withitem
 
     def __init__(
@@ -1930,6 +2189,7 @@ class Mwithitem(MAST):
             fields.append('optional_vars')
 
 class Mmatch_case(MAST):
+    """"""
     _types = match_case
 
     def __init__(
@@ -1953,6 +2213,7 @@ class Mmatch_case(MAST):
             fields.append('body')
 
 class MMatchValue(MAST):
+    """"""
     _types = MatchValue
 
     def __init__(
@@ -1966,6 +2227,7 @@ class MMatchValue(MAST):
             fields.append('value')
 
 class MMatchSingleton(MAST):
+    """"""
     _types = MatchSingleton
 
     def __init__(
@@ -1979,6 +2241,7 @@ class MMatchSingleton(MAST):
             fields.append('value')
 
 class MMatchSequence(MAST):
+    """"""
     _types = MatchSequence
 
     def __init__(
@@ -1992,6 +2255,7 @@ class MMatchSequence(MAST):
             fields.append('patterns')
 
 class MMatchMapping(MAST):
+    """"""
     _types = MatchMapping
 
     def __init__(
@@ -2015,6 +2279,7 @@ class MMatchMapping(MAST):
             fields.append('rest')
 
 class MMatchClass(MAST):
+    """"""
     _types = MatchClass
 
     def __init__(
@@ -2043,6 +2308,7 @@ class MMatchClass(MAST):
             fields.append('kwd_patterns')
 
 class MMatchStar(MAST):
+    """"""
     _types = MatchStar
 
     def __init__(
@@ -2056,6 +2322,7 @@ class MMatchStar(MAST):
             fields.append('name')
 
 class MMatchAs(MAST):
+    """"""
     _types = MatchAs
 
     def __init__(
@@ -2074,6 +2341,7 @@ class MMatchAs(MAST):
             fields.append('name')
 
 class MMatchOr(MAST):
+    """"""
     _types = MatchOr
 
     def __init__(
@@ -2087,6 +2355,7 @@ class MMatchOr(MAST):
             fields.append('patterns')
 
 class MTypeIgnore(MAST):
+    """"""
     _types = TypeIgnore
 
     def __init__(
@@ -2105,6 +2374,7 @@ class MTypeIgnore(MAST):
             fields.append('tag')
 
 class MTypeVar(MAST):
+    """"""
     _types = TypeVar
 
     def __init__(
@@ -2128,6 +2398,7 @@ class MTypeVar(MAST):
             fields.append('default_value')
 
 class MParamSpec(MAST):
+    """"""
     _types = ParamSpec
 
     def __init__(
@@ -2146,6 +2417,7 @@ class MParamSpec(MAST):
             fields.append('default_value')
 
 class MTypeVarTuple(MAST):
+    """"""
     _types = TypeVarTuple
 
     def __init__(
@@ -2164,6 +2436,7 @@ class MTypeVarTuple(MAST):
             fields.append('default_value')
 
 class M_ExceptHandlers(MAST):
+    """"""
     _types = _ExceptHandlers
 
     def __init__(
@@ -2177,6 +2450,7 @@ class M_ExceptHandlers(MAST):
             fields.append('handlers')
 
 class M_match_cases(MAST):
+    """"""
     _types = _match_cases
 
     def __init__(
@@ -2190,6 +2464,7 @@ class M_match_cases(MAST):
             fields.append('cases')
 
 class M_Assign_targets(MAST):
+    """"""
     _types = _Assign_targets
 
     def __init__(
@@ -2203,6 +2478,7 @@ class M_Assign_targets(MAST):
             fields.append('targets')
 
 class M_decorator_list(MAST):
+    """"""
     _types = _decorator_list
 
     def __init__(
@@ -2216,6 +2492,7 @@ class M_decorator_list(MAST):
             fields.append('decorator_list')
 
 class M_arglikes(MAST):
+    """"""
     _types = _arglikes
 
     def __init__(
@@ -2229,6 +2506,7 @@ class M_arglikes(MAST):
             fields.append('arglikes')
 
 class M_comprehensions(MAST):
+    """"""
     _types = _comprehensions
 
     def __init__(
@@ -2242,6 +2520,7 @@ class M_comprehensions(MAST):
             fields.append('generators')
 
 class M_comprehension_ifs(MAST):
+    """"""
     _types = _comprehension_ifs
 
     def __init__(
@@ -2255,6 +2534,7 @@ class M_comprehension_ifs(MAST):
             fields.append('ifs')
 
 class M_aliases(MAST):
+    """"""
     _types = _aliases
 
     def __init__(
@@ -2268,6 +2548,7 @@ class M_aliases(MAST):
             fields.append('names')
 
 class M_withitems(MAST):
+    """"""
     _types = _withitems
 
     def __init__(
@@ -2281,6 +2562,7 @@ class M_withitems(MAST):
             fields.append('items')
 
 class M_type_params(MAST):
+    """"""
     _types = _type_params
 
     def __init__(
@@ -2294,58 +2576,98 @@ class M_type_params(MAST):
             fields.append('type_params')
 
 class Mmod(MAST):
+    """"""
     _types = mod
 
 class Mstmt(MAST):
+    """"""
     _types = stmt
 
 class Mexpr(MAST):
+    """"""
     _types = expr
 
 class Mexpr_context(MAST):
+    """"""
     _types = expr_context
 
 class Mboolop(MAST):
+    """"""
     _types = boolop
 
 class Moperator(MAST):
+    """"""
     _types = operator
 
 class Munaryop(MAST):
+    """"""
     _types = unaryop
 
 class Mcmpop(MAST):
+    """"""
     _types = cmpop
 
 class Mexcepthandler(MAST):
+    """"""
     _types = excepthandler
 
 class Mpattern(MAST):
+    """"""
     _types = pattern
 
 class Mtype_ignore(MAST):
+    """"""
     _types = type_ignore
 
 class Mtype_param(MAST):
+    """"""
     _types = type_param
 
 class M_slice(MAST):
+    """"""
     _types = _slice
 
 
-# ----------------------------------------------------------------------------------------------------------------------
+# ......................................................................................................................
 
 class M(M_Pattern):
     """Tagging pattern container. If the given pattern matches then tags specified here will be returned in the
-    `M_Match` result object. The tags can be specified with static values but also the matched `AST` node can be
-    returned in a given tag name.
+    `M_Match` result object. The tags can be static values but also the matched `AST` node can be returned in a given
+    tag if the pattern is passed as a keyword parameter (the first one).
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched `AST` is not returned in tags. If this is
-        missing then there must be at least one element in `tags` and the first key:value pair there will be taken to be
-        the pattern to match and the name of the tag to use for the matched `AST`.
-    - `tags`: Any static tags to return on a successful match.
+        missing then there must be at least one element in `tags` and the first keyword there will be taken to be the
+        pattern to match and the name of the tag to use for the matched `AST`.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`).
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    >>> M('var') .match(Name(id='NOT_VAR'))
+
+    >>> M('var') .match(Name(id='var'))
+    <M_Match {}>
+
+    >>> M('var', tag='static') .match(Name(id='var'))
+    <M_Match {'tag': 'static'}>
+
+    >>> M(node='var', tag='static') .match(Name(id='var'))
+    <M_Match {'node': Name(id='var'), 'tag': 'static'}>
+
+    >>> M(M(M(node='var'), add1=1), add2=2) .match(Name(id='var'))
+    <M_Match {'node': Name(id='var'), 'add1': 1, 'add2': 2}>
     """
+
+    _requires = 'pattern'  # for printing error message
+
+    pat: _Patterns  ; """@private"""
+    pat_tag: str | None  ; """@private"""
+    static_tags: Mapping[str, Any]  ; """@private"""
 
     def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
         if anon_pat is not _SENTINEL:
@@ -2354,7 +2676,7 @@ class M(M_Pattern):
             self.static_tags = tags
 
         elif (pat_tag := next(iter(tags), _SENTINEL)) is _SENTINEL:
-            raise ValueError(f'{self.__class__.__qualname__} requires pattern')
+            raise ValueError(f'{self.__class__.__qualname__} requires {self._requires}')
 
         else:
             self.pat = tags.pop(pat_tag)
@@ -2401,11 +2723,38 @@ class MNOT(M):
     returned in the `M_Match` result object. The tags can be specified with static values but also the unmatched `AST`
     node can be returned in a given tag name.
 
+    Any tags that were being propagated up from successful matches are discarded since that constitutes an unsuccessful
+    match for this node. And any unsuccessful matches were not propagating any tags up anyway. So this node guarantees
+    that the only tags that it returns are ones that it itself provides.
+
     **Parameters:**
     - `anon_pat`: If the pattern to not match is provided in this then the unmatched `AST` is not returned in tags. If
-        this is missing (default `None`) then there must be at least one element in `tags` and the first key:value pair
-        there will be taken to be the pattern to not match and the name of the tag to use for the unmatched `AST`.
-    - `tags`: Any static tags to return on an unsuccessful match.
+        this is missing (default `None`) then there must be at least one element in `tags` and the first keyword there
+        will be taken to be the pattern to not match and the name of the tag to use for the unmatched `AST`.
+    - `tags`: Any static tags to return on an unsuccessful match (including the pattern to not match as the first
+        keyword if not provided in `anon_pat`).
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    >>> MNOT('var') .match(Name(id='NOT_VAR'))
+    <M_Match {}>
+
+    >>> MNOT('var') .match(Name(id='var'))
+
+    >>> MNOT('var', tag='static') .match(Name(id='NOT_VAR'))
+    <M_Match {'tag': 'static'}>
+
+    >>> MNOT(node='var', tag='static') .match(Name(id='NOT_VAR'))
+    <M_Match {'node': Name(id='NOT_VAR'), 'tag': 'static'}>
+
+    >>> MNOT(MNOT(node='var', tag='static')) .match(Name(id='NOT_VAR'))
+
+    >>> MNOT(MNOT(MNOT(node='var'), add1=1), add2=2) .match(Name(id='NOT_VAR'))
+    <M_Match {'add2': 2}>
     """
 
     @staticmethod
@@ -2433,13 +2782,47 @@ class MNOT(M):
 
 
 class MOR(M_Pattern):
-    """Simple OR pattern. Matches if any of the given patterns matches.
+    """Simple OR pattern. Matches if any of the given patterns match.
 
     **Parameters:**
     - `anon_pats`: Patterns that constitute a successful match, only need one to match. Checked in order.
-    - `tagged_pats`: Patterns that constitute a successful match, only need one to match. Checked in order. These
-        patterns will be returned with the given tags on success.
-    """
+    - `tagged_pats`: Patterns that constitute a successful match, only need one to match. Checked in order. The first
+        target matched with any one of these patterns will be returned in its corresponding tag (keyword name).
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    >>> MOR('a', this='b') .match(FST('a'))
+    <M_Match {}>
+
+    >>> MOR('a', this='b') .match(FST('b'))
+    <M_Match {'this': Name(id='b')}>
+
+    >>> MOR('a', this='b') .match(FST('c'))
+
+    Mixed pattern types and nesting.
+
+    >>> pat = MOR(Name('good'), M(m=Call, static='tag'), st=Starred)
+
+    >>> pat.match(FST('bad'))
+
+    >>> pat.match(FST('good'))
+    <M_Match {}>
+
+    >>> pat.match(FST('*starred'))
+    <M_Match {'st': Starred(value=Name(id='starred'))}>
+
+    >>> pat.match(FST('call()'))
+    <M_Match {'m': Call(func=Name(id='call'), args=[], keywords=[]), 'static': 'tag'}>
+
+    >>> pat.match(FST('bin + op'))
+"""
+
+    pats:     list[_Patterns]  ; """@private"""
+    pat_tags: list[str | None]  ; """@private"""
 
     def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
         if anon_pats:
@@ -2498,12 +2881,41 @@ class MOR(M_Pattern):
 
 
 class MAND(MOR):
-    """Simple AND pattern. Matches only if all of the given patterns match.
+    """Simple AND pattern. Matches only if all of the given patterns match. This pattern isn't terribly useful for
+    straight node matches as if you try to combine different node types using this node their types become mutually
+    exclusive and will make this always fail. Where this can come in handy for example is when examining list fields
+    for multiple conditions.
 
     **Parameters:**
     - `anon_pats`: Patterns that need to match to constitute a success. Checked in order.
-    - `tagged_pats`: Patterns that need to match to constitute a success. Checked in order. These patterns will be
-        returned with the given tags on success.
+    - `tagged_pats`: Patterns that need to match to constitute a success. Checked in order. All the targets matched with
+        these patterns will be returned in their corresponding tags (keyword names).
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    The following will always fail as a node cannot be both a `Name` AND a `Call` at the same time.
+
+    >>> MAND(Name, Call) .match(FST('name'))
+
+    >>> MAND(Name, Call) .match(FST('call()'))
+
+    More sensical usage below, for example that a list starts with `a` and contains at least two `b`.
+
+    >>> pat = MList(MAND(['a', ...], [..., 'b', ..., 'b', ...]))
+
+    >>> pat.match(FST('[a, b, c]'))
+
+    >>> pat.match(FST('[a, b, b, c]'))
+    <M_Match {}>
+
+    >>> pat.match(FST('[d, a, b, b, c]'))
+
+    >>> pat.match(FST('[a, x, b, y, z, b, c, b]'))
+    <M_Match {}>
     """
 
     @staticmethod
@@ -2555,7 +2967,44 @@ class MAND(MOR):
 
 
 class MANY(M_Pattern):
-    """This pattern matches any one of the given types and arbitrary fields."""
+    """This pattern matches any one of the given types and arbitrary fields if present. And its "m-any" as "in any one
+    of", not "many" as in "several", though that fits as well. Essentially this is an AND of whether the node type is
+    one of those provided and the given fields match.
+
+    **Note:** Since there are several fields which can be either an individual element or list of elements, usage of
+    arbitrary fields in this node does not raise an error on list vs. non-list mismatch and instead just considers it a
+    non-match.
+
+    **Parameters:**
+    - `types`: An iterable of `AST` or `MAST` **TYPES**, not instances. In order to match successfully the target must
+        be at least one of these types (non-leaf types like `stmt` included). To match any node for type use `AST`.
+    - `fields`: Field names which must be present (unless wildcard `...`) along with the patterns they need to match.
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    Whether a statement type that CAN have a docstring actually has a docstring.
+
+    >>> pat = MANY(
+    ...     (ClassDef, FunctionDef, AsyncFunctionDef),
+    ...     body=[Expr(MConstant(str)), ...],
+    ... )
+
+    >>> pat.match(FST('def f(): "docstr"; pass'))
+    <M_Match {}>
+
+    >>> pat.match(FST('if 1: "NOTdocstr"'))
+
+    >>> pat.match(FST('def f(): pass; "NOTdocstr"'))
+
+    >>> pat.match(FST('class cls: "docstr"; pass'))
+    <M_Match {}>
+    """
+
+    fields: Mapping[str, _Patterns]  ; """@private"""
 
     def __init__(self, types: Iterable[type[AST | MAST]], **fields: _Patterns) -> None:
         ts = {}
@@ -2608,9 +3057,46 @@ class MANY(M_Pattern):
 
 
 class MRE(M_Pattern):
-    """Tagging regex pattern. Normal `re.Pattern` can be used and that will just be checked using `.match()` and the
-    `re.Match` object is lost. If this pattern is used instead the can specify `.match()` or `.search()` as well as
-    allowing the `re.Match` object to be returned as a tag."""
+    """Tagging regex pattern. Normal `re.Pattern` can be used and that will just be checked using `re.match()` and the
+    `re.Match` object is lost. If this pattern is used instead the can specify the use of `re.match()` or `re.search()`,
+    as well as allowing the `re.Match` object to be returned as a tag.
+
+    **Parameters:**
+    - `anon_re_pat`: If the pattern to match is provided in this (either as a `str` to compile or an already compiled
+        `re.Pattern`) then the matched `re.Match` is not returned in tags. If this is missing then there must be at
+        least one element in `tags` and the first keyword there will be taken to be the pattern to match and the name of
+        the tag to use for the matched `re.Match` object.
+    - `flags`: If passing a `str` as the pattern then these are the `re` flags to pass to `re.compile()`. If passing an
+        already compiled `re.Pattern` then this must remain `0`.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_re_pat`).
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    >>> MRE('good|bad|ugly') .match(Name('ugly'))
+    <M_Match {}>
+
+    >>> MRE('good|bad|ugly') .match(Name('passable'))
+
+    Has bad in it.
+
+    >>> MRE(tag='.*bad.*') .match(arg('this_arg_is_not_so_bad'))
+    <M_Match {'tag': <re.Match object; span=(0, 22), match='this_arg_is_not_so_bad'>}>
+
+    Another way so we can get the exact location from the `re.Match` object.
+
+    >>> MRE(tag='bad', search=True) .match(arg('this_arg_is_not_so_bad'))
+    <M_Match {'tag': <re.Match object; span=(19, 22), match='bad'>}>
+    """
+
+    re_pat: re_Pattern  ; """@private"""
+    pat_tag: str | None  ; """@private"""
+    static_tags: Mapping[str, Any]  ; """@private"""
+    search: bool  ; """@private"""
 
     def __init__(
         self, anon_re_pat: str | re_Pattern | None = None, /, flags: int = 0, search: bool = False, **tags  # can only be one tag which will be the name for the pattern, in which case anon_re_pat must be None
@@ -2675,13 +3161,125 @@ class MRE(M_Pattern):
                 return None
 
         elif isinstance(tgt, list) and moptions.get('list_check', True):
-            raise ValueError('MRE can never match a list field')
+            raise MatchError('MRE can never match a list field')
 
         else:
             return None
 
         if pat_tag := self.pat_tag:
             return {pat_tag: m, **self.static_tags}
+
+        return self.static_tags
+
+
+class MCB(M):
+    """Callback to check target, which can be an `AST` or constant or a list of those. Can also specify that the
+    callback always be called with an `FST` node. In this case this pattern can only be used in places where a node or
+    `None` is expected, otherwise will raise during match.
+
+    **Parameters:**
+    - `anon_callback`: The function to call on each target to check. Depending on where in the pattern structure this
+        pattern is used, the function may be called with an `AST` node or a primitive, or even a list of elements. If
+        the function returns a truthy value then the match is considered a success, and likewise falsey means failure.
+        If this is not provided then the callback is taken from the first keyword in `tags` just like for the `M`
+        pattern.
+    - `call_with_FST`: If this is set to `True` then the callback function can only be called with `FST` nodes or a
+        `None` value. This restricts the use of this pattern to places where nodes are expected to be (or be missing
+        with a `None` value in their place), no primitives or lists. Also obviously, restricted to `FST` trees in this
+        case.
+    - `tag_call_ret`: If this is set to `True` then the truthy return value is returned in the pattern tag instead of
+        the target matched. This only applies if the callback is passed as the first keyword in `tags` instead of in
+        `anon_callback`, as in that case no target tag is available to return. Also keep in mind the "truthy value" bit
+        in case a successful match might want to return a falsey value, it would need to be accomodated somehow (wrapped
+        in a tuple maybe).
+
+    **Returns:**
+    - `M_Match`: The match object on successful match.
+    - `None`: Did not match.
+
+    **Examples:**
+
+    >>> in_range = lambda x: 2 < x < 8
+    >>> pat = MConstant(MCB(in_range))
+
+    >>> pat.match(FST('1'))
+
+    >>> pat.match(FST('3'))
+    <M_Match {}>
+
+    >>> pat.match(FST('7'))
+    <M_Match {}>
+
+    >>> pat.match(FST('10'))
+
+    Check for only parenthesized tuples.
+
+    >>> pat = MCB(FST.is_parenthesized_tuple, call_with_FST=True)
+
+    >>> pat.match(FST('x, y, z'))
+
+    >>> pat.match(FST('(x, y, z)'))
+    <M_Match {}>
+
+    >>> pat.match(FST('[x, y, z]'))
+
+    >>> pat.match(Tuple([]))
+    Traceback (most recent call last):
+    ...
+    fst.match.MatchError: MCB FST callback found AST node without an FST: Tuple(elts=[])
+
+    Get node along with name in uppercase.
+
+    >>> pat = M(node=Name(MCB(upper=str.upper, tag_call_ret=True)))
+
+    >>> pat.match(FST('a.b'))
+
+    >>> pat.match(FST('some_name'))
+    <M_Match {'upper': 'SOME_NAME', 'node': Name(id='some_name')}>
+    """
+
+    _requires = 'callback'  # for printing error message
+
+    pat: Callable[[AST], object] | Callable[[fst.FST], object]  ; """@private"""
+    call_with_FST: bool  ; """@private"""
+    tag_call_ret: bool  ; """@private"""
+
+    def __init__(
+        self,
+        anon_callback: Callable[[AST], object] | Callable[[fst.FST], object] = _SENTINEL,
+        /,
+        call_with_FST: bool = False,
+        *,
+        tag_call_ret: bool = False,
+        **tags,
+    ) -> None:
+        M.__init__(self, anon_callback, **tags)
+
+        if tag_call_ret and anon_callback is not _SENTINEL:
+            raise ValueError('MCB can never return the callback return value since the callback is not specified with keyword')
+
+        self.call_with_FST = call_with_FST
+        self.tag_call_ret = tag_call_ret
+
+    @staticmethod
+    def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        if not self.call_with_FST or tgt is None:
+            m = self.pat(tgt)
+        elif not isinstance(tgt, AST):
+            raise MatchError(f'MCB FST callback needs node or None, got {_rpr(tgt)}')
+        elif not (f := getattr(tgt, 'f', None)):
+            raise MatchError(f'MCB FST callback found AST node without an FST: {_rpr(tgt)}')
+        else:
+            m = self.pat(f)
+
+        if not m:
+            return None
+
+        if pat_tag := self.pat_tag:
+            if self.tag_call_ret:
+                tgt = m
+
+            return {pat_tag: tgt, **self.static_tags}
 
         return self.static_tags
 
@@ -2694,7 +3292,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
     if isinstance(pat, list):
         if not isinstance(tgt, list):
             if moptions.get('list_check', True):
-                raise ValueError('list can never match a non-list field')
+                raise MatchError('list can never match a non-list field')
 
             return None
 
@@ -2786,7 +3384,7 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[
             return None
 
     elif isinstance(tgt, list) and moptions.get('list_check', True):
-        raise ValueError('str can never match a list field')
+        raise MatchError('str can never match a list field')
 
     else:
         return None
@@ -2821,7 +3419,7 @@ def _match_primitive(pat: constant, tgt: _Targets, moptions: Mapping[str, Any]) 
 
     elif tgt != pat:
         if issubclass(tgt_cls, list) and moptions.get('list_check', True):
-            raise ValueError(f'{pat_cls.__qualname__} can never match a list field')
+            raise MatchError(f'{pat_cls.__qualname__} can never match a list field')
 
         return None
 
@@ -2835,7 +3433,7 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
 
     if not isinstance(tgt, types):
         if isinstance(tgt, list) and moptions.get('list_check', True):
-            raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
+            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -2881,7 +3479,7 @@ def _match_node_Constant(
 
     if not isinstance(tgt, Constant):
         if isinstance(tgt, list) and moptions.get('list_check', True):
-            raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
+            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -2924,7 +3522,7 @@ def _match_node_expr_context(
 
     if not isinstance(tgt, expr_context) or (moptions.get('ctx') and tgt.__class__ is not pat.__class__):
         if isinstance(tgt, list) and moptions.get('list_check', True):
-            raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
+            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -2945,7 +3543,7 @@ def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any]) -> Mappin
 
     if not isinstance(tgt, pat):
         if isinstance(tgt, list) and moptions.get('list_check', True):
-            raise ValueError(f'{pat.__class__.__qualname__} can never match a list field')
+            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -2976,7 +3574,7 @@ def _match_re_Pattern(pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any
             return None
 
     elif isinstance(tgt, list) and moptions.get('list_check', True):
-        raise ValueError('re.Pattern can never match a list field')
+        raise MatchError('re.Pattern can never match a list field')
 
     else:
         return None
@@ -2991,7 +3589,7 @@ def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, moptions: Mapping[str, Any
 def _match_None(pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     if tgt is not None:
         if isinstance(tgt, list) and moptions.get('list_check', True):
-            raise ValueError('None can never match a list field')
+            raise MatchError('None can never match a list field')
 
         return None
 
@@ -3004,6 +3602,7 @@ _MATCH_FUNCS = {
     MAND:                MAND._match,
     MANY:                _match_node,
     MRE:                 MRE._match,
+    MCB:                 MCB._match,
     AST:                 _match_node,  # _match_node_nonleaf,
     Add:                 _match_node,
     And:                 _match_node,
@@ -3292,7 +3891,7 @@ _MATCH_FUNCS = {
 
 
 # ......................................................................................................................
-# get all leaf AST types that can possible match a given _Pattern
+# get all leaf AST types that can possibly match a given _Pattern
 
 def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]]:
     if isinstance(pat, M_Pattern):
@@ -3305,7 +3904,7 @@ def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]]:
         return ASTS_LEAF__ALL
 
     if isinstance(pat, list):
-        raise ValueError('unexpected list')
+        raise MatchError('unexpected list')
 
     return _EMPTY_SET
 
@@ -3317,7 +3916,7 @@ def _leaf_asts_none(pat: _Pattern) -> tp_Set[type[AST]]:
 
 def _leaf_asts_type(pat: type) -> tp_Set[type[AST]]:
     if issubclass(pat, M_Pattern):
-        pat = pat._types
+        pat = pat._types  # guaranteed to be single element here
 
     return AST2ASTSLEAF[pat]
 
@@ -3328,13 +3927,14 @@ _LEAF_ASTS_FUNCS = {
     MAND:         MAND._leaf_asts,
     MANY:         MANY._leaf_asts,
     MRE:          _leaf_asts_all,
+    MCB:          _leaf_asts_all,
     type:         _leaf_asts_type,
     re_Pattern:   _leaf_asts_all,
     EllipsisType: _leaf_asts_all,
     int:          _leaf_asts_none,
     float:        _leaf_asts_none,
     complex:      _leaf_asts_none,
-    str:          _leaf_asts_all,
+    str:          _leaf_asts_all,  # because this can match source
     bytes:        _leaf_asts_none,
     bool:         _leaf_asts_none,
     NoneType:     _leaf_asts_none,
@@ -3350,17 +3950,85 @@ def match(
     *,
     ctx: bool = False,
 ) -> M_Match | None:
-    """TODO: document
+    r"""This will attempt to match this `self` against the given pattern. The pattern may be any of the `fst.match` `M*`
+    patterns or it can be a pure `AST` pattern. Attempt to match against a `str` will check the source against that
+    string. Likewise matching against a `re.Pattern` will check the source against the regex. Matching can also be done
+    against a `type[AST]` or `type[MAST]` for a trivial type match. Trying to match lists or primitives with this will
+    always fail (as `self` is an `FST`) and matching against a wildcard ellipsis `...` will always succeed.
 
     **Parameters:**
-    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not. Defaults to `False` because when
-        creating `AST` nodes the `ctx` field may be created automatically if you don't specify it so may
-        inadvertantly break any matches. Will always check `ctx` field for `M_Pattern` patterns because there it is
-        well behaved and if not specified is set to wildcard.
+    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+        Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
+        don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
+        Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
+        is set to wildcard.
 
     **Returns:**
-    - `M_Match`: Successful match, the match object can be indexed directly with tag names.
+    - `M_Match`: The match object on successful match.
     - `None`: Did not match.
+
+    **Examples:**
+
+    >>> import re
+    >>> from fst.match import *
+
+    Quick and dirty use of `AST` nodes and strings and regex.
+
+    >>> f = FST('val.attr', Attribute)
+
+    >>> f.match(Attribute(Name('val'), 'attr'))
+    <M_Match {}>
+
+    >>> f.match(Attribute('val', 'attr'))
+    <M_Match {}>
+
+    >>> f.match('val.attr')
+    <M_Match {}>
+
+    >>> f.match(re.compile(r'.*\.attr'))
+    <M_Match {}>
+
+    Pattern for finding a `logger.info()` call that has a keyword argument named `cid`, returning that keyword in a tag
+    called `cid_kw`. This one uses the pattern `MCall` and `Mkeyword` classes to avoid having to specify unused required
+    fields. The `...` are wildcards.
+
+    >>> pat = MCall(
+    ...    func=Attribute(Name('logger'), 'info'),
+    ...    keywords=[..., M(cid_kw=Mkeyword('cid')), ...]
+    ... )
+
+    >>> FST('logger.info("text", a=1, cid=123, b=2)') .match(pat)
+    <M_Match {'cid_kw': keyword(arg='cid', value=Constant(value=123, kind=None))}>
+
+    >>> FST('logger.warning("text", a=1, cid=123, b=2)') .match(pat)
+
+    >>> FST('notlogger.info("text", a=1, cid=123, b=2)') .match(pat)
+
+    >>> FST('logger.info("text", a=1, b=2)') .match(pat)
+
+    Pattern for finding any `[*_cls | object.__class__] [is | is not] [ZST | zst.ZST]`. Will tag the initial object as
+    `obj` and return whether the comparison is an `is` or `is not` in the `is_is` tag (which is missing in case of
+    `IsNot` but the attribute check on the `M_Match` object returns a false value in this case.)
+
+    >>> pat = Compare(
+    ...     left=MOR(Attribute(M(obj=expr), '__class__'),
+    ...              obj=M(Name(MRE(r'\w*_cls$')), is_name=True)),
+    ...     ops=[MOR(IsNot, is_is=Is)],
+    ...     comparators=[MOR(Name('ZST'), Attribute('zst', 'ZST'))],
+    ... )
+
+    >>> FST('a.__class__ is not ZST') .match(pat)
+    <M_Match {'obj': Name(id='a')}>
+
+    >>> bool(_.is_is)
+    False
+
+    >>> FST('a.__class__ is AST') .match(pat)
+
+    >>> FST('node_cls is zst.ZST') .match(pat)
+    <M_Match {'obj': Name(id='node_cls'), 'is_name': True, 'is_is': Is()}>
+
+    >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
 
     m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, dict(ctx=ctx))
@@ -3379,20 +4047,69 @@ def search(
     back: bool = False,
     asts: list[AST] | None = None,
 ) -> Generator[M_Match, bool, None]:
-    """TODO: document
+    r"""This will walk the subtree of `self` looking for `pat` using `match()`. The walk is carried out using the
+    standard `walk()` and the various parameters to that function are accepted here and passed on (check self_,
+    recursion, scope, walk backwards, etc...).
+
+    This function returns the `walk()` generator which can be interacted with in the same way as the standard one.
+    Meaning you can control the recursion into children by sending `True` or `False` to this generator. Replacement and
+    deletion of nodes during the walk is allowed according to the rules specified by `walk()`.
+
+    If you do not replace, delete or `send(False)` for any given node then the search will continue into that node with
+    the possibility of finding nested matches.
+
+    **Note:** Yhe generator returned by this function does not yield the matched nodes themselves, but rather the match
+    objects. You can get the matched nodes from these objects using the `fst` attribute, e.g. `match.fst`.
 
     **Parameters:**
-    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not. Defaults to `False` because when
-        creating `AST` nodes the `ctx` field may be created automatically if you don't specify it so may
-        inadvertantly break any matches. Will always check `ctx` field for `M_Pattern` patterns because there it is
-        well behaved and if not specified is set to wildcard.
-    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `fst.fst.FST.walk()`
-        function, see that for their meaning.
+    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+        Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
+        don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
+        Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
+        is set to wildcard.
+    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
+        function for their meanings.
 
     **Returns:**
     - `Generator`: This is a `walk()` generator set up for matching. You can interact with this generator in the same
-        way as a normal `walk()` generator in that you can send `True` or `False` to control recursion into child nodes.
-        You can also delete and replace nodes in the same way as a normal walk.
+        way as a normal walk generator in that you can send `True` or `False` to control recursion into child nodes.
+
+    **Examples:**
+
+    >>> from fst.match import *
+
+    >>> f = FST('''
+    ... if is_AST := ast_cls is not zst.ZST:
+    ...     ast = code.a
+    ...
+    ... if code_cls is keyword or (
+    ...         code_cls is zst.ZST and code.a.__class__ is keyword):
+    ...     return code_as_keyword(code, options, parse_params, sanitize=sanitize)
+    ...
+    ... if src_or_ast_or_fst.__class__ is ZST:
+    ...     return src_or_ast_or_fst.as_(
+    ...         mode, kwargs.get('copy', True), **filter_options(kwargs))
+    ...
+    ... return 'an ZST' if value.__class__ is not zst.ZST else None
+    ... '''.strip())
+
+    >>> pat = Compare(
+    ...     left=MOR(MAttribute(attr='__class__'), Name(MRE(r'\w*_cls$'))),
+    ...     ops=[MOR(IsNot, Is)],
+    ...     comparators=[MOR(Name('ZST'), Attribute('zst', 'ZST'))],
+    ... )
+
+    >>> for m in f.search(pat):
+    ...     print(m.fst.src)
+    ast_cls is not zst.ZST
+    code_cls is zst.ZST
+    src_or_ast_or_fst.__class__ is ZST
+    value.__class__ is not zst.ZST
+
+    If you just want the first match.
+
+    >>> print(next(f.search(pat)).fst.src)
+    ast_cls is not zst.ZST
     """
 
     pat_cls = pat.__class__
