@@ -31,10 +31,11 @@ from unicodedata import normalize
 from .asttypes import *
 from .asttypes import _ASTDummy
 from .astutil import *
-from .astutil import re_alnumdot_alnum
+from .astutil import re_alnumdot_alnum, AST_BASES
 from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
-from .view import fstview
 from .parsex import parse, parse_expr_arglike
+from .view import fstview
+from .match import *
 from .fst import FST, ASTS_LEAF_FTSTR
 from . import NodeError
 
@@ -1603,6 +1604,210 @@ class WalkDel(Fuzzy):
                     print(g.pfield)
 
                 raise
+
+
+class SearchMatch(Fuzzy):
+    """Complex searches vs. explicit walk with match."""
+
+    name = 'search_match'
+    forever = True
+    standard = False
+
+    MANY_MIN = 3
+    MANY_MAX = 6
+    MOR_MIN = 1
+    MOR_MAX = 3
+    MAND_MIN = 20
+    MAND_MAX = 30
+    ASTS__ALL = tuple(ASTS_LEAF__ALL) + AST_BASES
+    MASTS__ALL = (
+        MAST,
+        MAdd,
+        MAnd,
+        MAnnAssign,
+        MAssert,
+        MAssign,
+        MAsyncFor,
+        MAsyncFunctionDef,
+        MAsyncWith,
+        MAttribute,
+        MAugAssign,
+        MAwait,
+        MBinOp,
+        MBitAnd,
+        MBitOr,
+        MBitXor,
+        MBoolOp,
+        MBreak,
+        MCall,
+        MClassDef,
+        MCompare,
+        MConstant,
+        MContinue,
+        MDel,
+        MDelete,
+        MDict,
+        MDictComp,
+        MDiv,
+        MEq,
+        MExceptHandler,
+        MExpr,
+        MExpression,
+        MFloorDiv,
+        MFor,
+        MFormattedValue,
+        MFunctionDef,
+        MFunctionType,
+        MGeneratorExp,
+        MGlobal,
+        MGt,
+        MGtE,
+        MIf,
+        MIfExp,
+        MImport,
+        MImportFrom,
+        MIn,
+        MInteractive,
+        MInvert,
+        MIs,
+        MIsNot,
+        MJoinedStr,
+        MLShift,
+        MLambda,
+        MList,
+        MListComp,
+        MLoad,
+        MLt,
+        MLtE,
+        MMatMult,
+        MMatch,
+        MMatchAs,
+        MMatchClass,
+        MMatchMapping,
+        MMatchOr,
+        MMatchSequence,
+        MMatchSingleton,
+        MMatchStar,
+        MMatchValue,
+        MMod,
+        MModule,
+        MMult,
+        MName,
+        MNamedExpr,
+        MNonlocal,
+        MNot,
+        MNotEq,
+        MNotIn,
+        MOr,
+        MPass,
+        MPow,
+        MRShift,
+        MRaise,
+        MReturn,
+        MSet,
+        MSetComp,
+        MSlice,
+        MStarred,
+        MStore,
+        MSub,
+        MSubscript,
+        MTry,
+        MTuple,
+        MTypeIgnore,
+        MUAdd,
+        MUSub,
+        MUnaryOp,
+        MWhile,
+        MWith,
+        MYield,
+        MYieldFrom,
+        Malias,
+        Marg,
+        Marguments,
+        Mboolop,
+        Mcmpop,
+        Mcomprehension,
+        Mexcepthandler,
+        Mexpr,
+        Mexpr_context,
+        Mkeyword,
+        Mmatch_case,
+        Mmod,
+        Moperator,
+        Mpattern,
+        Mstmt,
+        Mtype_ignore,
+        Munaryop,
+        Mwithitem,
+        MTryStar,
+        MTypeAlias,
+        Mtype_param,
+        MTypeVar,
+        MParamSpec,
+        MTypeVarTuple,
+        MTemplateStr,
+        MInterpolation,
+        M_slice,
+        M_ExceptHandlers,
+        M_match_cases,
+        M_Assign_targets,
+        M_decorator_list,
+        M_arglikes,
+        M_comprehensions,
+        M_comprehension_ifs,
+        M_aliases,
+        M_withitems,
+        M_type_params,
+    )
+    ALL_ASTS__ALL = ASTS__ALL + MASTS__ALL
+
+    def rnd_pat(self, max_depth: int = 4) -> M_Pattern | type[M_Pattern] | type[AST]:
+        max_depth -= 1
+
+        if not max_depth or not (r := randint(0, 4)):
+            return choice(self.ALL_ASTS__ALL)
+        elif r == 1:
+            return MNOT(self.rnd_pat(max_depth))
+        elif r == 2:
+            return MANY(choice(self.ALL_ASTS__ALL) for _ in range(randint(self.MANY_MIN, self.MANY_MAX)))
+        elif r == 3:
+            return MOR(*(self.rnd_pat(max_depth) for _ in range(randint(self.MOR_MIN, self.MOR_MAX))))
+        elif r == 4:
+            return MAND(*(self.rnd_pat(max_depth) for _ in range(randint(self.MAND_MIN, self.MAND_MAX))))
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        for count in range(self.batch or 100):
+            try:
+                if not (count % 10):
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
+
+                search = match = searchf = matchf = None
+                pat = self.rnd_pat()
+                search = list(fst.search(pat))
+                match = []
+
+                for f in fst.walk(True):
+                    if m := f.match(pat):
+                        match.append(m)
+
+                searchf = [m.fst for m in search]
+                matchf = [m.fst for m in match]
+
+                assert searchf == matchf
+
+            except Exception as exc:
+                print()
+                print(f'{search=}')
+                print(f'{match=}')
+                print(f'{searchf=}')
+                print(f'{matchf=}')
+                print(f'{pat=}')
+                print(f'{len(match)=}, {len(search)=}')
+
+                raise
+
+        print()
 
 
 class ReputSrc(Fuzzy):

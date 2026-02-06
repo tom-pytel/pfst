@@ -340,6 +340,22 @@ _Pattern = Union[_Target, type[Union['M_Pattern', AST]], 'M_Pattern', re_Pattern
 _Patterns = list[_Pattern] | _Pattern
 
 
+def _rpr(o: object) -> str:
+    o_cls = o.__class__
+
+    return (
+        '...'
+        if o is ... else
+        o.__name__
+        if o_cls is type and issubclass(o, (AST, M_Pattern)) else
+        f'{o_cls.__name__}({", ".join(f"{f}={_rpr(getattr(o, f, None))}" for f in o._fields if f != "ctx")})'
+        if isinstance(o, AST) else
+        f'[{", ".join(_rpr(e) for e in o)}]'
+        if isinstance(o, list) else
+        repr(o)
+    )
+
+
 class M_Match:
     """Successful match object. Can look up tags directly on this object as attributes (as long as the name doesnt't
     collide with a name that already exists). Nonexistent tags will not raise but return a falsey `M_Match.NoTag`."""
@@ -430,6 +446,12 @@ class MAST(M_Pattern):
 
             for field, value in fields.items():
                 setattr(self, field, value)
+
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        fields = ', '.join(f'{f}={_rpr(getattr(self, f))}' for f in self._fields)
+
+        return f'{name}({fields})'
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -2339,6 +2361,18 @@ class M(M_Pattern):
             self.pat_tag = pat_tag
             self.static_tags = tags
 
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        pat = self.pat
+        pat_tag = self.pat_tag
+
+        if tags := self.static_tags:
+            tags = ', '.join(f'{t}={_rpr(p)}' for t, p in tags.items())
+
+            return f'{name}({pat_tag}={_rpr(pat)}, {tags})' if pat_tag else f'{name}({_rpr(pat)}, {tags})'
+
+        return f'{name}({pat_tag}={_rpr(pat)})' if pat_tag else f'{name}({_rpr(pat)})'
+
     @staticmethod
     def _match(self: M, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
         m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions)
@@ -2409,7 +2443,7 @@ class MOR(M_Pattern):
 
     def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
         if anon_pats:
-            pats = anon_pats
+            pats = list(anon_pats)
             pat_tags = [None] * len(pats)
 
             if tagged_pats:
@@ -2425,6 +2459,12 @@ class MOR(M_Pattern):
 
         self.pats = pats
         self.pat_tags = pat_tags
+
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        tags = ', '.join(f'{t}={_rpr(p)}' if t else _rpr(p) for t, p in zip(self.pat_tags, self.pats, strict=True))
+
+        return f'{name}({tags})'
 
     @staticmethod
     def _match(self: MOR, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
@@ -2496,21 +2536,58 @@ class MAND(MOR):
 
         return tags
 
+    @staticmethod
+    def _leaf_asts(self: MOR) -> tp_Set[type[AST]]:
+        leaf_asts = ASTS_LEAF__ALL
 
-class MANY(MAST):
+        for pat in self.pats:
+            la = _LEAF_ASTS_FUNCS.get(pat.__class__, _leaf_asts_default)(pat)
+
+            if not la:  # early out because everything gone
+                return la
+
+            leaf_asts = leaf_asts & la
+
+            if not leaf_asts:  # another early out
+                return leaf_asts
+
+        return leaf_asts
+
+
+class MANY(M_Pattern):
     """This pattern matches any one of the given types and arbitrary fields."""
 
-    def __init__(self, types: Iterable[type[AST]], **fields: _Patterns) -> None:
-        self._types = types = tuple(types)
+    def __init__(self, types: Iterable[type[AST | MAST]], **fields: _Patterns) -> None:
+        ts = {}
+
+        for t in types:
+            if issubclass(t, MAST):
+                t = t._types  # will be a single type
+            elif not issubclass(t, AST):
+                raise ValueError('MANY types can only be AST or MAST')
+
+            ts[t] = True
+
+        self._types = types = tuple(ts)
+        self.fields = fields
 
         if not types:
             raise ValueError('MANY requires at least one AST type to match')
 
         if fields:
-            self._fields = fields
+            self._fields = tuple(fields)
 
             for field, value in fields.items():
                 setattr(self, field, value)
+
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        types = f'({", ".join(_rpr(e) for e in self._types)})'
+
+        if fields := self.fields:
+            return f'{name}({types}, {", ".join(f"{f}={_rpr(v)}" for f, v in fields.items())})'
+
+        return f'{name}({types})'
 
     @staticmethod
     def _leaf_asts(self: MANY) -> tp_Set[type[AST]]:
@@ -2545,10 +2622,28 @@ class MRE(M_Pattern):
         else:
             anon_re_pat = tags.pop(pat_tag)
 
-        self.re_pat = anon_re_pat if isinstance(anon_re_pat, re_Pattern) else re.compile(anon_re_pat, flags)
+        if not isinstance(anon_re_pat, re_Pattern):
+            anon_re_pat = re.compile(anon_re_pat, flags)
+        elif flags:
+            raise ValueError('MRE cannot take flags for already compiled re.Pattern')
+
+        self.re_pat = anon_re_pat
         self.pat_tag = pat_tag
         self.search = search
         self.static_tags = tags
+
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        re_pat = _rpr(self.re_pat)
+        pat_tag = self.pat_tag
+        tags = [f'{pat_tag}={re_pat}' if pat_tag else re_pat]
+
+        if self.search:
+            tags.append('search=True')
+
+        tags.extend(f'{t}={_rpr(p)}' for t, p in self.static_tags)
+
+        return f'{name}({", ".join(tags)})'
 
     @staticmethod
     def _match(self: MRE, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
@@ -2821,7 +2916,7 @@ def _match_node_Constant(
     return tags
 
 def _match_node_expr_context(
-pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any]
+    pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any]
 ) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
     the match option `ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
@@ -2836,7 +2931,7 @@ pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any]
     return _EMPTY_DICT
 
 def _match_node_arbitrary_fields(
-pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
+    pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
 ) -> Mapping[str, Any] | None:
     """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches."""
 
@@ -3309,7 +3404,7 @@ def search(
         def walk_all(fst_: fst.FST) -> M_Match | Literal[False]:
             m = match_func(pat, fst_.a, moptions)
 
-            return False if m is None else M_Match(m, pat, self.a)
+            return False if m is None else M_Match(m, pat, fst_.a)
 
     else:
         def walk_all(fst_: fst.FST) -> M_Match | Literal[False]:
