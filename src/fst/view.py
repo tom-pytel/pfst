@@ -100,6 +100,7 @@ class fstview:
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
+    is_dictlike = False  ; """Whether the view is on a multi-element sequence like a `Dict` or `MatchMapping`. These will not give individual nodes on single element index but rather another fstview."""
 
     @property
     def start(self) -> int:
@@ -711,6 +712,8 @@ class fstview:
 class fstview_Dict(fstview):
     """View for `Dict` combined `key:value` virtual field `_all`. @private"""
 
+    is_dictlike = True
+
     def _len_field(self) -> int:
         return len(self.base.a.keys)
 
@@ -732,6 +735,8 @@ class fstview_Dict(fstview):
 
 class fstview_MatchMapping(fstview):
     """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`. @private"""
+
+    is_dictlike = True
 
     def _len_field(self) -> int:
         return len((a := self.base.a).keys) + bool(a.rest)

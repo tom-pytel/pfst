@@ -200,6 +200,27 @@ DUMP_NO_COLOR = nspace(
     },
 )
 
+FST_VIRTUAL_FIELDS = {
+    Module:           ('_body',),
+    Interactive:      ('_body',),
+    FunctionDef:      ('_args', '_body'),
+    AsyncFunctionDef: ('_args', '_body'),
+    ClassDef:         ('_bases', '_body'),
+    For:              ('_body',),
+    AsyncFor:         ('_body',),
+    While:            ('_body',),
+    If:               ('_body',),
+    With:             ('_body',),
+    AsyncWith:        ('_body',),
+    Try:              ('_body',),
+    TryStar:          ('_body',),
+    Dict:             ('_all',),
+    Compare:          ('_all',),
+    Call:             ('_args',),
+    arguments:        ('_all',),
+    MatchMapping:     ('_all',),
+}
+
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     # list fields of multiple children
     ('body',                  (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
@@ -241,6 +262,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('context_expr',          (withitem,)),
     ('pattern',               (MatchAs,)),
 ] for kls in classes}
+
 
 _re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)
 _re_one_space_or_end   = re.compile(r'\s|$')

@@ -9,6 +9,7 @@ if sys.version_info[:2] < (3, 14):
 from fst.astutil import *
 from fst import *
 from fst.astutil import FIELDS, AST_BASES
+from fst.fst_misc import FST_VIRTUAL_FIELDS
 
 
 m_patterns = []
@@ -36,9 +37,9 @@ class MConstant(MAST):
         continue
 
     name = ast_cls.__name__
-    fields = ast_cls._fields
+    fields = ast_cls._fields + FST_VIRTUAL_FIELDS.get(ast_cls, ())
     args = ''.join(f'\n        {f}: _Patterns = ...,' for f in fields)
-    set_ = ''.join(f'\n\n        if {f} is not ...:\n            self.{f} = {f}\n            fields.append({f!r})' for f in ast_cls._fields)
+    set_ = ''.join(f'\n\n        if {f} is not ...:\n            self.{f} = {f}\n            fields.append({f!r})' for f in fields)
 
     if args:
         init = f'\n\n    def __init__(\n        self,{args}\n    ) -> None:\n        self._fields = fields = []{set_}'

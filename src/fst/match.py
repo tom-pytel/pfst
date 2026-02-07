@@ -174,6 +174,7 @@ from .asttypes import (
 from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
+from .view import fstview
 
 __all__ = [
     'MatchError',
@@ -338,7 +339,7 @@ _EMPTY_SET = set()
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
 
 _Target = AST | constant
-_Targets = list[_Target] | _Target  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
+_Targets = fstview | list[_Target] | _Target  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
 
 _Pattern = Union[_Target, type[Union['M_Pattern', AST]], 'M_Pattern', re_Pattern, EllipsisType]  # `str` here may also be a match for target node source, not just a primitive
 _Patterns = list[_Pattern] | _Pattern
@@ -520,6 +521,7 @@ class MModule(MAST):
         self,
         body: _Patterns = ...,
         type_ignores: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -531,6 +533,10 @@ class MModule(MAST):
             self.type_ignores = type_ignores
             fields.append('type_ignores')
 
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
+
 class MInteractive(MAST):
     """"""
     _types = Interactive
@@ -538,12 +544,17 @@ class MInteractive(MAST):
     def __init__(
         self,
         body: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
         if body is not ...:
             self.body = body
             fields.append('body')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MExpression(MAST):
     """"""
@@ -591,6 +602,8 @@ class MFunctionDef(MAST):
         returns: _Patterns = ...,
         type_comment: _Patterns = ...,
         type_params: _Patterns = ...,
+        _args: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -621,6 +634,14 @@ class MFunctionDef(MAST):
         if type_params is not ...:
             self.type_params = type_params
             fields.append('type_params')
+
+        if _args is not ...:
+            self._args = _args
+            fields.append('_args')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MAsyncFunctionDef(MAST):
     """"""
@@ -635,6 +656,8 @@ class MAsyncFunctionDef(MAST):
         returns: _Patterns = ...,
         type_comment: _Patterns = ...,
         type_params: _Patterns = ...,
+        _args: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -666,6 +689,14 @@ class MAsyncFunctionDef(MAST):
             self.type_params = type_params
             fields.append('type_params')
 
+        if _args is not ...:
+            self._args = _args
+            fields.append('_args')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
+
 class MClassDef(MAST):
     """"""
     _types = ClassDef
@@ -678,6 +709,8 @@ class MClassDef(MAST):
         body: _Patterns = ...,
         decorator_list: _Patterns = ...,
         type_params: _Patterns = ...,
+        _bases: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -704,6 +737,14 @@ class MClassDef(MAST):
         if type_params is not ...:
             self.type_params = type_params
             fields.append('type_params')
+
+        if _bases is not ...:
+            self._bases = _bases
+            fields.append('_bases')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MReturn(MAST):
     """"""
@@ -845,6 +886,7 @@ class MFor(MAST):
         body: _Patterns = ...,
         orelse: _Patterns = ...,
         type_comment: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -867,6 +909,10 @@ class MFor(MAST):
         if type_comment is not ...:
             self.type_comment = type_comment
             fields.append('type_comment')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MAsyncFor(MAST):
     """"""
@@ -879,6 +925,7 @@ class MAsyncFor(MAST):
         body: _Patterns = ...,
         orelse: _Patterns = ...,
         type_comment: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -902,6 +949,10 @@ class MAsyncFor(MAST):
             self.type_comment = type_comment
             fields.append('type_comment')
 
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
+
 class MWhile(MAST):
     """"""
     _types = While
@@ -911,6 +962,7 @@ class MWhile(MAST):
         test: _Patterns = ...,
         body: _Patterns = ...,
         orelse: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -925,6 +977,10 @@ class MWhile(MAST):
         if orelse is not ...:
             self.orelse = orelse
             fields.append('orelse')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MIf(MAST):
     """"""
@@ -935,6 +991,7 @@ class MIf(MAST):
         test: _Patterns = ...,
         body: _Patterns = ...,
         orelse: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -950,6 +1007,10 @@ class MIf(MAST):
             self.orelse = orelse
             fields.append('orelse')
 
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
+
 class MWith(MAST):
     """"""
     _types = With
@@ -959,6 +1020,7 @@ class MWith(MAST):
         items: _Patterns = ...,
         body: _Patterns = ...,
         type_comment: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -973,6 +1035,10 @@ class MWith(MAST):
         if type_comment is not ...:
             self.type_comment = type_comment
             fields.append('type_comment')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MAsyncWith(MAST):
     """"""
@@ -983,6 +1049,7 @@ class MAsyncWith(MAST):
         items: _Patterns = ...,
         body: _Patterns = ...,
         type_comment: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -997,6 +1064,10 @@ class MAsyncWith(MAST):
         if type_comment is not ...:
             self.type_comment = type_comment
             fields.append('type_comment')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MMatch(MAST):
     """"""
@@ -1046,6 +1117,7 @@ class MTry(MAST):
         handlers: _Patterns = ...,
         orelse: _Patterns = ...,
         finalbody: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1064,6 +1136,10 @@ class MTry(MAST):
         if finalbody is not ...:
             self.finalbody = finalbody
             fields.append('finalbody')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MTryStar(MAST):
     """"""
@@ -1075,6 +1151,7 @@ class MTryStar(MAST):
         handlers: _Patterns = ...,
         orelse: _Patterns = ...,
         finalbody: _Patterns = ...,
+        _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1093,6 +1170,10 @@ class MTryStar(MAST):
         if finalbody is not ...:
             self.finalbody = finalbody
             fields.append('finalbody')
+
+        if _body is not ...:
+            self._body = _body
+            fields.append('_body')
 
 class MAssert(MAST):
     """"""
@@ -1346,6 +1427,7 @@ class MDict(MAST):
         self,
         keys: _Patterns = ...,
         values: _Patterns = ...,
+        _all: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1356,6 +1438,10 @@ class MDict(MAST):
         if values is not ...:
             self.values = values
             fields.append('values')
+
+        if _all is not ...:
+            self._all = _all
+            fields.append('_all')
 
 class MSet(MAST):
     """"""
@@ -1503,6 +1589,7 @@ class MCompare(MAST):
         left: _Patterns = ...,
         ops: _Patterns = ...,
         comparators: _Patterns = ...,
+        _all: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1518,6 +1605,10 @@ class MCompare(MAST):
             self.comparators = comparators
             fields.append('comparators')
 
+        if _all is not ...:
+            self._all = _all
+            fields.append('_all')
+
 class MCall(MAST):
     """"""
     _types = Call
@@ -1527,6 +1618,7 @@ class MCall(MAST):
         func: _Patterns = ...,
         args: _Patterns = ...,
         keywords: _Patterns = ...,
+        _args: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -1541,6 +1633,10 @@ class MCall(MAST):
         if keywords is not ...:
             self.keywords = keywords
             fields.append('keywords')
+
+        if _args is not ...:
+            self._args = _args
+            fields.append('_args')
 
 class MFormattedValue(MAST):
     """"""
@@ -2077,6 +2173,7 @@ class Marguments(MAST):
         kw_defaults: _Patterns = ...,
         kwarg: _Patterns = ...,
         defaults: _Patterns = ...,
+        _all: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2107,6 +2204,10 @@ class Marguments(MAST):
         if defaults is not ...:
             self.defaults = defaults
             fields.append('defaults')
+
+        if _all is not ...:
+            self._all = _all
+            fields.append('_all')
 
 class Marg(MAST):
     """"""
@@ -2264,6 +2365,7 @@ class MMatchMapping(MAST):
         keys: _Patterns = ...,
         patterns: _Patterns = ...,
         rest: _Patterns = ...,
+        _all: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2278,6 +2380,10 @@ class MMatchMapping(MAST):
         if rest is not ...:
             self.rest = rest
             fields.append('rest')
+
+        if _all is not ...:
+            self._all = _all
+            fields.append('_all')
 
 class MMatchClass(MAST):
     """"""
@@ -3032,7 +3138,7 @@ class MANY(M_Pattern):
 
     def __repr__(self) -> str:
         name = self.__class__.__name__
-        types = f'({", ".join(_rpr(e) for e in self._types)})'
+        types = f'[{", ".join(_rpr(e) for e in self._types)}]'
 
         if fields := self.fields:
             return f'{name}({types}, {", ".join(f"{f}={_rpr(v)}" for f, v in fields.items())})'
@@ -3291,6 +3397,12 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
     """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
 
     if isinstance(pat, list):
+        if isinstance(tgt, fstview):
+            if tgt.is_dictlike:
+                raise MatchError('list can never match a dictlike multi-element field')
+
+            tgt = [f.a for f in tgt]  # convert to temporary list of AST nodes
+
         if not isinstance(tgt, list):
             if moptions.get('list_check', True):
                 raise MatchError('list can never match a non-list field')
@@ -3446,10 +3558,11 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
         if p is ...:  # ellipsis handled here without dispatching for various reasons
             continue
 
-        t = getattr(tgt, field, _SENTINEL)  # for MF, but also field may not exist in target because pattern may have fields from a greater python version than we are running
+        t = getattr(tgt, field, _SENTINEL)  # _SENTINEL for arbitrary fields, but also field may not exist in target because pattern may have fields from a greater python version than we are running
 
         if t is _SENTINEL:
-            return None
+            if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), fstview):  # maybe its a virtual field
+                return None
 
         m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
 
@@ -4154,13 +4267,15 @@ def sub(
     asts: list[AST] | None = None,
     **options,
 ) -> int:
-    r"""TODO document
+    """Substitute matching targets with a given `repl` template or dynamically generated node if `repl` is a function.
+    The template substitutions can include tagged elements from a match.
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
-    - `repl`: TODO document
-    - `nest: TODO document
+    - `repl`: Replacement template or function to generate replacement nodes.
+    - `nest: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion due
+        to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
     - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -4177,6 +4292,9 @@ def sub(
     **Examples:**
 
     >>> from fst.match import *
+
+
+
 
     """
 
@@ -4207,8 +4325,8 @@ def sub(
                     g = f.copy()
                 elif (g := m.tags.get(tag, _SENTINEL)) is _SENTINEL:
                     raise RuntimeError(f'{tag!r} tag not found for substitution')
-                elif isinstance(f, fst.FST):
-                    g = g.copy()
+                elif isinstance(h := getattr(g, 'f', None), fst.FST):
+                    g = h.copy()
 
                 r.child_from_path(path).replace(g, **options)
 
