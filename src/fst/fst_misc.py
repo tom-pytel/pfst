@@ -203,8 +203,8 @@ DUMP_NO_COLOR = nspace(
 FST_VIRTUAL_FIELDS = {
     Module:           ('_body',),
     Interactive:      ('_body',),
-    FunctionDef:      ('_args', '_body'),
-    AsyncFunctionDef: ('_args', '_body'),
+    FunctionDef:      ('_body',),
+    AsyncFunctionDef: ('_body',),
     ClassDef:         ('_bases', '_body'),
     For:              ('_body',),
     AsyncFor:         ('_body',),

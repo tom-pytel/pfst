@@ -339,26 +339,35 @@ _EMPTY_SET = set()
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
 
 _Target = AST | constant
+_TargetFST = Union['fst.FST', constant]
 _Targets = fstview | list[_Target] | _Target  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
+_TargetsOrFST = Union[_Targets, 'fst.FST']
 
 _Pattern = Union[_Target, type[Union['M_Pattern', AST]], 'M_Pattern', re_Pattern, EllipsisType]  # `str` here may also be a match for target node source, not just a primitive
 _Patterns = list[_Pattern] | _Pattern
 
 
 def _rpr(o: object) -> str:
-    o_cls = o.__class__
-
     return (
         '...'
         if o is ... else
         o.__name__
-        if o_cls is type and issubclass(o, (AST, M_Pattern)) else
+        if (o_cls := o.__class__) is type and issubclass(o, (AST, M_Pattern)) else
         f'{o_cls.__name__}({", ".join(f"{f}={_rpr(getattr(o, f, None))}" for f in o._fields if f != "ctx")})'
         if isinstance(o, AST) else
         f'[{", ".join(_rpr(e) for e in o)}]'
         if isinstance(o, list) else
         repr(o)
     )
+
+
+class _PreserveValue:
+    """This class exists solely to preserve `MCB` return `AST` nodes when the pattern is called on an `FST`."""
+
+    __slots__ = ('value',)
+
+    def __init__(self, value: object) -> None:
+        self.value = value
 
 
 class MatchError(RuntimeError):
@@ -371,8 +380,7 @@ class M_Match:
 
     tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
-    target: _Targets  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged. Also possibly arbitrary return values from `MCB` callbacks."""
-    fst: fst.FST | None  ; """If the matched target is an `AST` node and it has an `FST` node then this is it."""
+    target: _TargetsOrFST  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged."""
 
     class _NoTag:  # so that we can check value of any tag without needing to check if it exists first
         __slots__ = ()
@@ -388,11 +396,27 @@ class M_Match:
 
     NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute. Can check for existence of tag using `match.tag is match.NoTag`"""
 
-    def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, target: _Target) -> None:
+    def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, target: _TargetsOrFST) -> None:
+        if isinstance(target, fst.FST):  # is_FST, need to convert any AST nodes in tags to their respective FST nodes, except for any MCB return values which need to be preserved exactly and in this case are wrapped in _PreserveValue
+            tags_FST = {}
+
+            for t, v in tags.items():
+                if isinstance(v, AST):
+                    if not (f := getattr(v, 'f', None)):
+                        raise MatchError(f'match found an AST node without an FST: {_rpr(v)}')
+
+                    tags_FST[t] = f
+
+                elif v.__class__ is _PreserveValue:
+                    tags_FST[t] = v.value
+                else:
+                    tags_FST[t] = v
+
+            tags = tags_FST
+
         self.tags = MappingProxyType(tags)
         self.pattern = pattern
         self.target = target
-        self.fst = f if isinstance(target, AST) and (f := getattr(target, 'f', None)) else None
 
     def __repr__(self) -> str:
         return f'<M_Match {{{", ".join(f"{k!r}: {_rpr(v)}" for k, v in self.tags.items())}}}>'
@@ -419,13 +443,13 @@ class M_Pattern:
     _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
     _types: type[AST] | tuple[type[AST]] = AST  # only the MANY pattern has a tuple here
 
-    def match(self, tgt: _Targets | fst.FST, *, ctx: bool = False) -> M_Match | None:
+    def match(self, target: _TargetsOrFST, *, ctx: bool = False) -> M_Match | None:
         """Match this pattern against given target. This can take `FST` nodes or `AST` (whether they are part of an
         `FST` tree or not, meaning it can match against pure `AST` trees). Can also match primitives and lists of nodes
         if the pattern is set up for that.
 
         **Parameters:**
-        - `tgt`: The target to match. Can be an `AST` or `FST` node or constant or a list of `AST` nodes or constants.
+        - `target`: The target to match. Can be an `AST` or `FST` node or constant or a list of `AST` nodes or constants.
         - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
             Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
             don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -437,13 +461,13 @@ class M_Pattern:
         - `None`: Did not match.
         """
 
-        if isinstance(tgt, fst.FST):
-            if not (tgt := tgt.a):
-                raise ValueError(f'{self.__class__.__qualname__}.match() got a dead FST node')
+        if is_FST := isinstance(target, fst.FST):
+            if not (target := target.a):
+                raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
 
-        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, dict(ctx=ctx))
+        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, target, dict(is_FST=is_FST, ctx=ctx))
 
-        return None if m is None else M_Match(m, self, tgt)
+        return None if m is None else M_Match(m, self, target)
 
 
 class MAST(M_Pattern):
@@ -602,7 +626,6 @@ class MFunctionDef(MAST):
         returns: _Patterns = ...,
         type_comment: _Patterns = ...,
         type_params: _Patterns = ...,
-        _args: _Patterns = ...,
         _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
@@ -634,10 +657,6 @@ class MFunctionDef(MAST):
         if type_params is not ...:
             self.type_params = type_params
             fields.append('type_params')
-
-        if _args is not ...:
-            self._args = _args
-            fields.append('_args')
 
         if _body is not ...:
             self._body = _body
@@ -656,7 +675,6 @@ class MAsyncFunctionDef(MAST):
         returns: _Patterns = ...,
         type_comment: _Patterns = ...,
         type_params: _Patterns = ...,
-        _args: _Patterns = ...,
         _body: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
@@ -688,10 +706,6 @@ class MAsyncFunctionDef(MAST):
         if type_params is not ...:
             self.type_params = type_params
             fields.append('type_params')
-
-        if _args is not ...:
-            self._args = _args
-            fields.append('_args')
 
         if _body is not ...:
             self._body = _body
@@ -3280,20 +3294,16 @@ class MRE(M_Pattern):
 
 
 class MCB(M):
-    """Callback to check target, which can be an `AST` or constant or a list of those. Can also specify that the
-    callback always be called with an `FST` node. In this case this pattern can only be used in places where a node or
-    `None` is expected, otherwise will raise during match.
+    """Callback to check target, which can be a node (`AST` or `FST` depending on the type of tree the pattern was
+    called on) or constant or a list of `AST`s or constants.
 
     **Parameters:**
     - `anon_callback`: The function to call on each target to check. Depending on where in the pattern structure this
-        pattern is used, the function may be called with an `AST` node or a primitive, or even a list of elements. If
-        the function returns a truthy value then the match is considered a success, and likewise falsey means failure.
-        If this is not provided then the callback is taken from the first keyword in `tags` just like for the `M`
-        pattern.
-    - `call_with_FST`: If this is set to `True` then the callback function can only be called with `FST` nodes or a
-        `None` value. This restricts the use of this pattern to places where nodes are expected to be (or be missing
-        with a `None` value in their place), no primitives or lists. Also obviously, restricted to `FST` trees in this
-        case.
+        pattern is used, the function may be called with n node or a primitive, or even a list of elements. Further,
+        depending on the initial target of the match, the node may be `FST` if the target was an `FST` node and `AST`
+        otherwise. If the function returns a truthy value then the match is considered a success, and likewise falsey
+        means failure. If this is not provided then the callback is taken from the first keyword in `tags` just like for
+        the `M` pattern.
     - `tag_call_ret`: If this is set to `True` then the truthy return value is returned in the pattern tag instead of
         the target matched. This only applies if the callback is passed as the first keyword in `tags` instead of in
         `anon_callback`, as in that case no target tag is available to return. Also keep in mind the "truthy value" bit
@@ -3321,7 +3331,7 @@ class MCB(M):
 
     Check for only parenthesized tuples.
 
-    >>> pat = MCB(FST.is_parenthesized_tuple, call_with_FST=True)
+    >>> pat = MCB(FST.is_parenthesized_tuple)
 
     >>> pat.match(FST('x, y, z'))
 
@@ -3329,11 +3339,6 @@ class MCB(M):
     <M_Match {}>
 
     >>> pat.match(FST('[x, y, z]'))
-
-    >>> pat.match(Tuple([]))
-    Traceback (most recent call last):
-    ...
-    fst.match.MatchError: MCB FST callback found AST node without an FST: Tuple(elts=[])
 
     Get node along with name in uppercase.
 
@@ -3343,48 +3348,52 @@ class MCB(M):
 
     >>> pat.match(FST('some_name'))
     <M_Match {'upper': 'SOME_NAME', 'node': Name(id='some_name')}>
+
+    The type of node passed to the callback depends on the type of tree that match is called on.
+
+    >>> pat = MCB(lambda n: print(type(n)))
+
+    >>> pat.match(FST('name').a)
+    <class 'ast.Name'>
+
+    >>> pat.match(FST('name'))
+    <class 'fst.fst.FST'>
     """
 
     _requires = 'callback'  # for printing error message
 
-    pat: Callable[[AST], object] | Callable[[fst.FST], object]  ; """@private"""
-    call_with_FST: bool  ; """@private"""
+    pat: Callable[[_Target], object] | Callable[[_TargetFST], object]  ; """@private"""
     tag_call_ret: bool  ; """@private"""
 
     def __init__(
         self,
-        anon_callback: Callable[[AST], object] | Callable[[fst.FST], object] = _SENTINEL,
+        anon_callback: Callable[[_Target], object] | Callable[[_TargetFST], object] = _SENTINEL,
         /,
-        call_with_FST: bool = False,
-        *,
         tag_call_ret: bool = False,
         **tags,
     ) -> None:
         M.__init__(self, anon_callback, **tags)
 
         if tag_call_ret and anon_callback is not _SENTINEL:
-            raise ValueError('MCB can never return the callback return value since the callback is not specified with keyword')
+            raise ValueError('MCB can never tag the callback return since the callback does not have a tag')
 
-        self.call_with_FST = call_with_FST
         self.tag_call_ret = tag_call_ret
 
     @staticmethod
     def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
-        if not self.call_with_FST or tgt is None:
+        if not moptions.get('is_FST') or not isinstance(tgt, AST):
             m = self.pat(tgt)
-        elif not isinstance(tgt, AST):
-            raise MatchError(f'MCB FST callback needs node or None, got {_rpr(tgt)}')
-        elif not (f := getattr(tgt, 'f', None)):
-            raise MatchError(f'MCB FST callback found AST node without an FST: {_rpr(tgt)}')
-        else:
+        elif f := getattr(tgt, 'f', None):
             m = self.pat(f)
+        else:
+            raise MatchError(f'MCB FST callback found AST node without an FST: {_rpr(tgt)}')
 
         if not m:
             return None
 
         if pat_tag := self.pat_tag:
             if self.tag_call_ret:
-                tgt = m
+                tgt = _PreserveValue(m) if moptions.get('is_FST') and isinstance(m, AST) else m  # only need to preserve AST if will be converting AST nodes back to FST nodes because pattern is matching an FST
 
             return {pat_tag: tgt, **self.static_tags}
 
@@ -4114,7 +4123,7 @@ def match(
     ... )
 
     >>> FST('logger.info("text", a=1, cid=123, b=2)') .match(pat)
-    <M_Match {'cid_kw': keyword(arg='cid', value=Constant(value=123, kind=None))}>
+    <M_Match {'cid_kw': <keyword 0,25..0,32>}>
 
     >>> FST('logger.warning("text", a=1, cid=123, b=2)') .match(pat)
 
@@ -4134,7 +4143,7 @@ def match(
     ... )
 
     >>> FST('a.__class__ is not ZST') .match(pat)
-    <M_Match {'obj': Name(id='a')}>
+    <M_Match {'obj': <Name 0,0..0,1>}>
 
     >>> bool(_.is_is)
     False
@@ -4142,14 +4151,14 @@ def match(
     >>> FST('a.__class__ is AST') .match(pat)
 
     >>> FST('node_cls is zst.ZST') .match(pat)
-    <M_Match {'obj': Name(id='node_cls'), 'is_name': True, 'is_is': Is()}>
+    <M_Match {'obj': <Name 0,0..0,8>, 'is_name': True, 'is_is': <Is 0,9..0,11>}>
 
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
 
-    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, dict(ctx=ctx))
+    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, dict(is_FST=True, ctx=ctx))
 
-    return None if m is None else M_Match(m, pat, self.a)
+    return None if m is None else M_Match(m, pat, self)
 
 
 def search(
@@ -4218,7 +4227,7 @@ def search(
     ... )
 
     >>> for m in f.search(pat):
-    ...     print(m.fst.src)
+    ...     print(m.target.src)
     ast_cls is not zst.ZST
     code_cls is zst.ZST
     src_or_ast_or_fst.__class__ is ZST
@@ -4226,29 +4235,29 @@ def search(
 
     If you just want the first match.
 
-    >>> print(next(f.search(pat)).fst.src)
+    >>> print(next(f.search(pat)).target.src)
     ast_cls is not zst.ZST
     """
 
     pat_cls = pat.__class__
     asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
-    moptions = dict(ctx=ctx)
+    moptions = dict(is_FST=True, ctx=ctx)
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
-        def all_func(fst_: fst.FST) -> M_Match | Literal[False]:
-            m = match_func(pat, fst_.a, moptions)
+        def all_func(f: fst.FST) -> M_Match | Literal[False]:
+            m = match_func(pat, f.a, moptions)
 
-            return False if m is None else M_Match(m, pat, fst_.a)
+            return False if m is None else M_Match(m, pat, f)
 
     else:
-        def all_func(fst_: fst.FST) -> M_Match | Literal[False]:
-            if fst_.a.__class__ not in asts_leaf:
+        def all_func(f: fst.FST) -> M_Match | Literal[False]:
+            if f.a.__class__ not in asts_leaf:
                 return False
 
-            m = match_func(pat, fst_.a, moptions)
+            m = match_func(pat, f.a, moptions)
 
-            return False if m is None else M_Match(m, pat, fst_.a)
+            return False if m is None else M_Match(m, pat, f)
 
     return self.walk(all_func, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
@@ -4312,26 +4321,35 @@ def sub(
     gen = self.search(pat, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
-        f = m.fst
+        tgt = m.target  # will be FST node
 
         if is_func:
-            r = repl(m)
+            sub = repl(m)  # user function that will return replacement
 
         else:
-            r = repl.copy()
+            sub = repl.copy()  # substitution template with replacable template variables
 
             for tag, path in paths:
+                one = True
+
                 if not tag:
-                    g = f.copy()
-                elif (g := m.tags.get(tag, _SENTINEL)) is _SENTINEL:
-                    raise RuntimeError(f'{tag!r} tag not found for substitution')
-                elif isinstance(h := getattr(g, 'f', None), fst.FST):
-                    g = h.copy()
+                    sub_sub = tgt.copy()
+                elif (sub_sub := m.tags.get(tag, _SENTINEL)) is _SENTINEL:
+                    raise MatchError(f'{tag!r} tag not found for substitution')
+                elif isinstance(sub_sub, fst.FST):
+                    sub_sub = sub_sub.copy()
 
-                r.child_from_path(path).replace(g, **options)
+                elif isinstance(sub_sub, fstview):  # we need to get a normal single element
+                    sub_sub = sub_sub.copy()
+                    one = False
 
-        if r is not f:
-            f.replace(r, **options)
+                elif not isinstance(sub_sub, (str, AST)):
+                    raise MatchError(f'match substitution must be FST, AST or str, got {sub_sub}')
+
+                sub.child_from_path(path).replace(sub_sub, one=one, **options)
+
+        if sub is not tgt:
+            tgt.replace(sub, **options)
 
             count += 1
 

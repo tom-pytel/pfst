@@ -7726,12 +7726,12 @@ opts.ignore_module = [mod.strip()
         f = FST('[a, b, c]')
         self.assertTrue(f.match(List(['a', 'b', 'c'])))
         self.assertFalse(f.match(List(['a'])))
-        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([M(obj='a'), ...])).tags)
-        self.assertEqual({'obj': f.a.elts[0]}, f.match(List([..., M(obj='a'), ...])).tags)
-        self.assertEqual({'obj': f.a.elts[1]}, f.match(List([..., M(obj='b'), ...])).tags)
+        self.assertEqual({'obj': f.elts[0]}, f.match(List([M(obj='a'), ...])).tags)
+        self.assertEqual({'obj': f.elts[0]}, f.match(List([..., M(obj='a'), ...])).tags)
+        self.assertEqual({'obj': f.elts[1]}, f.match(List([..., M(obj='b'), ...])).tags)
         self.assertFalse(f.match(List([..., M(obj='b')])))
-        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., M(obj='c'), ...])).tags)
-        self.assertEqual({'obj': f.a.elts[2]}, f.match(List([..., M(obj='c')])).tags)
+        self.assertEqual({'obj': f.elts[2]}, f.match(List([..., M(obj='c'), ...])).tags)
+        self.assertEqual({'obj': f.elts[2]}, f.match(List([..., M(obj='c')])).tags)
         self.assertTrue(f.match(List([..., 'a', ..., 'b', ..., 'c', ...])))
 
         # single element wildcard ...
@@ -7771,33 +7771,33 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(M(tag=None))
 
         f = FST('i = j')
-        self.assertEqual({'obj': f.a.value}, f.match(Assign(..., M(obj='j'))).tags)
+        self.assertEqual({'obj': f.value}, f.match(Assign(..., M(obj='j'))).tags)
         self.assertEqual({'is_obj': True}, f.match(Assign(..., M('j', is_obj=True))).tags)
-        self.assertEqual({'obj': f.a.targets[0], 'is_j': 'yay', 'is_j2': 'hoho'}, f.match(Assign([M(obj=...)], M('j', is_j='yay', is_j2='hoho'))).tags)
-        self.assertEqual({'obj': f.a.targets, 'obj2': f.a.value}, f.match(Assign(M(obj=...), M(obj2=...))).tags)
+        self.assertEqual({'obj': f.targets[0], 'is_j': 'yay', 'is_j2': 'hoho'}, f.match(Assign([M(obj=...)], M('j', is_j='yay', is_j2='hoho'))).tags)
+        self.assertEqual({'obj': f.a.targets, 'obj2': f.value}, f.match(Assign(M(obj=...), M(obj2=...))).tags)
 
         f = FST('a')
-        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MName('a'), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(M(a=MName('a'), b=True)).tags)
         self.assertFalse(f.match(M(a=MName('b'), b=True)))
         self.assertEqual({'a': 'a', 'b': True}, f.match(MName(M(a='a', b=True))).tags)
         self.assertFalse(f.match(MName(M(a='b', b=True))))
-        self.assertEqual({'a': f.a.ctx, 'b': True}, f.match(MName('a', M(a=MLoad(), b=True))).tags)
+        self.assertEqual({'a': f.ctx, 'b': True}, f.match(MName('a', M(a=MLoad(), b=True))).tags)
         self.assertFalse(f.match(MName('a', M(a=MStore(), b=True))))
-        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=Mexpr(), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(M(a=Mexpr(), b=True)).tags)
         self.assertFalse(f.match(M(a=Mstmt(), b=True)))
 
         f = FST('1')
-        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant(1), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(M(a=MConstant(1), b=True)).tags)
         self.assertFalse(f.match(M(a=MConstant(2), b=True)))
         self.assertEqual({'a': 1, 'b': True}, f.match(MConstant(M(a=1, b=True))).tags)
         self.assertFalse(f.match(MConstant(M(a=2, b=True))))
 
         f = FST('u"a"')
-        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant('a', ...), b=True)).tags)
-        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant('a', 'u'), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(M(a=MConstant('a', ...), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(M(a=MConstant('a', 'u'), b=True)).tags)
         self.assertFalse(f.match(M(a=MConstant('a', None), b=True)))
         self.assertFalse(f.match(M(a=MConstant('b'), b=True)))
-        self.assertEqual({'a': f.a, 'b': True}, f.match(M(a=MConstant('a', MOR(None, 'u')), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(M(a=MConstant('a', MOR(None, 'u')), b=True)).tags)
 
         # MNOT
 
@@ -7807,16 +7807,16 @@ opts.ignore_module = [mod.strip()
 
         f = FST('a')
         self.assertFalse(f.match(MNOT(a=MName('a'), b=True)))
-        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MName('b'), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(MNOT(a=MName('b'), b=True)).tags)
         self.assertFalse(f.match(MName(MNOT(a='a', b=True))))
         self.assertEqual({'a': 'a', 'b': True}, f.match(MName(MNOT(a='b', b=True))).tags)
         self.assertFalse(f.match(MName('a', MNOT(a=MLoad(), b=True))))
-        self.assertEqual({'a': f.a.ctx, 'b': True}, f.match(MName('a', MNOT(a=MStore(), b=True))).tags)
+        self.assertEqual({'a': f.ctx, 'b': True}, f.match(MName('a', MNOT(a=MStore(), b=True))).tags)
         self.assertFalse(f.match(MNOT(a=Mexpr(), b=True)))
-        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=Mstmt(), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(MNOT(a=Mstmt(), b=True)).tags)
 
         f = FST('1')
-        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MConstant(2), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(MNOT(a=MConstant(2), b=True)).tags)
         self.assertFalse(f.match(MNOT(a=MConstant(1), b=True)))
         self.assertEqual({'a': 1, 'b': True}, f.match(MConstant(MNOT(a=2, b=True))).tags)
         self.assertFalse(f.match(MConstant(MNOT(a=1, b=True))))
@@ -7824,8 +7824,8 @@ opts.ignore_module = [mod.strip()
         f = FST('u"a"')
         self.assertFalse(f.match(MNOT(a=MConstant('a', ...), b=True)))
         self.assertFalse(f.match(MNOT(a=MConstant('a', 'u'), b=True)))
-        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MConstant('a', None), b=True)).tags)
-        self.assertEqual({'a': f.a, 'b': True}, f.match(MNOT(a=MConstant('b'), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(MNOT(a=MConstant('a', None), b=True)).tags)
+        self.assertEqual({'a': f, 'b': True}, f.match(MNOT(a=MConstant('b'), b=True)).tags)
         self.assertFalse(f.match(MNOT(a=MConstant('a', MOR(None, 'u')), b=True)))
 
         # MOR
@@ -7837,8 +7837,8 @@ opts.ignore_module = [mod.strip()
         pat = M(obj=MOR(Constant, Name))
         self.assertFalse(FST('a + b').match(pat))
         self.assertFalse(FST('a = b').match(pat))
-        self.assertEqual({'obj': (f := FST('name')).a}, f.match(pat).tags)
-        self.assertEqual({'obj': (f := FST('123')).a}, f.match(pat).tags)
+        self.assertEqual({'obj': (f := FST('name'))}, f.match(pat).tags)
+        self.assertEqual({'obj': (f := FST('123'))}, f.match(pat).tags)
 
         self.assertFalse(FST('a').match(MOR('b', 'c')))
         self.assertTrue(FST('b').match(MOR('b', 'c')))
@@ -7858,9 +7858,9 @@ opts.ignore_module = [mod.strip()
         # MOR tagged patterns
 
         pat = List([MOR(a='a', b='b', c='c')])
-        self.assertEqual({'a': (f := FST('[a]')).a.elts[0]}, f.match(pat).tags)
-        self.assertEqual({'b': (f := FST('[b]')).a.elts[0]}, f.match(pat).tags)
-        self.assertEqual({'c': (f := FST('[c]')).a.elts[0]}, f.match(pat).tags)
+        self.assertEqual({'a': (f := FST('[a]')).elts[0]}, f.match(pat).tags)
+        self.assertEqual({'b': (f := FST('[b]')).elts[0]}, f.match(pat).tags)
+        self.assertEqual({'c': (f := FST('[c]')).elts[0]}, f.match(pat).tags)
 
         # MOR passthrough tags
 
@@ -7881,8 +7881,8 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(f.match(MAND(BinOp('a', ..., ...), BinOp(..., 'z', ...), BinOp(..., ..., 'b'))))
         self.assertFalse(f.match(MAND(BinOp('a', ..., ...), BinOp(..., '+', ...), BinOp(..., ..., 'z'))))
 
-        self.assertEqual({'a': f.a, 'plus': f.a, 'b': f.a}, f.match(MAND(a=BinOp('a', ..., ...), plus=BinOp(..., '+', ...), b=BinOp(..., ..., 'b'))).tags)
-        self.assertEqual({'a': f.a.left, 'plus': f.a.op, 'b': f.a.right}, f.match(MAND(BinOp(M(a='a'), ..., ...), BinOp(..., M(plus='+'), ...), BinOp(..., ..., M(b='b')))).tags)
+        self.assertEqual({'a': f, 'plus': f, 'b': f}, f.match(MAND(a=BinOp('a', ..., ...), plus=BinOp(..., '+', ...), b=BinOp(..., ..., 'b'))).tags)
+        self.assertEqual({'a': f.left, 'plus': f.op, 'b': f.right}, f.match(MAND(BinOp(M(a='a'), ..., ...), BinOp(..., M(plus='+'), ...), BinOp(..., ..., M(b='b')))).tags)
 
         # MRE
 
@@ -7924,15 +7924,15 @@ opts.ignore_module = [mod.strip()
         self.assertEqual({}, FST('x').match(pat).tags)
         self.assertFalse(FST('y').match(pat))
 
-        pat = MCB(lambda f: f.a.id == 'x', True)
+        pat = MCB(lambda f: f.a.id == 'x')
         self.assertEqual({}, FST('x').match(pat).tags)
         self.assertFalse(FST('y').match(pat))
 
         pat = MCB(tag=lambda a: a.id == 'x' and a, tag_call_ret=True)
-        self.assertEqual({'tag': (f := FST('x')).a}, f.match(pat).tags)
+        self.assertEqual({'tag': (f := FST('x')).a}, pat.match(f.a).tags)  # pat.match() because there is no match() on AST
         self.assertFalse(FST('y').match(pat))
 
-        pat = MCB(tag=lambda f: f.a.id == 'x' and f, call_with_FST=True, tag_call_ret=True)
+        pat = MCB(tag=lambda f: f.a.id == 'x' and f, tag_call_ret=True)
         self.assertEqual({'tag': (f := FST('x'))}, f.match(pat).tags)
         self.assertFalse(FST('y').match(pat))
 
@@ -7948,9 +7948,9 @@ opts.ignore_module = [mod.strip()
 
         f = FST('a = b')
         pat = MAssign(value='b')
-        self.assertIs(f.match(pat).fst, f)
-        self.assertIs(pat.match(f.a).fst, f)
-        self.assertIsNone(pat.match(Assign(Name('a'), Name('b'))).fst, f)
+        self.assertIs(f.match(pat).target, f)
+        self.assertIs(pat.match(f.a).target, f.a)
+        self.assertIs(pat.match(a := Assign(Name('a'), Name('b'))).target, a)
 
     def test_match_M_Pattern(self):
         # re.Pattern
@@ -8070,7 +8070,7 @@ opts.ignore_module = [mod.strip()
 
         f = FST('a')
         f.a = None
-        assertRaises(ValueError('Mstmt.match() got a dead FST node'), pat.match, f)
+        assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
 
     def test_find_def(self):
         def test(fst_, path, recurse=True, asts=None):
