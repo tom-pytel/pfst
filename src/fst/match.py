@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 from re import Pattern as re_Pattern
-from types import EllipsisType, MappingProxyType, NoneType
+from types import EllipsisType, NoneType
 from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Set as tp_Set, Union
 
 from . import fst
@@ -378,9 +378,9 @@ class M_Match:
     """Successful match object. Can look up tags directly on this object as attributes (as long as the name doesnt't
     collide with a name that already exists). Nonexistent tags will not raise but return a falsey `M_Match.NoTag`."""
 
-    tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
+    tags: dict[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
-    target: _TargetsOrFST  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged."""
+    matched: _TargetsOrFST  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged."""
 
     class _NoTag:  # so that we can check value of any tag without needing to check if it exists first
         __slots__ = ()
@@ -396,8 +396,8 @@ class M_Match:
 
     NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute. Can check for existence of tag using `match.tag is match.NoTag`"""
 
-    def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, target: _TargetsOrFST) -> None:
-        if isinstance(target, fst.FST):  # is_FST, need to convert any AST nodes in tags to their respective FST nodes, except for any MCB return values which need to be preserved exactly and in this case are wrapped in _PreserveValue
+    def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, matched: _TargetsOrFST) -> None:
+        if isinstance(matched, fst.FST):  # is_FST, need to convert any AST nodes in tags to their respective FST nodes, except for any MCB return values which need to be preserved exactly and in this case are wrapped in _PreserveValue
             tags_FST = {}
 
             for t, v in tags.items():
@@ -412,11 +412,13 @@ class M_Match:
                 else:
                     tags_FST[t] = v
 
-            tags = tags_FST
+            self.tags = tags_FST
 
-        self.tags = MappingProxyType(tags)
+        else:
+            self.tags = dict(tags)
+
         self.pattern = pattern
-        self.target = target
+        self.matched = matched
 
     def __repr__(self) -> str:
         return f'<M_Match {{{", ".join(f"{k!r}: {_rpr(v)}" for k, v in self.tags.items())}}}>'
@@ -461,11 +463,14 @@ class M_Pattern:
         - `None`: Did not match.
         """
 
-        if is_FST := isinstance(target, fst.FST):
-            if not (target := target.a):
-                raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
+        is_FST = isinstance(target, fst.FST)
 
-        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, target, dict(is_FST=is_FST, ctx=ctx))
+        if not is_FST:
+            tgt = target
+        elif not (tgt := target.a):
+            raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
+
+        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, dict(is_FST=is_FST, ctx=ctx))
 
         return None if m is None else M_Match(m, self, target)
 
@@ -2920,7 +2925,7 @@ class MOR(M_Pattern):
     <M_Match {}>
 
     >>> MOR('a', this='b') .match(FST('b'))
-    <M_Match {'this': Name(id='b')}>
+    <M_Match {'this': <Name ROOT 0,0..0,1>}>
 
     >>> MOR('a', this='b') .match(FST('c'))
 
@@ -2934,10 +2939,10 @@ class MOR(M_Pattern):
     <M_Match {}>
 
     >>> pat.match(FST('*starred'))
-    <M_Match {'st': Starred(value=Name(id='starred'))}>
+    <M_Match {'st': <Starred ROOT 0,0..0,8>}>
 
     >>> pat.match(FST('call()'))
-    <M_Match {'m': Call(func=Name(id='call'), args=[], keywords=[]), 'static': 'tag'}>
+    <M_Match {'m': <Call ROOT 0,0..0,6>, 'static': 'tag'}>
 
     >>> pat.match(FST('bin + op'))
 """
@@ -3347,7 +3352,7 @@ class MCB(M):
     >>> pat.match(FST('a.b'))
 
     >>> pat.match(FST('some_name'))
-    <M_Match {'upper': 'SOME_NAME', 'node': Name(id='some_name')}>
+    <M_Match {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
 
     The type of node passed to the callback depends on the type of tree that match is called on.
 
@@ -3410,7 +3415,10 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
             if tgt.is_dictlike:
                 raise MatchError('list can never match a dictlike multi-element field')
 
-            tgt = [f.a for f in tgt]  # convert to temporary list of AST nodes
+            if len(tgt) and isinstance(tgt[0], str):  # could be Global/Nonlocal.names
+                tgt = [s for s in tgt]
+            else:
+                tgt = [f.a for f in tgt]  # convert to temporary list of AST nodes
 
         if not isinstance(tgt, list):
             if moptions.get('list_check', True):
@@ -4230,7 +4238,7 @@ def search(
     ... )
 
     >>> for m in f.search(pat):
-    ...     print(m.target.src)
+    ...     print(m.matched.src)
     ast_cls is not zst.ZST
     code_cls is zst.ZST
     src_or_ast_or_fst.__class__ is ZST
@@ -4238,7 +4246,7 @@ def search(
 
     If you just want the first match.
 
-    >>> print(next(f.search(pat)).target.src)
+    >>> print(next(f.search(pat)).matched.src)
     ast_cls is not zst.ZST
     """
 
@@ -4281,6 +4289,8 @@ def sub(
 ) -> fst.FST:  # -> self
     """Substitute matching targets with a given `repl` template or dynamically generated node if `repl` is a function.
     The template substitutions can include tagged elements from a match.
+
+    TODO: unfinished, document
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
@@ -4352,7 +4362,7 @@ def sub(
     gen = self.search(pat, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
-        tgt = m.target  # will be FST node
+        tgt = m.matched  # will be FST node
 
         if is_func:  # user function that will return replacement
             sub = repl(m)

@@ -21,11 +21,13 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d10_options`: Options
 
-`fst.docs.d11_raw`: Raw reparse operations
+`fst.docs.d11_match`: Match, search and substitute
 
-`fst.docs.d12_reconcile`: Edit pure AST while preserving formatting
+`fst.docs.d12_raw`: Raw reparse operations
 
-`fst.docs.d13_examples`: Example recipes
+`fst.docs.d13_reconcile`: Edit pure AST while preserving formatting
+
+`fst.docs.d14_examples`: Example recipes
 """
 
 from . import (
@@ -39,9 +41,10 @@ from . import (
     d08_coerce,
     d09_parentheses,
     d10_options,
-    d11_raw,
-    d12_reconcile,
-    d13_examples,
+    d11_match,
+    d12_raw,
+    d13_reconcile,
+    d14_examples,
 )
 
 __all__ = [
@@ -55,9 +58,10 @@ __all__ = [
     'd08_coerce',
     'd09_parentheses',
     'd10_options',
-    'd11_raw',
-    'd12_reconcile',
-    'd13_examples',
+    'd11_match',
+    'd12_raw',
+    'd13_reconcile',
+    'd14_examples',
 ]
 
 

@@ -198,6 +198,54 @@ class cls:
 ```
 
 
+## Inject metadata using `sub()`
+
+You can do the same thing using structural pattern substitution. You probably wouldn't do this if you want the best
+results as it doesn't give you nearly as much control as doing your own substitution, but for simple and quick-and-dirty
+modifications it exists. There are three levels of structural pattern usage between the previous example and this one:
+
+- Normal `walk()` and `.match(PATTERN)` on each node to check if is the one you want.
+- Iterating `.search(PATTERN)` to get just matching nodes.
+- `.sub(PATTERN, repl=user_function)` to get a callback for each matching node.
+
+Note we are using the source from the previous example.
+
+```py
+
+>>> from fst.match import *
+
+>>> PATTERN = MCall(
+...    func=M(func=MAttribute('logger', 'info')),
+...    keywords=MNOT([..., Mkeyword('correlation_id'), ...]),
+...    _args=M(all_args=...),
+... )
+
+>>> def inject_logging_metadata_using_sub(src: str) -> str:
+...     fst = FST(src, 'exec')
+...
+...     fst.sub(PATTERN, '__fst_func(__fst_all_args, correlation_id=CID)')
+...
+...     return fst.src
+```
+
+Processed:
+
+```py
+>>> pprint(inject_logging_metadata_using_sub(src))
+logger.info('Hello world...', correlation_id=CID)  # ok
+logger.info('Already have id', correlation_id=other_cid)  # ok
+logger.info(correlation_id=CID)  # yes, no logger message, too bad
+ 
+class cls:
+    def method(self, thing, extra):
+        if not thing:
+            (logger).info(
+                          f'not a {thing}',  # this is fine
+                          extra=extra,       # also this
+                          correlation_id=CID)
+```
+
+
 ## `else if` chain to `elif`
 
 `fst` has `elif` <-> `else if` code built in as its needed for statement insertions and deletions from conditional
@@ -924,46 +972,43 @@ We build up a body and replace the original comprehension `Assign` statement wit
 >>> def list_comprehensions_to_loops(src):
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk():
-...         if (f.is_Assign  # to show we can check here instead of passing to walk()
-...             and f.value.is_ListComp
-...             and f.targets[0].is_Name
-...             and len(f.targets) == 1
-...         ):
-...             var = f.targets[0].id
-...             fcomp = f.value
-...             fcur = ftop = FST(f'{var} = []\n_', 'exec')
-...             # the `_` will become first `for`
+...     # find single Name targets with a value which is a ListComp
+...     for m in fst.search(Assign([Name], ListComp)):
+...         f = m.matched
+...         var = f.targets[0].id
+...         fcomp = f.value
+...         fcur = ftop = FST(f'{var} = []\n_', 'exec')
+...         # the `_` will become first `for`
 ...
-...             for fgen in fcomp.generators:
-...                 ffor = FST('for _ in _:\n    _')  # for loop, just copy the source
-...                 ffor.target = fgen.target.copy()
-...                 ffor.iter = fgen.iter.copy()
+...         for fgen in fcomp.generators:
+...             ffor = FST('for _ in _:\n    _')  # for loop, just copy the source
+...             ffor.target = fgen.target.copy()
+...             ffor.iter = fgen.iter.copy()
 ...
-...                 fcur = fcur.body[-1].replace(ffor)
-...                 fifs = fgen.ifs
-...                 nifs = len(fifs)
+...             fcur = fcur.body[-1].replace(ffor)
+...             fifs = fgen.ifs
+...             nifs = len(fifs)
 ...
-...                 if nifs:  # if no ifs then no test
-...                     if nifs == 1:  # if single test then just use that
-...                         ftest = fifs[0].copy()
+...             if nifs:  # if no ifs then no test
+...                 if nifs == 1:  # if single test then just use that
+...                     ftest = fifs[0].copy()
 ...
-...                     else:  # if multiple then join with `and`
-...                         ftest = FST(' and '.join('_' * nifs))
+...                 else:  # if multiple then join with `and`
+...                     ftest = FST(' and '.join('_' * nifs))
 ...
-...                         for i, fif in enumerate(fifs):
-...                             ftest.values[i] = fif.copy()
+...                     for i, fif in enumerate(fifs):
+...                         ftest.values[i] = fif.copy()
 ...
-...                     fifstmt = FST('if _:\n    _')
-...                     fifstmt.test = ftest
+...                 fifstmt = FST('if _:\n    _')
+...                 fifstmt.test = ftest
 ...
-...                     fcur = fcur.body[-1].replace(fifstmt)
+...                 fcur = fcur.body[-1].replace(fifstmt)
 ...
-...             # the ffor is the last one processed above (the innermost)
-...             fcur.body[-1].replace(f'{var}.append({fcomp.elt.own_src()})')
+...         # the ffor is the last one processed above (the innermost)
+...         fcur.body[-1].replace(f'{var}.append({fcomp.elt.own_src()})')
 ...
-...             # 'one=False' allows to replace a single element with multiple
-...             f.replace(ftop, one=False, trivia=())
+...         # 'one=False' allows to replace a single element with multiple
+...         f.replace(ftop, one=False, trivia=())
 ...
 ...     return fst.src
 ```

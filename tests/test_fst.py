@@ -7959,9 +7959,9 @@ opts.ignore_module = [mod.strip()
 
         f = FST('a = b')
         pat = MAssign(value='b')
-        self.assertIs(f.match(pat).target, f)
-        self.assertIs(pat.match(f.a).target, f.a)
-        self.assertIs(pat.match(a := Assign(Name('a'), Name('b'))).target, a)
+        self.assertIs(f.match(pat).matched, f)
+        self.assertIs(pat.match(f.a).matched, f.a)
+        self.assertIs(pat.match(a := Assign(Name('a'), Name('b'))).matched, a)
 
     def test_match_M_Pattern(self):
         # re.Pattern

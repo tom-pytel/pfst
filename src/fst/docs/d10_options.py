@@ -111,7 +111,7 @@ If you want a full up-to-date list of all options with their possible values and
 
 This option specifies whether normal prescribed put operations are done (`raw=False`), raw source reparse operations are
 done instead (`raw=True`), or whether raw source reparse is used as a fallback if the prescribed operation fails
-(`raw='auto'`). For information on how raw operations work see `fst.docs.d11_raw`.
+(`raw='auto'`). For information on how raw operations work see `fst.docs.d12_raw`.
 
 >>> print(FST('{a: b}').put('**c', 0, raw=False).src)  # default
 Traceback (most recent call last):
@@ -534,5 +534,5 @@ False
 
 Or the `op` option when doing `Compare` slice put operations and providing an operator for just that single put.
 
-For more information on `to` see `fst.docs.d11_raw` and for `op` see `fst.docs.d06_slices`.
+For more information on `to` see `fst.docs.d12_raw` and for `op` see `fst.docs.d06_slices`.
 """
