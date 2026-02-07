@@ -22,6 +22,7 @@
 ### Fixed
 
 - fixed `step_fwd/back()` for anything that wasn't `all=True/False/'loc'`
+- replacement of single statement no longer replaces that statement's `FST`, allowing a `walk()` to recurse into replaced children
 
 
 ## 0.2.6 - alpha - 2026-01-31

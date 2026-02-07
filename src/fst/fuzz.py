@@ -2273,8 +2273,8 @@ class SliceStmtlike(Fuzzy):
             else:
                 r = dst_container.append(s)[0]
 
-            assert s is stmtlike
-            assert r is stmtlike
+            # assert s is stmtlike
+            # assert r is stmtlike
 
         else:  # slice stmtlike to dst_container
             len_stmtlike = len(stmtlike_container)

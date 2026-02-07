@@ -8084,7 +8084,11 @@ opts.ignore_module = [mod.strip()
         assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
 
     def test_sub_special(self):
-        # special handling for Call.args/keywords
+        pass
+
+
+    def test_sub_special(self):
+        # Call.args/keywords
 
         src = '''
 logger.info(a, cid=-1)
@@ -8142,7 +8146,7 @@ other_logger.info(cid=-1, **b)
 logger.warning(a)
         '''.strip())
 
-        # special handling for ClassDef.args/keywords
+        # ClassDef.args/keywords
 
         src = '''
 class info(a, cid=-1): pass
@@ -8164,18 +8168,45 @@ class other_info(cid=-1, **b): pass
 class info(a): pass
         '''.strip())
 
-        # special handling for Compare._all
+        # Compare._all
 
         self.assertEqual('x < a < b < y', FST('a < b').sub(MCompare(_all=M(all=...)), 'x < __fst_all < y').src)
         self.assertEqual('x < (a < b) < y', FST('a < b').sub(M(all=MCompare(_all=...)), 'x < __fst_all < y').src)
 
-        # special handling for arguments._all
+        # arguments._all
 
         pat = MFunctionDef(args=M(args=arguments))
         src = 'def f(a, /, b=1, *c, d=2, **e): pass'
         fst_ = FST(src)
         repl = 'def g(__fst_args): pass'
         self.assertEqual('def g(a, /, b=1, *c, d=2, **e): pass', fst_.sub(pat, repl).src)
+
+        # body
+
+        src = '''
+if a:
+    call()
+if c := b():
+    while c:
+        c = c()
+if not d:
+    e ; f
+    g
+        '''.strip()
+
+        pat = MIf(test=M(test=...), body=M(body=...))
+        repl = 'if not __fst_test:\n    __fst_body'
+
+        self.assertEqual(FST(src).sub(pat, repl).src, '''
+if not a:
+    call()
+if not (c := b()):
+    while c:
+        c = c()
+if not not d:
+    e ; f
+    g
+        '''.strip())
 
     def test_find_def(self):
         def test(fst_, path, recurse=True, asts=None):

@@ -1306,16 +1306,24 @@ def _put_slice_stmtlike_old(
 
         put_fst._offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
         self._put_src(put_fst_lines, *put_loc, False)
-        self._unmake_fst_tree(body[start : stop])
+
+        if one and len_slice == 1:  # if putting a single statement then make sure the original FST in the body remains alive, for recursing in walk() into replaced node
+            body[start].f._set_ast(put_body[0], True)
+
+            put_len = 1
+
+        else:
+            self._unmake_fst_tree(body[start : stop])
+
+            body[start : stop] = put_body
+
+            put_len = len(put_body)
+            FST = fst.FST
+            stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + put_len)]
+
+            self._make_fst_tree(stack)
+
         put_fst._unmake_fst_parents(True)
-
-        body[start : stop] = put_body
-
-        put_len = len(put_body)
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + put_len)]
-
-        self._make_fst_tree(stack)
 
         if is_handlers and star is None and ast_cls is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
             is_except_star = body[0].f.is_except_star()

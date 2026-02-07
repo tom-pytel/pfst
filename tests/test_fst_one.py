@@ -840,7 +840,7 @@ if 1:
         f = g.replace('d')
         self.assertEqual(a.f.src, 'a\nd\nc')
         self.assertEqual(f.src, 'd')
-        self.assertIsNone(g.a)
+        # self.assertIsNone(g.a)
 
         a = parse('[a, b, c]')
         g = a.body[0].value.elts[1].f
@@ -3624,11 +3624,12 @@ f'd{t"e{f=!s:0.1f<1}"=}'
                     self.assertIsNotNone(neltf.a)  # duh
                     self.assertIsNone(delt.f)  # UNMADE
 
-                    if delt.__class__ not in ASTS_LEAF_STMTLIKE:
-                        self.assertIs(neltf, deltf)  # FST not changed unless stmtlike list (due to older code)
-                    else:
-                        self.assertIsNot(neltf, deltf)  # FSTs of stmtlike list fields get changed (currently)
-                        self.assertIsNone(deltf.a)  # UNMADE
+                    # if delt.__class__ not in ASTS_LEAF_STMTLIKE:
+                    #     self.assertIs(neltf, deltf)  # FST not changed unless stmtlike list (due to older code)
+                    # else:
+                    #     self.assertIsNot(neltf, deltf)  # FSTs of stmtlike list fields get changed (currently) NOT ANYMORE!
+                    #     self.assertIsNone(deltf.a)  # UNMADE
+                    self.assertIs(neltf, deltf)  # NOT ANYMORE!
 
                     if is_list:
                         self.assertIs(nbody, dbody)  # body list didn't change

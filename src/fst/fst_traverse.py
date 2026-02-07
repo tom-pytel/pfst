@@ -807,7 +807,9 @@ def walk(
     Node **REPLACEMENT** and **DELETION** during the walk is supported with some caveats, the rules are:
     - The current node can always be deleted, replaced or inserted before or after (if list field). If replaced the new
         children will be walked next unless you explicitly `send(False)` to the generator. Sibling nodes inserted after
-        this one will not be walked.
+        this one will not be walked. Note that on replace the new children can only be walked if the replacement was of
+        the single current node as a single element operation. If the replacement was with a slice operation then the
+        children will not be walked.
     - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
     - Previously walked nodes can likewise be deleted, replaced or inserted before.
     - Replacing or deleting a node in the current parent chain is allowed and will cause the walk to continue at its
