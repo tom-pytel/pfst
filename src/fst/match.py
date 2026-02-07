@@ -3573,6 +3573,9 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
             if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), fstview):  # maybe its a virtual field
                 return None
 
+        elif moptions.get('is_FST') and isinstance(t, list):
+            t = getattr(tgt.f, field)  # get the fstview instead (for maybe capture to tag, is converted back to list of AST for compare)
+
         m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
 
         if m is None:
@@ -4380,7 +4383,12 @@ def sub(
                     field, idx = sub_tgt.pfield
                     new_idx = None
 
-                    if parenta_cls is Call:  # Call._args?
+                    if parenta_cls is Expr:  # maybe replacing with single or body of statements
+                        if not one and sub_sub.a.__class__ is Module and (grandparent := parent.parent):
+                            field, new_idx = parent.pfield
+                            parent = grandparent
+
+                    elif parenta_cls is Call:  # Call._args?
                         if field in ('args', 'keywords'):
                             field = '_args'
                             new_idx = parent._cached_arglikes().index(sub_tgt.a)
