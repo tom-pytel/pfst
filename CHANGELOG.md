@@ -5,13 +5,16 @@
 - Python 3.15a support
   - unpacking in comprehensions, `[*st for st in itr]`, `{**key for key in itr}`
   - lazy imports not on main branch yet
-- `FST.match()` for structural pattern matching
-- `FST.search()` for structural pattern searching
-- `FST.sub()` for structural pattern substitution
-- `FST.find_def()` to easily find (possibly nested) function and class definitions by name in a given scope by dotted name
+- structural pattern matching
+   - `FST.match()` match - `f.match(Mstmt(body=[Expr(Constant(str)), ...]))`
+   - `FST.search()` search - `for m in f.search(Assign([Name], ListComp))`
+   - `FST.sub()` substitute - `f.sub(MCall('old_name', _args=M(all_args=...)), 'new_name(__fst_all_args, new_kw=3)')`
+- `FST.find_def()` easily find (possibly nested) function and class definitions by name in a given scope by dotted name
   - added usage of this in indexing (single-element only, not slice): `method = module['class.method']`, `del someclass['method']`, etc...
+- `walk()`
+  - can take explicit list of nodes to walk instead of just "all children of self"
+  - can take user callback for `all` parameter for deciding if node matches
 - added `top` and `stop_at` parameters to `step_fwd/back()`
-- `walk()` can take explicit list of nodes to walk instead of just "all children of self"
 - finally validating options
 - trivia option shorthand `()` for `(False, False)`
 
@@ -22,7 +25,7 @@
 ### Fixed
 
 - fixed `step_fwd/back()` for anything that wasn't `all=True/False/'loc'`
-- replacement of single statement no longer replaces that statement's `FST`, allowing a `walk()` to recurse into replaced children
+- replacement of single statement no longer replaces that statement's `FST`, allowing `walk()` to recurse into replaced children
 
 
 ## 0.2.6 - alpha - 2026-01-31

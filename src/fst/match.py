@@ -3286,7 +3286,7 @@ class MRE(M_Pattern):
             if not isinstance(re_pat.pattern, bytes) or not (m := func(tgt)):
                 return None
 
-        elif isinstance(tgt, list) and moptions.get('list_check', True):
+        elif isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError('MRE can never match a list field')
 
         else:
@@ -3405,6 +3405,16 @@ class MCB(M):
         return self.static_tags
 
 
+# MN
+# MN0PLUS
+# MN1PLUS
+# MN0OR1
+# MNMIN
+# MNMAX
+
+
+
+
 # ......................................................................................................................
 
 def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
@@ -3425,6 +3435,9 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
                 raise MatchError('list can never match a non-list field')
 
             return None
+
+        if moptions.get('list_check') is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
+            moptions = dict(moptions, list_check=True)
 
         tagss = []
         iter_pat = iter(pat)
@@ -3513,7 +3526,7 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[
         if src != pat:  # match source against exact string
             return None
 
-    elif isinstance(tgt, list) and moptions.get('list_check', True):
+    elif isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
         raise MatchError('str can never match a list field')
 
     else:
@@ -3548,24 +3561,29 @@ def _match_primitive(pat: constant, tgt: _Targets, moptions: Mapping[str, Any]) 
             return None
 
     elif tgt != pat:
-        if issubclass(tgt_cls, list) and moptions.get('list_check', True):
+        if issubclass(tgt_cls, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError(f'{pat_cls.__qualname__} can never match a list field')
 
         return None
 
     return _EMPTY_DICT
 
-def _match_node(pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_node(
+    pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any], *, allow_reset_list_check: bool = True
+) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
 
     is_mpat = isinstance(pat, M_Pattern)
     types = pat._types if is_mpat else pat.__class__
 
     if not isinstance(tgt, types):
-        if isinstance(tgt, list) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
+
+    if moptions.get('list_check') is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
+        moptions = dict(moptions, list_check=True)
 
     tagss = []
 
@@ -3612,7 +3630,7 @@ def _match_node_Constant(
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
 
     if not isinstance(tgt, Constant):
-        if isinstance(tgt, list) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
@@ -3655,7 +3673,7 @@ def _match_node_expr_context(
     `None` must also match one of these successfully for py < 3.13."""
 
     if not isinstance(tgt, expr_context) or (moptions.get('ctx') and tgt.__class__ is not pat.__class__):
-        if isinstance(tgt, list) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
@@ -3665,9 +3683,16 @@ def _match_node_expr_context(
 def _match_node_arbitrary_fields(
     pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
 ) -> Mapping[str, Any] | None:
-    """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches."""
+    """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches.
 
-    return _match_node(pat, tgt, {**moptions, 'list_check': False})
+    Normally a list vs. non-list match is an error as that indicates the user got confused with their pattern. Arbitrary
+    field check patterns can span nodes which have list vs. non-list definitions for fields so in this case the error
+    checking is turned off and rather a mismatch is treated as just a failed match. The error checking is turned back on
+    after the first level of child nodes where a match is actually attempted between things that could be list vs.
+    non-list.
+    """
+
+    return _match_node(pat, tgt, {**moptions, 'list_check': False}, allow_reset_list_check=False)
 
 def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
@@ -3676,7 +3701,7 @@ def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any]) -> Mappin
         pat = pat._types
 
     if not isinstance(tgt, pat):
-        if isinstance(tgt, list) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
@@ -3707,7 +3732,7 @@ def _match_re_Pattern(pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any
         if not isinstance(pat.pattern, bytes) or not pat.match(tgt):
             return None
 
-    elif isinstance(tgt, list) and moptions.get('list_check', True):
+    elif isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
         raise MatchError('re.Pattern can never match a list field')
 
     else:
@@ -3722,7 +3747,7 @@ def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, moptions: Mapping[str, Any
 
 def _match_None(pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
     if tgt is not None:
-        if isinstance(tgt, list) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
             raise MatchError('None can never match a list field')
 
         return None
@@ -3734,7 +3759,7 @@ _MATCH_FUNCS = {
     MNOT:                MNOT._match,
     MOR:                 MOR._match,
     MAND:                MAND._match,
-    MANY:                _match_node,
+    MANY:                _match_node_arbitrary_fields,
     MRE:                 MRE._match,
     MCB:                 MCB._match,
     AST:                 _match_node,  # _match_node_nonleaf,
