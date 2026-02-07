@@ -8072,6 +8072,100 @@ opts.ignore_module = [mod.strip()
         f.a = None
         assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
 
+    def test_sub_special(self):
+        # special handling for Call.args/keywords
+
+        src = '''
+logger.info(a, cid=-1)
+logger.info(a, cid=1)
+other_logger.info(cid=-1, **b)
+logger.info(a)
+        '''.strip()
+
+        pat = MCall(
+           func=Attribute(M(func=expr), 'info'),
+           keywords=[..., Mkeyword('cid', MUnaryOp(USub)), ...],
+           _args=M(all_args=...),
+        )
+
+        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_all_args)').src, '''
+logger.warning(a, cid=-1)
+logger.info(a, cid=1)
+other_logger.warning(cid=-1, **b)
+logger.info(a)
+        '''.strip())
+
+        pat = MCall(
+           func=Attribute(M(func=expr), 'info'),
+           keywords=[..., M(kw=Mkeyword('cid', MUnaryOp(USub))), ...],
+        )
+
+        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_kw)').src, '''
+logger.warning(cid=-1)
+logger.info(a, cid=1)
+other_logger.warning(cid=-1)
+logger.info(a)
+        '''.strip())
+
+        pat = MCall(
+           func=Attribute(M(func=expr), 'info'),
+           args=[..., M(arg='a'), ...],
+        )
+
+        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_arg)').src, '''
+logger.warning(a)
+logger.warning(a)
+other_logger.info(cid=-1, **b)
+logger.warning(a)
+        '''.strip())
+
+        pat = MCall(
+           func=Attribute(M(func=expr), 'info'),
+           _args=[..., M(arg='a'), ...],
+        )
+
+        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_arg)').src, '''
+logger.warning(a)
+logger.warning(a)
+other_logger.info(cid=-1, **b)
+logger.warning(a)
+        '''.strip())
+
+        # special handling for ClassDef.args/keywords
+
+        src = '''
+class info(a, cid=-1): pass
+class info(a, cid=1): pass
+class other_info(cid=-1, **b): pass
+class info(a): pass
+        '''.strip()
+
+        pat = MClassDef(
+           'info',
+           keywords=[..., Mkeyword('cid', MUnaryOp(USub)), ...],
+           _bases=M(all_bases=...),
+        )
+
+        self.assertEqual(FST(src).sub(pat, 'class warning(__fst_all_bases): pass', pep8space=False).src, '''
+class warning(a, cid=-1): pass
+class info(a, cid=1): pass
+class other_info(cid=-1, **b): pass
+class info(a): pass
+        '''.strip())
+
+        # special handling for Compare._all
+
+        self.assertEqual('x < a < b < y', FST('a < b').sub(MCompare(_all=M(all=...)), 'x < __fst_all < y').src)
+        self.assertEqual('x < (a < b) < y', FST('a < b').sub(M(all=MCompare(_all=...)), 'x < __fst_all < y').src)
+
+        # special handling for arguments._all
+
+        pat = MFunctionDef(args=M(args=arguments))
+        src = 'def f(a, /, b=1, *c, d=2, **e): pass'
+        fst_ = FST(src)
+        repl = 'def g(__fst_args): pass'
+        self.assertEqual('def g(a, /, b=1, *c, d=2, **e): pass', fst_.sub(pat, repl).src)
+
     def test_find_def(self):
         def test(fst_, path, recurse=True, asts=None):
             ret = []

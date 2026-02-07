@@ -4275,7 +4275,7 @@ def sub(
     back: bool = False,
     asts: list[AST] | None = None,
     **options,
-) -> int:
+) -> fst.FST:  # -> self
     """Substitute matching targets with a given `repl` template or dynamically generated node if `repl` is a function.
     The template substitutions can include tagged elements from a match.
 
@@ -4295,16 +4295,40 @@ def sub(
     - `options`: The options to use for the `replace()` calls. See `options()`.
 
     **Returns:**
-    - `int`: Number of substitutions made (by this function, user function could have done others, but that is on the
-        user).
+    - `self`
 
     **Examples:**
 
     >>> from fst.match import *
 
+    Add a 'cid=CID' keyword parameter to all `logger.info()` calls that don't have a `cid` already.
 
+    >>> src = '''
+    ... logger.info('Hello world...')  # ok
+    ... logger.info('Already have id', cid=other_cid)  # ok
+    ... logger.info()  # yes, no logger message, too bad
+    ... (logger).info(  # just checking
+    ...     f'not a {thing}',  # this is fine
+    ...     extra=extra,       # also this
+    ... )
+    ... '''.strip()
 
+    >>> pat = MCall(
+    ...    func=M(func=MAttribute('logger', 'info')),
+    ...    keywords=MNOT([..., Mkeyword('cid'), ...]),
+    ...    _args=M(all_args=...),
+    ... )
 
+    >>> repl = '__fst_func(__fst_all_args, cid=CID)'
+
+    >>> print(FST(src).sub(pat, repl).src)
+    logger.info('Hello world...', cid=CID)  # ok
+    logger.info('Already have id', cid=other_cid)  # ok
+    logger.info(cid=CID)  # yes, no logger message, too bad
+    (logger).info(
+                  f'not a {thing}',  # this is fine
+                  extra=extra,       # also this
+                  cid=CID)
     """
 
     is_func = callable(repl)
@@ -4313,23 +4337,28 @@ def sub(
         repl = code_as_all(repl, options, self.root.parse_params)
         paths = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
 
-        for f in repl.walk(Name):
-            if (n := f.a.id).startswith('__fst_'):
+        for f in repl.walk({Name, arg}):
+            if (a := f.a).__class__ is Name:
+                n = a.id
+            else:  # a.__class__ is arg, it makes more sense to replace the whole arg, annotation included, rather than just the name
+                n = a.arg
+
+            if n.startswith('__fst_'):
                 paths.append((n[6:], repl.child_path(f)))
 
-    count = 0
     gen = self.search(pat, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
         tgt = m.target  # will be FST node
 
-        if is_func:
-            sub = repl(m)  # user function that will return replacement
+        if is_func:  # user function that will return replacement
+            sub = repl(m)
 
-        else:
-            sub = repl.copy()  # substitution template with replacable template variables
+        else:  # substitution template with replacable template variables
+            sub = repl.copy()
 
             for tag, path in paths:
+                sub_tgt = sub.child_from_path(path)
                 one = True
 
                 if not tag:
@@ -4339,21 +4368,55 @@ def sub(
                 elif isinstance(sub_sub, fst.FST):
                     sub_sub = sub_sub.copy()
 
-                elif isinstance(sub_sub, fstview):  # we need to get a normal single element
+                elif isinstance(sub_sub, fstview):  # we get a normal single element for putting as a slice
                     sub_sub = sub_sub.copy()
-                    one = False
+                    one = False  # this will be a slice of some kind so make sure we put as a slice
 
                 elif not isinstance(sub_sub, (str, AST)):
                     raise MatchError(f'match substitution must be FST, AST or str, got {sub_sub}')
 
-                sub.child_from_path(path).replace(sub_sub, one=one, **options)
+                if parent := sub_tgt.parent:  # some fields are special-cased for simplicity and common-sense sake
+                    parenta_cls = parent.a.__class__
+                    field, idx = sub_tgt.pfield
+                    new_idx = None
+
+                    if parenta_cls is Call:  # Call._args?
+                        if field in ('args', 'keywords'):
+                            field = '_args'
+                            new_idx = parent._cached_arglikes().index(sub_tgt.a)
+
+                    elif parenta_cls is arguments:
+                        if sub_sub.a.__class__ is arguments:
+                            field = '_all'
+                            allargs = parent._cached_allargs()
+                            one = False
+
+                            try:
+                                new_idx = allargs.index(sub_tgt.a)
+                            except ValueError:
+                                raise MatchError('cannot substitute arguments for a non-arg') from None
+
+                    elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
+                        if not one:  # only if came from existing Compare slice
+                            field = '_all'
+                            new_idx = 0 if idx is None else idx + 1
+
+                    elif parenta_cls is ClassDef:  # ClassDef._bases?
+                        if field in ('bases', 'keywords'):
+                            field = '_bases'
+                            new_idx = parent._cached_arglikes().index(sub_tgt.a)
+
+                    if new_idx is not None:
+                        parent.put_slice(sub_sub, new_idx, new_idx + 1, field, one=one, **options)
+
+                        continue
+
+                sub_tgt.replace(sub_sub, one=one, **options)
 
         if sub is not tgt:
             tgt.replace(sub, **options)
 
-            count += 1
-
         if not nest:
             gen.send(False)
 
-    return count
+    return self
