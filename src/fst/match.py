@@ -188,6 +188,7 @@ __all__ = [
     'MANY',
     'MRE',
     'MCB',
+    'MTAG',
     'MN',
     'MNOPT',
     'MNSTAR',
@@ -354,17 +355,25 @@ _Patterns = list[_Pattern] | _Pattern
 
 
 def _rpr(o: object) -> str:
-    return (
-        '...'
-        if o is ... else
-        o.__name__
-        if (o_cls := o.__class__) is type and issubclass(o, (AST, M_Pattern)) else
-        f'{o_cls.__name__}({", ".join(f"{f}={_rpr(getattr(o, f, None))}" for f in o._fields if f != "ctx")})'
-        if isinstance(o, AST) else
-        f'[{", ".join(_rpr(e) for e in o)}]'
-        if isinstance(o, list) else
-        repr(o)
-    )
+    """Show `Ellipsis` as `...` and `AST` instances properly, among other things."""
+
+    if o is ...:
+        return '...'
+
+    if (o_cls := o.__class__) is type and issubclass(o, (AST, M_Pattern)):
+        return o.__name__
+
+    if isinstance(o, AST):
+        return f'{o_cls.__name__}({", ".join(f"{f}={_rpr(getattr(o, f, None))}" for f in o._fields if f != "ctx")})'
+
+    if isinstance(o, list):
+        return f'[{", ".join(_rpr(e) for e in o)}]'
+
+    return repr(o)
+
+
+def _new_moptions(is_FST: bool, ctx: bool) -> dict[str, Any]:
+    return dict(is_FST=is_FST, ctx=ctx, list_check=True)
 
 
 class _NoTag:
@@ -380,6 +389,33 @@ class _NoTag:
 
     def __repr__(self) -> str:
         return '<NoTag>'
+
+
+class _RunningTags:
+    """Store running tags being built up during matching cheaply until needed by `MTAG`."""
+
+    all_tagss: list[list[dict[str, Any]] | list[tuple[dict[str, Any], Any]]]
+
+    def __init__(self, all_tagss: list[list[dict[str, Any]] | list[tuple[dict[str, Any], Any]]] = []) -> None:  # noqa: B006
+        self.all_tagss = all_tagss
+
+    def with_(self, tagss: list[dict[str, Any]] | list[tuple[dict[str, Any], Any]]) -> _RunningTags:
+        all_tagss = self.all_tagss.copy()
+
+        all_tagss.append(tagss)
+
+        return _RunningTags(all_tagss)
+
+    def get(self, tag: str) -> object:
+        for tagss in reversed(self.all_tagss):
+            if tagss and isinstance(tagss[0], tuple):
+                for m, _ in reversed(tagss):  # tagss_n_tgts from _match_n()
+                    if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
+                        return v
+            else:
+                for m in reversed(tagss):
+                    if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
+                        return v
 
 
 class MatchError(RuntimeError):
@@ -459,7 +495,7 @@ class M_Pattern:
         elif not (tgt := target.a):
             raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
 
-        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, dict(is_FST=is_FST, ctx=ctx))
+        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _new_moptions(is_FST, ctx), _RunningTags())
 
         return None if m is None else M_Match(m, self, target)
 
@@ -2809,14 +2845,14 @@ class M(M_Pattern):
         return f'{name}({pat_tag}={_rpr(pat)})' if pat_tag else f'{name}({_rpr(pat)})'
 
     @staticmethod
-    def _match(self: M, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
-        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions)
+    def _match(self: M, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions, rtags)
 
         if m is None:
             return None
 
         if pat_tag := self.pat_tag:
-            if moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            if moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             if m:
@@ -2870,14 +2906,14 @@ class MNOT(M):
     """
 
     @staticmethod
-    def _match(self: MNOT, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
-        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions)
+    def _match(self: MNOT, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions, rtags)
 
         if m is not None:
             return None
 
         if pat_tag := self.pat_tag:
-            if moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            if moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: tgt, **self.static_tags}
@@ -2963,13 +2999,13 @@ class MOR(M_Pattern):
         return f'{name}({tags})'
 
     @staticmethod
-    def _match(self: MOR, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    def _match(self: MOR, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         for i, p in enumerate(self.pats):
-            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions)
+            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions, rtags)
 
             if m is not None:
                 if pat_tag := self.pat_tags[i]:
-                    if moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                    if moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                         raise MatchError('match found an AST node without an FST')
 
                     return {**m, pat_tag: tgt}
@@ -3031,8 +3067,8 @@ class MAND(MOR):
     """
 
     @staticmethod
-    def _match(self: MAND, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
-        if moptions.get('is_FST') and isinstance(tgt, AST):
+    def _match(self: MAND, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+        if moptions['is_FST'] and isinstance(tgt, AST):
             if not (tgtf := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
         else:
@@ -3041,7 +3077,7 @@ class MAND(MOR):
         tagss = []
 
         for i, p in enumerate(self.pats):
-            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions)
+            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions, rtags.with_(tagss))
 
             if m is None:
                 return None
@@ -3244,7 +3280,7 @@ class MRE(M_Pattern):
         return f'{name}({", ".join(tags)})'
 
     @staticmethod
-    def _match(self: MRE, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    def _match(self: MRE, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         """Regex match or search pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will
         use `FST` source from the tree and unparse a non-`FST` `AST` node for the check. Returns `re.Match` object if is
         requested."""
@@ -3272,7 +3308,7 @@ class MRE(M_Pattern):
             if not isinstance(re_pat.pattern, bytes) or not (m := func(tgt)):
                 return None
 
-        elif isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+        elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
             raise MatchError('MRE can never match a list field')
 
         else:
@@ -3367,8 +3403,8 @@ class MCB(M):
         self.tag_call_ret = tag_call_ret
 
     @staticmethod
-    def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
-        if not moptions.get('is_FST') or not isinstance(tgt, AST):
+    def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+        if not moptions['is_FST'] or not isinstance(tgt, AST):
             m = self.pat(tgt)
         elif f := getattr(tgt, 'f', None):
             m = self.pat(f)
@@ -3381,10 +3417,72 @@ class MCB(M):
         if pat_tag := self.pat_tag:
             if self.tag_call_ret:
                 tgt = m
-            elif moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            elif moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: tgt, **self.static_tags}
+
+        return self.static_tags
+
+
+class MTAG(M_Pattern):
+    """Match previously matched node.
+
+    **Parameters:**
+    - `tag`: The tag of the previously matched node we want to match.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`).
+
+    **Examples:**
+
+    >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
+    <M_Match {'left': <Name 0,0..0,1>}>
+
+    >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + b'))
+
+    >>> MBinOp(MTAG('right'), right=M(right='a')).match(FST('a + a'))
+
+    >>> pat = MList([M(first='a'), MNSTAR(st=MTAG('first'))])
+
+    >>> pat.match(FST('[a, a, a]'))
+    <M_Match {'first': <Name 0,1..0,2>, 'st': [<M_Match {}>, <M_Match {}>]}>
+
+    >>> pat.match(FST('[a, a, a, b]'))
+    """
+
+    tag: str  ; """@private"""
+    static_tags: Mapping[str, Any]  ; """@private"""
+
+    def __init__(self, tag: str, /, **tags) -> None:
+        self._validate_tags((tag,))
+        self._validate_tags(tags)
+
+        self.tag = tag
+        self.static_tags = tags
+
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        tag = self.tag
+
+        if tags := self.static_tags:
+            return f'{name}({tag!r}, {", ".join(f"{t}={_rpr(p)}" for t, p in tags.items())})'
+
+        return f'{name}({tag!r})'
+
+    @staticmethod
+    def _match(self: MTAG, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+        if (p := rtags.get(self.tag)) is _SENTINEL:
+            return None
+
+        if isinstance(p, fst.FST):
+            p = p.a
+
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions, rtags)
+
+        if m is None:
+            return None
+        if m:
+            return dict(m, **self.static_tags)
 
         return self.static_tags
 
@@ -3463,14 +3561,14 @@ class MN(M):
         self.max = max
 
     @staticmethod
-    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if not isinstance(tgt, (list, fstview)):
-            if moptions.get('list_check', True):
+            if moptions['list_check']:
                 raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
 
             return None
 
-        return _match_default([self], tgt, moptions)
+        return _match_default([self], tgt, moptions, rtags)
 
 
 class MNOPT(MN):
@@ -3525,9 +3623,9 @@ class MNOPT(MN):
         MN.__init__(self, anon_pat, 0, 1, **tags)
 
     @staticmethod
-    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if isinstance(tgt, (list, fstview)):
-            return _match_default([self], tgt, moptions)
+            return _match_default([self], tgt, moptions, rtags)
 
         if tgt is None:
             if pat_tag := self.pat_tag:
@@ -3536,19 +3634,19 @@ class MNOPT(MN):
             return self.static_tags
 
         if not isinstance(tgt, AST):
-            if moptions.get('list_check', True):
+            if moptions['list_check']:
                 raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
 
             return None
 
         pat = self.pat
-        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, moptions)
+        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, moptions, rtags)
 
         if m is None:
             return None
 
         if pat_tag := self.pat_tag:
-            if moptions.get('is_FST') and not (tgt := getattr(tgt, 'f', None)):
+            if moptions['is_FST'] and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: [M_Match(m, pat, tgt)], **self.static_tags}
@@ -3706,27 +3804,27 @@ class _StepbackListIter:
 
 
 def _match_n(
-    pat: _Pattern, tgt: _Targets, moptions: Mapping[str, Any], iter_tgt: _StepbackListIter
+    pat: _Pattern, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags, iter_tgt: _StepbackListIter
 ) -> list[dict[str, Any]] | None:
     """Match a quantifier pattern to a section of list field. If the match fails then the iterator is stepped back the
     whole way."""
 
-    tagss_n_tgts = []  # [(tgt, match dict), ...]
+    tagss_n_tgts = []  # [(match dict, tgt), ...]
     n_max = pat.max
     np = pat.pat
-    mfunc = _MATCH_FUNCS.get(np.__class__, _match_default)
+    match_func = _MATCH_FUNCS.get(np.__class__, _match_default)
     n = 0
 
     while n < n_max:
         if (t := iter_tgt.next()) is _SENTINEL:
             break
 
-        if (m := mfunc(np, t, moptions)) is None:
+        if (m := match_func(np, t, moptions, rtags.with_(tagss_n_tgts))) is None:
             iter_tgt.stepback()
 
             break
 
-        tagss_n_tgts.append((t, m))
+        tagss_n_tgts.append((m, t))
 
         n += 1
 
@@ -3736,10 +3834,10 @@ def _match_n(
         return None
 
     if pat_tag := pat.pat_tag:  # returning child match objects in list
-        if moptions.get('is_FST') and tgt and not isinstance(tgt[0], str):  # if str then always str, otherwise ASTs with maybe Nones, this basically decides if we need to convert AST to FST nodes
+        if moptions['is_FST'] and tgt and not isinstance(tgt[0], str):  # if str then always str, otherwise ASTs with maybe Nones, this basically decides if we need to convert AST to FST nodes
             ms = []
 
-            for t, ts in tagss_n_tgts:
+            for ts, t in tagss_n_tgts:
                 if t and not (t := getattr(t, 'f', None)):
                     raise MatchError('match found an AST node without an FST')
 
@@ -3748,10 +3846,10 @@ def _match_n(
             tagss = [{pat_tag: ms}]
 
         else:
-            tagss = [{pat_tag: [M_Match(ts, pat, t) for t, ts in tagss_n_tgts]}]  # non-node list field
+            tagss = [{pat_tag: [M_Match(ts, pat, t) for ts, t in tagss_n_tgts]}]  # non-node list field
 
     else:  # merging tags from child matches
-        tagss = list(ts for _, ts in tagss_n_tgts)
+        tagss = list(ts for ts, _ in tagss_n_tgts)
 
     if ts := pat.static_tags:
         tagss.append(ts)
@@ -3761,7 +3859,9 @@ def _match_n(
 
 # ......................................................................................................................
 
-def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_default(
+    pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+) -> Mapping[str, Any] | None:
     """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
 
     if isinstance(pat, list):
@@ -3775,12 +3875,12 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
                 tgt = [f.a for f in tgt]  # convert to temporary list of AST nodes
 
         if not isinstance(tgt, list):
-            if moptions.get('list_check', True):
+            if moptions['list_check']:
                 raise MatchError('list can never match a non-list field')
 
             return None
 
-        if moptions.get('list_check') is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
+        if moptions['list_check'] is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
             moptions = dict(moptions, list_check=True)
 
         # this is the list field matching where wildcards and quantifier patterns are handled
@@ -3792,7 +3892,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
         while (p := next(iter_pat, _SENTINEL)) is not _SENTINEL:
             if p is not ...:  # concrete or quantifier
                 if isinstance(p, MN): # quantifier
-                    if (m := _match_n(p, tgt, moptions, iter_tgt)) is None:
+                    if (m := _match_n(p, tgt, moptions, rtags.with_(tagss), iter_tgt)) is None:
                         return None
 
                     tagss.extend(m)
@@ -3801,7 +3901,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
                     if (t := iter_tgt.next()) is _SENTINEL:  # if ast list ended before can match then fail
                         return None
 
-                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
+                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags.with_(tagss))
 
                     if m is None:  # if not match then fail as this is an expected concrete match
                         return None
@@ -3824,7 +3924,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
             # got p to match against, now we walk the target ast list until find a match or not
 
             if isinstance(p, MN): # quantifier
-                while (m := _match_n(p, tgt, moptions, iter_tgt)) is None:
+                while (m := _match_n(p, tgt, moptions, rtags.with_(tagss), iter_tgt)) is None:
                     if iter_tgt.next() is _SENTINEL:  # advance one unit and try again
                         return None
 
@@ -3832,7 +3932,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
 
             else:  # concrete
                 while (t := iter_tgt.next()) is not _SENTINEL:
-                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
+                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags.with_(tagss))
 
                     if m is None:  # if not match then keep looking (because p preceded by ...)
                         continue
@@ -3867,11 +3967,11 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
     # got here through subclass of a primitive type
 
     if isinstance(pat, str):
-        return _match_str(pat, tgt, moptions)
+        return _match_str(pat, tgt, moptions, rtags)
 
-    return _match_primitive(pat, tgt, moptions)
+    return _match_primitive(pat, tgt, moptions, rtags)
 
-def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
     if isinstance(tgt, str):
         if tgt != pat:
             return None
@@ -3885,7 +3985,7 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[
         if src != pat:  # match source against exact string
             return None
 
-    elif isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+    elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
         raise MatchError('str can never match a list field')
 
     else:
@@ -3893,7 +3993,9 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[
 
     return _EMPTY_DICT
 
-def _match_primitive(pat: constant, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_primitive(
+    pat: constant, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+) -> Mapping[str, Any] | None:
     """Primitive value comparison. We explicitly disallow equality of different types so 0 != 0.0 != 0j != False. We do
     all this to account for the possibility of subclassed primary types. This will not compare a `str` pattern against
     source."""
@@ -3920,7 +4022,7 @@ def _match_primitive(pat: constant, tgt: _Targets, moptions: Mapping[str, Any]) 
             return None
 
     elif tgt != pat:
-        if issubclass(tgt_cls, (list, fstview)) and moptions.get('list_check', True):
+        if issubclass(tgt_cls, (list, fstview)) and moptions['list_check']:
             raise MatchError(f'{pat_cls.__qualname__} can never match a list field')
 
         return None
@@ -3928,7 +4030,12 @@ def _match_primitive(pat: constant, tgt: _Targets, moptions: Mapping[str, Any]) 
     return _EMPTY_DICT
 
 def _match_node(
-    pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any], *, allow_reset_list_check: bool = True
+    pat: M_Pattern | AST,
+    tgt: _Targets,
+    moptions: Mapping[str, Any],
+    rtags: _RunningTags,
+    *,
+    allow_reset_list_check: bool = True,
 ) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
 
@@ -3936,12 +4043,12 @@ def _match_node(
     types = pat._types if is_mpat else pat.__class__
 
     if not isinstance(tgt, types):
-        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
-    if moptions.get('list_check') is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
+    if moptions['list_check'] is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
         moptions = dict(moptions, list_check=True)
 
     tagss = []
@@ -3958,10 +4065,10 @@ def _match_node(
             if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), fstview):  # maybe its a virtual field
                 return None
 
-        elif moptions.get('is_FST') and isinstance(t, list):
+        elif moptions['is_FST'] and isinstance(t, list):
             t = getattr(tgt.f, field)  # get the fstview instead (for maybe capture to tag, is converted back to list of AST for compare)
 
-        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags.with_(tagss))
 
         if m is None:
             return None
@@ -3983,13 +4090,13 @@ def _match_node(
     return tags
 
 def _match_node_Constant(
-    pat: MConstant | Constant, tgt: _Targets, moptions: Mapping[str, Any]
+    pat: MConstant | Constant, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
 ) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
 
     if not isinstance(tgt, Constant):
-        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
@@ -3997,15 +4104,15 @@ def _match_node_Constant(
     tagss = []
 
     if (p := getattr(pat, 'value', _SENTINEL)) is not _SENTINEL:  # missing value acts as implicit ... wildcard, while the real ... is a concrete value here
-        f = _match_primitive if p is ... else _MATCH_FUNCS.get(p.__class__, _match_default)
+        match_func = _match_primitive if p is ... else _MATCH_FUNCS.get(p.__class__, _match_default)
 
-        if (m := f(p, tgt.value, moptions)) is None:
+        if (m := match_func(p, tgt.value, moptions, rtags)) is None:
             return None
         if m:
             tagss.append(m)
 
     if (p := getattr(pat, 'kind', ...)) is not ...:
-        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, moptions)) is None:
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, moptions, rtags.with_(tagss))) is None:
             return None
         if m:
             tagss.append(m)
@@ -4025,14 +4132,14 @@ def _match_node_Constant(
     return tags
 
 def _match_node_expr_context(
-    pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any]
+    pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
 ) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
     the match option `ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
     `None` must also match one of these successfully for py < 3.13."""
 
-    if not isinstance(tgt, expr_context) or (moptions.get('ctx') and tgt.__class__ is not pat.__class__):
-        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+    if not isinstance(tgt, expr_context) or (moptions['ctx'] and tgt.__class__ is not pat.__class__):
+        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
@@ -4040,7 +4147,7 @@ def _match_node_expr_context(
     return _EMPTY_DICT
 
 def _match_node_arbitrary_fields(
-    pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any]
+    pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
 ) -> Mapping[str, Any] | None:
     """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches.
 
@@ -4051,23 +4158,25 @@ def _match_node_arbitrary_fields(
     non-list.
     """
 
-    return _match_node(pat, tgt, {**moptions, 'list_check': False}, allow_reset_list_check=False)
+    return _match_node(pat, tgt, {**moptions, 'list_check': False}, rtags, allow_reset_list_check=False)
 
-def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
 
     if issubclass(pat, M_Pattern):
         pat = pat._types
 
     if not isinstance(tgt, pat):
-        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
             raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
     return _EMPTY_DICT
 
-def _match_re_Pattern(pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_re_Pattern(
+    pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+) -> Mapping[str, Any] | None:
     """Regex pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will use `FST` source
     from the tree and unparse a non-`FST` `AST` node for the check."""
 
@@ -4091,7 +4200,7 @@ def _match_re_Pattern(pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any
         if not isinstance(pat.pattern, bytes) or not pat.match(tgt):
             return None
 
-    elif isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+    elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
         raise MatchError('re.Pattern can never match a list field')
 
     else:
@@ -4099,14 +4208,18 @@ def _match_re_Pattern(pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any
 
     return _EMPTY_DICT
 
-def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_Ellipsis(
+    pat: EllipsisType, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+) -> Mapping[str, Any] | None:
     """Always succeeds."""
 
     return _EMPTY_DICT
 
-def _match_None(pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+def _match_None(
+    pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+) -> Mapping[str, Any] | None:
     if tgt is not None:
-        if isinstance(tgt, (list, fstview)) and moptions.get('list_check', True):
+        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
             raise MatchError('None can never match a list field')
 
         return None
@@ -4121,6 +4234,7 @@ _MATCH_FUNCS = {
     MANY:                _match_node_arbitrary_fields,
     MRE:                 MRE._match,
     MCB:                 MCB._match,
+    MTAG:                MTAG._match,
     MN:                  MN._match,
     MNOPT:               MNOPT._match,
     MNSTAR:              MNSTAR._match,
@@ -4452,6 +4566,7 @@ _LEAF_ASTS_FUNCS = {
     MANY:         MANY._leaf_asts,
     MRE:          _leaf_asts_all,
     MCB:          _leaf_asts_all,
+    MTAG:         _leaf_asts_all,
     type:         _leaf_asts_type,
     re_Pattern:   _leaf_asts_all,
     EllipsisType: _leaf_asts_all,
@@ -4557,7 +4672,7 @@ def match(
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
 
-    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, dict(is_FST=True, ctx=ctx))
+    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _new_moptions(True, ctx), _RunningTags())
 
     return None if m is None else M_Match(m, pat, self)
 
@@ -4643,11 +4758,11 @@ def search(
     pat_cls = pat.__class__
     asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
-    moptions = dict(is_FST=True, ctx=ctx)
+    moptions = _new_moptions(True, ctx)
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
         def all_func(f: fst.FST) -> M_Match | Literal[False]:
-            m = match_func(pat, f.a, moptions)
+            m = match_func(pat, f.a, moptions, _RunningTags())
 
             return False if m is None else M_Match(m, pat, f)
 
@@ -4656,7 +4771,7 @@ def search(
             if f.a.__class__ not in asts_leaf:
                 return False
 
-            m = match_func(pat, f.a, moptions)
+            m = match_func(pat, f.a, moptions, _RunningTags())
 
             return False if m is None else M_Match(m, pat, f)
 
