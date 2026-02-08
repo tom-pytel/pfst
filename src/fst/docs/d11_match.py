@@ -215,7 +215,7 @@ tag which is added on a successful match, meant to be used for flags.
 These tags can be accessed via the `.tags` attribute on the match object.
 
 >>> m.tags
-{'tag': 'string', 'static_tag': True}
+mappingproxy({'tag': 'string', 'static_tag': True})
 
 Or as a convenience directly as attributes, though this should be used with care as the tags may be shadowed by existing
 attributes on the `M_Match` node.
@@ -331,7 +331,7 @@ Or to the individual elements.
 <M_Match {'tag_b': <Name ROOT 0,0..0,1>}>
 
 >>> MOR(M('a', static=False), tag_b='b', tag_c=M('c', static=True)).match(FST('c'))
-<M_Match {'tag_c': <Name ROOT 0,0..0,1>, 'static': True}>
+<M_Match {'static': True, 'tag_c': <Name ROOT 0,0..0,1>}>
 
 
 ## `MANY()` pattern

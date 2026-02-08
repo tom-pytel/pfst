@@ -7776,6 +7776,147 @@ opts.ignore_module = [mod.strip()
         assertRaises(MatchError('re.Pattern can never match a list field'), MList(re.compile('i')).match, f.a)
         assertRaises(MatchError('None can never match a list field'), MList(None).match, f.a)
 
+        # non-leaf arbitrary fields
+
+        pat = MAST(elts=['a', ...])
+        self.assertTrue(FST('a,').match(pat))
+        self.assertTrue(FST('(a, b)').match(pat))
+        self.assertTrue(FST('[a]').match(pat))
+        self.assertTrue(FST('{a}').match(pat))
+        self.assertFalse(FST('{a: b}').match(pat))
+
+        pat = Mstmt(body=[..., 'a', ...])
+        self.assertTrue(FST('if 1:\n a\n b').match(pat))
+        self.assertTrue(FST('while 1: c;a;b').match(pat))
+        self.assertTrue(FST('for _ in _:\n c\n a').match(pat))
+        self.assertTrue(FST('try:\n c\n a\n b\nfinally: pass').match(pat))
+        self.assertFalse(FST('a if b else c').match(pat))
+
+        pat = MAST(body=[..., 'a', ...])
+        self.assertTrue(FST('if 1:\n a\n b').match(pat))
+        self.assertFalse(FST('a if b else c').match(pat))  # this is not a list field, ensure non-match instead of error
+
+    def test_match_M_Pattern(self):
+        # re.Pattern
+
+        self.assertTrue(MOR(re.compile('i')).match(FST(Name('i')).a))
+        self.assertFalse(MOR(re.compile('i')).match(FST(Name('j')).a))
+        self.assertTrue(MOR(re.compile('i')).match(Name('i')))
+        self.assertFalse(MOR(re.compile('i')).match(Name('j')))
+        self.assertTrue(MOR(re.compile('i')).match('i'))
+        self.assertFalse(MOR(re.compile('i')).match('j'))
+        self.assertFalse(MOR(re.compile('i')).match(b'i'))
+        self.assertTrue(MOR(re.compile(b'i')).match(b'i'))
+        self.assertFalse(MOR(re.compile(b'i')).match(b'j'))
+        self.assertFalse(MOR(re.compile(b'i')).match('i'))
+
+        # MRE
+
+        self.assertTrue(MRE(re.compile('i')).match(FST(Name('i')).a))
+        self.assertFalse(MRE(re.compile('i')).match(FST(Name('j')).a))
+        self.assertTrue(MRE(re.compile('i')).match(Name('i')))
+        self.assertFalse(MRE(re.compile('i')).match(Name('j')))
+        self.assertTrue(MRE(re.compile('i')).match('i'))
+        self.assertFalse(MRE(re.compile('i')).match('j'))
+        self.assertFalse(MRE(re.compile('i')).match(b'i'))
+        self.assertTrue(MRE(re.compile(b'i')).match(b'i'))
+        self.assertFalse(MRE(re.compile(b'i')).match(b'j'))
+        self.assertFalse(MRE(re.compile(b'i')).match('i'))
+
+        self.assertTrue(MRE('i').match(FST(Name('i')).a))
+        self.assertFalse(MRE('i').match(FST(Name('j')).a))
+        self.assertTrue(MRE('i').match(Name('i')))
+        self.assertFalse(MRE('i').match(Name('j')))
+        self.assertTrue(MRE('i').match('i'))
+        self.assertFalse(MRE('i').match('j'))
+        self.assertFalse(MRE('i').match(b'i'))
+        self.assertTrue(MRE(b'i').match(b'i'))
+        self.assertFalse(MRE(b'i').match(b'j'))
+        self.assertFalse(MRE(b'i').match('i'))
+
+        self.assertTrue(MRE('i').match('i'))
+        self.assertFalse(MRE('i').match('j'))
+        self.assertFalse(MRE('i').match('ai'))
+        self.assertTrue(MRE('i', search=True).match('ai'))
+        self.assertFalse(MRE('i j').match('ij'))
+        self.assertTrue(MRE('i j', re.VERBOSE).match('ij'))
+
+        m = MRE(tag='i').match('i')
+        self.assertEqual(['tag'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
+
+        m = MRE(tag='i', search=True).match('ai')
+        self.assertEqual(['tag'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
+
+        m = MRE(tag='i j', flags=re.VERBOSE).match('ij')
+        self.assertEqual(['tag'], list(m.tags))
+        self.assertEqual('ij', m.tags['tag'].group())
+
+        m = MRE(tag='i', t2=2, t3='3').match('i')
+        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
+        self.assertEqual(2, m.tags['t2'])
+        self.assertEqual('3', m.tags['t3'])
+
+        m = MRE(tag='i', search=True, t2=2, t3='3').match('ai')
+        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
+        self.assertEqual('i', m.tags['tag'].group())
+        self.assertEqual(2, m.tags['t2'])
+        self.assertEqual('3', m.tags['t3'])
+
+        m = MRE(tag='i j', flags=re.VERBOSE, t2=2, t3='3').match('ij')
+        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
+        self.assertEqual('ij', m.tags['tag'].group())
+        self.assertEqual(2, m.tags['t2'])
+        self.assertEqual('3', m.tags['t3'])
+
+        # MOR
+
+        pat = M(obj=MOR(Constant, Name))
+        self.assertIsNone(pat.match(FST('a + b').a))
+        self.assertIsNone(pat.match(FST('a = b').a))
+        self.assertEqual({'obj': (f := FST('name')).a}, pat.match(f.a).tags)
+        self.assertEqual({'obj': (f := FST('123')).a}, pat.match(f.a).tags)
+
+        pat = MOR('b', 'c')
+        self.assertFalse(pat.match(FST('a').a))
+        self.assertTrue(pat.match(FST('b').a))
+        self.assertTrue(pat.match(FST('c').a))
+        self.assertFalse(pat.match(FST('a').a))
+
+        pat = MOR(Constant(2), Constant(3))
+        self.assertFalse(pat.match(FST('1').a))
+        self.assertTrue(pat.match(FST('2').a))
+        self.assertTrue(pat.match(FST('3').a))
+        self.assertFalse(pat.match(FST('4').a))
+
+        pat = MTuple(MOR(['b', 'c'], ['c', 'd']))
+        self.assertFalse(pat.match(FST('a, b').a))
+        self.assertTrue(pat.match(FST('b, c').a))
+        self.assertTrue(pat.match(FST('c, d').a))
+        self.assertFalse(pat.match(FST('d, e').a))
+
+        # misc
+
+        pat = MAST(value=MCall)
+        self.assertTrue(pat.match(FST('return f()').a))
+        self.assertTrue(pat.match(FST('await something(a, b, c)').a))
+        self.assertFalse(pat.match(FST('yield x').a))
+        self.assertFalse(pat.match(FST('*(a, b, c)').a))
+
+        pat = Mstmt(body=[MExpr(MConstant(str)), ...])
+        self.assertTrue(pat.match(FST('def f(): "doc"; pass').a))
+        self.assertTrue(pat.match(FST('class cls: "doc"').a))
+        self.assertFalse(pat.match(FST('class cls: 1').a))
+        self.assertFalse(pat.match(FST('class cls: 1; "doc"').a))
+        self.assertFalse(pat.match(FST('class cls: pass').a))
+
+        f = FST('a')
+        f.a = None
+        assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
+
+    def test_match_M(self):
         # arbitrary fields ignore list check
 
         self.assertTrue(MANY((If, IfExp), body=[...]).match(FST('if 1: pass')))
@@ -7926,26 +8067,6 @@ opts.ignore_module = [mod.strip()
         assertRaises(ValueError('MRE requires pattern'), MRE)
         assertRaises(ValueError('MRE requires pattern'), MRE, None)
 
-        # non-leaf arbitrary fields
-
-        pat = MAST(elts=['a', ...])
-        self.assertTrue(FST('a,').match(pat))
-        self.assertTrue(FST('(a, b)').match(pat))
-        self.assertTrue(FST('[a]').match(pat))
-        self.assertTrue(FST('{a}').match(pat))
-        self.assertFalse(FST('{a: b}').match(pat))
-
-        pat = Mstmt(body=[..., 'a', ...])
-        self.assertTrue(FST('if 1:\n a\n b').match(pat))
-        self.assertTrue(FST('while 1: c;a;b').match(pat))
-        self.assertTrue(FST('for _ in _:\n c\n a').match(pat))
-        self.assertTrue(FST('try:\n c\n a\n b\nfinally: pass').match(pat))
-        self.assertFalse(FST('a if b else c').match(pat))
-
-        pat = MAST(body=[..., 'a', ...])
-        self.assertTrue(FST('if 1:\n a\n b').match(pat))
-        self.assertFalse(FST('a if b else c').match(pat))  # this is not a list field, ensure non-match instead of error
-
         # MANY
 
         pat = MANY((If, For), body=[..., 'a', ...])
@@ -7969,9 +8090,150 @@ opts.ignore_module = [mod.strip()
         self.assertEqual({'tag': (f := FST('x')).a}, pat.match(f.a).tags)  # pat.match() because there is no match() on AST
         self.assertFalse(FST('y').match(pat))
 
+        pat = MCB(tag=lambda f: f.a.id == 'x' and f.a, tag_call_ret=True)  # make sure AST is preserved as a tag in an FST call
+        self.assertEqual({'tag': (f := FST('x')).a}, f.match(pat).tags)
+        self.assertFalse(FST('y').match(pat))
+
         pat = MCB(tag=lambda f: f.a.id == 'x' and f, tag_call_ret=True)
         self.assertEqual({'tag': (f := FST('x'))}, f.match(pat).tags)
         self.assertFalse(FST('y').match(pat))
+
+    def test_match_MN(self):
+        # MN tags and in or outside of list
+
+        assertRaises(ValueError('MN requires pattern'), MN, ..., 0, 1)
+        assertRaises(MatchError('MN can only match to or in a list field'), FST('a + b').match, MBinOp(left=MN('a', 0, 0)))
+        assertRaises(ValueError('MN-type quantifier patterns cannot be nested directly within each other'), MN, MN('a'))
+
+        patd = MList(MN(MOR(is_a='a', is_b='b'), min=1, max=2, static='y'))
+        patl = MList([MN(MOR(is_a='a', is_b='b'), min=1, max=2, static='y')])
+
+        f = FST('[a]')
+        self.assertEqual({'is_a': f.elts[0], 'static': 'y'}, patd.match(f).tags)
+        self.assertEqual({'is_a': f.elts[0], 'static': 'y'}, patl.match(f).tags)
+
+        f = FST('[a, a]')
+        self.assertEqual({'is_a': f.elts[1], 'static': 'y'}, patd.match(f).tags)
+        self.assertEqual({'is_a': f.elts[1], 'static': 'y'}, patl.match(f).tags)
+
+        f = FST('[a, b]')
+        self.assertEqual({'is_a': f.elts[0], 'is_b': f.elts[1], 'static': 'y'}, patd.match(f).tags)
+        self.assertEqual({'is_a': f.elts[0], 'is_b': f.elts[1], 'static': 'y'}, patl.match(f).tags)
+
+        patd = MList(MN(mn=MOR(is_a='a', is_b='b'), min=1, max=2, static='y'))
+        patl = MList([MN(mn=MOR(is_a='a', is_b='b'), min=1, max=2, static='y')])
+
+        f = FST('[a]')
+        m = patd.match(f)
+        self.assertEqual(['mn', 'static'], list(m.tags))
+        self.assertEqual({'is_a': f.elts[0]}, m.mn[0].tags)
+        self.assertEqual(m.static, 'y')
+        m = patl.match(f)
+        self.assertEqual(['mn', 'static'], list(m.tags))
+        self.assertEqual({'is_a': f.elts[0]}, m.mn[0].tags)
+        self.assertEqual(m.static, 'y')
+
+        f = FST('[a, a]')
+        m = patd.match(f)
+        self.assertEqual(['mn', 'static'], list(m.tags))
+        self.assertEqual({'is_a': f.elts[0]}, m.mn[0].tags)
+        self.assertEqual({'is_a': f.elts[1]}, m.mn[1].tags)
+        self.assertEqual(m.static, 'y')
+        m = patl.match(f)
+        self.assertEqual(['mn', 'static'], list(m.tags))
+        self.assertEqual({'is_a': f.elts[0]}, m.mn[0].tags)
+        self.assertEqual({'is_a': f.elts[1]}, m.mn[1].tags)
+        self.assertEqual(m.static, 'y')
+
+        f = FST('[a, b]')
+        m = patd.match(f)
+        self.assertEqual(['mn', 'static'], list(m.tags))
+        self.assertEqual({'is_a': f.elts[0]}, m.mn[0].tags)
+        self.assertEqual({'is_b': f.elts[1]}, m.mn[1].tags)
+        self.assertEqual(m.static, 'y')
+        m = patl.match(f)
+        self.assertEqual(['mn', 'static'], list(m.tags))
+        self.assertEqual({'is_a': f.elts[0]}, m.mn[0].tags)
+        self.assertEqual({'is_b': f.elts[1]}, m.mn[1].tags)
+        self.assertEqual(m.static, 'y')
+
+        # MN logic correctness, merged tags
+
+        self.assertEqual({}, FST('[]').match(List([MN('a', 0, 0)])).tags)
+        self.assertFalse(FST('[a]').match(List([MN('a', 0, 0)])))
+        self.assertEqual({}, FST('[a]').match(List([MN('a', 0, 0), ...])).tags)
+        self.assertEqual({}, FST('[a]').match(List([MN(M(is_a='a'), 0, 0), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[a]')).elts[0]}, f.match(List([MN(M(is_a='a'), 0, 1), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[a, a]')).elts[0]}, f.match(List([MN(M(is_a='a'), 0, 1), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[a, a]')).elts[1]}, f.match(List([MN(M(is_a='a'), 0, 2), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[a, a, a]')).elts[1]}, f.match(List([MN(M(is_a='a'), 0, 2), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[a, a, a]')).elts[2]}, f.match(List([MN(M(is_a='a'), 0), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[a, a, a, a]')).elts[3]}, f.match(List([MN(M(is_a='a'), 0), ...])).tags)
+        self.assertFalse(FST('[]').match(List([MN(M(is_a='a'), 1, 1), ...])))
+        self.assertEqual({'is_a': (f := FST('[a]')).elts[0]}, f.match(List([MN(M(is_a='a'), 1, 1), ...])).tags)
+        self.assertFalse(FST('[a, a]').match(List([MN(M(is_a='a'), 1, 1)])))
+        self.assertEqual({'is_a': (f := FST('[a, a]')).elts[0]}, f.match(List([MN(M(is_a='a'), 1, 1), ...])).tags)
+
+        self.assertEqual({'is_a': (f := FST('[a, a]')).elts[0]}, f.match(List([..., MN(M(is_a='a'), 1, 1), ...])).tags)
+        self.assertEqual({'is_a': (f := FST('[b, a]')).elts[1]}, f.match(List([..., MN(M(is_a='a'), 1, 1), ...])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, a]')).elts[0], 'is_a2': f.elts[1]}, f.match(List([MN(M(is_a1='a'), 1, 1), MN(M(is_a2='a'), 1, 1)])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, a]')).elts[0], 'is_a2': f.elts[1]}, f.match(List([..., MN(M(is_a1='a'), 1, 1), MN(M(is_a2='a'), 1, 1), ...])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, a]')).elts[0], 'is_a2': f.elts[1]}, f.match(List([..., MN(M(is_a1='a'), 1, 1), ..., MN(M(is_a2='a'), 1, 1), ...])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, a]')).elts[0], 'is_a2': f.elts[1]}, f.match(List([..., MN(M(is_a1='a'), 0, 1), ..., MN(M(is_a2='a'), 0, 1), ...])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, a]')).elts[1]}, f.match(List([..., MN(M(is_a1='a'), 0, 2), ..., MN(M(is_a2='a'), 0, 0), ...])).tags)
+        self.assertEqual({'is_a2': (f := FST('[a, a]')).elts[1]}, f.match(List([..., MN(M(is_a1='a'), 0, 0), ..., MN(M(is_a2='a'), 0, 2), ...])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, b, a]')).elts[0], 'is_a2': f.elts[2]}, f.match(List([..., MN(M(is_a1='a'), 0, 1), ..., 'b', ..., MN(M(is_a2='a'), 0, 1), ...])).tags)
+        self.assertEqual({'is_a1': (f := FST('[a, b, a]')).elts[0], 'is_a2': f.elts[2]}, f.match(List([..., MN(M(is_a1='a'), 0, 2), ..., 'b', ..., MN(M(is_a2='a'), 0, 2), ...])).tags)
+
+        # MN individual tags
+
+        self.assertEqual("{'t': []}", str(FST('[]').match(List([MN(t='a', min=0, max=0)])).tags))
+        self.assertEqual('None', str(FST('[a]').match(List([MN(t='a', min=0, max=0)]))))
+        self.assertEqual("{'t': []}", str(FST('[a]').match(List([MN(t='a', min=0, max=0), ...])).tags))
+        self.assertEqual("{'t': []}", str(FST('[a]').match(List([MN(t=M(is_a='a'), min=0, max=0), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>]}", str(FST('[a]').match(List([MN(t=M(is_a='a'), min=0, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>]}", str(FST('[a, a]').match(List([MN(t=M(is_a='a'), min=0, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>, <M_Match {'is_a': <Name 0,4..0,5>}>]}", str(FST('[a, a]').match(List([MN(t=M(is_a='a'), min=0, max=2), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>, <M_Match {'is_a': <Name 0,4..0,5>}>]}", str(FST('[a, a, a]').match(List([MN(t=M(is_a='a'), min=0, max=2), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>, <M_Match {'is_a': <Name 0,4..0,5>}>, <M_Match {'is_a': <Name 0,7..0,8>}>]}", str(FST('[a, a, a]').match(List([MN(t=M(is_a='a'), min=0), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>, <M_Match {'is_a': <Name 0,4..0,5>}>, <M_Match {'is_a': <Name 0,7..0,8>}>, <M_Match {'is_a': <Name 0,10..0,11>}>]}", str(FST('[a, a, a, a]').match(List([MN(t=M(is_a='a'), min=0), ...])).tags))
+        self.assertEqual('None', str(FST('[]').match(List([MN(t=M(is_a='a'), min=1, max=1), ...]))))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>]}", str(FST('[a]').match(List([MN(t=M(is_a='a'), min=1, max=1), ...])).tags))
+        self.assertEqual('None', str(FST('[a, a]').match(List([MN(t=M(is_a='a'), min=1, max=1)]))))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>]}", str(FST('[a, a]').match(List([MN(t=M(is_a='a'), min=1, max=1), ...])).tags))
+
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,1..0,2>}>]}", str(FST('[a, a]').match(List([..., MN(t=M(is_a='a'), min=1, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a': <Name 0,4..0,5>}>]}", str(FST('[b, a]').match(List([..., MN(t=M(is_a='a'), min=1, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,4..0,5>}>]}", str(FST('[a, a]').match(List([MN(t=M(is_a1='a'), min=1, max=1), MN(u=M(is_a2='a'), min=1, max=1)])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,4..0,5>}>]}", str(FST('[a, a]').match(List([..., MN(t=M(is_a1='a'), min=1, max=1), MN(u=M(is_a2='a'), min=1, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,4..0,5>}>]}", str(FST('[a, a]').match(List([..., MN(t=M(is_a1='a'), min=1, max=1), ..., MN(u=M(is_a2='a'), min=1, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,4..0,5>}>]}", str(FST('[a, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=1), ..., MN(u=M(is_a2='a'), min=0, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>, <M_Match {'is_a1': <Name 0,4..0,5>}>], 'u': []}", str(FST('[a, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=2), ..., MN(u=M(is_a2='a'), min=0, max=0), ...])).tags))
+        self.assertEqual("{'t': [], 'u': [<M_Match {'is_a2': <Name 0,1..0,2>}>, <M_Match {'is_a2': <Name 0,4..0,5>}>]}", str(FST('[a, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=0), ..., MN(u=M(is_a2='a'), min=0, max=2), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,7..0,8>}>]}", str(FST('[a, b, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=1), ..., 'b', ..., MN(u=M(is_a2='a'), min=0, max=1), ...])).tags))
+        self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,7..0,8>}>]}", str(FST('[a, b, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=2), ..., 'b', ..., MN(u=M(is_a2='a'), min=0, max=2), ...])).tags))
+
+        # MNOPT
+
+        self.assertEqual("<M_Match {}>", str(MFunctionDef(returns=MNOPT('int')).match(FST('def f(): pass'))))
+        self.assertEqual("<M_Match {}>", str(MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> int: pass'))))
+        self.assertEqual("None", str(MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> str: pass'))))
+        self.assertEqual("<M_Match {'t': []}>", str(MFunctionDef(returns=MNOPT(t='int')).match(FST('def f(): pass'))))
+        self.assertEqual("<M_Match {'t': [<M_Match {}>]}>", str(MFunctionDef(returns=MNOPT(t='int')).match(FST('def f() -> int: pass'))))
+        self.assertEqual("<M_Match {'t': [<M_Match {'m': <Name 0,11..0,14>}>]}>", str(MFunctionDef(returns=MNOPT(t=M(m='int'))).match(FST('def f() -> int: pass'))))
+
+        p = MFunctionDef(returns=MNOPT(t='int'))
+        f = FST('def f() -> int: pass')
+        m = p.match(f)
+        self.assertIs(m.t[0].pattern, p.returns.pat)
+        self.assertIs(m.t[0].matched, f.returns)
+
+        p = MFunctionDef(returns=MNOPT(t=M(m='int')))
+        f = FST('def f() -> int: pass')
+        m = p.match(f)
+        self.assertIs(m.t[0].pattern, p.returns.pat)
+        self.assertIs(m.t[0].matched, f.returns)
+        self.assertIs(m.t[0].m, f.returns)
 
     def test_match_M_Match(self):
         # invalid tags
@@ -7991,6 +8253,12 @@ opts.ignore_module = [mod.strip()
         for n in dir(M_Match):
             assertRaises(ValueError(f"invalid tag {n!r} shadows match class attribute"), M, **{n: ...})
 
+        # MN
+
+        assertRaises(ValueError('MN minimum cannot be negative'), MN, None, -1)
+        assertRaises(ValueError('MN maximum cannot be negative'), MN, None, 0, -1)
+        assertRaises(ValueError('MN maximum cannot be lower than minimum'), MN, None, 2, 1)
+
         # match object attribute access
 
         self.assertIs(FST('a').match(M(Name('a'), tag=True)).tag, True)
@@ -8006,127 +8274,7 @@ opts.ignore_module = [mod.strip()
         self.assertIs(pat.match(f.a).matched, f.a)
         self.assertIs(pat.match(a := Assign(Name('a'), Name('b'))).matched, a)
 
-    def test_match_M_Pattern(self):
-        # re.Pattern
-
-        self.assertTrue(MOR(re.compile('i')).match(FST(Name('i')).a))
-        self.assertFalse(MOR(re.compile('i')).match(FST(Name('j')).a))
-        self.assertTrue(MOR(re.compile('i')).match(Name('i')))
-        self.assertFalse(MOR(re.compile('i')).match(Name('j')))
-        self.assertTrue(MOR(re.compile('i')).match('i'))
-        self.assertFalse(MOR(re.compile('i')).match('j'))
-        self.assertFalse(MOR(re.compile('i')).match(b'i'))
-        self.assertTrue(MOR(re.compile(b'i')).match(b'i'))
-        self.assertFalse(MOR(re.compile(b'i')).match(b'j'))
-        self.assertFalse(MOR(re.compile(b'i')).match('i'))
-
-        # MRE
-
-        self.assertTrue(MRE(re.compile('i')).match(FST(Name('i')).a))
-        self.assertFalse(MRE(re.compile('i')).match(FST(Name('j')).a))
-        self.assertTrue(MRE(re.compile('i')).match(Name('i')))
-        self.assertFalse(MRE(re.compile('i')).match(Name('j')))
-        self.assertTrue(MRE(re.compile('i')).match('i'))
-        self.assertFalse(MRE(re.compile('i')).match('j'))
-        self.assertFalse(MRE(re.compile('i')).match(b'i'))
-        self.assertTrue(MRE(re.compile(b'i')).match(b'i'))
-        self.assertFalse(MRE(re.compile(b'i')).match(b'j'))
-        self.assertFalse(MRE(re.compile(b'i')).match('i'))
-
-        self.assertTrue(MRE('i').match(FST(Name('i')).a))
-        self.assertFalse(MRE('i').match(FST(Name('j')).a))
-        self.assertTrue(MRE('i').match(Name('i')))
-        self.assertFalse(MRE('i').match(Name('j')))
-        self.assertTrue(MRE('i').match('i'))
-        self.assertFalse(MRE('i').match('j'))
-        self.assertFalse(MRE('i').match(b'i'))
-        self.assertTrue(MRE(b'i').match(b'i'))
-        self.assertFalse(MRE(b'i').match(b'j'))
-        self.assertFalse(MRE(b'i').match('i'))
-
-        self.assertTrue(MRE('i').match('i'))
-        self.assertFalse(MRE('i').match('j'))
-        self.assertFalse(MRE('i').match('ai'))
-        self.assertTrue(MRE('i', search=True).match('ai'))
-        self.assertFalse(MRE('i j').match('ij'))
-        self.assertTrue(MRE('i j', re.VERBOSE).match('ij'))
-
-        m = MRE(tag='i').match('i')
-        self.assertEqual(['tag'], list(m.tags))
-        self.assertEqual('i', m.tags['tag'].group())
-
-        m = MRE(tag='i', search=True).match('ai')
-        self.assertEqual(['tag'], list(m.tags))
-        self.assertEqual('i', m.tags['tag'].group())
-
-        m = MRE(tag='i j', flags=re.VERBOSE).match('ij')
-        self.assertEqual(['tag'], list(m.tags))
-        self.assertEqual('ij', m.tags['tag'].group())
-
-        m = MRE(tag='i', t2=2, t3='3').match('i')
-        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
-        self.assertEqual('i', m.tags['tag'].group())
-        self.assertEqual(2, m.tags['t2'])
-        self.assertEqual('3', m.tags['t3'])
-
-        m = MRE(tag='i', search=True, t2=2, t3='3').match('ai')
-        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
-        self.assertEqual('i', m.tags['tag'].group())
-        self.assertEqual(2, m.tags['t2'])
-        self.assertEqual('3', m.tags['t3'])
-
-        m = MRE(tag='i j', flags=re.VERBOSE, t2=2, t3='3').match('ij')
-        self.assertEqual(['tag', 't2', 't3'], list(m.tags))
-        self.assertEqual('ij', m.tags['tag'].group())
-        self.assertEqual(2, m.tags['t2'])
-        self.assertEqual('3', m.tags['t3'])
-
-        # MOR
-
-        pat = M(obj=MOR(Constant, Name))
-        self.assertIsNone(pat.match(FST('a + b').a))
-        self.assertIsNone(pat.match(FST('a = b').a))
-        self.assertEqual({'obj': (f := FST('name')).a}, pat.match(f.a).tags)
-        self.assertEqual({'obj': (f := FST('123')).a}, pat.match(f.a).tags)
-
-        pat = MOR('b', 'c')
-        self.assertFalse(pat.match(FST('a').a))
-        self.assertTrue(pat.match(FST('b').a))
-        self.assertTrue(pat.match(FST('c').a))
-        self.assertFalse(pat.match(FST('a').a))
-
-        pat = MOR(Constant(2), Constant(3))
-        self.assertFalse(pat.match(FST('1').a))
-        self.assertTrue(pat.match(FST('2').a))
-        self.assertTrue(pat.match(FST('3').a))
-        self.assertFalse(pat.match(FST('4').a))
-
-        pat = MTuple(MOR(['b', 'c'], ['c', 'd']))
-        self.assertFalse(pat.match(FST('a, b').a))
-        self.assertTrue(pat.match(FST('b, c').a))
-        self.assertTrue(pat.match(FST('c, d').a))
-        self.assertFalse(pat.match(FST('d, e').a))
-
-        # misc
-
-        pat = MAST(value=MCall)
-        self.assertTrue(pat.match(FST('return f()').a))
-        self.assertTrue(pat.match(FST('await something(a, b, c)').a))
-        self.assertFalse(pat.match(FST('yield x').a))
-        self.assertFalse(pat.match(FST('*(a, b, c)').a))
-
-        pat = Mstmt(body=[MExpr(MConstant(str)), ...])
-        self.assertTrue(pat.match(FST('def f(): "doc"; pass').a))
-        self.assertTrue(pat.match(FST('class cls: "doc"').a))
-        self.assertFalse(pat.match(FST('class cls: 1').a))
-        self.assertFalse(pat.match(FST('class cls: 1; "doc"').a))
-        self.assertFalse(pat.match(FST('class cls: pass').a))
-
-        f = FST('a')
-        f.a = None
-        assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
-
-    def test_sub_special(self):
+    def test_sub(self):
         pass
 
 

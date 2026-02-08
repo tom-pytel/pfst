@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 from re import Pattern as re_Pattern
-from types import EllipsisType, NoneType
+from types import EllipsisType, MappingProxyType, NoneType
 from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Set as tp_Set, Union
 
 from . import fst
@@ -188,6 +188,12 @@ __all__ = [
     'MANY',
     'MRE',
     'MCB',
+    'MN',
+    'MNOPT',
+    'MNSTAR',
+    'MNPLUS',
+    'MNMIN',
+    'MNMAX',
 
     'MAST',
     'MAdd',
@@ -361,15 +367,6 @@ def _rpr(o: object) -> str:
     )
 
 
-class _PreserveValue:
-    """This class exists solely to preserve `MCB` return `AST` nodes when the pattern is called on an `FST`."""
-
-    __slots__ = ('value',)
-
-    def __init__(self, value: object) -> None:
-        self.value = value
-
-
 class _NoTag:
     """This exists for M_Match so that we can check value of any tag without needing to check if it exists first."""
 
@@ -393,33 +390,14 @@ class M_Match:
     """Successful match object. Can look up tags directly on this object as attributes (as long as the name doesnt't
     collide with a name that already exists). Nonexistent tags will not raise but return a falsey `M_Match.NoTag`."""
 
-    tags: dict[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
+    tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
     matched: _TargetsOrFST  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged."""
 
     NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute. Can check for existence of tag using `match.tag is match.NoTag`"""
 
     def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, matched: _TargetsOrFST) -> None:
-        if isinstance(matched, fst.FST):  # is_FST, need to convert any AST nodes in tags to their respective FST nodes, except for any MCB return values which need to be preserved exactly and in this case are wrapped in _PreserveValue
-            tags_FST = {}
-
-            for t, v in tags.items():
-                if isinstance(v, AST):
-                    if not (f := getattr(v, 'f', None)):
-                        raise MatchError(f'match found an AST node without an FST: {_rpr(v)}')
-
-                    tags_FST[t] = f
-
-                elif v.__class__ is _PreserveValue:
-                    tags_FST[t] = v.value
-                else:
-                    tags_FST[t] = v
-
-            self.tags = tags_FST
-
-        else:
-            self.tags = dict(tags)
-
+        self.tags = MappingProxyType(tags)
         self.pattern = pattern
         self.matched = matched
 
@@ -2769,19 +2747,15 @@ class M_slice(MAST):
 
 class M(M_Pattern):
     """Tagging pattern container. If the given pattern matches then tags specified here will be returned in the
-    `M_Match` result object. The tags can be static values but also the matched `AST` node can be returned in a given
-    tag if the pattern is passed as a keyword parameter (the first one).
+    `M_Match` result object. The tags can be static values but also the matched node can be returned in a given tag if
+    the pattern is passed as a keyword parameter (the first one).
 
     **Parameters:**
-    - `anon_pat`: If the pattern to match is provided in this then the matched `AST` is not returned in tags. If this is
+    - `anon_pat`: If the pattern to match is provided in this then the matched node is not returned in tags. If this is
         missing then there must be at least one element in `tags` and the first keyword there will be taken to be the
-        pattern to match and the name of the tag to use for the matched `AST`.
+        pattern to match and the name of the tag to use for the matched node.
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`).
-
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
 
     **Examples:**
 
@@ -2842,6 +2816,9 @@ class M(M_Pattern):
             return None
 
         if pat_tag := self.pat_tag:
+            if moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+
             if m:
                 return {**m, pat_tag: tgt, **self.static_tags}
 
@@ -2859,23 +2836,19 @@ class M(M_Pattern):
 
 class MNOT(M):
     """Tagging NOT logic pattern container. If the given pattern **DOES NOT** match then tags specified here will be
-    returned in the `M_Match` result object. The tags can be specified with static values but also the unmatched `AST`
-    node can be returned in a given tag name.
+    returned in the `M_Match` result object. The tags can be specified with static values but also the unmatched node
+    can be returned in a given tag name.
 
     Any tags that were being propagated up from successful matches are discarded since that constitutes an unsuccessful
     match for this node. And any unsuccessful matches were not propagating any tags up anyway. So this node guarantees
     that the only tags that it returns are ones that it itself provides.
 
     **Parameters:**
-    - `anon_pat`: If the pattern to not match is provided in this then the unmatched `AST` is not returned in tags. If
+    - `anon_pat`: If the pattern to not match is provided in this then the unmatched node is not returned in tags. If
         this is missing (default `None`) then there must be at least one element in `tags` and the first keyword there
-        will be taken to be the pattern to not match and the name of the tag to use for the unmatched `AST`.
+        will be taken to be the pattern to not match and the name of the tag to use for the unmatched node.
     - `tags`: Any static tags to return on an unsuccessful match (including the pattern to not match as the first
         keyword if not provided in `anon_pat`).
-
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
 
     **Examples:**
 
@@ -2904,6 +2877,9 @@ class MNOT(M):
             return None
 
         if pat_tag := self.pat_tag:
+            if moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+
             return {pat_tag: tgt, **self.static_tags}
 
         return self.static_tags
@@ -2927,10 +2903,6 @@ class MOR(M_Pattern):
     - `anon_pats`: Patterns that constitute a successful match, only need one to match. Checked in order.
     - `tagged_pats`: Patterns that constitute a successful match, only need one to match. Checked in order. The first
         target matched with any one of these patterns will be returned in its corresponding tag (keyword name).
-
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
 
     **Examples:**
 
@@ -2997,7 +2969,10 @@ class MOR(M_Pattern):
 
             if m is not None:
                 if pat_tag := self.pat_tags[i]:
-                    return {pat_tag: tgt, **m}
+                    if moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                        raise MatchError('match found an AST node without an FST')
+
+                    return {**m, pat_tag: tgt}
 
                 return m
 
@@ -3032,10 +3007,6 @@ class MAND(MOR):
     - `tagged_pats`: Patterns that need to match to constitute a success. Checked in order. All the targets matched with
         these patterns will be returned in their corresponding tags (keyword names).
 
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
-
     **Examples:**
 
     The following will always fail as a node cannot be both a `Name` AND a `Call` at the same time.
@@ -3061,6 +3032,12 @@ class MAND(MOR):
 
     @staticmethod
     def _match(self: MAND, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        if moptions.get('is_FST') and isinstance(tgt, AST):
+            if not (tgtf := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+        else:
+            tgtf = tgt
+
         tagss = []
 
         for i, p in enumerate(self.pats):
@@ -3070,7 +3047,7 @@ class MAND(MOR):
                 return None
 
             if pat_tag := self.pat_tags[i]:
-                tagss.append({pat_tag: tgt, **m})
+                tagss.append({**m, pat_tag: tgtf})
             elif m:
                 tagss.append(m)
 
@@ -3120,10 +3097,6 @@ class MANY(M_Pattern):
     - `types`: An iterable of `AST` or `MAST` **TYPES**, not instances. In order to match successfully the target must
         be at least one of these types (non-leaf types like `stmt` included). To match any node for type use `AST`.
     - `fields`: Field names which must be present (unless wildcard `...`) along with the patterns they need to match.
-
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
 
     **Examples:**
 
@@ -3211,10 +3184,6 @@ class MRE(M_Pattern):
         already compiled `re.Pattern` then this must remain `0`.
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_re_pat`).
-
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
 
     **Examples:**
 
@@ -3332,10 +3301,6 @@ class MCB(M):
         in case a successful match might want to return a falsey value, it would need to be accomodated somehow (wrapped
         in a tuple maybe).
 
-    **Returns:**
-    - `M_Match`: The match object on successful match.
-    - `None`: Did not match.
-
     **Examples:**
 
     >>> in_range = lambda x: 2 < x < 8
@@ -3415,21 +3380,383 @@ class MCB(M):
 
         if pat_tag := self.pat_tag:
             if self.tag_call_ret:
-                tgt = _PreserveValue(m) if moptions.get('is_FST') and isinstance(m, AST) else m  # only need to preserve AST if will be converting AST nodes back to FST nodes because pattern is matching an FST
+                tgt = m
+            elif moptions.get('is_FST') and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: tgt, **self.static_tags}
 
         return self.static_tags
 
 
-# MN
-# MN0PLUS
-# MN1PLUS
-# MN0OR1
-# MNMIN
-# MNMAX
+class MN(M):
+    """Quantifier pattern. Can only be used on or inside list fields and matches at least `min` and at most `max`
+    instances of the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a
+    tag for the matched patterns they are given as a list of matches instead of just one.
+
+    This pattern and its specific subclasses are greedy and there is no backtracking done to attempt to make a sequence
+    of these match successfully. They are also not nestable, a single level is allowed for or in a list field (any
+    number sequential siblings but no `MN(MN(...))`).
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `M_Match` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present, for easier non-kw specification of
+        `min` and `max`, in this case you must provide the pattern in a keyword.
+    - `min`: The minimum number of pattern matches needed for a successful match.
+    - `max`: The maximum number of pattern matches taken for a successful match. `None` means unbounded.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    >>> MList(MN('a', 1, 2)).match(FST('[]'))
+
+    >>> MList(MN('a', 1, 2)).match(FST('[a]'))
+    <M_Match {}>
+
+    >>> MList(MN('a', 1, 2)).match(FST('[a, a]'))
+    <M_Match {}>
+
+    >>> MList(MN('a', 1, 2)).match(FST('[a, a, a]'))
+
+    >>> pat = MGlobal([..., MN(t='c', min=1, max=2), ...])
+
+    >>> FST('global a, b, c, c, d, e').match(pat)
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+
+    >>> pat = MList([..., MN(t=MRE('c|d'), min=1, max=3), ...])
+
+    >>> FST('[a, b, c, c, d, c, e]').match(pat)
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
+
+    >>> [m.matched.src for m in _.t]
+    ['c', 'c', 'd']
+    """
+
+    # This is mostly just a data class, the actual logic for these matches lives in `_match_default()`. The tags for the
+    # individual child matches are handled according to if the pattern is passed anonymously or in a tag. The static
+    # tags are added once at the end of the arbitrary-length match.
+
+    min: int  ; """@private"""
+    max: int  ; """@private"""
+
+    def __init__(self, anon_pat: _Patterns = ..., /, min: int = 0, max: int | None = None, **tags) -> None:
+        M.__init__(self, _SENTINEL if anon_pat is ... else anon_pat, **tags)
+
+        if isinstance(self.pat, MN):
+            raise ValueError('MN-type quantifier patterns cannot be nested directly within each other')
+
+        if max is None:
+            max = 0x7fffffffffffffff
+
+        if min < 0:
+            raise ValueError(f'{self.__class__.__qualname__} minimum cannot be negative')
+        if max < 0:
+            raise ValueError(f'{self.__class__.__qualname__} maximum cannot be negative')
+        if max < min:
+            raise ValueError(f'{self.__class__.__qualname__} maximum cannot be lower than minimum')
+
+        self.min = min
+        self.max = max
+
+    @staticmethod
+    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        if not isinstance(tgt, (list, fstview)):
+            if moptions.get('list_check', True):
+                raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
+
+            return None
+
+        return _match_default([self], tgt, moptions)
 
 
+class MNOPT(MN):
+    """Zero or one (optional) quantifier pattern. Matches at either zero or exactly one instance of the given pattern.
+    The tagging works the same way as `MN` and if returning in a tag a list is still returned with either zero or one
+    `M_Match` objects.
+
+    Unlike any other quantifier pattern this one can be used on non-list fields. When used in this way it will match
+    either the pattern or `None`, like for a `FunctionDef.returns`, hence - "optional". To clarify, if something is
+    present and the pattern doesn't match, that is a match failure. If something is not present (`None` value), that is
+    a match success.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `M_Match` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    >>> MList(MNOPT('a')).match(FST('[]'))
+    <M_Match {}>
+
+    >>> MList(MNOPT('a')).match(FST('[a]'))
+    <M_Match {}>
+
+    >>> MList(MNOPT('a')).match(FST('[b]'))
+
+    >>> MList([MNOPT('a')]).match(FST('[a]'))
+    <M_Match {}>
+
+    >>> MList([MNOPT('a')]).match(FST('[b]'))
+
+    >>> MList([MNOPT('a')]).match(FST('[a, a]'))
+
+    >>> MList([MNOPT('a'), ...]).match(FST('[a, a]'))
+    <M_Match {}>
+
+    >>> MFunctionDef(returns=MNOPT('int')).match(FST('def f(): pass'))
+    <M_Match {}>
+
+    >>> MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> int: pass'))
+    <M_Match {}>
+
+    >>> MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> str: pass'))
+    """
+
+    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
+        MN.__init__(self, anon_pat, 0, 1, **tags)
+
+    @staticmethod
+    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any]) -> Mapping[str, Any] | None:
+        if isinstance(tgt, (list, fstview)):
+            return _match_default([self], tgt, moptions)
+
+        if tgt is None:
+            if pat_tag := self.pat_tag:
+                return {pat_tag: [], **self.static_tags}
+
+            return self.static_tags
+
+        if not isinstance(tgt, AST):
+            if moptions.get('list_check', True):
+                raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
+
+            return None
+
+        pat = self.pat
+        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, moptions)
+
+        if m is None:
+            return None
+
+        if pat_tag := self.pat_tag:
+            if moptions.get('is_FST') and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+
+            return {pat_tag: [M_Match(m, pat, tgt)], **self.static_tags}
+
+        if m:
+            return dict(m, **self.static_tags)
+
+        return self.static_tags
+
+
+class MNSTAR(MN):
+    """Star quantifier pattern, zero or more. Matches any number of instances of pattern, including zero. The tagging
+    works the same way as `MN` and if returning in a tag a list is still returned with either zero or more `M_Match`
+    objects.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `M_Match` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    >>> MList([MNSTAR(t='a')]).match(FST('[]'))
+    <M_Match {'t': []}>
+
+    >>> MList([MNSTAR(t='a')]).match(FST('[a]'))
+    <M_Match {'t': [<M_Match {}>]}>
+
+    >>> MList([MNSTAR(t='a')]).match(FST('[a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+
+    >>> MList([MNSTAR(t='a')]).match(FST('[a, a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
+    """
+
+    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
+        MN.__init__(self, anon_pat, **tags)
+
+
+class MNPLUS(MN):
+    """Plus quantifier pattern, one or more. Matches one or more instances of pattern. The tagging works the same way as
+    `MN` and if returning in a tag a list is still returned with either zero or more `M_Match` objects.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `M_Match` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    >>> MList([MNPLUS(t='a')]).match(FST('[]'))
+
+    >>> MList([MNPLUS(t='a')]).match(FST('[a]'))
+    <M_Match {'t': [<M_Match {}>]}>
+
+    >>> MList([MNPLUS(t='a')]).match(FST('[a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+
+    >>> MList([MNPLUS(t='a')]).match(FST('[a, a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
+    """
+
+    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
+        MN.__init__(self, anon_pat, 1, **tags)
+
+
+class MNMIN(MN):
+    """Minimum count quantifier pattern. Matches a minimum of `min` instances of pattern. The tagging works the same way
+    as `MN` and if returning in a tag a list is still returned with either zero or more `M_Match` objects.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `M_Match` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `min`: The minimum number of pattern matches needed for a successful match.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    >>> MList([MNMIN(min=2, t='a')]).match(FST('[]'))
+
+    >>> MList([MNMIN(min=2, t='a')]).match(FST('[a]'))
+
+    >>> MList([MNMIN(min=2, t='a')]).match(FST('[a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+
+    >>> MList([MNMIN(min=2, t='a')]).match(FST('[a, a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
+    """
+
+    def __init__(self, anon_pat: _Patterns = ..., /, min: int = 0, **tags) -> None:
+        MN.__init__(self, anon_pat, min, **tags)
+
+
+class MNMAX(MN):
+    """Maximum count quantifier pattern. Matches a maximum of `max` instances of pattern. The tagging works the same way
+    as `MN` and if returning in a tag a list is still returned with either zero or more `M_Match` objects.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `M_Match` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `max`: The maximum number of pattern matches taken for a successful match. `None` means unbounded.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    >>> MList([MNMAX(max=2, t='a')]).match(FST('[]'))
+    <M_Match {'t': []}>
+
+    >>> MList([MNMAX(max=2, t='a')]).match(FST('[a]'))
+    <M_Match {'t': [<M_Match {}>]}>
+
+    >>> MList([MNMAX(max=2, t='a')]).match(FST('[a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+
+    >>> MList([MNMAX(max=2, t='a')]).match(FST('[a, a, a]'))
+
+    >>> MList([MNMAX(max=2, t='a'), ...]).match(FST('[a, a, a]'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+    """
+
+    def __init__(self, anon_pat: _Patterns = ..., /, max: int | None = None, **tags) -> None:
+        MN.__init__(self, anon_pat, 0, max, **tags)
+
+
+# ......................................................................................................................
+
+class _StepbackListIter:
+    def __init__(self, seq: list) -> None:
+        self.seq = seq
+        self.len = len(seq)
+        self.idx = -1
+
+    def next(self) -> object:
+        if (idx := self.idx + 1) == self.len:
+            return _SENTINEL
+
+        self.idx = idx
+
+        return self.seq[idx]
+
+    def stepback(self, n: int = 1) -> None:
+        self.idx -= n
+
+
+def _match_n(
+    pat: _Pattern, tgt: _Targets, moptions: Mapping[str, Any], iter_tgt: _StepbackListIter
+) -> list[dict[str, Any]] | None:
+    """Match a quantifier pattern to a section of list field. If the match fails then the iterator is stepped back the
+    whole way."""
+
+    tagss_n_tgts = []  # [(tgt, match dict), ...]
+    n_max = pat.max
+    np = pat.pat
+    mfunc = _MATCH_FUNCS.get(np.__class__, _match_default)
+    n = 0
+
+    while n < n_max:
+        if (t := iter_tgt.next()) is _SENTINEL:
+            break
+
+        if (m := mfunc(np, t, moptions)) is None:
+            iter_tgt.stepback()
+
+            break
+
+        tagss_n_tgts.append((t, m))
+
+        n += 1
+
+    if n < pat.min:
+        iter_tgt.stepback(n)
+
+        return None
+
+    if pat_tag := pat.pat_tag:  # returning child match objects in list
+        if moptions.get('is_FST') and tgt and not isinstance(tgt[0], str):  # if str then always str, otherwise ASTs with maybe Nones, this basically decides if we need to convert AST to FST nodes
+            ms = []
+
+            for t, ts in tagss_n_tgts:
+                if t and not (t := getattr(t, 'f', None)):
+                    raise MatchError('match found an AST node without an FST')
+
+                ms.append(M_Match(ts, pat, t))
+
+            tagss = [{pat_tag: ms}]
+
+        else:
+            tagss = [{pat_tag: [M_Match(ts, pat, t) for t, ts in tagss_n_tgts]}]  # non-node list field
+
+    else:  # merging tags from child matches
+        tagss = list(ts for _, ts in tagss_n_tgts)
+
+    if ts := pat.static_tags:
+        tagss.append(ts)
+
+    return tagss
 
 
 # ......................................................................................................................
@@ -3456,56 +3783,71 @@ def _match_default(pat: _Patterns, tgt: _Targets, moptions: Mapping[str, Any]) -
         if moptions.get('list_check') is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
             moptions = dict(moptions, list_check=True)
 
+        # this is the list field matching where wildcards and quantifier patterns are handled
+
         tagss = []
         iter_pat = iter(pat)
-        iter_tgt = iter(tgt)
+        iter_tgt = _StepbackListIter(tgt)
 
         while (p := next(iter_pat, _SENTINEL)) is not _SENTINEL:
-            if p is not ...:  # need to check cocncrete match
-                if (t := next(iter_tgt, _SENTINEL)) is _SENTINEL:  # if ast list ended before can match then fail
-                    return None
+            if p is not ...:  # concrete or quantifier
+                if isinstance(p, MN): # quantifier
+                    if (m := _match_n(p, tgt, moptions, iter_tgt)) is None:
+                        return None
 
-                m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
+                    tagss.extend(m)
 
-                if m is None:  # if not match then fail as this is an expected concrete match
-                    return None
+                else:  # concrete
+                    if (t := iter_tgt.next()) is _SENTINEL:  # if ast list ended before can match then fail
+                        return None
 
-                if m:
-                    tagss.append(m)
+                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
+
+                    if m is None:  # if not match then fail as this is an expected concrete match
+                        return None
+                    if m:
+                        tagss.append(m)
 
                 continue
 
             # wildcard skip
 
             while (p := next(iter_pat, _SENTINEL)) is not _SENTINEL:
-                if p is ...:  # eat any repeated ...
+                if p is ...:  # eat any repeated wildcards
                     continue
 
-                break  # found concrete pattern value to match against
+                break  # found pattern to match against
 
-            else:  # ended on ..., doesn't matter what is left in the ast list
+            else:  # ended on ..., doesn't matter what is left in the ast list, its a match
                 break
 
-            # got concrete p to match against, now we walk the ast list until find a match or not
+            # got p to match against, now we walk the target ast list until find a match or not
 
-            while (t := next(iter_tgt, _SENTINEL)) is not _SENTINEL:
-                m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
+            if isinstance(p, MN): # quantifier
+                while (m := _match_n(p, tgt, moptions, iter_tgt)) is None:
+                    if iter_tgt.next() is _SENTINEL:  # advance one unit and try again
+                        return None
 
-                if m is None:  # if not match then keep looking (because p preceded by ...)
-                    continue
+                tagss.extend(m)
 
-                if m:
-                    tagss.append(m)
+            else:  # concrete
+                while (t := iter_tgt.next()) is not _SENTINEL:
+                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions)
 
-                break
+                    if m is None:  # if not match then keep looking (because p preceded by ...)
+                        continue
+                    if m:
+                        tagss.append(m)
 
-            else:  # ast list ends before being able to make concrete match to concrete p
-                return None
+                    break
+
+                else:  # ast list ends before being able to make concrete match to concrete p
+                    return None
 
             continue  # found concrete / concrete match, iterate on to next pattern value
 
         else:
-            if next(iter_tgt, _SENTINEL) is not _SENTINEL:  # if concrete pattern list ended without ... and there are still elements in the ast list then fail
+            if iter_tgt.next() is not _SENTINEL:  # if concrete pattern list ended without ... and there are still elements in the ast list then fail
                 return None
 
         # combine all tags and return
@@ -3779,6 +4121,12 @@ _MATCH_FUNCS = {
     MANY:                _match_node_arbitrary_fields,
     MRE:                 MRE._match,
     MCB:                 MCB._match,
+    MN:                  MN._match,
+    MNOPT:               MNOPT._match,
+    MNSTAR:              MNSTAR._match,
+    MNPLUS:              MNPLUS._match,
+    MNMIN:               MNMIN._match,
+    MNMAX:               MNMAX._match,
     AST:                 _match_node,  # _match_node_nonleaf,
     Add:                 _match_node,
     And:                 _match_node,
@@ -4204,7 +4552,7 @@ def match(
     >>> FST('a.__class__ is AST') .match(pat)
 
     >>> FST('node_cls is zst.ZST') .match(pat)
-    <M_Match {'obj': <Name 0,0..0,8>, 'is_name': True, 'is_is': <Is 0,9..0,11>}>
+    <M_Match {'is_name': True, 'obj': <Name 0,0..0,8>, 'is_is': <Is 0,9..0,11>}>
 
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
