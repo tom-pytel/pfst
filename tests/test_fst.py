@@ -7974,6 +7974,23 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(FST('y').match(pat))
 
     def test_match_M_Match(self):
+        # invalid tags
+
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), M, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MNOT, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MOR, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MAND, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MRE, tags='')
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MCB, tags=lambda x: False)
+
+        assertRaises(ValueError("invalid tag 'pattern' shadows match class attribute"), M, pattern=...)
+        assertRaises(ValueError("invalid tag 'matched' shadows match class attribute"), M, matched=...)
+        assertRaises(ValueError("invalid tag 'NoTag' shadows match class attribute"), M, NoTag=...)
+        assertRaises(ValueError("invalid tag 'get' shadows match class attribute"), M, get=...)
+
+        for n in dir(M_Match):
+            assertRaises(ValueError(f"invalid tag {n!r} shadows match class attribute"), M, **{n: ...})
+
         # match object attribute access
 
         self.assertIs(FST('a').match(M(Name('a'), tag=True)).tag, True)
@@ -8111,6 +8128,13 @@ opts.ignore_module = [mod.strip()
 
     def test_sub_special(self):
         pass
+
+
+
+
+
+
+
 
 
     def test_sub_special(self):

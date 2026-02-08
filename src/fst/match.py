@@ -370,6 +370,21 @@ class _PreserveValue:
         self.value = value
 
 
+class _NoTag:
+    """This exists for M_Match so that we can check value of any tag without needing to check if it exists first."""
+
+    __slots__ = ()
+
+    def __new__(cls) -> M_Match._NoTag:
+        return M_Match.NoTag
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __repr__(self) -> str:
+        return '<NoTag>'
+
+
 class MatchError(RuntimeError):
     """An error during matching."""
 
@@ -381,18 +396,6 @@ class M_Match:
     tags: dict[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
     matched: _TargetsOrFST  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged."""
-
-    class _NoTag:  # so that we can check value of any tag without needing to check if it exists first
-        __slots__ = ()
-
-        def __new__(cls) -> M_Match._NoTag:
-            return M_Match.NoTag
-
-        def __bool__(self) -> bool:
-            return False
-
-        def __repr__(self) -> str:
-            return 'M_Match.NoTag'
 
     NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute. Can check for existence of tag using `match.tag is match.NoTag`"""
 
@@ -438,12 +441,20 @@ class M_Match:
         return self.tags.get(tag, default)
 
 
+_INVALID_TAGS = frozenset(dir(M_Match)) | set(M_Match.__annotations__)
+
+
 class M_Pattern:
     """The base class for all non-primitive match patterns. The two main classes being `MAST` node matchers and the
     functional matchers like `MOR` and `MRE`."""
 
     _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
     _types: type[AST] | tuple[type[AST]] = AST  # only the MANY pattern has a tuple here
+
+    def _validate_tags(self, tags: Iterable[str]) -> None:
+        for tag in tags:
+            if tag in _INVALID_TAGS:
+                raise ValueError(f'invalid tag {tag!r} shadows match class attribute')
 
     def match(self, target: _TargetsOrFST, *, ctx: bool = False) -> M_Match | None:
         """Match this pattern against given target. This can take `FST` nodes or `AST` (whether they are part of an
@@ -2796,6 +2807,8 @@ class M(M_Pattern):
     static_tags: Mapping[str, Any]  ; """@private"""
 
     def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+        self._validate_tags(tags)
+
         if anon_pat is not _SENTINEL:
             self.pat = anon_pat
             self.pat_tag = None
@@ -2951,6 +2964,8 @@ class MOR(M_Pattern):
     pat_tags: list[str | None]  ; """@private"""
 
     def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
+        self._validate_tags(tagged_pats)
+
         if anon_pats:
             pats = list(anon_pats)
             pat_tags = [None] * len(pats)
@@ -3225,8 +3240,10 @@ class MRE(M_Pattern):
     search: bool  ; """@private"""
 
     def __init__(
-        self, anon_re_pat: str | re_Pattern | None = None, /, flags: int = 0, search: bool = False, **tags  # can only be one tag which will be the name for the pattern, in which case anon_re_pat must be None
+        self, anon_re_pat: str | re_Pattern | None = None, /, flags: int = 0, search: bool = False, **tags
     ) -> None:
+        self._validate_tags(tags)
+
         if anon_re_pat is not None:
             pat_tag = None
         elif (pat_tag := next(iter(tags), None)) is None:
