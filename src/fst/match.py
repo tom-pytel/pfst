@@ -395,28 +395,43 @@ class _NoTag:
 class _RunningTags:
     """Store running tags being built up during matching cheaply until needed by `MTAG`."""
 
-    all_tagss: list[list[dict[str, Any]] | list[tuple[dict[str, Any], Any]]]
+    all_tagss: list[list[dict[str, Any]]]
 
-    def __init__(self, all_tagss: list[list[dict[str, Any]] | list[tuple[dict[str, Any], Any]]] = []) -> None:  # noqa: B006
-        self.all_tagss = all_tagss
+    def __init__(self) -> None:
+        self.all_tagss = []
 
-    def with_(self, tagss: list[dict[str, Any]] | list[tuple[dict[str, Any], Any]]) -> _RunningTags:
-        all_tagss = self.all_tagss.copy()
+    def new(self) -> list:
+        self.all_tagss.append(tagss := [])
 
-        all_tagss.append(tagss)
+        return tagss
 
-        return _RunningTags(all_tagss)
+    def discard(self) -> None:
+        del self.all_tagss[-1]
+
+        return None
+
+    def pop_merge(self) -> dict[str, Any]:
+        tagss = self.all_tagss.pop()
+
+        if not tagss:
+            return _EMPTY_DICT
+        if len(tagss) == 1:
+            return tagss[0]
+
+        tags = {}
+
+        for ts in tagss:
+            tags.update(ts)
+
+        return tags
 
     def get(self, tag: str) -> object:
+        """Walk list of dictionaries backwards checking for `tag`."""
+
         for tagss in reversed(self.all_tagss):
-            if tagss and isinstance(tagss[0], tuple):
-                for m, _ in reversed(tagss):  # tagss_n_tgts from _match_n()
-                    if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
-                        return v
-            else:
-                for m in reversed(tagss):
-                    if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
-                        return v
+            for m in reversed(tagss):
+                if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
+                    return v
 
 
 class MatchError(RuntimeError):
@@ -3076,33 +3091,20 @@ class MAND(MOR):
         else:
             tgtf = tgt
 
-        tagss = []
+        tagss = rtags.new()
 
         for i, p in enumerate(self.pats):
-            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions, rtags.with_(tagss))
+            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions, rtags)
 
             if m is None:
-                return None
+                return rtags.discard()
 
             if pat_tag := self.pat_tags[i]:
                 tagss.append({**m, pat_tag: tgtf})
             elif m:
                 tagss.append(m)
 
-        # combine all tags and return
-
-        if not tagss:
-            tags = _EMPTY_DICT
-        if len(tagss) == 1:
-            tags = tagss[0]
-
-        else:
-            tags = {}
-
-            for ts in tagss:
-                tags.update(ts)
-
-        return tags
+        return rtags.pop_merge()
 
     @staticmethod
     def _leaf_asts(self: MOR) -> tp_Set[type[AST]]:
@@ -3428,7 +3430,12 @@ class MCB(M):
 
 
 class MTAG(M_Pattern):
-    """Match previously matched node.
+    """Match previously matched node. Looks through tags of current matches and if found then attempts to match against
+    the value of the tag. Meant for matching previously matched nodes but can match anything which can work as a valid
+    pattern in a tag however it got there.
+
+    For the sake of sanity and efficiency, does not recurse into lists of `M_Match` objects that have already been built
+    by quantifier patterns. Can match those tags AS they are being built though.
 
     **Parameters:**
     - `tag`: The tag of the previously matched node we want to match.
@@ -3818,56 +3825,62 @@ class _StepbackListIter:
 
 def _match_n(
     pat: _Pattern, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags, iter_tgt: _StepbackListIter
-) -> list[dict[str, Any]] | None:
+) -> dict[str, Any] | None:
     """Match a quantifier pattern to a section of list field. If the match fails then the iterator is stepped back the
     whole way."""
 
-    tagss_n_tgts = []  # [(match dict, tgt), ...]
     n_max = pat.max
     np = pat.pat
     match_func = _MATCH_FUNCS.get(np.__class__, _match_default)
+    tagss = rtags.new()
+    tgts = []
     n = 0
 
     while n < n_max:
         if (t := iter_tgt.next()) is _SENTINEL:
             break
 
-        if (m := match_func(np, t, moptions, rtags.with_(tagss_n_tgts))) is None:
+        if (m := match_func(np, t, moptions, rtags)) is None:
             iter_tgt.stepback()
 
             break
 
-        tagss_n_tgts.append((m, t))
+        tagss.append(m)
+        tgts.append(t)
 
         n += 1
 
     if n < pat.min:
         iter_tgt.stepback(n)
 
-        return None
+        return rtags.discard()
+
+    static_tags = pat.static_tags
 
     if pat_tag := pat.pat_tag:  # returning child match objects in list
-        if moptions['is_FST'] and tgt and not isinstance(tgt[0], str):  # if str then always str, otherwise ASTs with maybe Nones, this basically decides if we need to convert AST to FST nodes
+        if moptions['is_FST'] and tgt and not isinstance(tgt[0], str):  # str as in `globals str`, otherwise ASTs with maybe Nones, this basically decides if we need to convert AST to FST nodes
             ms = []
 
-            for ts, t in tagss_n_tgts:
+            for ts, t in zip(tagss, tgts, strict=True):
                 if t and not (t := getattr(t, 'f', None)):
                     raise MatchError('match found an AST node without an FST')
 
                 ms.append(M_Match(ts, pat, t))
 
-            tagss = [{pat_tag: ms}]
+            tags = {pat_tag: ms, **static_tags}  # pat_tag MUST BE FIRST TAG IN DICT!
 
         else:
-            tagss = [{pat_tag: [M_Match(ts, pat, t) for ts, t in tagss_n_tgts]}]  # non-node list field
+            tags = {pat_tag: [M_Match(ts, pat, t) for ts, t in zip(tagss, tgts, strict=True)], **static_tags}  # non-node list field
+
+        rtags.discard()
 
     else:  # merging tags from child matches
-        tagss = list(ts for ts, _ in tagss_n_tgts)
+        if static_tags:
+            tagss.append(static_tags)
 
-    if ts := pat.static_tags:
-        tagss.append(ts)
+        tags = rtags.pop_merge()
 
-    return tagss
+    return tags
 
 
 # ......................................................................................................................
@@ -3898,26 +3911,26 @@ def _match_default(
 
         # this is the list field matching where wildcards and quantifier patterns are handled
 
-        tagss = []
+        tagss = rtags.new()
         iter_pat = iter(pat)
         iter_tgt = _StepbackListIter(tgt)
 
         while (p := next(iter_pat, _SENTINEL)) is not _SENTINEL:
             if p is not ...:  # concrete or quantifier
                 if isinstance(p, MN): # quantifier
-                    if (m := _match_n(p, tgt, moptions, rtags.with_(tagss), iter_tgt)) is None:
-                        return None
+                    if (m := _match_n(p, tgt, moptions, rtags, iter_tgt)) is None:
+                        return rtags.discard()
 
-                    tagss.extend(m)
+                    tagss.append(m)
 
                 else:  # concrete
                     if (t := iter_tgt.next()) is _SENTINEL:  # if ast list ended before can match then fail
-                        return None
+                        return rtags.discard()
 
-                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags.with_(tagss))
+                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags)
 
                     if m is None:  # if not match then fail as this is an expected concrete match
-                        return None
+                        return rtags.discard()
                     if m:
                         tagss.append(m)
 
@@ -3937,15 +3950,15 @@ def _match_default(
             # got p to match against, now we walk the target ast list until find a match or not
 
             if isinstance(p, MN): # quantifier
-                while (m := _match_n(p, tgt, moptions, rtags.with_(tagss), iter_tgt)) is None:
+                while (m := _match_n(p, tgt, moptions, rtags, iter_tgt)) is None:
                     if iter_tgt.next() is _SENTINEL:  # advance one unit and try again
-                        return None
+                        return rtags.discard()
 
-                tagss.extend(m)
+                tagss.append(m)
 
             else:  # concrete
                 while (t := iter_tgt.next()) is not _SENTINEL:
-                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags.with_(tagss))
+                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags)
 
                     if m is None:  # if not match then keep looking (because p preceded by ...)
                         continue
@@ -3955,27 +3968,15 @@ def _match_default(
                     break
 
                 else:  # ast list ends before being able to make concrete match to concrete p
-                    return None
+                    return rtags.discard()
 
             continue  # found concrete / concrete match, iterate on to next pattern value
 
         else:
             if iter_tgt.next() is not _SENTINEL:  # if concrete pattern list ended without ... and there are still elements in the ast list then fail
-                return None
+                return rtags.discard()
 
-        # combine all tags and return
-
-        if not tagss:
-            return _EMPTY_DICT
-        if len(tagss) == 1:
-            return tagss[0]
-
-        tags = {}
-
-        for ts in tagss:
-            tags.update(ts)
-
-        return tags
+        return rtags.pop_merge()
 
     # got here through subclass of a primitive type
 
@@ -4064,7 +4065,7 @@ def _match_node(
     if moptions['list_check'] is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
         moptions = dict(moptions, list_check=True)
 
-    tagss = []
+    tagss = rtags.new()
 
     for field in pat._fields:
         p = getattr(pat, field, ...)
@@ -4076,31 +4077,19 @@ def _match_node(
 
         if t is _SENTINEL:
             if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), fstview):  # maybe its a virtual field
-                return None
+                return rtags.discard()
 
         elif moptions['is_FST'] and isinstance(t, list):
             t = getattr(tgt.f, field)  # get the fstview instead (for maybe capture to tag, is converted back to list of AST for compare)
 
-        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags.with_(tagss))
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, moptions, rtags)
 
         if m is None:
-            return None
+            return rtags.discard()
         if m:
             tagss.append(m)
 
-    # combine all tags and return
-
-    if not tagss:
-        return _EMPTY_DICT
-    if len(tagss) == 1:
-        return tagss[0]
-
-    tags = {}
-
-    for ts in tagss:
-        tags.update(ts)
-
-    return tags
+    return rtags.pop_merge()
 
 def _match_node_Constant(
     pat: MConstant | Constant, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
@@ -4114,35 +4103,23 @@ def _match_node_Constant(
 
         return None
 
-    tagss = []
+    tagss = rtags.new()
 
     if (p := getattr(pat, 'value', _SENTINEL)) is not _SENTINEL:  # missing value acts as implicit ... wildcard, while the real ... is a concrete value here
         match_func = _match_primitive if p is ... else _MATCH_FUNCS.get(p.__class__, _match_default)
 
         if (m := match_func(p, tgt.value, moptions, rtags)) is None:
-            return None
+            return rtags.discard()
         if m:
             tagss.append(m)
 
     if (p := getattr(pat, 'kind', ...)) is not ...:
-        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, moptions, rtags.with_(tagss))) is None:
-            return None
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, moptions, rtags)) is None:
+            return rtags.discard()
         if m:
             tagss.append(m)
 
-    # combine all tags and return
-
-    if not tagss:
-        return _EMPTY_DICT
-    if len(tagss) == 1:
-        return tagss[0]
-
-    tags = {}
-
-    for ts in tagss:
-        tags.update(ts)
-
-    return tags
+    return rtags.pop_merge()
 
 def _match_node_expr_context(
     pat: Load | Store | Del, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
