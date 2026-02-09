@@ -175,6 +175,7 @@ from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
 from .view import fstview
+from .fst_options import check_options
 
 __all__ = [
     'MatchError',
@@ -345,6 +346,7 @@ _SENTINEL = object()
 _EMPTY_DICT = {}
 _EMPTY_SET = set()
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
+__DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique
 
 _Target = AST | constant
 _TargetFST = Union['fst.FST', constant]
@@ -4799,8 +4801,10 @@ def sub(
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
     - `repl`: Replacement template or function to generate replacement nodes.
-    - `nested: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion due
-        to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
+    - `nested: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion
+        due to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
+        Regardless of this setting, when using a template `repl` this function will never recurse into full matched
+        target substitutions (`__fst_`).
     - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -4847,30 +4851,53 @@ def sub(
                   cid=CID)
     """
 
-    is_func = callable(repl)
+    global __DIRTY
 
-    if not is_func:
-        repl = code_as_all(repl, options, self.root.parse_params)
-        paths = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
-
-        for f in repl.walk({Name, arg}):
-            if (a := f.a).__class__ is Name:
-                n = a.id
-            else:  # a.__class__ is arg, it makes more sense to replace the whole arg, annotation included, rather than just the name
-                n = a.arg
-
-            if n.startswith('__fst_'):
-                paths.append((n[6:], repl.child_path(f)))
+    check_options(options)
 
     gen = self.search(pat, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
-    for m in gen:
-        tgt = m.matched  # will be FST node
-
-        if is_func:  # user function that will return replacement
+    if callable(repl):  # user function, very simple, just do its own loop
+        for m in gen:
+            tgt = m.matched  # will be FST node
             sub = repl(m)
 
-        else:  # substitution template with replacable template variables
+            # TODO: user nested control, True, False or don't send anything
+
+            if sub is not tgt:
+                tgt.replace(sub, **options)
+
+            if not nested:
+                gen.send(False)
+
+        return
+
+    # template substitution, now it gets fun
+
+    repl = code_as_all(repl, options, self.root.parse_params)
+    paths = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
+
+    for f in repl.walk({Name, arg}):
+        if (a := f.a).__class__ is Name:
+            n = a.id
+        else:  # a.__class__ is arg, it makes more sense to replace the whole arg, annotation included, rather than just the name
+            n = a.arg
+
+        if n.startswith('__fst_'):
+            paths.append((n[6:], repl.child_path(f)))
+
+    dirty = __DIRTY = (__DIRTY + 1) & 0x7fffffffffffffff
+    dirties = []
+
+    try:
+        for m in gen:
+            tgt = m.matched  # will be FST node
+
+            if getattr(tgt.a, '__DIRTY', None) is dirty:
+                gen.send(False)
+
+                continue
+
             sub = repl.copy()
 
             for tag, path in paths:
@@ -4928,16 +4955,43 @@ def sub(
                             new_idx = parent._cached_arglikes().index(sub_tgt.a)
 
                     if new_idx is not None:
-                        parent.put_slice(sub_sub, new_idx, new_idx + 1, field, one=one, **options)
+                        if tag:  # not replacing with original whole node so don't need to mark dirty
+                            parent._put_slice(sub_sub, new_idx, new_idx + 1, field, one, options)
+
+                        else:  # need to do extra stuff to mark possibly multiple replacements as dirty
+                            view = getattr(parent, field)
+                            len_original_field = len(view)
+
+                            parent._put_slice(sub_sub, new_idx, new_idx + 1, field, one, options)
+
+                            if (delta := len(view) - len_original_field) >= 0:  # only if replaced or added, if length contracted then there was deletion
+                                for f in view[new_idx : new_idx + 1 + delta]:
+                                    if f:
+                                        (a := f.a).__DIRTY = dirty
+
+                                        dirties.append(a)
 
                         continue
 
-                sub_tgt.replace(sub_sub, one=one, **options)
+                f = sub_tgt.replace(sub_sub, one=one, **options)
 
-        if sub is not tgt:
-            tgt.replace(sub, **options)
+                if not tag and f:  # replaced with original whole matched element, mark as dirty
+                    (a := f.a).__DIRTY = dirty
 
-        if not nested:
-            gen.send(False)
+                    dirties.append(a)
+
+            tgt = tgt.replace(sub, **options)
+
+            if tgt and getattr(tgt.a, '__DIRTY', None) is dirty:  # substituted node with same node `__fst_`?
+                gen.send(False)
+
+                continue
+
+            if not nested:
+                gen.send(False)
+
+    finally:
+        for a in dirties:  # clean up after ourselves
+            del a.__DIRTY
 
     return self
