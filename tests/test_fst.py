@@ -8139,7 +8139,7 @@ opts.ignore_module = [mod.strip()
     def test_match_MN(self):
         # MN tags and in or outside of list
 
-        assertRaises(ValueError('MN requires pattern'), MN, ..., 0, 1)
+        assertRaises(ValueError('MN requires non-wildcard pattern'), MN, ..., 0, 1)
         # assertRaises(MatchError('MN can only match to or in a list field'), FST('a + b').match, MBinOp(left=MN('a', 0, 0)))
         assertRaises(ValueError('MN-type quantifier patterns cannot be nested directly within each other'), MN, MN('a'))
 
@@ -8515,6 +8515,60 @@ opts.ignore_module = [mod.strip()
         self.assertEqual(str((f := FST('{a, b}')).elts), str(MAST(elts=M(t=['a', 'b'])).match(f).t))
         self.assertEqual(str((f := FST('a; b')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
         self.assertEqual(str((f := FST('a\nb')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
+
+    def test_match_coverage(self):
+        self.assertEqual('MAST(elts=..., ctx=Store)', repr(MAST(elts=..., ctx=Store)))
+        self.assertEqual('<NoTag>', repr(NoTag.__class__()))
+        self.assertEqual('M(t=...)', repr(M(t=...)))
+        self.assertEqual('M(t=..., st=True)', repr(M(t=..., st=True)))
+        self.assertEqual('MOR(Constant, t=MConstant(value=1))', repr(MOR(Constant, t=MConstant(value=1))))
+        self.assertEqual('MANY([Tuple, List])', repr(MANY((Tuple, MList))))
+        self.assertEqual('MANY([Tuple, List], elts=...)', repr(MANY((Tuple, MList), elts=...)))
+        self.assertEqual("MRE(re.compile('a'), search=True)", repr(MRE("a", 0, True)))
+        self.assertEqual("MTAG('tag')", repr(MTAG('tag')))
+        self.assertEqual("MTAG('tag', st='static')", repr(MTAG('tag', st='static')))
+
+        assertRaises(ValueError('MANY types can only be AST or MAST'), MANY, [1])
+        assertRaises(ValueError('MANY types can only be AST or MAST'), MANY, [str])
+        assertRaises(ValueError('MANY requires at least one AST type to match'), MANY, [])
+        assertRaises(ValueError('MRE cannot take flags for already compiled re.Pattern'), MRE, re.compile('a'), re.M)
+        assertRaises(ValueError('MCB can never tag the callback return since the callback does not have a tag'), MCB, lambda: False, tag_ret=True)
+
+        f = FST('i = 1')
+        f.a.value.f = None
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=M(t=Constant)).match, f)
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MNOT(t=Name)).match, f)
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MOR(t=...)).match, f)
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MAND(t=...)).match, f)
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MCB(lambda: False)).match, f)
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MOPT(t=Constant)).match, f)
+
+        f = FST('[a, a, a]')
+        f.a.elts[1].f = None
+        assertRaises(AttributeError("'NoneType' object has no attribute 'a'"), MList(MN(t='a')).match, f)
+
+        f = FST('i = 1')
+        self.assertFalse(MRE(b'a').match(FST('a')))
+        self.assertFalse(MRE(b'a').match(1))
+        self.assertFalse(MTAG('notag').match(1))
+        self.assertTrue(MBinOp(left=M(..., t=M(..., u=True)), right=MTAG('t')).match(FST('a + a')))
+        self.assertFalse(MN(2).match(1))
+        self.assertFalse(MAssign(value=MConstant(MOPT(1))).match(f))
+        self.assertTrue(MAssign(value=(MOPT(M(t=MConstant), st='static'))).match(f))
+        self.assertFalse(MAST(_all=[...]).match(FST('{1: 2}')))
+        self.assertFalse(MList(['a']).match(FST('[]')))
+        self.assertTrue(MList([..., ..., ...]).match(FST('[]')))
+        self.assertFalse(MList([..., MN('a', 1)]).match(FST('[b, c]')))
+        self.assertFalse(MConstant(1).match(FST('a')))
+        self.assertTrue(MConstant("a", M(u='u')).match(FST('u"a"')))
+        self.assertFalse(MAssign(value=re.compile(b'v')).match(FST('a = v')))
+        self.assertFalse(MConstant(re.compile('v')).match(FST('1')))
+
+        class substr(str): pass
+        class subint(int): pass
+
+        self.assertTrue(MConstant(substr('a')).match(FST('"a"')))
+        self.assertTrue(MConstant(subint(1)).match(FST('1')))
 
     def test_sub(self):
         pass

@@ -433,6 +433,8 @@ class _RunningTags:
                 if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
                     return v
 
+        return _SENTINEL
+
 
 class MatchError(RuntimeError):
     """An error during matching."""
@@ -584,7 +586,7 @@ class MAST(M_Pattern):
 # ......................................................................................................................
 # Generated pattern classes
 
-class MModule(MAST):
+class MModule(MAST):  # pragma: no cover
     """"""
     _types = Module
 
@@ -608,7 +610,7 @@ class MModule(MAST):
             self._body = _body
             fields.append('_body')
 
-class MInteractive(MAST):
+class MInteractive(MAST):  # pragma: no cover
     """"""
     _types = Interactive
 
@@ -627,7 +629,7 @@ class MInteractive(MAST):
             self._body = _body
             fields.append('_body')
 
-class MExpression(MAST):
+class MExpression(MAST):  # pragma: no cover
     """"""
     _types = Expression
 
@@ -641,7 +643,7 @@ class MExpression(MAST):
             self.body = body
             fields.append('body')
 
-class MFunctionType(MAST):
+class MFunctionType(MAST):  # pragma: no cover
     """"""
     _types = FunctionType
 
@@ -660,7 +662,7 @@ class MFunctionType(MAST):
             self.returns = returns
             fields.append('returns')
 
-class MFunctionDef(MAST):
+class MFunctionDef(MAST):  # pragma: no cover
     """"""
     _types = FunctionDef
 
@@ -709,7 +711,7 @@ class MFunctionDef(MAST):
             self._body = _body
             fields.append('_body')
 
-class MAsyncFunctionDef(MAST):
+class MAsyncFunctionDef(MAST):  # pragma: no cover
     """"""
     _types = AsyncFunctionDef
 
@@ -758,7 +760,7 @@ class MAsyncFunctionDef(MAST):
             self._body = _body
             fields.append('_body')
 
-class MClassDef(MAST):
+class MClassDef(MAST):  # pragma: no cover
     """"""
     _types = ClassDef
 
@@ -807,7 +809,7 @@ class MClassDef(MAST):
             self._body = _body
             fields.append('_body')
 
-class MReturn(MAST):
+class MReturn(MAST):  # pragma: no cover
     """"""
     _types = Return
 
@@ -821,7 +823,7 @@ class MReturn(MAST):
             self.value = value
             fields.append('value')
 
-class MDelete(MAST):
+class MDelete(MAST):  # pragma: no cover
     """"""
     _types = Delete
 
@@ -835,7 +837,7 @@ class MDelete(MAST):
             self.targets = targets
             fields.append('targets')
 
-class MAssign(MAST):
+class MAssign(MAST):  # pragma: no cover
     """"""
     _types = Assign
 
@@ -859,7 +861,7 @@ class MAssign(MAST):
             self.type_comment = type_comment
             fields.append('type_comment')
 
-class MTypeAlias(MAST):
+class MTypeAlias(MAST):  # pragma: no cover
     """"""
     _types = TypeAlias
 
@@ -883,7 +885,7 @@ class MTypeAlias(MAST):
             self.value = value
             fields.append('value')
 
-class MAugAssign(MAST):
+class MAugAssign(MAST):  # pragma: no cover
     """"""
     _types = AugAssign
 
@@ -907,7 +909,7 @@ class MAugAssign(MAST):
             self.value = value
             fields.append('value')
 
-class MAnnAssign(MAST):
+class MAnnAssign(MAST):  # pragma: no cover
     """"""
     _types = AnnAssign
 
@@ -936,7 +938,7 @@ class MAnnAssign(MAST):
             self.simple = simple
             fields.append('simple')
 
-class MFor(MAST):
+class MFor(MAST):  # pragma: no cover
     """"""
     _types = For
 
@@ -975,7 +977,7 @@ class MFor(MAST):
             self._body = _body
             fields.append('_body')
 
-class MAsyncFor(MAST):
+class MAsyncFor(MAST):  # pragma: no cover
     """"""
     _types = AsyncFor
 
@@ -1014,7 +1016,7 @@ class MAsyncFor(MAST):
             self._body = _body
             fields.append('_body')
 
-class MWhile(MAST):
+class MWhile(MAST):  # pragma: no cover
     """"""
     _types = While
 
@@ -1043,7 +1045,7 @@ class MWhile(MAST):
             self._body = _body
             fields.append('_body')
 
-class MIf(MAST):
+class MIf(MAST):  # pragma: no cover
     """"""
     _types = If
 
@@ -1072,7 +1074,7 @@ class MIf(MAST):
             self._body = _body
             fields.append('_body')
 
-class MWith(MAST):
+class MWith(MAST):  # pragma: no cover
     """"""
     _types = With
 
@@ -1101,7 +1103,7 @@ class MWith(MAST):
             self._body = _body
             fields.append('_body')
 
-class MAsyncWith(MAST):
+class MAsyncWith(MAST):  # pragma: no cover
     """"""
     _types = AsyncWith
 
@@ -1130,7 +1132,7 @@ class MAsyncWith(MAST):
             self._body = _body
             fields.append('_body')
 
-class MMatch(MAST):
+class MMatch(MAST):  # pragma: no cover
     """"""
     _types = Match
 
@@ -1149,7 +1151,7 @@ class MMatch(MAST):
             self.cases = cases
             fields.append('cases')
 
-class MRaise(MAST):
+class MRaise(MAST):  # pragma: no cover
     """"""
     _types = Raise
 
@@ -1168,7 +1170,7 @@ class MRaise(MAST):
             self.cause = cause
             fields.append('cause')
 
-class MTry(MAST):
+class MTry(MAST):  # pragma: no cover
     """"""
     _types = Try
 
@@ -1202,7 +1204,7 @@ class MTry(MAST):
             self._body = _body
             fields.append('_body')
 
-class MTryStar(MAST):
+class MTryStar(MAST):  # pragma: no cover
     """"""
     _types = TryStar
 
@@ -1236,7 +1238,7 @@ class MTryStar(MAST):
             self._body = _body
             fields.append('_body')
 
-class MAssert(MAST):
+class MAssert(MAST):  # pragma: no cover
     """"""
     _types = Assert
 
@@ -1255,7 +1257,7 @@ class MAssert(MAST):
             self.msg = msg
             fields.append('msg')
 
-class MImport(MAST):
+class MImport(MAST):  # pragma: no cover
     """"""
     _types = Import
 
@@ -1269,7 +1271,7 @@ class MImport(MAST):
             self.names = names
             fields.append('names')
 
-class MImportFrom(MAST):
+class MImportFrom(MAST):  # pragma: no cover
     """"""
     _types = ImportFrom
 
@@ -1293,7 +1295,7 @@ class MImportFrom(MAST):
             self.level = level
             fields.append('level')
 
-class MGlobal(MAST):
+class MGlobal(MAST):  # pragma: no cover
     """"""
     _types = Global
 
@@ -1307,7 +1309,7 @@ class MGlobal(MAST):
             self.names = names
             fields.append('names')
 
-class MNonlocal(MAST):
+class MNonlocal(MAST):  # pragma: no cover
     """"""
     _types = Nonlocal
 
@@ -1321,7 +1323,7 @@ class MNonlocal(MAST):
             self.names = names
             fields.append('names')
 
-class MExpr(MAST):
+class MExpr(MAST):  # pragma: no cover
     """"""
     _types = Expr
 
@@ -1335,28 +1337,28 @@ class MExpr(MAST):
             self.value = value
             fields.append('value')
 
-class MPass(MAST):
+class MPass(MAST):  # pragma: no cover
     """"""
     _types = Pass
 
     def __init__(self) -> None:
         pass
 
-class MBreak(MAST):
+class MBreak(MAST):  # pragma: no cover
     """"""
     _types = Break
 
     def __init__(self) -> None:
         pass
 
-class MContinue(MAST):
+class MContinue(MAST):  # pragma: no cover
     """"""
     _types = Continue
 
     def __init__(self) -> None:
         pass
 
-class MBoolOp(MAST):
+class MBoolOp(MAST):  # pragma: no cover
     """"""
     _types = BoolOp
 
@@ -1375,7 +1377,7 @@ class MBoolOp(MAST):
             self.values = values
             fields.append('values')
 
-class MNamedExpr(MAST):
+class MNamedExpr(MAST):  # pragma: no cover
     """"""
     _types = NamedExpr
 
@@ -1394,7 +1396,7 @@ class MNamedExpr(MAST):
             self.value = value
             fields.append('value')
 
-class MBinOp(MAST):
+class MBinOp(MAST):  # pragma: no cover
     """"""
     _types = BinOp
 
@@ -1418,7 +1420,7 @@ class MBinOp(MAST):
             self.right = right
             fields.append('right')
 
-class MUnaryOp(MAST):
+class MUnaryOp(MAST):  # pragma: no cover
     """"""
     _types = UnaryOp
 
@@ -1437,7 +1439,7 @@ class MUnaryOp(MAST):
             self.operand = operand
             fields.append('operand')
 
-class MLambda(MAST):
+class MLambda(MAST):  # pragma: no cover
     """"""
     _types = Lambda
 
@@ -1456,7 +1458,7 @@ class MLambda(MAST):
             self.body = body
             fields.append('body')
 
-class MIfExp(MAST):
+class MIfExp(MAST):  # pragma: no cover
     """"""
     _types = IfExp
 
@@ -1480,7 +1482,7 @@ class MIfExp(MAST):
             self.orelse = orelse
             fields.append('orelse')
 
-class MDict(MAST):
+class MDict(MAST):  # pragma: no cover
     """"""
     _types = Dict
 
@@ -1504,7 +1506,7 @@ class MDict(MAST):
             self._all = _all
             fields.append('_all')
 
-class MSet(MAST):
+class MSet(MAST):  # pragma: no cover
     """"""
     _types = Set
 
@@ -1518,7 +1520,7 @@ class MSet(MAST):
             self.elts = elts
             fields.append('elts')
 
-class MListComp(MAST):
+class MListComp(MAST):  # pragma: no cover
     """"""
     _types = ListComp
 
@@ -1537,7 +1539,7 @@ class MListComp(MAST):
             self.generators = generators
             fields.append('generators')
 
-class MSetComp(MAST):
+class MSetComp(MAST):  # pragma: no cover
     """"""
     _types = SetComp
 
@@ -1556,7 +1558,7 @@ class MSetComp(MAST):
             self.generators = generators
             fields.append('generators')
 
-class MDictComp(MAST):
+class MDictComp(MAST):  # pragma: no cover
     """"""
     _types = DictComp
 
@@ -1580,7 +1582,7 @@ class MDictComp(MAST):
             self.generators = generators
             fields.append('generators')
 
-class MGeneratorExp(MAST):
+class MGeneratorExp(MAST):  # pragma: no cover
     """"""
     _types = GeneratorExp
 
@@ -1599,7 +1601,7 @@ class MGeneratorExp(MAST):
             self.generators = generators
             fields.append('generators')
 
-class MAwait(MAST):
+class MAwait(MAST):  # pragma: no cover
     """"""
     _types = Await
 
@@ -1613,7 +1615,7 @@ class MAwait(MAST):
             self.value = value
             fields.append('value')
 
-class MYield(MAST):
+class MYield(MAST):  # pragma: no cover
     """"""
     _types = Yield
 
@@ -1627,7 +1629,7 @@ class MYield(MAST):
             self.value = value
             fields.append('value')
 
-class MYieldFrom(MAST):
+class MYieldFrom(MAST):  # pragma: no cover
     """"""
     _types = YieldFrom
 
@@ -1641,7 +1643,7 @@ class MYieldFrom(MAST):
             self.value = value
             fields.append('value')
 
-class MCompare(MAST):
+class MCompare(MAST):  # pragma: no cover
     """"""
     _types = Compare
 
@@ -1670,7 +1672,7 @@ class MCompare(MAST):
             self._all = _all
             fields.append('_all')
 
-class MCall(MAST):
+class MCall(MAST):  # pragma: no cover
     """"""
     _types = Call
 
@@ -1699,7 +1701,7 @@ class MCall(MAST):
             self._args = _args
             fields.append('_args')
 
-class MFormattedValue(MAST):
+class MFormattedValue(MAST):  # pragma: no cover
     """"""
     _types = FormattedValue
 
@@ -1723,7 +1725,7 @@ class MFormattedValue(MAST):
             self.format_spec = format_spec
             fields.append('format_spec')
 
-class MInterpolation(MAST):
+class MInterpolation(MAST):  # pragma: no cover
     """"""
     _types = Interpolation
 
@@ -1752,7 +1754,7 @@ class MInterpolation(MAST):
             self.format_spec = format_spec
             fields.append('format_spec')
 
-class MJoinedStr(MAST):
+class MJoinedStr(MAST):  # pragma: no cover
     """"""
     _types = JoinedStr
 
@@ -1766,7 +1768,7 @@ class MJoinedStr(MAST):
             self.values = values
             fields.append('values')
 
-class MTemplateStr(MAST):
+class MTemplateStr(MAST):  # pragma: no cover
     """"""
     _types = TemplateStr
 
@@ -1780,7 +1782,7 @@ class MTemplateStr(MAST):
             self.values = values
             fields.append('values')
 
-class MConstant(MAST):
+class MConstant(MAST):  # pragma: no cover
     """"""
     _types = Constant
 
@@ -1796,7 +1798,7 @@ class MConstant(MAST):
             self.kind = kind
             fields.append('kind')
 
-class MAttribute(MAST):
+class MAttribute(MAST):  # pragma: no cover
     """"""
     _types = Attribute
 
@@ -1820,7 +1822,7 @@ class MAttribute(MAST):
             self.ctx = ctx
             fields.append('ctx')
 
-class MSubscript(MAST):
+class MSubscript(MAST):  # pragma: no cover
     """"""
     _types = Subscript
 
@@ -1844,7 +1846,7 @@ class MSubscript(MAST):
             self.ctx = ctx
             fields.append('ctx')
 
-class MStarred(MAST):
+class MStarred(MAST):  # pragma: no cover
     """"""
     _types = Starred
 
@@ -1863,7 +1865,7 @@ class MStarred(MAST):
             self.ctx = ctx
             fields.append('ctx')
 
-class MName(MAST):
+class MName(MAST):  # pragma: no cover
     """"""
     _types = Name
 
@@ -1882,7 +1884,7 @@ class MName(MAST):
             self.ctx = ctx
             fields.append('ctx')
 
-class MList(MAST):
+class MList(MAST):  # pragma: no cover
     """"""
     _types = List
 
@@ -1901,7 +1903,7 @@ class MList(MAST):
             self.ctx = ctx
             fields.append('ctx')
 
-class MTuple(MAST):
+class MTuple(MAST):  # pragma: no cover
     """"""
     _types = Tuple
 
@@ -1920,7 +1922,7 @@ class MTuple(MAST):
             self.ctx = ctx
             fields.append('ctx')
 
-class MSlice(MAST):
+class MSlice(MAST):  # pragma: no cover
     """"""
     _types = Slice
 
@@ -1944,231 +1946,231 @@ class MSlice(MAST):
             self.step = step
             fields.append('step')
 
-class MLoad(MAST):
+class MLoad(MAST):  # pragma: no cover
     """"""
     _types = Load
 
     def __init__(self) -> None:
         pass
 
-class MStore(MAST):
+class MStore(MAST):  # pragma: no cover
     """"""
     _types = Store
 
     def __init__(self) -> None:
         pass
 
-class MDel(MAST):
+class MDel(MAST):  # pragma: no cover
     """"""
     _types = Del
 
     def __init__(self) -> None:
         pass
 
-class MAnd(MAST):
+class MAnd(MAST):  # pragma: no cover
     """"""
     _types = And
 
     def __init__(self) -> None:
         pass
 
-class MOr(MAST):
+class MOr(MAST):  # pragma: no cover
     """"""
     _types = Or
 
     def __init__(self) -> None:
         pass
 
-class MAdd(MAST):
+class MAdd(MAST):  # pragma: no cover
     """"""
     _types = Add
 
     def __init__(self) -> None:
         pass
 
-class MSub(MAST):
+class MSub(MAST):  # pragma: no cover
     """"""
     _types = Sub
 
     def __init__(self) -> None:
         pass
 
-class MMult(MAST):
+class MMult(MAST):  # pragma: no cover
     """"""
     _types = Mult
 
     def __init__(self) -> None:
         pass
 
-class MMatMult(MAST):
+class MMatMult(MAST):  # pragma: no cover
     """"""
     _types = MatMult
 
     def __init__(self) -> None:
         pass
 
-class MDiv(MAST):
+class MDiv(MAST):  # pragma: no cover
     """"""
     _types = Div
 
     def __init__(self) -> None:
         pass
 
-class MMod(MAST):
+class MMod(MAST):  # pragma: no cover
     """"""
     _types = Mod
 
     def __init__(self) -> None:
         pass
 
-class MPow(MAST):
+class MPow(MAST):  # pragma: no cover
     """"""
     _types = Pow
 
     def __init__(self) -> None:
         pass
 
-class MLShift(MAST):
+class MLShift(MAST):  # pragma: no cover
     """"""
     _types = LShift
 
     def __init__(self) -> None:
         pass
 
-class MRShift(MAST):
+class MRShift(MAST):  # pragma: no cover
     """"""
     _types = RShift
 
     def __init__(self) -> None:
         pass
 
-class MBitOr(MAST):
+class MBitOr(MAST):  # pragma: no cover
     """"""
     _types = BitOr
 
     def __init__(self) -> None:
         pass
 
-class MBitXor(MAST):
+class MBitXor(MAST):  # pragma: no cover
     """"""
     _types = BitXor
 
     def __init__(self) -> None:
         pass
 
-class MBitAnd(MAST):
+class MBitAnd(MAST):  # pragma: no cover
     """"""
     _types = BitAnd
 
     def __init__(self) -> None:
         pass
 
-class MFloorDiv(MAST):
+class MFloorDiv(MAST):  # pragma: no cover
     """"""
     _types = FloorDiv
 
     def __init__(self) -> None:
         pass
 
-class MInvert(MAST):
+class MInvert(MAST):  # pragma: no cover
     """"""
     _types = Invert
 
     def __init__(self) -> None:
         pass
 
-class MNot(MAST):
+class MNot(MAST):  # pragma: no cover
     """"""
     _types = Not
 
     def __init__(self) -> None:
         pass
 
-class MUAdd(MAST):
+class MUAdd(MAST):  # pragma: no cover
     """"""
     _types = UAdd
 
     def __init__(self) -> None:
         pass
 
-class MUSub(MAST):
+class MUSub(MAST):  # pragma: no cover
     """"""
     _types = USub
 
     def __init__(self) -> None:
         pass
 
-class MEq(MAST):
+class MEq(MAST):  # pragma: no cover
     """"""
     _types = Eq
 
     def __init__(self) -> None:
         pass
 
-class MNotEq(MAST):
+class MNotEq(MAST):  # pragma: no cover
     """"""
     _types = NotEq
 
     def __init__(self) -> None:
         pass
 
-class MLt(MAST):
+class MLt(MAST):  # pragma: no cover
     """"""
     _types = Lt
 
     def __init__(self) -> None:
         pass
 
-class MLtE(MAST):
+class MLtE(MAST):  # pragma: no cover
     """"""
     _types = LtE
 
     def __init__(self) -> None:
         pass
 
-class MGt(MAST):
+class MGt(MAST):  # pragma: no cover
     """"""
     _types = Gt
 
     def __init__(self) -> None:
         pass
 
-class MGtE(MAST):
+class MGtE(MAST):  # pragma: no cover
     """"""
     _types = GtE
 
     def __init__(self) -> None:
         pass
 
-class MIs(MAST):
+class MIs(MAST):  # pragma: no cover
     """"""
     _types = Is
 
     def __init__(self) -> None:
         pass
 
-class MIsNot(MAST):
+class MIsNot(MAST):  # pragma: no cover
     """"""
     _types = IsNot
 
     def __init__(self) -> None:
         pass
 
-class MIn(MAST):
+class MIn(MAST):  # pragma: no cover
     """"""
     _types = In
 
     def __init__(self) -> None:
         pass
 
-class MNotIn(MAST):
+class MNotIn(MAST):  # pragma: no cover
     """"""
     _types = NotIn
 
     def __init__(self) -> None:
         pass
 
-class Mcomprehension(MAST):
+class Mcomprehension(MAST):  # pragma: no cover
     """"""
     _types = comprehension
 
@@ -2197,7 +2199,7 @@ class Mcomprehension(MAST):
             self.is_async = is_async
             fields.append('is_async')
 
-class MExceptHandler(MAST):
+class MExceptHandler(MAST):  # pragma: no cover
     """"""
     _types = ExceptHandler
 
@@ -2221,7 +2223,7 @@ class MExceptHandler(MAST):
             self.body = body
             fields.append('body')
 
-class Marguments(MAST):
+class Marguments(MAST):  # pragma: no cover
     """"""
     _types = arguments
 
@@ -2270,7 +2272,7 @@ class Marguments(MAST):
             self._all = _all
             fields.append('_all')
 
-class Marg(MAST):
+class Marg(MAST):  # pragma: no cover
     """"""
     _types = arg
 
@@ -2294,7 +2296,7 @@ class Marg(MAST):
             self.type_comment = type_comment
             fields.append('type_comment')
 
-class Mkeyword(MAST):
+class Mkeyword(MAST):  # pragma: no cover
     """"""
     _types = keyword
 
@@ -2313,7 +2315,7 @@ class Mkeyword(MAST):
             self.value = value
             fields.append('value')
 
-class Malias(MAST):
+class Malias(MAST):  # pragma: no cover
     """"""
     _types = alias
 
@@ -2332,7 +2334,7 @@ class Malias(MAST):
             self.asname = asname
             fields.append('asname')
 
-class Mwithitem(MAST):
+class Mwithitem(MAST):  # pragma: no cover
     """"""
     _types = withitem
 
@@ -2351,7 +2353,7 @@ class Mwithitem(MAST):
             self.optional_vars = optional_vars
             fields.append('optional_vars')
 
-class Mmatch_case(MAST):
+class Mmatch_case(MAST):  # pragma: no cover
     """"""
     _types = match_case
 
@@ -2375,7 +2377,7 @@ class Mmatch_case(MAST):
             self.body = body
             fields.append('body')
 
-class MMatchValue(MAST):
+class MMatchValue(MAST):  # pragma: no cover
     """"""
     _types = MatchValue
 
@@ -2389,7 +2391,7 @@ class MMatchValue(MAST):
             self.value = value
             fields.append('value')
 
-class MMatchSingleton(MAST):
+class MMatchSingleton(MAST):  # pragma: no cover
     """"""
     _types = MatchSingleton
 
@@ -2403,7 +2405,7 @@ class MMatchSingleton(MAST):
             self.value = value
             fields.append('value')
 
-class MMatchSequence(MAST):
+class MMatchSequence(MAST):  # pragma: no cover
     """"""
     _types = MatchSequence
 
@@ -2417,7 +2419,7 @@ class MMatchSequence(MAST):
             self.patterns = patterns
             fields.append('patterns')
 
-class MMatchMapping(MAST):
+class MMatchMapping(MAST):  # pragma: no cover
     """"""
     _types = MatchMapping
 
@@ -2446,7 +2448,7 @@ class MMatchMapping(MAST):
             self._all = _all
             fields.append('_all')
 
-class MMatchClass(MAST):
+class MMatchClass(MAST):  # pragma: no cover
     """"""
     _types = MatchClass
 
@@ -2475,7 +2477,7 @@ class MMatchClass(MAST):
             self.kwd_patterns = kwd_patterns
             fields.append('kwd_patterns')
 
-class MMatchStar(MAST):
+class MMatchStar(MAST):  # pragma: no cover
     """"""
     _types = MatchStar
 
@@ -2489,7 +2491,7 @@ class MMatchStar(MAST):
             self.name = name
             fields.append('name')
 
-class MMatchAs(MAST):
+class MMatchAs(MAST):  # pragma: no cover
     """"""
     _types = MatchAs
 
@@ -2508,7 +2510,7 @@ class MMatchAs(MAST):
             self.name = name
             fields.append('name')
 
-class MMatchOr(MAST):
+class MMatchOr(MAST):  # pragma: no cover
     """"""
     _types = MatchOr
 
@@ -2522,7 +2524,7 @@ class MMatchOr(MAST):
             self.patterns = patterns
             fields.append('patterns')
 
-class MTypeIgnore(MAST):
+class MTypeIgnore(MAST):  # pragma: no cover
     """"""
     _types = TypeIgnore
 
@@ -2541,7 +2543,7 @@ class MTypeIgnore(MAST):
             self.tag = tag
             fields.append('tag')
 
-class MTypeVar(MAST):
+class MTypeVar(MAST):  # pragma: no cover
     """"""
     _types = TypeVar
 
@@ -2565,7 +2567,7 @@ class MTypeVar(MAST):
             self.default_value = default_value
             fields.append('default_value')
 
-class MParamSpec(MAST):
+class MParamSpec(MAST):  # pragma: no cover
     """"""
     _types = ParamSpec
 
@@ -2584,7 +2586,7 @@ class MParamSpec(MAST):
             self.default_value = default_value
             fields.append('default_value')
 
-class MTypeVarTuple(MAST):
+class MTypeVarTuple(MAST):  # pragma: no cover
     """"""
     _types = TypeVarTuple
 
@@ -2603,7 +2605,7 @@ class MTypeVarTuple(MAST):
             self.default_value = default_value
             fields.append('default_value')
 
-class M_ExceptHandlers(MAST):
+class M_ExceptHandlers(MAST):  # pragma: no cover
     """"""
     _types = _ExceptHandlers
 
@@ -2617,7 +2619,7 @@ class M_ExceptHandlers(MAST):
             self.handlers = handlers
             fields.append('handlers')
 
-class M_match_cases(MAST):
+class M_match_cases(MAST):  # pragma: no cover
     """"""
     _types = _match_cases
 
@@ -2631,7 +2633,7 @@ class M_match_cases(MAST):
             self.cases = cases
             fields.append('cases')
 
-class M_Assign_targets(MAST):
+class M_Assign_targets(MAST):  # pragma: no cover
     """"""
     _types = _Assign_targets
 
@@ -2645,7 +2647,7 @@ class M_Assign_targets(MAST):
             self.targets = targets
             fields.append('targets')
 
-class M_decorator_list(MAST):
+class M_decorator_list(MAST):  # pragma: no cover
     """"""
     _types = _decorator_list
 
@@ -2659,7 +2661,7 @@ class M_decorator_list(MAST):
             self.decorator_list = decorator_list
             fields.append('decorator_list')
 
-class M_arglikes(MAST):
+class M_arglikes(MAST):  # pragma: no cover
     """"""
     _types = _arglikes
 
@@ -2673,7 +2675,7 @@ class M_arglikes(MAST):
             self.arglikes = arglikes
             fields.append('arglikes')
 
-class M_comprehensions(MAST):
+class M_comprehensions(MAST):  # pragma: no cover
     """"""
     _types = _comprehensions
 
@@ -2687,7 +2689,7 @@ class M_comprehensions(MAST):
             self.generators = generators
             fields.append('generators')
 
-class M_comprehension_ifs(MAST):
+class M_comprehension_ifs(MAST):  # pragma: no cover
     """"""
     _types = _comprehension_ifs
 
@@ -2701,7 +2703,7 @@ class M_comprehension_ifs(MAST):
             self.ifs = ifs
             fields.append('ifs')
 
-class M_aliases(MAST):
+class M_aliases(MAST):  # pragma: no cover
     """"""
     _types = _aliases
 
@@ -2715,7 +2717,7 @@ class M_aliases(MAST):
             self.names = names
             fields.append('names')
 
-class M_withitems(MAST):
+class M_withitems(MAST):  # pragma: no cover
     """"""
     _types = _withitems
 
@@ -2729,7 +2731,7 @@ class M_withitems(MAST):
             self.items = items
             fields.append('items')
 
-class M_type_params(MAST):
+class M_type_params(MAST):  # pragma: no cover
     """"""
     _types = _type_params
 
@@ -2743,55 +2745,55 @@ class M_type_params(MAST):
             self.type_params = type_params
             fields.append('type_params')
 
-class Mmod(MAST):
+class Mmod(MAST):  # pragma: no cover
     """"""
     _types = mod
 
-class Mstmt(MAST):
+class Mstmt(MAST):  # pragma: no cover
     """"""
     _types = stmt
 
-class Mexpr(MAST):
+class Mexpr(MAST):  # pragma: no cover
     """"""
     _types = expr
 
-class Mexpr_context(MAST):
+class Mexpr_context(MAST):  # pragma: no cover
     """"""
     _types = expr_context
 
-class Mboolop(MAST):
+class Mboolop(MAST):  # pragma: no cover
     """"""
     _types = boolop
 
-class Moperator(MAST):
+class Moperator(MAST):  # pragma: no cover
     """"""
     _types = operator
 
-class Munaryop(MAST):
+class Munaryop(MAST):  # pragma: no cover
     """"""
     _types = unaryop
 
-class Mcmpop(MAST):
+class Mcmpop(MAST):  # pragma: no cover
     """"""
     _types = cmpop
 
-class Mexcepthandler(MAST):
+class Mexcepthandler(MAST):  # pragma: no cover
     """"""
     _types = excepthandler
 
-class Mpattern(MAST):
+class Mpattern(MAST):  # pragma: no cover
     """"""
     _types = pattern
 
-class Mtype_ignore(MAST):
+class Mtype_ignore(MAST):  # pragma: no cover
     """"""
     _types = type_ignore
 
-class Mtype_param(MAST):
+class Mtype_param(MAST):  # pragma: no cover
     """"""
     _types = type_param
 
-class M_slice(MAST):
+class M_slice(MAST):  # pragma: no cover
     """"""
     _types = _slice
 
@@ -3164,7 +3166,9 @@ class MANY(M_Pattern):
         ts = {}
 
         for t in types:
-            if issubclass(t, MAST):
+            if not isinstance(t, type):
+                raise ValueError('MANY types can only be AST or MAST')
+            elif issubclass(t, MAST):
                 t = t._types  # will be a single type
             elif not issubclass(t, AST):
                 raise ValueError('MANY types can only be AST or MAST')
@@ -3408,23 +3412,23 @@ class MCB(M):
 
     @staticmethod
     def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+        tgtf = None
+
         if not moptions['is_FST'] or not isinstance(tgt, AST):
             m = self.pat(tgt)
-        elif f := getattr(tgt, 'f', None):
-            m = self.pat(f)
+        elif tgtf := getattr(tgt, 'f', None):
+            m = self.pat(tgtf)
         else:
-            raise MatchError(f'MCB FST callback found AST node without an FST: {_rpr(tgt)}')
+            raise MatchError('match found an AST node without an FST')
 
         if not m:
             return None
 
         if pat_tag := self.pat_tag:
             if self.tag_ret:
-                tgt = m
-            elif moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
-                raise MatchError('match found an AST node without an FST')
+                tgtf = m
 
-            return {pat_tag: tgt, **self.static_tags}
+            return {pat_tag: tgtf or tgt, **self.static_tags}
 
         return self.static_tags
 
@@ -3560,6 +3564,8 @@ class MN(M):
 
     min: int  ; """@private"""
     max: int  ; """@private"""
+
+    _requires = 'non-wildcard pattern'
 
     def __init__(self, anon_pat: _Patterns = ..., /, min: int = 0, max: int | None = None, **tags) -> None:
         M.__init__(self, _SENTINEL if anon_pat is ... else anon_pat, **tags)
@@ -3863,7 +3869,7 @@ def _match_n(
 
             for ts, t in zip(tagss, tgts, strict=True):
                 if t and not (t := getattr(t, 'f', None)):
-                    raise MatchError('match found an AST node without an FST')
+                    raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
 
                 ms.append(M_Match(ts, pat, t))
 
@@ -3893,7 +3899,8 @@ def _match_default(
     if isinstance(pat, list):
         if isinstance(tgt, fstview):
             if tgt.is_dictlike:
-                raise MatchError('list can never match a dictlike multi-element field')
+                return None
+                # raise MatchError('list can never match a dictlike multi-element field')
 
             if len(tgt) and isinstance(tgt[0], str):  # could be Global/Nonlocal.names
                 tgt = [s for s in tgt]
@@ -4773,7 +4780,7 @@ def sub(
     self: fst.FST,
     pat: _Pattern,
     repl: Code | Callable[[M_Match], Code],
-    nest: bool = False,
+    nested: bool = False,
     *,
     ctx: bool = False,
     self_: bool = True,
@@ -4792,7 +4799,7 @@ def sub(
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
     - `repl`: Replacement template or function to generate replacement nodes.
-    - `nest: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion due
+    - `nested: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion due
         to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
     - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
@@ -4930,7 +4937,7 @@ def sub(
         if sub is not tgt:
             tgt.replace(sub, **options)
 
-        if not nest:
+        if not nested:
             gen.send(False)
 
     return self

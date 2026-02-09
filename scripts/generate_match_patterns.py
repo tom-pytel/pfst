@@ -17,7 +17,7 @@ m_patterns = []
 for ast_cls in FIELDS:
     if ast_cls is Constant:
         m_patterns.append('''
-class MConstant(MAST):
+class MConstant(MAST):  # pragma: no cover
     """"""
     _types = Constant
 
@@ -47,7 +47,7 @@ class MConstant(MAST):
         init = '\n\n    def __init__(self) -> None:\n        pass'
 
     m_patterns.append(f'''
-class M{name}(MAST):
+class M{name}(MAST):  # pragma: no cover
     """"""
     _types = {name}{init}
 '''.strip())
@@ -56,7 +56,7 @@ for ast_cls in AST_BASES:
     name = ast_cls.__name__
 
     m_patterns.append(f'''
-class M{name}(MAST):
+class M{name}(MAST):  # pragma: no cover
     """"""
     _types = {name}
 '''.strip())
