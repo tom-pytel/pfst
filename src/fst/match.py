@@ -3299,12 +3299,13 @@ class MRE(M_Pattern):
             if not (m := func(src)):  # match source against pattern
                 return None
 
+
+        # TODO: fstview
+
+
         elif isinstance(tgt, bytes):
             if not isinstance(re_pat.pattern, bytes) or not (m := func(tgt)):
                 return None
-
-        # elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError('MRE can never match a list field')
 
         else:
             return None
@@ -3330,7 +3331,8 @@ class MCB(M):
         target matched. This only applies if the callback is passed as the first keyword in `tags` instead of in
         `anon_callback`, as in that case no target tag is available to return. Also keep in mind the "truthy value" bit
         in case a successful match might want to return a falsey value, it would need to be accomodated somehow (wrapped
-        in a tuple maybe).
+        in a tuple maybe). Or just provide an explicit `fail_val` to check against to determine failure.
+    - `fail_val`: An explicit value to check equality against to determine if the callback failed.
 
     **Examples:**
 
@@ -3367,6 +3369,14 @@ class MCB(M):
     >>> pat.match(FST('some_name'))
     <M_Match {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
 
+    An explicit fail value can be provided in case you want to be able to tag falsey values directly, it is checked by
+    equality.
+
+    >>> MCB(tag=lambda f: False, tag_ret=True, fail_val=None) .match(FST('a'))
+    <M_Match {'tag': False}>
+
+    >>> MCB(tag=lambda f: None, tag_ret=True, fail_val=None) .match(FST('a'))
+
     The type of node passed to the callback depends on the type of tree that `match()` is called on.
 
     >>> pat = MCB(lambda n: print(type(n)))
@@ -3382,12 +3392,14 @@ class MCB(M):
 
     pat: Callable[[_Target], object] | Callable[[_TargetFST], object]  ; """@private"""
     tag_ret: bool  ; """@private"""
+    fail_val: object  ; """@private"""
 
     def __init__(
         self,
         anon_callback: Callable[[_Target], object] | Callable[[_TargetFST], object] = _SENTINEL,
         /,
         tag_ret: bool = False,
+        fail_val: object = _SENTINEL,
         **tags,
     ) -> None:
         M.__init__(self, anon_callback, **tags)
@@ -3396,26 +3408,27 @@ class MCB(M):
             raise ValueError('MCB can never tag the callback return since the callback does not have a tag')
 
         self.tag_ret = tag_ret
+        self.fail_val = fail_val
 
     @staticmethod
     def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
-        tgtf = None
-
         if not moptions['is_FST'] or not isinstance(tgt, AST):
             m = self.pat(tgt)
-        elif tgtf := getattr(tgt, 'f', None):
-            m = self.pat(tgtf)
+        elif tgt := getattr(tgt, 'f', None):
+            m = self.pat(tgt)
         else:
             raise MatchError('match found an AST node without an FST')
 
-        if not m:
+        fail_val = self.fail_val
+
+        if (not m if fail_val is _SENTINEL else m == fail_val):
             return None
 
         if pat_tag := self.pat_tag:
             if self.tag_ret:
-                tgtf = m
+                tgt = m
 
-            return {pat_tag: tgtf or tgt, **self.static_tags}
+            return {pat_tag: tgt, **self.static_tags}
 
         return self.static_tags
 
@@ -3576,9 +3589,6 @@ class MN(M):
     @staticmethod
     def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if not isinstance(tgt, (list, fstview)):
-            # if moptions['list_check']:
-            #     raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
-
             return None
 
         return _match_default([self], tgt, moptions, rtags)
@@ -3630,6 +3640,14 @@ class MOPT(MN):
     <M_Match {}>
 
     >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
+
+    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **a}', 'pattern'))
+    <M_Match {}>
+
+    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **b}', 'pattern'))
+
+    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
+    <M_Match {}>
     """
 
     def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
@@ -3646,11 +3664,8 @@ class MOPT(MN):
 
             return self.static_tags
 
-        if not isinstance(tgt, AST):
-            # if moptions['list_check']:
-            #     raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
-
-            return None
+        # if not isinstance(tgt, AST):
+        #     return None
 
         pat = self.pat
         m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, moptions, rtags)
@@ -3659,7 +3674,7 @@ class MOPT(MN):
             return None
 
         if pat_tag := self.pat_tag:
-            if moptions['is_FST'] and not (tgt := getattr(tgt, 'f', None)):
+            if moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: [M_Match(m, pat, tgt)], **self.static_tags}
@@ -3892,16 +3907,10 @@ def _match_default(
             if len(tgt) and isinstance(tgt[0], str):  # could be Global/Nonlocal.names
                 tgt = [s for s in tgt]
             else:
-                tgt = [f.a for f in tgt]  # convert to temporary list of AST nodes
+                tgt = [f.a if isinstance(f, fst.FST) else f for f in tgt]  # convert to temporary list of AST nodes
 
         if not isinstance(tgt, list):
-            # if moptions['list_check']:
-            #     raise MatchError('list can never match a non-list field')
-
             return None
-
-        # if moptions['list_check'] is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
-        #     moptions = dict(moptions, list_check=True)
 
         # this is the list field matching where wildcards and quantifier patterns are handled
 
@@ -3993,8 +4002,20 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any], rtags: _Run
         if src != pat:  # match source against exact string
             return None
 
-    # elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
-    #     raise MatchError('str can never match a list field')
+
+    # TODO: fstview
+
+
+    # elif isinstance(tgt, fstview):
+    #     f = tgt.copy()
+
+    #     if not (loc := f.loc):
+    #         src = unparse(f.a)
+    #     else:
+    #         src = f._get_src(*loc)
+
+    #     if src != pat:  # match source against exact string
+    #         return None
 
     else:
         return None
@@ -4030,9 +4051,6 @@ def _match_primitive(
             return None
 
     elif tgt != pat:
-        # if issubclass(tgt_cls, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError(f'{pat_cls.__qualname__} can never match a list field')
-
         return None
 
     return _EMPTY_DICT
@@ -4042,8 +4060,6 @@ def _match_node(
     tgt: _Targets,
     moptions: Mapping[str, Any],
     rtags: _RunningTags,
-    # *,
-    # allow_reset_list_check: bool = True,
 ) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
 
@@ -4051,13 +4067,7 @@ def _match_node(
     types = pat._types if is_mpat else pat.__class__
 
     if not isinstance(tgt, types):
-        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
-
         return None
-
-    # if moptions['list_check'] is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
-    #     moptions = dict(moptions, list_check=True)
 
     tagss = rtags.new()
 
@@ -4092,9 +4102,6 @@ def _match_node_Constant(
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
 
     if not isinstance(tgt, Constant):
-        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
-
         return None
 
     tagss = rtags.new()
@@ -4123,29 +4130,9 @@ def _match_node_expr_context(
     `None` must also match one of these successfully for py < 3.13."""
 
     if not isinstance(tgt, expr_context) or (moptions['ctx'] and tgt.__class__ is not pat.__class__):
-        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
-
         return None
 
     return _EMPTY_DICT
-
-# def _match_node_arbitrary_fields(
-#     pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
-# ) -> Mapping[str, Any] | None:
-#     """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches.
-
-#     Normally a list vs. non-list match is an error as that indicates the user got confused with their pattern. Arbitrary
-#     field check patterns can span nodes which have list vs. non-list definitions for fields so in this case the error
-#     checking is turned off and rather a mismatch is treated as just a failed match. The error checking is turned back on
-#     after the first level of child nodes where a match is actually attempted between things that could be list vs.
-#     non-list.
-#     """
-
-#     return _match_node(pat, tgt, moptions, rtags)
-#     # return _match_node(pat, tgt, {**moptions, 'list_check': False}, rtags, allow_reset_list_check=False)
-
-_match_node_arbitrary_fields = _match_node
 
 def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
@@ -4154,9 +4141,6 @@ def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _R
         pat = pat._types
 
     if not isinstance(tgt, pat):
-        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
-
         return None
 
     return _EMPTY_DICT
@@ -4183,12 +4167,13 @@ def _match_re_Pattern(
         if not pat.match(src):  # match source against pattern
             return None
 
+
+    # TODO: fstview
+
+
     elif isinstance(tgt, bytes):
         if not isinstance(pat.pattern, bytes) or not pat.match(tgt):
             return None
-
-    # elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
-    #     raise MatchError('re.Pattern can never match a list field')
 
     else:
         return None
@@ -4206,9 +4191,6 @@ def _match_None(
     pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
 ) -> Mapping[str, Any] | None:
     if tgt is not None:
-        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        #     raise MatchError('None can never match a list field')
-
         return None
 
     return _EMPTY_DICT
@@ -4218,7 +4200,7 @@ _MATCH_FUNCS = {
     MNOT:                MNOT._match,
     MOR:                 MOR._match,
     MAND:                MAND._match,
-    MANY:                _match_node_arbitrary_fields,
+    MANY:                _match_node,  # _match_node_arbitrary_fields,
     MRE:                 MRE._match,
     MCB:                 MCB._match,
     MTAG:                MTAG._match,
@@ -4365,7 +4347,7 @@ _MATCH_FUNCS = {
     _aliases:            _match_node,
     _withitems:          _match_node,
     _type_params:        _match_node,
-    MAST:                _match_node_arbitrary_fields,
+    MAST:                _match_node,  # _match_node_arbitrary_fields,
     MAdd:                _match_node,
     MAnd:                _match_node,
     MAnnAssign:          _match_node,
@@ -4471,27 +4453,27 @@ _MATCH_FUNCS = {
     Mboolop:             _match_node,
     Mcmpop:              _match_node,
     Mcomprehension:      _match_node,
-    Mexcepthandler:      _match_node_arbitrary_fields,
-    Mexpr:               _match_node_arbitrary_fields,
-    Mexpr_context:       _match_node_arbitrary_fields,
+    Mexcepthandler:      _match_node,  # _match_node_arbitrary_fields,
+    Mexpr:               _match_node,  # _match_node_arbitrary_fields,
+    Mexpr_context:       _match_node,  # _match_node_arbitrary_fields,
     Mkeyword:            _match_node,
     Mmatch_case:         _match_node,
-    Mmod:                _match_node_arbitrary_fields,
+    Mmod:                _match_node,  # _match_node_arbitrary_fields,
     Moperator:           _match_node,
-    Mpattern:            _match_node_arbitrary_fields,
-    Mstmt:               _match_node_arbitrary_fields,
-    Mtype_ignore:        _match_node_arbitrary_fields,
+    Mpattern:            _match_node,  # _match_node_arbitrary_fields,
+    Mstmt:               _match_node,  # _match_node_arbitrary_fields,
+    Mtype_ignore:        _match_node,  # _match_node_arbitrary_fields,
     Munaryop:            _match_node,
     Mwithitem:           _match_node,
     MTryStar:            _match_node,
     MTypeAlias:          _match_node,
-    Mtype_param:         _match_node_arbitrary_fields,
+    Mtype_param:         _match_node,  # _match_node_arbitrary_fields,
     MTypeVar:            _match_node,
     MParamSpec:          _match_node,
     MTypeVarTuple:       _match_node,
     MTemplateStr:        _match_node,
     MInterpolation:      _match_node,
-    M_slice:             _match_node_arbitrary_fields,
+    M_slice:             _match_node,  # _match_node_arbitrary_fields,
     M_ExceptHandlers:    _match_node,
     M_match_cases:       _match_node,
     M_Assign_targets:    _match_node,

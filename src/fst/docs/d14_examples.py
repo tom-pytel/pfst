@@ -202,36 +202,26 @@ class cls:
 
 You can do the same thing using structural pattern substitution. You probably wouldn't do this if you want the best
 results as it doesn't give you nearly as much control as doing your own substitution, but for simple and quick-and-dirty
-modifications it exists. There are three levels of structural pattern usage between the previous example and this one:
+modifications it exists. There are two other levels of structural pattern usage between the previous example and this
+one:
 
 - Normal `walk()` and `.match(PATTERN)` on each node to check if is the one you want.
 - Iterating `.search(PATTERN)` to get just matching nodes.
-- `.sub(PATTERN, repl=user_function)` to get a callback for each matching node.
 
 Note we are using the source from the previous example.
 
-```py
 
+```py
 >>> from fst.match import *
 
->>> PATTERN = MCall(
-...    func=M(func=MAttribute('logger', 'info')),
-...    keywords=MNOT([..., Mkeyword('correlation_id'), ...]),
-...    _args=M(all_args=...),
-... )
-
->>> def inject_logging_metadata_using_sub(src: str) -> str:
-...     fst = FST(src, 'exec')
-...
-...     fst.sub(PATTERN, '__fst_func(__fst_all_args, correlation_id=CID)')
-...
-...     return fst.src
-```
-
-Processed:
-
-```py
->>> pprint(inject_logging_metadata_using_sub(src))
+>>> pprint(FST(src).sub(
+...     MCall(
+...        func=M(func=MAttribute('logger', 'info')),
+...        keywords=MNOT([..., Mkeyword('correlation_id'), ...]),
+...        _args=M(all_args=...),
+...     ),
+...     '__fst_func(__fst_all_args, correlation_id=CID)',
+... ).src)
 logger.info('Hello world...', correlation_id=CID)  # ok
 logger.info('Already have id', correlation_id=other_cid)  # ok
 logger.info(correlation_id=CID)  # yes, no logger message, too bad

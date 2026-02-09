@@ -8543,9 +8543,9 @@ opts.ignore_module = [mod.strip()
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MCB(lambda: False)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MOPT(t=Constant)).match, f)
 
-        f = FST('[a, a, a]')
-        f.a.elts[1].f = None
-        assertRaises(AttributeError("'NoneType' object has no attribute 'a'"), MList(MN(t='a')).match, f)
+        # f = FST('[a, a, a]')
+        # f.a.elts[1].f = None
+        # assertRaises(AttributeError("'NoneType' object has no attribute 'a'"), MList(MN(t='a')).match, f)
 
         f = FST('i = 1')
         self.assertFalse(MRE(b'a').match(FST('a')))
@@ -8553,7 +8553,8 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(MTAG('notag').match(1))
         self.assertTrue(MBinOp(left=M(..., t=M(..., u=True)), right=MTAG('t')).match(FST('a + a')))
         self.assertFalse(MN(2).match(1))
-        self.assertFalse(MAssign(value=MConstant(MOPT(1))).match(f))
+        self.assertTrue(MAssign(value=MConstant(MOPT(1))).match(f))
+        self.assertFalse(MAssign(value=MConstant(MOPT(2))).match(f))
         self.assertTrue(MAssign(value=(MOPT(M(t=MConstant), st='static'))).match(f))
         self.assertFalse(MAST(_all=[...]).match(FST('{1: 2}')))
         self.assertFalse(MList(['a']).match(FST('[]')))

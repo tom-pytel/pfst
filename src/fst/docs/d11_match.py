@@ -14,10 +14,6 @@ To be able to execute the examples, import this.
 special `M_Pattern` classes provided by `fst`, or just normal `AST` classes, though type checkers might complain about
 that usage.
 
-Apart from that, the other differences between using internal `M` patterns and actual `AST` for the patterns nodes is
-that for the `M` patterns you only specify the fields you need whereas for `AST` nodes you may have to explicitly
-provide fields you don't need as wildcards. Patterns also allow you to match virtual fields.
-
 Here is an example of a structural match to give you an idea, it will be explained below. This pattern will match any
 `logger.info()` call which has a `cid` keyword argument:
 
@@ -69,7 +65,7 @@ False
 
 You will note the use of the `Ellipsis` in the examples above. The `...` serves as a wildcard in pattern matching. It
 matches anything in place of an actual field value and serves as a zero-or-more `*`-style wildcard when used inside a
-list field, as shown above in the `keywords` field.
+list field, as shown in the `keywords` field.
 
 
 ## String and regex patterns
@@ -78,7 +74,7 @@ In the example above the `Attribute` node was created with a proper expected str
 a string parameter for the `value` field, which should normally be a node. The `fst` matcher allows strings (or regexes)
 in place of nodes and in this case it will attempt to match the string against the source code of the node.
 
-In case of an `FST` node this source is gotten directly from the stored source for the tree so a normal `str` has to
+In case of an `FST` node this source is gotten directly from the stored source from the tree. A normal `str` has to
 match exactly.
 
 >>> bool(MAssign(..., 'a + b').match(FST('v = a + b')))
@@ -87,7 +83,7 @@ True
 >>> bool(MAssign(..., 'a + b').match(FST('v = a+b')))
 False
 
-You can use a regex in this case.
+You can use a regex for more flexible matching.
 
 >>> bool(MAssign(..., re.compile(r'a\s*\+\s*b')).match(FST('v = a+b')))
 True
@@ -95,8 +91,9 @@ True
 >>> bool(MAssign(..., re.compile(r'a\s*\+\s*b')).match(FST('v = (a   + \nb)')))
 True
 
-In the case of an `FST` node, the source matched against is the location of the node **WITHOUT** any enclosing grouping
-parentheses. You can also match source against `AST` nodes, in which case they are internally unparsed for the check.
+In the case of an `FST` node, the source matched against comes from the location of the node **WITHOUT** any enclosing
+grouping parentheses. You can also match source against `AST` nodes, in which case they are internally unparsed for the
+check.
 
 >>> bool(MAssign(..., 'a + b').match(ast.parse('v = a+b').body[0]))
 True
@@ -105,7 +102,7 @@ The `a + b` with the spaces matches the `a+b` in the `AST` because when unparsed
 standard `AST` spacing.
 
 Strings and regexes can also be used for fields which are normally strings themselves (instead of nodes), in which case
-it they are not matched against source but rather against the actual values of the fields.
+it they are not matched against source but rather against the actual values of the field.
 
 >>> bool(MImportFrom(module='mod.submod').match(FST('from mod.submod import *')))
 True
@@ -169,7 +166,7 @@ True
 False
 
 If you wish to use the wildcard to match a `Constant.value` then either use the wildcard one level above if that is
-possible, or better just enclose it with the `M()` functional pattern.
+possible, or just enclose the value field with the `M()` functional pattern.
 
 >>> bool(MConstant(M(...)).match(FST('"string"', Constant)))
 True
@@ -231,8 +228,8 @@ Traceback (most recent call last):
 ...
 ValueError: invalid tag 'tags' shadows match class attribute
 
-One benefit is quick existence checking as nonexistent tags do not raise `AttributeError` but rather return a falsey
-object.
+Attribute tag access allows quick existence checking as nonexistent tags do not raise `AttributeError` but rather return
+a falsey object.
 
 >>> bool(m.nonexistent_tag)
 False
@@ -285,13 +282,21 @@ The `M()` pattern can be nested to any level and propagates successful match tag
 >>> MBinOp(M(left=...), ..., M(tag1=M(tag2=...))).match(FST('a + b'))
 <M_Match {'left': <Name 0,0..0,1>, 'tag2': <Name 0,4..0,5>, 'tag1': <Name 0,4..0,5>}>
 
+This pattern can go almost anywhere and tag nodes, primitives, `None` and even entire list fields.
+
+>>> MAST(names=M(l=[...])).match(FST('global a, b, c'))
+<M_Match {'l': <<Global ROOT 0,0..0,14>.names ['a', 'b', 'c']>}>
+
+Here it returned an `fstview` for the list because the node we used as an `FST`. In case of `AST` it just returns what
+is there.
+
+>>> MAST(names=M(l=[...])).match(ast.parse('global a, b, c').body[0])
+<M_Match {'l': ['a', 'b', 'c']}>
+
 
 ## `MNOT()` pattern
 
 This is similar to the `M()` pattern except that it succeeds and adds tags when the child does **NOT** match.
-
->>> MConstant(M(tag=1, static=True)).match(FST('1'))
-<M_Match {'tag': 1, 'static': True}>
 
 >>> print(MConstant(MNOT(tag=1, static=True)).match(FST('1')))
 None
@@ -299,12 +304,8 @@ None
 >>> MConstant(MNOT(tag=1, static=True)).match(FST('2'))
 <M_Match {'tag': 2, 'static': True}>
 
->>> print(MConstant(M(tag=1, static=True)).match(FST('2')))
-None
-
-This tag does not ever propagate any tags from below as it only succeeds when the child patterns fail, and fails if
-they succeed. So it can only ever propagate its own tags upwards when there are no tags from children due to failed
-match.
+This tag does not propagate any tags from below as it only succeeds when the child pattern fails, and fails if it
+succeeds. So it can only ever propagate its own tags upwards when there are no tags from children due to failed match.
 
 
 ## `MOR()` and `MAND()` patterns
@@ -397,7 +398,7 @@ You can use `re.Pattern` directly but that doesn't allow the use of `re.search()
 >>> f.match(MRE(m=r'.*hidden.*'))
 <M_Match {'m': <re.Match object; span=(0, 15), match='some_hidden_gem'>}>
 
-But even that doesn't give you the position of the hidden gem.
+Using `search=True` you can narrow down the location of whatever you are looking for.
 
 >>> f.match(MRE(m=r'hidden', search=True))
 <M_Match {'m': <re.Match object; span=(5, 11), match='hidden'>}>
@@ -439,7 +440,8 @@ This node also allows matched target and static tags.
 >>> pat.match(FST('(x, y, z)'))
 <M_Match {'tgt': <Tuple ROOT 0,0..0,9>, 'static': True}>
 
-If you pass `tag_ret=True` then whatever is returned from the callback function is used for the match tag.
+If you pass `tag_ret=True` then whatever is returned from the callback function is used for the match tag (assuming it
+is a truthy value, otherwise the match is assumed to have failed).
 
 >>> pat = M(node=Name(MCB(upper=str.upper, tag_ret=True)))
 
@@ -447,6 +449,14 @@ If you pass `tag_ret=True` then whatever is returned from the callback function 
 
 >>> pat.match(FST('some_name'))
 <M_Match {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
+
+An explicit fail value can be provided in case you want to be able to tag falsey values directly, it is checked by
+equality.
+
+>>> MCB(tag=lambda f: False, tag_ret=True, fail_val=None).match(FST('a'))
+<M_Match {'tag': False}>
+
+>>> MCB(tag=lambda f: None, tag_ret=True, fail_val=None).match(FST('a'))
 
 The type of node passed to the callback depends on the type of tree that match is called on.
 
@@ -461,17 +471,245 @@ The type of node passed to the callback depends on the type of tree that match i
 
 ## `MTAG()` pattern
 
+This pattern allows you to match against tags that exist at the point that this pattern is reached. Mostly meant for
+matching against already matched nodes, but can also be used to match against arbitrary tag values as well as long as
+they are valid patterns.
+
+>>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
+<M_Match {'left': <Name 0,0..0,1>}>
+
+In the example above we match a `BinOp` which has the same node on the right as the left. It will fail if they are
+different.
+
+>>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + b'))
+
+The tag must already have been matched, not be in the future.
+
+>>> MBinOp(MTAG('right'), right=M(right='a')).match(FST('a + a'))
+
+As stated, the tag to match does not have to come from an actual previous match, it can be set explicitly.
+
+>>> pat = MBinOp(
+...    MOR(M('if_a', then='then_b'), M('if_x', then='then_y')),
+...    ...,
+...    MTAG('then'))
+
+>>> pat.match(FST('if_a + then_b'))
+<M_Match {'then': 'then_b'}>
+
+>>> pat.match(FST('if_a + then_y'))
+
+>>> pat.match(FST('if_x + then_y'))
+<M_Match {'then': 'then_y'}>
 
 
+## `MN()` quantifier pattern
+
+This is essentially a counted wildcard for use inside list fields to match a pattern between a minimum and maximum
+number of times.
+
+>>> MList([MN('a', 1, 2)]) .match(FST('[]'))
+
+>>> MList([MN('a', 1, 2)]) .match(FST('[a]'))
+<M_Match {}>
+
+>>> MList([MN('a', 1, 2)]) .match(FST('[a, a]'))
+<M_Match {}>
+
+>>> MList([MN('a', 1, 2)]) .match(FST('[a, a, a]'))
+
+The pattern above will only match 1 or 2 instances of `a`. It failed the last check because there were three `a`s and
+we did not account for that in the full pattern.
+
+>>> MList([MN('a', 1, 2), ...]) .match(FST('[a, a, a]'))
+<M_Match {}>
+
+Now we tag it to show that it only "consumed" two of the `a` instances.
+
+>>> MList([MN(t='a', min=1, max=2), ...]) .match(FST('[a, a, a]'))
+<M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+
+When a quantifier pattern is tagged then it returns a list of `M_Match` objects in that tag of all the nodes that were
+matched. If used with a tag like this then any tags from the children are made available in their individual match
+objects.
+
+>>> MList([MN(t=M(u=MRE('a|b')), min=1, max=2), ...]) .match(FST('[a, b, a]'))
+<M_Match {'t': [<M_Match {'u': <Name 0,1..0,2>}>, <M_Match {'u': <Name 0,4..0,5>}>]}>
+
+If the pattern is untagged however, the tags from all the children are collapsed and the latter matches override
+earlier tag values. All the tags are put into the parent match object and the matched nodes do not get their own
+individual match objects.
+
+>>> MList([MN(M(u=MRE('a|b')), min=1, max=2), ...]) .match(FST('[a, b, a]'))
+<M_Match {'u': <Name 0,4..0,5>}>
+
+One case to look out for is when using a quantifier with a minimum of 0. This can always match something since it can
+match nonexistent elements.
+
+>>> MList([MN(t='a', min=0, max=2), ...]) .match(FST('[b, b, b]'))
+<M_Match {'t': []}>
+
+There was a successful match against 0 elements in this case.
+
+And lastly, these must normally only be used inside list fields, but as a convenience a single pattern can be used as
+a list field without the `[]` and it acts as if it is the only pattern in the list field.
+
+>>> MList([MN(t='a', min=1, max=2)]) .match(FST('[a]'))
+<M_Match {'t': [<M_Match {}>]}>
+
+>>> MList(MN(t='a', min=1, max=2)) .match(FST('[a]'))
+<M_Match {'t': [<M_Match {}>]}>
 
 
+## `MSTAR()`, `MPLUS()`, `MMIN()` and `MMAX()` quantifier patterns
+
+These are just convenience classes subclassed off of `MN` which provide predefined `min` and / or `max` values. `MSTAR`
+is match zero or more.
+
+>>> bool(MList([MSTAR('a')]) .match(FST('[]')))
+True
+
+>>> bool(MList([MSTAR('a')]) .match(FST('[a]')))
+True
+
+>>> bool(MList([MSTAR('a')]) .match(FST('[a, a]')))
+True
+
+>>> bool(MList([MSTAR('a')]) .match(FST('[a, a, a]')))
+True
+
+`MPLUS` is one or more.
+
+>>> bool(MList([MPLUS('a')]) .match(FST('[]')))
+False
+
+>>> bool(MList([MPLUS('a')]) .match(FST('[a]')))
+True
+
+>>> bool(MList([MPLUS('a')]) .match(FST('[a, a]')))
+True
+
+>>> bool(MList([MPLUS('a')]) .match(FST('[a, a, a]')))
+True
+
+`MMIN` is expectedly minimum.
+
+>>> bool(MList([MMIN('a', 2)]) .match(FST('[]')))
+False
+
+>>> bool(MList([MMIN('a', 2)]) .match(FST('[a]')))
+False
+
+>>> bool(MList([MMIN('a', 2)]) .match(FST('[a, a]')))
+True
+
+>>> bool(MList([MMIN('a', 2)]) .match(FST('[a, a, a]')))
+True
+
+And `MMAX` is maximum.
+
+>>> bool(MList([MMAX('a', 2)]) .match(FST('[]')))
+True
+
+>>> bool(MList([MMAX('a', 2)]) .match(FST('[a]')))
+True
+
+>>> bool(MList([MMAX('a', 2)]) .match(FST('[a, a]')))
+True
+
+>>> bool(MList([MMAX('a', 2)]) .match(FST('[a, a, a]')))
+False
+
+>>> bool(MList([MMAX('a', 2), ...]) .match(FST('[a, a, a]')))
+True
 
 
+## `MOPT()` quantifier pattern
 
+This is also subclassed off of `MN()` and is also a quantifier pattern for inside of list fields, in this case matching
+zero or one times.
 
+>>> MList(MOPT('a')) .match(FST('[]'))
+<M_Match {}>
+
+>>> MList(MOPT('a')) .match(FST('[a]'))
+<M_Match {}>
+
+>>> MList(MOPT('a')) .match(FST('[b]'))
+
+>>> MList([MOPT('a')]) .match(FST('[a]'))
+<M_Match {}>
+
+>>> MList([MOPT('a')]) .match(FST('[b]'))
+
+>>> MList([MOPT('a')]) .match(FST('[a, a]'))
+
+>>> MList([MOPT('a'), ...]) .match(FST('[a, a]'))
+<M_Match {}>
+
+Unlike the other patterns however this one can be used outside of list fields to optionally match single-element fields
+which may or may not be present. That is, both a normal value which matches the pattern and a `None` value are
+considered a successful match. A non-`None` value which does NOT match the pattern is considered a failure.
+
+>>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
+<M_Match {}>
+
+>>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
+<M_Match {}>
+
+>>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
 
 
 ## `AST` as pattern or target
+
+`AST` trees can be matched against patterns or they can be used as patterns themselves. In fact, this is the exact
+mechanism which is used by the `MTAG()` pattern to compare previously matched parts of the tree.
+
+>>> FST('a = b ; call()').match(ast.parse('a = b ; call()'))
+<M_Match {}>
+
+It is not any less efficient to use `AST` as a pattern vs. using the `MAST` pattern classes. The differences are:
+
+- `AST` nodes may need all required fields to be specified whereas for the pattern classes all fields are optional. The
+    way handle this if using `AST` is just to specify those fields as `...` wildcards.
+
+>>> FST('a + b').match(MBinOp(op='+'))
+<M_Match {}>
+
+vs.
+
+>>> FST('a + b').match(BinOp(..., '+', ...))
+<M_Match {}>
+
+- The `MAST` patterns allow you to match against virtual fields like `_all` or `_args`, `AST` nodes do not.
+
+>>> FST('call(a, **b)').match(MCall(_args=['a', '**b']))
+<M_Match {}>
+
+vs.
+
+>>> FST('call(a, **b)').match(Call(..., args=['a'], keywords=['**b']))
+<M_Match {}>
+
+- And finally, your type checker will complain if you use any patterns, values or wildcards in `AST` fields which are not
+    expected to be there.
+
+```
+$ mypy -c 'from ast import *; Call('f', args=["a", "*b"], keywords=["c=d", "**e"])'
+error: Name "f" is not defined  [name-defined]
+error: List item 0 has incompatible type "str"; expected "expr"  [list-item]
+error: List item 1 has incompatible type "str"; expected "expr"  [list-item]
+error: List item 0 has incompatible type "str"; expected "keyword"  [list-item]
+error: List item 1 has incompatible type "str"; expected "keyword"  [list-item]
+```
+
+
+# Search
+
+# Substitute
+
+
+
 
 
 """
