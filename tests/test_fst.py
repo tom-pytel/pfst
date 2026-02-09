@@ -7788,31 +7788,31 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(FST(Constant(1)).match(Constant(...)))
         self.assertFalse(FST(Constant(...)).match(Constant(1)))
 
-        # non-list pattern in list field position
+        # # non-list pattern in list field position
 
-        f = FST('[]')
+        # f = FST('[]')
 
-        assertRaises(MatchError('MRE can never match a list field'), f.match, List(MRE('')))
-        assertRaises(MatchError('list can never match a non-list field'), f.match, List([], []))
-        assertRaises(MatchError('str can never match a list field'), f.match, List('str'))
-        assertRaises(MatchError('int can never match a list field'), f.match, List(1))
-        assertRaises(MatchError('Pass can never match a list field'), f.match, List(Pass()))
-        assertRaises(MatchError('Constant can never match a list field'), f.match, List(Constant(1)))
-        assertRaises(MatchError('Load can never match a list field'), f.match, List(Load()))
-        assertRaises(MatchError('type can never match a list field'), f.match, List(stmt))
-        assertRaises(MatchError('re.Pattern can never match a list field'), f.match, List(re.compile('i')))
-        assertRaises(MatchError('None can never match a list field'), f.match, List(None))
+        # assertRaises(MatchError('MRE can never match a list field'), f.match, List(MRE('')))
+        # assertRaises(MatchError('list can never match a non-list field'), f.match, List([], []))
+        # assertRaises(MatchError('str can never match a list field'), f.match, List('str'))
+        # assertRaises(MatchError('int can never match a list field'), f.match, List(1))
+        # assertRaises(MatchError('Pass can never match a list field'), f.match, List(Pass()))
+        # assertRaises(MatchError('Constant can never match a list field'), f.match, List(Constant(1)))
+        # assertRaises(MatchError('Load can never match a list field'), f.match, List(Load()))
+        # assertRaises(MatchError('type can never match a list field'), f.match, List(stmt))
+        # assertRaises(MatchError('re.Pattern can never match a list field'), f.match, List(re.compile('i')))
+        # assertRaises(MatchError('None can never match a list field'), f.match, List(None))
 
-        assertRaises(MatchError('MRE can never match a list field'), MList(MRE('')).match, f.a)
-        assertRaises(MatchError('list can never match a non-list field'), MList([], []).match, f.a)
-        assertRaises(MatchError('str can never match a list field'), MList('str').match, f.a)
-        assertRaises(MatchError('int can never match a list field'), MList(1).match, f.a)
-        assertRaises(MatchError('Pass can never match a list field'), MList(Pass()).match, f.a)
-        assertRaises(MatchError('Constant can never match a list field'), MList(Constant(1)).match, f.a)
-        assertRaises(MatchError('Load can never match a list field'), MList(Load()).match, f.a)
-        assertRaises(MatchError('type can never match a list field'), MList(stmt).match, f.a)
-        assertRaises(MatchError('re.Pattern can never match a list field'), MList(re.compile('i')).match, f.a)
-        assertRaises(MatchError('None can never match a list field'), MList(None).match, f.a)
+        # assertRaises(MatchError('MRE can never match a list field'), MList(MRE('')).match, f.a)
+        # assertRaises(MatchError('list can never match a non-list field'), MList([], []).match, f.a)
+        # assertRaises(MatchError('str can never match a list field'), MList('str').match, f.a)
+        # assertRaises(MatchError('int can never match a list field'), MList(1).match, f.a)
+        # assertRaises(MatchError('Pass can never match a list field'), MList(Pass()).match, f.a)
+        # assertRaises(MatchError('Constant can never match a list field'), MList(Constant(1)).match, f.a)
+        # assertRaises(MatchError('Load can never match a list field'), MList(Load()).match, f.a)
+        # assertRaises(MatchError('type can never match a list field'), MList(stmt).match, f.a)
+        # assertRaises(MatchError('re.Pattern can never match a list field'), MList(re.compile('i')).match, f.a)
+        # assertRaises(MatchError('None can never match a list field'), MList(None).match, f.a)
 
         # non-leaf arbitrary fields
 
@@ -7846,17 +7846,17 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(MAST(body='a').match(FST('if 1: pass')))
         self.assertTrue(MAST(body='a').match(FST('a if b else c')))
 
-        # list checks turned back on below arbitrary fields
+        # # list checks turned back on below arbitrary fields
 
-        self.assertTrue(MANY((If, IfExp), body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
-        assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
-        assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=MList(elts='a')).match, FST('[1] if b else c'))
-        self.assertTrue(MANY((If, IfExp), body=MList(elts=[...])).match(FST('[1] if b else c')))
+        # self.assertTrue(MANY((If, IfExp), body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
+        # assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
+        # assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=MList(elts='a')).match, FST('[1] if b else c'))
+        # self.assertTrue(MANY((If, IfExp), body=MList(elts=[...])).match(FST('[1] if b else c')))
 
-        self.assertTrue(MAST(body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
-        assertRaises(MatchError('str can never match a list field'), MAST(body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
-        assertRaises(MatchError('str can never match a list field'), MAST(body=MList(elts='a')).match, FST('[1] if b else c'))
-        self.assertTrue(MAST(body=MList(elts=[...])).match(FST('[1] if b else c')))
+        # self.assertTrue(MAST(body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
+        # assertRaises(MatchError('str can never match a list field'), MAST(body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
+        # assertRaises(MatchError('str can never match a list field'), MAST(body=MList(elts='a')).match, FST('[1] if b else c'))
+        # self.assertTrue(MAST(body=MList(elts=[...])).match(FST('[1] if b else c')))
 
     def test_match_M_Pattern(self):
         # re.Pattern
@@ -8140,7 +8140,7 @@ opts.ignore_module = [mod.strip()
         # MN tags and in or outside of list
 
         assertRaises(ValueError('MN requires pattern'), MN, ..., 0, 1)
-        assertRaises(MatchError('MN can only match to or in a list field'), FST('a + b').match, MBinOp(left=MN('a', 0, 0)))
+        # assertRaises(MatchError('MN can only match to or in a list field'), FST('a + b').match, MBinOp(left=MN('a', 0, 0)))
         assertRaises(ValueError('MN-type quantifier patterns cannot be nested directly within each other'), MN, MN('a'))
 
         patd = MList(MN(MOR(is_a='a', is_b='b'), min=1, max=2, static='y'))

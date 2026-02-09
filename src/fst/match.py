@@ -374,7 +374,7 @@ def _rpr(o: object) -> str:
 
 
 def _new_moptions(is_FST: bool, ctx: bool) -> dict[str, Any]:
-    return dict(is_FST=is_FST, ctx=ctx, list_check=True)
+    return dict(is_FST=is_FST, ctx=ctx)
 
 
 class _NoTag:
@@ -3312,8 +3312,8 @@ class MRE(M_Pattern):
             if not isinstance(re_pat.pattern, bytes) or not (m := func(tgt)):
                 return None
 
-        elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
-            raise MatchError('MRE can never match a list field')
+        # elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError('MRE can never match a list field')
 
         else:
             return None
@@ -3583,8 +3583,8 @@ class MN(M):
     @staticmethod
     def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if not isinstance(tgt, (list, fstview)):
-            if moptions['list_check']:
-                raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
+            # if moptions['list_check']:
+            #     raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
 
             return None
 
@@ -3654,8 +3654,8 @@ class MOPT(MN):
             return self.static_tags
 
         if not isinstance(tgt, AST):
-            if moptions['list_check']:
-                raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
+            # if moptions['list_check']:
+            #     raise MatchError(f'{self.__class__.__qualname__} can only match to or in a list field')
 
             return None
 
@@ -3901,13 +3901,13 @@ def _match_default(
                 tgt = [f.a for f in tgt]  # convert to temporary list of AST nodes
 
         if not isinstance(tgt, list):
-            if moptions['list_check']:
-                raise MatchError('list can never match a non-list field')
+            # if moptions['list_check']:
+            #     raise MatchError('list can never match a non-list field')
 
             return None
 
-        if moptions['list_check'] is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
-            moptions = dict(moptions, list_check=True)
+        # if moptions['list_check'] is False:  # turn list vs. non-list checking back on because it was off due to arbitrary field
+        #     moptions = dict(moptions, list_check=True)
 
         # this is the list field matching where wildcards and quantifier patterns are handled
 
@@ -3999,8 +3999,8 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any], rtags: _Run
         if src != pat:  # match source against exact string
             return None
 
-    elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        raise MatchError('str can never match a list field')
+    # elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
+    #     raise MatchError('str can never match a list field')
 
     else:
         return None
@@ -4036,8 +4036,8 @@ def _match_primitive(
             return None
 
     elif tgt != pat:
-        if issubclass(tgt_cls, (list, fstview)) and moptions['list_check']:
-            raise MatchError(f'{pat_cls.__qualname__} can never match a list field')
+        # if issubclass(tgt_cls, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError(f'{pat_cls.__qualname__} can never match a list field')
 
         return None
 
@@ -4048,8 +4048,8 @@ def _match_node(
     tgt: _Targets,
     moptions: Mapping[str, Any],
     rtags: _RunningTags,
-    *,
-    allow_reset_list_check: bool = True,
+    # *,
+    # allow_reset_list_check: bool = True,
 ) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
 
@@ -4057,13 +4057,13 @@ def _match_node(
     types = pat._types if is_mpat else pat.__class__
 
     if not isinstance(tgt, types):
-        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
+        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
-    if moptions['list_check'] is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
-        moptions = dict(moptions, list_check=True)
+    # if moptions['list_check'] is False and allow_reset_list_check:  # turn list vs. non-list checking back on because it was off due to arbitrary field
+    #     moptions = dict(moptions, list_check=True)
 
     tagss = rtags.new()
 
@@ -4098,8 +4098,8 @@ def _match_node_Constant(
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
 
     if not isinstance(tgt, Constant):
-        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
+        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -4129,8 +4129,8 @@ def _match_node_expr_context(
     `None` must also match one of these successfully for py < 3.13."""
 
     if not isinstance(tgt, expr_context) or (moptions['ctx'] and tgt.__class__ is not pat.__class__):
-        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
+        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -4148,7 +4148,8 @@ def _match_node_arbitrary_fields(
     non-list.
     """
 
-    return _match_node(pat, tgt, {**moptions, 'list_check': False}, rtags, allow_reset_list_check=False)
+    return _match_node(pat, tgt, moptions, rtags)
+    # return _match_node(pat, tgt, {**moptions, 'list_check': False}, rtags, allow_reset_list_check=False)
 
 def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
@@ -4157,8 +4158,8 @@ def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _R
         pat = pat._types
 
     if not isinstance(tgt, pat):
-        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-            raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
+        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError(f'{pat.__class__.__qualname__} can never match a list field')
 
         return None
 
@@ -4190,8 +4191,8 @@ def _match_re_Pattern(
         if not isinstance(pat.pattern, bytes) or not pat.match(tgt):
             return None
 
-    elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
-        raise MatchError('re.Pattern can never match a list field')
+    # elif isinstance(tgt, (list, fstview)) and moptions['list_check']:
+    #     raise MatchError('re.Pattern can never match a list field')
 
     else:
         return None
@@ -4209,8 +4210,8 @@ def _match_None(
     pat: NoneType, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
 ) -> Mapping[str, Any] | None:
     if tgt is not None:
-        if isinstance(tgt, (list, fstview)) and moptions['list_check']:
-            raise MatchError('None can never match a list field')
+        # if isinstance(tgt, (list, fstview)) and moptions['list_check']:
+        #     raise MatchError('None can never match a list field')
 
         return None
 
