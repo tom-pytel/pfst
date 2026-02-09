@@ -7637,7 +7637,45 @@ opts.ignore_module = [mod.strip()
         self.assertEqual('l', g[4].src)
         self.assertEqual('i\nj\nk\nh\nl', f.src)
 
-    def test_match_FST(self):
+    def test_match_M_Match(self):
+        # invalid tags
+
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), M, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MNOT, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MOR, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MAND, tags=...)
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MRE, tags='')
+        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MCB, tags=lambda x: False)
+
+        assertRaises(ValueError("invalid tag 'pattern' shadows match class attribute"), M, pattern=...)
+        assertRaises(ValueError("invalid tag 'matched' shadows match class attribute"), M, matched=...)
+        assertRaises(ValueError("invalid tag 'get' shadows match class attribute"), M, get=...)
+
+        for n in dir(M_Match):
+            assertRaises(ValueError(f"invalid tag {n!r} shadows match class attribute"), M, **{n: ...})
+
+        # MN
+
+        assertRaises(ValueError('MN minimum cannot be negative'), MN, None, -1)
+        assertRaises(ValueError('MN maximum cannot be negative'), MN, None, 0, -1)
+        assertRaises(ValueError('MN maximum cannot be lower than minimum'), MN, None, 2, 1)
+
+        # match object attribute access
+
+        self.assertIs(FST('a').match(M(Name('a'), tag=True)).tag, True)
+        self.assertIs(FST('a').match(M(Name('a'), tag=True)).noexist, NoTag)
+        self.assertIs(FST('a').match(M(Name('a'), __tag__=True)).__tag__, True)
+        self.assertRaises(AttributeError, lambda: FST('a').match(M(Name('a'), __tag__=True)).__noexist__)
+
+        # get FST node
+
+        f = FST('a = b')
+        pat = MAssign(value='b')
+        self.assertIs(f.match(pat).matched, f)
+        self.assertIs(pat.match(f.a).matched, f.a)
+        self.assertIs(pat.match(a := Assign(Name('a'), Name('b'))).matched, a)
+
+    def test_match_basic(self):
         self.assertTrue(FST(Load()).match, ...)
 
         # expr_context
@@ -7796,6 +7834,30 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(FST('if 1:\n a\n b').match(pat))
         self.assertFalse(FST('a if b else c').match(pat))  # this is not a list field, ensure non-match instead of error
 
+        # arbitrary fields ignore list check
+
+        self.assertTrue(MANY((If, IfExp), body=[...]).match(FST('if 1: pass')))
+        self.assertFalse(MANY((If, IfExp), body=[...]).match(FST('a if b else c')))
+        self.assertFalse(MANY((If, IfExp), body='a').match(FST('if 1: pass')))
+        self.assertTrue(MANY((If, IfExp), body='a').match(FST('a if b else c')))
+
+        self.assertTrue(MAST(body=[...]).match(FST('if 1: pass')))
+        self.assertFalse(MAST(body=[...]).match(FST('a if b else c')))
+        self.assertFalse(MAST(body='a').match(FST('if 1: pass')))
+        self.assertTrue(MAST(body='a').match(FST('a if b else c')))
+
+        # list checks turned back on below arbitrary fields
+
+        self.assertTrue(MANY((If, IfExp), body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
+        assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
+        assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=MList(elts='a')).match, FST('[1] if b else c'))
+        self.assertTrue(MANY((If, IfExp), body=MList(elts=[...])).match(FST('[1] if b else c')))
+
+        self.assertTrue(MAST(body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
+        assertRaises(MatchError('str can never match a list field'), MAST(body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
+        assertRaises(MatchError('str can never match a list field'), MAST(body=MList(elts='a')).match, FST('[1] if b else c'))
+        self.assertTrue(MAST(body=MList(elts=[...])).match(FST('[1] if b else c')))
+
     def test_match_M_Pattern(self):
         # re.Pattern
 
@@ -7917,30 +7979,6 @@ opts.ignore_module = [mod.strip()
         assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
 
     def test_match_M(self):
-        # arbitrary fields ignore list check
-
-        self.assertTrue(MANY((If, IfExp), body=[...]).match(FST('if 1: pass')))
-        self.assertFalse(MANY((If, IfExp), body=[...]).match(FST('a if b else c')))
-        self.assertFalse(MANY((If, IfExp), body='a').match(FST('if 1: pass')))
-        self.assertTrue(MANY((If, IfExp), body='a').match(FST('a if b else c')))
-
-        self.assertTrue(MAST(body=[...]).match(FST('if 1: pass')))
-        self.assertFalse(MAST(body=[...]).match(FST('a if b else c')))
-        self.assertFalse(MAST(body='a').match(FST('if 1: pass')))
-        self.assertTrue(MAST(body='a').match(FST('a if b else c')))
-
-        # list checks turned back on below arbitrary fields
-
-        self.assertTrue(MANY((If, IfExp), body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
-        assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
-        assertRaises(MatchError('str can never match a list field'), MANY((If, IfExp), body=MList(elts='a')).match, FST('[1] if b else c'))
-        self.assertTrue(MANY((If, IfExp), body=MList(elts=[...])).match(FST('[1] if b else c')))
-
-        self.assertTrue(MAST(body=[MIf(body=[...])]).match(FST('if 1:\n if 2: pass')))
-        assertRaises(MatchError('str can never match a list field'), MAST(body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
-        assertRaises(MatchError('str can never match a list field'), MAST(body=MList(elts='a')).match, FST('[1] if b else c'))
-        self.assertTrue(MAST(body=MList(elts=[...])).match(FST('[1] if b else c')))
-
         # M
 
         assertRaises(ValueError('M requires pattern'), M)
@@ -8086,15 +8124,15 @@ opts.ignore_module = [mod.strip()
         self.assertEqual({}, FST('x').match(pat).tags)
         self.assertFalse(FST('y').match(pat))
 
-        pat = MCB(tag=lambda a: a.id == 'x' and a, tag_call_ret=True)
+        pat = MCB(tag=lambda a: a.id == 'x' and a, tag_ret=True)
         self.assertEqual({'tag': (f := FST('x')).a}, pat.match(f.a).tags)  # pat.match() because there is no match() on AST
         self.assertFalse(FST('y').match(pat))
 
-        pat = MCB(tag=lambda f: f.a.id == 'x' and f.a, tag_call_ret=True)  # make sure AST is preserved as a tag in an FST call
+        pat = MCB(tag=lambda f: f.a.id == 'x' and f.a, tag_ret=True)  # make sure AST is preserved as a tag in an FST call
         self.assertEqual({'tag': (f := FST('x')).a}, f.match(pat).tags)
         self.assertFalse(FST('y').match(pat))
 
-        pat = MCB(tag=lambda f: f.a.id == 'x' and f, tag_call_ret=True)
+        pat = MCB(tag=lambda f: f.a.id == 'x' and f, tag_ret=True)
         self.assertEqual({'tag': (f := FST('x'))}, f.match(pat).tags)
         self.assertFalse(FST('y').match(pat))
 
@@ -8213,66 +8251,270 @@ opts.ignore_module = [mod.strip()
         self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,7..0,8>}>]}", str(FST('[a, b, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=1), ..., 'b', ..., MN(u=M(is_a2='a'), min=0, max=1), ...])).tags))
         self.assertEqual("{'t': [<M_Match {'is_a1': <Name 0,1..0,2>}>], 'u': [<M_Match {'is_a2': <Name 0,7..0,8>}>]}", str(FST('[a, b, a]').match(List([..., MN(t=M(is_a1='a'), min=0, max=2), ..., 'b', ..., MN(u=M(is_a2='a'), min=0, max=2), ...])).tags))
 
-        # MNOPT
+        # MOPT
 
-        self.assertEqual("<M_Match {}>", str(MFunctionDef(returns=MNOPT('int')).match(FST('def f(): pass'))))
-        self.assertEqual("<M_Match {}>", str(MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> int: pass'))))
-        self.assertEqual("None", str(MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> str: pass'))))
-        self.assertEqual("<M_Match {'t': []}>", str(MFunctionDef(returns=MNOPT(t='int')).match(FST('def f(): pass'))))
-        self.assertEqual("<M_Match {'t': [<M_Match {}>]}>", str(MFunctionDef(returns=MNOPT(t='int')).match(FST('def f() -> int: pass'))))
-        self.assertEqual("<M_Match {'t': [<M_Match {'m': <Name 0,11..0,14>}>]}>", str(MFunctionDef(returns=MNOPT(t=M(m='int'))).match(FST('def f() -> int: pass'))))
+        self.assertEqual("<M_Match {}>", str(MFunctionDef(returns=MOPT('int')).match(FST('def f(): pass'))))
+        self.assertEqual("<M_Match {}>", str(MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))))
+        self.assertEqual("None", str(MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))))
+        self.assertEqual("<M_Match {'t': []}>", str(MFunctionDef(returns=MOPT(t='int')).match(FST('def f(): pass'))))
+        self.assertEqual("<M_Match {'t': [<M_Match {}>]}>", str(MFunctionDef(returns=MOPT(t='int')).match(FST('def f() -> int: pass'))))
+        self.assertEqual("<M_Match {'t': [<M_Match {'m': <Name 0,11..0,14>}>]}>", str(MFunctionDef(returns=MOPT(t=M(m='int'))).match(FST('def f() -> int: pass'))))
 
-        p = MFunctionDef(returns=MNOPT(t='int'))
+        p = MFunctionDef(returns=MOPT(t='int'))
         f = FST('def f() -> int: pass')
         m = p.match(f)
         self.assertIs(m.t[0].pattern, p.returns.pat)
         self.assertIs(m.t[0].matched, f.returns)
 
-        p = MFunctionDef(returns=MNOPT(t=M(m='int')))
+        p = MFunctionDef(returns=MOPT(t=M(m='int')))
         f = FST('def f() -> int: pass')
         m = p.match(f)
         self.assertIs(m.t[0].pattern, p.returns.pat)
         self.assertIs(m.t[0].matched, f.returns)
         self.assertIs(m.t[0].m, f.returns)
 
-    def test_match_M_Match(self):
-        # invalid tags
+        # MN with MANY
 
-        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), M, tags=...)
-        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MNOT, tags=...)
-        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MOR, tags=...)
-        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MAND, tags=...)
-        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MRE, tags='')
-        assertRaises(ValueError("invalid tag 'tags' shadows match class attribute"), MCB, tags=lambda x: False)
+        m = FST('[1, (b,), (x,), [y], {z}, {b}, -1]').match(MList([..., MN(t=MANY((Tuple, List, Set), elts=[MOR('x', 'y', 'z')]), min=1), ...]))
+        self.assertEqual("['(x,)', '[y]', '{z}']", str([mm.matched.src for mm in m.t]))
 
-        assertRaises(ValueError("invalid tag 'pattern' shadows match class attribute"), M, pattern=...)
-        assertRaises(ValueError("invalid tag 'matched' shadows match class attribute"), M, matched=...)
-        assertRaises(ValueError("invalid tag 'NoTag' shadows match class attribute"), M, NoTag=...)
-        assertRaises(ValueError("invalid tag 'get' shadows match class attribute"), M, get=...)
+        # MSTAR with MRE
 
-        for n in dir(M_Match):
-            assertRaises(ValueError(f"invalid tag {n!r} shadows match class attribute"), M, **{n: ...})
+        f = FST('nonlocal abc, bcd')
+        m = f.match(MNonlocal(MSTAR(MRE(r='.*'))))
+        self.assertEqual("<M_Match {'r': <re.Match object; span=(0, 3), match='bcd'>}>", str(m))
+        m = f.match(MNonlocal(MSTAR(t=MRE(r='.*'))))
+        self.assertEqual("<M_Match {'t': [<M_Match {'r': <re.Match object; span=(0, 3), match='abc'>}>, <M_Match {'r': <re.Match object; span=(0, 3), match='bcd'>}>]}>", str(m))
 
-        # MN
+    def test_match_AST(self):
+        pat = MConstant(M(t=...))
 
-        assertRaises(ValueError('MN minimum cannot be negative'), MN, None, -1)
-        assertRaises(ValueError('MN maximum cannot be negative'), MN, None, 0, -1)
-        assertRaises(ValueError('MN maximum cannot be lower than minimum'), MN, None, 2, 1)
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
 
-        # match object attribute access
+        pat = MAST(value=M(t=...))
 
-        self.assertIs(FST('a').match(M(Name('a'), tag=True)).tag, True)
-        self.assertIs(FST('a').match(M(Name('a'), tag=True)).noexist, M_Match.NoTag)
-        self.assertIs(FST('a').match(M(Name('a'), __tag__=True)).__tag__, True)
-        self.assertRaises(AttributeError, lambda: FST('a').match(M(Name('a'), __tag__=True)).__noexist__)
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
 
-        # get FST node
+        pat = Mexpr(value=M(t=...))
 
-        f = FST('a = b')
-        pat = MAssign(value='b')
-        self.assertIs(f.match(pat).matched, f)
-        self.assertIs(pat.match(f.a).matched, f.a)
-        self.assertIs(pat.match(a := Assign(Name('a'), Name('b'))).matched, a)
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
+
+        pat = Mexpr(value=MNOT(t='z'))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
+
+        pat = MConstant(MCB(t=lambda v: True))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
+
+        pat = MConstant(MCB(t=lambda v: v, tag_ret=True))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        # self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        # self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
+
+        pat = MConstant(MOR('z', t=...))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
+
+        pat = MConstant(MAND(u=..., t=MTAG('u')))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f.a).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f.a).t)
+
+        self.assertIs((f := FST('global abc')).a.names[0], MGlobal([M(t='abc')]).match(f.a).t)
+
+        self.assertIs((f := FST('global a, b')).a.names, MGlobal(M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('a, b')).a.elts, MTuple(M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('(a, b)')).a.elts, MTuple(M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('[a, b]')).a.elts, MList(M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('{a, b}')).a.elts, MSet(M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('a; b')).a.body, MModule(M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('a\nb')).a.body, MModule(M(t=['a', 'b'])).match(f.a).t)
+
+        self.assertIs((f := FST('global a, b')).a.names, MAST(names=M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('a, b')).a.elts, MAST(elts=M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('(a, b)')).a.elts, MAST(elts=M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('[a, b]')).a.elts, MAST(elts=M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('{a, b}')).a.elts, MAST(elts=M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('a; b')).a.body, MAST(body=M(t=['a', 'b'])).match(f.a).t)
+        self.assertIs((f := FST('a\nb')).a.body, MAST(body=M(t=['a', 'b'])).match(f.a).t)
+
+    def test_match_FST(self):
+        pat = MConstant(M(t=...))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = MAST(value=M(t=...))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = Mexpr(value=M(t=...))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = Mexpr(value=MNOT(t='z'))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = MConstant(MCB(t=lambda v: True))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = MConstant(MCB(t=lambda v: v, tag_ret=True))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        # self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        # self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = MConstant(MOR('z', t=...))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        pat = MConstant(MAND(u=..., t=MTAG('u')))
+
+        self.assertIs((f := FST('...')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234.0')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('1234j')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('b"1234"')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('True')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('False')).a.value, pat.match(f).t)
+        self.assertIs((f := FST('None')).a.value, pat.match(f).t)
+
+        self.assertIs((f := FST('global abc')).names[0], MGlobal([M(t='abc')]).match(f).t)
+
+        self.assertEqual(str((f := FST('global a, b')).names), str(MGlobal(M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('a, b')).elts), str(MTuple(M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('(a, b)')).elts), str(MTuple(M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('[a, b]')).elts), str(MList(M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('{a, b}')).elts), str(MSet(M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('a; b')).body), str(MModule(M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('a\nb')).body), str(MModule(M(t=['a', 'b'])).match(f).t))
+
+        self.assertEqual(str((f := FST('global a, b')).names), str(MAST(names=M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('a, b')).elts), str(MAST(elts=M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('(a, b)')).elts), str(MAST(elts=M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('[a, b]')).elts), str(MAST(elts=M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('{a, b}')).elts), str(MAST(elts=M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('a; b')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
+        self.assertEqual(str((f := FST('a\nb')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
 
     def test_sub(self):
         pass

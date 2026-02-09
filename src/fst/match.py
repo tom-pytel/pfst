@@ -178,6 +178,7 @@ from .view import fstview
 
 __all__ = [
     'MatchError',
+    'NoTag',
     'M_Match',
     'M_Pattern',
 
@@ -190,11 +191,11 @@ __all__ = [
     'MCB',
     'MTAG',
     'MN',
-    'MNOPT',
-    'MNSTAR',
-    'MNPLUS',
-    'MNMIN',
-    'MNMAX',
+    'MOPT',
+    'MSTAR',
+    'MPLUS',
+    'MMIN',
+    'MMAX',
 
     'MAST',
     'MAdd',
@@ -382,7 +383,7 @@ class _NoTag:
     __slots__ = ()
 
     def __new__(cls) -> M_Match._NoTag:
-        return M_Match.NoTag
+        return NoTag
 
     def __bool__(self) -> bool:
         return False
@@ -422,15 +423,16 @@ class MatchError(RuntimeError):
     """An error during matching."""
 
 
+NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute."""
+
+
 class M_Match:
-    """Successful match object. Can look up tags directly on this object as attributes (as long as the name doesnt't
-    collide with a name that already exists). Nonexistent tags will not raise but return a falsey `M_Match.NoTag`."""
+    """Successful match object. Can look up tags directly on this object as attributes. Nonexistent tags will not raise
+    but return a falsey `NoTag`."""
 
     tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
     matched: _TargetsOrFST  ; """What was matched. Does not have to be a node as list and primitive matches can be tagged."""
-
-    NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `M_Match` object as an attribute. Can check for existence of tag using `match.tag is match.NoTag`"""
 
     def __init__(self, tags: Mapping[str, Any], pattern: _Pattern, matched: _TargetsOrFST) -> None:
         self.tags = MappingProxyType(tags)
@@ -445,7 +447,7 @@ class M_Match:
             return v
 
         if not name.startswith('__'):
-            return self.NoTag
+            return NoTag
 
         raise AttributeError(name)  # nonexistence of dunders should not be masked
 
@@ -459,8 +461,8 @@ _INVALID_TAGS = frozenset(dir(M_Match)) | set(M_Match.__annotations__)
 
 
 class M_Pattern:
-    """The base class for all non-primitive match patterns. The two main classes being `MAST` node matchers and the
-    functional matchers like `MOR` and `MRE`."""
+    """The base class for all non-primitive match patterns. The two main categories of patterns being `MAST` node
+    matchers and the functional matchers like `MOR` and `MRE`."""
 
     _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
     _types: type[AST] | tuple[type[AST]] = AST  # only the MANY pattern has a tuple here
@@ -3121,7 +3123,7 @@ class MAND(MOR):
 
 
 class MANY(M_Pattern):
-    """This pattern matches any one of the given types and arbitrary fields if present. And its "m-any" as "in any one
+    """This pattern matches any one of the given types and arbitrary fields if present. And its "m-any" as in "any one
     of", not "many" as in "several", though that fits as well. Essentially this is an AND of whether the node type is
     one of those provided and the given fields match.
 
@@ -3208,8 +3210,8 @@ class MANY(M_Pattern):
 
 class MRE(M_Pattern):
     """Tagging regex pattern. Normal `re.Pattern` can be used and that will just be checked using `re.match()` and the
-    `re.Match` object is lost. If this pattern is used instead the can specify the use of `re.match()` or `re.search()`,
-    as well as allowing the `re.Match` object to be returned as a tag.
+    `re.Match` object is lost. If this pattern is used instead then you can specify the use of `re.match()` or
+    `re.search()`, as well as allowing the `re.Match` object to be returned as a tag.
 
     **Parameters:**
     - `anon_re_pat`: If the pattern to match is provided in this (either as a `str` to compile or an already compiled
@@ -3331,8 +3333,8 @@ class MCB(M):
         otherwise. If the function returns a truthy value then the match is considered a success, and likewise falsey
         means failure. If this is not provided then the callback is taken from the first keyword in `tags` just like for
         the `M` pattern.
-    - `tag_call_ret`: If this is set to `True` then the truthy return value is returned in the pattern tag instead of
-        the target matched. This only applies if the callback is passed as the first keyword in `tags` instead of in
+    - `tag_ret`: If this is set to `True` then the truthy return value is returned in the pattern tag instead of the
+        target matched. This only applies if the callback is passed as the first keyword in `tags` instead of in
         `anon_callback`, as in that case no target tag is available to return. Also keep in mind the "truthy value" bit
         in case a successful match might want to return a falsey value, it would need to be accomodated somehow (wrapped
         in a tuple maybe).
@@ -3365,18 +3367,18 @@ class MCB(M):
 
     Get node along with name in uppercase.
 
-    >>> pat = M(node=Name(MCB(upper=str.upper, tag_call_ret=True)))
+    >>> pat = M(node=Name(MCB(upper=str.upper, tag_ret=True)))
 
     >>> pat.match(FST('a.b'))
 
     >>> pat.match(FST('some_name'))
     <M_Match {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
 
-    The type of node passed to the callback depends on the type of tree that match is called on.
+    The type of node passed to the callback depends on the type of tree that `match()` is called on.
 
     >>> pat = MCB(lambda n: print(type(n)))
 
-    >>> pat.match(FST('name').a)
+    >>> pat.match(Name('name'))
     <class 'ast.Name'>
 
     >>> pat.match(FST('name'))
@@ -3386,21 +3388,21 @@ class MCB(M):
     _requires = 'callback'  # for printing error message
 
     pat: Callable[[_Target], object] | Callable[[_TargetFST], object]  ; """@private"""
-    tag_call_ret: bool  ; """@private"""
+    tag_ret: bool  ; """@private"""
 
     def __init__(
         self,
         anon_callback: Callable[[_Target], object] | Callable[[_TargetFST], object] = _SENTINEL,
         /,
-        tag_call_ret: bool = False,
+        tag_ret: bool = False,
         **tags,
     ) -> None:
         M.__init__(self, anon_callback, **tags)
 
-        if tag_call_ret and anon_callback is not _SENTINEL:
+        if tag_ret and anon_callback is not _SENTINEL:
             raise ValueError('MCB can never tag the callback return since the callback does not have a tag')
 
-        self.tag_call_ret = tag_call_ret
+        self.tag_ret = tag_ret
 
     @staticmethod
     def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
@@ -3415,7 +3417,7 @@ class MCB(M):
             return None
 
         if pat_tag := self.pat_tag:
-            if self.tag_call_ret:
+            if self.tag_ret:
                 tgt = m
             elif moptions['is_FST'] and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
@@ -3435,14 +3437,18 @@ class MTAG(M_Pattern):
 
     **Examples:**
 
-    >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
+    >>> MBinOp(M(left='a'), right=MTAG('left')) .match(FST('a + a'))
     <M_Match {'left': <Name 0,0..0,1>}>
 
-    >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + b'))
+    >>> MBinOp(M(left='a'), right=MTAG('left')) .match(FST('a + b'))
 
-    >>> MBinOp(MTAG('right'), right=M(right='a')).match(FST('a + a'))
+    The tag must already have been matched, not be in the future.
 
-    >>> pat = MList([M(first='a'), MNSTAR(st=MTAG('first'))])
+    >>> MBinOp(MTAG('right'), right=M(right='a')) .match(FST('a + a'))
+
+    Works just fine with quantifier patterns.
+
+    >>> pat = MList([M(first='a'), MSTAR(st=MTAG('first'))])
 
     >>> pat.match(FST('[a, a, a]'))
     <M_Match {'first': <Name 0,1..0,2>, 'st': [<M_Match {}>, <M_Match {}>]}>
@@ -3492,9 +3498,13 @@ class MN(M):
     instances of the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a
     tag for the matched patterns they are given as a list of matches instead of just one.
 
+    This is the base class for `MOPT`, `MSTAR`, `MPLUS`, `MMIN` and `MMAX` and can do everything they can with the
+    appropriate values for `min` and `max` (with the exception of `MOPT` being used outside of list fields). Those
+    classes are provided regardless for cleaner pattern structuring.
+
     This pattern and its specific subclasses are greedy and there is no backtracking done to attempt to make a sequence
     of these match successfully. They are also not nestable, a single level is allowed for or in a list field (any
-    number sequential siblings but no `MN(MN(...))`).
+    number sequential siblings `MN(), MN(), ...`, but no `MN(MN(...))`).
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3510,24 +3520,27 @@ class MN(M):
 
     **Examples:**
 
-    >>> MList(MN('a', 1, 2)).match(FST('[]'))
+    >>> MList(MN('a', 1, 2)) .match(FST('[]'))
 
-    >>> MList(MN('a', 1, 2)).match(FST('[a]'))
+    >>> MList(MN('a', 1, 2)) .match(FST('[a]'))
     <M_Match {}>
 
-    >>> MList(MN('a', 1, 2)).match(FST('[a, a]'))
+    >>> MList([MN('a', 1, 2)]) .match(FST('[a, a]'))
     <M_Match {}>
 
-    >>> MList(MN('a', 1, 2)).match(FST('[a, a, a]'))
+    >>> MList([MN('a', 1, 2)]) .match(FST('[a, a, a]'))
+
+    >>> MList([MN('a', 1, 2), ...]) .match(FST('[a, a, a]'))
+    <M_Match {}>
 
     >>> pat = MGlobal([..., MN(t='c', min=1, max=2), ...])
 
-    >>> FST('global a, b, c, c, d, e').match(pat)
+    >>> FST('global a, b, c, c, d, e') .match(pat)
     <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
 
     >>> pat = MList([..., MN(t=MRE('c|d'), min=1, max=3), ...])
 
-    >>> FST('[a, b, c, c, d, c, e]').match(pat)
+    >>> FST('[a, b, c, c, d, c, e]') .match(pat)
     <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
 
     >>> [m.matched.src for m in _.t]
@@ -3571,7 +3584,7 @@ class MN(M):
         return _match_default([self], tgt, moptions, rtags)
 
 
-class MNOPT(MN):
+class MOPT(MN):
     """Zero or one (optional) quantifier pattern. Matches at either zero or exactly one instance of the given pattern.
     The tagging works the same way as `MN` and if returning in a tag a list is still returned with either zero or one
     `M_Match` objects.
@@ -3579,7 +3592,7 @@ class MNOPT(MN):
     Unlike any other quantifier pattern this one can be used on non-list fields. When used in this way it will match
     either the pattern or `None`, like for a `FunctionDef.returns`, hence - "optional". To clarify, if something is
     present and the pattern doesn't match, that is a match failure. If something is not present (`None` value), that is
-    a match success.
+    a successful match.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3592,31 +3605,31 @@ class MNOPT(MN):
 
     **Examples:**
 
-    >>> MList(MNOPT('a')).match(FST('[]'))
+    >>> MList(MOPT('a')) .match(FST('[]'))
     <M_Match {}>
 
-    >>> MList(MNOPT('a')).match(FST('[a]'))
+    >>> MList(MOPT('a')) .match(FST('[a]'))
     <M_Match {}>
 
-    >>> MList(MNOPT('a')).match(FST('[b]'))
+    >>> MList(MOPT('a')) .match(FST('[b]'))
 
-    >>> MList([MNOPT('a')]).match(FST('[a]'))
+    >>> MList([MOPT('a')]) .match(FST('[a]'))
     <M_Match {}>
 
-    >>> MList([MNOPT('a')]).match(FST('[b]'))
+    >>> MList([MOPT('a')]) .match(FST('[b]'))
 
-    >>> MList([MNOPT('a')]).match(FST('[a, a]'))
+    >>> MList([MOPT('a')]) .match(FST('[a, a]'))
 
-    >>> MList([MNOPT('a'), ...]).match(FST('[a, a]'))
+    >>> MList([MOPT('a'), ...]) .match(FST('[a, a]'))
     <M_Match {}>
 
-    >>> MFunctionDef(returns=MNOPT('int')).match(FST('def f(): pass'))
+    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
     <M_Match {}>
 
-    >>> MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> int: pass'))
+    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
     <M_Match {}>
 
-    >>> MFunctionDef(returns=MNOPT('int')).match(FST('def f() -> str: pass'))
+    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
     """
 
     def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
@@ -3657,7 +3670,7 @@ class MNOPT(MN):
         return self.static_tags
 
 
-class MNSTAR(MN):
+class MSTAR(MN):
     """Star quantifier pattern, zero or more. Matches any number of instances of pattern, including zero. The tagging
     works the same way as `MN` and if returning in a tag a list is still returned with either zero or more `M_Match`
     objects.
@@ -3673,16 +3686,16 @@ class MNSTAR(MN):
 
     **Examples:**
 
-    >>> MList([MNSTAR(t='a')]).match(FST('[]'))
+    >>> MList([MSTAR(t='a')]) .match(FST('[]'))
     <M_Match {'t': []}>
 
-    >>> MList([MNSTAR(t='a')]).match(FST('[a]'))
+    >>> MList([MSTAR(t='a')]) .match(FST('[a]'))
     <M_Match {'t': [<M_Match {}>]}>
 
-    >>> MList([MNSTAR(t='a')]).match(FST('[a, a]'))
+    >>> MList([MSTAR(t='a')]) .match(FST('[a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
 
-    >>> MList([MNSTAR(t='a')]).match(FST('[a, a, a]'))
+    >>> MList([MSTAR(t='a')]) .match(FST('[a, a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
     """
 
@@ -3690,7 +3703,7 @@ class MNSTAR(MN):
         MN.__init__(self, anon_pat, **tags)
 
 
-class MNPLUS(MN):
+class MPLUS(MN):
     """Plus quantifier pattern, one or more. Matches one or more instances of pattern. The tagging works the same way as
     `MN` and if returning in a tag a list is still returned with either zero or more `M_Match` objects.
 
@@ -3705,15 +3718,15 @@ class MNPLUS(MN):
 
     **Examples:**
 
-    >>> MList([MNPLUS(t='a')]).match(FST('[]'))
+    >>> MList([MPLUS(t='a')]) .match(FST('[]'))
 
-    >>> MList([MNPLUS(t='a')]).match(FST('[a]'))
+    >>> MList([MPLUS(t='a')]) .match(FST('[a]'))
     <M_Match {'t': [<M_Match {}>]}>
 
-    >>> MList([MNPLUS(t='a')]).match(FST('[a, a]'))
+    >>> MList([MPLUS(t='a')]) .match(FST('[a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
 
-    >>> MList([MNPLUS(t='a')]).match(FST('[a, a, a]'))
+    >>> MList([MPLUS(t='a')]) .match(FST('[a, a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
     """
 
@@ -3721,7 +3734,7 @@ class MNPLUS(MN):
         MN.__init__(self, anon_pat, 1, **tags)
 
 
-class MNMIN(MN):
+class MMIN(MN):
     """Minimum count quantifier pattern. Matches a minimum of `min` instances of pattern. The tagging works the same way
     as `MN` and if returning in a tag a list is still returned with either zero or more `M_Match` objects.
 
@@ -3735,14 +3748,14 @@ class MNMIN(MN):
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
 
-    >>> MList([MNMIN(min=2, t='a')]).match(FST('[]'))
+    >>> MList([MMIN(min=2, t='a')]) .match(FST('[]'))
 
-    >>> MList([MNMIN(min=2, t='a')]).match(FST('[a]'))
+    >>> MList([MMIN(min=2, t='a')]) .match(FST('[a]'))
 
-    >>> MList([MNMIN(min=2, t='a')]).match(FST('[a, a]'))
+    >>> MList([MMIN(min=2, t='a')]) .match(FST('[a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
 
-    >>> MList([MNMIN(min=2, t='a')]).match(FST('[a, a, a]'))
+    >>> MList([MMIN(min=2, t='a')]) .match(FST('[a, a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>, <M_Match {}>]}>
     """
 
@@ -3750,7 +3763,7 @@ class MNMIN(MN):
         MN.__init__(self, anon_pat, min, **tags)
 
 
-class MNMAX(MN):
+class MMAX(MN):
     """Maximum count quantifier pattern. Matches a maximum of `max` instances of pattern. The tagging works the same way
     as `MN` and if returning in a tag a list is still returned with either zero or more `M_Match` objects.
 
@@ -3764,18 +3777,18 @@ class MNMAX(MN):
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
 
-    >>> MList([MNMAX(max=2, t='a')]).match(FST('[]'))
+    >>> MList([MMAX(max=2, t='a')]) .match(FST('[]'))
     <M_Match {'t': []}>
 
-    >>> MList([MNMAX(max=2, t='a')]).match(FST('[a]'))
+    >>> MList([MMAX(max=2, t='a')]) .match(FST('[a]'))
     <M_Match {'t': [<M_Match {}>]}>
 
-    >>> MList([MNMAX(max=2, t='a')]).match(FST('[a, a]'))
+    >>> MList([MMAX(max=2, t='a')]) .match(FST('[a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
 
-    >>> MList([MNMAX(max=2, t='a')]).match(FST('[a, a, a]'))
+    >>> MList([MMAX(max=2, t='a')]) .match(FST('[a, a, a]'))
 
-    >>> MList([MNMAX(max=2, t='a'), ...]).match(FST('[a, a, a]'))
+    >>> MList([MMAX(max=2, t='a'), ...]) .match(FST('[a, a, a]'))
     <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
     """
 
@@ -4236,11 +4249,11 @@ _MATCH_FUNCS = {
     MCB:                 MCB._match,
     MTAG:                MTAG._match,
     MN:                  MN._match,
-    MNOPT:               MNOPT._match,
-    MNSTAR:              MNSTAR._match,
-    MNPLUS:              MNPLUS._match,
-    MNMIN:               MNMIN._match,
-    MNMAX:               MNMAX._match,
+    MOPT:                MOPT._match,
+    MSTAR:               MSTAR._match,
+    MPLUS:               MPLUS._match,
+    MMIN:                MMIN._match,
+    MMAX:                MMAX._match,
     AST:                 _match_node,  # _match_node_nonleaf,
     Add:                 _match_node,
     And:                 _match_node,

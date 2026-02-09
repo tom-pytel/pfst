@@ -8,7 +8,7 @@ To be able to execute the examples, import this.
 >>> from fst.match import *
 
 
-## Match
+# Match
 
 `fst` provides a way to do structural pattern matching against `FST` or `AST` trees. The elements of the pattern are
 special `M_Pattern` classes provided by `fst`, or just normal `AST` classes, though type checkers might complain about
@@ -217,14 +217,19 @@ These tags can be accessed via the `.tags` attribute on the match object.
 >>> m.tags
 mappingproxy({'tag': 'string', 'static_tag': True})
 
-Or as a convenience directly as attributes, though this should be used with care as the tags may be shadowed by existing
-attributes on the `M_Match` node.
+Or as a convenience directly as attributes. You do not have to worry about tags shadowing real `M_Match` attributes
+as tags which would do that are not allowed and raise an exception if you try to create a pattern with them.
 
 >>> m.tag
 'string'
 
 >>> m.static_tag
 True
+
+>>> M(tags=...)
+Traceback (most recent call last):
+...
+ValueError: invalid tag 'tags' shadows match class attribute
 
 One benefit is quick existence checking as nonexistent tags do not raise `AttributeError` but rather return a falsey
 object.
@@ -434,9 +439,9 @@ This node also allows matched target and static tags.
 >>> pat.match(FST('(x, y, z)'))
 <M_Match {'tgt': <Tuple ROOT 0,0..0,9>, 'static': True}>
 
-If you pass `tag_call_ret=True` then whatever is returned from the callback function is used for the match tag.
+If you pass `tag_ret=True` then whatever is returned from the callback function is used for the match tag.
 
->>> pat = M(node=Name(MCB(upper=str.upper, tag_call_ret=True)))
+>>> pat = M(node=Name(MCB(upper=str.upper, tag_ret=True)))
 
 >>> pat.match(FST('a.b'))
 
@@ -452,6 +457,10 @@ The type of node passed to the callback depends on the type of tree that match i
 
 >>> pat.match(FST('name'))
 <class 'fst.fst.FST'>
+
+
+## `MTAG()` pattern
+
 
 
 
