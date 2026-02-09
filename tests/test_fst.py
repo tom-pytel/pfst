@@ -8570,6 +8570,31 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(MConstant(substr('a')).match(FST('"a"')))
         self.assertTrue(MConstant(subint(1)).match(FST('1')))
 
+    def test_search(self):
+        f = FST('[1, a, x.y]')
+
+        self.assertEqual(['a', 'x'], [m.matched.src for m in f.search(Name)])
+        self.assertEqual(['x.y'], [m.matched.src for m in f.search(MAttribute)])
+        self.assertEqual(['1'], [m.matched.src for m in f.search(Constant(1))])
+        self.assertEqual(['[1, a, x.y]'], [m.matched.src for m in f.search(MANY((Tuple, List)))])
+
+        # AST type pruning for walk()
+
+        class substr(str): pass
+        class subint(int): pass
+
+        self.assertEqual(['[1, a, x.y]', '1', 'a', '', 'x.y', 'x', '', '', ''], [m.matched.src for m in f.search(MOR(Name, MNOT(Name)))])  # the '' are ctx nodes
+        self.assertEqual(['[1, a, x.y]', '1', 'a', '', 'x.y', 'x', '', '', ''], [m.matched.src for m in f.search(MNOT(MAND(Name, MNOT(Name))))])
+        self.assertEqual([], [m.matched.src for m in f.search(MNOT(MNOT(MAND(Name, MNOT(Name)))))])
+        self.assertEqual([], [m.matched.src for m in f.search(MAND(MAND(Name, MNOT(Name))))])
+        self.assertEqual(['[1, a, x.y]', '1', 'a', '', 'x.y', 'x', '', '', ''], [m.matched.src for m in f.search(MOR(MNOT(MAND(Name, MNOT(Name)))))])
+        self.assertEqual(['1', 'a', 'x'], [m.matched.src for m in f.search(MOR(Name, Constant))])
+        self.assertEqual(['a', 'x'], [m.matched.src for m in f.search(MAND(MOR(Name, Constant), MOR(Name, Attribute)))])
+        self.assertEqual(['a'], [m.matched.src for m in f.search(MRE('a'))])
+        self.assertEqual([], [m.matched.src for m in f.search(1)])
+        self.assertEqual(['a'], [m.matched.src for m in f.search(substr('a'))])
+        self.assertEqual([], [m.matched.src for m in f.search(subint(1))])
+
     def test_sub(self):
         pass
 

@@ -527,9 +527,8 @@ class MAST(M_Pattern):
     matches an `Mstmt` but not an `Mexpr`). This arbitrary field matching behavior is unique to non-leaf `AST` types,
     concrete types like `MAssign` always have fixed fields.
 
-    **Note:** Since there are several fields which can be either an individual element or list of elements, usage of
-    arbitrary fields in this node does not raise an error on list vs. non-list mismatch and instead just considers it a
-    non-match.
+    **Note:** Since there are several fields which can be either an individual element or list of elements, matching
+    a list pattern vs. a non-list and vice versa is just treated as a non-match.
 
     **Parameters:**
     - `fields`: If provided then is an arbitrary list of fields to match. Otherwise will just match based on type.
@@ -2947,7 +2946,7 @@ class MNOT(M):
 
         if not leaf_asts:
             return ASTS_LEAF__ALL
-        elif len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:
+        elif len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:  # >= because maybe some extra node types got in there from the future
             return _EMPTY_SET
 
         return ASTS_LEAF__ALL - leaf_asts
@@ -3133,9 +3132,8 @@ class MANY(M_Pattern):
     of", not "many" as in "several", though that fits as well. Essentially this is an AND of whether the node type is
     one of those provided and the given fields match.
 
-    **Note:** Since there are several fields which can be either an individual element or list of elements, usage of
-    arbitrary fields in this node does not raise an error on list vs. non-list mismatch and instead just considers it a
-    non-match.
+    **Note:** Since there are several fields which can be either an individual element or list of elements, matching
+    a list pattern vs. a non-list and vice versa is just treated as a non-match.
 
     **Parameters:**
     - `types`: An iterable of `AST` or `MAST` **TYPES**, not instances. In order to match successfully the target must
@@ -3200,20 +3198,7 @@ class MANY(M_Pattern):
 
     @staticmethod
     def _leaf_asts(self: MANY) -> tp_Set[type[AST]]:
-        leaf_asts = set()
-
-        for p in self._types:
-            la = _LEAF_ASTS_FUNCS.get(p.__class__, _leaf_asts_default)(p)
-
-            if len(la) >= _LEN_ASTS_LEAF__ALL:  # early out because we hit all possible types
-                return la
-
-            leaf_asts.update(la)
-
-            if len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:  # another early out
-                return leaf_asts
-
-        return leaf_asts
+        return set(self._types)
 
 
 class MRE(M_Pattern):
@@ -4145,20 +4130,22 @@ def _match_node_expr_context(
 
     return _EMPTY_DICT
 
-def _match_node_arbitrary_fields(
-    pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
-) -> Mapping[str, Any] | None:
-    """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches.
+# def _match_node_arbitrary_fields(
+#     pat: M_Pattern | AST, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+# ) -> Mapping[str, Any] | None:
+#     """This just turns off list field vs. non-list field errors for nodes which do arbitrary field matches.
 
-    Normally a list vs. non-list match is an error as that indicates the user got confused with their pattern. Arbitrary
-    field check patterns can span nodes which have list vs. non-list definitions for fields so in this case the error
-    checking is turned off and rather a mismatch is treated as just a failed match. The error checking is turned back on
-    after the first level of child nodes where a match is actually attempted between things that could be list vs.
-    non-list.
-    """
+#     Normally a list vs. non-list match is an error as that indicates the user got confused with their pattern. Arbitrary
+#     field check patterns can span nodes which have list vs. non-list definitions for fields so in this case the error
+#     checking is turned off and rather a mismatch is treated as just a failed match. The error checking is turned back on
+#     after the first level of child nodes where a match is actually attempted between things that could be list vs.
+#     non-list.
+#     """
 
-    return _match_node(pat, tgt, moptions, rtags)
-    # return _match_node(pat, tgt, {**moptions, 'list_check': False}, rtags, allow_reset_list_check=False)
+#     return _match_node(pat, tgt, moptions, rtags)
+#     # return _match_node(pat, tgt, {**moptions, 'list_check': False}, rtags, allow_reset_list_check=False)
+
+_match_node_arbitrary_fields = _match_node
 
 def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
@@ -4538,13 +4525,10 @@ def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]]:
     if isinstance(pat, AST):
         return AST2ASTSLEAF[pat.__class__]
 
-    if isinstance(pat, str):
+    if isinstance(pat, str):  # gets here from a subclassed str
         return ASTS_LEAF__ALL
 
-    if isinstance(pat, list):
-        raise MatchError('unexpected list')
-
-    return _EMPTY_SET
+    return _EMPTY_SET  # from some subclassed primitive
 
 def _leaf_asts_all(pat: _Pattern) -> tp_Set[type[AST]]:
     return ASTS_LEAF__ALL
