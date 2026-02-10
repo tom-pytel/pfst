@@ -285,7 +285,7 @@ The `M()` pattern can be nested to any level and propagates successful match tag
 This pattern can go almost anywhere and tag nodes, primitives, `None` and even entire list fields.
 
 >>> MAST(names=M(l=[...])).match(FST('global a, b, c'))
-<M_Match {'l': <<Global ROOT 0,0..0,14>.names ['a', 'b', 'c']>}>
+<M_Match {'l': <<Global ROOT 0,0..0,14>.names>}>
 
 Here it returned an `fstview` for the list because the node we used as an `FST`. In case of `AST` it just returns what
 is there.

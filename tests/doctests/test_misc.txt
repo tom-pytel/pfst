@@ -37,7 +37,7 @@ def meth(self, a):
 def meth(self, a):
     return a
 >>> f.body.append(f.body[1].copy())
-<<ClassDef ROOT 1,0..9,16>.body [<FunctionDef 2,4..3,12>, <FunctionDef 5,4..6,16>, <FunctionDef 8,4..9,16>]>
+<<ClassDef ROOT 1,0..9,16>.body>
 >>> print(f.src)
 <BLANKLINE>
 class cls:

@@ -1,6 +1,6 @@
 # pfst
 
-**High-level Python AST/CST manipulation that preserves formatting**
+**High-level Python AST manipulation that preserves formatting**
 
 [![PyPI version](https://img.shields.io/badge/pypi-0.2.6-orange.svg)](https://pypi.org/project/pfst/)
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15a-blue.svg)](https://www.python.org/)

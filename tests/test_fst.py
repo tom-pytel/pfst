@@ -9245,13 +9245,13 @@ class cls:
     def test_fstview_refresh_indices(self):
         f = FST('[a, b, c]')
         v = f.elts
-        self.assertEqual('<<List ROOT 0,0..0,9>.elts [<Name 0,1..0,2>, <Name 0,4..0,5>, <Name 0,7..0,8>]>', repr(v))
+        self.assertEqual('<<List ROOT 0,0..0,9>.elts>', repr(v))
 
         f.put_slice('x', 'end')
-        self.assertEqual('<<List ROOT 0,0..0,12>.elts [<Name 0,1..0,2>, <Name 0,4..0,5>, <Name 0,7..0,8>, <Name 0,10..0,11>]>', repr(v))
+        self.assertEqual('<<List ROOT 0,0..0,12>.elts>', repr(v))
 
         f.elts[1:3].remove()
-        self.assertEqual('<<List ROOT 0,0..0,6>.elts [<Name 0,1..0,2>, <Name 0,4..0,5>]>', repr(v))
+        self.assertEqual('<<List ROOT 0,0..0,6>.elts>', repr(v))
 
         # TODO: this is not exhaustive
 
@@ -9330,7 +9330,7 @@ class cls:
         self.assertIs(v, v.prextend(None))
         self.assertRaises(RuntimeError, v.prextend, True)
 
-        self.assertEqual('<<Name ROOT 0,0..0,1>.type_params DUMMY VIEW>', repr(v))
+        self.assertEqual('<<Name ROOT 0,0..0,1>.type_params>', repr(v))
 
     def test_fstview_coverage(self):
         # misc stuff to fill out test coverage
@@ -10605,7 +10605,7 @@ if 1:
         self.assertEqual('new', test(FST('v', Expr), 'value', 'new', FST, 'v').src)
 
         f = FST('a and b and c')
-        self.assertEqual('<<BoolOp ROOT 0,0..0,13>.values [<Name 0,0..0,1>, <Name 0,6..0,7>, <Name 0,12..0,13>]>', str(f.values))
+        self.assertEqual('<<BoolOp ROOT 0,0..0,13>.values>', str(f.values))
         self.assertEqual('a or b or c', test(f, 'op', 'or', FST, 'and').src)
 
         f = FST('(a := b)')
@@ -10631,8 +10631,8 @@ if 1:
         self.assertEqual('new if test else blah', test(f, 'orelse', 'blah', FST, 'c').src)
 
         f = FST('{a: b}')
-        self.assertEqual('<<Dict ROOT 0,0..0,6>.keys [<Name 0,1..0,2>]>', str(f.keys))
-        self.assertEqual('<<Dict ROOT 0,0..0,6>.values [<Name 0,4..0,5>]>', str(f.values))
+        self.assertEqual('<<Dict ROOT 0,0..0,6>.keys>', str(f.keys))
+        self.assertEqual('<<Dict ROOT 0,0..0,6>.values>', str(f.values))
 
         self.assertEqual('{{a, b, c}}', test(FST('{x, y}'), 'elts', '{a, b, c}', fstview, '{x, y}').src)
         self.assertEqual('{a, b, c}', test(FST('{x, y}'), 'elts', 'a, b, c', fstview, '{x, y}').src)
@@ -10666,8 +10666,8 @@ if 1:
 
         f = FST('a < b < c')
         self.assertEqual('new < b < c', test(f, 'left', 'new', FST, 'a').src)
-        self.assertEqual('<<Compare ROOT 0,0..0,11>.ops [<Lt 0,4..0,5>, <Lt 0,8..0,9>]>', str(f.ops))
-        self.assertEqual('<<Compare ROOT 0,0..0,11>.comparators [<Name 0,6..0,7>, <Name 0,10..0,11>]>', str(f.comparators))
+        self.assertEqual('<<Compare ROOT 0,0..0,11>.ops>', str(f.ops))
+        self.assertEqual('<<Compare ROOT 0,0..0,11>.comparators>', str(f.comparators))
 
         f = FST('call(arg, kw=blah)')
         self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', fstview, '(arg,)').src)
@@ -10772,7 +10772,7 @@ if 1:
         self.assertEqual('glob(a, b=c)', test(f, 'cls', 'glob', FST, 'cls').src)
         self.assertEqual('glob(new, b=c)', test(f, 'patterns', 'new', fstview, '[a]').src)
         self.assertEqual('glob(new, kw=c)', test(f, 'kwd_attrs', 'kw', None,
-                                                "<<MatchClass ROOT 0,0..0,14>.kwd_attrs ['b']>").src)
+                                                "<<MatchClass ROOT 0,0..0,14>.kwd_attrs>").src)
         self.assertEqual('glob(new, kw=blah)', test(f, 'kwd_patterns', 'blah', fstview, 'c').src)
 
         self.assertEqual('*new', test(FST('*star', MatchStar), 'name', 'new', None, 'star').src)
@@ -10809,7 +10809,7 @@ if 1:
             # (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
 
             self.assertEqual('f"new"', test(FST('f"{a}"'), 'values', 'new', fstview,
-                                            '<<JoinedStr ROOT 0,0..0,6>.values [<FormattedValue 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
+                                            '<<JoinedStr ROOT 0,0..0,6>.values>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
             self.assertEqual('new', test(FST('T', TypeVar), 'name', 'new', None, 'T').src)
             self.assertEqual('T: str', test(FST('T: int', TypeVar), 'bound', 'str', FST, 'int').src)
@@ -10826,7 +10826,7 @@ if 1:
             # (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
 
             self.assertEqual('new', test(FST('f"{a}"'), 'values', 'new', fstview,
-                                         '<<JoinedStr ROOT 0,0..0,6>.values [<FormattedValue 0,0..0,6>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet, and will probably not be implemented for py < 3.12
+                                         '<<JoinedStr ROOT 0,0..0,6>.values>').src)  # TODO: the result of this put is incorrect because it is not implemented yet, and will probably not be implemented for py < 3.12
 
         if not PYLT13:
             self.assertEqual('T = str', test(FST('T = int', TypeVar), 'default_value', 'str', FST, 'int').src)
@@ -10840,17 +10840,17 @@ if 1:
             # (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
 
             self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', fstview,
-                                            '<<TemplateStr ROOT 0,0..0,6>.values [<Interpolation 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
+                                            '<<TemplateStr ROOT 0,0..0,6>.values>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
     def test_ast_accessors_virtual_field__all(self):
         # Dict
 
         f = FST('{a: b, c: d, e: f}')
-        self.assertEqual('<<Dict ROOT 0,0..0,18>._all {<Name 0,1..0,2>: <Name 0,4..0,5>, <Name 0,7..0,8>: <Name 0,10..0,11>, <Name 0,13..0,14>: <Name 0,16..0,17>}>', str(f._all))
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all>', str(f._all))
         self.assertEqual('{a: b}', f._all[:1].copy().src)
         self.assertEqual('{e: f}', f._all[-1:].copy().src)
         self.assertEqual('{}', f._all[0:0].copy().src)
-        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1:2] {<Name 0,7..0,8>: <Name 0,10..0,11>}>', str(f._all[1]))
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1:2]>', str(f._all[1]))
 
         self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
 
@@ -10869,13 +10869,13 @@ if 1:
         # MatchMapping
 
         f = FST('{1: a, 2: b, **c}', pattern)
-        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all {<Constant 0,1..0,2>: <MatchAs 0,4..0,5>, <Constant 0,7..0,8>: <MatchAs 0,10..0,11>, **c}>', str(f._all))
+        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all>', str(f._all))
         self.assertEqual('{1: a}', f._all[:1].copy().src)
         self.assertEqual('{**c}', f._all[-1:].copy().src)
         self.assertEqual('{2: b, **c}', f._all[-2:].copy().src)
         self.assertEqual('{}', f._all[0:0].copy().src)
 
-        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[1:2] {<Constant 0,7..0,8>: <MatchAs 0,10..0,11>}>', str(f._all[1:2]))
+        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[1:2]>', str(f._all[1:2]))
         # self.assertRaises(ValueError, lambda: f._all[0])
         self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
 
@@ -10894,7 +10894,7 @@ if 1:
         # Compare
 
         f = FST('a < b > c')
-        self.assertEqual('<<Compare ROOT 0,0..0,9>._all <Name 0,0..0,1> < <Name 0,4..0,5> > <Name 0,8..0,9>>', str(f._all))
+        self.assertEqual('<<Compare ROOT 0,0..0,9>._all>', str(f._all))
         self.assertEqual('a', f._all[:1].copy().src)
         self.assertEqual('c', f._all[-1:].copy().src)
         self.assertEqual('a < b', f._all[:2].copy().src)
@@ -10912,7 +10912,7 @@ if 1:
 
         self.assertEqual('a > c', f.src)
 
-        self.assertEqual('<<Compare ROOT 0,0..0,14>._all[1:3] <Name 0,4..0,5> == <Name 0,9..0,10>>', repr(FST('a < b == c > d')._all[1:3]))
+        self.assertEqual('<<Compare ROOT 0,0..0,14>._all[1:3]>', repr(FST('a < b == c > d')._all[1:3]))
 
         f._all = 'x != y'
 

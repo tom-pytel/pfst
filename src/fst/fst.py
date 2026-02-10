@@ -1767,19 +1767,19 @@ class FST:
         '1'
 
         >>> FST('[0, 1, 2, 3]')[:3]
-        <<List ROOT 0,0..0,12>.elts[:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+        <<List ROOT 0,0..0,12>.elts[:3]>
 
         >>> FST('[0, 1, 2, 3]')[:3].copy().src
         '[0, 1, 2]'
 
         >>> FST('[0, 1, 2, 3]')[-3:]
-        <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+        <<List ROOT 0,0..0,12>.elts[1:4]>
 
         >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body[1]
         <ClassDef 1,0..1,15>
 
         >>> FST('global a, b, c').names
-        <<Global ROOT 0,0..0,14>.names ['a', 'b', 'c']>
+        <<Global ROOT 0,0..0,14>.names>
 
         >>> FST('global a, b, c')[1]
         'b'

@@ -17,8 +17,8 @@ or `Tuple` / `List` / `Set` `elts` field. Any field which is a list of other obj
 >>> type(view)
 <class 'fst.view.fstview'>
 
->>> print(str(view)[:88])
-<<List ROOT 0,0..0,9>.elts [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8
+>>> print(str(view))
+<<List ROOT 0,0..0,9>.elts>
 
 >>> view.base, view.field, view.start, view.stop
 (<List ROOT 0,0..0,9>, 'elts', 0, 3)
@@ -125,17 +125,17 @@ used and truncates them to the actual size of the target field.
 >>> view = f.elts[1:3]
 
 >>> view
-<<List ROOT 0,0..0,15>.elts[1:3] [<Name 0,4..0,5>, <Name 0,7..0,8>]>
+<<List ROOT 0,0..0,15>.elts[1:3]>
 
 >>> _ = f.put_slice(None, 2, 5)
 
 >>> view
-<<List ROOT 0,0..0,6>.elts[1:2] [<Name 0,4..0,5>]>
+<<List ROOT 0,0..0,6>.elts[1:2]>
 
 >>> _ = f.put_slice(None, 0, 2)
 
 >>> view
-<<List ROOT 0,0..0,2>.elts[:0] []>
+<<List ROOT 0,0..0,2>.elts[:0]>
 
 
 ## Name indexing

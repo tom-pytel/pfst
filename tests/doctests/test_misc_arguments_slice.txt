@@ -232,10 +232,10 @@ FunctionDef - ROOT 0,0..0,91
 <arguments ROOT 0,0..0,14>
 
 >>> FST("def f(a: int = ( 1 ), b: str = ( '2' ), c: float = ( 3.0 ), d: bytes = ( b'z' ), e: complex = ( 1j )): pass").args._all
-<<arguments 0,6..0,100>._all <arg 0,6..0,12>=<Constant 0,17..0,18>, <arg 0,22..0,28>=<Constant 0,33..0,36>, <arg 0,40..0,48>=<Constant 0,53..0,56>, <arg 0,60..0,68>=<Constant 0,73..0,77>, <arg 0,81..0,91>=<Constant 0,96..0,98>>
+<<arguments 0,6..0,100>._all>
 
 >>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all
-<<arguments 0,6..0,84>._all <arg 0,6..0,12>=<Constant 0,17..0,18>, <arg 0,25..0,31>=<Constant 0,36..0,39>, <arg 0,44..0,52>, <arg 0,54..0,62>=<Constant 0,67..0,71>, <arg 0,77..0,84>>
+<<arguments 0,6..0,84>._all>
 
 >>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[0].copy().src
 'a: int = ( 1 ), /'
@@ -253,43 +253,43 @@ FunctionDef - ROOT 0,0..0,91
 '**e: dict'
 
 >>> FST('call(a, b, c, d, e)')._args[1:-1]
-<<Call ROOT 0,0..0,19>.__args[1:4] (<Name 0,8..0,9>, <Name 0,11..0,12>, <Name 0,14..0,15>)>
+<<Call ROOT 0,0..0,19>._args[1:4]>
 
 >>> FST('(a, b, c, d, e)').elts[1:-1]
-<<Tuple ROOT 0,0..0,15>.elts[1:4] [<Name 0,4..0,5>, <Name 0,7..0,8>, <Name 0,10..0,11>]>
+<<Tuple ROOT 0,0..0,15>.elts[1:4]>
 
 >>> FST('a;b;c;d;e')._body[1:-1]
-<<Module ROOT 0,0..0,9>._body[1:4] [<Expr 0,2..0,3>, <Expr 0,4..0,5>, <Expr 0,6..0,7>]>
+<<Module ROOT 0,0..0,9>._body[1:4]>
 
 >>> FST('a<b<c<d<e')._all[1:-1]
-<<Compare ROOT 0,0..0,9>._all[1:4] <Name 0,2..0,3> < <Name 0,4..0,5> < <Name 0,6..0,7>>
+<<Compare ROOT 0,0..0,9>._all[1:4]>
 
 >>> FST('{a:a, b:b, c:c, d:d, e:e}')._all[1:-1]
-<<Dict ROOT 0,0..0,25>._all[1:4] {<Name 0,6..0,7>: <Name 0,8..0,9>, <Name 0,11..0,12>: <Name 0,13..0,14>, <Name 0,16..0,17>: <Name 0,18..0,19>}>
+<<Dict ROOT 0,0..0,25>._all[1:4]>
 
 >>> FST('{a:a, b:b, c:c, d:d, e:e}')._all[2]
-<<Dict ROOT 0,0..0,25>._all[2:3] {<Name 0,11..0,12>: <Name 0,13..0,14>}>
+<<Dict ROOT 0,0..0,25>._all[2:3]>
 
 >>> FST('{1:a, 2:b, 3:c, 4:d, 5:e}', pattern)._all[1:-1]
-<<MatchMapping ROOT 0,0..0,25>._all[1:4] {<Constant 0,6..0,7>: <MatchAs 0,8..0,9>, <Constant 0,11..0,12>: <MatchAs 0,13..0,14>, <Constant 0,16..0,17>: <MatchAs 0,18..0,19>}>
+<<MatchMapping ROOT 0,0..0,25>._all[1:4]>
 
 >>> FST('{1:a, 2:b, 3:c, 4:d, 5:e}', pattern)._all[2]
-<<MatchMapping ROOT 0,0..0,25>._all[2:3] {<Constant 0,11..0,12>: <MatchAs 0,13..0,14>}>
+<<MatchMapping ROOT 0,0..0,25>._all[2:3]>
 
 >>> FST('{1:a, 2:b, 3:c, 4:d, 5:e, **rest}', pattern)._all[-1].copy().src
 '{**rest}'
 
 >>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[1:-1]
-<<arguments 0,6..0,84>._all[1:4] <arg 0,25..0,31>=<Constant 0,36..0,39>, <arg 0,44..0,52>, <arg 0,54..0,62>=<Constant 0,67..0,71>>
+<<arguments 0,6..0,84>._all[1:4]>
 
 >>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[2]
-<<arguments 0,6..0,84>._all[2:3] <arg 0,44..0,52>>
+<<arguments 0,6..0,84>._all[2:3]>
 
 >>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args._all[2].copy().src
 '*c: tuple'
 
 >>> FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass").args[1]
-<<arguments 0,6..0,84>._all[1:2] <arg 0,25..0,31>=<Constant 0,36..0,39>>
+<<arguments 0,6..0,84>._all[1:2]>
 
 >>> (f := FST("def f(a: int = ( 1 ), /, b: str = ( '2' ), *c: tuple, d: bytes = ( b'z' ), **e: dict): pass")).args[2] = 'z: int = -1'
 

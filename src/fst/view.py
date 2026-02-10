@@ -8,7 +8,7 @@ from typing import Literal
 from . import fst
 
 from .asttypes import ASTS_LEAF_BLOCK_OR_MOD
-from .astutil import OPCLS2STR, AST
+from .astutil import AST
 from .common import fstloc, fstlocn
 from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
@@ -43,13 +43,13 @@ class fstview:
     >>> view[1].remove()
 
     >>> view
-    <<List ROOT 0,0..0,6>.elts [<Constant 0,1..0,2>, <Constant 0,4..0,5>]>
+    <<List ROOT 0,0..0,6>.elts>
 
     >>> view[1:].cut()
     <List ROOT 0,0..0,3>
 
     >>> view
-    <<List ROOT 0,0..0,3>.elts [<Constant 0,1..0,2>]>
+    <<List ROOT 0,0..0,3>.elts>
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 
@@ -62,7 +62,7 @@ class fstview:
     <List ROOT 0,0..0,12>
 
     >>> f.elts
-    <<List ROOT 0,0..0,12>.elts [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+    <<List ROOT 0,0..0,12>.elts>
 
     >>> f.elts[1]
     <Constant 0,4..0,5>
@@ -71,7 +71,7 @@ class fstview:
     '1'
 
     >>> f.elts[1:3]
-    <<List ROOT 0,0..0,12>.elts[1:3] [<Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+    <<List ROOT 0,0..0,12>.elts[1:3]>
 
     >>> f.elts[1:3].copy()
     <List ROOT 0,0..0,6>
@@ -353,7 +353,7 @@ class fstview:
         start, stop, _ = self._get_indices()
         indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
 
-        return f'<{self.base!r}.{self.field}{indices} {list(self)}>'
+        return f'<{self.base!r}.{self.field}{indices}>'
 
     def __len__(self) -> int:
         start, stop, _ = self._get_indices()
@@ -384,19 +384,19 @@ class fstview:
         '1'
 
         >>> FST('[0, 1, 2, 3]').elts[:3]
-        <<List ROOT 0,0..0,12>.elts[:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+        <<List ROOT 0,0..0,12>.elts[:3]>
 
         >>> FST('[0, 1, 2, 3]').elts[:3].copy().src
         '[0, 1, 2]'
 
         >>> FST('[0, 1, 2, 3]').elts[-3:]
-        <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+        <<List ROOT 0,0..0,12>.elts[1:4]>
 
         >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body[1]
         <ClassDef 1,0..1,15>
 
         >>> FST('global a, b, c').names
-        <<Global ROOT 0,0..0,14>.names ['a', 'b', 'c']>
+        <<Global ROOT 0,0..0,14>.names>
 
         >>> FST('global a, b, c').names[1]
         'b'
@@ -978,18 +978,6 @@ class fstview_Dict(fstview):
     def _deref_one(self, idx: int) -> AST | str:
         return fstview_Dict(self.base, '_all', idx, idx + 1)
 
-    def __repr__(self) -> str:
-        start, stop, _ = self._get_indices()
-        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
-        base = self.base
-        ast = base.a
-        keys = ast.keys[start : stop]
-        values = ast.values[start : stop]
-
-        seq = ', '.join(f'{f"{k.f}: " if k else "**"}{v.f}' for k, v in zip(keys, values, strict=True))
-
-        return f'<{base!r}._all{indices} {{{seq}}}>'
-
 
 class fstview_MatchMapping(fstview):
     """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`. @private"""
@@ -1162,22 +1150,6 @@ class fstview_MatchMapping(fstview):
     def _deref_one(self, idx: int) -> AST | str:
         return fstview_MatchMapping(self.base, '_all', idx, idx + 1)
 
-    def __repr__(self) -> str:
-        start, stop, _ = self._get_indices()
-        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
-        base = self.base
-        ast = base.a
-        patterns = ast.patterns
-
-        seq = [f'{k.f}: {p.f}' for k, p in zip(ast.keys[start : stop], patterns[start : stop], strict=True)]
-
-        if (rest := ast.rest) and stop > len(patterns):
-            seq.append('**' + rest)
-
-        seq = ', '.join(seq)
-
-        return f'<{base!r}._all{indices} {{{seq}}}>'
-
 
 class fstview_Compare(fstview):
     """View for `Compare` combined `left + comparators` virtual field `_all`. @private"""
@@ -1187,30 +1159,6 @@ class fstview_Compare(fstview):
 
     def _deref_one(self, idx: int) -> AST | str:
         return self.base.a.comparators[idx - 1] if idx else self.base.a.left
-
-    def __repr__(self) -> str:
-        start, stop, _ = self._get_indices()
-        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
-        base = self.base
-        ast = base.a
-        start_1 = max(0, start - 1)
-        stop_1 = max(0, stop - 1)
-        comparators = ast.comparators[start_1 : stop_1]
-
-        if start:
-            left = comparators.pop(0) if comparators else None
-            ops = ast.ops[start : stop_1]
-
-        else:
-            left = ast.left
-            ops = ast.ops[start_1 : stop_1]
-
-        seq = [f' {OPCLS2STR[o.__class__]} {c.f}' for o, c in zip(ops, comparators, strict=True)]
-
-        if left:
-            seq.insert(0, repr(left.f))
-
-        return f'<{base!r}._all{indices} {"".join(seq)}>'
 
 
 class fstview_arguments(fstview):
@@ -1400,20 +1348,6 @@ class fstview_arguments(fstview):
     def _deref_one(self, idx: int) -> AST | str:
         return fstview_arguments(self.base, '_all', idx, idx + 1)
 
-    def __repr__(self) -> str:
-        start, stop, _ = self._get_indices()
-        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
-        base = self.base
-        seq = []
-
-        for a in base._cached_allargs()[start : stop]:
-            if (g := (f := a.f).next()) and g.pfield.name in ('defaults', 'kw_defaults'):
-                seq.append(f'{f}={g}')
-            else:
-                seq.append(str(f))
-
-        return f'<{base!r}._all{indices} {", ".join(seq)}>'
-
 
 class fstview__body(fstview):
     """View for `_body` virtual field, only used on node types that can have a docstring. @private"""
@@ -1440,13 +1374,6 @@ class fstview_arglikes(fstview):
 
     def _deref_one(self, idx: int) -> AST | str:
         return self.base._cached_arglikes()[idx]
-
-    def __repr__(self) -> str:
-        start, stop, _ = self._get_indices()
-        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
-        base = self.base
-
-        return f'<{base!r}._{self.field}{indices} {tuple(a.f for a in base._cached_arglikes()[start : stop])}>'
 
 
 class fstview_Global_Nonlocal(fstview):
@@ -1626,9 +1553,6 @@ class fstview_dummy(fstview):
 
     def _len_field(self) -> int:
         return 0
-
-    def __repr__(self) -> str:
-        return f'<{self.base!r}.{self.field} DUMMY VIEW>'
 
     def __getitem__(self, idx: int | slice) -> fstview | fst.FST | str | None:
         if not isinstance(idx, slice):
