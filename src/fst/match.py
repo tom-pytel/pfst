@@ -2864,8 +2864,7 @@ class M(M_Pattern):
 
         return f'{name}({pat_tag}={_rpr(pat)})' if pat_tag else f'{name}({_rpr(pat)})'
 
-    @staticmethod
-    def _match(self: M, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, moptions, rtags)
 
         if m is None:
@@ -2885,8 +2884,7 @@ class M(M_Pattern):
 
         return self.static_tags
 
-    @staticmethod
-    def _leaf_asts(self: M) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]]:
         return _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
 
 
@@ -2940,8 +2938,7 @@ class MNOT(M):
 
         return self.static_tags
 
-    @staticmethod
-    def _leaf_asts(self: M) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]]:
         leaf_asts = _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
 
         if not leaf_asts:
@@ -3018,8 +3015,7 @@ class MOR(M_Pattern):
 
         return f'{name}({tags})'
 
-    @staticmethod
-    def _match(self: MOR, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         for i, p in enumerate(self.pats):
             m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, moptions, rtags)
 
@@ -3034,8 +3030,7 @@ class MOR(M_Pattern):
 
         return None
 
-    @staticmethod
-    def _leaf_asts(self: MOR) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]]:
         leaf_asts = set()
 
         for pat in self.pats:
@@ -3086,8 +3081,7 @@ class MAND(MOR):
     <M_Match {}>
     """
 
-    @staticmethod
-    def _match(self: MAND, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if moptions['is_FST'] and isinstance(tgt, AST):
             if not (tgtf := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
@@ -3109,8 +3103,7 @@ class MAND(MOR):
 
         return rtags.pop_merge()
 
-    @staticmethod
-    def _leaf_asts(self: MOR) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]]:
         leaf_asts = ASTS_LEAF__ALL
 
         for pat in self.pats:
@@ -3169,7 +3162,7 @@ class MANY(M_Pattern):
             if not isinstance(t, type):
                 raise ValueError('MANY types can only be AST or MAST')
             elif issubclass(t, MAST):
-                t = t._types  # will be a single type
+                t = t._types  # will be a single type, can be non-leaf
             elif not issubclass(t, AST):
                 raise ValueError('MANY types can only be AST or MAST')
 
@@ -3196,9 +3189,21 @@ class MANY(M_Pattern):
 
         return f'{name}({types})'
 
-    @staticmethod
-    def _leaf_asts(self: MANY) -> tp_Set[type[AST]]:
-        return set(self._types)
+    def _leaf_asts(self) -> tp_Set[type[AST]]:
+        leaf_asts = set()
+
+        for t in self._types:
+            la = AST2ASTSLEAF[t]
+
+            if len(la) >= _LEN_ASTS_LEAF__ALL:  # early out because we hit all possible types
+                return la
+
+            leaf_asts.update(la)
+
+            if len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:  # another early out
+                return leaf_asts
+
+        return leaf_asts
 
 
 class MRE(M_Pattern):
@@ -3274,8 +3279,7 @@ class MRE(M_Pattern):
 
         return f'{name}({", ".join(tags)})'
 
-    @staticmethod
-    def _match(self: MRE, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         """Regex match or search pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will
         use `FST` source from the tree and unparse a non-`FST` `AST` node for the check. Returns `re.Match` object if is
         requested."""
@@ -3410,8 +3414,7 @@ class MCB(M):
         self.tag_ret = tag_ret
         self.fail_val = fail_val
 
-    @staticmethod
-    def _match(self: MCB, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if not moptions['is_FST'] or not isinstance(tgt, AST):
             m = self.pat(tgt)
         elif tgt := getattr(tgt, 'f', None):
@@ -3486,8 +3489,7 @@ class MTAG(M_Pattern):
 
         return f'{name}({tag!r})'
 
-    @staticmethod
-    def _match(self: MTAG, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if (p := rtags.get(self.tag)) is _SENTINEL:
             return None
 
@@ -3586,8 +3588,7 @@ class MN(M):
         self.min = min
         self.max = max
 
-    @staticmethod
-    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if not isinstance(tgt, (list, fstview)):
             return None
 
@@ -3653,8 +3654,7 @@ class MOPT(MN):
     def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
         MN.__init__(self, anon_pat, 0, 1, **tags)
 
-    @staticmethod
-    def _match(self: MN, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags) -> Mapping[str, Any] | None:
         if isinstance(tgt, (list, fstview)):
             return _match_default([self], tgt, moptions, rtags)
 
