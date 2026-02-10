@@ -102,7 +102,7 @@ class fstview:
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
-    is_multinode = False  ; """Whether the view is on a possibly multi-element sequence like a `Dict`, `MatchMapping` or `arguments`. These will not give individual nodes on single element index but rather another fstview."""
+    is_multinode = False  ; """Whether the view is on a possibly multi-node sequence like a `Dict`, `MatchMapping` or `arguments`. These will not give individual nodes on single element index but rather another fstview."""
 
     @property
     def start(self) -> int:

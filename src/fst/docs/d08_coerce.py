@@ -354,8 +354,8 @@ fst.NodeError: expecting Name, got Set, could not coerce
 ## Slice put `one` parameter
 
 This parameter to put functions specifies whether you want to put the node you are passing as a single element (if
-applicable) or as a multi-element slice. For the `put_slice()` function this parameter defaults to `False`, which means
-you want to put the node you are passing as an actual slice and not a single element.
+applicable) or as a multi-node slice. For the `put_slice()` function this parameter defaults to `False`, which means you
+want to put the node you are passing as an actual slice and not a single element.
 
 Other functions which normally put a single element like `put()`, `replace()` and `insert()` also take this parameter
 where it defaults to `True`. This allows you to use those functions as slice puts as well.

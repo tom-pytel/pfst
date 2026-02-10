@@ -3237,6 +3237,9 @@ class MRE(M_Pattern):
 
     >>> MRE(tag='bad', search=True) .match(arg('this_arg_is_not_so_bad'))
     <M_Match {'tag': <re.Match object; span=(19, 22), match='bad'>}>
+
+    >>> MDict(_all=[MN(t=MRE('a: .'))]).match(FST('{a: b, a: z}'))
+    <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
     """
 
     re_pat: re_Pattern  ; """@private"""
@@ -3285,33 +3288,9 @@ class MRE(M_Pattern):
         requested."""
 
         re_pat = self.re_pat
-        func = re_pat.search if self.search else re_pat.match
+        re_func = re_pat.search if self.search else re_pat.match
 
-        if isinstance(tgt, str):
-            if not isinstance(re_pat.pattern, str) or not (m := func(tgt)):
-                return None
-
-        elif isinstance(tgt, AST):
-            if not isinstance(re_pat.pattern, str):
-                return None
-
-            if not (f := getattr(tgt, 'f', None)) or not (loc := f.loc):
-                src = unparse(tgt)
-            else:
-                src = f._get_src(*loc)
-
-            if not (m := func(src)):  # match source against pattern
-                return None
-
-
-        # TODO: fstview
-
-
-        elif isinstance(tgt, bytes):
-            if not isinstance(re_pat.pattern, bytes) or not (m := func(tgt)):
-                return None
-
-        else:
+        if (m := _match_re_Pattern(re_pat, tgt, moptions, rtags, re_func)) is None:
             return None
 
         if pat_tag := self.pat_tag:
@@ -3518,6 +3497,9 @@ class MN(M):
     This pattern and its specific subclasses are greedy and there is no backtracking done to attempt to make a sequence
     of these match successfully. They are also not nestable, a single level is allowed for or in a list field (any
     number sequential siblings `MN(), MN(), ...`, but no `MN(MN(...))`).
+
+    `MN()` with default `min` and `max` is the same as `MSTAR()`, so if you don't care about cleaner patterns then just
+    use this.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3870,7 +3852,7 @@ def _match_n(
             ms = []
 
             for ts, t in zip(tagss, tgts, strict=True):
-                if t and not (t := getattr(t, 'f', None)):
+                if t and not isinstance(t, fstview) and not (t := getattr(t, 'f', None)):
                     raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
 
                 ms.append(M_Match(ts, pat, t))
@@ -3899,22 +3881,18 @@ def _match_default(
     """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
 
     if isinstance(pat, list):
-        if isinstance(tgt, fstview):
-            if tgt.is_multinode:
-                return None
+        if isinstance(tgt, list):
+            pass  # noop
 
-
-                # TODO: can maybe match if string or regex, allow this as will be same mechanism as arguments
-
-
-                # raise MatchError('list can never match a dictlike multi-element field')
-
-            if len(tgt) and isinstance(tgt[0], str):  # could be Global/Nonlocal.names
-                tgt = [s for s in tgt]
+        elif isinstance(tgt, fstview):
+            if not len(tgt):
+                tgt = []
+            elif isinstance(tgt[0], (str, fstview)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
+                tgt = list(tgt)
             else:
-                tgt = [f.a if isinstance(f, fst.FST) else f for f in tgt]  # convert to temporary list of AST nodes
+                tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
 
-        if not isinstance(tgt, list):
+        else:
             return None
 
         # this is the list field matching where wildcards and quantifier patterns are handled
@@ -4140,13 +4118,20 @@ def _match_type(pat: type, tgt: _Targets, moptions: Mapping[str, Any], rtags: _R
     return _EMPTY_DICT
 
 def _match_re_Pattern(
-    pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags
+    pat: re_Pattern, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags, re_func: Callable | None = None
 ) -> Mapping[str, Any] | None:
     """Regex pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will use `FST` source
-    from the tree and unparse a non-`FST` `AST` node for the check."""
+    from the tree and unparse a non-`FST` `AST` node for the check.
+
+    **Parameters:**
+    - `re_func`: `None` for normal direct `re.Pattern` operation or bound `re.Pattern.match` or `re.Pattern.search` if
+        calling from `MRE` for the appropriate match or search behavior and return of `re.Match` object.
+    """
+
+    _re_func = re_func if re_func else pat.match
 
     if isinstance(tgt, str):
-        if not isinstance(pat.pattern, str) or not pat.match(tgt):
+        if not isinstance(pat.pattern, str) or not (m := _re_func(tgt)):
             return None
 
     elif isinstance(tgt, AST):
@@ -4156,23 +4141,26 @@ def _match_re_Pattern(
         if not (f := getattr(tgt, 'f', None)) or not (loc := f.loc):
             src = unparse(tgt)
         else:
-            src = f._get_src(*loc)
+            src = f._get_src(*loc)  # because at root this is whole source which may include leading and trailing trivia that is not part of the node itself
 
-        if not pat.match(src):  # match source against pattern
+        if not (m := _re_func(src)):  # match source against pattern
             return None
 
+    elif isinstance(tgt, fstview):
+        if not isinstance(pat.pattern, str):
+            return None
 
-    # TODO: fstview
-
+        if not (m := _re_func(tgt.src)):  # match source against pattern
+            return None
 
     elif isinstance(tgt, bytes):
-        if not isinstance(pat.pattern, bytes) or not pat.match(tgt):
+        if not isinstance(pat.pattern, bytes) or not (m := _re_func(tgt)):
             return None
 
     else:
         return None
 
-    return _EMPTY_DICT
+    return m if re_func else _EMPTY_DICT
 
 def _match_Ellipsis(
     pat: EllipsisType, tgt: _Targets, moptions: Mapping[str, Any], rtags: _RunningTags

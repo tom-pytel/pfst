@@ -1606,10 +1606,10 @@ class WalkDel(Fuzzy):
                 raise
 
 
-class SearchMatch(Fuzzy):
+class MatchSearch(Fuzzy):
     """Complex searches vs. explicit walk with match."""
 
-    name = 'search_match'
+    name = 'match_search'
     forever = True
     standard = False
 

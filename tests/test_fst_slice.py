@@ -2956,7 +2956,7 @@ i ; \\
         self.assertEqual('{a, x, d}', (f := FST('{a, b, c, d}')).put_slice('x', 1, 3, one=True).root.src)
         f.verify()
 
-        # Dict doesn't support 'one' because has multi-element items
+        # Dict doesn't support 'one' because has multi-node items
 
         # MatchSequence
 
@@ -2969,7 +2969,7 @@ i ; \\
         self.assertEqual('[a, x, d]', (f := FST('[a, b, c, d]', 'pattern')).put_slice('x', 1, 3, one=True).root.src)
         f.verify()
 
-        # MatchDict doesn't support 'one' because has multi-element items
+        # MatchDict doesn't support 'one' because has multi-node items
 
         # MatchOr
 
