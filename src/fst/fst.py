@@ -474,6 +474,12 @@ class FST:
         return self
 
     @property
+    def base(self) -> FST:
+        """This exists for more convenient interoperability with `fstview`. Here it just always returns `self`."""
+
+        return self
+
+    @property
     def lines(self) -> list[builtins.str]:
         """Whole lines of this node from the **RAW SOURCE**, without any dedentation, may also contain parts of
         enclosing nodes. Will have indentation as it appears in the top level source if multiple lines. If gotten at
@@ -514,27 +520,10 @@ class FST:
             return OPCLS2STR.get(self.a.__class__, '')  # for boolop or expr_context
 
     @property
-    def has_own_loc(self) -> bool:
-        """`True` when the node has its own location which comes directly from AST `lineno` and other location fields.
-        Otherwise `False` if no `loc` or `loc` is calculated."""
-
-        return hasattr(self.a, 'end_col_offset')
-
-    @property
-    def whole_loc(self) -> fstloc:
-        """Whole source location, from (0, 0) to end of source. Works from any node (not just root)."""
-
-        return fstloc(0, 0, len(ls := self.root._lines) - 1, len(ls[-1]))
-
-    @property
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of node (may not be entire location if node has decorators). Not all
         nodes have locations (like `expr_context`). Other nodes which normally don't have locations like `arguments` or
-        most operators have this location calculated from their children or source.
-
-        **Note:** Empty `arguments` do **NOT** have a location even though the `AST` exists, while non-empty `arguments`
-        have a calculated location.
-        """
+        most operators have this location calculated from their children or source."""
 
         try:
             return self._cache['loc']
@@ -616,81 +605,94 @@ class FST:
         return bloc
 
     @property
-    def ln(self) -> int:
+    def ln(self) -> int | None:
         """Line number of the first line of this node (0 based)."""
 
         return (l := self.loc) and l[0]
 
     @property
-    def col(self) -> int:  # char index
+    def col(self) -> int | None:  # char index
         """CHARACTER index of the start of this node (0 based)."""
 
         return (l := self.loc) and l[1]
 
     @property
-    def end_ln(self) -> int:  # 0 based
+    def end_ln(self) -> int | None:  # 0 based
         """Line number of the LAST LINE of this node (0 based)."""
 
         return (l := self.loc) and l[2]
 
     @property
-    def end_col(self) -> int:  # char index
+    def end_col(self) -> int | None:  # char index
         """CHARACTER index one past the end of this node (0 based)."""
 
         return (l := self.loc) and l[3]
 
     @property
-    def bln(self) -> int:
+    def bln(self) -> int | None:
         """Line number of the first line of this node or the first decorator if present (0 based)."""
 
         return (l := self.bloc) and l[0]
 
     @property
-    def bcol(self) -> int:
+    def bcol(self) -> int | None:
         """CHARACTER column of this node or the first decorator if present (0 based)."""
 
         return (l := self.bloc) and l[1]
 
     @property
-    def bend_ln(self) -> int:
+    def bend_ln(self) -> int | None:
         """Line number of the last line of this node."""
 
         return (l := self.bloc) and l[2]
 
     @property
-    def bend_col(self) -> int:
+    def bend_col(self) -> int | None:
         """CHARACTER column of the end of the last line of this node, past a trailing line comment on last child if
         `self` is a block statement."""
 
         return (l := self.bloc) and l[3]
 
     @property
-    def lineno(self) -> int:  # 1 based
+    def lineno(self) -> int | None:  # 1 based
         """AST-style line number of the first line of this node (1 based), available for all nodes which have `loc`
         (otherwise `None`)."""
 
         return (loc := self.loc) and loc[0] + 1
 
     @property
-    def col_offset(self) -> int:  # byte index
+    def col_offset(self) -> int | None:  # byte index
         """AST-style BYTE index of the start of this node (0 based), available for all nodes which have `loc`
         (otherwise `None`)."""
 
         return (loc := self.loc) and self.root._lines[loc[0]].c2b(loc[1])
 
     @property
-    def end_lineno(self) -> int:  # 1 based
+    def end_lineno(self) -> int | None:  # 1 based
         """AST-style line number of the LAST LINE of this node (1 based), available for all nodes which have `loc`
         (otherwise `None`)."""
 
         return (loc := self.loc) and loc[2] + 1
 
     @property
-    def end_col_offset(self) -> int:  # byte index
+    def end_col_offset(self) -> int | None:  # byte index
         """AST-style BYTE index one past the end of this node (0 based), available for all nodes which have `loc`
         (otherwise `None`)."""
 
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
+
+    @property
+    def whole_loc(self) -> fstloc:
+        """Whole source location, from (0, 0) to end of source. Works from any node (not just root)."""
+
+        return fstloc(0, 0, len(ls := self.root._lines) - 1, len(ls[-1]))
+
+    @property
+    def has_own_loc(self) -> bool:
+        """`True` when the node has its own location which comes directly from AST `lineno` and other location fields.
+        Otherwise `False` if no `loc` or `loc` is calculated."""
+
+        return hasattr(self.a, 'end_col_offset')
 
     @property
     def has_docstr(self) -> bool:

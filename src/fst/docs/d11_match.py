@@ -695,12 +695,10 @@ vs.
     expected to be there.
 
 ```
-$ mypy -c 'from ast import *; Call('f', args=["a", "*b"], keywords=["c=d", "**e"])'
-error: Name "f" is not defined  [name-defined]
+$ mypy -c "from ast import *; Call(..., args=['a'], keywords=['**b'])"
+error: Argument 1 to "Call" has incompatible type "EllipsisType"; expected "expr" [arg-type]
 error: List item 0 has incompatible type "str"; expected "expr"  [list-item]
-error: List item 1 has incompatible type "str"; expected "expr"  [list-item]
 error: List item 0 has incompatible type "str"; expected "keyword"  [list-item]
-error: List item 1 has incompatible type "str"; expected "keyword"  [list-item]
 ```
 
 

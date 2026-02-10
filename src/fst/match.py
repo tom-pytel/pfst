@@ -3900,8 +3900,13 @@ def _match_default(
 
     if isinstance(pat, list):
         if isinstance(tgt, fstview):
-            if tgt.is_dictlike:
+            if tgt.is_multinode:
                 return None
+
+
+                # TODO: can maybe match if string or regex, allow this as will be same mechanism as arguments
+
+
                 # raise MatchError('list can never match a dictlike multi-element field')
 
             if len(tgt) and isinstance(tgt[0], str):  # could be Global/Nonlocal.names
@@ -3997,25 +4002,14 @@ def _match_str(pat: str, tgt: _Targets, moptions: Mapping[str, Any], rtags: _Run
         if not (f := getattr(tgt, 'f', None)) or not (loc := f.loc):
             src = unparse(tgt)
         else:
-            src = f._get_src(*loc)
+            src = f._get_src(*loc)  # because at root this is whole source which may include leading and trailing trivia that is not part of the node itself
 
         if src != pat:  # match source against exact string
             return None
 
-
-    # TODO: fstview
-
-
-    # elif isinstance(tgt, fstview):
-    #     f = tgt.copy()
-
-    #     if not (loc := f.loc):
-    #         src = unparse(f.a)
-    #     else:
-    #         src = f._get_src(*loc)
-
-    #     if src != pat:  # match source against exact string
-    #         return None
+    elif isinstance(tgt, fstview):
+        if tgt.src != pat:
+            return None
 
     else:
         return None

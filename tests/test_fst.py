@@ -9317,6 +9317,44 @@ def h(k): pass            # ln 16
 
         self.assertEqual('<ClassDef 15,8..15,24>', str(f.body[0].orelse[2].finalbody['j']))
 
+    def test_fstview_loc_and_src(self):
+        def test(fv: fstview):
+            loc = fv.loc
+            pars = fv.pars()
+
+            self.assertEqual(fv.bloc, loc)
+            self.assertEqual(pars, loc)
+            self.assertEqual(pars.n, 0)
+            self.assertEqual(fv.ln, loc.ln)
+            self.assertEqual(fv.col, loc.col)
+            self.assertEqual(fv.end_ln, loc.end_ln)
+            self.assertEqual(fv.end_col, loc.end_col)
+            self.assertEqual(fv.bln, loc.ln)
+            self.assertEqual(fv.bcol, loc.col)
+            self.assertEqual(fv.bend_ln, loc.end_ln)
+            self.assertEqual(fv.bend_col, loc.end_col)
+            self.assertEqual(fv[0].pars()[:2], loc[:2])
+            self.assertEqual(fv[-1].pars()[2:], loc[2:])
+
+        test(FST('{(a):\n(b),\n(c):\n(d)}')._all)
+        test(FST('{(a):\n(b),\n**\n(d)}')._all)
+        test(FST('{**\n(b),\n(c):\n(d)}')._all)
+        test(FST('{**\n(b),\n**\n(d)}')._all)
+
+        test(FST('{1:\n(a),\n2:\n(b)}', pattern)._all)
+        test(FST('{1:\n(a),\n**\nb}', pattern)._all)
+        test(FST('{**\nb}', pattern)._all)
+
+        test(FST('a=\n1,\n/,\nb=\n2,\n*c:\nint,\nd=\n3,\n**e:\nint', arguments)._all)
+        test(FST('a=\n1,\n/,\nb=\n2', arguments)._all)
+        test(FST('b=\n2,\n*c:\nint', arguments)._all)
+        test(FST('*c:\nint,\nd=\n3', arguments)._all)
+        test(FST('d=\n3,\n**e:\nint', arguments)._all)
+
+        test(FST('@deco\nclass cls: pass\nif 1:\n  pass  # tail').body)
+        test(FST('class cls:\n  """docstr"""\n  @deco\n  def f(): pass\n  if 1:\n    pass  # tail').body)
+        test(FST('class cls:\n  """docstr"""\n  @deco\n  def f(): pass\n  if 1:\n    pass  # tail')._body)
+
     def test_options(self):
         new = dict(
             docstr    = 'strict',

@@ -465,7 +465,7 @@ def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_argument(self: fst.FST, default: bool = False) -> fstloc:
+def _loc_argument(self: fst.FST, default: bool = False, stars: bool = True) -> fstloc:
     """Get the location of the argument `self` including the leading `*` for a `vararg` or `**` for a `kwarg` if is one
     of those. Can return end of argument or end of default value which corresponds to this argument, but this will only
     be returned if requested with `default=True` and if `self` is actually a child of an `arguments` node.
@@ -477,11 +477,13 @@ def _loc_argument(self: fst.FST, default: bool = False) -> fstloc:
             `arguments` node then this fails silently and the `.default` attribute returned will be `None` the same as
             if there was no default.
         - `False`: Will return end of this `arg` as end location and there will not be a `.default` attribute at all.
+    - `stars`: Whether to get the starting location of any `*` or `**` present or not. Can be turned off if not needed
+        for a bit of efficiency.
 
     **Returns:**
-    - `fstloc | fstlocn`: Location of argument including any preceding `*` or `**` and optionally ending at the end of
-        its default value. If `default=True` then there will be a `.default` attribute which will either be the node of
-        the default value or `None`.
+    - `fstloc | fstlocn`: Location of argument including any preceding `*` or `**` (unless `stars=False`) and optionally
+        ending at the end of its default value. If `default=True` then there will be a `.default` attribute which will
+        either be the node of the default value or `None`.
     """
 
     loc = self.loc
@@ -491,8 +493,9 @@ def _loc_argument(self: fst.FST, default: bool = False) -> fstloc:
 
     ln, col, end_ln, end_col = loc
     field, _ = pfield
+    is_star_arg = (is_kwarg := field == 'kwarg') or field == 'vararg'
 
-    if (is_kwarg := field == 'kwarg') or field == 'vararg':
+    if is_star_arg and stars:
         lines = self.root._lines
 
         if prev := self.prev():

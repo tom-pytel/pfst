@@ -9,6 +9,7 @@ from . import fst
 
 from .asttypes import ASTS_LEAF_BLOCK_OR_MOD
 from .astutil import OPCLS2STR, AST
+from .common import fstloc, fstlocn
 from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
 from .fst_options import check_options
@@ -100,7 +101,7 @@ class fstview:
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
-    is_dictlike = False  ; """Whether the view is on a multi-element sequence like a `Dict` or `MatchMapping`. These will not give individual nodes on single element index but rather another fstview."""
+    is_multinode = False  ; """Whether the view is on a possibly multi-element sequence like a `Dict`, `MatchMapping` or `arguments`. These will not give individual nodes on single element index but rather another fstview."""
 
     @property
     def start(self) -> int:
@@ -113,6 +114,137 @@ class fstview:
         """One past the last element within the target field list this view references."""
 
         return self._get_indices()[1]
+
+    @property
+    def lines(self) -> list[str]:
+        r"""Whole lines of this view from the **RAW SOURCE**, without any dedentation, may also contain parts of
+        enclosing nodes. Will have indentation as it appears in the top level source if multiple lines.
+
+        A valid list of strings is always returned, even for empty views. The lines list returned is always a copy so
+        safe to modify.
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> FST('a\nb\nc\nd').body[1:3].lines
+        ['b', 'c']
+        """
+
+        return self.base.root._lines[loc.ln : loc.end_ln + 1] if (loc := self.bloc) else ['']
+
+    @property
+    def src(self) -> str:
+        """Source code of this view from the **RAW SOURCE** clipped out as a single string, without any dedentation.
+        Will have indentation as it appears in the top level source if multiple lines.
+
+        A string is always returned, even for empty views.
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> FST('[a, b, c, d]').elts[1:3].src
+        'b, c'
+        """
+
+        return self.base._get_src(*loc) if (loc := self.bloc) else ''
+
+    @property
+    def loc(self) -> fstloc | None:
+        """Zero based character indexed location of view (including parentheses and or decorators where present)."""
+
+        start, stop, _ = self._get_indices()
+
+        if not (len_ := stop - start):
+            return None
+        if len_ == 1:
+            return self._deref_one(start).f.pars()
+
+        ln, col, _, _ = self._deref_one(start).f.pars()
+        _, _, end_ln, end_col = self._deref_one(stop - 1).f.pars()
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        """Line number of the first line of this view (0 based)."""
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self._deref_one(start).f.pars().ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        """CHARACTER index of the start of this view (0 based)."""
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self._deref_one(start).f.pars().col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        """Line number of the LAST LINE of this view (0 based)."""
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self._deref_one(stop - 1).f.pars().end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        """CHARACTER index one past the end of this view (0 based)."""
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self._deref_one(stop - 1).f.pars().end_col
+
+    bloc = loc
+    bln = ln
+    bcol = col
+    bend_ln = end_ln
+    bend_col = end_col
+
+    def pars(self, *, shared: bool | None = True) -> fstlocn | None:
+        """Convenience function just returns the `.loc` of this view, as it will already have parentheses included.
+
+        **Parameters:**
+        - IGNORED!
+
+        **Returns:**
+        - `fstlocn`: Full location of view from first element to last, if elements present.
+        - `None`: If view is empty.
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> FST('[a, b, c, d]').elts[1:3].pars()
+        fstlocn(0, 4, 0, 8, n=0)
+
+        >>> FST('[(a), (b), (c), (d)]').elts[1:3].pars()
+        fstlocn(0, 6, 0, 14, n=0)
+        """
+
+        loc = self.loc
+
+        if not loc or hasattr(loc, 'n'):  # could be `None`
+            return loc
+
+        ln, col, end_ln, end_col = loc
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # pars() return must have an `n`
 
     def _len_field(self) -> int:
         """Length of full base `FST` field, irrespective of view `start` and `stop`."""
@@ -712,7 +844,133 @@ class fstview:
 class fstview_Dict(fstview):
     """View for `Dict` combined `key:value` virtual field `_all`. @private"""
 
-    is_dictlike = True
+    is_multinode = True
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('{(a):\n(b),\n**\n (c)}')
+
+        >>> f._all.loc
+        fstlocn(0, 1, 3, 4, n=0)
+
+        >>> f._all[0].loc
+        fstlocn(0, 1, 1, 3, n=0)
+
+        >>> f._all[1].loc
+        fstlocn(2, 0, 3, 4, n=0)
+
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        base = self.base
+        ln, col, _, _ = base._loc_maybe_key(start)
+        _, _, end_ln, end_col = base.a.values[stop - 1].f.pars()
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{(a):\n(b),\n**\n (c)}')
+
+        >>> f._all[0].ln
+        0
+
+        >>> f._all[1].ln
+        2
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_maybe_key(start).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{(a):\n(b),\n**\n (c)}')
+
+        >>> f._all[0].col
+        1
+
+        >>> f._all[1].col
+        0
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_maybe_key(start).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{(a):\n(b),\n**\n (c)}')
+
+        >>> f._all[0].end_ln
+        1
+
+        >>> f._all[1].end_ln
+        3
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base.a.values[stop - 1].f.pars().end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{(a):\n(b),\n**\n (c)}')
+
+        >>> f._all[0].end_col
+        3
+
+        >>> f._all[1].end_col
+        4
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base.a.values[stop - 1].f.pars().end_col
+
+    bloc = loc
+    bln = ln
+    bcol = col
+    bend_ln = end_ln
+    bend_col = end_col
 
     def _len_field(self) -> int:
         return len(self.base.a.keys)
@@ -736,7 +994,167 @@ class fstview_Dict(fstview):
 class fstview_MatchMapping(fstview):
     """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`. @private"""
 
-    is_dictlike = True
+    is_multinode = True
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('{1:\n(a),\n**\n b}', 'pattern')
+
+        >>> f._all.loc
+        fstlocn(0, 1, 3, 2, n=0)
+
+        >>> f._all[0].loc
+        fstlocn(0, 1, 1, 3, n=0)
+
+        >>> f._all[1].loc
+        fstloc(2, 0, 3, 2)
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        base = self.base
+        ast = base.a
+        patterns = ast.patterns
+
+        if stop > len(patterns):  # means there is a .rest
+            if stop == start + 1:
+                return base._loc_MatchMapping_rest(True)
+
+            _, _, end_ln, end_col = base._loc_MatchMapping_rest()
+
+        else:
+            _, _, end_ln, end_col = patterns[stop - 1].f.pars()
+
+        ln, col, _, _ = ast.keys[start].f.loc
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{1:\n(a),\n**\n b}', 'pattern')
+
+        >>> f._all[0].ln
+        0
+
+        >>> f._all[1].ln
+        2
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        base = self.base
+        ast = base.a
+
+        if start == len(ast.patterns):  # means starts on .rest
+            return base._loc_MatchMapping_rest(True).ln
+
+        return ast.keys[start].f.loc.ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{1:\n(a),\n**\n b}', 'pattern')
+
+        >>> f._all[0].col
+        1
+
+        >>> f._all[1].col
+        0
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        base = self.base
+        ast = base.a
+
+        if start == len(ast.patterns):  # means starts on .rest
+            return base._loc_MatchMapping_rest(True).col
+
+        return ast.keys[start].f.loc.col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{1:\n(a),\n**\n b}', 'pattern')
+
+        >>> f._all[0].end_ln
+        1
+
+        >>> f._all[1].end_ln
+        3
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        base = self.base
+        patterns = base.a.patterns
+
+        if stop > len(patterns):  # means there is a .rest
+            return base._loc_MatchMapping_rest().end_ln
+
+        return patterns[stop - 1].f.pars().end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('{1:\n(a),\n**\n b}', 'pattern')
+
+        >>> f._all[0].end_col
+        3
+
+        >>> f._all[1].end_col
+        2
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        base = self.base
+        patterns = base.a.patterns
+
+        if stop > len(patterns):  # means there is a .rest
+            return base._loc_MatchMapping_rest().end_col
+
+        return patterns[stop - 1].f.pars().end_col
+
+    bloc = loc
+    bln = ln
+    bcol = col
+    bend_ln = end_ln
+    bend_col = end_col
 
     def _len_field(self) -> int:
         return len((a := self.base.a).keys) + bool(a.rest)
@@ -798,6 +1216,184 @@ class fstview_Compare(fstview):
 class fstview_arguments(fstview):
     """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. @private"""
 
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> args = FST('a=1, /,\n b=2,\n  *c: int,\n   d=3,\n    **e', 'arguments')
+
+        >>> args._all.loc
+        fstlocn(0, 0, 4, 7, n=0)
+
+        >>> args._all[0].loc
+        fstlocn(0, 0, 0, 3, n=0)
+
+        >>> args._all[:2].loc
+        fstlocn(0, 0, 1, 4, n=0)
+
+        >>> args._all[2].loc
+        fstlocn(2, 2, 2, 9, n=0)
+
+        >>> args._all[3].loc
+        fstlocn(3, 3, 3, 6, n=0)
+
+        >>> args._all[-1].loc
+        fstlocn(4, 4, 4, 7, n=0)
+
+        >>> args._all[1:-1].loc
+        fstlocn(1, 1, 3, 6, n=0)
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if not (len_ := stop - start):
+            return None
+
+        allargs = self.base._cached_allargs()
+
+        if len_ == 1:
+            ln, col, end_ln, end_col = allargs[start].f._loc_argument(True)  # we don't return this directly because it may have a `default` in it
+
+        else:
+            ln, col, _, _ = allargs[start].f._loc_argument().loc
+            _, _, end_ln, end_col = allargs[stop - 1].f._loc_argument(True, False).loc
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> args = FST('a=1, /,\n b=2,\n  *c: int,\n   d=3,\n    **e', 'arguments')
+
+        >>> args._all[0].ln
+        0
+
+        >>> args._all[1].ln
+        1
+
+        >>> args._all[2].ln
+        2
+
+        >>> args._all[3].ln
+        3
+
+        >>> args._all[4].ln
+        4
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._cached_allargs()[start].f._loc_argument().ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> args = FST('a=1, /,\n b=2,\n  *c: int,\n   d=3,\n    **e', 'arguments')
+
+        >>> args._all[0].col
+        0
+
+        >>> args._all[1].col
+        1
+
+        >>> args._all[2].col
+        2
+
+        >>> args._all[3].col
+        3
+
+        >>> args._all[4].col
+        4
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._cached_allargs()[start].f._loc_argument().col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> args = FST('a=1, /,\n b=2,\n  *c: int,\n   d=3,\n    **e', 'arguments')
+
+        >>> args._all[0].end_ln
+        0
+
+        >>> args._all[1].end_ln
+        1
+
+        >>> args._all[2].end_ln
+        2
+
+        >>> args._all[3].end_ln
+        3
+
+        >>> args._all[4].end_ln
+        4
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._cached_allargs()[stop - 1].f._loc_argument(True, False).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> args = FST('a=1, /,\n b=2,\n  *c: int,\n   d=3,\n    **e', 'arguments')
+
+        >>> args._all[0].end_col
+        3
+
+        >>> args._all[1].end_col
+        4
+
+        >>> args._all[2].end_col
+        9
+
+        >>> args._all[3].end_col
+        6
+
+        >>> args._all[4].end_col
+        7
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._cached_allargs()[stop - 1].f._loc_argument(True, False).end_col
+
+    bloc = loc
+    bln = ln
+    bcol = col
+    bend_ln = end_ln
+    bend_col = end_col
+
     def _len_field(self) -> int:
         return len(self.base._cached_allargs())
 
@@ -855,6 +1451,40 @@ class fstview_arglikes(fstview):
 
 class fstview_dummy(fstview):
     """Dummy view for nonexistent fields (type_params on py < 3.12). @private"""
+
+    @property
+    def lines(self) -> list[str]:
+        return ['']
+
+    @property
+    def src(self) -> str:
+        return ''
+
+    @property
+    def loc(self) -> fstloc | None:
+        return None
+
+    @property
+    def ln(self) -> int | None:
+        return None
+
+    @property
+    def col(self) -> int | None:  # char index
+        return None
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        return None
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        return None
+
+    bloc = loc
+    bln = ln
+    bcol = col
+    bend_ln = end_ln
+    bend_col = end_col
 
     def _len_field(self) -> int:
         return 0

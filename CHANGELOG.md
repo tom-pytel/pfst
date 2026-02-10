@@ -14,6 +14,9 @@
 - `walk()`
   - can take explicit list of nodes to walk instead of just "all children of self"
   - can take user callback for `all` parameter for deciding if node matches
+- `FST` / `fstview` interoperability for convenience
+  - added `lines`, `src`, `loc/ln/col/end_ln/end_col`, `bloc/bln/bcol/bend_ln/bend_col` and `pars()` to `fstview`
+  - added `base` to `FST` so that you can do `f.base.get_src(*f.loc)` without knowing if is `FST` or `fstview`
 - added `top` and `stop_at` parameters to `step_fwd/back()`
 - finally validating options
 - trivia option shorthand `()` for `(False, False)`
