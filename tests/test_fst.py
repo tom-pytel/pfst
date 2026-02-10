@@ -36,7 +36,7 @@ from fst.astutil import (
 
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, PYGE15, astfield, fstloc
 from fst.code import *
-from fst.view import fstview, fstview_dummy
+from fst.view import fstview, fstview_Global_Nonlocal, fstview_dummy
 from fst.match import *
 
 from support import assertRaises
@@ -9333,6 +9333,12 @@ def h(k): pass            # ln 16
             self.assertEqual(fv.bcol, loc.col)
             self.assertEqual(fv.bend_ln, loc.end_ln)
             self.assertEqual(fv.bend_col, loc.end_col)
+            self.assertEqual(fv[:1].loc[:2], loc[:2])
+            self.assertEqual(fv[-1:].loc[2:], loc[2:])
+
+            if isinstance(fv, fstview_Global_Nonlocal):
+                return
+
             self.assertEqual(fv[0].pars()[:2], loc[:2])
             self.assertEqual(fv[-1].pars()[2:], loc[2:])
 
@@ -9354,6 +9360,11 @@ def h(k): pass            # ln 16
         test(FST('@deco\nclass cls: pass\nif 1:\n  pass  # tail').body)
         test(FST('class cls:\n  """docstr"""\n  @deco\n  def f(): pass\n  if 1:\n    pass  # tail').body)
         test(FST('class cls:\n  """docstr"""\n  @deco\n  def f(): pass\n  if 1:\n    pass  # tail')._body)
+
+        test(FST('global a, b').names)
+        test(FST('global\\\na,\\\n b').names)
+        test(FST('nonlocal a, b').names)
+        test(FST('nonlocal\\\na,\\\n b').names)
 
     def test_options(self):
         new = dict(

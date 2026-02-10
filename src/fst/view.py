@@ -22,6 +22,7 @@ __all__ = [
     'fstview_arguments',
     'fstview__body',
     'fstview_arglikes',
+    'fstview_Global_Nonlocal',
     'fstview_dummy',
 ]
 
@@ -152,7 +153,7 @@ class fstview:
 
     @property
     def loc(self) -> fstloc | None:
-        """Zero based character indexed location of view (including parentheses and or decorators where present)."""
+        """Zero based character indexed location of view (including parentheses and / or decorators where present)."""
 
         start, stop, _ = self._get_indices()
 
@@ -864,7 +865,6 @@ class fstview_Dict(fstview):
 
         >>> f._all[1].loc
         fstlocn(2, 0, 3, 4, n=0)
-
         """
 
         start, stop, _ = self._get_indices()
@@ -1447,6 +1447,144 @@ class fstview_arglikes(fstview):
         base = self.base
 
         return f'<{base!r}._{self.field}{indices} {tuple(a.f for a in base._cached_arglikes()[start : stop])}>'
+
+
+class fstview_Global_Nonlocal(fstview):
+    """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly. Currently only really needed for `loc`
+    and `src`, but may expand in future if control given over primitive vs. `FST` presentation of primitive fields."""
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names.loc
+        fstlocn(1, 0, 2, 2, n=0)
+
+        >>> f.names[:1].loc
+        fstloc(1, 0, 1, 1)
+
+        >>> f.names[-1:].loc
+        fstloc(2, 1, 2, 2)
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if not (len_ := stop - start):
+            return None
+        if len_ == 1:
+            return self.base._loc_Global_Nonlocal_names(start)
+
+        (ln, col, _, _), (_, _, end_ln, end_col) = self.base._loc_Global_Nonlocal_names(start, stop - 1)
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].ln
+        1
+
+        >>> f.names[-1:].ln
+        2
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Global_Nonlocal_names(start).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].col
+        0
+
+        >>> f.names[-1:].col
+        1
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Global_Nonlocal_names(start).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].end_ln
+        1
+
+        >>> f.names[-1:].end_ln
+        2
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Global_Nonlocal_names(stop - 1).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].end_col
+        1
+
+        >>> f.names[-1:].end_col
+        2
+        """
+
+        start, stop, _ = self._get_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Global_Nonlocal_names(stop - 1).end_col
+
+    bloc = loc
+    bln = ln
+    bcol = col
+    bend_ln = end_ln
+    bend_col = end_col
 
 
 class fstview_dummy(fstview):

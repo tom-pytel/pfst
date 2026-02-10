@@ -152,6 +152,30 @@ else:  # safely access nonexistent empty field
     def {field}(self: 'fst.FST') -> None:
         pass
 '''.strip())
+
+            elif field == 'names':  # SPECIAL CASE!!!
+                print(f'''
+@property
+def {field}(self: 'fst.FST') -> fstview:
+    """`FST` accessor for `AST` field `{field}`."""
+
+    ast = self.a
+    ast.{field}  # noqa: B018
+
+    if ast.__class__ in ASTS_LEAF_VAR_SCOPE_DECL:
+        return fstview_Global_Nonlocal(self, {field!r})
+
+    return fstview(self, {field!r})
+
+@{field}.setter
+def {field}(self: 'fst.FST', code: Code | None) -> None:
+    self._put_slice(code, 0, 'end', {field!r})
+
+@{field}.deleter
+def {field}(self: 'fst.FST') -> None:
+    self._put_slice(None, 0, 'end', {field!r})
+'''.strip())
+
             else:
                 print(f'''
 @property
@@ -212,11 +236,11 @@ from typing import Union
 
 from . import fst
 
-from .asttypes import AST, FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias
+from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import fstview, fstview_dummy
+from .view import fstview, fstview_Global_Nonlocal, fstview_dummy
 '''.strip())
 
     cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either) | 4 if is optional (for single), ...}
