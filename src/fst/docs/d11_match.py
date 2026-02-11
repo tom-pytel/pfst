@@ -195,16 +195,16 @@ False
 True
 
 
-## `M_Match` object and tags
+## `FSTMatch` object and tags
 
 So far we have been showing the return of `match()` as a `bool`, but the actual return value is either `None` for no match
-or an `M_Match` object for a successful match. This match object may contain tagged values which we have not show yet,
+or an `FSTMatch` object for a successful match. This match object may contain tagged values which we have not show yet,
 so here they are
 
 >>> m = MConstant(M(tag=..., static_tag=True)).match(FST('"string"', Constant))
 
 >>> m
-<M_Match {'tag': 'string', 'static_tag': True}>
+<FSTMatch <Constant ROOT 0,0..0,8> {'tag': 'string', 'static_tag': True}>
 
 The `tag` tag in this case gets the value of the thing actually matched, and the `static_tag` is just a fixed-value
 tag which is added on a successful match, meant to be used for flags.
@@ -214,7 +214,7 @@ These tags can be accessed via the `.tags` attribute on the match object.
 >>> m.tags
 mappingproxy({'tag': 'string', 'static_tag': True})
 
-Or as a convenience directly as attributes. You do not have to worry about tags shadowing real `M_Match` attributes
+Or as a convenience directly as attributes. You do not have to worry about tags shadowing real `FSTMatch` attributes
 as tags which would do that are not allowed and raise an exception if you try to create a pattern with them.
 
 >>> m.tag
@@ -247,7 +247,7 @@ on the `.tags` dictionary.
 ## `M()` pattern
 
 The `M()` pattern was used above to attach tags to a successful match. This class can tag whatever is matched directly
-below it in the eventual `M_Match` object if the given `M` object lives in a successful match path, as well as any
+below it in the eventual `FSTMatch` object if the given `M` object lives in a successful match path, as well as any
 number of static value tags. The target matched may or MAY NOT be added to tags depending on if the match pattern is
 specified with a keyword or as an anonymous positional argument.
 
@@ -255,12 +255,12 @@ This will match successfully, but as there is no tag provided for the match the 
 tags.
 
 >>> M(Constant).match(FST('1'))
-<M_Match {}>
+<FSTMatch <Constant ROOT 0,0..0,1>>
 
 If you want the tag then you need to specify the pattern with a keyword.
 
 >>> M(tag=Constant).match(FST('1'))
-<M_Match {'tag': <Constant ROOT 0,0..0,1>}>
+<FSTMatch <Constant ROOT 0,0..0,1> {'tag': <Constant ROOT 0,0..0,1>}>
 
 Regardless of tags, the top level match is always available on the match object as the `.matched` attribute.
 
@@ -272,7 +272,7 @@ The reason the tags exist however is to be able to match arbitrary nodes below t
 >>> m = MBinOp(..., ..., M(tag=...)).match(FST('a + b'))
 
 >>> m
-<M_Match {'tag': <Name 0,4..0,5>}>
+<FSTMatch <BinOp ROOT 0,0..0,5> {'tag': <Name 0,4..0,5>}>
 
 >>> m.matched
 <BinOp ROOT 0,0..0,5>
@@ -280,18 +280,18 @@ The reason the tags exist however is to be able to match arbitrary nodes below t
 The `M()` pattern can be nested to any level and propagates successful match tags from below.
 
 >>> MBinOp(M(left=...), ..., M(tag1=M(tag2=...))).match(FST('a + b'))
-<M_Match {'left': <Name 0,0..0,1>, 'tag2': <Name 0,4..0,5>, 'tag1': <Name 0,4..0,5>}>
+<FSTMatch <BinOp ROOT 0,0..0,5> {'left': <Name 0,0..0,1>, 'tag2': <Name 0,4..0,5>, 'tag1': <Name 0,4..0,5>}>
 
 This pattern can go almost anywhere and tag nodes, primitives, `None` and even entire list fields.
 
 >>> MAST(names=M(l=[...])).match(FST('global a, b, c'))
-<M_Match {'l': <<Global ROOT 0,0..0,14>.names>}>
+<FSTMatch <Global ROOT 0,0..0,14> {'l': <<Global ROOT 0,0..0,14>.names>}>
 
 Here it returned an `fstview` for the list because the node we used as an `FST`. In case of `AST` it just returns what
 is there.
 
 >>> MAST(names=M(l=[...])).match(ast.parse('global a, b, c').body[0])
-<M_Match {'l': ['a', 'b', 'c']}>
+<FSTMatch Global(names=['a', 'b', 'c']) {'l': ['a', 'b', 'c']}>
 
 
 ## `MNOT()` pattern
@@ -302,7 +302,7 @@ This is similar to the `M()` pattern except that it succeeds and adds tags when 
 None
 
 >>> MConstant(MNOT(tag=1, static=True)).match(FST('2'))
-<M_Match {'tag': 2, 'static': True}>
+<FSTMatch <Constant ROOT 0,0..0,1> {'tag': 2, 'static': True}>
 
 This tag does not propagate any tags from below as it only succeeds when the child pattern fails, and fails if it
 succeeds. So it can only ever propagate its own tags upwards when there are no tags from children due to failed match.
@@ -314,30 +314,30 @@ These should be self-explanatory. The only thing that needs to be clarified is t
 more patterns and the patterns can be all anonymous, all tagged or a combination.
 
 >>> MOR('a', tag_b='b', tag_c='c').match(FST('a'))
-<M_Match {}>
+<FSTMatch <Name ROOT 0,0..0,1>>
 
 >>> MOR('a', tag_b='b', tag_c='c').match(FST('b'))
-<M_Match {'tag_b': <Name ROOT 0,0..0,1>}>
+<FSTMatch <Name ROOT 0,0..0,1> {'tag_b': <Name ROOT 0,0..0,1>}>
 
 >>> MOR('a', tag_b='b', tag_c='c').match(FST('c'))
-<M_Match {'tag_c': <Name ROOT 0,0..0,1>}>
+<FSTMatch <Name ROOT 0,0..0,1> {'tag_c': <Name ROOT 0,0..0,1>}>
 
 They do not provide static tags as each keyword element is another pattern to match. If you want to add static tags to
 a successful or match the either add an `M()` to the whole `MOR`.
 
 >>> M(MOR('a', tag_b='b', tag_c='c'), static=True).match(FST('c'))
-<M_Match {'tag_c': <Name ROOT 0,0..0,1>, 'static': True}>
+<FSTMatch <Name ROOT 0,0..0,1> {'tag_c': <Name ROOT 0,0..0,1>, 'static': True}>
 
 Or to the individual elements.
 
 >>> MOR(M('a', static=False), tag_b='b', tag_c=M('c', static=True)).match(FST('a'))
-<M_Match {'static': False}>
+<FSTMatch <Name ROOT 0,0..0,1> {'static': False}>
 
 >>> MOR(M('a', static=False), tag_b='b', tag_c=M('c', static=True)).match(FST('b'))
-<M_Match {'tag_b': <Name ROOT 0,0..0,1>}>
+<FSTMatch <Name ROOT 0,0..0,1> {'tag_b': <Name ROOT 0,0..0,1>}>
 
 >>> MOR(M('a', static=False), tag_b='b', tag_c=M('c', static=True)).match(FST('c'))
-<M_Match {'static': True, 'tag_c': <Name ROOT 0,0..0,1>}>
+<FSTMatch <Name ROOT 0,0..0,1> {'static': True, 'tag_c': <Name ROOT 0,0..0,1>}>
 
 
 ## `MANY()` pattern
@@ -353,14 +353,14 @@ The following will match any statement node which can and does have a docstring
 ... )
 
 >>> pat.match(FST('def f(): "docstring"; pass'))
-<M_Match {}>
+<FSTMatch <FunctionDef ROOT 0,0..0,26>>
 
 >>> pat.match(FST('def f(): pass; pass'))
 
 >>> pat.match(FST('def f(): pass; "NOTdocstring"'))
 
 >>> pat.match(FST('class cls: "docstring"; pass'))
-<M_Match {}>
+<FSTMatch <ClassDef ROOT 0,0..0,28>>
 
 >>> pat.match(FST('if 1: "NOTdocstring"; pass'))
 
@@ -373,7 +373,7 @@ Multiple fields to match.
 ... )
 
 >>> pat.match(FST('def f() -> int: "docstring"; pass'))
-<M_Match {}>
+<FSTMatch <FunctionDef ROOT 0,0..0,33>>
 
 >>> pat.match(FST('def f() -> str: "docstring"; pass'))
 
@@ -393,15 +393,15 @@ You can use `re.Pattern` directly but that doesn't allow the use of `re.search()
 >>> f = FST('some_hidden_gem')
 
 >>> f.match(re.compile(r'.*hidden.*'))
-<M_Match {}>
+<FSTMatch <Name ROOT 0,0..0,15>>
 
 >>> f.match(MRE(m=r'.*hidden.*'))
-<M_Match {'m': <re.Match object; span=(0, 15), match='some_hidden_gem'>}>
+<FSTMatch <Name ROOT 0,0..0,15> {'m': <re.Match object; span=(0, 15), match='some_hidden_gem'>}>
 
 Using `search=True` you can narrow down the location of whatever you are looking for.
 
 >>> f.match(MRE(m=r'hidden', search=True))
-<M_Match {'m': <re.Match object; span=(5, 11), match='hidden'>}>
+<FSTMatch <Name ROOT 0,0..0,15> {'m': <re.Match object; span=(5, 11), match='hidden'>}>
 
 
 ## `MCB()` pattern
@@ -415,10 +415,10 @@ the return value to add as a tag (if a tag is being added).
 >>> pat.match(FST('1'))
 
 >>> pat.match(FST('3'))
-<M_Match {}>
+<FSTMatch <Constant ROOT 0,0..0,1>>
 
 >>> pat.match(FST('7'))
-<M_Match {}>
+<FSTMatch <Constant ROOT 0,0..0,1>>
 
 >>> pat.match(FST('10'))
 
@@ -429,7 +429,7 @@ Check for only parenthesized tuples.
 >>> pat.match(FST('x, y, z'))
 
 >>> pat.match(FST('(x, y, z)'))
-<M_Match {}>
+<FSTMatch <Tuple ROOT 0,0..0,9>>
 
 >>> pat.match(FST('[x, y, z]'))
 
@@ -438,7 +438,7 @@ This node also allows matched target and static tags.
 >>> pat = MCB(tgt=FST.is_parenthesized_tuple, static=True)
 
 >>> pat.match(FST('(x, y, z)'))
-<M_Match {'tgt': <Tuple ROOT 0,0..0,9>, 'static': True}>
+<FSTMatch <Tuple ROOT 0,0..0,9> {'tgt': <Tuple ROOT 0,0..0,9>, 'static': True}>
 
 If you pass `tag_ret=True` then whatever is returned from the callback function is used for the match tag (assuming it
 is a truthy value, otherwise the match is assumed to have failed).
@@ -448,13 +448,13 @@ is a truthy value, otherwise the match is assumed to have failed).
 >>> pat.match(FST('a.b'))
 
 >>> pat.match(FST('some_name'))
-<M_Match {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
+<FSTMatch <Name ROOT 0,0..0,9> {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
 
 An explicit fail value can be provided in case you want to be able to tag falsey values directly, it is checked by
 equality.
 
 >>> MCB(tag=lambda f: False, tag_ret=True, fail_val=None).match(FST('a'))
-<M_Match {'tag': False}>
+<FSTMatch <Name ROOT 0,0..0,1> {'tag': False}>
 
 >>> MCB(tag=lambda f: None, tag_ret=True, fail_val=None).match(FST('a'))
 
@@ -476,7 +476,7 @@ matching against already matched nodes, but can also be used to match against ar
 they are valid patterns.
 
 >>> MBinOp(M(left_='a'), right=MTAG('left_')).match(FST('a + a'))
-<M_Match {'left_': <Name 0,0..0,1>}>
+<FSTMatch <BinOp ROOT 0,0..0,5> {'left_': <Name 0,0..0,1>}>
 
 In the example above we match a `BinOp` which has the same node on the right as the left. It will fail if they are
 different.
@@ -495,20 +495,20 @@ As stated, the tag to match does not have to come from an actual previous match,
 ...    MTAG('then'))
 
 >>> pat.match(FST('if_a + then_b'))
-<M_Match {'then': 'then_b'}>
+<FSTMatch <BinOp ROOT 0,0..0,13> {'then': 'then_b'}>
 
 >>> pat.match(FST('if_a + then_y'))
 
 >>> pat.match(FST('if_x + then_y'))
-<M_Match {'then': 'then_y'}>
+<FSTMatch <BinOp ROOT 0,0..0,13> {'then': 'then_y'}>
 
 Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
 
 >>> MDict(_all=[M(s=...), ..., MTAG(e='s')]).match(FST('{1:a,1:a}'))
-<M_Match {'s': <<Dict ROOT 0,0..0,9>._all[:1]>, 'e': <<Dict ROOT 0,0..0,9>._all[1:2]>}>
+<FSTMatch <Dict ROOT 0,0..0,9> {'s': <<Dict ROOT 0,0..0,9>._all[:1]>, 'e': <<Dict ROOT 0,0..0,9>._all[1:2]>}>
 
 >>> MDict(_all=[M(start=...), ..., MTAG('start')]).match(FST('{**b, 1: a, **b}'))
-<M_Match {'start': <<Dict ROOT 0,0..0,16>._all[:1]>}>
+<FSTMatch <Dict ROOT 0,0..0,16> {'start': <<Dict ROOT 0,0..0,16>._all[:1]>}>
 
 
 ## `MN()` quantifier pattern
@@ -519,10 +519,10 @@ number of times.
 >>> MList([MN('a', 1, 2)]).match(FST('[]'))
 
 >>> MList([MN('a', 1, 2)]).match(FST('[a]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,3>>
 
 >>> MList([MN('a', 1, 2)]).match(FST('[a, a]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,6>>
 
 >>> MList([MN('a', 1, 2)]).match(FST('[a, a, a]'))
 
@@ -530,32 +530,32 @@ The pattern above will only match 1 or 2 instances of `a`. It failed the last ch
 we did not account for that in the full pattern.
 
 >>> MList([MN('a', 1, 2), ...]).match(FST('[a, a, a]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,9>>
 
 Now we tag it to show that it only "consumed" two of the `a` instances.
 
 >>> MList([MN(t='a', min=1, max=2), ...]).match(FST('[a, a, a]'))
-<M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
+<FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-When a quantifier pattern is tagged then it returns a list of `M_Match` objects in that tag of all the nodes that were
+When a quantifier pattern is tagged then it returns a list of `FSTMatch` objects in that tag of all the nodes that were
 matched. If used with a tag like this then any tags from the children are made available in their individual match
 objects.
 
 >>> MList([MN(t=M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
-<M_Match {'t': [<M_Match {'u': <Name 0,1..0,2>}>, <M_Match {'u': <Name 0,4..0,5>}>]}>
+<FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2> {'u': <Name 0,1..0,2>}>, <FSTMatch <Name 0,4..0,5> {'u': <Name 0,4..0,5>}>]}>
 
 If the pattern is untagged however, the tags from all the children are collapsed and the latter matches override
 earlier tag values. All the tags are put into the parent match object and the matched nodes do not get their own
 individual match objects.
 
 >>> MList([MN(M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
-<M_Match {'u': <Name 0,4..0,5>}>
+<FSTMatch <List ROOT 0,0..0,9> {'u': <Name 0,4..0,5>}>
 
 One case to look out for is when using a quantifier with a minimum of 0. This can always match something since it can
 match nonexistent elements.
 
 >>> MList([MN(t='a', min=0, max=2), ...]).match(FST('[b, b, b]'))
-<M_Match {'t': []}>
+<FSTMatch <List ROOT 0,0..0,9> {'t': []}>
 
 There was a successful match against 0 elements in this case.
 
@@ -563,10 +563,10 @@ And lastly, these must normally only be used inside list fields, but as a conven
 a list field without the `[]` and it acts as if it is the only pattern in the list field.
 
 >>> MList([MN(t='a', min=1, max=2)]).match(FST('[a]'))
-<M_Match {'t': [<M_Match {}>]}>
+<FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
 >>> MList(MN(t='a', min=1, max=2)).match(FST('[a]'))
-<M_Match {'t': [<M_Match {}>]}>
+<FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
 
 ## `MSTAR()`, `MPLUS()`, `MMIN()` and `MMAX()` quantifier patterns
@@ -638,32 +638,32 @@ This is also subclassed off of `MN()` and is also a quantifier pattern for insid
 zero or one times.
 
 >>> MList(MOPT('a')).match(FST('[]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,2>>
 
 >>> MList(MOPT('a')).match(FST('[a]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,3>>
 
 >>> MList(MOPT('a')).match(FST('[b]'))
 
 >>> MList([MOPT('a')]).match(FST('[a]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,3>>
 
 >>> MList([MOPT('a')]).match(FST('[b]'))
 
 >>> MList([MOPT('a')]).match(FST('[a, a]'))
 
 >>> MList([MOPT('a'), ...]).match(FST('[a, a]'))
-<M_Match {}>
+<FSTMatch <List ROOT 0,0..0,6>>
 
 Unlike the other patterns however this one can be used outside of list fields to optionally match single-element fields
 which may or may not be present. That is, both a normal value which matches the pattern and a `None` value are
 considered a successful match. A non-`None` value which does NOT match the pattern is considered a failure.
 
 >>> MFunctionDef(returns=MOPT('int')).match(FST('def f(): pass'))
-<M_Match {}>
+<FSTMatch <FunctionDef ROOT 0,0..0,13>>
 
 >>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))
-<M_Match {}>
+<FSTMatch <FunctionDef ROOT 0,0..0,20>>
 
 >>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))
 
@@ -674,7 +674,7 @@ considered a successful match. A non-`None` value which does NOT match the patte
 mechanism which is used by the `MTAG()` pattern to compare previously matched parts of the tree.
 
 >>> FST('a = b ; call()').match(ast.parse('a = b ; call()'))
-<M_Match {}>
+<FSTMatch <Module ROOT 0,0..0,14>>
 
 It is not any less efficient to use `AST` as a pattern vs. using the `MAST` pattern classes. The differences are:
 
@@ -682,22 +682,22 @@ It is not any less efficient to use `AST` as a pattern vs. using the `MAST` patt
     way handle this if using `AST` is just to specify those fields as `...` wildcards.
 
 >>> FST('a + b').match(MBinOp(op='+'))
-<M_Match {}>
+<FSTMatch <BinOp ROOT 0,0..0,5>>
 
 vs.
 
 >>> FST('a + b').match(BinOp(..., '+', ...))
-<M_Match {}>
+<FSTMatch <BinOp ROOT 0,0..0,5>>
 
 - The `MAST` patterns allow you to match against virtual fields like `_all` or `_args`, `AST` nodes do not.
 
 >>> FST('call(a, **b)').match(MCall(_args=['a', '**b']))
-<M_Match {}>
+<FSTMatch <Call ROOT 0,0..0,12>>
 
 vs.
 
 >>> FST('call(a, **b)').match(Call(..., args=['a'], keywords=['**b']))
-<M_Match {}>
+<FSTMatch <Call ROOT 0,0..0,12>>
 
 - And finally, your type checker will complain if you use any patterns, values or wildcards in `AST` fields which are not
     expected to be there.
