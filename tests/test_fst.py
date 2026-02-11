@@ -7978,6 +7978,9 @@ opts.ignore_module = [mod.strip()
         f.a = None
         assertRaises(ValueError('Mstmt.match() called with dead FST node'), pat.match, f)
 
+        class MyM(M): pass
+        assertRaises(RuntimeError('subclassing M_Pattern not supported'), MyM(...).match, FST('a'))
+
     def test_match_M(self):
         # M
 
@@ -8634,6 +8637,12 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(pat.match(FST('[{2: b}, {2: b}]')))
         self.assertTrue(pat.match(FST('[{2: b}, {2: b, 2: b}]')))
 
+        pat = MDict(_all=[M(t=...), ..., M(u=MTAG('t'))])
+        self.assertEqual("<M_Match {'t': <<Dict ROOT 0,0..0,12>._all[:1]>, 'u': <<Dict ROOT 0,0..0,12>._all[1:2]>}>", str(pat.match(FST('{1: a, 1: a}'))))
+        self.assertEqual("<M_Match {'t': <<Dict ROOT 0,0..0,18>._all[:1]>, 'u': <<Dict ROOT 0,0..0,18>._all[2:3]>}>", str(pat.match(FST('{1: a, 2: b, 1: a}'))))
+        self.assertEqual("<M_Match {'t': <<Dict ROOT 0,0..0,16>._all[:1]>, 'u': <<Dict ROOT 0,0..0,16>._all[2:3]>}>", str(pat.match(FST('{**a, 2: b, **a}'))))
+        self.assertFalse(pat.match(FST('{1: a, 2: b, 1: a, **b}')))
+
         # Concrete pattern to multinode MatchMapping
 
         f = FST('{1: b}', pattern)
@@ -8679,6 +8688,14 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(pat.match(FST('[{2: b}, {1: b}]', pattern)))
         self.assertTrue(pat.match(FST('[{2: b}, {2: b}]', pattern)))
         self.assertTrue(pat.match(FST('[{2: b}, {2: b, 2: b}]', pattern)))
+
+        pat = MMatchMapping(_all=[M(t=...), ..., M(u=MTAG('t'))])
+        self.assertEqual("<M_Match {'t': <<MatchMapping ROOT 0,0..0,12>._all[:1]>, 'u': <<MatchMapping ROOT 0,0..0,12>._all[1:2]>}>", str(pat.match(FST('{1: a, 1: a}', pattern))))
+        self.assertEqual("<M_Match {'t': <<MatchMapping ROOT 0,0..0,18>._all[:1]>, 'u': <<MatchMapping ROOT 0,0..0,18>._all[2:3]>}>", str(pat.match(FST('{1: a, 2: b, 1: a}', pattern))))
+        self.assertFalse(pat.match(FST('{1: a, 2: b, 1: a, **b}', pattern)))
+
+        pat = MMatchSequence([MMatchMapping(_all=[..., M(t=...)]), MMatchMapping(_all=[..., M(u=MTAG('t'))])])
+        self.assertEqual("<M_Match {'t': <<MatchMapping 0,1..0,6>._all[:1]>, 'u': <<MatchMapping 0,8..0,19>._all[1:2]>}>", str(pat.match(FST('[{**b}, {1: a, **b}]', pattern))))
 
         # others
 

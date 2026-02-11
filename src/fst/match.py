@@ -174,7 +174,7 @@ from .asttypes import (
 from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
-from .view import fstview, fstview_Dict, fstview_MatchMapping
+from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_arguments
 from .fst_options import check_options
 
 __all__ = [
@@ -2757,11 +2757,19 @@ class _MatchContext:
     is_FST: bool
     ctx: bool
     all_tagss: list[list[dict[str, Any]]]
+    fstview_pat_cache: dict[fstview, _Pattern]  # may need to temporarily convert fstviews to AST patterns, specifically for MTAG match previously matched multinode item from Dict, MatchMapping or arguments
 
     def __init__(self, is_FST: bool, ctx: bool) -> None:
         self.is_FST = is_FST
         self.ctx = ctx
         self.all_tagss = []
+        self.fstview_pat_cache = {}
+
+    def clear(self) -> None:
+        """Clean up anything from a previous match attempt."""
+
+        self.all_tagss = []
+        self.fstview_pat_cache = {}
 
     def new_tagss(self) -> list:
         """Add new list of tags dictionaries to add to, which may be discarded in its entirety quickly if match fails
@@ -2805,6 +2813,38 @@ class _MatchContext:
                     return v
 
         return _SENTINEL
+
+    def fstview_as_pat(self, view: fstview) -> _Pattern:
+        """Temporary concrete pattern for matching against the given `fstview`. Created once and cached."""
+
+        if pat := self.fstview_pat_cache.get(view):
+            pass  # noop
+
+        elif isinstance(view, fstview_Dict):
+            start, stop = view.start_and_stop
+            ast = view.base.a
+            pat = self.fstview_pat_cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
+
+        elif isinstance(view, fstview_arguments):
+            raise NotImplementedError
+
+
+
+        elif isinstance(view, fstview_MatchMapping):
+            start, stop = view.start_and_stop
+            ast = view.base.a
+
+            if view.has_rest:
+                stop -= 1
+                pat = self.fstview_pat_cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop],
+                                                                   ast.rest)
+            else:
+                pat = self.fstview_pat_cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
+
+        else:
+            raise MatchError('unsupported fstview type')
+
+        return pat
 
 
 class M(M_Pattern):
@@ -3421,7 +3461,7 @@ class MCB(M):
         return self.static_tags
 
 
-class MTAG(M_Pattern):
+class MTAG(M):
     """Match previously matched node. Looks through tags of current matches and if found then attempts to match against
     the value of the tag. Meant for matching previously matched nodes but can match anything which can work as a valid
     pattern in a tag however it got there.
@@ -3430,7 +3470,9 @@ class MTAG(M_Pattern):
     by quantifier patterns. Can match those tags AS they are being built though.
 
     **Parameters:**
-    - `tag`: The tag of the previously matched node we want to match.
+    - `anon_tag`: If the source tag to match is provided in this then the new matched node is not returned in tags. If
+        this is missing then there must be at least one element in `tags` and the first keyword there will be taken to
+        be the source tag to match and the name of the new tag to use for the matched node.
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`).
 
@@ -3453,29 +3495,26 @@ class MTAG(M_Pattern):
     <M_Match {'first': <Name 0,1..0,2>, 'st': [<M_Match {}>, <M_Match {}>]}>
 
     >>> pat.match(FST('[a, a, a, b]'))
+
+    Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
+
+    >>> MDict(_all=[M(start=...), ..., MTAG('start')]) .match(FST('{1: a, 1: a}'))
+    <M_Match {'start': <<Dict ROOT 0,0..0,12>._all[:1]>}>
     """
 
-    tag: str  ; """@private"""
+    _requires = 'source tag'  # for printing error message
+
+    pat: str  ; """@private"""  # this is really a source tag name here
     static_tags: Mapping[str, Any]  ; """@private"""
 
-    def __init__(self, tag: str, /, **tags) -> None:
-        self._validate_tags((tag,))
-        self._validate_tags(tags)
+    def __init__(self, anon_tag: str | None = None, /, **tags) -> None:
+        M.__init__(self, anon_tag or _SENTINEL, **tags)
 
-        self.tag = tag
-        self.static_tags = tags
-
-    def __repr__(self) -> str:
-        name = self.__class__.__name__
-        tag = self.tag
-
-        if tags := self.static_tags:
-            return f'{name}({tag!r}, {", ".join(f"{t}={_rpr(p)}" for t, p in tags.items())})'
-
-        return f'{name}({tag!r})'
+        self._validate_tags((self.pat,))
+        self._validate_tags(self.static_tags)
 
     def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if (p := mctx.get_tag(self.tag)) is _SENTINEL:
+        if (p := mctx.get_tag(self.pat)) is _SENTINEL:
             return None
 
         if isinstance(p, fst.FST):
@@ -3485,6 +3524,16 @@ class MTAG(M_Pattern):
 
         if m is None:
             return None
+
+        if pat_tag := self.pat_tag:
+            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+
+            if m:
+                return {**m, pat_tag: tgt, **self.static_tags}
+
+            return {pat_tag: tgt, **self.static_tags}
+
         if m:
             return dict(m, **self.static_tags)
 
@@ -3968,10 +4017,20 @@ def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mappin
 
         return mctx.pop_merge_tagss()
 
+    # maybe pattern is a previously matched multinode fstview (Dict, MatchMapping, arguments)
+
+    if isinstance(pat, fstview):
+        pat = mctx.fstview_as_pat(pat)
+
+        return _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mctx)
+
     # got here through subclass of a primitive type
 
     if isinstance(pat, str):
         return _match_str(pat, tgt, mctx)
+
+    if isinstance(pat, M_Pattern):
+        raise RuntimeError('subclassing M_Pattern not supported')
 
     return _match_primitive(pat, tgt, mctx)
 
@@ -4803,6 +4862,8 @@ def search(
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
         def all_func(f: fst.FST) -> M_Match | Literal[False]:
+            mctx.clear()
+
             m = match_func(pat, f.a, mctx)
 
             return False if m is None else M_Match(m, pat, f)
@@ -4811,6 +4872,8 @@ def search(
         def all_func(f: fst.FST) -> M_Match | Literal[False]:
             if f.a.__class__ not in asts_leaf:
                 return False
+
+            mctx.clear()
 
             m = match_func(pat, f.a, mctx)
 

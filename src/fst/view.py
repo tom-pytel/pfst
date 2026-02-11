@@ -117,6 +117,12 @@ class fstview:
         return self._get_indices()[1]
 
     @property
+    def start_and_stop(self) -> tuple[int, int]:
+        """Start and stop positions within the target field list this view references."""
+
+        return self._get_indices()[:2]
+
+    @property
     def lines(self) -> list[str]:
         r"""Whole lines of this view from the **RAW SOURCE**, without any dedentation, may also contain parts of
         enclosing nodes. Will have indentation as it appears in the top level source if multiple lines.

@@ -475,8 +475,8 @@ This pattern allows you to match against tags that exist at the point that this 
 matching against already matched nodes, but can also be used to match against arbitrary tag values as well as long as
 they are valid patterns.
 
->>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
-<M_Match {'left': <Name 0,0..0,1>}>
+>>> MBinOp(M(left_='a'), right=MTAG('left_')).match(FST('a + a'))
+<M_Match {'left_': <Name 0,0..0,1>}>
 
 In the example above we match a `BinOp` which has the same node on the right as the left. It will fail if they are
 different.
@@ -502,51 +502,59 @@ As stated, the tag to match does not have to come from an actual previous match,
 >>> pat.match(FST('if_x + then_y'))
 <M_Match {'then': 'then_y'}>
 
+Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
+
+>>> MDict(_all=[M(s=...), ..., MTAG(e='s')]).match(FST('{1:a,1:a}'))
+<M_Match {'s': <<Dict ROOT 0,0..0,9>._all[:1]>, 'e': <<Dict ROOT 0,0..0,9>._all[1:2]>}>
+
+>>> MDict(_all=[M(start=...), ..., MTAG('start')]).match(FST('{**b, 1: a, **b}'))
+<M_Match {'start': <<Dict ROOT 0,0..0,16>._all[:1]>}>
+
 
 ## `MN()` quantifier pattern
 
 This is essentially a counted wildcard for use inside list fields to match a pattern between a minimum and maximum
 number of times.
 
->>> MList([MN('a', 1, 2)]) .match(FST('[]'))
+>>> MList([MN('a', 1, 2)]).match(FST('[]'))
 
->>> MList([MN('a', 1, 2)]) .match(FST('[a]'))
+>>> MList([MN('a', 1, 2)]).match(FST('[a]'))
 <M_Match {}>
 
->>> MList([MN('a', 1, 2)]) .match(FST('[a, a]'))
+>>> MList([MN('a', 1, 2)]).match(FST('[a, a]'))
 <M_Match {}>
 
->>> MList([MN('a', 1, 2)]) .match(FST('[a, a, a]'))
+>>> MList([MN('a', 1, 2)]).match(FST('[a, a, a]'))
 
 The pattern above will only match 1 or 2 instances of `a`. It failed the last check because there were three `a`s and
 we did not account for that in the full pattern.
 
->>> MList([MN('a', 1, 2), ...]) .match(FST('[a, a, a]'))
+>>> MList([MN('a', 1, 2), ...]).match(FST('[a, a, a]'))
 <M_Match {}>
 
 Now we tag it to show that it only "consumed" two of the `a` instances.
 
->>> MList([MN(t='a', min=1, max=2), ...]) .match(FST('[a, a, a]'))
+>>> MList([MN(t='a', min=1, max=2), ...]).match(FST('[a, a, a]'))
 <M_Match {'t': [<M_Match {}>, <M_Match {}>]}>
 
 When a quantifier pattern is tagged then it returns a list of `M_Match` objects in that tag of all the nodes that were
 matched. If used with a tag like this then any tags from the children are made available in their individual match
 objects.
 
->>> MList([MN(t=M(u=MRE('a|b')), min=1, max=2), ...]) .match(FST('[a, b, a]'))
+>>> MList([MN(t=M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
 <M_Match {'t': [<M_Match {'u': <Name 0,1..0,2>}>, <M_Match {'u': <Name 0,4..0,5>}>]}>
 
 If the pattern is untagged however, the tags from all the children are collapsed and the latter matches override
 earlier tag values. All the tags are put into the parent match object and the matched nodes do not get their own
 individual match objects.
 
->>> MList([MN(M(u=MRE('a|b')), min=1, max=2), ...]) .match(FST('[a, b, a]'))
+>>> MList([MN(M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
 <M_Match {'u': <Name 0,4..0,5>}>
 
 One case to look out for is when using a quantifier with a minimum of 0. This can always match something since it can
 match nonexistent elements.
 
->>> MList([MN(t='a', min=0, max=2), ...]) .match(FST('[b, b, b]'))
+>>> MList([MN(t='a', min=0, max=2), ...]).match(FST('[b, b, b]'))
 <M_Match {'t': []}>
 
 There was a successful match against 0 elements in this case.
@@ -554,10 +562,10 @@ There was a successful match against 0 elements in this case.
 And lastly, these must normally only be used inside list fields, but as a convenience a single pattern can be used as
 a list field without the `[]` and it acts as if it is the only pattern in the list field.
 
->>> MList([MN(t='a', min=1, max=2)]) .match(FST('[a]'))
+>>> MList([MN(t='a', min=1, max=2)]).match(FST('[a]'))
 <M_Match {'t': [<M_Match {}>]}>
 
->>> MList(MN(t='a', min=1, max=2)) .match(FST('[a]'))
+>>> MList(MN(t='a', min=1, max=2)).match(FST('[a]'))
 <M_Match {'t': [<M_Match {}>]}>
 
 
@@ -566,61 +574,61 @@ a list field without the `[]` and it acts as if it is the only pattern in the li
 These are just convenience classes subclassed off of `MN` which provide predefined `min` and / or `max` values. `MSTAR`
 is match zero or more.
 
->>> bool(MList([MSTAR('a')]) .match(FST('[]')))
+>>> bool(MList([MSTAR('a')]).match(FST('[]')))
 True
 
->>> bool(MList([MSTAR('a')]) .match(FST('[a]')))
+>>> bool(MList([MSTAR('a')]).match(FST('[a]')))
 True
 
->>> bool(MList([MSTAR('a')]) .match(FST('[a, a]')))
+>>> bool(MList([MSTAR('a')]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MSTAR('a')]) .match(FST('[a, a, a]')))
+>>> bool(MList([MSTAR('a')]).match(FST('[a, a, a]')))
 True
 
 `MPLUS` is one or more.
 
->>> bool(MList([MPLUS('a')]) .match(FST('[]')))
+>>> bool(MList([MPLUS('a')]).match(FST('[]')))
 False
 
->>> bool(MList([MPLUS('a')]) .match(FST('[a]')))
+>>> bool(MList([MPLUS('a')]).match(FST('[a]')))
 True
 
->>> bool(MList([MPLUS('a')]) .match(FST('[a, a]')))
+>>> bool(MList([MPLUS('a')]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MPLUS('a')]) .match(FST('[a, a, a]')))
+>>> bool(MList([MPLUS('a')]).match(FST('[a, a, a]')))
 True
 
 `MMIN` is expectedly minimum.
 
->>> bool(MList([MMIN('a', 2)]) .match(FST('[]')))
+>>> bool(MList([MMIN('a', 2)]).match(FST('[]')))
 False
 
->>> bool(MList([MMIN('a', 2)]) .match(FST('[a]')))
+>>> bool(MList([MMIN('a', 2)]).match(FST('[a]')))
 False
 
->>> bool(MList([MMIN('a', 2)]) .match(FST('[a, a]')))
+>>> bool(MList([MMIN('a', 2)]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MMIN('a', 2)]) .match(FST('[a, a, a]')))
+>>> bool(MList([MMIN('a', 2)]).match(FST('[a, a, a]')))
 True
 
 And `MMAX` is maximum.
 
->>> bool(MList([MMAX('a', 2)]) .match(FST('[]')))
+>>> bool(MList([MMAX('a', 2)]).match(FST('[]')))
 True
 
->>> bool(MList([MMAX('a', 2)]) .match(FST('[a]')))
+>>> bool(MList([MMAX('a', 2)]).match(FST('[a]')))
 True
 
->>> bool(MList([MMAX('a', 2)]) .match(FST('[a, a]')))
+>>> bool(MList([MMAX('a', 2)]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MMAX('a', 2)]) .match(FST('[a, a, a]')))
+>>> bool(MList([MMAX('a', 2)]).match(FST('[a, a, a]')))
 False
 
->>> bool(MList([MMAX('a', 2), ...]) .match(FST('[a, a, a]')))
+>>> bool(MList([MMAX('a', 2), ...]).match(FST('[a, a, a]')))
 True
 
 
@@ -629,35 +637,35 @@ True
 This is also subclassed off of `MN()` and is also a quantifier pattern for inside of list fields, in this case matching
 zero or one times.
 
->>> MList(MOPT('a')) .match(FST('[]'))
+>>> MList(MOPT('a')).match(FST('[]'))
 <M_Match {}>
 
->>> MList(MOPT('a')) .match(FST('[a]'))
+>>> MList(MOPT('a')).match(FST('[a]'))
 <M_Match {}>
 
->>> MList(MOPT('a')) .match(FST('[b]'))
+>>> MList(MOPT('a')).match(FST('[b]'))
 
->>> MList([MOPT('a')]) .match(FST('[a]'))
+>>> MList([MOPT('a')]).match(FST('[a]'))
 <M_Match {}>
 
->>> MList([MOPT('a')]) .match(FST('[b]'))
+>>> MList([MOPT('a')]).match(FST('[b]'))
 
->>> MList([MOPT('a')]) .match(FST('[a, a]'))
+>>> MList([MOPT('a')]).match(FST('[a, a]'))
 
->>> MList([MOPT('a'), ...]) .match(FST('[a, a]'))
+>>> MList([MOPT('a'), ...]).match(FST('[a, a]'))
 <M_Match {}>
 
 Unlike the other patterns however this one can be used outside of list fields to optionally match single-element fields
 which may or may not be present. That is, both a normal value which matches the pattern and a `None` value are
 considered a successful match. A non-`None` value which does NOT match the pattern is considered a failure.
 
->>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
+>>> MFunctionDef(returns=MOPT('int')).match(FST('def f(): pass'))
 <M_Match {}>
 
->>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
+>>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))
 <M_Match {}>
 
->>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
+>>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))
 
 
 ## `AST` as pattern or target
