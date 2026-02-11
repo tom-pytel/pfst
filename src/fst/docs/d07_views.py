@@ -352,19 +352,18 @@ You can delete individual elements in this way.
 >>> print(f.src)
 {1: a, 4: d}
 
-But not put individual elements, since there is not an `AST` which represents a `key:value` pair. If you want to replace
-a single element in this way you must use slice operations.
+You can also put individual multi-node items if you pass the container with a single one of those items.
 
->>> f.put('{-2: y}', 1, '_all')
-Traceback (most recent call last):
-...
-fst.NodeError: cannot put as 'one' item to a Dict slice
+>>> print(f.put('{-2: y}', 1, '_all').src)
+{1: a, -2: y}
 
->>> f.put_slice('{-2: y}', 1, 2, '_all')
+You want to replace a single element in this way using slice operations.
+
+>>> f.put_slice('{-3: z}', 1, 2, '_all')
 <Dict ROOT 0,0..0,13>
 
 >>> print(f.src)
-{1: a, -2: y}
+{1: a, -3: z}
 
 When using `_all` on a `MatchMapping`, the `rest` element is included in the virtual field for both get and put
 operations.

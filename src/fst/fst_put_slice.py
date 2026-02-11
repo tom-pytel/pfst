@@ -367,8 +367,8 @@ def _code_to_slice_key_and_other(
     if code is None:
         return None
 
-    if one:
-        raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
+    # if one:
+    #     raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
     fst_ = code_as(code, options, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
     ast_ = fst_.a
@@ -377,8 +377,13 @@ def _code_to_slice_key_and_other(
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
                         f", not a {ast_.__class__.__name__}")
 
-    if not ast_.keys and not getattr(ast_, 'rest', None):  # put empty sequence is same as delete, check `rest` because in that case MatchMapping is not empty
+    len_body = len(ast_.keys) + bool(getattr(ast_, 'rest', None))  # add `rest` because in that case MatchMapping is not empty
+
+    if not len_body:
         return None
+
+    if one and len_body != 1:
+        raise ValueError("expecting single item pair for put as 'one=True'")
 
     return fst_
 
@@ -1077,7 +1082,7 @@ def _code_to_slice_arguments(
         len_body = len(ast_.posonlyargs) + len(ast_.args) + bool(ast_.vararg) + len(ast_.kwonlyargs) + bool(ast_.kwarg)
 
         if len_body != 1:
-            raise ValueError(f"expecting single argument for put as 'one=True', got {len_body}")
+            raise ValueError("expecting single argument for put as 'one=True'")
 
     return fst_
 

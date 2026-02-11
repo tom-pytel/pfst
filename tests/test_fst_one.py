@@ -400,10 +400,12 @@ class TestFSTPut(unittest.TestCase):
         self.assertIsInstance(f.value.get('ctx').a, Load)
 
         f = FST('{a: b}', 'exec').body[0].value
-        self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of Dict
+        # self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of Dict
+        self.assertEqual('{a: b}', f.get(0).src)
 
         f = FST('match a:\n case {1: b}: pass', 'exec').body[0].cases[0].pattern
-        self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of MatchMapping
+        # self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of MatchMapping
+        self.assertEqual('{1: b}', f.get(0).src)
 
         f = FST('a < b < c', 'exec').body[0].value
         self.assertEqual('a', f.get(0).src)
@@ -449,8 +451,10 @@ class TestFSTPut(unittest.TestCase):
         self.assertIsInstance(f.a, Or)
         self.assertEqual('or', f.src)
 
-        self.assertRaises(ValueError, FST('{a: b}').get, 0)
-        self.assertRaises(ValueError, FST('match a:\n case {1: b}: pass').cases[0].pattern.get, 0)
+        # self.assertRaises(ValueError, FST('{a: b}').get, 0)
+        self.assertEqual('{c: d}', FST('{a: b, c: d, e: f}').get(1).src)
+        # self.assertRaises(ValueError, FST('match a:\n case {1: b}: pass').cases[0].pattern.get, 0)
+        self.assertEqual('{2: b}', FST('match a:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern.get(1).root.src)
 
         f = FST('a < b < c')
         self.assertEqual('a', f.get(0).src)
@@ -2992,7 +2996,9 @@ c, # c
         self.assertEqual('{a: b, e: f}', self_.src)
 
         self.assertRaises(ValueError, FST('{a: b, c: d, e: f}')._put_one, None, 1, '_all', {'raw': True}, True)
-        self.assertRaises(NodeError, FST('{a: b, c: d, e: f}')._put_one, 'x: y', 1, '_all', {'raw': False}, True)
+        # self.assertRaises(NodeError, FST('{a: b, c: d, e: f}')._put_one, 'x: y', 1, '_all', {'raw': False}, True)
+        (f := FST('{a: b, c: d, e: f}'))._put_one('{x: y}', 1, '_all', {'raw': False}, True)
+        self.assertEqual('{a: b, x: y, e: f}', f.src)
 
         child = (self_ := FST('{a: b, c: d, e: f}', 'exec').body[0].value)._put_one('x: y', 1, '_all', {'raw': True}, True)
         self.assertIsNone(child)
@@ -3007,7 +3013,9 @@ c, # c
         self.assertEqual('{a: b, e: f}', self_.src)
 
         self.assertRaises(ValueError, FST('{a: b, c: d, e: f}')._put_one, None, 1, '_all', {'raw': True}, False)
-        self.assertRaises(NodeError, FST('{a: b, c: d, e: f}')._put_one, 'x: y', 1, '_all', {'raw': False}, False)
+        # self.assertRaises(NodeError, FST('{a: b, c: d, e: f}')._put_one, 'x: y', 1, '_all', {'raw': False}, False)
+        (f := FST('{a: b, c: d, e: f}'))._put_one('{x: y}', 1, '_all', {'raw': False}, False)
+        self.assertEqual('{a: b, x: y, e: f}', f.src)
 
         new_self = (self_ := FST('{a: b, c: d, e: f}', 'exec').body[0].value)._put_one('x: y', 1, '_all', {'raw': True}, False)
         self.assertIsNot(new_self, self)
@@ -3022,7 +3030,9 @@ c, # c
         self.assertEqual('case {1: a, 3: c}: pass', self_.src)
 
         self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, None, 1, '_all', {'raw': True}, True)
-        self.assertRaises(NodeError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, True)
+        # self.assertRaises(NodeError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, True)
+        (f := FST('{1: a, 2: b, 3: c}'))._put_one('{4: x}', 1, '_all', {'raw': False}, True)
+        self.assertEqual('{1: a, 4: x, 3: c}', f.src)
 
         self_ = FST('case {1: a, 2: b, 3: c}: pass', 'match_case')
         ast = self_.a
@@ -3039,7 +3049,9 @@ c, # c
         self.assertEqual('case {1: a, 3: c}: pass', self_.src)
 
         self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, None, 1, '_all', {'raw': True}, False)
-        self.assertRaises(NodeError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
+        # self.assertRaises(NodeError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
+        (f := FST('{1: a, 2: b, 3: c}'))._put_one('{4: x}', 1, '_all', {'raw': False}, False)
+        self.assertEqual('{1: a, 4: x, 3: c}', f.src)
 
         new_pat = (old_pat := (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern)._put_one('4: x', 1, '_all', {'raw': True}, False)
         self.assertIsNot(new_pat, old_pat)
@@ -3054,7 +3066,9 @@ c, # c
         self.assertEqual('case {1: a, 3: c}: pass', self_.src)
 
         self.assertRaises(ValueError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, None, 1, '_all', {'raw': True}, True)
-        self.assertRaises(NodeError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, '4: x', 1, '_all', {'raw': False}, True)
+        # self.assertRaises(NodeError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, '4: x', 1, '_all', {'raw': False}, True)
+        (f := FST('match _:\n case {1: a, 2: b, 3: c}: pass')).cases[0].pattern._put_one('{4: x}', 1, '_all', {'raw': False}, True)
+        self.assertEqual('match _:\n case {1: a, 4: x, 3: c}: pass', f.src)
 
         child = (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern._put_one('4: x', 1, '_all', {'raw': True}, True)
         self.assertIsNone(child)
@@ -3069,7 +3083,9 @@ c, # c
         self.assertEqual('case {1: a, 3: c}: pass', self_.src)
 
         self.assertRaises(ValueError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, None, 1, '_all', {'raw': True}, False)
-        self.assertRaises(NodeError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
+        # self.assertRaises(NodeError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
+        (f := FST('match _:\n case {1: a, 2: b, 3: c}: pass')).cases[0].pattern._put_one('{4: x}', 1, '_all', {'raw': False}, False)
+        self.assertEqual('match _:\n case {1: a, 4: x, 3: c}: pass', f.src)
 
         new_pat = (old_pat := (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern)._put_one('4: x', 1, '_all', {'raw': True}, False)
         self.assertIsNot(new_pat, old_pat)

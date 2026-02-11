@@ -1203,105 +1203,105 @@ AST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerc
 one=True, coerce=True  (mode=None)
 ----------------------------------
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Name')**  # src='x'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Name')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Name')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='*x'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Starred')**  # src='*x'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Starred')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Starred')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x,'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='x,'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='*x,'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='*x,'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='(x,)'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='(x,)'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='[x]'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a List')**  # src='[x]'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a List')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a List')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='{x}'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Set')**  # src='{x}'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Set')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Set')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='{x: y}'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: {x: y}  # src='{x: y}'
+FST: {x: y}
+AST: {x: y}
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x, y'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='x, y'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x = y ='
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **SyntaxError**  # src='x = y ='
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='@x\n@y'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='if x if y'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Name')**  # src='x'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Name')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Name')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='*x'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Starred')**  # src='*x'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Starred')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Starred')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x,'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='x,'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='*x,'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='*x,'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='(x,)'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='(x,)'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='[x]'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a List')**  # src='[x]'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a List')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a List')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='{x}'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Set')**  # src='{x}'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Set')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Set')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='{x: y}'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: {x: y}  # src='{x: y}'
+FST: {x: y}
+AST: {x: y}
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x, y'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**  # src='x, y'
+FST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
+AST: **NodeError('slice being assigned to a Dict must be a Dict, not a Tuple')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='x = y ='
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **SyntaxError**  # src='x = y ='
+FST: **NodeError('expecting expression (standard), got _Assign_targets, coerce disabled')**
+AST: **NodeError('expecting expression (standard), got _Assign_targets, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='@x\n@y'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting expression (standard), got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting expression (standard), got _decorator_list, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a Dict slice")**  # src='if x if y'
-FST: **NodeError("cannot put as 'one' item to a Dict slice")**
-AST: **NodeError("cannot put as 'one' item to a Dict slice")**
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
+AST: **NodeError('expecting expression (standard), got _comprehension_ifs, coerce disabled')**
 
 
 
@@ -4584,97 +4584,97 @@ AST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
 one=True, coerce=True  (mode=None)
 ----------------------------------
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**  # src='x'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**  # src='*x'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='x,'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='*x,'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='(x,)'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='(x,)'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='[x]'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='[x]'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='{x}'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x, y'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='x, y'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x = y ='
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='x = y ='
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='@x\n@y'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='if x if y'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
  
 one=True, coerce=False  (mode=None)
 -----------------------------------
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**  # src='x'
+FST: **NodeError('expecting pattern, got Name, coerce disabled')**
+AST: **NodeError('expecting pattern, got Name, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**  # src='*x'
+FST: **NodeError('expecting pattern, got Starred, coerce disabled')**
+AST: **NodeError('expecting pattern, got Starred, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='x,'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='*x,'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='(x,)'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='(x,)'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='[x]'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='[x]'
+FST: **NodeError('expecting pattern, got List, coerce disabled')**
+AST: **NodeError('expecting pattern, got List, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='{x}'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting pattern, got Set, coerce disabled')**
+AST: **NodeError('expecting pattern, got Set, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x, y'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='x, y'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x = y ='
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='x = y ='
+FST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
+AST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='@x\n@y'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='if x if y'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
+AST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
 
 
 ........................................................................................................................
@@ -4755,73 +4755,73 @@ AST: {**r}
 one=True, coerce=True  (mode='pattern')
 ---------------------------------------
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**  # src='x'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**  # src='*x'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='x,'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='*x,'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='(x,)'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='(x,)'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='[x]'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='[x]'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='{9: y}'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: {9: y}  # src='{9: y}'
+FST: {9: y}
+AST: {9: y}
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='{**r}'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: {**r}  # src='{**r}'
+FST: {**r}
+AST: {**r}
  
  
 one=True, coerce=False  (mode='pattern')
 ----------------------------------------
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**  # src='x'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**  # src='*x'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchStar')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='x,'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='*x,'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='*x,'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='(x,)'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='(x,)'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='[x]'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**  # src='[x]'
+FST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
+AST: **NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchSequence')**
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='{9: y}'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: {9: y}  # src='{9: y}'
+FST: {9: y}
+AST: {9: y}
  
-src: **NodeError("cannot put as 'one' item to a MatchMapping slice")**  # src='{**r}'
-FST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
-AST: **NodeError("cannot put as 'one' item to a MatchMapping slice")**
+src: {**r}  # src='{**r}'
+FST: {**r}
+AST: {**r}
 
 
 

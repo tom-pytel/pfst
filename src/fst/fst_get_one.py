@@ -234,16 +234,6 @@ def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, op
                    [''], None, from_=self)
 
 
-def _get_one_arguments__all(
-    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
-) -> _GetOneRet:
-    ast = self.a
-    len_body = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
-    idx = fixup_one_index(len_body, idx)
-
-    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete in the caller
-
-
 def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
@@ -262,10 +252,33 @@ def _get_one_arglike(self: fst.FST, idx: int | None, field: str, cut: bool, opti
     return _get_one_default(self, idx, field, cut, options, child)
 
 
-def _get_one_invalid_virtual(
+def _get_one_Dict__all(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
-    raise ValueError(f'cannot get single element from {self.a.__class__.__name__}.{field}')
+    len_body = len(self.a.keys)
+    idx = fixup_one_index(len_body, idx)
+
+    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handles in the slice function
+
+
+def _get_one_arguments__all(
+    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
+) -> _GetOneRet:
+    ast = self.a
+    len_body = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
+    idx = fixup_one_index(len_body, idx)
+
+    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handles in the slice function
+
+
+def _get_one_MatchMapping__all(
+    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
+) -> _GetOneRet:
+    ast = self.a
+    len_body = len(ast.keys) + bool(ast.rest)
+    idx = fixup_one_index(len_body, idx)
+
+    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handles in the slice function
 
 
 @pyver(lt=12, else_=_get_one_default)
@@ -528,7 +541,7 @@ _GET_ONE_HANDLERS = {
     (IfExp, 'orelse'):                    _get_one_default,  # expr
     (Dict, 'keys'):                       _get_one_default,  # expr*
     (Dict, 'values'):                     _get_one_default,  # expr*
-    (Dict, '_all'):                       _get_one_invalid_virtual,  # expr*
+    (Dict, '_all'):                       _get_one_Dict__all,  # expr*
     (Set, 'elts'):                        _get_one_default,  # expr*
     (ListComp, 'elt'):                    _get_one_default,  # expr
     (ListComp, 'generators'):             _get_one_default,  # comprehension*
@@ -610,7 +623,7 @@ _GET_ONE_HANDLERS = {
     (MatchMapping, 'keys'):               _get_one_default,  # expr*
     (MatchMapping, 'patterns'):           _get_one_default,  # pattern*
     (MatchMapping, 'rest'):               _get_one_identifier,  # identifier?
-    (MatchMapping, '_all'):               _get_one_invalid_virtual,  # expr*
+    (MatchMapping, '_all'):               _get_one_MatchMapping__all,  # expr*
     (MatchClass, 'cls'):                  _get_one_default,  # expr
     (MatchClass, 'patterns'):             _get_one_default,  # pattern*
     (MatchClass, 'kwd_attrs'):            _get_one_identifier,  # identifier*

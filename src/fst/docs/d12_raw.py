@@ -26,7 +26,7 @@ Raw node put operations can do things which are not normally possible with presc
 >>> f.put('**g', 1, raw=False)
 Traceback (most recent call last):
 ...
-fst.NodeError: cannot put as 'one' item to a Dict slice
+SyntaxError: invalid syntax
 
 >>> f.put('**g', 1, raw=True)
 <Dict ROOT 0,0..0,17>

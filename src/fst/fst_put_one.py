@@ -2652,11 +2652,9 @@ _PUT_ONE_HANDLERS = {
     (SetComp, 'elt'):                     (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred if PYGE15 else _onestatic_expr_required),  # expr
     (SetComp, 'generators'):              (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (DictComp, 'key'):                    (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
-
     (DictComp, 'value'):                  (False, _put_one_exprlike_optional, onestatic(_one_info_DictComp_value, _restrict_default))
                                           if PYGE15 else
                                           (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
-
     (DictComp, 'generators'):             (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (GeneratorExp, 'elt'):                (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred if PYGE15 else _onestatic_expr_required),  # expr
     (GeneratorExp, 'generators'):         (True,  _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
@@ -3037,14 +3035,14 @@ def _put_one(
 
         if is_virtual_field:
             if keys is not None:  # Dict or MatchMapping
-                return None
+                return None  # must return this because item at idx is a two-node key:value
 
-            assert ast_cls is arguments  # Compare and others are only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare and others have handlers
+            if ast_cls is arguments:  # Compare and others are only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare and others have handlers
+                ast = new_self.a
 
-            ast = new_self.a
+                return new_self._cached_allargs()[idx].f  # we return only the arg portion even though it might have a default, but it will never be called expecting a return with a default because that would be a .replace() on a single combined arg+defualt element which never exists on its own
 
-            return [*ast.posonlyargs, *ast.args, *([a] if (a := ast.vararg) else ()), *ast.kwonlyargs,
-                    *([a] if (a := ast.kwarg) else ())][idx].f  # we return only the arg portion even though it might have a default, but it will never be called expecting a return with a default because that would be a .replace() on a single combined arg+defualt element which never exists on its own
+            raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 
         try:
             return getattr(new_self.a, field)[idx].f  # may not be there due to removal of last element or raw reparsing of weird *(^$

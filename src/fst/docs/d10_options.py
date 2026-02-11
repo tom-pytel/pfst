@@ -116,7 +116,7 @@ done instead (`raw=True`), or whether raw source reparse is used as a fallback i
 >>> print(FST('{a: b}').put('**c', 0, raw=False).src)  # default
 Traceback (most recent call last):
 ...
-fst.NodeError: cannot put as 'one' item to a Dict slice
+SyntaxError: invalid syntax
 
 >>> print(FST('{a: b}').put('**c', 0, raw=True).src)
 {**c}

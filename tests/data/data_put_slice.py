@@ -37007,7 +37007,7 @@ arguments - ROOT 0,0..0,1
 ('', 0, 'end', '_all', {'one': True}, ('arguments',
 r'''a, b, c'''), ('arguments',
 r'''x, y'''),
-r'''**ValueError("expecting single argument for put as 'one=True', got 2")**'''),
+r'''**ValueError("expecting single argument for put as 'one=True'")**'''),
 
 ('', 0, 'end', '_all', {'one': True}, ('arguments',
 r'''a, b, c'''), ('arguments',

@@ -1092,7 +1092,15 @@ r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
 ('', 0, None, None, {}, (Dict,
 r'''{key: val}'''),
-r'''**ValueError('cannot get single element from Dict._all')**'''),
+r'''{}''',
+r'''Dict - ROOT 0,0..0,2''',
+r'''{key: val}''', r'''
+Dict - ROOT 0,0..0,10
+  .keys[1]
+   0] Name 'key' Load - 0,1..0,4
+  .values[1]
+   0] Name 'val' Load - 0,6..0,9
+'''),
 
 ('', 0, None, 'elts', {}, (Set,
 r'''{elt0, elt1}'''),
@@ -2173,7 +2181,18 @@ r'''**None**'''),
 
 ('', 0, None, None, {}, (MatchMapping,
 r'''{1: a, **rest}'''),
-r'''**ValueError('cannot get single element from MatchMapping._all')**'''),
+r'''{**rest}''', r'''
+MatchMapping - ROOT 0,0..0,8
+  .rest 'rest'
+''',
+r'''{1: a}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
 
 ('', None, None, 'cls', {}, (MatchClass,
 r'''cls(a, b=c)'''),
