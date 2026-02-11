@@ -174,7 +174,7 @@ from .asttypes import (
 from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
-from .view import fstview
+from .view import fstview, fstview_Dict
 from .fst_options import check_options
 
 __all__ = [
@@ -4064,6 +4064,49 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
 
     return mctx.pop_merge_tagss()
 
+def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+    """`Dict` or `MDict` leaf node. Possibly match against a single-item `fstview_Dict`."""
+
+    # TODO: maybe in future allow match > len-1 Dict against multiple items, but that gets complicated quickly
+
+    if not isinstance(tgt, fstview_Dict):
+        return _match_node(pat, tgt, mctx)
+
+    if len(tgt) != 1:
+        return None
+
+    key = getattr(pat, 'keys', ...)
+
+    if isinstance(key, list):
+        if len(key) != 1:
+            raise MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single-element or single-element list')
+        else:
+            key = key[0]
+
+    value = getattr(pat, 'values', ...)
+
+    if isinstance(value, list):
+        if len(value) != 1:
+            raise MatchError('matching a Dict pattern against Dict._all the pattern values must be a single-element or single-element list')
+        else:
+            value = value[0]
+
+    idx = tgt.start
+    tgt = tgt.base.a
+
+    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mctx)) is None:
+        return None
+
+    if (mv := _MATCH_FUNCS.get(value.__class__, _match_default)(value, tgt.values[idx], mctx)) is None:
+        return None
+
+    if not mk:
+        return mv
+    if not mv:
+        return mk
+
+    return {**mk, **mv}
+
 def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
@@ -4071,23 +4114,24 @@ def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchC
     if not isinstance(tgt, Constant):
         return None
 
-    tagss = mctx.new_tagss()
-
     if (p := getattr(pat, 'value', _SENTINEL)) is not _SENTINEL:  # missing value acts as implicit ... wildcard, while the real ... is a concrete value here
         match_func = _match_primitive if p is ... else _MATCH_FUNCS.get(p.__class__, _match_default)
 
-        if (m := match_func(p, tgt.value, mctx)) is None:
-            return mctx.discard_tagss()
-        if m:
-            tagss.append(m)
+        if (mv := match_func(p, tgt.value, mctx)) is None:
+            return None
+    else:
+        mv = None
 
     if (p := getattr(pat, 'kind', ...)) is not ...:
-        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, mctx)) is None:
-            return mctx.discard_tagss()
-        if m:
-            tagss.append(m)
+        if (mk := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, mctx)) is None:
+            return None
+    else:
+        return mv
 
-    return mctx.pop_merge_tagss()
+    if not mv:
+        return mk
+
+    return {**mv, **mk}
 
 def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
@@ -4206,7 +4250,7 @@ _MATCH_FUNCS = {
     Continue:            _match_node,
     Del:                 _match_node_expr_context,
     Delete:              _match_node,
-    Dict:                _match_node,
+    Dict:                _match_node_Dict,
     DictComp:            _match_node,
     Div:                 _match_node,
     Eq:                  _match_node,
@@ -4343,7 +4387,7 @@ _MATCH_FUNCS = {
     MContinue:           _match_node,
     MDel:                _match_node,
     MDelete:             _match_node,
-    MDict:               _match_node,
+    MDict:               _match_node_Dict,
     MDictComp:           _match_node,
     MDiv:                _match_node,
     MEq:                 _match_node,

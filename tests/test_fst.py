@@ -8594,10 +8594,35 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
         self.assertFalse(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
 
-        # Concrete pattern to multinode
+        # Concrete pattern to multinode Dict
 
+        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single-element or single-element list'), MDict(_all=[MDict([], [])]).match, FST('{a: b}'))
+        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be a single-element or single-element list'), MDict(_all=[MDict(['a'], [])]).match, FST('{a: b}'))
 
+        self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{ a : b }')))
+        self.assertTrue(MDict(_all=[MDict('a')]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[MDict('a')]).match(FST('{ a : c }')))
+        self.assertFalse(MDict(_all=[MDict('a')]).match(FST('{x: b}')))
+        self.assertTrue(MDict(_all=[MDict(values='b')]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[MDict(values='b')]).match(FST('{ c : b }')))
+        self.assertFalse(MDict(_all=[MDict(values='b')]).match(FST('{a: x}')))
 
+        self.assertTrue(MDict(_all=[FST('{**b}').a]).match(FST('{**b}')))
+        self.assertFalse(MDict(_all=[FST('{**b}').a]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[MDict(None, 'b')]).match(FST('{**b}')))
+        self.assertFalse(MDict(_all=[MDict(None, 'b')]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[MDict(..., 'b')]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[MDict(..., 'b')]).match(FST('{**b}')))
+        self.assertTrue(MDict(_all=[MDict(..., 'b')]).match(FST('{c: b}')))
+        self.assertTrue(MDict(_all=[MDict(MOPT('a'), 'b')]).match(FST('{a: b}')))
+        self.assertTrue(MDict(_all=[MDict(MOPT('a'), 'b')]).match(FST('{**b}')))
+        self.assertFalse(MDict(_all=[MDict(MOPT('a'), 'b')]).match(FST('{c: b}')))
+
+        self.assertEqual("<M_Match {'t': [<M_Match {}>, <M_Match {}>]}>", str(MDict(_all=[MN(t=MDict(..., 'b')), ...]).match(FST('{a: b, **b, c: d}'))))
+        self.assertEqual('[<<Dict ROOT 0,0..0,17>._all[:1]>, <<Dict ROOT 0,0..0,17>._all[1:2]>]', str([m.matched for m in MDict(_all=[MN(t=MDict(..., 'b')), ...]).match(FST('{a: b, **b, c: d}')).t]))
+        self.assertEqual('[<Name 0,4..0,5>, <Name 0,9..0,10>]', str([m.v for m in MDict(_all=[MN(t=MDict(..., M(v='b'))), ...]).match(FST('{a: b, **b, c: d}')).t]))
+        self.assertEqual('[<Name 0,1..0,2>, None]', str([m.k for m in MDict(_all=[MN(t=MDict(M(k=MOPT('a')))), ...]).match(FST('{a: b, **b, c: d}')).t]))
 
         # others
 
