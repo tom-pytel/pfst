@@ -8596,8 +8596,9 @@ opts.ignore_module = [mod.strip()
 
         # Concrete pattern to multinode Dict
 
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single-element or single-element list'), MDict(_all=[MDict([], [])]).match, FST('{a: b}'))
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be a single-element or single-element list'), MDict(_all=[MDict(['a'], [])]).match, FST('{a: b}'))
+        f = FST('{a: b}')
+        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single-element or single-element list'), MDict(_all=[MDict([], [])]).match, f)
+        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be a single-element or single-element list'), MDict(_all=[MDict(['a'], [])]).match, f)
 
         self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{a: b}')))
         self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{ a : b }')))
@@ -8623,6 +8624,61 @@ opts.ignore_module = [mod.strip()
         self.assertEqual('[<<Dict ROOT 0,0..0,17>._all[:1]>, <<Dict ROOT 0,0..0,17>._all[1:2]>]', str([m.matched for m in MDict(_all=[MN(t=MDict(..., 'b')), ...]).match(FST('{a: b, **b, c: d}')).t]))
         self.assertEqual('[<Name 0,4..0,5>, <Name 0,9..0,10>]', str([m.v for m in MDict(_all=[MN(t=MDict(..., M(v='b'))), ...]).match(FST('{a: b, **b, c: d}')).t]))
         self.assertEqual('[<Name 0,1..0,2>, None]', str([m.k for m in MDict(_all=[MN(t=MDict(M(k=MOPT('a')))), ...]).match(FST('{a: b, **b, c: d}')).t]))
+
+        pat = MList([M(t=MDict(..., ['b'])), MDict(_all=MPLUS(MTAG('t')))])
+        self.assertFalse(pat.match(FST('[{1: b}, {}]')))
+        self.assertTrue(pat.match(FST('[{1: b}, {1: b}]')))
+        self.assertTrue(pat.match(FST('[{1: b}, {1: b, 1: b}]')))
+        self.assertFalse(pat.match(FST('[{1: b}, {1: c}]')))
+        self.assertFalse(pat.match(FST('[{2: b}, {1: b}]')))
+        self.assertTrue(pat.match(FST('[{2: b}, {2: b}]')))
+        self.assertTrue(pat.match(FST('[{2: b}, {2: b, 2: b}]')))
+
+        # Concrete pattern to multinode MatchMapping
+
+        f = FST('{1: b}', pattern)
+        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping('a', [], 'r')]).match, f)
+        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], 'a', 'r')]).match, f)
+        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping('a', 'a', 'r')]).match, f)
+        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], [], 'r')]).match, f)
+        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], ['a'], 'r')]).match, f)
+        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], ['a'], 'r')]).match, f)
+        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be a single-element or single-element list'), MMatchMapping(_all=[MMatchMapping([], [])]).match, f)
+        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be a single-element or single-element list'), MMatchMapping(_all=[MMatchMapping(['a'], [])]).match, f)
+
+        self.assertTrue(MMatchMapping(_all=[FST('{1: b}', pattern).a]).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[FST('{1: b}', pattern).a]).match(FST('{ 1 : b }', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping('1')]).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping('1')]).match(FST('{ 1 : c }', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping('1')]).match(FST('{2: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping(patterns='b')]).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping(patterns='b')]).match(FST('{ 2 : b }', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping(patterns='b')]).match(FST('{1: x}', pattern)))
+
+        self.assertTrue(MMatchMapping(_all=[FST('{**b}', pattern).a]).match(FST('{**b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[FST('{**b}', pattern).a]).match(FST('{1: b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping(None, 'b')]).match(FST('{**b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping(None, 'b')]).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping(..., 'b')]).match(FST('{1: b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping(..., 'b')]).match(FST('{**b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping(..., 'b')]).match(FST('{2: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MMatchMapping(MOPT('1'), 'b')]).match(FST('{1: b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping(MOPT('1'), 'b')]).match(FST('{**b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MMatchMapping(MOPT('1'), 'b')]).match(FST('{2: b}', pattern)))
+
+        self.assertEqual("<M_Match {'t': [<M_Match {}>]}>", str(MMatchMapping(_all=[MN(t=MMatchMapping(..., 'b')), ...]).match(FST('{1: b, **b}', pattern))))
+        self.assertEqual('[<<MatchMapping ROOT 0,0..0,11>._all[:1]>]', str([m.matched for m in MMatchMapping(_all=[MN(t=MMatchMapping(..., 'b')), ...]).match(FST('{1: b, **b}', pattern)).t]))
+        self.assertEqual("[<MatchAs 0,4..0,5>]", str([m.v for m in MMatchMapping(_all=[MN(t=MMatchMapping(..., M(v='b'))), ...]).match(FST('{1: b, **b}', pattern)).t]))
+        self.assertEqual('[<Constant 0,1..0,2>]', str([m.k for m in MMatchMapping(_all=[MN(t=MMatchMapping(M(k=MOPT('1')))), ...]).match(FST('{1: b, **b}', pattern)).t]))
+
+        pat = MMatchSequence([M(t=MMatchMapping(..., ['b'])), MMatchMapping(_all=MPLUS(MTAG('t')))])
+        self.assertFalse(pat.match(FST('[{1: b}, {}]', pattern)))
+        self.assertTrue(pat.match(FST('[{1: b}, {1: b}]', pattern)))
+        self.assertTrue(pat.match(FST('[{1: b}, {1: b, 1: b}]', pattern)))
+        self.assertFalse(pat.match(FST('[{1: b}, {1: c}]', pattern)))
+        self.assertFalse(pat.match(FST('[{2: b}, {1: b}]', pattern)))
+        self.assertTrue(pat.match(FST('[{2: b}, {2: b}]', pattern)))
+        self.assertTrue(pat.match(FST('[{2: b}, {2: b, 2: b}]', pattern)))
 
         # others
 

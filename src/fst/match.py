@@ -174,7 +174,7 @@ from .asttypes import (
 from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
-from .view import fstview, fstview_Dict
+from .view import fstview, fstview_Dict, fstview_MatchMapping
 from .fst_options import check_options
 
 __all__ = [
@@ -4067,8 +4067,6 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
 def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """`Dict` or `MDict` leaf node. Possibly match against a single-item `fstview_Dict`."""
 
-    # TODO: maybe in future allow match > len-1 Dict against multiple items, but that gets complicated quickly
-
     if not isinstance(tgt, fstview_Dict):
         return _match_node(pat, tgt, mctx)
 
@@ -4106,6 +4104,68 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
         return mk
 
     return {**mk, **mv}
+
+def _match_node_MatchMapping(
+    pat: MatchMapping | MMatchMapping, tgt: _Targets, mctx: _MatchContext
+) -> Mapping[str, Any] | None:
+    """`MatchMapping` or `MMatchMapping` leaf node. Possibly match against a single-item `fstview_MatchMapping`. Need to
+    do more than `Dict` here to handle possible `**rest` element."""
+
+    if not isinstance(tgt, fstview_MatchMapping):
+        return _match_node(pat, tgt, mctx)
+
+    if len(tgt) != 1:
+        return None
+
+    rest = getattr(pat, 'rest', None)
+    key = getattr(pat, 'keys', ...)
+    pattern = getattr(pat, 'patterns', ...)
+
+    if rest is not None:  # matching against just **rest
+        if not (
+            (key is ... or (not key and isinstance(key, list)))
+            and (pattern is ... or (not pattern and isinstance(pattern, list)))
+        ):
+            raise MatchError('matching a MatchMapping rest against MatchMapping._all'
+                             ' the pattern keys and patterns must be ... or empty lists')
+
+        if not tgt.has_rest:
+            return None
+
+        return _MATCH_FUNCS.get(rest.__class__, _match_default)(rest, tgt.base.a.rest, mctx)
+
+    if isinstance(key, list):
+        if len(key) != 1:
+            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
+                             ' the pattern keys must be a single-element or single-element list')
+        else:
+            key = key[0]
+
+    if isinstance(pattern, list):
+        if len(pattern) != 1:
+            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
+                             ' the pattern patterns must be a single-element or single-element list')
+        else:
+            pattern = pattern[0]
+
+    if tgt.has_rest:  # if want to match a rest then we force user to do it explicitly on purpose since it is too different from regular nodes
+        return None
+
+    idx = tgt.start
+    tgt = tgt.base.a
+
+    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mctx)) is None:
+        return None
+
+    if (mp := _MATCH_FUNCS.get(pattern.__class__, _match_default)(pattern, tgt.patterns[idx], mctx)) is None:
+        return None
+
+    if not mk:
+        return mp
+    if not mp:
+        return mk
+
+    return {**mk, **mp}
 
 def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
@@ -4287,7 +4347,7 @@ _MATCH_FUNCS = {
     Match:               _match_node,
     MatchAs:             _match_node,
     MatchClass:          _match_node,
-    MatchMapping:        _match_node,
+    MatchMapping:        _match_node_MatchMapping,
     MatchOr:             _match_node,
     MatchSequence:       _match_node,
     MatchSingleton:      _match_node,
@@ -4424,7 +4484,7 @@ _MATCH_FUNCS = {
     MMatch:              _match_node,
     MMatchAs:            _match_node,
     MMatchClass:         _match_node,
-    MMatchMapping:       _match_node,
+    MMatchMapping:       _match_node_MatchMapping,
     MMatchOr:            _match_node,
     MMatchSequence:      _match_node,
     MMatchSingleton:     _match_node,

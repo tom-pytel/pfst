@@ -1144,6 +1144,14 @@ class fstview_MatchMapping(fstview):
     bend_ln = end_ln
     bend_col = end_col
 
+    @property
+    def has_rest(self) -> bool:
+        """Whether this slice contains the `rest` element or not."""
+
+        _, stop, _ = self._get_indices()
+
+        return stop > len(self.base.a.patterns)  # means there is a .rest
+
     def _len_field(self) -> int:
         return len((a := self.base.a).keys) + bool(a.rest)
 
