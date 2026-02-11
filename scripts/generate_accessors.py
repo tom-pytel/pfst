@@ -118,12 +118,12 @@ def {field}(self: 'fst.FST') -> None:
                 print(f'''
 if PYGE12:
     @property
-    def {field}(self: 'fst.FST') -> fstview:
+    def {field}(self: 'fst.FST') -> FSTView:
         """`FST` accessor for `AST` field `{field}`."""
 
         self.a.{field}  # noqa: B018
 
-        return fstview(self, {field!r})
+        return FSTView(self, {field!r})
 
     @{field}.setter
     def {field}(self: 'fst.FST', code: Code | None) -> None:
@@ -139,7 +139,7 @@ else:  # safely access nonexistent empty field
         """`FST` accessor for `AST` field `{field}`."""
 
         if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
-            return fstview_dummy(self, '{field}')
+            return FSTView_dummy(self, '{field}')
 
         self.a.{field}  # noqa: B018, AttributeError
 
@@ -156,16 +156,16 @@ else:  # safely access nonexistent empty field
             elif field == 'names':  # SPECIAL CASE!!!
                 print(f'''
 @property
-def {field}(self: 'fst.FST') -> fstview:
+def {field}(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `{field}`."""
 
     ast = self.a
     ast.{field}  # noqa: B018
 
     if ast.__class__ in ASTS_LEAF_VAR_SCOPE_DECL:
-        return fstview_Global_Nonlocal(self, {field!r})
+        return FSTView_Global_Nonlocal(self, {field!r})
 
-    return fstview(self, {field!r})
+    return FSTView(self, {field!r})
 
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:
@@ -179,12 +179,12 @@ def {field}(self: 'fst.FST') -> None:
             else:
                 print(f'''
 @property
-def {field}(self: 'fst.FST') -> fstview:
+def {field}(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `{field}`."""
 
     self.a.{field}  # noqa: B018
 
-    return fstview(self, {field!r})
+    return FSTView(self, {field!r})
 
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:
@@ -200,11 +200,11 @@ def {field}(self: 'fst.FST') -> None:
 
             print(f'''
 @property
-def {field}(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
+def {field}(self: 'fst.FST') -> FSTView | Union['fst.FST', None, constant]:
     """`FST` accessor for `AST` field `{field}`."""
 
     if isinstance(child := self.a.{field}, list):
-        return fstview(self, {field!r})
+        return FSTView(self, {field!r})
 
     return child.f
 
@@ -240,7 +240,7 @@ from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionD
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import fstview, fstview_Global_Nonlocal, fstview_dummy
+from .view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
 '''.strip())
 
     cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either) | 4 if is optional (for single), ...}

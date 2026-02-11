@@ -313,7 +313,7 @@ a == c > d
 ## `insert()`, `append()`, `extend()`, `prepend()` and `prextend()`
 
 These do what they say and are essentially just convenience functions which call `put_slice()` underneath. They work in
-exactly the same way as their `fstview` counterparts but allow you to specify a field to operate on explicitly, and if
+exactly the same way as their `FSTView` counterparts but allow you to specify a field to operate on explicitly, and if
 not provided they operate on the default field of the node (assuming it is a list field).
 
 Below are examples of their usage along with the corresponding `put_slice()` call to demonstrate what is happening.
@@ -378,7 +378,7 @@ if a:
 else:
     j = 2
 
-And this is the same as the function on the `fstview` (`fst.docs.d07_views`).
+And this is the same as the function on the `FSTView` (`fst.docs.d07_views`).
 
 >>> print(FST('''
 ... if a:

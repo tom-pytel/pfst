@@ -338,12 +338,12 @@ global a, a, b, c, c
 
 The `FST` class provides properties that mirror the fields of all possible `AST` classes in order to allow direct access
 to those fields through the `FST` class. When accessing like this, fields which are `AST` nodes have their corresponding
-`FST` node returned and fields which are lists of `AST` nodes return an `fstview` which acts as a list of corresponding
+`FST` node returned and fields which are lists of `AST` nodes return an `FSTView` which acts as a list of corresponding
 `FST` nodes (see `fst.docs.d07_views`). Elements which are primitive values are returned as such.
 
 >>> f = FST('i, j = [x, 2.5]')
 
->>> f.targets  # this is an `fstview`
+>>> f.targets  # this is an `FSTView`
 <<Assign ROOT 0,0..0,15>.targets>
 
 >>> f.targets[0]

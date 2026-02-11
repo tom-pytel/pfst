@@ -287,7 +287,7 @@ This pattern can go almost anywhere and tag nodes, primitives, `None` and even e
 >>> MAST(names=M(l=[...])).match(FST('global a, b, c'))
 <FSTMatch <Global ROOT 0,0..0,14> {'l': <<Global ROOT 0,0..0,14>.names>}>
 
-Here it returned an `fstview` for the list because the node we used as an `FST`. In case of `AST` it just returns what
+Here it returned an `FSTView` for the list because the node we used as an `FST`. In case of `AST` it just returns what
 is there.
 
 >>> MAST(names=M(l=[...])).match(ast.parse('global a, b, c').body[0])
@@ -708,6 +708,9 @@ error: Argument 1 to "Call" has incompatible type "EllipsisType"; expected "expr
 error: List item 0 has incompatible type "str"; expected "expr"  [list-item]
 error: List item 0 has incompatible type "str"; expected "keyword"  [list-item]
 ```
+
+## Virtual fields and `FSTView`
+
 
 
 # Search

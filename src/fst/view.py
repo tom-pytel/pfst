@@ -15,19 +15,19 @@ from .fst_misc import fixup_one_index, fixup_slice_indices
 from .fst_options import check_options
 
 __all__ = [
-    'fstview',
-    'fstview_Dict',
-    'fstview_MatchMapping',
-    'fstview_Compare',
-    'fstview_arguments',
-    'fstview__body',
-    'fstview_arglikes',
-    'fstview_Global_Nonlocal',
-    'fstview_dummy',
+    'FSTView',
+    'FSTView_Dict',
+    'FSTView_MatchMapping',
+    'FSTView_Compare',
+    'FSTView_arguments',
+    'FSTView__body',
+    'FSTView_arglikes',
+    'FSTView_Global_Nonlocal',
+    'FSTView_dummy',
 ]
 
 
-class fstview:
+class FSTView:
     """View for a list of `AST` nodes in a body, or any other field which is a list of values (not necessarily `AST`
     nodes), of an `FST` node.
 
@@ -102,7 +102,7 @@ class fstview:
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
-    is_multinode = False  ; """Whether the view is on a possibly multi-node sequence like a `Dict`, `MatchMapping` or `arguments`. These will not give individual nodes on single element index but rather another fstview."""
+    is_multinode = False  ; """Whether the view is on a possibly multi-node sequence like a `Dict`, `MatchMapping` or `arguments`. These will not give individual nodes on single element index but rather another FSTView."""
 
     @property
     def start(self) -> int:
@@ -261,7 +261,7 @@ class fstview:
     def _deref_one(self, idx: int) -> AST | str:
         """Return a single element from field (which may not be a contiguous list). `idx` is the real index already
         absolute (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN NODE. Can
-        return `AST` or primitive or another `fstview`."""
+        return `AST` or primitive or another `FSTView`."""
 
         return getattr(self.base.a, self.field)[idx]
 
@@ -328,7 +328,7 @@ class fstview:
             if ast.__class__ not in ASTS_LEAF_BLOCK_OR_MOD or field not in ('body', '_body', 'orelse', 'finalbody'):
                 raise IndexError(f'name indexing not supported on {ast.__class__.__name__}.{field}')
 
-            if field == '_body':  # special casing a specific subclass fstview__body behavior here to keep things simple, this is less ugly than abstracting it
+            if field == '_body':  # special casing a specific subclass FSTView__body behavior here to keep things simple, this is less ugly than abstracting it
                 field = 'body'
                 idx_off = base.has_docstr
             else:
@@ -366,19 +366,19 @@ class fstview:
 
         return stop - start
 
-    def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
+    def __getitem__(self, idx: int | slice | str) -> FSTView | fst.FST | str | None:
         r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
 
-        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when dealing with
+        Note that `FSTView` can also hold references to non-AST lists of items, so keep this in mind when dealing with
         return values which may be `None` or may not be `FST` nodes.
 
         **Parameters:**
         - `idx`: The index or `slice` where to get the element(s) from. Or a `str` for a single-element name search.
 
         **Returns:**
-        - `fstview | FST | str | None`: Either a single `FST` node if accessing a single item or a new `fstview` view
+        - `FSTView | FST | str | None`: Either a single `FST` node if accessing a single item or a new `FSTView` view
             according to the slice passed. `str` can also be returned from a view of `Global.names` or `None` from a
             `Dict.keys`.
 
@@ -424,7 +424,7 @@ class fstview:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
-        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        Note that `FSTView` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
 
         **Parameters:**
@@ -484,7 +484,7 @@ class fstview:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
-        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        Note that `FSTView` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
 
         **Parameters:**
@@ -582,7 +582,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool | None = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def replace(self, code: Code | None, one: bool | None = True, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -622,7 +622,7 @@ class fstview:
 
         return self
 
-    def remove(self, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def remove(self, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
@@ -650,7 +650,7 @@ class fstview:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool | None = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool | None = True, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -707,7 +707,7 @@ class fstview:
 
         return self
 
-    def append(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def append(self, code: Code, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Append `code` as a single element to the end of this slice.
 
         **Returns:**
@@ -739,7 +739,7 @@ class fstview:
 
         return self
 
-    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -777,7 +777,7 @@ class fstview:
 
         return self
 
-    def prepend(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def prepend(self, code: Code, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**
@@ -809,7 +809,7 @@ class fstview:
 
         return self
 
-    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
+    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -848,7 +848,7 @@ class fstview:
         return self
 
 
-class fstview_Dict(fstview):
+class FSTView_Dict(FSTView):
     """View for `Dict` combined `key:value` virtual field `_all`. @private"""
 
     is_multinode = True
@@ -982,10 +982,10 @@ class fstview_Dict(fstview):
         return len(self.base.a.keys)
 
     def _deref_one(self, idx: int) -> AST | str:
-        return fstview_Dict(self.base, '_all', idx, idx + 1)
+        return FSTView_Dict(self.base, '_all', idx, idx + 1)
 
 
-class fstview_MatchMapping(fstview):
+class FSTView_MatchMapping(FSTView):
     """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`. @private"""
 
     is_multinode = True
@@ -1162,10 +1162,10 @@ class fstview_MatchMapping(fstview):
         return len((a := self.base.a).keys) + bool(a.rest)
 
     def _deref_one(self, idx: int) -> AST | str:
-        return fstview_MatchMapping(self.base, '_all', idx, idx + 1)
+        return FSTView_MatchMapping(self.base, '_all', idx, idx + 1)
 
 
-class fstview_Compare(fstview):
+class FSTView_Compare(FSTView):
     """View for `Compare` combined `left + comparators` virtual field `_all`. @private"""
 
     def _len_field(self) -> int:
@@ -1175,7 +1175,7 @@ class fstview_Compare(fstview):
         return self.base.a.comparators[idx - 1] if idx else self.base.a.left
 
 
-class fstview_arguments(fstview):
+class FSTView_arguments(FSTView):
     """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. @private"""
 
     @property
@@ -1360,10 +1360,10 @@ class fstview_arguments(fstview):
         return len(self.base._cached_allargs())
 
     def _deref_one(self, idx: int) -> AST | str:
-        return fstview_arguments(self.base, '_all', idx, idx + 1)
+        return FSTView_arguments(self.base, '_all', idx, idx + 1)
 
 
-class fstview__body(fstview):
+class FSTView__body(FSTView):
     """View for `_body` virtual field, only used on node types that can have a docstring. @private"""
 
     def _len_field(self) -> int:
@@ -1377,7 +1377,7 @@ class fstview__body(fstview):
         return base.a.body[idx + base.has_docstr]
 
 
-class fstview_arglikes(fstview):
+class FSTView_arglikes(FSTView):
     """View for `Call` merged `args+keywords` virtual field `_args` or `ClassDef` merged `bases+keywords` virtual field
     `_bases`. @private"""
 
@@ -1390,7 +1390,7 @@ class fstview_arglikes(fstview):
         return self.base._cached_arglikes()[idx]
 
 
-class fstview_Global_Nonlocal(fstview):
+class FSTView_Global_Nonlocal(FSTView):
     """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly. Currently only really needed for `loc`
     and `src`, but may expand in future if control given over primitive vs. `FST` presentation of primitive fields."""
 
@@ -1528,7 +1528,7 @@ class fstview_Global_Nonlocal(fstview):
     bend_col = end_col
 
 
-class fstview_dummy(fstview):
+class FSTView_dummy(FSTView):
     """Dummy view for nonexistent fields (type_params on py < 3.12). @private"""
 
     @property
@@ -1568,7 +1568,7 @@ class fstview_dummy(fstview):
     def _len_field(self) -> int:
         return 0
 
-    def __getitem__(self, idx: int | slice) -> fstview | fst.FST | str | None:
+    def __getitem__(self, idx: int | slice) -> FSTView | fst.FST | str | None:
         if not isinstance(idx, slice):
             raise IndexError('cannot get items from a dummy view')
 
@@ -1590,40 +1590,40 @@ class fstview_dummy(fstview):
     def cut(self, **options) -> fst.FST:
         raise RuntimeError('cannot cut a dummy view')
 
-    def replace(self, code: Code | None, one: bool | None = True, **options) -> fstview:
+    def replace(self, code: Code | None, one: bool | None = True, **options) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot replace a dummy view')
 
         return self
 
-    def remove(self, **options) -> fstview:
+    def remove(self, **options) -> FSTView:
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool | None = True, **options) -> fstview:
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool | None = True, **options) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot insert to a dummy view')
 
         return self
 
-    def append(self, code: Code, **options) -> fstview:
+    def append(self, code: Code, **options) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot append to a dummy view')
 
         return self
 
-    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:
+    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot extend a dummy view')
 
         return self
 
-    def prepend(self, code: Code, **options) -> fstview:
+    def prepend(self, code: Code, **options) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot prepend to a dummy view')
 
         return self
 
-    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> fstview:
+    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot prextend a dummy view')
 

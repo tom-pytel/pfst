@@ -174,7 +174,7 @@ from .asttypes import (
 from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
-from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_arguments
+from .view import FSTView, FSTView_Dict, FSTView_MatchMapping, FSTView_arguments
 from .fst_options import check_options
 
 __all__ = [
@@ -350,7 +350,7 @@ __DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will prob
 
 _Target = AST | constant
 _TargetFST = Union['fst.FST', constant]
-_Targets = fstview | list[_Target] | _Target  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
+_Targets = FSTView | list[_Target] | _Target  # `str` and `None` also have special meaning outside of constant, str is identifier and None may be a missing optional AST (or other type)
 _TargetsOrFST = Union[_Targets, 'fst.FST']
 
 _Pattern = Union[_Target, type[Union['M_Pattern', AST]], 'M_Pattern', re_Pattern, EllipsisType]  # `str` here may also be a match for target node source, not just a primitive
@@ -2760,7 +2760,7 @@ class _MatchContext:
     is_FST: bool
     ctx: bool
     all_tagss: list[list[dict[str, Any]]]
-    fstview_pat_cache: dict[fstview, _Pattern]  # may need to temporarily convert fstviews to AST patterns, specifically for MTAG match previously matched multinode item from Dict, MatchMapping or arguments
+    fstview_pat_cache: dict[FSTView, _Pattern]  # may need to temporarily convert FSTViews to AST patterns, specifically for MTAG match previously matched multinode item from Dict, MatchMapping or arguments
 
     def __init__(self, is_FST: bool, ctx: bool) -> None:
         self.is_FST = is_FST
@@ -2817,23 +2817,23 @@ class _MatchContext:
 
         return _SENTINEL
 
-    def fstview_as_pat(self, view: fstview) -> _Pattern:
-        """Temporary concrete pattern for matching against the given `fstview`. Created once and cached."""
+    def fstview_as_pat(self, view: FSTView) -> _Pattern:
+        """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached."""
 
         if pat := self.fstview_pat_cache.get(view):
             pass  # noop
 
-        elif isinstance(view, fstview_Dict):
+        elif isinstance(view, FSTView_Dict):
             start, stop = view.start_and_stop
             ast = view.base.a
             pat = self.fstview_pat_cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
 
-        elif isinstance(view, fstview_arguments):
+        elif isinstance(view, FSTView_arguments):
             raise NotImplementedError
 
 
 
-        elif isinstance(view, fstview_MatchMapping):
+        elif isinstance(view, FSTView_MatchMapping):
             start, stop = view.start_and_stop
             ast = view.base.a
 
@@ -2845,7 +2845,7 @@ class _MatchContext:
                 pat = self.fstview_pat_cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
 
         else:
-            raise MatchError('unsupported fstview type')
+            raise MatchError('unsupported FSTView type')
 
         return pat
 
@@ -3287,7 +3287,7 @@ class MRE(M_Pattern):
     >>> MRE(tag='bad', search=True) .match(arg('this_arg_is_not_so_bad'))
     <FSTMatch arg(arg='this_arg_is_not_so_bad', annotation=None, type_comment=None) {'tag': <re.Match object; span=(19, 22), match='bad'>}>
 
-    >>> MDict(_all=[MN(t=MRE('a: .'))]).match(FST('{a: b, a: z}'))
+    >>> MDict(_all=[MN(t=MRE('a: .'))]) .match(FST('{a: b, a: z}'))
     <FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
     """
 
@@ -3629,7 +3629,7 @@ class MN(M):
         self.max = max
 
     def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if not isinstance(tgt, (list, fstview)):
+        if not isinstance(tgt, (list, FSTView)):
             return None
 
         return _match_default([self], tgt, mctx)
@@ -3695,7 +3695,7 @@ class MOPT(MN):
         MN.__init__(self, anon_pat, 0, 1, **tags)
 
     def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if isinstance(tgt, (list, fstview)):
+        if isinstance(tgt, (list, FSTView)):
             return _match_default([self], tgt, mctx)
 
         if tgt is None:
@@ -3910,7 +3910,7 @@ def _match_n(
             ms = []
 
             for ts, t in zip(tagss, tgts, strict=True):
-                if t and not isinstance(t, fstview) and not (t := getattr(t, 'f', None)):
+                if t and not isinstance(t, FSTView) and not (t := getattr(t, 'f', None)):
                     raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
 
                 ms.append(FSTMatch(pat, t, ts))
@@ -3940,10 +3940,10 @@ def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mappin
         if isinstance(tgt, list):
             pass  # noop
 
-        elif isinstance(tgt, fstview):
+        elif isinstance(tgt, FSTView):
             if not len(tgt):
                 tgt = []
-            elif isinstance(tgt[0], (str, fstview)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
+            elif isinstance(tgt[0], (str, FSTView)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
                 tgt = list(tgt)
             else:
                 tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
@@ -4020,9 +4020,9 @@ def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mappin
 
         return mctx.pop_merge_tagss()
 
-    # maybe pattern is a previously matched multinode fstview (Dict, MatchMapping, arguments)
+    # maybe pattern is a previously matched multinode FSTView (Dict, MatchMapping, arguments)
 
-    if isinstance(pat, fstview):
+    if isinstance(pat, FSTView):
         pat = mctx.fstview_as_pat(pat)
 
         return _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mctx)
@@ -4051,7 +4051,7 @@ def _match_str(pat: str, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any
         if src != pat:  # match source against exact string
             return None
 
-    elif isinstance(tgt, fstview):
+    elif isinstance(tgt, FSTView):
         if tgt.src != pat:
             return None
 
@@ -4111,11 +4111,11 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
         t = getattr(tgt, field, _SENTINEL)  # _SENTINEL for arbitrary fields, but also field may not exist in target because pattern may have fields from a greater python version than we are running
 
         if t is _SENTINEL:
-            if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), fstview):  # maybe its a virtual field
+            if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), FSTView):  # maybe its a virtual field
                 return mctx.discard_tagss()
 
         elif mctx.is_FST and isinstance(t, list):
-            t = getattr(tgt.f, field)  # get the fstview instead (for maybe capture to tag, is converted back to list of AST for compare)
+            t = getattr(tgt.f, field)  # get the FSTView instead (for maybe capture to tag, is converted back to list of AST for compare)
 
         m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mctx)
 
@@ -4127,9 +4127,9 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
     return mctx.pop_merge_tagss()
 
 def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-    """`Dict` or `MDict` leaf node. Possibly match against a single-item `fstview_Dict`."""
+    """`Dict` or `MDict` leaf node. Possibly match against a single-item `FSTView_Dict`."""
 
-    if not isinstance(tgt, fstview_Dict):
+    if not isinstance(tgt, FSTView_Dict):
         return _match_node(pat, tgt, mctx)
 
     if len(tgt) != 1:
@@ -4170,10 +4170,10 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
 def _match_node_MatchMapping(
     pat: MatchMapping | MMatchMapping, tgt: _Targets, mctx: _MatchContext
 ) -> Mapping[str, Any] | None:
-    """`MatchMapping` or `MMatchMapping` leaf node. Possibly match against a single-item `fstview_MatchMapping`. Need to
+    """`MatchMapping` or `MMatchMapping` leaf node. Possibly match against a single-item `FSTView_MatchMapping`. Need to
     do more than `Dict` here to handle possible `**rest` element."""
 
-    if not isinstance(tgt, fstview_MatchMapping):
+    if not isinstance(tgt, FSTView_MatchMapping):
         return _match_node(pat, tgt, mctx)
 
     if len(tgt) != 1:
@@ -4305,7 +4305,7 @@ def _match_re_Pattern(
         if not (m := _re_func(src)):  # match source against pattern
             return None
 
-    elif isinstance(tgt, fstview):
+    elif isinstance(tgt, FSTView):
         if not isinstance(pat.pattern, str):
             return None
 
@@ -5018,7 +5018,7 @@ def sub(
                 elif isinstance(sub_sub, fst.FST):
                     sub_sub = sub_sub.copy()
 
-                elif isinstance(sub_sub, fstview):  # we get a normal single element for putting as a slice
+                elif isinstance(sub_sub, FSTView):  # we get a normal single element for putting as a slice
                     sub_sub = sub_sub.copy()
                     one = False  # this will be a slice of some kind so make sure we put as a slice
 

@@ -11,7 +11,7 @@ from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionD
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import fstview, fstview_Global_Nonlocal, fstview_dummy
+from .view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
 
 __all__ = [
     'body',
@@ -97,11 +97,11 @@ __all__ = [
 
 # Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Try, TryStar, Lambda, IfExp, ExceptHandler, match_case
 @property
-def body(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
+def body(self: 'fst.FST') -> FSTView | Union['fst.FST', None, constant]:
     """`FST` accessor for `AST` field `body`."""
 
     if isinstance(child := self.a.body, list):
-        return fstview(self, 'body')
+        return FSTView(self, 'body')
 
     return child.f
 
@@ -122,12 +122,12 @@ def body(self: 'fst.FST') -> None:
 
 # Module
 @property
-def type_ignores(self: 'fst.FST') -> fstview:
+def type_ignores(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `type_ignores`."""
 
     self.a.type_ignores  # noqa: B018
 
-    return fstview(self, 'type_ignores')
+    return FSTView(self, 'type_ignores')
 
 @type_ignores.setter
 def type_ignores(self: 'fst.FST', code: Code | None) -> None:
@@ -140,12 +140,12 @@ def type_ignores(self: 'fst.FST') -> None:
 
 # FunctionType
 @property
-def argtypes(self: 'fst.FST') -> fstview:
+def argtypes(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `argtypes`."""
 
     self.a.argtypes  # noqa: B018
 
-    return fstview(self, 'argtypes')
+    return FSTView(self, 'argtypes')
 
 @argtypes.setter
 def argtypes(self: 'fst.FST', code: Code | None) -> None:
@@ -174,12 +174,12 @@ def returns(self: 'fst.FST') -> None:
 
 # FunctionDef, AsyncFunctionDef, ClassDef, _decorator_list
 @property
-def decorator_list(self: 'fst.FST') -> fstview:
+def decorator_list(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `decorator_list`."""
 
     self.a.decorator_list  # noqa: B018
 
-    return fstview(self, 'decorator_list')
+    return FSTView(self, 'decorator_list')
 
 @decorator_list.setter
 def decorator_list(self: 'fst.FST', code: Code | None) -> None:
@@ -209,12 +209,12 @@ def name(self: 'fst.FST') -> None:
 # FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias, _type_params
 if PYGE12:
     @property
-    def type_params(self: 'fst.FST') -> fstview:
+    def type_params(self: 'fst.FST') -> FSTView:
         """`FST` accessor for `AST` field `type_params`."""
 
         self.a.type_params  # noqa: B018
 
-        return fstview(self, 'type_params')
+        return FSTView(self, 'type_params')
 
     @type_params.setter
     def type_params(self: 'fst.FST', code: Code | None) -> None:
@@ -230,7 +230,7 @@ else:  # safely access nonexistent empty field
         """`FST` accessor for `AST` field `type_params`."""
 
         if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
-            return fstview_dummy(self, 'type_params')
+            return FSTView_dummy(self, 'type_params')
 
         self.a.type_params  # noqa: B018, AttributeError
 
@@ -246,11 +246,11 @@ else:  # safely access nonexistent empty field
 
 # FunctionDef, AsyncFunctionDef, Lambda, Call, arguments
 @property
-def args(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
+def args(self: 'fst.FST') -> FSTView | Union['fst.FST', None, constant]:
     """`FST` accessor for `AST` field `args`."""
 
     if isinstance(child := self.a.args, list):
-        return fstview(self, 'args')
+        return FSTView(self, 'args')
 
     return child.f
 
@@ -287,12 +287,12 @@ def type_comment(self: 'fst.FST') -> None:
 
 # ClassDef
 @property
-def bases(self: 'fst.FST') -> fstview:
+def bases(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `bases`."""
 
     self.a.bases  # noqa: B018
 
-    return fstview(self, 'bases')
+    return FSTView(self, 'bases')
 
 @bases.setter
 def bases(self: 'fst.FST', code: Code | None) -> None:
@@ -305,12 +305,12 @@ def bases(self: 'fst.FST') -> None:
 
 # ClassDef, Call
 @property
-def keywords(self: 'fst.FST') -> fstview:
+def keywords(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `keywords`."""
 
     self.a.keywords  # noqa: B018
 
-    return fstview(self, 'keywords')
+    return FSTView(self, 'keywords')
 
 @keywords.setter
 def keywords(self: 'fst.FST', code: Code | None) -> None:
@@ -339,12 +339,12 @@ def value(self: 'fst.FST') -> None:
 
 # Delete, Assign, _Assign_targets
 @property
-def targets(self: 'fst.FST') -> fstview:
+def targets(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `targets`."""
 
     self.a.targets  # noqa: B018
 
-    return fstview(self, 'targets')
+    return FSTView(self, 'targets')
 
 @targets.setter
 def targets(self: 'fst.FST', code: Code | None) -> None:
@@ -437,11 +437,11 @@ def iter(self: 'fst.FST') -> None:
 
 # For, AsyncFor, While, If, Try, TryStar, IfExp
 @property
-def orelse(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
+def orelse(self: 'fst.FST') -> FSTView | Union['fst.FST', None, constant]:
     """`FST` accessor for `AST` field `orelse`."""
 
     if isinstance(child := self.a.orelse, list):
-        return fstview(self, 'orelse')
+        return FSTView(self, 'orelse')
 
     return child.f
 
@@ -478,12 +478,12 @@ def test(self: 'fst.FST') -> None:
 
 # With, AsyncWith, _withitems
 @property
-def items(self: 'fst.FST') -> fstview:
+def items(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `items`."""
 
     self.a.items  # noqa: B018
 
-    return fstview(self, 'items')
+    return FSTView(self, 'items')
 
 @items.setter
 def items(self: 'fst.FST', code: Code | None) -> None:
@@ -512,12 +512,12 @@ def subject(self: 'fst.FST') -> None:
 
 # Match, _match_cases
 @property
-def cases(self: 'fst.FST') -> fstview:
+def cases(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `cases`."""
 
     self.a.cases  # noqa: B018
 
-    return fstview(self, 'cases')
+    return FSTView(self, 'cases')
 
 @cases.setter
 def cases(self: 'fst.FST', code: Code | None) -> None:
@@ -562,12 +562,12 @@ def cause(self: 'fst.FST') -> None:
 
 # Try, TryStar, _ExceptHandlers
 @property
-def handlers(self: 'fst.FST') -> fstview:
+def handlers(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `handlers`."""
 
     self.a.handlers  # noqa: B018
 
-    return fstview(self, 'handlers')
+    return FSTView(self, 'handlers')
 
 @handlers.setter
 def handlers(self: 'fst.FST', code: Code | None) -> None:
@@ -580,12 +580,12 @@ def handlers(self: 'fst.FST') -> None:
 
 # Try, TryStar
 @property
-def finalbody(self: 'fst.FST') -> fstview:
+def finalbody(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `finalbody`."""
 
     self.a.finalbody  # noqa: B018
 
-    return fstview(self, 'finalbody')
+    return FSTView(self, 'finalbody')
 
 @finalbody.setter
 def finalbody(self: 'fst.FST', code: Code | None) -> None:
@@ -614,16 +614,16 @@ def msg(self: 'fst.FST') -> None:
 
 # Import, ImportFrom, Global, Nonlocal, _aliases
 @property
-def names(self: 'fst.FST') -> fstview:
+def names(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `names`."""
 
     ast = self.a
     ast.names  # noqa: B018
 
     if ast.__class__ in ASTS_LEAF_VAR_SCOPE_DECL:
-        return fstview_Global_Nonlocal(self, 'names')
+        return FSTView_Global_Nonlocal(self, 'names')
 
-    return fstview(self, 'names')
+    return FSTView(self, 'names')
 
 @names.setter
 def names(self: 'fst.FST', code: Code | None) -> None:
@@ -668,12 +668,12 @@ def level(self: 'fst.FST') -> None:
 
 # BoolOp, Dict, JoinedStr, TemplateStr
 @property
-def values(self: 'fst.FST') -> fstview:
+def values(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `values`."""
 
     self.a.values  # noqa: B018
 
-    return fstview(self, 'values')
+    return FSTView(self, 'values')
 
 @values.setter
 def values(self: 'fst.FST', code: Code | None) -> None:
@@ -734,12 +734,12 @@ def operand(self: 'fst.FST') -> None:
 
 # Dict, MatchMapping
 @property
-def keys(self: 'fst.FST') -> fstview:
+def keys(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `keys`."""
 
     self.a.keys  # noqa: B018
 
-    return fstview(self, 'keys')
+    return FSTView(self, 'keys')
 
 @keys.setter
 def keys(self: 'fst.FST', code: Code | None) -> None:
@@ -752,12 +752,12 @@ def keys(self: 'fst.FST') -> None:
 
 # Set, List, Tuple
 @property
-def elts(self: 'fst.FST') -> fstview:
+def elts(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `elts`."""
 
     self.a.elts  # noqa: B018
 
-    return fstview(self, 'elts')
+    return FSTView(self, 'elts')
 
 @elts.setter
 def elts(self: 'fst.FST', code: Code | None) -> None:
@@ -786,12 +786,12 @@ def elt(self: 'fst.FST') -> None:
 
 # ListComp, SetComp, DictComp, GeneratorExp, _comprehensions
 @property
-def generators(self: 'fst.FST') -> fstview:
+def generators(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `generators`."""
 
     self.a.generators  # noqa: B018
 
-    return fstview(self, 'generators')
+    return FSTView(self, 'generators')
 
 @generators.setter
 def generators(self: 'fst.FST', code: Code | None) -> None:
@@ -820,12 +820,12 @@ def key(self: 'fst.FST') -> None:
 
 # Compare
 @property
-def ops(self: 'fst.FST') -> fstview:
+def ops(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `ops`."""
 
     self.a.ops  # noqa: B018
 
-    return fstview(self, 'ops')
+    return FSTView(self, 'ops')
 
 @ops.setter
 def ops(self: 'fst.FST', code: Code | None) -> None:
@@ -838,12 +838,12 @@ def ops(self: 'fst.FST') -> None:
 
 # Compare
 @property
-def comparators(self: 'fst.FST') -> fstview:
+def comparators(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `comparators`."""
 
     self.a.comparators  # noqa: B018
 
-    return fstview(self, 'comparators')
+    return FSTView(self, 'comparators')
 
 @comparators.setter
 def comparators(self: 'fst.FST', code: Code | None) -> None:
@@ -1048,12 +1048,12 @@ def step(self: 'fst.FST') -> None:
 
 # comprehension, _comprehension_ifs
 @property
-def ifs(self: 'fst.FST') -> fstview:
+def ifs(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `ifs`."""
 
     self.a.ifs  # noqa: B018
 
-    return fstview(self, 'ifs')
+    return FSTView(self, 'ifs')
 
 @ifs.setter
 def ifs(self: 'fst.FST', code: Code | None) -> None:
@@ -1098,12 +1098,12 @@ def type(self: 'fst.FST') -> None:
 
 # arguments
 @property
-def posonlyargs(self: 'fst.FST') -> fstview:
+def posonlyargs(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `posonlyargs`."""
 
     self.a.posonlyargs  # noqa: B018
 
-    return fstview(self, 'posonlyargs')
+    return FSTView(self, 'posonlyargs')
 
 @posonlyargs.setter
 def posonlyargs(self: 'fst.FST', code: Code | None) -> None:
@@ -1116,12 +1116,12 @@ def posonlyargs(self: 'fst.FST') -> None:
 
 # arguments
 @property
-def defaults(self: 'fst.FST') -> fstview:
+def defaults(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `defaults`."""
 
     self.a.defaults  # noqa: B018
 
-    return fstview(self, 'defaults')
+    return FSTView(self, 'defaults')
 
 @defaults.setter
 def defaults(self: 'fst.FST', code: Code | None) -> None:
@@ -1150,12 +1150,12 @@ def vararg(self: 'fst.FST') -> None:
 
 # arguments
 @property
-def kwonlyargs(self: 'fst.FST') -> fstview:
+def kwonlyargs(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `kwonlyargs`."""
 
     self.a.kwonlyargs  # noqa: B018
 
-    return fstview(self, 'kwonlyargs')
+    return FSTView(self, 'kwonlyargs')
 
 @kwonlyargs.setter
 def kwonlyargs(self: 'fst.FST', code: Code | None) -> None:
@@ -1168,12 +1168,12 @@ def kwonlyargs(self: 'fst.FST') -> None:
 
 # arguments
 @property
-def kw_defaults(self: 'fst.FST') -> fstview:
+def kw_defaults(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `kw_defaults`."""
 
     self.a.kw_defaults  # noqa: B018
 
-    return fstview(self, 'kw_defaults')
+    return FSTView(self, 'kw_defaults')
 
 @kw_defaults.setter
 def kw_defaults(self: 'fst.FST', code: Code | None) -> None:
@@ -1298,12 +1298,12 @@ def guard(self: 'fst.FST') -> None:
 
 # MatchSequence, MatchMapping, MatchClass, MatchOr
 @property
-def patterns(self: 'fst.FST') -> fstview:
+def patterns(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `patterns`."""
 
     self.a.patterns  # noqa: B018
 
-    return fstview(self, 'patterns')
+    return FSTView(self, 'patterns')
 
 @patterns.setter
 def patterns(self: 'fst.FST', code: Code | None) -> None:
@@ -1348,12 +1348,12 @@ def cls(self: 'fst.FST') -> None:
 
 # MatchClass
 @property
-def kwd_attrs(self: 'fst.FST') -> fstview:
+def kwd_attrs(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `kwd_attrs`."""
 
     self.a.kwd_attrs  # noqa: B018
 
-    return fstview(self, 'kwd_attrs')
+    return FSTView(self, 'kwd_attrs')
 
 @kwd_attrs.setter
 def kwd_attrs(self: 'fst.FST', code: Code | None) -> None:
@@ -1366,12 +1366,12 @@ def kwd_attrs(self: 'fst.FST') -> None:
 
 # MatchClass
 @property
-def kwd_patterns(self: 'fst.FST') -> fstview:
+def kwd_patterns(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `kwd_patterns`."""
 
     self.a.kwd_patterns  # noqa: B018
 
-    return fstview(self, 'kwd_patterns')
+    return FSTView(self, 'kwd_patterns')
 
 @kwd_patterns.setter
 def kwd_patterns(self: 'fst.FST', code: Code | None) -> None:
@@ -1449,12 +1449,12 @@ else:  # safely access nonexistent field
 
 # _arglikes
 @property
-def arglikes(self: 'fst.FST') -> fstview:
+def arglikes(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `arglikes`."""
 
     self.a.arglikes  # noqa: B018
 
-    return fstview(self, 'arglikes')
+    return FSTView(self, 'arglikes')
 
 @arglikes.setter
 def arglikes(self: 'fst.FST', code: Code | None) -> None:

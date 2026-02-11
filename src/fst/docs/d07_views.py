@@ -8,14 +8,14 @@ To be able to execute the examples, import this.
 
 ## How to get
 
-An `fstview` is a lightweight object meant to facilitate access to lists of child objects like a block statement `body`
+An `FSTView` is a lightweight object meant to facilitate access to lists of child objects like a block statement `body`
 or `Tuple` / `List` / `Set` `elts` field. Any field which is a list of other objects (or even strings in the case of
-`Global` or `Nonlocal`) will make use of an `fstview` when accessed through the field name on the parent `FST` object.
+`Global` or `Nonlocal`) will make use of an `FSTView` when accessed through the field name on the parent `FST` object.
 
 >>> view = FST('[1, 2, 3]').elts
 
 >>> type(view)
-<class 'fst.view.fstview'>
+<class 'fst.view.FSTView'>
 
 >>> print(str(view))
 <<List ROOT 0,0..0,9>.elts>
@@ -23,7 +23,7 @@ or `Tuple` / `List` / `Set` `elts` field. Any field which is a list of other obj
 >>> view.base, view.field, view.start, view.stop
 (<List ROOT 0,0..0,9>, 'elts', 0, 3)
 
-An `fstview` is not normally intended to be accessed by assigning it to a name and using it through that. An `fstview`
+An `FSTView` is not normally intended to be accessed by assigning it to a name and using it through that. An `FSTView`
 basically exists to facilitate direct access to slices of children for immediate operations.
 
 >>> f = FST('[1, 2]')

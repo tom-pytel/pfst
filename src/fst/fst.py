@@ -146,13 +146,13 @@ from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, c
 from .fst_options import check_options, filter_options
 
 from .view import (
-    fstview,
-    fstview_Dict,
-    fstview_MatchMapping,
-    fstview_Compare,
-    fstview_arguments,
-    fstview__body,
-    fstview_arglikes,
+    FSTView,
+    FSTView_Dict,
+    FSTView_MatchMapping,
+    FSTView_Compare,
+    FSTView_arguments,
+    FSTView__body,
+    FSTView_arglikes,
 )
 
 from .reconcile import Reconcile
@@ -450,7 +450,7 @@ class FST:
     _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
 
     # class attributes
-    is_FST:       bool = True  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `fstloc` or `fstview`
+    is_FST:       bool = True  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `fstloc` or `FSTView`
 
     @property
     def is_alive(self) -> bool:
@@ -475,7 +475,7 @@ class FST:
 
     @property
     def base(self) -> FST:
-        """This exists for more convenient interoperability with `fstview`. Here it just always returns `self`."""
+        """This exists for more convenient interoperability with `FSTView`. Here it just always returns `self`."""
 
         return self
 
@@ -1743,13 +1743,13 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Edit
 
-    def __getitem__(self, idx: int | builtins.slice | builtins.str) -> fstview | FST | builtins.str | None:
+    def __getitem__(self, idx: int | builtins.slice | builtins.str) -> FSTView | FST | builtins.str | None:
         r"""Get a single item or a slice view from the default field of `self`. This is just an access, not a cut or a
         copy, so if you want a copy you must explicitly do `.copy()` on the returned value.
 
         Same as `self.default_field[idx]`.
 
-        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when dealing with
+        Note that `FSTView` can also hold references to non-AST lists of items, so keep this in mind when dealing with
         return values which may be `None` or may not be `FST` nodes.
 
         **Parameters:**
@@ -1757,7 +1757,7 @@ class FST:
             search.
 
         **Returns:**
-        - `fstview | FST | str | None`: Either a single `FST` node if accessing a single item or a new `fstview` view
+        - `FSTView | FST | str | None`: Either a single `FST` node if accessing a single item or a new `FSTView` view
             according to the slice passed. `builtins.str` can also be returned from a view of `Global.names` or `None`
             from a `Dict.keys`.
 
@@ -1796,7 +1796,7 @@ class FST:
 
         Same as `self.default_field[idx] = code`.
 
-        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        Note that `FSTView` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
 
         **Parameters:**
@@ -1845,7 +1845,7 @@ class FST:
     def __delitem__(self, idx: int | builtins.slice | builtins.str) -> None:
         """Delete a single item or a slice from default field of `self`.
 
-        Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
+        Note that `FSTView` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
 
         **Parameters:**
@@ -2484,7 +2484,7 @@ class FST:
 
     def prextend(
         self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options
-    ) -> fstview:  # -> self or None if deleted due to raw reparse
+    ) -> FSTView:  # -> self or None if deleted due to raw reparse
         """Extend the beginning of the `field` of `self` with the slice in `code` (type must be compatible). Default
         field if `field=None`. This is a convenience function for `self.put_slice()`.
 
@@ -5516,7 +5516,7 @@ class FST:
     # Virtual field accessors
 
     @property
-    def _all(self: FST) -> fstview:
+    def _all(self: FST) -> FSTView:
         """Virtual `_all` field view for `Dict`, `MatchMapping`, `Compare` and `arguments`.
 
         **Examples:**
@@ -5550,7 +5550,7 @@ class FST:
         self._put_slice(None, 0, 'end', '_all')
 
     @property
-    def _body(self: FST) -> fstview:
+    def _body(self: FST) -> FSTView:
         r"""Virtual `_body` field for statements. Special field view for statements which excludes a docstring if
         present from the list and indexing.
 
@@ -5582,10 +5582,10 @@ class FST:
         ast_cls = self.a.__class__
 
         if ast_cls in ASTS_LEAF_MAYBE_DOCSTR:
-            return fstview__body(self, '_body')
+            return FSTView__body(self, '_body')
 
         if ast_cls in ASTS_LEAF_BLOCK:
-            return fstview(self, 'body')
+            return FSTView(self, 'body')
 
         raise AttributeError(f"{ast_cls.__name__} does not have virtual field '_body'")
 
@@ -5598,7 +5598,7 @@ class FST:
         self._put_slice(None, 0, 'end', '_body')
 
     @property
-    def _args(self: FST) -> fstview:
+    def _args(self: FST) -> FSTView:
         """Virtual `_args` field view for merged `Call.args+keywords`.
 
         **Examples:**
@@ -5621,7 +5621,7 @@ class FST:
         """
 
         if self.a.__class__ is Call:
-            return fstview_arglikes(self, '_args')
+            return FSTView_arglikes(self, '_args')
 
         raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_args'")
 
@@ -5634,7 +5634,7 @@ class FST:
         self._put_slice(None, 0, 'end', '_args')
 
     @property
-    def _bases(self: FST) -> fstview:
+    def _bases(self: FST) -> FSTView:
         """Virtual `_bases` field view for merged `ClassDef.bases+keywords`.
 
         **Examples:**
@@ -5656,7 +5656,7 @@ class FST:
         """
 
         if self.a.__class__ is ClassDef:
-            return fstview_arglikes(self, '_bases')
+            return FSTView_arglikes(self, '_bases')
 
         raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_bases'")
 
@@ -5670,8 +5670,8 @@ class FST:
 
 
 _VIRTUAL_FIELD_VIEW__ALL = {
-    Dict:         fstview_Dict,
-    MatchMapping: fstview_MatchMapping,
-    Compare:      fstview_Compare,
-    arguments:    fstview_arguments,
+    Dict:         FSTView_Dict,
+    MatchMapping: FSTView_MatchMapping,
+    Compare:      FSTView_Compare,
+    arguments:    FSTView_arguments,
 }

@@ -34,7 +34,7 @@ from .astutil import *
 from .astutil import re_alnumdot_alnum, AST_BASES
 from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
 from .parsex import parse, parse_expr_arglike
-from .view import fstview
+from .view import FSTView
 from .match import *
 from .fst import FST, ASTS_LEAF_FTSTR
 from . import NodeError
@@ -2258,13 +2258,13 @@ class ReconcileRnd(Fuzzy):
 
 
 class SliceStmtlike(Fuzzy):
-    """Test moving around stmtlikes, empty bodies, fstview, stmtlike FST identity stability and unmarking deleted FSTs."""
+    """Test moving around stmtlikes, empty bodies, FSTView, stmtlike FST identity stability and unmarking deleted FSTs."""
 
     name = 'slice_stmtlike'
     forever = True
 
     @staticmethod
-    def do_move(stmtlike: FST, stmtlike_container: fstview, dst_container: fstview):
+    def do_move(stmtlike: FST, stmtlike_container: FSTView, dst_container: FSTView):
         if random() < 0.5:  # single element stmtlike to container
             s = stmtlike.cut()
 

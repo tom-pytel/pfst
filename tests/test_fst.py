@@ -36,7 +36,7 @@ from fst.astutil import (
 
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, PYGE15, astfield, fstloc
 from fst.code import *
-from fst.view import fstview, fstview_Global_Nonlocal, fstview_dummy
+from fst.view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
 from fst.match import *
 
 from support import assertRaises
@@ -9127,7 +9127,7 @@ else:
         self.assertIs(fass, f.find_loc(0, 6, 0, 7))
         self.assertIs(fass, f.find_loc(0, 6, 0, 7, True))
 
-    def test_fstview(self):
+    def test_FSTView(self):
         self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)
         self.assertEqual('b', parse('if 1: a\nelse: b').f.body[0].orelse[0].src)
         self.assertEqual('a\nb\nc', parse('a\nb\nc').f.body.copy().src)
@@ -9335,10 +9335,10 @@ class cls:
     def prefunc(): pass
     def postfunc(): pass
             '''.strip())
-        self.assertIsInstance(a.f.body, fstview)
-        self.assertIsInstance(a.body[0].f.body, fstview)
+        self.assertIsInstance(a.f.body, FSTView)
+        self.assertIsInstance(a.body[0].f.body, FSTView)
         a.body[0].f.body.cut(norm=False)
-        self.assertIsInstance(a.body[0].f.body, fstview)
+        self.assertIsInstance(a.body[0].f.body, FSTView)
 
         a = parse('a\nb\nc\nd\ne')
         p = a.f.body[1:4]
@@ -9359,7 +9359,7 @@ class cls:
         self.assertEqual('a\nb', c.base.src)
         self.assertEqual(2, c.stop)
 
-    def test_fstview_refresh_indices(self):
+    def test_FSTView_refresh_indices(self):
         f = FST('[a, b, c]')
         v = f.elts
         self.assertEqual('<<List ROOT 0,0..0,9>.elts>', repr(v))
@@ -9372,7 +9372,7 @@ class cls:
 
         # TODO: this is not exhaustive
 
-    def test_fstview_fixed_indices(self):
+    def test_FSTView_fixed_indices(self):
         # update non-refreshing indices
 
         f = FST('[1, 2, 3, 4]')
@@ -9415,8 +9415,8 @@ class cls:
         self.assertEqual(1, v.start)
         self.assertEqual(7, v.stop)
 
-    def test_fstview_dummy(self):
-        v = fstview_dummy(FST('a'), 'type_params')
+    def test_FSTView_dummy(self):
+        v = FSTView_dummy(FST('a'), 'type_params')
 
         self.assertRaises(IndexError, lambda: v[0])
         self.assertIs(v, v[:])
@@ -9449,7 +9449,7 @@ class cls:
 
         self.assertEqual('<<Name ROOT 0,0..0,1>.type_params>', repr(v))
 
-    def test_fstview_coverage(self):
+    def test_FSTView_coverage(self):
         # misc stuff to fill out test coverage
 
         # slice with step errors
@@ -9461,7 +9461,7 @@ class cls:
         def delitem(): del v[::2]
         self.assertRaises(IndexError, delitem)
 
-    def test_fstview_named_indexing(self):
+    def test_FSTView_named_indexing(self):
         f = FST('''
 if 1:                     # ln 0
     def f(a): pass        # ln 1
@@ -9512,8 +9512,8 @@ def h(k): pass            # ln 16
 
         self.assertEqual('<ClassDef 15,8..15,24>', str(f.body[0].orelse[2].finalbody['j']))
 
-    def test_fstview_loc_and_src(self):
-        def test(fv: fstview):
+    def test_FSTView_loc_and_src(self):
+        def test(fv: FSTView):
             loc = fv.loc
             pars = fv.pars()
 
@@ -9531,7 +9531,7 @@ def h(k): pass            # ln 16
             self.assertEqual(fv[:1].loc[:2], loc[:2])
             self.assertEqual(fv[-1:].loc[2:], loc[2:])
 
-            if isinstance(fv, fstview_Global_Nonlocal):
+            if isinstance(fv, FSTView_Global_Nonlocal):
                 return
 
             self.assertEqual(fv[0].pars()[:2], loc[:2])
@@ -10568,7 +10568,7 @@ if 1:
             got = getattr(f, field)
 
             if expect is None:
-                self.assertEqual(str(got) if isinstance(got, fstview) else got, src)  # fstview for kwd_attrs
+                self.assertEqual(str(got) if isinstance(got, FSTView) else got, src)  # FSTView for kwd_attrs
 
             else:
                 self.assertIsInstance(got, expect)
@@ -10613,40 +10613,40 @@ if 1:
 
             return f
 
-        self.assertEqual('a', test(FST('i\nj', 'exec'), 'body', 'a', fstview, 'i\nj').src)
-        self.assertEqual('a', test(FST('i;j', 'single'), 'body', 'a', fstview, 'i;j').src)
+        self.assertEqual('a', test(FST('i\nj', 'exec'), 'body', 'a', FSTView, 'i\nj').src)
+        self.assertEqual('a', test(FST('i;j', 'single'), 'body', 'a', FSTView, 'i;j').src)
         self.assertEqual('a', test(FST('i', 'eval'), 'body', 'a', FST, 'i').src)
 
         f = FST('@deco\ndef func(args) -> ret: pass')
-        self.assertEqual('@deco\ndef func(args) -> ret: pass', test(f, 'decorator_list', '@deco', fstview,
+        self.assertEqual('@deco\ndef func(args) -> ret: pass', test(f, 'decorator_list', '@deco', FSTView,
                                                                     '@deco').src)
         self.assertEqual('@deco\ndef new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
         self.assertEqual('@deco\ndef new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
         self.assertEqual('@deco\ndef new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
-        self.assertEqual('@deco\ndef new(nargs) -> int:\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('@deco\ndef new(nargs) -> int:\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         f = FST('@deco\nasync def func(args) -> ret: pass')
-        self.assertEqual('@deco\nasync def func(args) -> ret: pass', test(f, 'decorator_list', '@deco', fstview,
+        self.assertEqual('@deco\nasync def func(args) -> ret: pass', test(f, 'decorator_list', '@deco', FSTView,
                                                                           '@deco').src)
         self.assertEqual('@deco\nasync def new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
         self.assertEqual('@deco\nasync def new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
         self.assertEqual('@deco\nasync def new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
-        self.assertEqual('@deco\nasync def new(nargs) -> int:\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('@deco\nasync def new(nargs) -> int:\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         f = FST('@deco\nclass cls(base, meta=other): pass')
-        self.assertEqual('@deco\nclass cls(base, meta=other): pass', test(f, 'decorator_list', '@deco', fstview,
+        self.assertEqual('@deco\nclass cls(base, meta=other): pass', test(f, 'decorator_list', '@deco', FSTView,
                                                                           '@deco').src)
         self.assertEqual('@deco\nclass new(base, meta=other): pass', test(f, 'name', 'new', None, 'cls').src)
-        self.assertEqual('@deco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass,', fstview, '(base,)').src)
-        self.assertEqual('@deco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', fstview,
+        self.assertEqual('@deco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass,', FSTView, '(base,)').src)
+        self.assertEqual('@deco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', FSTView,
                                                                          'meta=other').src)
-        self.assertEqual('@deco\nclass new(bass, moto=some):\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('@deco\nclass new(bass, moto=some):\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         self.assertEqual('return yup', test(FST('return yes'), 'value', 'yup', FST, 'yes').src)
 
-        self.assertEqual('del zzz', test(FST('del a, b'), 'targets', 'zzz', fstview, 'a, b').src)
+        self.assertEqual('del zzz', test(FST('del a, b'), 'targets', 'zzz', FSTView, 'a, b').src)
 
-        self.assertEqual('zzz = c', test(FST('a, b = c'), 'targets', 'zzz', fstview, 'a, b =').src)
+        self.assertEqual('zzz = c', test(FST('a, b = c'), 'targets', 'zzz', FSTView, 'a, b =').src)
         self.assertEqual('a, b = zzz', test(FST('a, b = c'), 'value', 'zzz', FST, 'c').src)
 
         f = FST('a += b')
@@ -10663,61 +10663,61 @@ if 1:
         f = FST('for a, b in c: pass\nelse: pass')
         self.assertEqual('for new in c: pass\nelse: pass', test(f, 'target', 'new', FST, 'a, b').src)
         self.assertEqual('for new in zzz: pass\nelse: pass', test(f, 'iter', 'zzz', FST, 'c').src)
-        self.assertEqual('for new in zzz:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
-        self.assertEqual('for new in zzz:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', fstview, 'pass').src)
+        self.assertEqual('for new in zzz:\n    return\nelse: pass', test(f, 'body', 'return', FSTView, 'pass').src)
+        self.assertEqual('for new in zzz:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', FSTView, 'pass').src)
 
         f = FST('async for a, b in c: pass\nelse: pass')
         self.assertEqual('async for new in c: pass\nelse: pass', test(f, 'target', 'new', FST, 'a, b').src)
         self.assertEqual('async for new in zzz: pass\nelse: pass', test(f, 'iter', 'zzz', FST, 'c').src)
-        self.assertEqual('async for new in zzz:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
-        self.assertEqual('async for new in zzz:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', fstview, 'pass').src)
+        self.assertEqual('async for new in zzz:\n    return\nelse: pass', test(f, 'body', 'return', FSTView, 'pass').src)
+        self.assertEqual('async for new in zzz:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', FSTView, 'pass').src)
 
         f = FST('while a: pass\nelse: pass')
         self.assertEqual('while new: pass\nelse: pass', test(f, 'test', 'new', FST, 'a').src)
-        self.assertEqual('while new:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
-        self.assertEqual('while new:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', fstview, 'pass').src)
+        self.assertEqual('while new:\n    return\nelse: pass', test(f, 'body', 'return', FSTView, 'pass').src)
+        self.assertEqual('while new:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', FSTView, 'pass').src)
 
         f = FST('if a: pass\nelse: pass')
         self.assertEqual('if new: pass\nelse: pass', test(f, 'test', 'new', FST, 'a').src)
-        self.assertEqual('if new:\n    return\nelse: pass', test(f, 'body', 'return', fstview, 'pass').src)
-        self.assertEqual('if new:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', fstview, 'pass').src)
+        self.assertEqual('if new:\n    return\nelse: pass', test(f, 'body', 'return', FSTView, 'pass').src)
+        self.assertEqual('if new:\n    return\nelse:\n    continue', test(f, 'orelse', 'continue', FSTView, 'pass').src)
 
         f = FST('with a as b: pass')
-        self.assertEqual('with old as new: pass', test(f, 'items', 'old as new', fstview, 'a as b').src)
-        self.assertEqual('with old as new:\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('with old as new: pass', test(f, 'items', 'old as new', FSTView, 'a as b').src)
+        self.assertEqual('with old as new:\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         f = FST('async with a as b: pass')
-        self.assertEqual('async with old as new: pass', test(f, 'items', 'old as new', fstview, 'a as b').src)
-        self.assertEqual('async with old as new:\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('async with old as new: pass', test(f, 'items', 'old as new', FSTView, 'a as b').src)
+        self.assertEqual('async with old as new:\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         f = FST('match a:\n    case _: pass')
         self.assertEqual('match new:\n    case _: pass', test(f, 'subject', 'new', FST, 'a').src)
-        self.assertEqual('match new:\n    case 1: return', test(f, 'cases', 'case 1: return', fstview, 'case _: pass').src)
+        self.assertEqual('match new:\n    case 1: return', test(f, 'cases', 'case 1: return', FSTView, 'case _: pass').src)
 
         f = FST('raise exc from cause')
         self.assertEqual('raise e from cause', test(f, 'exc', 'e', FST, 'exc').src)
         self.assertEqual('raise e from c', test(f, 'cause', 'c', FST, 'cause').src)
 
         f = FST('try: pass\nexcept: pass\nelse: pass\nfinally: pass')
-        self.assertEqual('try:\n    return\nexcept: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', fstview, 'pass').src)
-        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except Exception as e: continue', fstview, 'except: pass').src)
-        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', fstview, 'pass').src)
-        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse:\n    break\nfinally:\n    f()', test(f, 'finalbody', 'f()', fstview, 'pass').src)
+        self.assertEqual('try:\n    return\nexcept: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', FSTView, 'pass').src)
+        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except Exception as e: continue', FSTView, 'except: pass').src)
+        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', FSTView, 'pass').src)
+        self.assertEqual('try:\n    return\nexcept Exception as e: continue\nelse:\n    break\nfinally:\n    f()', test(f, 'finalbody', 'f()', FSTView, 'pass').src)
 
         f = FST('assert test, "msg"')
         self.assertEqual('assert toast, "msg"', test(f, 'test', 'toast', FST, 'test').src)
         self.assertEqual('assert toast, "sheep"', test(f, 'msg', '"sheep"', FST, '"msg"').src)
 
-        self.assertEqual('import a, b, c', test(FST('import x, y'), 'names', 'a, b, c', fstview, 'x, y').src)
+        self.assertEqual('import a, b, c', test(FST('import x, y'), 'names', 'a, b, c', FSTView, 'x, y').src)
 
         f = FST('from .module import x, y')
         self.assertEqual('from .new import x, y', test(f, 'module', 'new', None, 'module').src)
-        self.assertEqual('from .new import a, b, c', test(f, 'names', 'a, b, c', fstview, 'x, y').src)
+        self.assertEqual('from .new import a, b, c', test(f, 'names', 'a, b, c', FSTView, 'x, y').src)
         self.assertEqual('from ...new import a, b, c', test(f, 'level', 3, None, 1).src)
 
-        self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', fstview, 'x, y').src)
+        self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', FSTView, 'x, y').src)
 
-        self.assertEqual('nonlocal a, b, c', test(FST('nonlocal x, y'), 'names', 'a, b, c', fstview, 'x, y').src)
+        self.assertEqual('nonlocal a, b, c', test(FST('nonlocal x, y'), 'names', 'a, b, c', FSTView, 'x, y').src)
 
         self.assertEqual('new', test(FST('v', Expr), 'value', 'new', FST, 'v').src)
 
@@ -10751,28 +10751,28 @@ if 1:
         self.assertEqual('<<Dict ROOT 0,0..0,6>.keys>', str(f.keys))
         self.assertEqual('<<Dict ROOT 0,0..0,6>.values>', str(f.values))
 
-        self.assertEqual('{{a, b, c}}', test(FST('{x, y}'), 'elts', '{a, b, c}', fstview, '{x, y}').src)
-        self.assertEqual('{a, b, c}', test(FST('{x, y}'), 'elts', 'a, b, c', fstview, '{x, y}').src)
+        self.assertEqual('{{a, b, c}}', test(FST('{x, y}'), 'elts', '{a, b, c}', FSTView, '{x, y}').src)
+        self.assertEqual('{a, b, c}', test(FST('{x, y}'), 'elts', 'a, b, c', FSTView, '{x, y}').src)
 
         f = FST('[i for i in j if i]')
         self.assertEqual('[new for i in j if i]', test(f, 'elt', 'new', FST, 'i').src)
-        self.assertEqual('[new async for dog in dogs]', test(f, 'generators', 'async for dog in dogs', fstview,
+        self.assertEqual('[new async for dog in dogs]', test(f, 'generators', 'async for dog in dogs', FSTView,
                                                              'for i in j if i').src)
 
         f = FST('{i for i in j if i}')
         self.assertEqual('{new for i in j if i}', test(f, 'elt', 'new', FST, 'i').src)
-        self.assertEqual('{new async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', fstview,
+        self.assertEqual('{new async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', FSTView,
                                                              'for i in j if i').src)
 
         f = FST('{i: i for i in j if i}')
         self.assertEqual('{new: i for i in j if i}', test(f, 'key', 'new', FST, 'i').src)
         self.assertEqual('{new: old for i in j if i}', test(f, 'value', 'old', FST, 'i').src)
-        self.assertEqual('{new: old async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', fstview,
+        self.assertEqual('{new: old async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', FSTView,
                                                              'for i in j if i').src)
 
         f = FST('(i for i in j if i)')
         self.assertEqual('(new for i in j if i)', test(f, 'elt', 'new', FST, 'i').src)
-        self.assertEqual('(new async for dog in dogs)', test(f, 'generators', 'async for dog in dogs', fstview,
+        self.assertEqual('(new async for dog in dogs)', test(f, 'generators', 'async for dog in dogs', FSTView,
                                                              'for i in j if i').src)
 
         self.assertEqual('await yup', test(FST('await yes'), 'value', 'yup', FST, 'yes').src)
@@ -10787,8 +10787,8 @@ if 1:
         self.assertEqual('<<Compare ROOT 0,0..0,11>.comparators>', str(f.comparators))
 
         f = FST('call(arg, kw=blah)')
-        self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', fstview, '(arg,)').src)
-        self.assertEqual('call(a, b, kw1=bloh, kws=hmm)', test(f, 'keywords', 'kw1=bloh, kws=hmm', fstview,
+        self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', FSTView, '(arg,)').src)
+        self.assertEqual('call(a, b, kw1=bloh, kws=hmm)', test(f, 'keywords', 'kw1=bloh, kws=hmm', FSTView,
                                                                'kw=blah').src)
 
         f = FST('u"a"')
@@ -10815,15 +10815,15 @@ if 1:
         self.assertIsInstance(f.ctx.a, Load)
 
         f = FST('[a, b]')
-        self.assertEqual('[[x, y, z]]', test(f, 'elts', '[x, y, z]', fstview, '[a, b]').src)
+        self.assertEqual('[[x, y, z]]', test(f, 'elts', '[x, y, z]', FSTView, '[a, b]').src)
         self.assertIsInstance(f.ctx.a, Load)
-        self.assertEqual('[x, y, z]', test(f, 'elts', 'x, y, z', fstview, '[[x, y, z]]').src)
+        self.assertEqual('[x, y, z]', test(f, 'elts', 'x, y, z', FSTView, '[[x, y, z]]').src)
         self.assertIsInstance(f.ctx.a, Load)
 
         f = FST('(a, b)')
-        self.assertEqual('((x, y, z),)', test(f, 'elts', '(x, y, z)', fstview, '(a, b)').src)
+        self.assertEqual('((x, y, z),)', test(f, 'elts', '(x, y, z)', FSTView, '(a, b)').src)
         self.assertIsInstance(f.ctx.a, Load)
-        self.assertEqual('(x, y, z)', test(f, 'elts', 'x, y, z', fstview, '((x, y, z),)').src)
+        self.assertEqual('(x, y, z)', test(f, 'elts', 'x, y, z', FSTView, '((x, y, z),)').src)
         self.assertIsInstance(f.ctx.a, Load)
 
         f = FST('a:b:c')
@@ -10834,22 +10834,22 @@ if 1:
         f = FST('for i in j if i')
         self.assertEqual('for new in j if i', test(f, 'target', 'new', FST, 'i').src)
         self.assertEqual('for new in blah if i', test(f, 'iter', 'blah', FST, 'j').src)
-        self.assertEqual('for new in blah if new', test(f, 'ifs', 'if new', fstview,
+        self.assertEqual('for new in blah if new', test(f, 'ifs', 'if new', FSTView,
                                                         'if i').src)
         self.assertEqual('async for new in blah if new', test(f, 'is_async', 1, None, 0).src)
 
         f = FST('except Exception as exc: pass')
         self.assertEqual('except ValueError as exc: pass', test(f, 'type', 'ValueError', FST, 'Exception').src)
         self.assertEqual('except ValueError as blah: pass', test(f, 'name', 'blah', None, 'exc').src)
-        self.assertEqual('except ValueError as blah:\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('except ValueError as blah:\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         f = FST('a, /, b=c, *d, e=f, **g')
-        self.assertEqual('new, /, b=c, *d, e=f, **g', test(f, 'posonlyargs', 'new', fstview, 'a').src)
-        self.assertEqual('new, /, blah=c, *d, e=f, **g', test(f, 'args', 'blah', fstview, 'b').src)
-        self.assertEqual('new, /, blah=cat, *d, e=f, **g', test(f, 'defaults', 'cat', fstview, 'c').src)
+        self.assertEqual('new, /, b=c, *d, e=f, **g', test(f, 'posonlyargs', 'new', FSTView, 'a').src)
+        self.assertEqual('new, /, blah=c, *d, e=f, **g', test(f, 'args', 'blah', FSTView, 'b').src)
+        self.assertEqual('new, /, blah=cat, *d, e=f, **g', test(f, 'defaults', 'cat', FSTView, 'c').src)
         self.assertEqual('new, /, blah=cat, *va, e=f, **g', test(f, 'vararg', 'va', FST, 'd').src)
-        self.assertEqual('new, /, blah=cat, *va, lemur=f, **g', test(f, 'kwonlyargs', 'lemur', fstview, 'e').src)
-        self.assertEqual('new, /, blah=cat, *va, lemur=raisin, **g', test(f, 'kw_defaults', 'raisin', fstview, 'f').src)
+        self.assertEqual('new, /, blah=cat, *va, lemur=f, **g', test(f, 'kwonlyargs', 'lemur', FSTView, 'e').src)
+        self.assertEqual('new, /, blah=cat, *va, lemur=raisin, **g', test(f, 'kw_defaults', 'raisin', FSTView, 'f').src)
         self.assertEqual('new, /, blah=cat, *va, lemur=raisin, **splat', test(f, 'kwarg', 'splat', FST, 'g').src)
 
         f = FST('a: int', arg)
@@ -10871,26 +10871,26 @@ if 1:
         f = FST('case a if b: pass')
         self.assertEqual('case new if b: pass', test(f, 'pattern', 'new', FST, 'a').src)
         self.assertEqual('case new if old: pass', test(f, 'guard', 'old', FST, 'b').src)
-        self.assertEqual('case new if old:\n    return', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('case new if old:\n    return', test(f, 'body', 'return', FSTView, 'pass').src)
 
         self.assertEqual('2', test(FST('1', MatchValue), 'value', '2', FST, '1').src)
 
         self.assertEqual('True', test(FST('False', MatchSingleton), 'value', True, None, False).src)
 
-        self.assertEqual('[a, b, c]', test(FST('[x, y]', MatchSequence), 'patterns', 'a, b, c', fstview, '[x, y]').src)
+        self.assertEqual('[a, b, c]', test(FST('[x, y]', MatchSequence), 'patterns', 'a, b, c', FSTView, '[x, y]').src)
 
         f = FST('{1: a, **b}', MatchMapping)
-        self.assertEqual('{2: a, **b}', test(f, 'keys', '2', fstview, '1').src)
-        # self.assertEqual('{2: new, **b}', test(f, None, 'new', fstview,
+        self.assertEqual('{2: a, **b}', test(f, 'keys', '2', FSTView, '1').src)
+        # self.assertEqual('{2: new, **b}', test(f, None, 'new', FSTView,
         #                                        '<<MatchMapping ROOT 0,0..0,11>.patterns [<MatchAs 0,4..0,5>]>').src)
         self.assertEqual('{2: a, **rest}', test(f, 'rest', 'rest', None, 'b').src)
 
         f = FST('cls(a, b=c)', MatchClass)
         self.assertEqual('glob(a, b=c)', test(f, 'cls', 'glob', FST, 'cls').src)
-        self.assertEqual('glob(new, b=c)', test(f, 'patterns', 'new', fstview, '[a]').src)
+        self.assertEqual('glob(new, b=c)', test(f, 'patterns', 'new', FSTView, '[a]').src)
         self.assertEqual('glob(new, kw=c)', test(f, 'kwd_attrs', 'kw', None,
                                                 "<<MatchClass ROOT 0,0..0,14>.kwd_attrs>").src)
-        self.assertEqual('glob(new, kw=blah)', test(f, 'kwd_patterns', 'blah', fstview, 'c').src)
+        self.assertEqual('glob(new, kw=blah)', test(f, 'kwd_patterns', 'blah', FSTView, 'c').src)
 
         self.assertEqual('*new', test(FST('*star', MatchStar), 'name', 'new', None, 'star').src)
 
@@ -10898,25 +10898,25 @@ if 1:
         self.assertEqual('new as b', test(f, 'pattern', 'new', FST, 'a').src)
         self.assertEqual('new as grog', test(f, 'name', 'grog', None, 'b').src)
 
-        self.assertEqual('1 | 2 | 3', test(FST('a.b | c.d', MatchOr), 'patterns', '1 | 2 | 3', fstview, 'a.b | c.d').src)
+        self.assertEqual('1 | 2 | 3', test(FST('a.b | c.d', MatchOr), 'patterns', '1 | 2 | 3', FSTView, 'a.b | c.d').src)
 
         if not PYLT11:
             f = FST('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass')
-            self.assertEqual('try:\n    return\nexcept* Exception: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', fstview, 'pass').src)
-            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except* Exception as e: continue', fstview, 'except* Exception: pass').src)
-            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', fstview, 'pass').src)
-            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally:\n    f()', test(f, 'finalbody', 'f()', fstview, 'pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception: pass\nelse: pass\nfinally: pass', test(f, 'body', 'return', FSTView, 'pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse: pass\nfinally: pass', test(f, 'handlers', 'except* Exception as e: continue', FSTView, 'except* Exception: pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally: pass', test(f, 'orelse', 'break', FSTView, 'pass').src)
+            self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally:\n    f()', test(f, 'finalbody', 'f()', FSTView, 'pass').src)
 
         if not PYLT12:
-            self.assertEqual('def func[U](): pass', test(FST('def func[T](): pass'), 'type_params', 'U', fstview, 'T').src)
+            self.assertEqual('def func[U](): pass', test(FST('def func[T](): pass'), 'type_params', 'U', FSTView, 'T').src)
 
-            self.assertEqual('async def func[U](): pass', test(FST('async def func[T](): pass'), 'type_params', 'U', fstview, 'T').src)
+            self.assertEqual('async def func[U](): pass', test(FST('async def func[T](): pass'), 'type_params', 'U', FSTView, 'T').src)
 
-            self.assertEqual('class cls[U]: pass', test(FST('class cls[T]: pass'), 'type_params', 'U', fstview, 'T').src)
+            self.assertEqual('class cls[U]: pass', test(FST('class cls[T]: pass'), 'type_params', 'U', FSTView, 'T').src)
 
             f = FST('type t[T] = v')
             self.assertEqual('type new[T] = v', test(f, 'name', 'new', FST, 't').src)
-            self.assertEqual('type new[U] = v', test(f, 'type_params', 'U', fstview, 'T').src)
+            self.assertEqual('type new[U] = v', test(f, 'type_params', 'U', FSTView, 'T').src)
             self.assertEqual('type new[U] = zzz', test(f, 'value', 'zzz', FST, 'v').src)
 
             # these are complicated...
@@ -10925,7 +10925,7 @@ if 1:
             # (FormattedValue, 'conversion'):       _get_one_conversion, # int
             # (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
 
-            self.assertEqual('f"new"', test(FST('f"{a}"'), 'values', 'new', fstview,
+            self.assertEqual('f"new"', test(FST('f"{a}"'), 'values', 'new', FSTView,
                                             '<<JoinedStr ROOT 0,0..0,6>.values>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
             self.assertEqual('new', test(FST('T', TypeVar), 'name', 'new', None, 'T').src)
@@ -10942,7 +10942,7 @@ if 1:
             # (FormattedValue, 'conversion'):       _get_one_conversion, # int
             # (FormattedValue, 'format_spec'):      _get_one_format_spec, # expr?  - no location on py < 3.12
 
-            self.assertEqual('new', test(FST('f"{a}"'), 'values', 'new', fstview,
+            self.assertEqual('new', test(FST('f"{a}"'), 'values', 'new', FSTView,
                                          '<<JoinedStr ROOT 0,0..0,6>.values>').src)  # TODO: the result of this put is incorrect because it is not implemented yet, and will probably not be implemented for py < 3.12
 
         if not PYLT13:
@@ -10956,7 +10956,7 @@ if 1:
             # (Interpolation, 'conversion'):        _get_one_conversion, # int
             # (Interpolation, 'format_spec'):       _get_one_format_spec, # expr?  - no location on py < 3.12
 
-            self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', fstview,
+            self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', FSTView,
                                             '<<TemplateStr ROOT 0,0..0,6>.values>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
     def test_ast_accessors_virtual_field__all(self):
@@ -11066,7 +11066,7 @@ if 1:
         f._body = 'x\ny'
         self.assertEqual('"""doc"""\nx\ny', f.src)
 
-        self.assertEqual(0, len(fstview_dummy(f, 'invalid')))
+        self.assertEqual(0, len(FSTView_dummy(f, 'invalid')))
 
         self.assertEqual('b', FST('if 1:\n  a\n  b\n  c')._body[1].src)
 
@@ -11084,9 +11084,9 @@ if 1:
 
     def test_ast_accessors_dummy(self):
         if PYLT12:
-            self.assertIsInstance(FST('def f(): pass').type_params, fstview_dummy)
-            self.assertIsInstance(FST('async def f(): pass').type_params, fstview_dummy)
-            self.assertIsInstance(FST('class cls: pass').type_params, fstview_dummy)
+            self.assertIsInstance(FST('def f(): pass').type_params, FSTView_dummy)
+            self.assertIsInstance(FST('async def f(): pass').type_params, FSTView_dummy)
+            self.assertIsInstance(FST('class cls: pass').type_params, FSTView_dummy)
 
             f = FST('class cls: pass')
             del f.type_params
