@@ -537,7 +537,59 @@ class MAST(M_Pattern):
 # ......................................................................................................................
 # Generated pattern classes
 
-class MModule(MAST):  # pragma: no cover
+class Mmod(MAST):  # pragma: no cover
+    """"""
+    _types = mod
+
+class Mstmt(MAST):  # pragma: no cover
+    """"""
+    _types = stmt
+
+class Mexpr(MAST):  # pragma: no cover
+    """"""
+    _types = expr
+
+class Mexpr_context(MAST):  # pragma: no cover
+    """"""
+    _types = expr_context
+
+class Mboolop(MAST):  # pragma: no cover
+    """"""
+    _types = boolop
+
+class Moperator(MAST):  # pragma: no cover
+    """"""
+    _types = operator
+
+class Munaryop(MAST):  # pragma: no cover
+    """"""
+    _types = unaryop
+
+class Mcmpop(MAST):  # pragma: no cover
+    """"""
+    _types = cmpop
+
+class Mexcepthandler(MAST):  # pragma: no cover
+    """"""
+    _types = excepthandler
+
+class Mpattern(MAST):  # pragma: no cover
+    """"""
+    _types = pattern
+
+class Mtype_ignore(MAST):  # pragma: no cover
+    """"""
+    _types = type_ignore
+
+class Mtype_param(MAST):  # pragma: no cover
+    """"""
+    _types = type_param
+
+class M_slice(MAST):  # pragma: no cover
+    """"""
+    _types = _slice
+
+class MModule(Mmod):  # pragma: no cover
     """"""
     _types = Module
 
@@ -561,7 +613,7 @@ class MModule(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MInteractive(MAST):  # pragma: no cover
+class MInteractive(Mmod):  # pragma: no cover
     """"""
     _types = Interactive
 
@@ -580,7 +632,7 @@ class MInteractive(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MExpression(MAST):  # pragma: no cover
+class MExpression(Mmod):  # pragma: no cover
     """"""
     _types = Expression
 
@@ -594,7 +646,7 @@ class MExpression(MAST):  # pragma: no cover
             self.body = body
             fields.append('body')
 
-class MFunctionType(MAST):  # pragma: no cover
+class MFunctionType(Mmod):  # pragma: no cover
     """"""
     _types = FunctionType
 
@@ -613,7 +665,7 @@ class MFunctionType(MAST):  # pragma: no cover
             self.returns = returns
             fields.append('returns')
 
-class MFunctionDef(MAST):  # pragma: no cover
+class MFunctionDef(Mstmt):  # pragma: no cover
     """"""
     _types = FunctionDef
 
@@ -662,7 +714,7 @@ class MFunctionDef(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MAsyncFunctionDef(MAST):  # pragma: no cover
+class MAsyncFunctionDef(Mstmt):  # pragma: no cover
     """"""
     _types = AsyncFunctionDef
 
@@ -711,7 +763,7 @@ class MAsyncFunctionDef(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MClassDef(MAST):  # pragma: no cover
+class MClassDef(Mstmt):  # pragma: no cover
     """"""
     _types = ClassDef
 
@@ -760,7 +812,7 @@ class MClassDef(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MReturn(MAST):  # pragma: no cover
+class MReturn(Mstmt):  # pragma: no cover
     """"""
     _types = Return
 
@@ -774,7 +826,7 @@ class MReturn(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MDelete(MAST):  # pragma: no cover
+class MDelete(Mstmt):  # pragma: no cover
     """"""
     _types = Delete
 
@@ -788,7 +840,7 @@ class MDelete(MAST):  # pragma: no cover
             self.targets = targets
             fields.append('targets')
 
-class MAssign(MAST):  # pragma: no cover
+class MAssign(Mstmt):  # pragma: no cover
     """"""
     _types = Assign
 
@@ -812,7 +864,7 @@ class MAssign(MAST):  # pragma: no cover
             self.type_comment = type_comment
             fields.append('type_comment')
 
-class MTypeAlias(MAST):  # pragma: no cover
+class MTypeAlias(Mstmt):  # pragma: no cover
     """"""
     _types = TypeAlias
 
@@ -836,7 +888,7 @@ class MTypeAlias(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MAugAssign(MAST):  # pragma: no cover
+class MAugAssign(Mstmt):  # pragma: no cover
     """"""
     _types = AugAssign
 
@@ -860,7 +912,7 @@ class MAugAssign(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MAnnAssign(MAST):  # pragma: no cover
+class MAnnAssign(Mstmt):  # pragma: no cover
     """"""
     _types = AnnAssign
 
@@ -889,7 +941,7 @@ class MAnnAssign(MAST):  # pragma: no cover
             self.simple = simple
             fields.append('simple')
 
-class MFor(MAST):  # pragma: no cover
+class MFor(Mstmt):  # pragma: no cover
     """"""
     _types = For
 
@@ -928,7 +980,7 @@ class MFor(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MAsyncFor(MAST):  # pragma: no cover
+class MAsyncFor(Mstmt):  # pragma: no cover
     """"""
     _types = AsyncFor
 
@@ -967,7 +1019,7 @@ class MAsyncFor(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MWhile(MAST):  # pragma: no cover
+class MWhile(Mstmt):  # pragma: no cover
     """"""
     _types = While
 
@@ -996,7 +1048,7 @@ class MWhile(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MIf(MAST):  # pragma: no cover
+class MIf(Mstmt):  # pragma: no cover
     """"""
     _types = If
 
@@ -1025,7 +1077,7 @@ class MIf(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MWith(MAST):  # pragma: no cover
+class MWith(Mstmt):  # pragma: no cover
     """"""
     _types = With
 
@@ -1054,7 +1106,7 @@ class MWith(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MAsyncWith(MAST):  # pragma: no cover
+class MAsyncWith(Mstmt):  # pragma: no cover
     """"""
     _types = AsyncWith
 
@@ -1083,7 +1135,7 @@ class MAsyncWith(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MMatch(MAST):  # pragma: no cover
+class MMatch(Mstmt):  # pragma: no cover
     """"""
     _types = Match
 
@@ -1102,7 +1154,7 @@ class MMatch(MAST):  # pragma: no cover
             self.cases = cases
             fields.append('cases')
 
-class MRaise(MAST):  # pragma: no cover
+class MRaise(Mstmt):  # pragma: no cover
     """"""
     _types = Raise
 
@@ -1121,7 +1173,7 @@ class MRaise(MAST):  # pragma: no cover
             self.cause = cause
             fields.append('cause')
 
-class MTry(MAST):  # pragma: no cover
+class MTry(Mstmt):  # pragma: no cover
     """"""
     _types = Try
 
@@ -1155,7 +1207,7 @@ class MTry(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MTryStar(MAST):  # pragma: no cover
+class MTryStar(Mstmt):  # pragma: no cover
     """"""
     _types = TryStar
 
@@ -1189,7 +1241,7 @@ class MTryStar(MAST):  # pragma: no cover
             self._body = _body
             fields.append('_body')
 
-class MAssert(MAST):  # pragma: no cover
+class MAssert(Mstmt):  # pragma: no cover
     """"""
     _types = Assert
 
@@ -1208,7 +1260,7 @@ class MAssert(MAST):  # pragma: no cover
             self.msg = msg
             fields.append('msg')
 
-class MImport(MAST):  # pragma: no cover
+class MImport(Mstmt):  # pragma: no cover
     """"""
     _types = Import
 
@@ -1222,7 +1274,7 @@ class MImport(MAST):  # pragma: no cover
             self.names = names
             fields.append('names')
 
-class MImportFrom(MAST):  # pragma: no cover
+class MImportFrom(Mstmt):  # pragma: no cover
     """"""
     _types = ImportFrom
 
@@ -1246,7 +1298,7 @@ class MImportFrom(MAST):  # pragma: no cover
             self.level = level
             fields.append('level')
 
-class MGlobal(MAST):  # pragma: no cover
+class MGlobal(Mstmt):  # pragma: no cover
     """"""
     _types = Global
 
@@ -1260,7 +1312,7 @@ class MGlobal(MAST):  # pragma: no cover
             self.names = names
             fields.append('names')
 
-class MNonlocal(MAST):  # pragma: no cover
+class MNonlocal(Mstmt):  # pragma: no cover
     """"""
     _types = Nonlocal
 
@@ -1274,7 +1326,7 @@ class MNonlocal(MAST):  # pragma: no cover
             self.names = names
             fields.append('names')
 
-class MExpr(MAST):  # pragma: no cover
+class MExpr(Mstmt):  # pragma: no cover
     """"""
     _types = Expr
 
@@ -1288,28 +1340,28 @@ class MExpr(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MPass(MAST):  # pragma: no cover
+class MPass(Mstmt):  # pragma: no cover
     """"""
     _types = Pass
 
     def __init__(self) -> None:
         pass
 
-class MBreak(MAST):  # pragma: no cover
+class MBreak(Mstmt):  # pragma: no cover
     """"""
     _types = Break
 
     def __init__(self) -> None:
         pass
 
-class MContinue(MAST):  # pragma: no cover
+class MContinue(Mstmt):  # pragma: no cover
     """"""
     _types = Continue
 
     def __init__(self) -> None:
         pass
 
-class MBoolOp(MAST):  # pragma: no cover
+class MBoolOp(Mexpr):  # pragma: no cover
     """"""
     _types = BoolOp
 
@@ -1328,7 +1380,7 @@ class MBoolOp(MAST):  # pragma: no cover
             self.values = values
             fields.append('values')
 
-class MNamedExpr(MAST):  # pragma: no cover
+class MNamedExpr(Mexpr):  # pragma: no cover
     """"""
     _types = NamedExpr
 
@@ -1347,7 +1399,7 @@ class MNamedExpr(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MBinOp(MAST):  # pragma: no cover
+class MBinOp(Mexpr):  # pragma: no cover
     """"""
     _types = BinOp
 
@@ -1371,7 +1423,7 @@ class MBinOp(MAST):  # pragma: no cover
             self.right = right
             fields.append('right')
 
-class MUnaryOp(MAST):  # pragma: no cover
+class MUnaryOp(Mexpr):  # pragma: no cover
     """"""
     _types = UnaryOp
 
@@ -1390,7 +1442,7 @@ class MUnaryOp(MAST):  # pragma: no cover
             self.operand = operand
             fields.append('operand')
 
-class MLambda(MAST):  # pragma: no cover
+class MLambda(Mexpr):  # pragma: no cover
     """"""
     _types = Lambda
 
@@ -1409,7 +1461,7 @@ class MLambda(MAST):  # pragma: no cover
             self.body = body
             fields.append('body')
 
-class MIfExp(MAST):  # pragma: no cover
+class MIfExp(Mexpr):  # pragma: no cover
     """"""
     _types = IfExp
 
@@ -1433,7 +1485,7 @@ class MIfExp(MAST):  # pragma: no cover
             self.orelse = orelse
             fields.append('orelse')
 
-class MDict(MAST):  # pragma: no cover
+class MDict(Mexpr):  # pragma: no cover
     """"""
     _types = Dict
 
@@ -1457,7 +1509,7 @@ class MDict(MAST):  # pragma: no cover
             self._all = _all
             fields.append('_all')
 
-class MSet(MAST):  # pragma: no cover
+class MSet(Mexpr):  # pragma: no cover
     """"""
     _types = Set
 
@@ -1471,7 +1523,7 @@ class MSet(MAST):  # pragma: no cover
             self.elts = elts
             fields.append('elts')
 
-class MListComp(MAST):  # pragma: no cover
+class MListComp(Mexpr):  # pragma: no cover
     """"""
     _types = ListComp
 
@@ -1490,7 +1542,7 @@ class MListComp(MAST):  # pragma: no cover
             self.generators = generators
             fields.append('generators')
 
-class MSetComp(MAST):  # pragma: no cover
+class MSetComp(Mexpr):  # pragma: no cover
     """"""
     _types = SetComp
 
@@ -1509,7 +1561,7 @@ class MSetComp(MAST):  # pragma: no cover
             self.generators = generators
             fields.append('generators')
 
-class MDictComp(MAST):  # pragma: no cover
+class MDictComp(Mexpr):  # pragma: no cover
     """"""
     _types = DictComp
 
@@ -1533,7 +1585,7 @@ class MDictComp(MAST):  # pragma: no cover
             self.generators = generators
             fields.append('generators')
 
-class MGeneratorExp(MAST):  # pragma: no cover
+class MGeneratorExp(Mexpr):  # pragma: no cover
     """"""
     _types = GeneratorExp
 
@@ -1552,7 +1604,7 @@ class MGeneratorExp(MAST):  # pragma: no cover
             self.generators = generators
             fields.append('generators')
 
-class MAwait(MAST):  # pragma: no cover
+class MAwait(Mexpr):  # pragma: no cover
     """"""
     _types = Await
 
@@ -1566,7 +1618,7 @@ class MAwait(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MYield(MAST):  # pragma: no cover
+class MYield(Mexpr):  # pragma: no cover
     """"""
     _types = Yield
 
@@ -1580,7 +1632,7 @@ class MYield(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MYieldFrom(MAST):  # pragma: no cover
+class MYieldFrom(Mexpr):  # pragma: no cover
     """"""
     _types = YieldFrom
 
@@ -1594,7 +1646,7 @@ class MYieldFrom(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MCompare(MAST):  # pragma: no cover
+class MCompare(Mexpr):  # pragma: no cover
     """"""
     _types = Compare
 
@@ -1623,7 +1675,7 @@ class MCompare(MAST):  # pragma: no cover
             self._all = _all
             fields.append('_all')
 
-class MCall(MAST):  # pragma: no cover
+class MCall(Mexpr):  # pragma: no cover
     """"""
     _types = Call
 
@@ -1652,7 +1704,7 @@ class MCall(MAST):  # pragma: no cover
             self._args = _args
             fields.append('_args')
 
-class MFormattedValue(MAST):  # pragma: no cover
+class MFormattedValue(Mexpr):  # pragma: no cover
     """"""
     _types = FormattedValue
 
@@ -1676,7 +1728,7 @@ class MFormattedValue(MAST):  # pragma: no cover
             self.format_spec = format_spec
             fields.append('format_spec')
 
-class MInterpolation(MAST):  # pragma: no cover
+class MInterpolation(Mexpr):  # pragma: no cover
     """"""
     _types = Interpolation
 
@@ -1705,7 +1757,7 @@ class MInterpolation(MAST):  # pragma: no cover
             self.format_spec = format_spec
             fields.append('format_spec')
 
-class MJoinedStr(MAST):  # pragma: no cover
+class MJoinedStr(Mexpr):  # pragma: no cover
     """"""
     _types = JoinedStr
 
@@ -1719,7 +1771,7 @@ class MJoinedStr(MAST):  # pragma: no cover
             self.values = values
             fields.append('values')
 
-class MTemplateStr(MAST):  # pragma: no cover
+class MTemplateStr(Mexpr):  # pragma: no cover
     """"""
     _types = TemplateStr
 
@@ -1733,7 +1785,7 @@ class MTemplateStr(MAST):  # pragma: no cover
             self.values = values
             fields.append('values')
 
-class MConstant(MAST):  # pragma: no cover
+class MConstant(Mexpr):  # pragma: no cover
     """"""
     _types = Constant
 
@@ -1749,7 +1801,7 @@ class MConstant(MAST):  # pragma: no cover
             self.kind = kind
             fields.append('kind')
 
-class MAttribute(MAST):  # pragma: no cover
+class MAttribute(Mexpr):  # pragma: no cover
     """"""
     _types = Attribute
 
@@ -1773,7 +1825,7 @@ class MAttribute(MAST):  # pragma: no cover
             self.ctx = ctx
             fields.append('ctx')
 
-class MSubscript(MAST):  # pragma: no cover
+class MSubscript(Mexpr):  # pragma: no cover
     """"""
     _types = Subscript
 
@@ -1797,7 +1849,7 @@ class MSubscript(MAST):  # pragma: no cover
             self.ctx = ctx
             fields.append('ctx')
 
-class MStarred(MAST):  # pragma: no cover
+class MStarred(Mexpr):  # pragma: no cover
     """"""
     _types = Starred
 
@@ -1816,7 +1868,7 @@ class MStarred(MAST):  # pragma: no cover
             self.ctx = ctx
             fields.append('ctx')
 
-class MName(MAST):  # pragma: no cover
+class MName(Mexpr):  # pragma: no cover
     """"""
     _types = Name
 
@@ -1835,7 +1887,7 @@ class MName(MAST):  # pragma: no cover
             self.ctx = ctx
             fields.append('ctx')
 
-class MList(MAST):  # pragma: no cover
+class MList(Mexpr):  # pragma: no cover
     """"""
     _types = List
 
@@ -1854,7 +1906,7 @@ class MList(MAST):  # pragma: no cover
             self.ctx = ctx
             fields.append('ctx')
 
-class MTuple(MAST):  # pragma: no cover
+class MTuple(Mexpr):  # pragma: no cover
     """"""
     _types = Tuple
 
@@ -1873,7 +1925,7 @@ class MTuple(MAST):  # pragma: no cover
             self.ctx = ctx
             fields.append('ctx')
 
-class MSlice(MAST):  # pragma: no cover
+class MSlice(Mexpr):  # pragma: no cover
     """"""
     _types = Slice
 
@@ -1897,224 +1949,224 @@ class MSlice(MAST):  # pragma: no cover
             self.step = step
             fields.append('step')
 
-class MLoad(MAST):  # pragma: no cover
+class MLoad(Mexpr_context):  # pragma: no cover
     """"""
     _types = Load
 
     def __init__(self) -> None:
         pass
 
-class MStore(MAST):  # pragma: no cover
+class MStore(Mexpr_context):  # pragma: no cover
     """"""
     _types = Store
 
     def __init__(self) -> None:
         pass
 
-class MDel(MAST):  # pragma: no cover
+class MDel(Mexpr_context):  # pragma: no cover
     """"""
     _types = Del
 
     def __init__(self) -> None:
         pass
 
-class MAnd(MAST):  # pragma: no cover
+class MAnd(Mboolop):  # pragma: no cover
     """"""
     _types = And
 
     def __init__(self) -> None:
         pass
 
-class MOr(MAST):  # pragma: no cover
+class MOr(Mboolop):  # pragma: no cover
     """"""
     _types = Or
 
     def __init__(self) -> None:
         pass
 
-class MAdd(MAST):  # pragma: no cover
+class MAdd(Moperator):  # pragma: no cover
     """"""
     _types = Add
 
     def __init__(self) -> None:
         pass
 
-class MSub(MAST):  # pragma: no cover
+class MSub(Moperator):  # pragma: no cover
     """"""
     _types = Sub
 
     def __init__(self) -> None:
         pass
 
-class MMult(MAST):  # pragma: no cover
+class MMult(Moperator):  # pragma: no cover
     """"""
     _types = Mult
 
     def __init__(self) -> None:
         pass
 
-class MMatMult(MAST):  # pragma: no cover
+class MMatMult(Moperator):  # pragma: no cover
     """"""
     _types = MatMult
 
     def __init__(self) -> None:
         pass
 
-class MDiv(MAST):  # pragma: no cover
+class MDiv(Moperator):  # pragma: no cover
     """"""
     _types = Div
 
     def __init__(self) -> None:
         pass
 
-class MMod(MAST):  # pragma: no cover
+class MMod(Moperator):  # pragma: no cover
     """"""
     _types = Mod
 
     def __init__(self) -> None:
         pass
 
-class MPow(MAST):  # pragma: no cover
+class MPow(Moperator):  # pragma: no cover
     """"""
     _types = Pow
 
     def __init__(self) -> None:
         pass
 
-class MLShift(MAST):  # pragma: no cover
+class MLShift(Moperator):  # pragma: no cover
     """"""
     _types = LShift
 
     def __init__(self) -> None:
         pass
 
-class MRShift(MAST):  # pragma: no cover
+class MRShift(Moperator):  # pragma: no cover
     """"""
     _types = RShift
 
     def __init__(self) -> None:
         pass
 
-class MBitOr(MAST):  # pragma: no cover
+class MBitOr(Moperator):  # pragma: no cover
     """"""
     _types = BitOr
 
     def __init__(self) -> None:
         pass
 
-class MBitXor(MAST):  # pragma: no cover
+class MBitXor(Moperator):  # pragma: no cover
     """"""
     _types = BitXor
 
     def __init__(self) -> None:
         pass
 
-class MBitAnd(MAST):  # pragma: no cover
+class MBitAnd(Moperator):  # pragma: no cover
     """"""
     _types = BitAnd
 
     def __init__(self) -> None:
         pass
 
-class MFloorDiv(MAST):  # pragma: no cover
+class MFloorDiv(Moperator):  # pragma: no cover
     """"""
     _types = FloorDiv
 
     def __init__(self) -> None:
         pass
 
-class MInvert(MAST):  # pragma: no cover
+class MInvert(Munaryop):  # pragma: no cover
     """"""
     _types = Invert
 
     def __init__(self) -> None:
         pass
 
-class MNot(MAST):  # pragma: no cover
+class MNot(Munaryop):  # pragma: no cover
     """"""
     _types = Not
 
     def __init__(self) -> None:
         pass
 
-class MUAdd(MAST):  # pragma: no cover
+class MUAdd(Munaryop):  # pragma: no cover
     """"""
     _types = UAdd
 
     def __init__(self) -> None:
         pass
 
-class MUSub(MAST):  # pragma: no cover
+class MUSub(Munaryop):  # pragma: no cover
     """"""
     _types = USub
 
     def __init__(self) -> None:
         pass
 
-class MEq(MAST):  # pragma: no cover
+class MEq(Mcmpop):  # pragma: no cover
     """"""
     _types = Eq
 
     def __init__(self) -> None:
         pass
 
-class MNotEq(MAST):  # pragma: no cover
+class MNotEq(Mcmpop):  # pragma: no cover
     """"""
     _types = NotEq
 
     def __init__(self) -> None:
         pass
 
-class MLt(MAST):  # pragma: no cover
+class MLt(Mcmpop):  # pragma: no cover
     """"""
     _types = Lt
 
     def __init__(self) -> None:
         pass
 
-class MLtE(MAST):  # pragma: no cover
+class MLtE(Mcmpop):  # pragma: no cover
     """"""
     _types = LtE
 
     def __init__(self) -> None:
         pass
 
-class MGt(MAST):  # pragma: no cover
+class MGt(Mcmpop):  # pragma: no cover
     """"""
     _types = Gt
 
     def __init__(self) -> None:
         pass
 
-class MGtE(MAST):  # pragma: no cover
+class MGtE(Mcmpop):  # pragma: no cover
     """"""
     _types = GtE
 
     def __init__(self) -> None:
         pass
 
-class MIs(MAST):  # pragma: no cover
+class MIs(Mcmpop):  # pragma: no cover
     """"""
     _types = Is
 
     def __init__(self) -> None:
         pass
 
-class MIsNot(MAST):  # pragma: no cover
+class MIsNot(Mcmpop):  # pragma: no cover
     """"""
     _types = IsNot
 
     def __init__(self) -> None:
         pass
 
-class MIn(MAST):  # pragma: no cover
+class MIn(Mcmpop):  # pragma: no cover
     """"""
     _types = In
 
     def __init__(self) -> None:
         pass
 
-class MNotIn(MAST):  # pragma: no cover
+class MNotIn(Mcmpop):  # pragma: no cover
     """"""
     _types = NotIn
 
@@ -2150,7 +2202,7 @@ class Mcomprehension(MAST):  # pragma: no cover
             self.is_async = is_async
             fields.append('is_async')
 
-class MExceptHandler(MAST):  # pragma: no cover
+class MExceptHandler(Mexcepthandler):  # pragma: no cover
     """"""
     _types = ExceptHandler
 
@@ -2328,7 +2380,7 @@ class Mmatch_case(MAST):  # pragma: no cover
             self.body = body
             fields.append('body')
 
-class MMatchValue(MAST):  # pragma: no cover
+class MMatchValue(Mpattern):  # pragma: no cover
     """"""
     _types = MatchValue
 
@@ -2342,7 +2394,7 @@ class MMatchValue(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MMatchSingleton(MAST):  # pragma: no cover
+class MMatchSingleton(Mpattern):  # pragma: no cover
     """"""
     _types = MatchSingleton
 
@@ -2356,7 +2408,7 @@ class MMatchSingleton(MAST):  # pragma: no cover
             self.value = value
             fields.append('value')
 
-class MMatchSequence(MAST):  # pragma: no cover
+class MMatchSequence(Mpattern):  # pragma: no cover
     """"""
     _types = MatchSequence
 
@@ -2370,7 +2422,7 @@ class MMatchSequence(MAST):  # pragma: no cover
             self.patterns = patterns
             fields.append('patterns')
 
-class MMatchMapping(MAST):  # pragma: no cover
+class MMatchMapping(Mpattern):  # pragma: no cover
     """"""
     _types = MatchMapping
 
@@ -2399,7 +2451,7 @@ class MMatchMapping(MAST):  # pragma: no cover
             self._all = _all
             fields.append('_all')
 
-class MMatchClass(MAST):  # pragma: no cover
+class MMatchClass(Mpattern):  # pragma: no cover
     """"""
     _types = MatchClass
 
@@ -2428,7 +2480,7 @@ class MMatchClass(MAST):  # pragma: no cover
             self.kwd_patterns = kwd_patterns
             fields.append('kwd_patterns')
 
-class MMatchStar(MAST):  # pragma: no cover
+class MMatchStar(Mpattern):  # pragma: no cover
     """"""
     _types = MatchStar
 
@@ -2442,7 +2494,7 @@ class MMatchStar(MAST):  # pragma: no cover
             self.name = name
             fields.append('name')
 
-class MMatchAs(MAST):  # pragma: no cover
+class MMatchAs(Mpattern):  # pragma: no cover
     """"""
     _types = MatchAs
 
@@ -2461,7 +2513,7 @@ class MMatchAs(MAST):  # pragma: no cover
             self.name = name
             fields.append('name')
 
-class MMatchOr(MAST):  # pragma: no cover
+class MMatchOr(Mpattern):  # pragma: no cover
     """"""
     _types = MatchOr
 
@@ -2475,7 +2527,7 @@ class MMatchOr(MAST):  # pragma: no cover
             self.patterns = patterns
             fields.append('patterns')
 
-class MTypeIgnore(MAST):  # pragma: no cover
+class MTypeIgnore(Mtype_ignore):  # pragma: no cover
     """"""
     _types = TypeIgnore
 
@@ -2494,7 +2546,7 @@ class MTypeIgnore(MAST):  # pragma: no cover
             self.tag = tag
             fields.append('tag')
 
-class MTypeVar(MAST):  # pragma: no cover
+class MTypeVar(Mtype_param):  # pragma: no cover
     """"""
     _types = TypeVar
 
@@ -2518,7 +2570,7 @@ class MTypeVar(MAST):  # pragma: no cover
             self.default_value = default_value
             fields.append('default_value')
 
-class MParamSpec(MAST):  # pragma: no cover
+class MParamSpec(Mtype_param):  # pragma: no cover
     """"""
     _types = ParamSpec
 
@@ -2537,7 +2589,7 @@ class MParamSpec(MAST):  # pragma: no cover
             self.default_value = default_value
             fields.append('default_value')
 
-class MTypeVarTuple(MAST):  # pragma: no cover
+class MTypeVarTuple(Mtype_param):  # pragma: no cover
     """"""
     _types = TypeVarTuple
 
@@ -2556,7 +2608,7 @@ class MTypeVarTuple(MAST):  # pragma: no cover
             self.default_value = default_value
             fields.append('default_value')
 
-class M_ExceptHandlers(MAST):  # pragma: no cover
+class M_ExceptHandlers(M_slice):  # pragma: no cover
     """"""
     _types = _ExceptHandlers
 
@@ -2570,7 +2622,7 @@ class M_ExceptHandlers(MAST):  # pragma: no cover
             self.handlers = handlers
             fields.append('handlers')
 
-class M_match_cases(MAST):  # pragma: no cover
+class M_match_cases(M_slice):  # pragma: no cover
     """"""
     _types = _match_cases
 
@@ -2584,7 +2636,7 @@ class M_match_cases(MAST):  # pragma: no cover
             self.cases = cases
             fields.append('cases')
 
-class M_Assign_targets(MAST):  # pragma: no cover
+class M_Assign_targets(M_slice):  # pragma: no cover
     """"""
     _types = _Assign_targets
 
@@ -2598,7 +2650,7 @@ class M_Assign_targets(MAST):  # pragma: no cover
             self.targets = targets
             fields.append('targets')
 
-class M_decorator_list(MAST):  # pragma: no cover
+class M_decorator_list(M_slice):  # pragma: no cover
     """"""
     _types = _decorator_list
 
@@ -2612,7 +2664,7 @@ class M_decorator_list(MAST):  # pragma: no cover
             self.decorator_list = decorator_list
             fields.append('decorator_list')
 
-class M_arglikes(MAST):  # pragma: no cover
+class M_arglikes(M_slice):  # pragma: no cover
     """"""
     _types = _arglikes
 
@@ -2626,7 +2678,7 @@ class M_arglikes(MAST):  # pragma: no cover
             self.arglikes = arglikes
             fields.append('arglikes')
 
-class M_comprehensions(MAST):  # pragma: no cover
+class M_comprehensions(M_slice):  # pragma: no cover
     """"""
     _types = _comprehensions
 
@@ -2640,7 +2692,7 @@ class M_comprehensions(MAST):  # pragma: no cover
             self.generators = generators
             fields.append('generators')
 
-class M_comprehension_ifs(MAST):  # pragma: no cover
+class M_comprehension_ifs(M_slice):  # pragma: no cover
     """"""
     _types = _comprehension_ifs
 
@@ -2654,7 +2706,7 @@ class M_comprehension_ifs(MAST):  # pragma: no cover
             self.ifs = ifs
             fields.append('ifs')
 
-class M_aliases(MAST):  # pragma: no cover
+class M_aliases(M_slice):  # pragma: no cover
     """"""
     _types = _aliases
 
@@ -2668,7 +2720,7 @@ class M_aliases(MAST):  # pragma: no cover
             self.names = names
             fields.append('names')
 
-class M_withitems(MAST):  # pragma: no cover
+class M_withitems(M_slice):  # pragma: no cover
     """"""
     _types = _withitems
 
@@ -2682,7 +2734,7 @@ class M_withitems(MAST):  # pragma: no cover
             self.items = items
             fields.append('items')
 
-class M_type_params(MAST):  # pragma: no cover
+class M_type_params(M_slice):  # pragma: no cover
     """"""
     _types = _type_params
 
@@ -2695,58 +2747,6 @@ class M_type_params(MAST):  # pragma: no cover
         if type_params is not ...:
             self.type_params = type_params
             fields.append('type_params')
-
-class Mmod(MAST):  # pragma: no cover
-    """"""
-    _types = mod
-
-class Mstmt(MAST):  # pragma: no cover
-    """"""
-    _types = stmt
-
-class Mexpr(MAST):  # pragma: no cover
-    """"""
-    _types = expr
-
-class Mexpr_context(MAST):  # pragma: no cover
-    """"""
-    _types = expr_context
-
-class Mboolop(MAST):  # pragma: no cover
-    """"""
-    _types = boolop
-
-class Moperator(MAST):  # pragma: no cover
-    """"""
-    _types = operator
-
-class Munaryop(MAST):  # pragma: no cover
-    """"""
-    _types = unaryop
-
-class Mcmpop(MAST):  # pragma: no cover
-    """"""
-    _types = cmpop
-
-class Mexcepthandler(MAST):  # pragma: no cover
-    """"""
-    _types = excepthandler
-
-class Mpattern(MAST):  # pragma: no cover
-    """"""
-    _types = pattern
-
-class Mtype_ignore(MAST):  # pragma: no cover
-    """"""
-    _types = type_ignore
-
-class Mtype_param(MAST):  # pragma: no cover
-    """"""
-    _types = type_param
-
-class M_slice(MAST):  # pragma: no cover
-    """"""
-    _types = _slice
 
 
 # ......................................................................................................................

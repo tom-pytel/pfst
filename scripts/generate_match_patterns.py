@@ -14,10 +14,26 @@ from fst.fst_misc import FST_VIRTUAL_FIELDS
 
 m_patterns = []
 
+for ast_cls in AST_BASES:
+    assert len(ast_cls.__bases__) == 1
+
+    ast_base_name = ast_cls.__bases__[0].__name__
+    name = ast_cls.__name__
+
+    m_patterns.append(f'''
+class M{name}(M{ast_base_name}):  # pragma: no cover
+    """"""
+    _types = {name}
+'''.strip())
+
 for ast_cls in FIELDS:
+    assert len(ast_cls.__bases__) == 1
+
+    ast_base_name = ast_cls.__bases__[0].__name__
+
     if ast_cls is Constant:
-        m_patterns.append('''
-class MConstant(MAST):  # pragma: no cover
+        m_patterns.append(f'''
+class MConstant(M{ast_base_name}):  # pragma: no cover
     """"""
     _types = Constant
 
@@ -47,18 +63,9 @@ class MConstant(MAST):  # pragma: no cover
         init = '\n\n    def __init__(self) -> None:\n        pass'
 
     m_patterns.append(f'''
-class M{name}(MAST):  # pragma: no cover
+class M{name}(M{ast_base_name}):  # pragma: no cover
     """"""
     _types = {name}{init}
-'''.strip())
-
-for ast_cls in AST_BASES:
-    name = ast_cls.__name__
-
-    m_patterns.append(f'''
-class M{name}(MAST):  # pragma: no cover
-    """"""
-    _types = {name}
 '''.strip())
 
 print('\n\n'.join(m_patterns))
