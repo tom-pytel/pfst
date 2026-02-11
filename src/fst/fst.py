@@ -142,6 +142,8 @@ from .astutil import (
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, _code_as_lines, code_as_all
+from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
+from .fst_options import check_options, filter_options
 
 from .view import (
     fstview,
@@ -154,10 +156,8 @@ from .view import (
 )
 
 from .reconcile import Reconcile
-from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
 from .fst_trivia import Trivia
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
-from .fst_options import check_options, filter_options
 
 
 __all__ = [

@@ -8516,8 +8516,8 @@ opts.ignore_module = [mod.strip()
         self.assertEqual(str((f := FST('a; b')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
         self.assertEqual(str((f := FST('a\nb')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
 
-    def test_match_basic_pat_to_fstview(self):
-        # string
+    def test_match_virtual_field(self):
+        # string to multinode
 
         self.assertTrue(MDict(_all=['a: b']).match(FST('{a: b}')))
         self.assertTrue(MDict(_all=['a: b']).match(FST('{ a: b }')))
@@ -8544,7 +8544,7 @@ opts.ignore_module = [mod.strip()
         self.assertFalse(Marguments(_all=['a: int = 1']).match(FST('a:int=1', arguments)))
         self.assertFalse(Marguments(_all=['a: int = 1']).match(FST('a  :  int  =  1', arguments)))
 
-        # regex
+        # regex to multinode
 
         self.assertTrue(MDict(_all=[re.compile(r'a\s*:\s*b')]).match(FST('{a: b}')))
         self.assertTrue(MDict(_all=[re.compile(r'a\s*:\s*b')]).match(FST('{a:b}')))
@@ -8569,7 +8569,7 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
         self.assertFalse(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
 
-        # MRE
+        # MRE to multinode
 
         self.assertTrue(MDict(_all=[MRE(r'a\s*:\s*b')]).match(FST('{a: b}')))
         self.assertTrue(MDict(_all=[MRE(r'a\s*:\s*b')]).match(FST('{a:b}')))
@@ -8593,6 +8593,25 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a:int=1', arguments)))
         self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
         self.assertFalse(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
+
+        # Concrete pattern to multinode
+
+
+
+
+        # others
+
+        self.assertTrue(MClassDef(_bases=['a', '*b', 'c=d', '**e']).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=['a', '*b', 'c=d', '**e']).match(FST('call(a, *b, c=d, **e)')))
+        self.assertTrue(MCompare(_all=['a', 'b', 'c']).match(FST('a < b < c')))
+        self.assertFalse(MClassDef(body=['a', 'b', 'c']).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=['a', 'b', 'c']).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+
+        self.assertTrue(MClassDef(_bases=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('call(a, *b, c=d, **e)')))
+        self.assertTrue(MCompare(_all=[MName('a'), MName('b'), MName('c')]).match(FST('a < b < c')))
+        self.assertFalse(MClassDef(body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
 
     def test_match_coverage(self):
         self.assertEqual('MAST(elts=..., ctx=Store)', repr(MAST(elts=..., ctx=Store)))
