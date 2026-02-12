@@ -3648,9 +3648,9 @@ class MN(M):
 
     **Examples:**
 
-    >>> MList(MN('a', 1, 2)) .match(FST('[]'))
+    >>> MList([MN('a', 1, 2)]) .match(FST('[]'))
 
-    >>> MList(MN('a', 1, 2)) .match(FST('[a]'))
+    >>> MList([MN('a', 1, 2)]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3>>
 
     >>> MList([MN('a', 1, 2)]) .match(FST('[a, a]'))
@@ -3704,10 +3704,7 @@ class MN(M):
         self.max = max
 
     def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if not isinstance(tgt, (list, FSTView)):
-            return None
-
-        return _match_default([self], tgt, mctx)
+        return None  # this should not appear alone outside of list fields
 
 
 class MSTAR(MN):
@@ -3790,13 +3787,8 @@ class MQMARK(MN):
 
     **Examples:**
 
-    >>> MList(MQMARK('a')) .match(FST('[]'))
+    >>> MList([MQMARK('a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2>>
-
-    >>> MList(MQMARK('a')) .match(FST('[a]'))
-    <FSTMatch <List ROOT 0,0..0,3>>
-
-    >>> MList(MQMARK('a')) .match(FST('[b]'))
 
     >>> MList([MQMARK('a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3>>

@@ -590,15 +590,6 @@ match nonexistent elements.
 
 There was a successful match against 0 elements in this case.
 
-And lastly, these must normally only be used inside list fields, but as a convenience a single pattern can be used as
-a list field without the `[]` and it acts as if it is the only pattern in the list field.
-
->>> MList([MN(t='a', min=1, max=2)]).match(FST('[a]'))
-<FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
-
->>> MList(MN(t='a', min=1, max=2)).match(FST('[a]'))
-<FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
-
 
 ## `MSTAR()`, `MPLUS()`, `MQMARK()`, `MMIN()` and `MMAX()` quantifier patterns
 
@@ -633,14 +624,8 @@ True
 
 `MQMARK` is zero or one, just like the regex `?` question mark.
 
->>> bool(MList(MQMARK('a')) .match(FST('[]')))
+>>> bool(MList([MQMARK('a')]) .match(FST('[]')))
 True
-
->>> bool(MList(MQMARK('a')) .match(FST('[a]')))
-True
-
->>> bool(MList(MQMARK('a')) .match(FST('[b]')))
-False
 
 >>> bool(MList([MQMARK('a')]) .match(FST('[a]')))
 True
