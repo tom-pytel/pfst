@@ -4153,19 +4153,19 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
 
     key = getattr(pat, 'keys', ...)
 
-    if isinstance(key, list):
-        if len(key) != 1:
-            raise MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single element or length-1 list')
-        else:
+    if key is not ...:
+        if isinstance(key, list) and  len(key) == 1:
             key = key[0]
+        else:
+            raise MatchError('matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list')
 
     value = getattr(pat, 'values', ...)
 
-    if isinstance(value, list):
-        if len(value) != 1:
-            raise MatchError('matching a Dict pattern against Dict._all the pattern values must be a single element or length-1 list')
-        else:
+    if value is not ...:
+        if isinstance(value, list) and len(value) == 1:
             value = value[0]
+        else:
+            raise MatchError('matching a Dict pattern against Dict._all the pattern values must be ... or a length-1 list')
 
     idx = tgt.start
     tgt = tgt.base.a
@@ -4212,19 +4212,19 @@ def _match_node_MatchMapping(
 
         return _MATCH_FUNCS.get(rest.__class__, _match_default)(rest, tgt.base.a.rest, mctx)
 
-    if isinstance(key, list):
-        if len(key) != 1:
-            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                             ' the pattern keys must be a single element or length-1 list')
-        else:
+    if key is not ...:
+        if isinstance(key, list) and  len(key) == 1:
             key = key[0]
-
-    if isinstance(pattern, list):
-        if len(pattern) != 1:
-            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                             ' the pattern patterns must be a single element or length-1 list')
         else:
+            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
+                             ' the pattern keys must be ... or a length-1 list')
+
+    if pattern is not ...:
+        if isinstance(pattern, list) and  len(pattern) == 1:
             pattern = pattern[0]
+        else:
+            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
+                             ' the pattern patterns must be ... or a length-1 list')
 
     if tgt.has_rest:  # if want to match a rest then we force user to do it explicitly on purpose since it is too different from regular nodes
         return None
