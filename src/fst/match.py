@@ -188,13 +188,14 @@ __all__ = [
     'MOR',
     'MAND',
     'MANY',
+    'MOPT',
     'MRE',
     'MCB',
     'MTAG',
     'MN',
-    'MOPT',
     'MSTAR',
     'MPLUS',
+    'MQMARK',
     'MMIN',
     'MMAX',
 
@@ -444,14 +445,14 @@ class M_Pattern:
             if tag in _INVALID_TAGS:
                 raise ValueError(f'invalid tag {tag!r} shadows match class attribute')
 
-    def match(self, target: _TargetsOrFST, *, ctx: bool = False) -> FSTMatch | None:
+    def match(self, target: _TargetsOrFST, *, ast_ctx: bool = False) -> FSTMatch | None:
         """Match this pattern against given target. This can take `FST` nodes or `AST` (whether they are part of an
         `FST` tree or not, meaning it can match against pure `AST` trees). Can also match primitives and lists of nodes
         if the pattern is set up for that.
 
         **Parameters:**
         - `target`: The target to match. Can be an `AST` or `FST` node or constant or a list of `AST` nodes or constants.
-        - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+        - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
             Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
             don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
             Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
@@ -469,7 +470,7 @@ class M_Pattern:
         elif not (tgt := target.a):
             raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
 
-        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _MatchContext(is_FST, ctx))
+        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _MatchContext(is_FST, ast_ctx))
 
         return None if m is None else FSTMatch(self, target, m)
 
@@ -2755,16 +2756,18 @@ class M_type_params(M_slice):  # pragma: no cover
 # ......................................................................................................................
 
 class _MatchContext:
-    """Store running tags being built up during matching, which may be queried by `MTAG`."""
+    """Store running tags being built up during matching, which may be queried by `MTAG`. `tagss` is the plural of
+    `tags` and indicates a list of dictionaries of tags. Merged on exit from each node that builds them up as a list
+    like this."""
 
     is_FST: bool
-    ctx: bool
+    ast_ctx: bool
     all_tagss: list[list[dict[str, Any]]]
     fstview_pat_cache: dict[FSTView, _Pattern]  # may need to temporarily convert FSTViews to AST patterns, specifically for MTAG match previously matched multinode item from Dict, MatchMapping or arguments
 
-    def __init__(self, is_FST: bool, ctx: bool) -> None:
+    def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
         self.is_FST = is_FST
-        self.ctx = ctx
+        self.ast_ctx = ast_ctx
         self.all_tagss = []
         self.fstview_pat_cache = {}
 
@@ -2829,9 +2832,12 @@ class _MatchContext:
             pat = self.fstview_pat_cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
 
         elif isinstance(view, FSTView_arguments):
+
+
+            # TODO: this
+
+
             raise NotImplementedError
-
-
 
         elif isinstance(view, FSTView_MatchMapping):
             start, stop = view.start_and_stop
@@ -3174,6 +3180,8 @@ class MANY(M_Pattern):
     of", not "many" as in "several", though that fits as well. Essentially this is an AND of whether the node type is
     one of those provided and the given fields match.
 
+    This is essentially `MAND(MOR(*types), MAST(**fields))`. But the types must be actual types, not other patterns.
+
     **Note:** Since there are several fields which can be either an individual element or list of elements, matching
     a list pattern vs. a non-list and vice versa is just treated as a non-match.
 
@@ -3253,6 +3261,74 @@ class MANY(M_Pattern):
                 return leaf_asts
 
         return leaf_asts
+
+
+class MOPT(M):
+    """This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not
+    be present. That is, both a normal value which matches the pattern and a `None` value are considered a successful
+    match. A non-`None` value which does NOT match the pattern is considered a failure.
+
+    This is essentially `MOR(pattern, None)`.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `FSTMatch` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
+    <FSTMatch <FunctionDef ROOT 0,0..0,13>>
+
+    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
+    <FSTMatch <FunctionDef ROOT 0,0..0,20>>
+
+    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
+
+    >>> MDict([MOPT('a')], ['b']) .match(FST('{a: b}'))
+    <FSTMatch <Dict ROOT 0,0..0,6>>
+
+    >>> MDict([MOPT('a')], ['b']) .match(FST('{**b}'))
+    <FSTMatch <Dict ROOT 0,0..0,5>>
+
+    >>> MDict([MOPT('a')], ['b']) .match(FST('{x: b}'))
+
+    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **a}', 'pattern'))
+    <FSTMatch <MatchMapping ROOT 0,0..0,11>>
+
+    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **b}', 'pattern'))
+
+    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
+    <FSTMatch <MatchMapping ROOT 0,0..0,6>>
+    """
+
+    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+        if tgt is None:
+            if pat_tag := self.pat_tag:
+                return {pat_tag: [], **self.static_tags}
+
+            return self.static_tags
+
+        pat = self.pat
+        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mctx)
+
+        if m is None:
+            return None
+
+        if pat_tag := self.pat_tag:
+            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+
+            return {pat_tag: [FSTMatch(pat, tgt, m)], **self.static_tags}
+
+        if m:
+            return dict(m, **self.static_tags)
+
+        return self.static_tags
 
 
 class MRE(M_Pattern):
@@ -3548,16 +3624,15 @@ class MN(M):
     instances of the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a
     tag for the matched patterns they are given as a list of matches instead of just one.
 
-    This is the base class for `MOPT`, `MSTAR`, `MPLUS`, `MMIN` and `MMAX` and can do everything they can with the
-    appropriate values for `min` and `max` (with the exception of `MOPT` being used outside of list fields). Those
-    classes are provided regardless for cleaner pattern structuring.
+    This is the base class for `MSTAR`, `MPLUS`, `MQMARK`, `MMIN` and `MMAX` and can do everything they can with the
+    appropriate values for `min` and `max`. Those classes are provided regardless for cleaner pattern structuring.
 
     This pattern and its specific subclasses are greedy and there is no backtracking done to attempt to make a sequence
     of these match successfully. They are also not nestable, a single level is allowed for or in a list field (any
     number sequential siblings `MN(), MN(), ...`, but no `MN(MN(...))`).
 
-    `MN()` with default `min` and `max` is the same as `MSTAR()`, so if you don't care about cleaner patterns then just
-    use this.
+    `MN()` with default `min` and `max` is the same as `MSTAR()`, so if you don't care about cleaner patterns you can
+    just use this.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3635,96 +3710,6 @@ class MN(M):
         return _match_default([self], tgt, mctx)
 
 
-class MOPT(MN):
-    """Zero or one (optional) quantifier pattern. Matches at either zero or exactly one instance of the given pattern.
-    The tagging works the same way as `MN` and if returning in a tag a list is still returned with either zero or one
-    `FSTMatch` objects.
-
-    Unlike any other quantifier pattern this one can be used on non-list fields. When used in this way it will match
-    either the pattern or `None`, like for a `FunctionDef.returns`, hence - "optional". To clarify, if something is
-    present and the pattern doesn't match, that is a match failure. If something is not present (`None` value), that is
-    a successful match.
-
-    **Parameters:**
-    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
-        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
-        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
-        case the keyword is used as a tag which is used to return a list of `FSTMatch` objects for each node matched by
-        the pattern. Setting this to `...` is the same as not having it present.
-    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
-        not provided in `anon_pat`). These are added AFTER all the child match tags.
-
-    **Examples:**
-
-    >>> MList(MOPT('a')) .match(FST('[]'))
-    <FSTMatch <List ROOT 0,0..0,2>>
-
-    >>> MList(MOPT('a')) .match(FST('[a]'))
-    <FSTMatch <List ROOT 0,0..0,3>>
-
-    >>> MList(MOPT('a')) .match(FST('[b]'))
-
-    >>> MList([MOPT('a')]) .match(FST('[a]'))
-    <FSTMatch <List ROOT 0,0..0,3>>
-
-    >>> MList([MOPT('a')]) .match(FST('[b]'))
-
-    >>> MList([MOPT('a')]) .match(FST('[a, a]'))
-
-    >>> MList([MOPT('a'), ...]) .match(FST('[a, a]'))
-    <FSTMatch <List ROOT 0,0..0,6>>
-
-    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
-    <FSTMatch <FunctionDef ROOT 0,0..0,13>>
-
-    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
-    <FSTMatch <FunctionDef ROOT 0,0..0,20>>
-
-    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
-
-    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **a}', 'pattern'))
-    <FSTMatch <MatchMapping ROOT 0,0..0,11>>
-
-    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **b}', 'pattern'))
-
-    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
-    <FSTMatch <MatchMapping ROOT 0,0..0,6>>
-    """
-
-    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
-        MN.__init__(self, anon_pat, 0, 1, **tags)
-
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if isinstance(tgt, (list, FSTView)):
-            return _match_default([self], tgt, mctx)
-
-        if tgt is None:
-            if pat_tag := self.pat_tag:
-                return {pat_tag: [], **self.static_tags}
-
-            return self.static_tags
-
-        # if not isinstance(tgt, AST):
-        #     return None
-
-        pat = self.pat
-        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mctx)
-
-        if m is None:
-            return None
-
-        if pat_tag := self.pat_tag:
-            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
-                raise MatchError('match found an AST node without an FST')
-
-            return {pat_tag: [FSTMatch(pat, tgt, m)], **self.static_tags}
-
-        if m:
-            return dict(m, **self.static_tags)
-
-        return self.static_tags
-
-
 class MSTAR(MN):
     """Star quantifier pattern, zero or more. Matches any number of instances of pattern, including zero. The tagging
     works the same way as `MN` and if returning in a tag a list is still returned with either zero or more `FSTMatch`
@@ -3787,6 +3772,45 @@ class MPLUS(MN):
 
     def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
         MN.__init__(self, anon_pat, 1, **tags)
+
+
+class MQMARK(MN):
+    """Zero or one quantifier pattern. Matches at either zero or exactly one instance of the given pattern. The tagging
+    works the same way as `MN` and if returning in a tag a list is still returned with either zero or one `FSTMatch`
+    objects.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `FSTMatch` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    >>> MList(MQMARK('a')) .match(FST('[]'))
+    <FSTMatch <List ROOT 0,0..0,2>>
+
+    >>> MList(MQMARK('a')) .match(FST('[a]'))
+    <FSTMatch <List ROOT 0,0..0,3>>
+
+    >>> MList(MQMARK('a')) .match(FST('[b]'))
+
+    >>> MList([MQMARK('a')]) .match(FST('[a]'))
+    <FSTMatch <List ROOT 0,0..0,3>>
+
+    >>> MList([MQMARK('a')]) .match(FST('[b]'))
+
+    >>> MList([MQMARK('a')]) .match(FST('[a, a]'))
+
+    >>> MList([MQMARK('a'), ...]) .match(FST('[a, a]'))
+    <FSTMatch <List ROOT 0,0..0,6>>
+    """
+
+    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
+        MN.__init__(self, anon_pat, 0, 1, **tags)
 
 
 class MMIN(MN):
@@ -4139,7 +4163,7 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
 
     if isinstance(key, list):
         if len(key) != 1:
-            raise MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single-element or single-element list')
+            raise MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single element or length-1 list')
         else:
             key = key[0]
 
@@ -4147,7 +4171,7 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
 
     if isinstance(value, list):
         if len(value) != 1:
-            raise MatchError('matching a Dict pattern against Dict._all the pattern values must be a single-element or single-element list')
+            raise MatchError('matching a Dict pattern against Dict._all the pattern values must be a single element or length-1 list')
         else:
             value = value[0]
 
@@ -4199,14 +4223,14 @@ def _match_node_MatchMapping(
     if isinstance(key, list):
         if len(key) != 1:
             raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                             ' the pattern keys must be a single-element or single-element list')
+                             ' the pattern keys must be a single element or length-1 list')
         else:
             key = key[0]
 
     if isinstance(pattern, list):
         if len(pattern) != 1:
             raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                             ' the pattern patterns must be a single-element or single-element list')
+                             ' the pattern patterns must be a single element or length-1 list')
         else:
             pattern = pattern[0]
 
@@ -4228,6 +4252,71 @@ def _match_node_MatchMapping(
         return mk
 
     return {**mk, **mp}
+
+def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+    """`arguments` or `Marguments` leaf node. Possibly match against a single-item `FSTView_arguments`. Will match a
+    single argument with possibly a default to a single-argument `FSTView_arguments`. Pattern `args` argument matches
+    to target `args`, `posonlyargs` or `kwonlyargs`. Other type pattern args must match exactly (`posonlyargs` only to
+    `posonlyargs`, `kwonlyargs` to `kwonlyargs`, `varag` to `vararg` and `kwarg` to `kwarg` (obviously), etc...)."""
+
+    if not isinstance(tgt, FSTView_arguments):
+        return _match_node(pat, tgt, mctx)
+
+
+    raise NotImplementedError
+
+    if len(tgt) != 1:
+        return None
+
+    arg_pat = None
+    dflt_pat = None
+    args = getattr(pat, 'args', ...)
+
+    if isinstance(args, list):
+        if len(key) != 1:
+            raise MatchError('matching a arguments pattern against arguments._all'
+                             ' the pattern must be a single argument')
+        else:
+            key = key[0]
+
+
+
+
+
+
+
+
+    key = getattr(pat, 'keys', ...)
+
+    if isinstance(key, list):
+        if len(key) != 1:
+            raise MatchError('matching a arguments pattern against arguments._all the pattern keys must be a single element or length-1 list')
+        else:
+            key = key[0]
+
+    value = getattr(pat, 'values', ...)
+
+    if isinstance(value, list):
+        if len(value) != 1:
+            raise MatchError('matching a arguments pattern against arguments._all the pattern values must be a single element or length-1 list')
+        else:
+            value = value[0]
+
+    idx = tgt.start
+    tgt = tgt.base.a
+
+    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mctx)) is None:
+        return None
+
+    if (mv := _MATCH_FUNCS.get(value.__class__, _match_default)(value, tgt.values[idx], mctx)) is None:
+        return None
+
+    if not mk:
+        return mv
+    if not mv:
+        return mk
+
+    return {**mk, **mv}
 
 def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
@@ -4257,10 +4346,10 @@ def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchC
 
 def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
-    the match option `ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
+    the match option `ast_ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
     `None` must also match one of these successfully for py < 3.13."""
 
-    if not isinstance(tgt, expr_context) or (mctx.ctx and tgt.__class__ is not pat.__class__):
+    if not isinstance(tgt, expr_context) or (mctx.ast_ctx and tgt.__class__ is not pat.__class__):
         return None
 
     return _EMPTY_DICT
@@ -4338,13 +4427,14 @@ _MATCH_FUNCS = {
     MOR:                 MOR._match,
     MAND:                MAND._match,
     MANY:                _match_node,  # _match_node_arbitrary_fields,
+    MOPT:                MOPT._match,
     MRE:                 MRE._match,
     MCB:                 MCB._match,
     MTAG:                MTAG._match,
     MN:                  MN._match,
-    MOPT:                MOPT._match,
     MSTAR:               MSTAR._match,
     MPLUS:               MPLUS._match,
+    MQMARK:              MQMARK._match,
     MMIN:                MMIN._match,
     MMAX:                MMAX._match,
     AST:                 _match_node,  # _match_node_nonleaf,
@@ -4449,7 +4539,7 @@ _MATCH_FUNCS = {
     YieldFrom:           _match_node,
     alias:               _match_node,
     arg:                 _match_node,
-    arguments:           _match_node,
+    arguments:           _match_node_arguments,
     boolop:              _match_node,
     cmpop:               _match_node,
     comprehension:       _match_node,
@@ -4586,7 +4676,7 @@ _MATCH_FUNCS = {
     MYieldFrom:          _match_node,
     Malias:              _match_node,
     Marg:                _match_node,
-    Marguments:          _match_node,
+    Marguments:          _match_node_arguments,
     Mboolop:             _match_node,
     Mcmpop:              _match_node,
     Mcomprehension:      _match_node,
@@ -4690,7 +4780,7 @@ def match(
     self: fst.FST,
     pat: _Pattern,
     *,
-    ctx: bool = False,
+    ast_ctx: bool = False,
 ) -> FSTMatch | None:
     r"""This will attempt to match this `self` against the given pattern. The pattern may be any of the `fst.match` `M*`
     patterns or it can be a pure `AST` pattern. Attempt to match against a `str` will check the source against that
@@ -4701,7 +4791,7 @@ def match(
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against a node, otherwise nothing will match.
-    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+    - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
         Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
@@ -4775,7 +4865,7 @@ def match(
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
 
-    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _MatchContext(True, ctx))
+    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _MatchContext(True, ast_ctx))
 
     return None if m is None else FSTMatch(pat, self, m)
 
@@ -4784,7 +4874,7 @@ def search(
     self: fst.FST,
     pat: _Pattern,
     *,
-    ctx: bool = False,
+    ast_ctx: bool = False,
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
@@ -4808,7 +4898,7 @@ def search(
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
-    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+    - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
         Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
@@ -4861,7 +4951,7 @@ def search(
     pat_cls = pat.__class__
     asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
-    mctx = _MatchContext(True, ctx)
+    mctx = _MatchContext(True, ast_ctx)
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
         def all_func(f: fst.FST) -> FSTMatch | Literal[False]:
@@ -4891,7 +4981,7 @@ def sub(
     repl: Code | Callable[[FSTMatch], Code],
     nested: bool = False,
     *,
-    ctx: bool = False,
+    ast_ctx: bool = False,
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
@@ -4912,7 +5002,7 @@ def sub(
         due to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
         Regardless of this setting, when using a template `repl` this function will never recurse into full matched
         target substitutions (`__fst_`).
-    - `ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
+    - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
         Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
@@ -4962,7 +5052,7 @@ def sub(
 
     check_options(options)
 
-    gen = self.search(pat, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+    gen = self.search(pat, ast_ctx=ast_ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     if callable(repl):  # user function, very simple, just do its own loop
         for m in gen:

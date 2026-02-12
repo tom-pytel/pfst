@@ -7707,9 +7707,9 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(FST(Load()).match(Load()))
         self.assertTrue(FST(Load()).match(Store()))
         self.assertTrue(FST(Load()).match(Del()))
-        self.assertTrue(FST(Load()).match(Load(), ctx=True))
-        self.assertFalse(FST(Load()).match(Store(), ctx=True))
-        self.assertFalse(FST(Load()).match(Del(), ctx=True))
+        self.assertTrue(FST(Load()).match(Load(), ast_ctx=True))
+        self.assertFalse(FST(Load()).match(Store(), ast_ctx=True))
+        self.assertFalse(FST(Load()).match(Del(), ast_ctx=True))
         self.assertTrue(FST(Load()).match(MLoad()))
         self.assertFalse(FST(Load()).match(MStore()))
         self.assertFalse(FST(Load()).match(MDel()))
@@ -7717,9 +7717,9 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(FST(Name('i')).match(Name('i', Load())))
         self.assertTrue(FST(Name('i')).match(Name('i', Store())))
         self.assertTrue(FST(Name('i')).match(Name('i', Del())))
-        self.assertTrue(FST(Name('i')).match(Name('i', Load()), ctx=True))
-        self.assertFalse(FST(Name('i')).match(Name('i', Store()), ctx=True))
-        self.assertFalse(FST(Name('i')).match(Name('i', Del()), ctx=True))
+        self.assertTrue(FST(Name('i')).match(Name('i', Load()), ast_ctx=True))
+        self.assertFalse(FST(Name('i')).match(Name('i', Store()), ast_ctx=True))
+        self.assertFalse(FST(Name('i')).match(Name('i', Del()), ast_ctx=True))
 
         # str
 
@@ -8600,8 +8600,8 @@ opts.ignore_module = [mod.strip()
         # Concrete pattern to multinode Dict
 
         f = FST('{a: b}')
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single-element or single-element list'), MDict(_all=[MDict([], [])]).match, f)
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be a single-element or single-element list'), MDict(_all=[MDict(['a'], [])]).match, f)
+        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be a single element or length-1 list'), MDict(_all=[MDict([], [])]).match, f)
+        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be a single element or length-1 list'), MDict(_all=[MDict(['a'], [])]).match, f)
 
         self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{a: b}')))
         self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{ a : b }')))
@@ -8652,8 +8652,8 @@ opts.ignore_module = [mod.strip()
         assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], [], 'r')]).match, f)
         assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], ['a'], 'r')]).match, f)
         assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], ['a'], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be a single-element or single-element list'), MMatchMapping(_all=[MMatchMapping([], [])]).match, f)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be a single-element or single-element list'), MMatchMapping(_all=[MMatchMapping(['a'], [])]).match, f)
+        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be a single element or length-1 list'), MMatchMapping(_all=[MMatchMapping([], [])]).match, f)
+        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be a single element or length-1 list'), MMatchMapping(_all=[MMatchMapping(['a'], [])]).match, f)
 
         self.assertTrue(MMatchMapping(_all=[FST('{1: b}', pattern).a]).match(FST('{1: b}', pattern)))
         self.assertTrue(MMatchMapping(_all=[FST('{1: b}', pattern).a]).match(FST('{ 1 : b }', pattern)))
@@ -8696,6 +8696,12 @@ opts.ignore_module = [mod.strip()
 
         pat = MMatchSequence([MMatchMapping(_all=[..., M(t=...)]), MMatchMapping(_all=[..., M(u=MTAG('t'))])])
         self.assertEqual("<FSTMatch <MatchSequence ROOT 0,0..0,20> {'t': <<MatchMapping 0,1..0,6>._all[:1]>, 'u': <<MatchMapping 0,8..0,19>._all[1:2]>}>", str(pat.match(FST('[{**b}, {1: a, **b}]', pattern))))
+
+        # Concrete pattern to multinode arguments
+
+
+
+
 
         # others
 

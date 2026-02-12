@@ -404,6 +404,37 @@ Using `search=True` you can narrow down the location of whatever you are looking
 <FSTMatch <Name ROOT 0,0..0,15> {'m': <re.Match object; span=(5, 11), match='hidden'>}>
 
 
+## `MOPT()` pattern
+
+This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not be
+present. That is, both a normal value which matches the pattern and a `None` value are considered a successful match.
+A non-`None` value which does NOT match the pattern is considered a failure.
+
+>>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,13>>
+
+>>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,20>>
+
+>>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
+
+>>> MDict([MOPT('a')], ['b']) .match(FST('{a: b}'))
+<FSTMatch <Dict ROOT 0,0..0,6>>
+
+>>> MDict([MOPT('a')], ['b']) .match(FST('{**b}'))
+<FSTMatch <Dict ROOT 0,0..0,5>>
+
+>>> MDict([MOPT('a')], ['b']) .match(FST('{x: b}'))
+
+>>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **a}', 'pattern'))
+<FSTMatch <MatchMapping ROOT 0,0..0,11>>
+
+>>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **b}', 'pattern'))
+
+>>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
+<FSTMatch <MatchMapping ROOT 0,0..0,6>>
+
+
 ## `MCB()` pattern
 
 This is a powerful pattern that allows you to inject arbitrary logic at any point of the pattern match. The `CB` stands
@@ -569,7 +600,7 @@ a list field without the `[]` and it acts as if it is the only pattern in the li
 <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
 
-## `MSTAR()`, `MPLUS()`, `MMIN()` and `MMAX()` quantifier patterns
+## `MSTAR()`, `MPLUS()`, `MQMARK()`, `MMIN()` and `MMAX()` quantifier patterns
 
 These are just convenience classes subclassed off of `MN` which provide predefined `min` and / or `max` values. `MSTAR`
 is match zero or more.
@@ -598,6 +629,29 @@ True
 True
 
 >>> bool(MList([MPLUS('a')]).match(FST('[a, a, a]')))
+True
+
+`MQMARK` is zero or one, just like the regex `?` question mark.
+
+>>> bool(MList(MQMARK('a')) .match(FST('[]')))
+True
+
+>>> bool(MList(MQMARK('a')) .match(FST('[a]')))
+True
+
+>>> bool(MList(MQMARK('a')) .match(FST('[b]')))
+False
+
+>>> bool(MList([MQMARK('a')]) .match(FST('[a]')))
+True
+
+>>> bool(MList([MQMARK('a')]) .match(FST('[b]')))
+False
+
+>>> bool(MList([MQMARK('a')]) .match(FST('[a, a]')))
+False
+
+>>> bool(MList([MQMARK('a'), ...]) .match(FST('[a, a]')))
 True
 
 `MMIN` is expectedly minimum.
@@ -630,42 +684,6 @@ False
 
 >>> bool(MList([MMAX('a', 2), ...]).match(FST('[a, a, a]')))
 True
-
-
-## `MOPT()` quantifier pattern
-
-This is also subclassed off of `MN()` and is also a quantifier pattern for inside of list fields, in this case matching
-zero or one times.
-
->>> MList(MOPT('a')).match(FST('[]'))
-<FSTMatch <List ROOT 0,0..0,2>>
-
->>> MList(MOPT('a')).match(FST('[a]'))
-<FSTMatch <List ROOT 0,0..0,3>>
-
->>> MList(MOPT('a')).match(FST('[b]'))
-
->>> MList([MOPT('a')]).match(FST('[a]'))
-<FSTMatch <List ROOT 0,0..0,3>>
-
->>> MList([MOPT('a')]).match(FST('[b]'))
-
->>> MList([MOPT('a')]).match(FST('[a, a]'))
-
->>> MList([MOPT('a'), ...]).match(FST('[a, a]'))
-<FSTMatch <List ROOT 0,0..0,6>>
-
-Unlike the other patterns however this one can be used outside of list fields to optionally match single-element fields
-which may or may not be present. That is, both a normal value which matches the pattern and a `None` value are
-considered a successful match. A non-`None` value which does NOT match the pattern is considered a failure.
-
->>> MFunctionDef(returns=MOPT('int')).match(FST('def f(): pass'))
-<FSTMatch <FunctionDef ROOT 0,0..0,13>>
-
->>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))
-<FSTMatch <FunctionDef ROOT 0,0..0,20>>
-
->>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))
 
 
 ## `AST` as pattern or target
