@@ -2879,9 +2879,11 @@ class _MatchContext:
                 args=pat_args['args'] or ...,
                 vararg=a[0] if (a := pat_args['vararg']) else ...,
                 kwonlyargs=pat_args['kwonlyargs'] or ...,
-                kw_defaults=pat_args['kw_defaults'] or ...,
+                # kw_defaults=pat_args['kw_defaults'] or ...,
+                kw_defaults=pat_args['kw_defaults'],
                 kwarg=a[0] if (a := pat_args['kwarg']) else ...,
-                defaults=pat_args['defaults'] or ...,
+                # defaults=pat_args['defaults'] or ...,
+                defaults=pat_args['defaults'],
                 _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
             )
 
@@ -4411,6 +4413,9 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
                 pat_dflt = defaults[0]
                 ndflts += len(defaults)
 
+            elif args or posonlyargs:
+                pat_dflt = _SENTINEL  # this means that there must not be a default, instead of any default
+
         if (kw_defaults := getattr(pat, 'kw_defaults', ...)) is not ...:
             if not isinstance(kw_defaults, list):
                 raise MatchError('matching an arguments pattern against arguments._all'
@@ -4423,7 +4428,14 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
                     dflt_fields = ('kw_defaults',)
 
                 pat_dflt = kw_defaults[0]
-                ndflts += len(kw_defaults)
+
+                if pat_dflt is None:
+                    pat_dflt = _SENTINEL
+                else:
+                    ndflts += len(kw_defaults)
+
+            elif kwonlyargs:
+                pat_dflt = _SENTINEL
 
         if ndflts > 1:
             raise MatchError('matching an arguments pattern against arguments._all'
@@ -4454,7 +4466,10 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
 
     tgt_dfltf = tgt_argf.next()
 
-    if tgt_dfltf and tgt_dfltf.pfield.name not in dflt_fields:
+    if not tgt_dfltf or tgt_dfltf.pfield.name not in dflt_fields:  # this means there is no default, we assume that the target is valid so that defaults and non-defaults MUST alternate so if there is a next default it is ours
+        if pat_dflt is _SENTINEL:  # if the pattern says no default instead of any default then it is a successful match
+            return ma
+
         return None
 
     md = _MATCH_FUNCS.get(pat_dflt.__class__, _match_default)(pat_dflt, tgt_dfltf.a, mctx)
