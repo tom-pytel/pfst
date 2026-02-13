@@ -8519,7 +8519,7 @@ opts.ignore_module = [mod.strip()
         self.assertEqual(str((f := FST('a; b')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
         self.assertEqual(str((f := FST('a\nb')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
 
-    def test_match_virtual_field(self):
+    def test_match_virtual_field_Dict_and_MatchMapping(self):
         # string to multinode
 
         self.assertTrue(MDict(_all=['a: b']).match(FST('{a: b}')))
@@ -8648,6 +8648,11 @@ opts.ignore_module = [mod.strip()
         self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,16> {'t': <<Dict ROOT 0,0..0,16>._all[:1]>, 'u': <<Dict ROOT 0,0..0,16>._all[2:3]>}>", str(pat.match(FST('{**a, 2: b, **a}'))))
         self.assertFalse(pat.match(FST('{1: a, 2: b, 1: a, **b}')))
 
+        pat = MList([M(..., t=MDict([M(k=...)], [M(v=...)])), MDict(_all=[MTAG('t')])])
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,16> {'t': MDict(keys=[M(k=...)], values=[M(v=...)]), 'k': <Constant 0,10..0,11>, 'v': <Name 0,13..0,14>}>", str(pat.match(FST('[filler, {1: a}]'))))
+
+        self.assertIsNone(MDict().match(FST('{1: a, 2: b}')._all))  # this is a truly unrealistic test, but hey, coverage
+
         # Concrete pattern to multinode MatchMapping
 
         f = FST('{1: b}', pattern)
@@ -8707,6 +8712,11 @@ opts.ignore_module = [mod.strip()
         pat = MMatchSequence([MMatchMapping(_all=[..., M(t=...)]), MMatchMapping(_all=[..., M(u=MTAG('t'))])])
         self.assertEqual("<FSTMatch <MatchSequence ROOT 0,0..0,20> {'t': <<MatchMapping 0,1..0,6>._all[:1]>, 'u': <<MatchMapping 0,8..0,19>._all[1:2]>}>", str(pat.match(FST('[{**b}, {1: a, **b}]', pattern))))
 
+        pat = MMatchSequence([M(..., t=MMatchMapping([M(k=...)], [M(v=...)])), MMatchMapping(_all=[MTAG('t')])])
+        self.assertEqual("<FSTMatch <MatchSequence ROOT 0,0..0,16> {'t': MMatchMapping(keys=[M(k=...)], patterns=[M(v=...)]), 'k': <Constant 0,10..0,11>, 'v': <MatchAs 0,13..0,14>}>", str(pat.match(FST('[filler, {1: a}]', pattern))))
+
+        self.assertIsNone(MMatchMapping().match(FST('{1: a, 2: b}', pattern)._all))  # this is a truly unrealistic test, but hey, coverage
+
         # others
 
         self.assertTrue(MClassDef(_bases=['a', '*b', 'c=d', '**e']).match(FST('class c(a, *b, c=d, **e): pass')))
@@ -8722,6 +8732,8 @@ opts.ignore_module = [mod.strip()
         self.assertTrue(MClassDef(_body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
 
     def test_match_virtual_field_arguments(self):
+        self.assertIsNone(Marguments().match(FST('a, b', arguments)._all))  # this is a truly unrealistic test, but hey, coverage
+
         # Invalid concrete pattern to multinode arguments
 
         f = FST('a=1', arguments)
@@ -8754,6 +8766,13 @@ opts.ignore_module = [mod.strip()
         assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., 'a', ..., ..., None, ['a'])]).match, f)
         assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., None, ..., ['a'], 'a', ...)]).match, f)
         assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., None, ..., ..., 'a', ['a'])]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern posonlyargs must be ... or a length-1 list'), Marguments(_all=[arguments('a', [], None, [], [], None, [])]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern args must be ... or a length-1 list'), Marguments(_all=[arguments([], 'a', None, [], [], None, [])]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern kwonlyargs must be ... or a length-1 list'), Marguments(_all=[arguments([], [], None, 'a', [], None, [])]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern kw_defaults must be ... or a length-1 list'), Marguments(_all=[arguments([], [], None, [], 'a', None, [])]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern defaults must be ... or a length-1 list'), Marguments(_all=[arguments([], [], None, [], [], None, 'a')]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern can only have a single default'), Marguments(_all=[arguments([], [], None, [], ['a', 'a'], None, [])]).match, f)
+        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern can only have a single default'), Marguments(_all=[arguments([], [], None, [], [], None, ['a', 'a'])]).match, f)
 
         # Concrete pattern to multinode arguments (without defaults), also _strict
 
@@ -9160,6 +9179,20 @@ opts.ignore_module = [mod.strip()
         self.assertEqual("<FSTMatch <Module ROOT 0,0..1,22> {'t': <<arguments 0,6..0,15>._all[:1]>, 'u': <arguments 1,6..1,15>}>", str(pat.match(FST('def f(a: int, /): pass\ndef g(a: int, /): pass'))))
         self.assertFalse(pat.match(FST('def f(a: int, /): pass\ndef g(a: int = 1, /): pass')))
 
+        # match tags present in pattern for fstview
+
+        pat = MAST(body=[
+            MFunctionDef(args=M(Marguments, t=Marguments(defaults=[M(d=...)]))),
+            MFunctionDef(args=M(u=Marguments(_all=[MTAG('t')]))),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,16> {'t': Marguments(defaults=[M(d=...)]), 'd': <Constant 1,8..1,9>, 'u': <arguments 1,6..1,9>}>", str(pat.match(FST('def f(): pass\ndef g(a=1): pass'))))
+
+        pat = MAST(body=[
+            MFunctionDef(args=M(Marguments, t=Marguments(args=[M(a=...)], defaults=[M(d=...)]))),
+            MFunctionDef(args=M(u=Marguments(_all=[MTAG('t')]))),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,16> {'t': Marguments(args=[M(a=...)], defaults=[M(d=...)]), 'a': <arg 1,6..1,7>, 'd': <Constant 1,8..1,9>, 'u': <arguments 1,6..1,9>}>", str(pat.match(FST('def f(): pass\ndef g(a=1): pass'))))
+
     def test_match_coverage(self):
         self.assertEqual('MAST(elts=..., ctx=Store)', repr(MAST(elts=..., ctx=Store)))
         self.assertEqual('<NoTag>', repr(NoTag.__class__()))
@@ -9186,6 +9219,14 @@ opts.ignore_module = [mod.strip()
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MAND(t=...)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MCB(lambda: False)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MOPT(t=Constant)).match, f)
+        assertRaises(MatchError('unsupported FSTView type'), MAssign(M(t=...), value=MTAG('t')).match, f)
+
+        f = FST('i = i')
+        self.assertEqual("<FSTMatch <Assign ROOT 0,0..0,5> {'t': <Name 0,0..0,1>, 'u': <Name 0,4..0,5>}>", str(MAssign([M(t=...)], value=MTAG(u='t')).match(f)))
+        self.assertEqual("<FSTMatch <Assign ROOT 0,0..0,5> {'v': <Name 0,0..0,1>, 't': <Name 0,0..0,1>, 'u': <Name 0,4..0,5>}>", str(MAssign([M(t=M(v=...))], value=MTAG(u='t')).match(f)))
+        self.assertEqual("<FSTMatch <Assign ROOT 0,0..0,5> {'t': M(v=...), 'v': <Name 0,4..0,5>, 'u': <Name 0,4..0,5>}>", str(MAssign([M(..., t=M(v=...))], value=MTAG(u='t')).match(f)))
+        f.a.value.f = None
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign([M(t=...)], value=MTAG(u='t')).match, f)
 
         # f = FST('[a, a, a]')
         # f.a.elts[1].f = None
@@ -9214,6 +9255,17 @@ opts.ignore_module = [mod.strip()
 
         self.assertTrue(MConstant(substr('a')).match(FST('"a"')))
         self.assertTrue(MConstant(subint(1)).match(FST('1')))
+
+        from fst.asttypes import ASTS_LEAF__ALL, ASTS_LEAF_STMT
+        self.assertTrue(list(FST('1').search(MANY((AST,)))))
+        self.assertTrue(list(FST('1').search(MANY((stmt, *(ASTS_LEAF__ALL - ASTS_LEAF_STMT))))))
+
+        self.assertEqual("<FSTMatch <Constant ROOT 0,0..0,4> {'v': 'a', 'k': 'u'}>", str(MConstant(M(v='a'), M(k='u')).match(FST('u"a"'))))
+        pat = Constant('a', M(k='u'))
+        del pat.value
+        self.assertEqual("<FSTMatch <Constant ROOT 0,0..0,4> {'k': 'u'}>", str(FST('u"a"').match(pat)))
+
+        self.assertFalse(Marguments(_all=[MRE(b'a')]).match(FST('a', arguments)))
 
     def test_search(self):
         f = FST('[1, a, x.y]')
