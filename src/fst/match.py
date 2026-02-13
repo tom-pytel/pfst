@@ -2763,19 +2763,24 @@ class _MatchContext:
     is_FST: bool
     ast_ctx: bool
     all_tagss: list[list[dict[str, Any]]]
-    fstview_pat_cache: dict[FSTView, _Pattern]  # may need to temporarily convert FSTViews to AST patterns, specifically for MTAG match previously matched multinode item from Dict, MatchMapping or arguments
+    cache: dict
+    """Stores:
+    - `{FSTView: _Pattern}`: This exists for things like to temporarily convert FSTViews to AST patterns, specifically
+        for MTAG match previously matched multinode item from Dict, MatchMapping or arguments.
+    - ``:
+    """
 
     def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
         self.is_FST = is_FST
         self.ast_ctx = ast_ctx
         self.all_tagss = []
-        self.fstview_pat_cache = {}
+        self.cache = {}
 
     def clear(self) -> None:
         """Clean up anything from a previous match attempt."""
 
-        self.all_tagss = []
-        self.fstview_pat_cache = {}
+        self.all_tagss.clear()
+        self.cache.clear()
 
     def new_tagss(self) -> list:
         """Add new list of tags dictionaries to add to, which may be discarded in its entirety quickly if match fails
@@ -2823,13 +2828,13 @@ class _MatchContext:
     def fstview_as_pat(self, view: FSTView) -> _Pattern:
         """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached."""
 
-        if pat := self.fstview_pat_cache.get(view):
+        if pat := self.cache.get(view):
             pass  # noop
 
         elif isinstance(view, FSTView_Dict):
             start, stop = view.start_and_stop
             ast = view.base.a
-            pat = self.fstview_pat_cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
+            pat = self.cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
 
         elif isinstance(view, FSTView_arguments):
 
@@ -2845,10 +2850,9 @@ class _MatchContext:
 
             if view.has_rest:
                 stop -= 1
-                pat = self.fstview_pat_cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop],
-                                                                   ast.rest)
+                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop], ast.rest)
             else:
-                pat = self.fstview_pat_cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
+                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
 
         else:
             raise MatchError('unsupported FSTView type')
@@ -3704,7 +3708,7 @@ class MN(M):
         self.max = max
 
     def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        return None  # this should not appear alone outside of list fields
+        raise MatchError(f'{self.__class__.__name__} quantifier pattern in invalid location')
 
 
 class MSTAR(MN):
@@ -3868,6 +3872,9 @@ class MMAX(MN):
 
 
 # ......................................................................................................................
+
+_NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
+
 
 class _StepbackListIter:
     def __init__(self, seq: list) -> None:
@@ -4148,16 +4155,20 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
     if not isinstance(tgt, FSTView_Dict):
         return _match_node(pat, tgt, mctx)
 
+    if getattr(pat, '_all', ...) is not ...:
+        raise MatchError('matching a Dict pattern against Dict._all the pattern cannot have its own _all field')
+
     if len(tgt) != 1:
         return None
 
     key = getattr(pat, 'keys', ...)
 
     if key is not ...:
-        if isinstance(key, list) and  len(key) == 1:
+        if isinstance(key, list) and len(key) == 1:
             key = key[0]
         else:
-            raise MatchError('matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list')
+            raise MatchError('matching a Dict pattern against Dict._all'
+                             ' the pattern keys must be ... or a length-1 list')
 
     value = getattr(pat, 'values', ...)
 
@@ -4165,7 +4176,8 @@ def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> M
         if isinstance(value, list) and len(value) == 1:
             value = value[0]
         else:
-            raise MatchError('matching a Dict pattern against Dict._all the pattern values must be ... or a length-1 list')
+            raise MatchError('matching a Dict pattern against Dict._all'
+                             ' the pattern values must be ... or a length-1 list')
 
     idx = tgt.start
     tgt = tgt.base.a
@@ -4192,6 +4204,10 @@ def _match_node_MatchMapping(
     if not isinstance(tgt, FSTView_MatchMapping):
         return _match_node(pat, tgt, mctx)
 
+    if getattr(pat, '_all', ...) is not ...:
+        raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
+                         ' the pattern cannot have its own _all field')
+
     if len(tgt) != 1:
         return None
 
@@ -4213,14 +4229,14 @@ def _match_node_MatchMapping(
         return _MATCH_FUNCS.get(rest.__class__, _match_default)(rest, tgt.base.a.rest, mctx)
 
     if key is not ...:
-        if isinstance(key, list) and  len(key) == 1:
+        if isinstance(key, list) and len(key) == 1:
             key = key[0]
         else:
             raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
                              ' the pattern keys must be ... or a length-1 list')
 
     if pattern is not ...:
-        if isinstance(pattern, list) and  len(pattern) == 1:
+        if isinstance(pattern, list) and len(pattern) == 1:
             pattern = pattern[0]
         else:
             raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
@@ -4249,66 +4265,154 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
     """`arguments` or `Marguments` leaf node. Possibly match against a single-item `FSTView_arguments`. Will match a
     single argument with possibly a default to a single-argument `FSTView_arguments`. Pattern `args` argument matches
     to target `args`, `posonlyargs` or `kwonlyargs`. Other type pattern args must match exactly (`posonlyargs` only to
-    `posonlyargs`, `kwonlyargs` to `kwonlyargs`, `varag` to `vararg` and `kwarg` to `kwarg` (obviously), etc...)."""
+    `posonlyargs`, `kwonlyargs` to `kwonlyargs`, `varag` to `vararg` and `kwarg` to `kwarg` (obviously), etc...).
+    Standalone `defaults` matches to `defaults` or `kw_defaults` while standalone `kw_defaults` only matches to
+    `kw_defaults`."""
+
+    # TODO: come up with something cleaner and more controllable to match vs. any args or specific args
 
     if not isinstance(tgt, FSTView_arguments):
         return _match_node(pat, tgt, mctx)
 
-
-    raise NotImplementedError
-
     if len(tgt) != 1:
         return None
 
-    arg_pat = None
-    dflt_pat = None
-    args = getattr(pat, 'args', ...)
+    if cached := mctx.cache.get(pat):
+        pat_arg, pat_dflt, arg_fields, dflt_fields = cached
 
-    if isinstance(args, list):
-        if len(key) != 1:
-            raise MatchError('matching a arguments pattern against arguments._all'
-                             ' the pattern must be a single argument')
-        else:
-            key = key[0]
+    else:  # first time using this pattern preprocess and cache
+        if getattr(pat, '_all', ...) is not ...:
+            raise MatchError('matching an arguments pattern against arguments._all'
+                            ' the pattern cannot have its own _all field')
 
+        # argument pattern (if any)
 
+        nargs = 0
+        pat_arg = None
+        arg_fields = None
 
+        if (posonlyargs := getattr(pat, 'posonlyargs', ...)) is ...:
+            posonlyargs = ()
+        elif not isinstance(posonlyargs, list):
+            raise MatchError('matching an arguments pattern against arguments._all'
+                            ' the pattern posonlyargs must be ... or a length-1 list')
+        elif posonlyargs:
+            arg_fields = ('posonlyargs',)
+            pat_arg = posonlyargs[0]
+            nargs += len(posonlyargs)
 
+        if (args := getattr(pat, 'args', ...)) is ...:
+            args = ()
+        elif not isinstance(args, list):
+            raise MatchError('matching an arguments pattern against arguments._all'
+                            ' the pattern args must be ... or a length-1 list')
+        elif args:
+            arg_fields = _NODE_ARGUMENTS_ARGS_FIELDS
+            pat_arg = args[0]
+            nargs += len(args)
 
+        if (kwonlyargs := getattr(pat, 'kwonlyargs', ...)) is ...:
+            kwonlyargs = ()
+        elif not isinstance(kwonlyargs, list):
+            raise MatchError('matching an arguments pattern against arguments._all'
+                            ' the pattern kwonlyargs must be ... or a length-1 list')
+        elif kwonlyargs:
+            arg_fields = ('kwonlyargs',)
+            pat_arg = kwonlyargs[0]
+            nargs += len(kwonlyargs)
 
+        if (vararg := getattr(pat, 'vararg', None)) is ...:
+            vararg = None
 
+        elif vararg is not None:
+            arg_fields = ('vararg',)
+            pat_arg = vararg
+            nargs += 1
 
-    key = getattr(pat, 'keys', ...)
+        if (kwarg := getattr(pat, 'kwarg', None)) is ...:
+            kwarg = None
 
-    if isinstance(key, list):
-        if len(key) != 1:
-            raise MatchError('matching a arguments pattern against arguments._all the pattern keys must be a single element or length-1 list')
-        else:
-            key = key[0]
+        elif kwarg is not None:
+            arg_fields = ('kwarg',)
+            pat_arg = kwarg
+            nargs += 1
 
-    value = getattr(pat, 'values', ...)
+        if nargs > 1:
+            raise MatchError('matching an arguments pattern against arguments._all'
+                            ' the pattern cannot have more than one arg')
 
-    if isinstance(value, list):
-        if len(value) != 1:
-            raise MatchError('matching a arguments pattern against arguments._all the pattern values must be a single element or length-1 list')
-        else:
-            value = value[0]
+        # default pattern (if any)
 
+        ndflts = 0
+        pat_dflt = ...
+        dflt_fields = ('defaults', 'kw_defaults')  # args field matches all args lists so default matches all defaults, if posonlyargs present then the 'kw_defaults' doesn't matter because will exit due to kwonlyargs before that
+
+        if (defaults := getattr(pat, 'defaults', ...)) is not ...:
+            if not isinstance(defaults, list):
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                ' the pattern defaults must be ... or a length-1 list')
+            if defaults:
+                if kwonlyargs or vararg or kwarg:
+                    raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
+
+                pat_dflt = defaults[0]
+                ndflts += len(defaults)
+
+        if (kw_defaults := getattr(pat, 'kw_defaults', ...)) is not ...:
+            if not isinstance(kw_defaults, list):
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                ' the pattern kw_defaults must be ... or a length-1 list')
+            if kw_defaults:
+                if ndflts or args or posonlyargs or vararg or kwarg:
+                    raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
+
+                dflt_fields = ('kw_defaults',)
+                pat_dflt = kw_defaults[0]
+                ndflts += len(kw_defaults)
+
+        if ndflts > 1:
+            raise MatchError('matching an arguments pattern against arguments._all'
+                            ' the pattern can only have a single default')
+
+        mctx.cache[pat] = pat_arg, pat_dflt, arg_fields, dflt_fields
+
+    # we know we have at most a single argument and at most a single keyword and if there are both then they are the correct matching kinds
+
+    base = tgt.base
     idx = tgt.start
-    tgt = tgt.base.a
+    tgt_arg = base._cached_allargs()[idx]
+    tgt_argf = tgt_arg.f
+    tgt_field = tgt_argf.pfield.name
+    ma = _EMPTY_DICT
 
-    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mctx)) is None:
+    if pat_arg is not None:
+        if tgt_field not in arg_fields:
+            return None
+
+        ma = _MATCH_FUNCS.get(pat_arg.__class__, _match_default)(pat_arg, tgt_arg, mctx)
+
+        if ma is None:
+            return None
+
+    if pat_dflt is ...:
+        return ma
+
+    tgt_dfltf = tgt_argf.next()
+
+    if tgt_dfltf and tgt_dfltf.pfield.name not in dflt_fields:
         return None
 
-    if (mv := _MATCH_FUNCS.get(value.__class__, _match_default)(value, tgt.values[idx], mctx)) is None:
+    md = _MATCH_FUNCS.get(pat_dflt.__class__, _match_default)(pat_dflt, tgt_dfltf.a, mctx)
+
+    if md is None:
         return None
 
-    if not mk:
-        return mv
-    if not mv:
-        return mk
+    if not md:
+        return ma
+    if not ma:
+        return md
 
-    return {**mk, **mv}
+    return {**ma, **md}
 
 def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
