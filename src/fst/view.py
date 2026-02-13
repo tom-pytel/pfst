@@ -1176,7 +1176,8 @@ class FSTView_Compare(FSTView):
 
 
 class FSTView_arguments(FSTView):
-    """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. @private"""
+    """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. This indexes on the
+    `arguments` node `_cached_allargs()`. @private"""
 
     @property
     def loc(self) -> fstloc | None:
@@ -1379,7 +1380,7 @@ class FSTView__body(FSTView):
 
 class FSTView_arglikes(FSTView):
     """View for `Call` merged `args+keywords` virtual field `_args` or `ClassDef` merged `bases+keywords` virtual field
-    `_bases`. @private"""
+    `_bases`. This indexes on the base node `_cached_arglikes()`. @private"""
 
     def _len_field(self) -> int:
         ast = self.base.a

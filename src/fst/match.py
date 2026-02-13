@@ -2231,7 +2231,19 @@ class MExceptHandler(Mexcepthandler):  # pragma: no cover
             fields.append('body')
 
 class Marguments(MAST):  # pragma: no cover
-    """"""
+    """This works like all the other match pattern classes except that it has an extra `_strict` parameter which
+    controls how it matches against individual `arguments._all`. This parameter can also be set on a normal `AST`
+    `arguments` class for the same effect.
+
+    **Parameters:**
+    - `_strict`: Set this to control matching, if not set defaults to `None`.
+        - `True`: `posonlyargs` only match to `posonlyargs`, `kwonlyargs` to `kwonlyargs` and `args` only to `args`.
+            Their associated defaults only match to the same type of default as well.
+        - `None`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
+            the target and `defaults` likewise can also match to `kw_defaults`. This allows the use of the standard args
+            to search in all the args fields.
+        - `False`: All types of args and defaults can match to each other.
+    """
     _types = arguments
 
     def __init__(
@@ -2244,8 +2256,10 @@ class Marguments(MAST):  # pragma: no cover
         kwarg: _Patterns = ...,
         defaults: _Patterns = ...,
         _all: _Patterns = ...,
+        _strict: bool | None = None,  # `True` matches pos/arg/kw exclusively to same type, `None` allos match arg to all, `False` allows match all to all
     ) -> None:
         self._fields = fields = []
+        self._strict = _strict
 
         if posonlyargs is not ...:
             self.posonlyargs = posonlyargs
@@ -2837,12 +2851,39 @@ class _MatchContext:
             pat = self.cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
 
         elif isinstance(view, FSTView_arguments):
+            pat_args = {
+                'posonlyargs': [],
+                'args': [],
+                'vararg': [],
+                'kwonlyargs': [],
+                'kw_defaults': [],
+                'kwarg': [],
+                'defaults': [],
+            }
+            allargs = view.base._cached_allargs()
 
+            for v in view:
+                a = allargs[v.start]
+                f = a.f
+                field = f.pfield.name
 
-            # TODO: this
+                pat_args[field].append(a)
 
+                if (d := f.next()) and (d_field := d.pfield.name) in _NODE_ARGUMENTS_DEFAULTS_FIELDS:
+                    pat_args[d_field].append(d.a)
+                elif field == 'kwonlyargs':
+                    pat_args['kw_defaults'].append(None)
 
-            raise NotImplementedError
+            pat = self.cache[view] = Marguments(
+                posonlyargs=pat_args['posonlyargs'] or ...,
+                args=pat_args['args'] or ...,
+                vararg=a[0] if (a := pat_args['vararg']) else ...,
+                kwonlyargs=pat_args['kwonlyargs'] or ...,
+                kw_defaults=pat_args['kw_defaults'] or ...,
+                kwarg=a[0] if (a := pat_args['kwarg']) else ...,
+                defaults=pat_args['defaults'] or ...,
+                _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
+            )
 
         elif isinstance(view, FSTView_MatchMapping):
             start, stop = view.start_and_stop
@@ -3874,6 +3915,7 @@ class MMAX(MN):
 # ......................................................................................................................
 
 _NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
+_NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
 
 class _StepbackListIter:
@@ -4285,11 +4327,13 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
             raise MatchError('matching an arguments pattern against arguments._all'
                             ' the pattern cannot have its own _all field')
 
+        strict = getattr(pat, '_strict', None)  # this controls allowing matching between the different kinds of args (pos, normal and kw)
+
         # argument pattern (if any)
 
         nargs = 0
-        pat_arg = None
-        arg_fields = None
+        pat_arg = ...
+        arg_fields = _NODE_ARGUMENTS_ARGS_FIELDS
 
         if (posonlyargs := getattr(pat, 'posonlyargs', ...)) is ...:
             posonlyargs = ()
@@ -4297,7 +4341,9 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
             raise MatchError('matching an arguments pattern against arguments._all'
                             ' the pattern posonlyargs must be ... or a length-1 list')
         elif posonlyargs:
-            arg_fields = ('posonlyargs',)
+            if strict is not False:
+                arg_fields = ('posonlyargs',)
+
             pat_arg = posonlyargs[0]
             nargs += len(posonlyargs)
 
@@ -4307,7 +4353,9 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
             raise MatchError('matching an arguments pattern against arguments._all'
                             ' the pattern args must be ... or a length-1 list')
         elif args:
-            arg_fields = _NODE_ARGUMENTS_ARGS_FIELDS
+            if strict:
+                arg_fields = ('args',)
+
             pat_arg = args[0]
             nargs += len(args)
 
@@ -4317,7 +4365,9 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
             raise MatchError('matching an arguments pattern against arguments._all'
                             ' the pattern kwonlyargs must be ... or a length-1 list')
         elif kwonlyargs:
-            arg_fields = ('kwonlyargs',)
+            if strict is not False:
+                arg_fields = ('kwonlyargs',)
+
             pat_arg = kwonlyargs[0]
             nargs += len(kwonlyargs)
 
@@ -4345,7 +4395,7 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
 
         ndflts = 0
         pat_dflt = ...
-        dflt_fields = ('defaults', 'kw_defaults')  # args field matches all args lists so default matches all defaults, if posonlyargs present then the 'kw_defaults' doesn't matter because will exit due to kwonlyargs before that
+        dflt_fields = _NODE_ARGUMENTS_DEFAULTS_FIELDS  # args field matches all args lists so default matches all defaults, if posonlyargs present then the 'kw_defaults' doesn't matter because will exit due to kwonlyargs before that
 
         if (defaults := getattr(pat, 'defaults', ...)) is not ...:
             if not isinstance(defaults, list):
@@ -4354,6 +4404,9 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
             if defaults:
                 if kwonlyargs or vararg or kwarg:
                     raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
+
+                if strict:
+                    dflt_fields = ('defaults',)
 
                 pat_dflt = defaults[0]
                 ndflts += len(defaults)
@@ -4366,7 +4419,9 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
                 if ndflts or args or posonlyargs or vararg or kwarg:
                     raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
 
-                dflt_fields = ('kw_defaults',)
+                if strict is not False:
+                    dflt_fields = ('kw_defaults',)
+
                 pat_dflt = kw_defaults[0]
                 ndflts += len(kw_defaults)
 
@@ -4385,7 +4440,7 @@ def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _Mat
     tgt_field = tgt_argf.pfield.name
     ma = _EMPTY_DICT
 
-    if pat_arg is not None:
+    if pat_arg is not ...:
         if tgt_field not in arg_fields:
             return None
 
