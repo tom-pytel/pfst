@@ -4111,45 +4111,66 @@ def _match_quantifier(
 
     tagss = mstate.new_tagss()
 
-    iter_tgt_idx = tgt_iter.idx
-    q_pat = pat.pat
-    q_min = pat.min
-    q_max = pat.max
+    tgt_idx_saved = tgt_iter.idx
+    tgt_seq = tgt_iter.seq
+    qpat = pat.pat
+    qmin = pat.min
+    qmax = pat.max
     greedy = pat.greedy
-    match_func = _MATCH_FUNCS.get(q_pat.__class__, _match_default)
     tgts = []
     count = 0
 
-    if q_max is None:
-        q_max = 0x7fffffffffffffff
+    if qmax is None:
+        qmax = 0x7fffffffffffffff
 
     if greedy:
-        initial_count = q_max
-        last_try_count = q_min
+        initial_count = qmax
+        last_try_count = qmin
     else:
-        initial_count = q_min
-        last_try_count = q_max
+        initial_count = qmin
+        last_try_count = qmax
 
     # match quantifier pattern up to maximum allowed number of times to list
 
-    initial_count = q_max if greedy else q_min
+    initial_count = qmax if greedy else qmin
 
-    while count < initial_count:
-        if (t := tgt_iter.next()) is _SENTINEL:  # end of list?
-            break
+    if is_qpat_list := isinstance(qpat, list):  # quantifiers can match a partial list
+        qpat_iter = _MatchList(qpat)
+        tgt_idx = tgt_iter.idx
 
-        if (m := match_func(q_pat, t, mstate)) is None:
-            tgt_iter.idx -= 1  # step back 1
+        while count < initial_count:
+            qpat_iter.idx = 0  # reset quantifier list pattern to start
 
-            break
+            if (m := _match_list(mstate, qpat_iter, tgt_iter, True)) is None:
+                break
 
-        tagss.append(m)
-        tgts.append(t)
+            new_tgt_idx = tgt_iter.idx
 
-        count += 1
+            tagss.append(m)
+            tgts.append(tgt_seq[tgt_idx : new_tgt_idx])
 
-    if count < q_min:  # failed to meet minimum count?
-        tgt_iter.idx = iter_tgt_idx  # rewind target iterator
+            tgt_idx = new_tgt_idx
+            count += 1
+
+    else:  # normal pattern to match one target list element at a time
+        match_func = _MATCH_FUNCS.get(qpat.__class__, _match_default)
+
+        while count < initial_count:
+            if (t := tgt_iter.next()) is _SENTINEL:  # end of list?
+                break
+
+            if (m := match_func(qpat, t, mstate)) is None:
+                tgt_iter.idx -= 1  # step back 1
+
+                break
+
+            tagss.append(m)
+            tgts.append(t)
+
+            count += 1
+
+    if count < qmin:  # failed to meet minimum count?
+        tgt_iter.idx = tgt_idx_saved  # rewind target iterator
 
         return mstate.discard_tagss()
 
@@ -4157,24 +4178,30 @@ def _match_quantifier(
 
     static_tags = pat.static_tags
     pat_tag = pat.pat_tag
-    is_FST = mstate.is_FST
+    is_FST = bool(mstate.is_FST and tgt_seq and not isinstance(tgt_seq[0], (str, FSTView)))  # target lists can only contain ASTs, strings or FSTViews, we only need to check one element because all will be same
 
     if pat_tag:  # all matched targets and their tags under single tag as list of `FSTMatch` objects
         if not count:
             match_list = []
 
-        elif not is_FST or isinstance(tgts[0], (str, FSTView)):  # target lists can only contain ASTs, strings or FSTViews, we only need to check one element because all will be same
-            is_FST = False  # so isinstance doesn't get checked again if non-greedy
-            match_list = [FSTMatch(q_pat, t, ts) for ts, t in zip(tagss, tgts, strict=True)]  # non-node list field
+        elif not is_FST:
+            match_list = [FSTMatch(qpat, t, ts) for ts, t in zip(tagss, tgts, strict=True)]  # non-node list field
 
         else:
             match_list = []
 
             for ts, t in zip(tagss, tgts, strict=True):
-                if t and not (t := getattr(t, 'f', None)):
+                if is_qpat_list:
+                    for i, tt in enumerate(t):
+                        if tt and not (tt := getattr(tt, 'f', None)):
+                            raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
+
+                        t[i] = tt
+
+                elif t and not (t := getattr(t, 'f', None)):
                     raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
 
-                match_list.append(FSTMatch(q_pat, t, ts))  # t is FST
+                match_list.append(FSTMatch(qpat, t, ts))  # t is FST
 
         tagss[:] = ({pat_tag: match_list, **static_tags},)
 
@@ -4200,7 +4227,7 @@ def _match_quantifier(
             break
 
         if count == last_try_count:  # if we are at end with no match then we failed
-            tgt_iter.idx = iter_tgt_idx  # rewind target iterator
+            tgt_iter.idx = tgt_idx_saved
 
             return mstate.discard_tagss()
 
@@ -4211,24 +4238,43 @@ def _match_quantifier(
             count -= 1
 
         else:  # if non-greedy then we are attempting to match our pattern one position to the right and if successful then try match shorter list
-            if ((t := tgt_iter.next()) is _SENTINEL  # end of list?
-                or (m := match_func(q_pat, t, mstate)) is None  # no match?
-            ):
-                tgt_iter.idx = iter_tgt_idx  # rewind target iterator
+            if is_qpat_list:
+                qpat_iter.idx = 0  # reset quantifier list pattern to start
 
-                return mstate.discard_tagss()
+                if (m := _match_list(mstate, qpat_iter, tgt_iter, True)) is None:
+                    tgt_iter.idx = tgt_idx_saved
 
-            if pat_tag:
-                if is_FST:
-                    if isinstance(t, (str, FSTView)):
-                        is_FST = False
-                    elif t and not (t := getattr(t, 'f', None)):
-                        raise MatchError('match found an AST node without an FST')  # pragma: no cover
+                    return mstate.discard_tagss()
 
-                match_list.insert(match_list_idx, FSTMatch(q_pat, t, m))
+                new_tgt_idx = tgt_iter.idx
+                t = tgt_seq[tgt_idx : new_tgt_idx]
+                tgt_idx = new_tgt_idx
+
+                if pat_tag:
+                    if is_FST:
+                        for i, tt in enumerate(t):
+                            if tt and not (tt := getattr(tt, 'f', None)):
+                                raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
+
+                            t[i] = tt
+
+                    m = FSTMatch(qpat, t, m)
 
             else:
-                match_list.insert(match_list_idx, m)
+                if ((t := tgt_iter.next()) is _SENTINEL  # end of list?
+                    or (m := match_func(qpat, t, mstate)) is None  # no match?
+                ):
+                    tgt_iter.idx = tgt_idx_saved
+
+                    return mstate.discard_tagss()
+
+                if pat_tag:
+                    if is_FST and t and not (t := getattr(t, 'f', None)):
+                        raise MatchError('match found an AST node without an FST')  # pragma: no cover
+
+                    m = FSTMatch(qpat, t, m)
+
+            match_list.insert(match_list_idx, m)
 
             count += 1
 
@@ -4240,15 +4286,21 @@ def _match_quantifier(
 
 
 def _match_list(
-    mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList
+    mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList, allow_partial: bool = False
 ) -> dict[str, Any] | None:
     """Match list. The sequence to match in `tgt_iter` can be either `list[AST]` or `FSTView`. If match fails then
-    "rewinds" the iterators to their locations on entry."""
+    "rewinds" the iterators to their locations on entry.
+
+    **Parameters:**
+    - `allow_partial`: Whether to allow unfinished target list at end of pattern list or not.
+        - `False`: This is the normal mode of operation used for matching an entire list field.
+        - `True`: This allows matching partial lists inside quantifiers.
+    """
 
     tagss = mstate.new_tagss()
 
-    iter_tgt_idx = tgt_iter.idx
-    iter_pat_idx = pat_iter.idx
+    tgt_idx_saved = tgt_iter.idx
+    pat_idx_saved = pat_iter.idx
 
     while (p := pat_iter.next()) is not _SENTINEL:
         if p in _QUANTIFIER_STANDALONES or isinstance(p, MQ):  # quantifier
@@ -4274,11 +4326,11 @@ def _match_list(
             tagss.append(m)
 
     else:
-        if tgt_iter.at_end():  # pattern sequence ended so target sequence must also be at end in order to be a success
+        if allow_partial or tgt_iter.at_end():  # pattern sequence ended so target sequence must also be at end in order to be a success, unless we explicitly allow partial match
             return mstate.pop_merge_tagss()
 
-    pat_iter.idx = iter_pat_idx  # rewind iterators
-    tgt_iter.idx = iter_tgt_idx
+    pat_iter.idx = pat_idx_saved  # rewind iterators
+    tgt_iter.idx = tgt_idx_saved
 
     return mstate.discard_tagss()
 
