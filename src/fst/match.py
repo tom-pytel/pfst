@@ -470,7 +470,7 @@ class M_Pattern:
         elif not (tgt := target.a):
             raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
 
-        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _MatchContext(is_FST, ast_ctx))
+        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _MatchState(is_FST, ast_ctx))
 
         return None if m is None else FSTMatch(self, target, m)
 
@@ -2771,7 +2771,7 @@ class M_type_params(M_slice):  # pragma: no cover
 
 # ......................................................................................................................
 
-class _MatchContext:
+class _MatchState:
     """Store running tags being built up during matching, which may be queried by `MTAG`. `tagss` is the plural of
     `tags` and indicates a list of dictionaries of tags. Merged on exit from each node that builds them up as a list
     like this."""
@@ -2967,14 +2967,14 @@ class M(M_Pattern):
 
         return f'{name}({pat_tag}={_rpr(pat)})' if pat_tag else f'{name}({_rpr(pat)})'
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mctx)
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mstate)
 
         if m is None:
             return None
 
         if pat_tag := self.pat_tag:
-            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             if m:
@@ -3027,14 +3027,14 @@ class MNOT(M):
     """
 
     @staticmethod
-    def _match(self: MNOT, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mctx)
+    def _match(self: MNOT, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mstate)
 
         if m is not None:
             return None
 
         if pat_tag := self.pat_tag:
-            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: tgt, **self.static_tags}
@@ -3118,13 +3118,13 @@ class MOR(M_Pattern):
 
         return f'{name}({tags})'
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         for i, p in enumerate(self.pats):
-            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, mctx)
+            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, mstate)
 
             if m is not None:
                 if pat_tag := self.pat_tags[i]:
-                    if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                    if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                         raise MatchError('match found an AST node without an FST')
 
                     return {**m, pat_tag: tgt}
@@ -3184,27 +3184,27 @@ class MAND(MOR):
     <FSTMatch <List ROOT 0,0..0,24>>
     """
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if mctx.is_FST and isinstance(tgt, AST):
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        if mstate.is_FST and isinstance(tgt, AST):
             if not (tgtf := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
         else:
             tgtf = tgt
 
-        tagss = mctx.new_tagss()
+        tagss = mstate.new_tagss()
 
         for i, p in enumerate(self.pats):
-            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, mctx)
+            m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, mstate)
 
             if m is None:
-                return mctx.discard_tagss()
+                return mstate.discard_tagss()
 
             if pat_tag := self.pat_tags[i]:
                 tagss.append({**m, pat_tag: tgtf})
             elif m:
                 tagss.append(m)
 
-        return mctx.pop_merge_tagss()
+        return mstate.pop_merge_tagss()
 
     def _leaf_asts(self) -> tp_Set[type[AST]]:
         leaf_asts = ASTS_LEAF__ALL
@@ -3353,7 +3353,7 @@ class MOPT(M):
     <FSTMatch <MatchMapping ROOT 0,0..0,6>>
     """
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if tgt is None:
             if pat_tag := self.pat_tag:
                 return {pat_tag: [], **self.static_tags}
@@ -3361,13 +3361,13 @@ class MOPT(M):
             return self.static_tags
 
         pat = self.pat
-        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mctx)
+        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mstate)
 
         if m is None:
             return None
 
         if pat_tag := self.pat_tag:
-            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             return {pat_tag: [FSTMatch(pat, tgt, m)], **self.static_tags}
@@ -3454,7 +3454,7 @@ class MRE(M_Pattern):
 
         return f'{name}({", ".join(tags)})'
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         """Regex match or search pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will
         use `FST` source from the tree and unparse a non-`FST` `AST` node for the check. Returns `re.Match` object if is
         requested."""
@@ -3462,7 +3462,7 @@ class MRE(M_Pattern):
         re_pat = self.re_pat
         re_func = re_pat.search if self.search else re_pat.match
 
-        if (m := _match_re_Pattern(re_pat, tgt, mctx, re_func)) is None:
+        if (m := _match_re_Pattern(re_pat, tgt, mstate, re_func)) is None:
             return None
 
         if pat_tag := self.pat_tag:
@@ -3565,8 +3565,8 @@ class MCB(M):
         self.tag_ret = tag_ret
         self.fail_val = fail_val
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if not mctx.is_FST or not isinstance(tgt, AST):
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        if not mstate.is_FST or not isinstance(tgt, AST):
             m = self.pat(tgt)
         elif tgt := getattr(tgt, 'f', None):
             m = self.pat(tgt)
@@ -3639,20 +3639,20 @@ class MTAG(M):
         self._validate_tags((self.pat,))
         self._validate_tags(self.static_tags)
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        if (p := mctx.get_tag(self.pat)) is _SENTINEL:
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        if (p := mstate.get_tag(self.pat)) is _SENTINEL:
             return None
 
         if isinstance(p, fst.FST):
             p = p.a
 
-        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, mctx)
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt, mstate)
 
         if m is None:
             return None
 
         if pat_tag := self.pat_tag:
-            if mctx.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
             if m:
@@ -4041,11 +4041,11 @@ class _MatchList:
 
 
 def _match_quantifier(
-    mctx: _MatchContext, pat_iter: _MatchList, tgt_iter: _MatchList, pat: MQ
+    mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList, pat: MQ
 ) -> dict[str, Any] | None:
     """Match greedy quantifier in list."""
 
-    tagss = mctx.new_tagss()
+    tagss = mstate.new_tagss()
 
     iter_tgt_idx = tgt_iter.idx
     q_pat = pat.pat
@@ -4071,7 +4071,7 @@ def _match_quantifier(
         if (t := tgt_iter.next()) is _SENTINEL:  # end of list?
             break
 
-        if (m := match_func(q_pat, t, mctx)) is None:
+        if (m := match_func(q_pat, t, mstate)) is None:
             tgt_iter.idx -= 1  # step back 1
 
             break
@@ -4084,13 +4084,13 @@ def _match_quantifier(
     if count < q_min:  # failed to meet minimum count?
         tgt_iter.idx = iter_tgt_idx  # rewind target iterator
 
-        return mctx.discard_tagss()
+        return mstate.discard_tagss()
 
     # now we have to format tags as would be on successful match to have available MTAG patterns when matching rest of list
 
     static_tags = pat.static_tags
     pat_tag = pat.pat_tag
-    is_FST = mctx.is_FST
+    is_FST = mstate.is_FST
 
     if pat_tag:  # all matched targets and their tags under single tag as list of `FSTMatch` objects
         if not count:
@@ -4127,7 +4127,7 @@ def _match_quantifier(
     # tags are formatted, now we try to match rest of list repeatedly decreasing quantifier matched targets until success or we go below minimum quantifier requirement
 
     while True:  # as long as we don't hit the last allowed count try to match rest of list
-        m = _match_list(mctx, pat_iter, tgt_iter)
+        m = _match_list(mstate, pat_iter, tgt_iter)
 
         if m is not None:  # successful match to rest of list?
             break
@@ -4135,7 +4135,7 @@ def _match_quantifier(
         if count == last_try_count:  # if we are at end with no match then we failed
             tgt_iter.idx = iter_tgt_idx  # rewind target iterator
 
-            return mctx.discard_tagss()
+            return mstate.discard_tagss()
 
         if greedy:  # if greedy then we are removing previous matches to try again one position to the left
             del match_list[match_list_idx]  # if there are static_tags then we are deleting the dictionary before those
@@ -4145,11 +4145,11 @@ def _match_quantifier(
 
         else:  # if non-greedy then we are attempting to match our pattern one position to the right and if successful then try match shorter list
             if ((t := tgt_iter.next()) is _SENTINEL  # end of list?
-                or (m := match_func(q_pat, t, mctx)) is None  # no match?
+                or (m := match_func(q_pat, t, mstate)) is None  # no match?
             ):
                 tgt_iter.idx = iter_tgt_idx  # rewind target iterator
 
-                return mctx.discard_tagss()
+                return mstate.discard_tagss()
 
             if pat_tag:
                 if is_FST:
@@ -4169,37 +4169,37 @@ def _match_quantifier(
 
     tagss.append(m)
 
-    return mctx.pop_merge_tagss()
+    return mstate.pop_merge_tagss()
 
 
 def _match_list(
-    mctx: _MatchContext, pat_iter: _MatchList, tgt_iter: _MatchList
+    mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList
 ) -> dict[str, Any] | None:
     """Match list. The sequence to match in `tgt_iter` can be either `list[AST]` or `FSTView`. If match fails then
     "rewinds" the iterators to their locations on entry."""
 
-    tagss = mctx.new_tagss()
+    tagss = mstate.new_tagss()
 
     iter_tgt_idx = tgt_iter.idx
     iter_pat_idx = pat_iter.idx
 
     while (p := pat_iter.next()) is not _SENTINEL:
         if p in _QUANTIFIER_STANDALONES or isinstance(p, MQ):  # quantifier
-            m = _match_quantifier(mctx, pat_iter, tgt_iter, p)
+            m = _match_quantifier(mstate, pat_iter, tgt_iter, p)
 
             if m is None:
                 break  # fail
             if m:
                 tagss.append(m)
 
-            return mctx.pop_merge_tagss()  # _match_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
+            return mstate.pop_merge_tagss()  # _match_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
 
         # concrete value
 
         if (t := tgt_iter.next()) is _SENTINEL:  # if nothing left in target list then fail since we have a concrete pattern left to match
             break  # fail
 
-        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mctx)
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)
 
         if m is None:
             break  # fail
@@ -4208,20 +4208,20 @@ def _match_list(
 
     else:
         if tgt_iter.at_end():  # pattern sequence ended so target sequence must also be at end in order to be a success
-            return mctx.pop_merge_tagss()
+            return mstate.pop_merge_tagss()
 
     pat_iter.idx = iter_pat_idx  # rewind iterators
     tgt_iter.idx = iter_tgt_idx
 
-    return mctx.discard_tagss()
+    return mstate.discard_tagss()
 
 
 # ......................................................................................................................
 
-def _match_quantifier_invalid_location(pat: MQ, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_quantifier_invalid_location(pat: MQ, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     raise MatchError(f'{pat.__class__.__qualname__} quantifier pattern in invalid location')
 
-def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_default(pat: _Patterns, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
 
     if isinstance(pat, list):
@@ -4236,26 +4236,26 @@ def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mappin
             else:
                 tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
 
-        return _match_list(mctx, _MatchList(pat), _MatchList(tgt))
+        return _match_list(mstate, _MatchList(pat), _MatchList(tgt))
 
     # maybe pattern is a previously matched multinode FSTView (Dict, MatchMapping, arguments)
 
     if isinstance(pat, FSTView):
-        pat = mctx.fstview_as_pat(pat)
+        pat = mstate.fstview_as_pat(pat)
 
-        return _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mctx)
+        return _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mstate)
 
     # got here through subclass of a primitive type
 
     if isinstance(pat, str):
-        return _match_str(pat, tgt, mctx)
+        return _match_str(pat, tgt, mstate)
 
     if isinstance(pat, M_Pattern):
         raise RuntimeError('subclassing M_Pattern not supported')
 
-    return _match_primitive(pat, tgt, mctx)
+    return _match_primitive(pat, tgt, mstate)
 
-def _match_str(pat: str, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_str(pat: str, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     if isinstance(tgt, str):
         if tgt != pat:
             return None
@@ -4278,7 +4278,7 @@ def _match_str(pat: str, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any
 
     return _EMPTY_DICT
 
-def _match_primitive(pat: constant, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_primitive(pat: constant, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """Primitive value comparison. We explicitly disallow equality of different types so 0 != 0.0 != 0j != False. We do
     all this to account for the possibility of subclassed primary types. This will not compare a `str` pattern against
     source."""
@@ -4309,7 +4309,7 @@ def _match_primitive(pat: constant, tgt: _Targets, mctx: _MatchContext) -> Mappi
 
     return _EMPTY_DICT
 
-def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
 
     is_mpat = isinstance(pat, M_Pattern)
@@ -4318,7 +4318,7 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
     if not isinstance(tgt, types):
         return None
 
-    tagss = mctx.new_tagss()
+    tagss = mstate.new_tagss()
 
     for field in pat._fields:
         p = getattr(pat, field, ...)
@@ -4330,25 +4330,25 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
 
         if t is _SENTINEL:
             if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), FSTView):  # maybe its a virtual field
-                return mctx.discard_tagss()
+                return mstate.discard_tagss()
 
-        elif mctx.is_FST and isinstance(t, list):
+        elif mstate.is_FST and isinstance(t, list):
             t = getattr(tgt.f, field)  # get the FSTView instead (for maybe capture to tag, is converted back to list of AST for compare)
 
-        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mctx)
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)
 
         if m is None:
-            return mctx.discard_tagss()
+            return mstate.discard_tagss()
         if m:
             tagss.append(m)
 
-    return mctx.pop_merge_tagss()
+    return mstate.pop_merge_tagss()
 
-def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`Dict` or `MDict` leaf node. Possibly match against a single-item `FSTView_Dict`."""
 
     if not isinstance(tgt, FSTView_Dict):
-        return _match_node(pat, tgt, mctx)
+        return _match_node(pat, tgt, mstate)
 
     if getattr(pat, '_all', ...) is not ...:
         raise MatchError('matching a Dict pattern against Dict._all the pattern cannot have its own _all field')
@@ -4377,10 +4377,10 @@ def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mctx: _MatchContext) -> M
     idx = tgt.start
     tgt = tgt.base.a
 
-    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mctx)) is None:
+    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mstate)) is None:
         return None
 
-    if (mv := _MATCH_FUNCS.get(value.__class__, _match_default)(value, tgt.values[idx], mctx)) is None:
+    if (mv := _MATCH_FUNCS.get(value.__class__, _match_default)(value, tgt.values[idx], mstate)) is None:
         return None
 
     if not mk:
@@ -4391,13 +4391,13 @@ def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mctx: _MatchContext) -> M
     return {**mk, **mv}
 
 def _match_node_MatchMapping(
-    pat: MatchMapping | MMatchMapping, tgt: _Targets, mctx: _MatchContext
+    pat: MatchMapping | MMatchMapping, tgt: _Targets, mstate: _MatchState
 ) -> Mapping[str, Any] | None:
     """`MatchMapping` or `MMatchMapping` leaf node. Possibly match against a single-item `FSTView_MatchMapping`. Need to
     do more than `Dict` here to handle possible `**rest` element."""
 
     if not isinstance(tgt, FSTView_MatchMapping):
-        return _match_node(pat, tgt, mctx)
+        return _match_node(pat, tgt, mstate)
 
     if getattr(pat, '_all', ...) is not ...:
         raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
@@ -4421,7 +4421,7 @@ def _match_node_MatchMapping(
         if not tgt.has_rest:
             return None
 
-        return _MATCH_FUNCS.get(rest.__class__, _match_default)(rest, tgt.base.a.rest, mctx)
+        return _MATCH_FUNCS.get(rest.__class__, _match_default)(rest, tgt.base.a.rest, mstate)
 
     if key is not ...:
         if isinstance(key, list) and len(key) == 1:
@@ -4443,10 +4443,10 @@ def _match_node_MatchMapping(
     idx = tgt.start
     tgt = tgt.base.a
 
-    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mctx)) is None:
+    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mstate)) is None:
         return None
 
-    if (mp := _MATCH_FUNCS.get(pattern.__class__, _match_default)(pattern, tgt.patterns[idx], mctx)) is None:
+    if (mp := _MATCH_FUNCS.get(pattern.__class__, _match_default)(pattern, tgt.patterns[idx], mstate)) is None:
         return None
 
     if not mk:
@@ -4456,7 +4456,7 @@ def _match_node_MatchMapping(
 
     return {**mk, **mp}
 
-def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`arguments` or `Marguments` leaf node. Possibly match against a single-item `FSTView_arguments`. Will match a
     single argument with possibly a default to a single-argument `FSTView_arguments`. Pattern `args` argument matches
     to target `args`, `posonlyargs` or `kwonlyargs`. Other type pattern args must match exactly (`posonlyargs` only to
@@ -4467,12 +4467,12 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _Mat
     # TODO: come up with something cleaner and more controllable to match vs. any args or specific args
 
     if not isinstance(tgt, FSTView_arguments):
-        return _match_node(pat, tgt, mctx)
+        return _match_node(pat, tgt, mstate)
 
     if len(tgt) != 1:
         return None
 
-    if cached := mctx.cache.get(pat):
+    if cached := mstate.cache.get(pat):
         pat_arg, pat_dflt, arg_fields, dflt_fields = cached
 
     else:  # first time using this pattern preprocess and cache
@@ -4592,7 +4592,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _Mat
             raise MatchError('matching an arguments pattern against arguments._all'
                             ' the pattern can only have a single default')
 
-        mctx.cache[pat] = pat_arg, pat_dflt, arg_fields, dflt_fields
+        mstate.cache[pat] = pat_arg, pat_dflt, arg_fields, dflt_fields
 
     # we know we have at most a single argument and at most a single keyword and if there are both then they are the correct matching kinds
 
@@ -4607,7 +4607,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _Mat
         if tgt_field not in arg_fields:
             return None
 
-        ma = _MATCH_FUNCS.get(pat_arg.__class__, _match_default)(pat_arg, tgt_arg, mctx)
+        ma = _MATCH_FUNCS.get(pat_arg.__class__, _match_default)(pat_arg, tgt_arg, mstate)
 
         if ma is None:
             return None
@@ -4623,7 +4623,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _Mat
 
         return None
 
-    md = _MATCH_FUNCS.get(pat_dflt.__class__, _match_default)(pat_dflt, tgt_dfltf.a, mctx)
+    md = _MATCH_FUNCS.get(pat_dflt.__class__, _match_default)(pat_dflt, tgt_dfltf.a, mstate)
 
     if md is None:
         return None
@@ -4635,7 +4635,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _Mat
 
     return {**ma, **md}
 
-def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
     wildcarcd. We do a standalone handler so don't have to have the check in general."""
 
@@ -4645,13 +4645,13 @@ def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchC
     if (p := getattr(pat, 'value', _SENTINEL)) is not _SENTINEL:  # missing value acts as implicit ... wildcard, while the real ... is a concrete value here
         match_func = _match_primitive if p is ... else _MATCH_FUNCS.get(p.__class__, _match_default)
 
-        if (mv := match_func(p, tgt.value, mctx)) is None:
+        if (mv := match_func(p, tgt.value, mstate)) is None:
             return None
     else:
         mv = None
 
     if (p := getattr(pat, 'kind', ...)) is not ...:
-        if (mk := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, mctx)) is None:
+        if (mk := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt.kind, mstate)) is None:
             return None
     else:
         return mv
@@ -4661,17 +4661,17 @@ def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mctx: _MatchC
 
     return {**mv, **mk}
 
-def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
     the match option `ast_ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
     `None` must also match one of these successfully for py < 3.13."""
 
-    if not isinstance(tgt, expr_context) or (mctx.ast_ctx and tgt.__class__ is not pat.__class__):
+    if not isinstance(tgt, expr_context) or (mstate.ast_ctx and tgt.__class__ is not pat.__class__):
         return None
 
     return _EMPTY_DICT
 
-def _match_type(pat: type, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_type(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
 
     if issubclass(pat, MQ):
@@ -4686,7 +4686,7 @@ def _match_type(pat: type, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, A
     return _EMPTY_DICT
 
 def _match_re_Pattern(
-    pat: re_Pattern, tgt: _Targets, mctx: _MatchContext, re_func: Callable | None = None
+    pat: re_Pattern, tgt: _Targets, mstate: _MatchState, re_func: Callable | None = None
 ) -> Mapping[str, Any] | None:
     """Regex pattern against direct `str` or `bytes` value or source if `tgt` is an actual node. Will use `FST` source
     from the tree and unparse a non-`FST` `AST` node for the check.
@@ -4730,12 +4730,12 @@ def _match_re_Pattern(
 
     return m if re_func else _EMPTY_DICT
 
-def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """Always succeeds."""
 
     return _EMPTY_DICT
 
-def _match_None(pat: NoneType, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_None(pat: NoneType, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     if tgt is not None:
         return None
 
@@ -5191,7 +5191,7 @@ def match(
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
 
-    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _MatchContext(True, ast_ctx))
+    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _MatchState(True, ast_ctx))
 
     return None if m is None else FSTMatch(pat, self, m)
 
@@ -5277,13 +5277,13 @@ def search(
     pat_cls = pat.__class__
     asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
-    mctx = _MatchContext(True, ast_ctx)
+    mstate = _MatchState(True, ast_ctx)
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
         def all_func(f: fst.FST) -> FSTMatch | Literal[False]:
-            mctx.clear()
+            mstate.clear()
 
-            m = match_func(pat, f.a, mctx)
+            m = match_func(pat, f.a, mstate)
 
             return False if m is None else FSTMatch(pat, f, m)
 
@@ -5292,9 +5292,9 @@ def search(
             if f.a.__class__ not in asts_leaf:
                 return False
 
-            mctx.clear()
+            mstate.clear()
 
-            m = match_func(pat, f.a, mctx)
+            m = match_func(pat, f.a, mstate)
 
             return False if m is None else FSTMatch(pat, f, m)
 
