@@ -198,6 +198,7 @@ __all__ = [
     'MQ01',
     'MQMIN',
     'MQMAX',
+    'MQN',
 
     'MAST',
     'MAdd',
@@ -344,8 +345,9 @@ __all__ = [
 
 
 _SENTINEL = object()
-_EMPTY_DICT = {}
+_EMPTY_LIST = []
 _EMPTY_SET = set()
+_EMPTY_DICT = {}
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
 __DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique, doesn't need to be though
 
@@ -365,10 +367,10 @@ def _rpr(o: object) -> str:
         return '...'
 
     if (o_cls := o.__class__) is type and issubclass(o, (AST, M_Pattern)):
-        return o.__name__
+        return o.__qualname__
 
     if isinstance(o, AST):
-        return f'{o_cls.__name__}({", ".join(f"{f}={_rpr(getattr(o, f, None))}" for f in o._fields if f != "ctx")})'
+        return f'{o_cls.__qualname__}({", ".join(f"{f}={_rpr(getattr(o, f, None))}" for f in o._fields if f != "ctx")})'
 
     if isinstance(o, list):
         return f'[{", ".join(_rpr(e) for e in o)}]'
@@ -425,7 +427,7 @@ class FSTMatch:
 
         raise AttributeError(name)  # nonexistence of dunders should not be masked
 
-    def get(self, tag: str, default: object = None, /) -> object:
+    def get(self, tag: str, default: object = NoTag, /) -> object:
         """A `dict.get()` function for the match tags. Just a shortcut for `match.tags.get(tag, default)`."""
 
         return self.tags.get(tag, default)
@@ -2779,6 +2781,7 @@ class _MatchState:
     is_FST: bool
     ast_ctx: bool
     all_tagss: list[list[dict[str, Any]]]
+
     cache: dict
     """Stores:
     - `{FSTView: _Pattern}`: For temporary conversions of `FSTView`s to `AST` patterns, specifically for `MTAG` match
@@ -2956,16 +2959,18 @@ class M(M_Pattern):
             self.static_tags = tags
 
     def __repr__(self) -> str:
-        name = self.__class__.__qualname__
-        pat = self.pat
-        pat_tag = self.pat_tag
+        tag = f'{pat_tag}={_rpr(self.pat)}' if (pat_tag := self.pat_tag) else _rpr(self.pat)
+        extra = self._repr_extra()
 
-        if tags := self.static_tags:
-            tags = ', '.join(f'{t}={_rpr(p)}' for t, p in tags.items())
+        if static_tags := self.static_tags:
+            params = [tag, *extra, ', '.join(f'{t}={_rpr(p)}' for t, p in static_tags.items())]
+        else:
+            params = [tag, *extra]
 
-            return f'{name}({pat_tag}={_rpr(pat)}, {tags})' if pat_tag else f'{name}({_rpr(pat)}, {tags})'
+        return f'{self.__class__.__qualname__}({", ".join(params)})'
 
-        return f'{name}({pat_tag}={_rpr(pat)})' if pat_tag else f'{name}({_rpr(pat)})'
+    def _repr_extra(self) -> list[str]:
+        return _EMPTY_LIST
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mstate)
@@ -3259,7 +3264,7 @@ class MTYPES(M_Pattern):
 
     fields: Mapping[str, _Patterns]  ; """@private"""
 
-    def __init__(self, types: Iterable[type[AST | MAST]], **fields: _Patterns) -> None:
+    def __init__(self, types: Iterable[type[AST | MAST]], /, **fields: _Patterns) -> None:
         ts = {}
 
         for t in types:
@@ -3286,7 +3291,8 @@ class MTYPES(M_Pattern):
 
     def __repr__(self) -> str:
         name = self.__class__.__name__
-        types = f'[{", ".join(_rpr(e) for e in self._types)}]'
+        types = self._types
+        types = f'({", ".join(_rpr(e) for e in types)}{"," if len(types) == 1 else ""})'
 
         if fields := self.fields:
             return f'{name}({types}, {", ".join(f"{f}={_rpr(v)}" for f, v in fields.items())})'
@@ -3414,7 +3420,7 @@ class MRE(M_Pattern):
     <FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
     """
 
-    re_pat: re_Pattern  ; """@private"""
+    pat: re_Pattern  ; """@private"""
     pat_tag: str | None  ; """@private"""
     static_tags: Mapping[str, Any]  ; """@private"""
     search: bool  ; """@private"""
@@ -3436,21 +3442,21 @@ class MRE(M_Pattern):
         elif flags:
             raise ValueError('MRE cannot take flags for already compiled re.Pattern')
 
-        self.re_pat = anon_re_pat
+        self.pat = anon_re_pat
         self.pat_tag = pat_tag
         self.search = search
         self.static_tags = tags
 
     def __repr__(self) -> str:
         name = self.__class__.__name__
-        re_pat = _rpr(self.re_pat)
+        pat = _rpr(self.pat)
         pat_tag = self.pat_tag
-        tags = [f'{pat_tag}={re_pat}' if pat_tag else re_pat]
+        tags = [f'{pat_tag}={pat}' if pat_tag else pat]
 
         if self.search:
             tags.append('search=True')
 
-        tags.extend(f'{t}={_rpr(p)}' for t, p in self.static_tags)
+        tags.extend(f'{t}={_rpr(p)}' for t, p in self.static_tags.items())
 
         return f'{name}({", ".join(tags)})'
 
@@ -3459,10 +3465,10 @@ class MRE(M_Pattern):
         use `FST` source from the tree and unparse a non-`FST` `AST` node for the check. Returns `re.Match` object if is
         requested."""
 
-        re_pat = self.re_pat
-        re_func = re_pat.search if self.search else re_pat.match
+        pat = self.pat
+        re_func = pat.search if self.search else pat.match
 
-        if (m := _match_re_Pattern(re_pat, tgt, mstate, re_func)) is None:
+        if (m := _match_re_Pattern(pat, tgt, mstate, re_func)) is None:
             return None
 
         if pat_tag := self.pat_tag:
@@ -3565,6 +3571,20 @@ class MCB(M):
         self.tag_ret = tag_ret
         self.fail_val = fail_val
 
+    def __repr__(self) -> str:
+        params =[f'{pat_tag}={self.pat.__qualname__}' if (pat_tag := self.pat_tag) else self.pat.__qualname__]
+
+        if tag_ret := self.tag_ret:
+            params.append(f'tag_ret={tag_ret}')
+
+        if (fail_val := self.fail_val) is not _SENTINEL:
+            params.append(f'fail_val={_rpr(fail_val)}')
+
+        if static_tags := self.static_tags:
+            params.append(', '.join(f'{t}={_rpr(p)}' for t, p in static_tags.items()))
+
+        return f'{self.__class__.__qualname__}({", ".join(params)})'
+
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if not mstate.is_FST or not isinstance(tgt, AST):
             m = self.pat(tgt)
@@ -3631,7 +3651,6 @@ class MTAG(M):
     _requires = 'source tag'  # for printing error message
 
     pat: str  ; """@private"""  # this is really a source tag name here
-    static_tags: Mapping[str, Any]  ; """@private"""
 
     def __init__(self, anon_tag: str | None = None, /, **tags) -> None:
         M.__init__(self, anon_tag or _SENTINEL, **tags)
@@ -3669,17 +3688,10 @@ class MTAG(M):
 class MQ(M):
     """Quantifier pattern. Can only be used on or inside list fields and matches at least `min` and at most `max`
     instances of the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a
-    tag for the matched patterns they are given as a list of matches instead of just one.
+    tag for the matched patterns they are given as a list of `FSTMatch` objects instead of just one.
 
     This is the base class for `MQSTAR`, `MQPLUS`, `MQ01`, `MQMIN` and `MQMAX` and can do everything they can with the
     appropriate values for `min` and `max`. Those classes are provided regardless for cleaner pattern structuring.
-
-    This pattern and its specific subclasses are greedy and there is no backtracking done to attempt to make a sequence
-    of these match successfully. They are also not nestable, a single level is allowed for or in a list field (any
-    number sequential siblings `MQ(), MQ(), ...`, but no `MQ(MQ(...))`).
-
-    `MQ()` with default `min` and `max` is the same as `MQSTAR()`, so if you don't care about cleaner patterns you can
-    just use this.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3729,10 +3741,10 @@ class MQ(M):
     pat = ...  # for direct subclass type use as a pattern
     pat_tag = None
     static_tags = _EMPTY_DICT
+    greedy = True
 
     min: int  ; """@private"""
-    max: int  ; """@private"""
-    greedy: bool  ; """@private"""
+    max: int | None  ; """@private"""
 
     _requires = 'pattern or list of patterns'
 
@@ -3742,45 +3754,41 @@ class MQ(M):
         /,
         min: int = _SENTINEL,
         max: int | None = _SENTINEL,
-        greedy: bool = True,
         **tags,
     ) -> None:
         M.__init__(self, anon_pat, **tags)
 
         if min is _SENTINEL or max is _SENTINEL:
-            raise ValueError(f'{self.__class__.__qualname__} requires both min and max be specified')
-
-        if max is None:
-            max = 0x7fffffffffffffff
+            raise ValueError(f'{self.__class__.__qualname__} requires both min and max values')
 
         if min < 0:
-            raise ValueError(f'{self.__class__.__qualname__} minimum cannot be negative')
-        if max < 0:
-            raise ValueError(f'{self.__class__.__qualname__} maximum cannot be negative')
-        if max < min:
-            raise ValueError(f'{self.__class__.__qualname__} maximum cannot be lower than minimum')
+            raise ValueError(f'{self.__class__.__qualname__} min cannot be negative')
+
+        if max is not None:
+            if max < 0:
+                raise ValueError(f'{self.__class__.__qualname__} max cannot be negative')
+            if max < min:
+                raise ValueError(f'{self.__class__.__qualname__} max cannot be lower than min')
 
         self.min = min
         self.max = max
-        self.greedy = greedy
+
+    def _repr_extra(self) -> list[str]:
+        return [f'min={self.min}, max={self.max}']
 
 class NG(MQ):
-    """Non-greedy default version of `MQ` quantifier pattern."""
+    """Non-greedy version of `MQ` quantifier pattern."""
 
     __qualname__ = 'MQ.NG'
-
-    def __init__(
-        self, anon_pat: _Patterns = _SENTINEL, /, min: int = _SENTINEL, max: int | None = _SENTINEL, **tags
-    ) -> None:
-        MQ.__init__(self, anon_pat, min, max, False, **tags)
+    greedy = False
 
 MQ.NG = NG
 del NG
 
 
 class MQSTAR(MQ):
-    """Star quantifier pattern, zero or more. Shortcut for `MQ(pattern, min=0, max=None, greedy=greedy)`. Has non-greedy
-    shortcut child class `MQSTAR.NG`.
+    """Star quantifier pattern, zero or more. Shortcut for `MQ(anon_pat, min=0, max=None, **tags)`. Has non-greedy
+    version child class `MQSTAR.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3806,30 +3814,28 @@ class MQSTAR(MQ):
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
     """
 
-    min = 0  # for direct type use
-    max = 0x7fffffffffffffff
-    greedy = True
-
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, greedy: bool = True, **tags) -> None:
-        MQ.__init__(self, anon_pat, 0, None, greedy, **tags)
-
-class NG(MQSTAR):
-    """Non-greedy default version of `MQSTAR` quantifier pattern."""
-
-    __qualname__ = 'MQSTAR.NG'
-
-    greedy = False  # for direct type use
+    min = 0
+    max = None
 
     def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
-        MQ.__init__(self, anon_pat, 0, None, False, **tags)
+        M.__init__(self, anon_pat, **tags)
+
+    def _repr_extra(self) -> list[str]:
+        return _EMPTY_LIST
+
+class NG(MQSTAR):
+    """Non-greedy version of `MQSTAR` quantifier pattern."""
+
+    __qualname__ = 'MQSTAR.NG'
+    greedy = False
 
 MQSTAR.NG = NG
 del NG
 
 
 class MQPLUS(MQ):
-    """Plus quantifier pattern, one or more. Shortcut for `MQ(pattern, min=1, max=None, greedy=greedy)`. Has non-greedy
-    shortcut child class `MQPLUS.NG`.
+    """Plus quantifier pattern, one or more. Shortcut for `MQ(anon_pat, min=1, max=None, **tags)`. Has non-greedy
+    version child class `MQPLUS.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3854,30 +3860,28 @@ class MQPLUS(MQ):
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
     """
 
-    min = 1  # for direct type use
-    max = 0x7fffffffffffffff
-    greedy = True
+    min = 1
+    max = None
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, greedy: bool = True, **tags) -> None:
-        MQ.__init__(self, anon_pat, 1, None, greedy, **tags)
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+        M.__init__(self, anon_pat, **tags)
+
+    def _repr_extra(self) -> list[str]:
+        return _EMPTY_LIST
 
 class NG(MQPLUS):
     """Non-greedy default version of `MQPLUS` quantifier pattern."""
 
     __qualname__ = 'MQPLUS.NG'
-
-    greedy = False  # for direct type use
-
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
-        MQ.__init__(self, anon_pat, 1, None, False, **tags)
+    greedy = False
 
 MQPLUS.NG = NG
 del NG
 
 
 class MQ01(MQ):
-    """Zero or one quantifier pattern. Shortcut for `MQ(pattern, min=0, max=1, greedy=greedy)`. Has non-greedy shortcut
-    child class `MQ01.NG`.
+    """Zero or one quantifier pattern. Shortcut for `MQ(anon_pat, min=0, max=1, **tags)`. Has non-greedy version child
+    class `MQ01.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3906,28 +3910,26 @@ class MQ01(MQ):
 
     min = 0  # for direct type use
     max = 1
-    greedy = True
-
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, greedy: bool = True, **tags) -> None:
-        MQ.__init__(self, anon_pat, 0, 1, greedy, **tags)
-
-class NG(MQ01):
-    """Non-greedy default version of `MQ01` quantifier pattern."""
-
-    __qualname__ = 'MQ01.NG'
-
-    greedy = False  # for direct type use
 
     def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
-        MQ.__init__(self, anon_pat, 0, 1, False, **tags)
+        M.__init__(self, anon_pat, **tags)
+
+    def _repr_extra(self) -> list[str]:
+        return _EMPTY_LIST
+
+class NG(MQ01):
+    """Non-greedy version of `MQ01` quantifier pattern."""
+
+    __qualname__ = 'MQ01.NG'
+    greedy = False
 
 MQ01.NG = NG
 del NG
 
 
 class MQMIN(MQ):
-    """Minimum count quantifier pattern. Shortcut for `MQ(pattern, min=min, max=None, greedy=greedy)`. Has non-greedy
-    shortcut child class `MQMIN.NG`.
+    """Minimum count quantifier pattern. Shortcut for `MQ(anon_pat, min=min, max=None, **tags)`. Has non-greedy version
+    child class `MQMIN.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3938,6 +3940,8 @@ class MQMIN(MQ):
     - `min`: The minimum number of pattern matches needed for a successful match.
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
 
     >>> MList([MQMIN(min=2, t='a')]) .match(FST('[]'))
 
@@ -3950,24 +3954,34 @@ class MQMIN(MQ):
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, min: int = 0, greedy: bool = True, **tags) -> None:
-        MQ.__init__(self, anon_pat, min, None, greedy, **tags)
+    max = None
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, min: int = _SENTINEL, **tags) -> None:
+        M.__init__(self, anon_pat, **tags)
+
+        if min is _SENTINEL:
+            raise ValueError(f'{self.__class__.__qualname__} requires a min value')
+        if min < 0:
+            raise ValueError(f'{self.__class__.__qualname__} min cannot be negative')
+
+        self.min = min
+
+    def _repr_extra(self) -> list[str]:
+        return [f'min={self.min}']
 
 class NG(MQMIN):
-    """Non-greedy default version of `MQMIN` quantifier pattern."""
+    """Non-greedy version of `MQMIN` quantifier pattern."""
 
     __qualname__ = 'MQMIN.NG'
-
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, min: int = 0, **tags) -> None:
-        MQ.__init__(self, anon_pat, min, None, False, **tags)
+    greedy = False
 
 MQMIN.NG = NG
 del NG
 
 
 class MQMAX(MQ):
-    """Maximum count quantifier pattern. Shortcut for `MQ(pattern, min=0, max=max, greedy=greedy)`. Has non-greedy
-    shortcut child class `MQMAX.NG`.
+    """Maximum count quantifier pattern. Shortcut for `MQ(anon_pat, min=0, max=max, **tags)`. Has non-greedy version
+    child class `MQMAX.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3978,6 +3992,8 @@ class MQMAX(MQ):
     - `max`: The maximum number of pattern matches taken for a successful match. `None` means unbounded.
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
 
     >>> MList([MQMAX(max=2, t='a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2> {'t': []}>
@@ -3994,18 +4010,66 @@ class MQMAX(MQ):
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, max: int | None = None, greedy: bool = True, **tags) -> None:
-        MQ.__init__(self, anon_pat, 0, max, greedy, **tags)
+    min = 0
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, max: int | None = _SENTINEL, **tags) -> None:
+        M.__init__(self, anon_pat, **tags)
+
+        if max is _SENTINEL:
+            raise ValueError(f'{self.__class__.__qualname__} requires a max value')
+        if max is not None and max < 0:
+            raise ValueError(f'{self.__class__.__qualname__} max cannot be negative')
+
+        self.max = max
+
+    def _repr_extra(self) -> list[str]:
+        return [f'max={self.max}']
 
 class NG(MQMAX):
-    """Non-greedy default version of `MQMAX` quantifier pattern."""
+    """Non-greedy version of `MQMAX` quantifier pattern."""
 
     __qualname__ = 'MQMAX.NG'
-
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, max: int | None = None, **tags) -> None:
-        MQ.__init__(self, anon_pat, 0, max, False, **tags)
+    greedy = False
 
 MQMAX.NG = NG
+del NG
+
+
+class MQN(MQ):
+    """Exact count quantifier pattern. Shortcut for `MQ(anon_pat, min=n, max=n, **tags)`. Has non-greedy version
+    child class `MQN.NG`.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
+        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
+        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
+        case the keyword is used as a tag which is used to return a list of `FSTMatch` objects for each node matched by
+        the pattern. Setting this to `...` is the same as not having it present.
+    - `n`: The exact number of pattern matches taken for a successful match.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+    """
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, n: int = _SENTINEL, **tags) -> None:
+        M.__init__(self, anon_pat, **tags)
+
+        if n is _SENTINEL:
+            raise ValueError(f'{self.__class__.__qualname__} requires a count value')
+        if n is not None and n < 0:
+            raise ValueError(f'{self.__class__.__qualname__} count cannot be negative')
+
+        self.min = self.max = n
+
+    def _repr_extra(self) -> list[str]:
+        return [f'n={self.min}']
+
+class NG(MQN):
+    """Non-greedy version of `MQN` quantifier pattern."""
+
+    __qualname__ = 'MQN.NG'
+    greedy = False
+
+MQN.NG = NG
 del NG
 
 
@@ -4055,6 +4119,9 @@ def _match_quantifier(
     match_func = _MATCH_FUNCS.get(q_pat.__class__, _match_default)
     tgts = []
     count = 0
+
+    if q_max is None:
+        q_max = 0x7fffffffffffffff
 
     if greedy:
         initial_count = q_max
@@ -4156,7 +4223,7 @@ def _match_quantifier(
                     if isinstance(t, (str, FSTView)):
                         is_FST = False
                     elif t and not (t := getattr(t, 'f', None)):
-                        raise MatchError('match found an AST node without an FST')
+                        raise MatchError('match found an AST node without an FST')  # pragma: no cover
 
                 match_list.insert(match_list_idx, FSTMatch(q_pat, t, m))
 
