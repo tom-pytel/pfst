@@ -217,7 +217,7 @@ Note we are using the source from the previous example.
 >>> pprint(FST(src).sub(
 ...     MCall(
 ...        func=M(func=MAttribute('logger', 'info')),
-...        keywords=MNOT([..., Mkeyword('correlation_id'), ...]),
+...        keywords=MNOT([MQSTAR, Mkeyword('correlation_id'), MQSTAR]),
 ...        _args=M(all_args=...),
 ...     ),
 ...     '__fst_func(__fst_all_args, correlation_id=CID)',

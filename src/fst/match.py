@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
-from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Set as tp_Set, Union
+from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequence, Set as tp_Set, Union
 
 from . import fst
 
@@ -187,17 +187,17 @@ __all__ = [
     'MNOT',
     'MOR',
     'MAND',
-    'MANY',
+    'MTYPES',
     'MOPT',
     'MRE',
     'MCB',
     'MTAG',
-    'MN',
-    'MSTAR',
-    'MPLUS',
-    'MQMARK',
-    'MMIN',
-    'MMAX',
+    'MQ',
+    'MQSTAR',
+    'MQPLUS',
+    'MQ01',
+    'MQMIN',
+    'MQMAX',
 
     'MAST',
     'MAdd',
@@ -347,7 +347,7 @@ _SENTINEL = object()
 _EMPTY_DICT = {}
 _EMPTY_SET = set()
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
-__DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique
+__DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique, doesn't need to be though
 
 _Target = AST | constant
 _TargetFST = Union['fst.FST', constant]
@@ -438,7 +438,7 @@ class M_Pattern:
     matchers and the functional matchers like `MOR` and `MRE`."""
 
     _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
-    _types: type[AST] | tuple[type[AST]] = AST  # only the MANY pattern has a tuple here
+    _types: type[AST] | tuple[type[AST]] = AST  # only the MTYPES pattern has a tuple here
 
     def _validate_tags(self, tags: Iterable[str]) -> None:
         for tag in tags:
@@ -509,7 +509,7 @@ class MAST(M_Pattern):
 
     Will match any statement which has a `Constant` string as the first element of its body, in other words a docstring.
 
-    >>> pat = Mstmt(body=[Expr(MConstant(str)), ...])
+    >>> pat = Mstmt(body=[Expr(MConstant(str)), MQSTAR])
 
     >>> pat.match(FST('def f(): "docstr"; pass'))
     <FSTMatch <FunctionDef ROOT 0,0..0,23>>
@@ -523,6 +523,8 @@ class MAST(M_Pattern):
 
     >>> pat.match(FST('class cls: pass'))
     """
+
+    _types = AST
 
     def __init__(self, **fields: _Patterns) -> None:
         if fields:
@@ -2779,9 +2781,10 @@ class _MatchContext:
     all_tagss: list[list[dict[str, Any]]]
     cache: dict
     """Stores:
-    - `{FSTView: _Pattern}`: This exists for things like to temporarily convert FSTViews to AST patterns, specifically
-        for MTAG match previously matched multinode item from Dict, MatchMapping or arguments.
-    - ``:
+    - `{FSTView: _Pattern}`: For temporary conversions of `FSTView`s to `AST` patterns, specifically for `MTAG` match
+        previously matched multinode item from Dict, MatchMapping or arguments.
+    - `(pat_arg, pat_dflt, arg_fields, dflt_fields)`: For validated match parameters for matching a single `arguments`
+        arg against `FSTView`.
     """
 
     def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
@@ -2851,6 +2854,7 @@ class _MatchContext:
             pat = self.cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
 
         elif isinstance(view, FSTView_arguments):
+            allargs = view.base._cached_allargs()
             pat_args = {
                 'posonlyargs': [],
                 'args': [],
@@ -2860,7 +2864,6 @@ class _MatchContext:
                 'kwarg': [],
                 'defaults': [],
             }
-            allargs = view.base._cached_allargs()
 
             for v in view:
                 a = allargs[v.start]
@@ -2879,10 +2882,8 @@ class _MatchContext:
                 args=pat_args['args'] or ...,
                 vararg=a[0] if (a := pat_args['vararg']) else ...,
                 kwonlyargs=pat_args['kwonlyargs'] or ...,
-                # kw_defaults=pat_args['kw_defaults'] or ...,
                 kw_defaults=pat_args['kw_defaults'],
                 kwarg=a[0] if (a := pat_args['kwarg']) else ...,
-                # defaults=pat_args['defaults'] or ...,
                 defaults=pat_args['defaults'],
                 _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
             )
@@ -2955,7 +2956,7 @@ class M(M_Pattern):
             self.static_tags = tags
 
     def __repr__(self) -> str:
-        name = self.__class__.__name__
+        name = self.__class__.__qualname__
         pat = self.pat
         pat_tag = self.pat_tag
 
@@ -3087,7 +3088,7 @@ class MOR(M_Pattern):
     >>> pat.match(FST('bin + op'))
 """
 
-    pats:     list[_Patterns]  ; """@private"""
+    pats: list[_Patterns]  ; """@private"""
     pat_tags: list[str | None]  ; """@private"""
 
     def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
@@ -3170,7 +3171,7 @@ class MAND(MOR):
 
     More sensical usage below, for example that a list starts with `a` and contains at least two `b`.
 
-    >>> pat = MList(MAND(['a', ...], [..., 'b', ..., 'b', ...]))
+    >>> pat = MList(MAND(['a', MQSTAR], [MQSTAR, 'b', MQSTAR, 'b', MQSTAR]))
 
     >>> pat.match(FST('[a, b, c]'))
 
@@ -3222,10 +3223,9 @@ class MAND(MOR):
         return leaf_asts
 
 
-class MANY(M_Pattern):
-    """This pattern matches any one of the given types and arbitrary fields if present. And its "m-any" as in "any one
-    of", not "many" as in "several", though that fits as well. Essentially this is an AND of whether the node type is
-    one of those provided and the given fields match.
+class MTYPES(M_Pattern):
+    """This pattern matches any one of the given types and arbitrary fields if present. Essentially this is an AND of
+    whether the node type is one of those provided and the given fields match.
 
     This is essentially `MAND(MOR(*types), MAST(**fields))`. But the types must be actual types, not other patterns.
 
@@ -3241,9 +3241,9 @@ class MANY(M_Pattern):
 
     Whether a statement type that CAN have a docstring actually has a docstring.
 
-    >>> pat = MANY(
+    >>> pat = MTYPES(
     ...     (ClassDef, FunctionDef, AsyncFunctionDef),
-    ...     body=[Expr(MConstant(str)), ...],
+    ...     body=[Expr(MConstant(str)), MQSTAR],
     ... )
 
     >>> pat.match(FST('def f(): "docstr"; pass'))
@@ -3264,11 +3264,11 @@ class MANY(M_Pattern):
 
         for t in types:
             if not isinstance(t, type):
-                raise ValueError('MANY types can only be AST or MAST')
+                raise ValueError('MTYPES types can only be AST or MAST')
             elif issubclass(t, MAST):
                 t = t._types  # will be a single type, can be non-leaf
             elif not issubclass(t, AST):
-                raise ValueError('MANY types can only be AST or MAST')
+                raise ValueError('MTYPES types can only be AST or MAST')
 
             ts[t] = True
 
@@ -3276,7 +3276,7 @@ class MANY(M_Pattern):
         self.fields = fields
 
         if not types:
-            raise ValueError('MANY requires at least one AST type to match')
+            raise ValueError('MTYPES requires at least one AST type to match')
 
         if fields:
             self._fields = tuple(fields)
@@ -3410,7 +3410,7 @@ class MRE(M_Pattern):
     >>> MRE(tag='bad', search=True) .match(arg('this_arg_is_not_so_bad'))
     <FSTMatch arg(arg='this_arg_is_not_so_bad', annotation=None, type_comment=None) {'tag': <re.Match object; span=(19, 22), match='bad'>}>
 
-    >>> MDict(_all=[MN(t=MRE('a: .'))]) .match(FST('{a: b, a: z}'))
+    >>> MDict(_all=[MQSTAR(t=MRE('a: .'))]) .match(FST('{a: b, a: z}'))
     <FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
     """
 
@@ -3615,7 +3615,7 @@ class MTAG(M):
 
     Works just fine with quantifier patterns.
 
-    >>> pat = MList([M(first='a'), MSTAR(st=MTAG('first'))])
+    >>> pat = MList([M(first='a'), MQSTAR(st=MTAG('first'))])
 
     >>> pat.match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'first': <Name 0,1..0,2>, 'st': [<FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
@@ -3624,7 +3624,7 @@ class MTAG(M):
 
     Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
 
-    >>> MDict(_all=[M(start=...), ..., MTAG('start')]) .match(FST('{1: a, 1: a}'))
+    >>> MDict(_all=[M(start=...), MQSTAR, MTAG('start')]) .match(FST('{1: a, 1: a}'))
     <FSTMatch <Dict ROOT 0,0..0,12> {'start': <<Dict ROOT 0,0..0,12>._all[:1]>}>
     """
 
@@ -3666,19 +3666,19 @@ class MTAG(M):
         return self.static_tags
 
 
-class MN(M):
+class MQ(M):
     """Quantifier pattern. Can only be used on or inside list fields and matches at least `min` and at most `max`
     instances of the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a
     tag for the matched patterns they are given as a list of matches instead of just one.
 
-    This is the base class for `MSTAR`, `MPLUS`, `MQMARK`, `MMIN` and `MMAX` and can do everything they can with the
+    This is the base class for `MQSTAR`, `MQPLUS`, `MQ01`, `MQMIN` and `MQMAX` and can do everything they can with the
     appropriate values for `min` and `max`. Those classes are provided regardless for cleaner pattern structuring.
 
     This pattern and its specific subclasses are greedy and there is no backtracking done to attempt to make a sequence
     of these match successfully. They are also not nestable, a single level is allowed for or in a list field (any
-    number sequential siblings `MN(), MN(), ...`, but no `MN(MN(...))`).
+    number sequential siblings `MQ(), MQ(), ...`, but no `MQ(MQ(...))`).
 
-    `MN()` with default `min` and `max` is the same as `MSTAR()`, so if you don't care about cleaner patterns you can
+    `MQ()` with default `min` and `max` is the same as `MQSTAR()`, so if you don't care about cleaner patterns you can
     just use this.
 
     **Parameters:**
@@ -3695,25 +3695,25 @@ class MN(M):
 
     **Examples:**
 
-    >>> MList([MN('a', 1, 2)]) .match(FST('[]'))
+    >>> MList([MQ('a', 1, 2)]) .match(FST('[]'))
 
-    >>> MList([MN('a', 1, 2)]) .match(FST('[a]'))
+    >>> MList([MQ('a', 1, 2)]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3>>
 
-    >>> MList([MN('a', 1, 2)]) .match(FST('[a, a]'))
+    >>> MList([MQ('a', 1, 2)]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6>>
 
-    >>> MList([MN('a', 1, 2)]) .match(FST('[a, a, a]'))
+    >>> MList([MQ('a', 1, 2)]) .match(FST('[a, a, a]'))
 
-    >>> MList([MN('a', 1, 2), ...]) .match(FST('[a, a, a]'))
+    >>> MList([MQ('a', 1, 2), MQSTAR]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9>>
 
-    >>> pat = MGlobal([..., MN(t='c', min=1, max=2), ...])
+    >>> pat = MGlobal([MQSTAR.NG, MQ(t='c', min=1, max=2), MQSTAR])
 
     >>> FST('global a, b, c, c, d, e') .match(pat)
     <FSTMatch <Global ROOT 0,0..0,23> {'t': [<FSTMatch 'c'>, <FSTMatch 'c'>]}>
 
-    >>> pat = MList([..., MN(t=MRE('c|d'), min=1, max=3), ...])
+    >>> pat = MList([MQSTAR.NG, MQ(t=MRE('c|d'), min=1, max=3), MQSTAR])
 
     >>> FST('[a, b, c, c, d, c, e]') .match(pat)
     <FSTMatch <List ROOT 0,0..0,21> {'t': [<FSTMatch <Name 0,7..0,8>>, <FSTMatch <Name 0,10..0,11>>, <FSTMatch <Name 0,13..0,14>>]}>
@@ -3726,16 +3726,29 @@ class MN(M):
     # individual child matches are handled according to if the pattern is passed anonymously or in a tag. The static
     # tags are added once at the end of the arbitrary-length match.
 
+    pat = ...  # for direct subclass type use as a pattern
+    pat_tag = None
+    static_tags = _EMPTY_DICT
+
     min: int  ; """@private"""
     max: int  ; """@private"""
+    greedy: bool  ; """@private"""
 
-    _requires = 'non-wildcard pattern'
+    _requires = 'pattern or list of patterns'
 
-    def __init__(self, anon_pat: _Patterns = ..., /, min: int = 0, max: int | None = None, **tags) -> None:
-        M.__init__(self, _SENTINEL if anon_pat is ... else anon_pat, **tags)
+    def __init__(
+        self,
+        anon_pat: _Patterns = _SENTINEL,
+        /,
+        min: int = _SENTINEL,
+        max: int | None = _SENTINEL,
+        greedy: bool = True,
+        **tags,
+    ) -> None:
+        M.__init__(self, anon_pat, **tags)
 
-        if isinstance(self.pat, MN):
-            raise ValueError('MN-type quantifier patterns cannot be nested directly within each other')
+        if min is _SENTINEL or max is _SENTINEL:
+            raise ValueError(f'{self.__class__.__qualname__} requires both min and max be specified')
 
         if max is None:
             max = 0x7fffffffffffffff
@@ -3749,15 +3762,25 @@ class MN(M):
 
         self.min = min
         self.max = max
+        self.greedy = greedy
 
-    def _match(self, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
-        raise MatchError(f'{self.__class__.__name__} quantifier pattern in invalid location')
+class NG(MQ):
+    """Non-greedy default version of `MQ` quantifier pattern."""
+
+    __qualname__ = 'MQ.NG'
+
+    def __init__(
+        self, anon_pat: _Patterns = _SENTINEL, /, min: int = _SENTINEL, max: int | None = _SENTINEL, **tags
+    ) -> None:
+        MQ.__init__(self, anon_pat, min, max, False, **tags)
+
+MQ.NG = NG
+del NG
 
 
-class MSTAR(MN):
-    """Star quantifier pattern, zero or more. Matches any number of instances of pattern, including zero. The tagging
-    works the same way as `MN` and if returning in a tag a list is still returned with either zero or more `FSTMatch`
-    objects.
+class MQSTAR(MQ):
+    """Star quantifier pattern, zero or more. Shortcut for `MQ(pattern, min=0, max=None, greedy=greedy)`. Has non-greedy
+    shortcut child class `MQSTAR.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3770,26 +3793,43 @@ class MSTAR(MN):
 
     **Examples:**
 
-    >>> MList([MSTAR(t='a')]) .match(FST('[]'))
+    >>> MList([MQSTAR(t='a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2> {'t': []}>
 
-    >>> MList([MSTAR(t='a')]) .match(FST('[a]'))
+    >>> MList([MQSTAR(t='a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MSTAR(t='a')]) .match(FST('[a, a]'))
+    >>> MList([MQSTAR(t='a')]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MSTAR(t='a')]) .match(FST('[a, a, a]'))
+    >>> MList([MQSTAR(t='a')]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
-        MN.__init__(self, anon_pat, **tags)
+    min = 0  # for direct type use
+    max = 0x7fffffffffffffff
+    greedy = True
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, greedy: bool = True, **tags) -> None:
+        MQ.__init__(self, anon_pat, 0, None, greedy, **tags)
+
+class NG(MQSTAR):
+    """Non-greedy default version of `MQSTAR` quantifier pattern."""
+
+    __qualname__ = 'MQSTAR.NG'
+
+    greedy = False  # for direct type use
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+        MQ.__init__(self, anon_pat, 0, None, False, **tags)
+
+MQSTAR.NG = NG
+del NG
 
 
-class MPLUS(MN):
-    """Plus quantifier pattern, one or more. Matches one or more instances of pattern. The tagging works the same way as
-    `MN` and if returning in a tag a list is still returned with either zero or more `FSTMatch` objects.
+class MQPLUS(MQ):
+    """Plus quantifier pattern, one or more. Shortcut for `MQ(pattern, min=1, max=None, greedy=greedy)`. Has non-greedy
+    shortcut child class `MQPLUS.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3802,26 +3842,42 @@ class MPLUS(MN):
 
     **Examples:**
 
-    >>> MList([MPLUS(t='a')]) .match(FST('[]'))
+    >>> MList([MQPLUS(t='a')]) .match(FST('[]'))
 
-    >>> MList([MPLUS(t='a')]) .match(FST('[a]'))
+    >>> MList([MQPLUS(t='a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MPLUS(t='a')]) .match(FST('[a, a]'))
+    >>> MList([MQPLUS(t='a')]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MPLUS(t='a')]) .match(FST('[a, a, a]'))
+    >>> MList([MQPLUS(t='a')]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
-        MN.__init__(self, anon_pat, 1, **tags)
+    min = 1  # for direct type use
+    max = 0x7fffffffffffffff
+    greedy = True
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, greedy: bool = True, **tags) -> None:
+        MQ.__init__(self, anon_pat, 1, None, greedy, **tags)
+
+class NG(MQPLUS):
+    """Non-greedy default version of `MQPLUS` quantifier pattern."""
+
+    __qualname__ = 'MQPLUS.NG'
+
+    greedy = False  # for direct type use
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+        MQ.__init__(self, anon_pat, 1, None, False, **tags)
+
+MQPLUS.NG = NG
+del NG
 
 
-class MQMARK(MN):
-    """Zero or one quantifier pattern. Matches at either zero or exactly one instance of the given pattern. The tagging
-    works the same way as `MN` and if returning in a tag a list is still returned with either zero or one `FSTMatch`
-    objects.
+class MQ01(MQ):
+    """Zero or one quantifier pattern. Shortcut for `MQ(pattern, min=0, max=1, greedy=greedy)`. Has non-greedy shortcut
+    child class `MQ01.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3834,27 +3890,44 @@ class MQMARK(MN):
 
     **Examples:**
 
-    >>> MList([MQMARK('a')]) .match(FST('[]'))
+    >>> MList([MQ01('a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2>>
 
-    >>> MList([MQMARK('a')]) .match(FST('[a]'))
+    >>> MList([MQ01('a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3>>
 
-    >>> MList([MQMARK('a')]) .match(FST('[b]'))
+    >>> MList([MQ01('a')]) .match(FST('[b]'))
 
-    >>> MList([MQMARK('a')]) .match(FST('[a, a]'))
+    >>> MList([MQ01('a')]) .match(FST('[a, a]'))
 
-    >>> MList([MQMARK('a'), ...]) .match(FST('[a, a]'))
+    >>> MList([MQ01('a'), MQSTAR]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6>>
     """
 
-    def __init__(self, anon_pat: _Patterns = ..., /, **tags) -> None:
-        MN.__init__(self, anon_pat, 0, 1, **tags)
+    min = 0  # for direct type use
+    max = 1
+    greedy = True
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, greedy: bool = True, **tags) -> None:
+        MQ.__init__(self, anon_pat, 0, 1, greedy, **tags)
+
+class NG(MQ01):
+    """Non-greedy default version of `MQ01` quantifier pattern."""
+
+    __qualname__ = 'MQ01.NG'
+
+    greedy = False  # for direct type use
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+        MQ.__init__(self, anon_pat, 0, 1, False, **tags)
+
+MQ01.NG = NG
+del NG
 
 
-class MMIN(MN):
-    """Minimum count quantifier pattern. Matches a minimum of `min` instances of pattern. The tagging works the same way
-    as `MN` and if returning in a tag a list is still returned with either zero or more `FSTMatch` objects.
+class MQMIN(MQ):
+    """Minimum count quantifier pattern. Shortcut for `MQ(pattern, min=min, max=None, greedy=greedy)`. Has non-greedy
+    shortcut child class `MQMIN.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3866,24 +3939,35 @@ class MMIN(MN):
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
 
-    >>> MList([MMIN(min=2, t='a')]) .match(FST('[]'))
+    >>> MList([MQMIN(min=2, t='a')]) .match(FST('[]'))
 
-    >>> MList([MMIN(min=2, t='a')]) .match(FST('[a]'))
+    >>> MList([MQMIN(min=2, t='a')]) .match(FST('[a]'))
 
-    >>> MList([MMIN(min=2, t='a')]) .match(FST('[a, a]'))
+    >>> MList([MQMIN(min=2, t='a')]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MMIN(min=2, t='a')]) .match(FST('[a, a, a]'))
+    >>> MList([MQMIN(min=2, t='a')]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = ..., /, min: int = 0, **tags) -> None:
-        MN.__init__(self, anon_pat, min, **tags)
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, min: int = 0, greedy: bool = True, **tags) -> None:
+        MQ.__init__(self, anon_pat, min, None, greedy, **tags)
+
+class NG(MQMIN):
+    """Non-greedy default version of `MQMIN` quantifier pattern."""
+
+    __qualname__ = 'MQMIN.NG'
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, min: int = 0, **tags) -> None:
+        MQ.__init__(self, anon_pat, min, None, False, **tags)
+
+MQMIN.NG = NG
+del NG
 
 
-class MMAX(MN):
-    """Maximum count quantifier pattern. Matches a maximum of `max` instances of pattern. The tagging works the same way
-    as `MN` and if returning in a tag a list is still returned with either zero or more `FSTMatch` objects.
+class MQMAX(MQ):
+    """Maximum count quantifier pattern. Shortcut for `MQ(pattern, min=0, max=max, greedy=greedy)`. Has non-greedy
+    shortcut child class `MQMAX.NG`.
 
     **Parameters:**
     - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
@@ -3895,119 +3979,256 @@ class MMAX(MN):
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
 
-    >>> MList([MMAX(max=2, t='a')]) .match(FST('[]'))
+    >>> MList([MQMAX(max=2, t='a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2> {'t': []}>
 
-    >>> MList([MMAX(max=2, t='a')]) .match(FST('[a]'))
+    >>> MList([MQMAX(max=2, t='a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MMAX(max=2, t='a')]) .match(FST('[a, a]'))
+    >>> MList([MQMAX(max=2, t='a')]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MMAX(max=2, t='a')]) .match(FST('[a, a, a]'))
+    >>> MList([MQMAX(max=2, t='a')]) .match(FST('[a, a, a]'))
 
-    >>> MList([MMAX(max=2, t='a'), ...]) .match(FST('[a, a, a]'))
+    >>> MList([MQMAX(max=2, t='a'), MQSTAR]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = ..., /, max: int | None = None, **tags) -> None:
-        MN.__init__(self, anon_pat, 0, max, **tags)
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, max: int | None = None, greedy: bool = True, **tags) -> None:
+        MQ.__init__(self, anon_pat, 0, max, greedy, **tags)
+
+class NG(MQMAX):
+    """Non-greedy default version of `MQMAX` quantifier pattern."""
+
+    __qualname__ = 'MQMAX.NG'
+
+    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, max: int | None = None, **tags) -> None:
+        MQ.__init__(self, anon_pat, 0, max, False, **tags)
+
+MQMAX.NG = NG
+del NG
 
 
 # ......................................................................................................................
+
+_QUANTIFIER_STANDALONES = {MQSTAR, MQPLUS, MQ01, MQSTAR.NG, MQPLUS.NG, MQ01.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
 
 _NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
 
-class _StepbackListIter:
-    def __init__(self, seq: list) -> None:
+class _MatchList:
+    seq: Sequence  # to be accessed directly
+    len: int
+    idx: int  # next item to return
+
+    def __init__(self, seq: Sequence) -> None:
         self.seq = seq
         self.len = len(seq)
-        self.idx = -1
+        self.idx = 0
 
     def next(self) -> object:
-        if (idx := self.idx + 1) == self.len:
+        if (idx := self.idx) == self.len:
             return _SENTINEL
 
-        self.idx = idx
+        ret = self.seq[idx]
+        self.idx = idx + 1
 
-        return self.seq[idx]
+        return ret
 
-    def stepback(self, n: int = 1) -> None:
-        self.idx -= n
+    def at_end(self) -> bool:
+        return self.idx == self.len
 
 
-def _match_n(
-    pat: _Pattern, tgt: _Targets, mctx: _MatchContext, iter_tgt: _StepbackListIter
+def _match_quantifier(
+    mctx: _MatchContext, pat_iter: _MatchList, tgt_iter: _MatchList, pat: MQ
 ) -> dict[str, Any] | None:
-    """Match a quantifier pattern to a section of list field. If the match fails then the iterator is stepped back the
-    whole way."""
+    """Match greedy quantifier in list."""
 
-    n_max = pat.max
-    np = pat.pat
-    match_func = _MATCH_FUNCS.get(np.__class__, _match_default)
     tagss = mctx.new_tagss()
-    tgts = []
-    n = 0
 
-    while n < n_max:
-        if (t := iter_tgt.next()) is _SENTINEL:
+    iter_tgt_idx = tgt_iter.idx
+    q_pat = pat.pat
+    q_min = pat.min
+    q_max = pat.max
+    greedy = pat.greedy
+    match_func = _MATCH_FUNCS.get(q_pat.__class__, _match_default)
+    tgts = []
+    count = 0
+
+    if greedy:
+        initial_count = q_max
+        last_try_count = q_min
+    else:
+        initial_count = q_min
+        last_try_count = q_max
+
+    # match quantifier pattern up to maximum allowed number of times to list
+
+    initial_count = q_max if greedy else q_min
+
+    while count < initial_count:
+        if (t := tgt_iter.next()) is _SENTINEL:  # end of list?
             break
 
-        if (m := match_func(np, t, mctx)) is None:
-            iter_tgt.stepback()
+        if (m := match_func(q_pat, t, mctx)) is None:
+            tgt_iter.idx -= 1  # step back 1
 
             break
 
         tagss.append(m)
         tgts.append(t)
 
-        n += 1
+        count += 1
 
-    if n < pat.min:
-        iter_tgt.stepback(n)
+    if count < q_min:  # failed to meet minimum count?
+        tgt_iter.idx = iter_tgt_idx  # rewind target iterator
 
         return mctx.discard_tagss()
 
+    # now we have to format tags as would be on successful match to have available MTAG patterns when matching rest of list
+
     static_tags = pat.static_tags
+    pat_tag = pat.pat_tag
+    is_FST = mctx.is_FST
 
-    if pat_tag := pat.pat_tag:  # returning child match objects in list
-        if mctx.is_FST and tgt and not isinstance(tgt[0], str):  # str as in `globals str`, otherwise ASTs with maybe Nones, this basically decides if we need to convert AST to FST nodes
-            ms = []
+    if pat_tag:  # all matched targets and their tags under single tag as list of `FSTMatch` objects
+        if not count:
+            match_list = []
 
-            for ts, t in zip(tagss, tgts, strict=True):
-                if t and not isinstance(t, FSTView) and not (t := getattr(t, 'f', None)):
-                    raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
-
-                ms.append(FSTMatch(pat, t, ts))
-
-            tags = {pat_tag: ms, **static_tags}  # pat_tag MUST BE FIRST TAG IN DICT!
+        elif not is_FST or isinstance(tgts[0], (str, FSTView)):  # target lists can only contain ASTs, strings or FSTViews, we only need to check one element because all will be same
+            is_FST = False  # so isinstance doesn't get checked again if non-greedy
+            match_list = [FSTMatch(q_pat, t, ts) for ts, t in zip(tagss, tgts, strict=True)]  # non-node list field
 
         else:
-            tags = {pat_tag: [FSTMatch(pat, t, ts) for ts, t in zip(tagss, tgts, strict=True)], **static_tags}  # non-node list field
+            match_list = []
 
-        mctx.discard_tagss()
+            for ts, t in zip(tagss, tgts, strict=True):
+                if t and not (t := getattr(t, 'f', None)):
+                    raise MatchError('match found an AST node without an FST')  # pragma: no cover  # cannot currently happen due to how lists are handled and checked before getting here
 
-    else:  # merging tags from child matches
+                match_list.append(FSTMatch(q_pat, t, ts))  # t is FST
+
+        tagss[:] = ({pat_tag: match_list, **static_tags},)
+
+        match_list_idx = -1 if greedy else 0x7fffffffffffffff  # will be deleing FSTMatch objects at this index in greedy mode or inserting them in non-greedy
+
+    else:
+        match_list = tagss  # delete individual target match dictionaries directly
+
         if static_tags:
             tagss.append(static_tags)
 
-        tags = mctx.pop_merge_tagss()
+            match_list_idx = -2 if greedy else -1  # leaving static_tags at end of list of dicts
 
-    return tags
+        else:
+            match_list_idx = -1 if greedy else 0x7fffffffffffffff
+
+    # tags are formatted, now we try to match rest of list repeatedly decreasing quantifier matched targets until success or we go below minimum quantifier requirement
+
+    while True:  # as long as we don't hit the last allowed count try to match rest of list
+        m = _match_list(mctx, pat_iter, tgt_iter)
+
+        if m is not None:  # successful match to rest of list?
+            break
+
+        if count == last_try_count:  # if we are at end with no match then we failed
+            tgt_iter.idx = iter_tgt_idx  # rewind target iterator
+
+            return mctx.discard_tagss()
+
+        if greedy:  # if greedy then we are removing previous matches to try again one position to the left
+            del match_list[match_list_idx]  # if there are static_tags then we are deleting the dictionary before those
+
+            tgt_iter.idx -= 1  # step back 1
+            count -= 1
+
+        else:  # if non-greedy then we are attempting to match our pattern one position to the right and if successful then try match shorter list
+            if ((t := tgt_iter.next()) is _SENTINEL  # end of list?
+                or (m := match_func(q_pat, t, mctx)) is None  # no match?
+            ):
+                tgt_iter.idx = iter_tgt_idx  # rewind target iterator
+
+                return mctx.discard_tagss()
+
+            if pat_tag:
+                if is_FST:
+                    if isinstance(t, (str, FSTView)):
+                        is_FST = False
+                    elif t and not (t := getattr(t, 'f', None)):
+                        raise MatchError('match found an AST node without an FST')
+
+                match_list.insert(match_list_idx, FSTMatch(q_pat, t, m))
+
+            else:
+                match_list.insert(match_list_idx, m)
+
+            count += 1
+
+    # successful match everything, merge tags
+
+    tagss.append(m)
+
+    return mctx.pop_merge_tagss()
+
+
+def _match_list(
+    mctx: _MatchContext, pat_iter: _MatchList, tgt_iter: _MatchList
+) -> dict[str, Any] | None:
+    """Match list. The sequence to match in `tgt_iter` can be either `list[AST]` or `FSTView`. If match fails then
+    "rewinds" the iterators to their locations on entry."""
+
+    tagss = mctx.new_tagss()
+
+    iter_tgt_idx = tgt_iter.idx
+    iter_pat_idx = pat_iter.idx
+
+    while (p := pat_iter.next()) is not _SENTINEL:
+        if p in _QUANTIFIER_STANDALONES or isinstance(p, MQ):  # quantifier
+            m = _match_quantifier(mctx, pat_iter, tgt_iter, p)
+
+            if m is None:
+                break  # fail
+            if m:
+                tagss.append(m)
+
+            return mctx.pop_merge_tagss()  # _match_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
+
+        # concrete value
+
+        if (t := tgt_iter.next()) is _SENTINEL:  # if nothing left in target list then fail since we have a concrete pattern left to match
+            break  # fail
+
+        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mctx)
+
+        if m is None:
+            break  # fail
+        if m:
+            tagss.append(m)
+
+    else:
+        if tgt_iter.at_end():  # pattern sequence ended so target sequence must also be at end in order to be a success
+            return mctx.pop_merge_tagss()
+
+    pat_iter.idx = iter_pat_idx  # rewind iterators
+    tgt_iter.idx = iter_tgt_idx
+
+    return mctx.discard_tagss()
 
 
 # ......................................................................................................................
+
+def _match_quantifier_invalid_location(pat: MQ, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+    raise MatchError(f'{pat.__class__.__qualname__} quantifier pattern in invalid location')
 
 def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
 
     if isinstance(pat, list):
-        if isinstance(tgt, list):
-            pass  # noop
+        if not isinstance(tgt, list):
+            if not isinstance(tgt, FSTView):
+                return None
 
-        elif isinstance(tgt, FSTView):
             if not len(tgt):
                 tgt = []
             elif isinstance(tgt[0], (str, FSTView)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
@@ -4015,77 +4236,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, mctx: _MatchContext) -> Mappin
             else:
                 tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
 
-        else:
-            return None
-
-        # this is the list field matching where wildcards and quantifier patterns are handled
-
-        tagss = mctx.new_tagss()
-        iter_pat = iter(pat)
-        iter_tgt = _StepbackListIter(tgt)
-
-        while (p := next(iter_pat, _SENTINEL)) is not _SENTINEL:
-            if p is not ...:  # concrete or quantifier
-                if isinstance(p, MN): # quantifier
-                    if (m := _match_n(p, tgt, mctx, iter_tgt)) is None:
-                        return mctx.discard_tagss()
-
-                    tagss.append(m)
-
-                else:  # concrete
-                    if (t := iter_tgt.next()) is _SENTINEL:  # if ast list ended before can match then fail
-                        return mctx.discard_tagss()
-
-                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mctx)
-
-                    if m is None:  # if not match then fail as this is an expected concrete match
-                        return mctx.discard_tagss()
-                    if m:
-                        tagss.append(m)
-
-                continue
-
-            # wildcard skip
-
-            while (p := next(iter_pat, _SENTINEL)) is not _SENTINEL:
-                if p is ...:  # eat any repeated wildcards
-                    continue
-
-                break  # found pattern to match against
-
-            else:  # ended on ..., doesn't matter what is left in the ast list, its a match
-                break
-
-            # got p to match against, now we walk the target ast list until find a match or not
-
-            if isinstance(p, MN): # quantifier
-                while (m := _match_n(p, tgt, mctx, iter_tgt)) is None:
-                    if iter_tgt.next() is _SENTINEL:  # advance one unit and try again
-                        return mctx.discard_tagss()
-
-                tagss.append(m)
-
-            else:  # concrete
-                while (t := iter_tgt.next()) is not _SENTINEL:
-                    m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mctx)
-
-                    if m is None:  # if not match then keep looking (because p preceded by ...)
-                        continue
-                    if m:
-                        tagss.append(m)
-
-                    break
-
-                else:  # ast list ends before being able to make concrete match to concrete p
-                    return mctx.discard_tagss()
-
-            continue  # found concrete / concrete match, iterate on to next pattern value
-
-        else:
-            if iter_tgt.next() is not _SENTINEL:  # if concrete pattern list ended without ... and there are still elements in the ast list then fail
-                return mctx.discard_tagss()
-
-        return mctx.pop_merge_tagss()
+        return _match_list(mctx, _MatchList(pat), _MatchList(tgt))
 
     # maybe pattern is a previously matched multinode FSTView (Dict, MatchMapping, arguments)
 
@@ -4193,7 +4344,7 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mctx: _MatchContext) -> Map
 
     return mctx.pop_merge_tagss()
 
-def _match_node_Dict(pat: Dict | MDict, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """`Dict` or `MDict` leaf node. Possibly match against a single-item `FSTView_Dict`."""
 
     if not isinstance(tgt, FSTView_Dict):
@@ -4305,7 +4456,7 @@ def _match_node_MatchMapping(
 
     return {**mk, **mp}
 
-def _match_node_arguments(pat: arguments | Marguments, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
+def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """`arguments` or `Marguments` leaf node. Possibly match against a single-item `FSTView_arguments`. Will match a
     single argument with possibly a default to a single-argument `FSTView_arguments`. Pattern `args` argument matches
     to target `args`, `posonlyargs` or `kwonlyargs`. Other type pattern args must match exactly (`posonlyargs` only to
@@ -4523,6 +4674,9 @@ def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mctx: _Matc
 def _match_type(pat: type, tgt: _Targets, mctx: _MatchContext) -> Mapping[str, Any] | None:
     """Just match the `AST` type (or equivalent `MAST` type)."""
 
+    if issubclass(pat, MQ):
+        raise MatchError(f'{pat.__qualname__} quantifier pattern in invalid location')
+
     if issubclass(pat, M_Pattern):
         pat = pat._types
 
@@ -4592,17 +4746,23 @@ _MATCH_FUNCS = {
     MNOT:                MNOT._match,
     MOR:                 MOR._match,
     MAND:                MAND._match,
-    MANY:                _match_node,  # _match_node_arbitrary_fields,
+    MTYPES:              _match_node,  # _match_node_arbitrary_fields,
     MOPT:                MOPT._match,
     MRE:                 MRE._match,
     MCB:                 MCB._match,
     MTAG:                MTAG._match,
-    MN:                  MN._match,
-    MSTAR:               MSTAR._match,
-    MPLUS:               MPLUS._match,
-    MQMARK:              MQMARK._match,
-    MMIN:                MMIN._match,
-    MMAX:                MMAX._match,
+    MQ:                  _match_quantifier_invalid_location,
+    MQ.NG:               _match_quantifier_invalid_location,
+    MQSTAR:              _match_quantifier_invalid_location,
+    MQSTAR.NG:           _match_quantifier_invalid_location,
+    MQPLUS:              _match_quantifier_invalid_location,
+    MQPLUS.NG:           _match_quantifier_invalid_location,
+    MQ01:                _match_quantifier_invalid_location,
+    MQ01.NG:             _match_quantifier_invalid_location,
+    MQMIN:               _match_quantifier_invalid_location,
+    MQMIN.NG:            _match_quantifier_invalid_location,
+    MQMAX:               _match_quantifier_invalid_location,
+    MQMAX.NG:            _match_quantifier_invalid_location,
     AST:                 _match_node,  # _match_node_nonleaf,
     Add:                 _match_node,
     And:                 _match_node,
@@ -4922,7 +5082,7 @@ _LEAF_ASTS_FUNCS = {
     MNOT:         MNOT._leaf_asts,
     MOR:          MOR._leaf_asts,
     MAND:         MAND._leaf_asts,
-    MANY:         MANY._leaf_asts,
+    MTYPES:       MTYPES._leaf_asts,
     MRE:          _leaf_asts_all,
     MCB:          _leaf_asts_all,
     MTAG:         _leaf_asts_all,
@@ -4994,7 +5154,7 @@ def match(
 
     >>> pat = MCall(
     ...    func=Attribute(Name('logger'), 'info'),
-    ...    keywords=[..., M(cid_kw=Mkeyword('cid')), ...]
+    ...    keywords=[MQSTAR, M(cid_kw=Mkeyword('cid')), MQSTAR]
     ... )
 
     >>> FST('logger.info("text", a=1, cid=123, b=2)') .match(pat)
@@ -5198,7 +5358,7 @@ def sub(
 
     >>> pat = MCall(
     ...    func=M(func=MAttribute('logger', 'info')),
-    ...    keywords=MNOT([..., Mkeyword('cid'), ...]),
+    ...    keywords=MNOT([MQSTAR, Mkeyword('cid'), MQSTAR]),
     ...    _args=M(all_args=...),
     ... )
 

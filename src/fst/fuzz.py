@@ -1769,7 +1769,7 @@ class MatchSearch(Fuzzy):
         elif r == 1:
             return MNOT(self.rnd_pat(max_depth))
         elif r == 2:
-            return MANY(choice(self.ALL_ASTS__ALL) for _ in range(randint(self.MANY_MIN, self.MANY_MAX)))
+            return MTYPES(choice(self.ALL_ASTS__ALL) for _ in range(randint(self.MANY_MIN, self.MANY_MAX)))
         elif r == 3:
             return MOR(*(self.rnd_pat(max_depth) for _ in range(randint(self.MOR_MIN, self.MOR_MAX))))
         elif r == 4:

@@ -19,7 +19,7 @@ Here is an example of a structural match to give you an idea, it will be explain
 
 >>> pat = MCall(
 ...    MAttribute('logger', 'info'),
-...    keywords=[..., Mkeyword('cid'), ...],
+...    keywords=[MQSTAR, Mkeyword('cid'), MQSTAR],
 ... )
 
 >>> bool(pat.match(FST('logger.info(a, cid=1)')))
@@ -54,7 +54,7 @@ If matching from the `FST` node then you can use a pure or mixed `AST` pattern (
 >>> ast_pat = Call(
 ...    Attribute('logger', 'info'),
 ...    ...,
-...    [..., keyword('cid', ...), ...],
+...    [MQSTAR, keyword('cid', ...), MQSTAR],
 ... )
 
 >>> bool(FST('logger.info(a, cid=1)').match(ast_pat))
@@ -117,7 +117,7 @@ True
 
 These are matched by value even in list fields of strings.
 
->>> bool(FST('global a, b, c, d, e, f').match(Global([..., 'c', ...])))
+>>> bool(FST('global a, b, c, d, e, f').match(Global([MQSTAR, 'c', MQSTAR])))
 True
 
 
@@ -188,10 +188,10 @@ False
 
 Its not really meant to be used like this but rather deeper in pattern structures.
 
->>> bool(MList([..., MCall, ...]).match(FST('[a, b, c, d]')))
+>>> bool(MList([MQSTAR, MCall, MQSTAR]).match(FST('[a, b, c, d]')))
 False
 
->>> bool(MList([..., MCall, ...]).match(FST('[a, b(), c, d]')))
+>>> bool(MList([MQSTAR, MCall, MQSTAR]).match(FST('[a, b(), c, d]')))
 True
 
 
@@ -284,13 +284,13 @@ The `M()` pattern can be nested to any level and propagates successful match tag
 
 This pattern can go almost anywhere and tag nodes, primitives, `None` and even entire list fields.
 
->>> MAST(names=M(l=[...])).match(FST('global a, b, c'))
+>>> MAST(names=M(l=[MQSTAR])).match(FST('global a, b, c'))
 <FSTMatch <Global ROOT 0,0..0,14> {'l': <<Global ROOT 0,0..0,14>.names>}>
 
 Here it returned an `FSTView` for the list because the node we used as an `FST`. In case of `AST` it just returns what
 is there.
 
->>> MAST(names=M(l=[...])).match(ast.parse('global a, b, c').body[0])
+>>> MAST(names=M(l=[MQSTAR])).match(ast.parse('global a, b, c').body[0])
 <FSTMatch Global(names=['a', 'b', 'c']) {'l': ['a', 'b', 'c']}>
 
 
@@ -340,14 +340,14 @@ Or to the individual elements.
 <FSTMatch <Name ROOT 0,0..0,1> {'static': True, 'tag_c': <Name ROOT 0,0..0,1>}>
 
 
-## `MANY()` pattern
+## `MTYPES()` pattern
 
 This is essentially a combination of type check with arbitrary fields. It takes an iterable of `AST` and `MAST` types
 and an arbitrarly list of keyword-specified fields to match.
 
 The following will match any statement node which can and does have a docstring
 
->>> pat = MANY(
+>>> pat = MTYPES(
 ...     (FunctionDef, AsyncFunctionDef, ClassDef),
 ...     body=[Expr(Constant(str)), ...],
 ... )
@@ -366,7 +366,7 @@ The following will match any statement node which can and does have a docstring
 
 Multiple fields to match.
 
->>> pat = MANY(
+>>> pat = MTYPES(
 ...     (FunctionDef, AsyncFunctionDef),
 ...     body=[Expr(Constant(str)), ...],
 ...     returns='int',
@@ -535,139 +535,139 @@ As stated, the tag to match does not have to come from an actual previous match,
 
 Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
 
->>> MDict(_all=[M(s=...), ..., MTAG(e='s')]).match(FST('{1:a,1:a}'))
+>>> MDict(_all=[M(s=...), MQSTAR, MTAG(e='s')]).match(FST('{1:a,1:a}'))
 <FSTMatch <Dict ROOT 0,0..0,9> {'s': <<Dict ROOT 0,0..0,9>._all[:1]>, 'e': <<Dict ROOT 0,0..0,9>._all[1:2]>}>
 
 >>> MDict(_all=[M(start=...), ..., MTAG('start')]).match(FST('{**b, 1: a, **b}'))
 <FSTMatch <Dict ROOT 0,0..0,16> {'start': <<Dict ROOT 0,0..0,16>._all[:1]>}>
 
 
-## `MN()` quantifier pattern
+## `MQ()` quantifier pattern
 
 This is essentially a counted wildcard for use inside list fields to match a pattern between a minimum and maximum
 number of times.
 
->>> MList([MN('a', 1, 2)]).match(FST('[]'))
+>>> MList([MQ('a', 1, 2)]).match(FST('[]'))
 
->>> MList([MN('a', 1, 2)]).match(FST('[a]'))
+>>> MList([MQ('a', 1, 2)]).match(FST('[a]'))
 <FSTMatch <List ROOT 0,0..0,3>>
 
->>> MList([MN('a', 1, 2)]).match(FST('[a, a]'))
+>>> MList([MQ('a', 1, 2)]).match(FST('[a, a]'))
 <FSTMatch <List ROOT 0,0..0,6>>
 
->>> MList([MN('a', 1, 2)]).match(FST('[a, a, a]'))
+>>> MList([MQ('a', 1, 2)]).match(FST('[a, a, a]'))
 
 The pattern above will only match 1 or 2 instances of `a`. It failed the last check because there were three `a`s and
 we did not account for that in the full pattern.
 
->>> MList([MN('a', 1, 2), ...]).match(FST('[a, a, a]'))
+>>> MList([MQ('a', 1, 2), ...]).match(FST('[a, a, a]'))
 <FSTMatch <List ROOT 0,0..0,9>>
 
 Now we tag it to show that it only "consumed" two of the `a` instances.
 
->>> MList([MN(t='a', min=1, max=2), ...]).match(FST('[a, a, a]'))
+>>> MList([MQ(t='a', min=1, max=2), ...]).match(FST('[a, a, a]'))
 <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
 When a quantifier pattern is tagged then it returns a list of `FSTMatch` objects in that tag of all the nodes that were
 matched. If used with a tag like this then any tags from the children are made available in their individual match
 objects.
 
->>> MList([MN(t=M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
+>>> MList([MQ(t=M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
 <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2> {'u': <Name 0,1..0,2>}>, <FSTMatch <Name 0,4..0,5> {'u': <Name 0,4..0,5>}>]}>
 
 If the pattern is untagged however, the tags from all the children are collapsed and the latter matches override
 earlier tag values. All the tags are put into the parent match object and the matched nodes do not get their own
 individual match objects.
 
->>> MList([MN(M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
+>>> MList([MQ(M(u=MRE('a|b')), min=1, max=2), ...]).match(FST('[a, b, a]'))
 <FSTMatch <List ROOT 0,0..0,9> {'u': <Name 0,4..0,5>}>
 
 One case to look out for is when using a quantifier with a minimum of 0. This can always match something since it can
 match nonexistent elements.
 
->>> MList([MN(t='a', min=0, max=2), ...]).match(FST('[b, b, b]'))
+>>> MList([MQ(t='a', min=0, max=2), MQSTAR]).match(FST('[b, b, b]'))
 <FSTMatch <List ROOT 0,0..0,9> {'t': []}>
 
 There was a successful match against 0 elements in this case.
 
 
-## `MSTAR()`, `MPLUS()`, `MQMARK()`, `MMIN()` and `MMAX()` quantifier patterns
+## `MQSTAR()`, `MQPLUS()`, `MQ01()`, `MQMIN()` and `MQMAX()` quantifier patterns
 
-These are just convenience classes subclassed off of `MN` which provide predefined `min` and / or `max` values. `MSTAR`
+These are just convenience classes subclassed off of `MQ` which provide predefined `min` and / or `max` values. `MQSTAR`
 is match zero or more.
 
->>> bool(MList([MSTAR('a')]).match(FST('[]')))
+>>> bool(MList([MQSTAR('a')]).match(FST('[]')))
 True
 
->>> bool(MList([MSTAR('a')]).match(FST('[a]')))
+>>> bool(MList([MQSTAR('a')]).match(FST('[a]')))
 True
 
->>> bool(MList([MSTAR('a')]).match(FST('[a, a]')))
+>>> bool(MList([MQSTAR('a')]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MSTAR('a')]).match(FST('[a, a, a]')))
+>>> bool(MList([MQSTAR('a')]).match(FST('[a, a, a]')))
 True
 
-`MPLUS` is one or more.
+`MQPLUS` is one or more.
 
->>> bool(MList([MPLUS('a')]).match(FST('[]')))
+>>> bool(MList([MQPLUS('a')]).match(FST('[]')))
 False
 
->>> bool(MList([MPLUS('a')]).match(FST('[a]')))
+>>> bool(MList([MQPLUS('a')]).match(FST('[a]')))
 True
 
->>> bool(MList([MPLUS('a')]).match(FST('[a, a]')))
+>>> bool(MList([MQPLUS('a')]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MPLUS('a')]).match(FST('[a, a, a]')))
+>>> bool(MList([MQPLUS('a')]).match(FST('[a, a, a]')))
 True
 
-`MQMARK` is zero or one, just like the regex `?` question mark.
+`MQ01` is zero or one, just like the regex `?` question mark.
 
->>> bool(MList([MQMARK('a')]) .match(FST('[]')))
+>>> bool(MList([MQ01('a')]) .match(FST('[]')))
 True
 
->>> bool(MList([MQMARK('a')]) .match(FST('[a]')))
+>>> bool(MList([MQ01('a')]) .match(FST('[a]')))
 True
 
->>> bool(MList([MQMARK('a')]) .match(FST('[b]')))
+>>> bool(MList([MQ01('a')]) .match(FST('[b]')))
 False
 
->>> bool(MList([MQMARK('a')]) .match(FST('[a, a]')))
+>>> bool(MList([MQ01('a')]) .match(FST('[a, a]')))
 False
 
->>> bool(MList([MQMARK('a'), ...]) .match(FST('[a, a]')))
+>>> bool(MList([MQ01('a'), ...]) .match(FST('[a, a]')))
 True
 
-`MMIN` is expectedly minimum.
+`MQMIN` is expectedly minimum.
 
->>> bool(MList([MMIN('a', 2)]).match(FST('[]')))
+>>> bool(MList([MQMIN('a', 2)]).match(FST('[]')))
 False
 
->>> bool(MList([MMIN('a', 2)]).match(FST('[a]')))
+>>> bool(MList([MQMIN('a', 2)]).match(FST('[a]')))
 False
 
->>> bool(MList([MMIN('a', 2)]).match(FST('[a, a]')))
+>>> bool(MList([MQMIN('a', 2)]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MMIN('a', 2)]).match(FST('[a, a, a]')))
+>>> bool(MList([MQMIN('a', 2)]).match(FST('[a, a, a]')))
 True
 
-And `MMAX` is maximum.
+And `MQMAX` is maximum.
 
->>> bool(MList([MMAX('a', 2)]).match(FST('[]')))
+>>> bool(MList([MQMAX('a', 2)]).match(FST('[]')))
 True
 
->>> bool(MList([MMAX('a', 2)]).match(FST('[a]')))
+>>> bool(MList([MQMAX('a', 2)]).match(FST('[a]')))
 True
 
->>> bool(MList([MMAX('a', 2)]).match(FST('[a, a]')))
+>>> bool(MList([MQMAX('a', 2)]).match(FST('[a, a]')))
 True
 
->>> bool(MList([MMAX('a', 2)]).match(FST('[a, a, a]')))
+>>> bool(MList([MQMAX('a', 2)]).match(FST('[a, a, a]')))
 False
 
->>> bool(MList([MMAX('a', 2), ...]).match(FST('[a, a, a]')))
+>>> bool(MList([MQMAX('a', 2), ...]).match(FST('[a, a, a]')))
 True
 
 
