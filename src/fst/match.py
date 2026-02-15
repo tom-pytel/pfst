@@ -344,7 +344,7 @@ __all__ = [
 ]
 
 
-_SENTINEL = object()
+_SENTINEL = type('_SENTINEL', (object,), {'__repr__': lambda s: '<SENTINEL>'})()  # object()
 _EMPTY_LIST = []
 _EMPTY_SET = set()
 _EMPTY_DICT = {}
@@ -2773,6 +2773,7 @@ class M_type_params(M_slice):  # pragma: no cover
 
 
 # ......................................................................................................................
+# TODO: clean up class hirearchy
 
 class M(M_Pattern):
     """Tagging pattern container. If the given pattern matches then tags specified here will be returned in the
@@ -3361,6 +3362,10 @@ class MCB(M):
         in case a successful match might want to return a falsey value, it would need to be accomodated somehow (wrapped
         in a tuple maybe). Or just provide an explicit `fail_obj` to check against to determine failure.
     - `fail_obj`: An explicit object to check identity against to determine if the callback failed.
+    - `pass_tags`: If `False` then the normal single-object callback format is used. If `True` then will call the
+        callback with an additional parameter which is a tag getter function which allows the callback to get tags which
+        have been set up to this point. The tag getter works in the same way as `dict.get()` and the default for no tag
+        is `fst.match.NoTag`.
 
     **Examples:**
 
@@ -3414,20 +3419,40 @@ class MCB(M):
 
     >>> pat.match(FST('name'))
     <class 'fst.fst.FST'>
+
+    A tag getter function can be passed to the callback so it can request tags that have been set so far.
+
+    >>> mcb = MCB(lambda t, g: (print(f"this: {t}, prev: {g('prev')}"),), pass_tags=True)
+    >>> m = M(prev=mcb)
+
+    >>> MList([m, m, m]) .match(FST('[a, b, c]'))
+    this: <Name 0,1..0,2>, prev: <NoTag>
+    this: <Name 0,4..0,5>, prev: <Name 0,1..0,2>
+    this: <Name 0,7..0,8>, prev: <Name 0,4..0,5>
+    <FSTMatch <List ROOT 0,0..0,9> {'prev': <Name 0,7..0,8>}>
     """
+
+    CallbackType = (
+        Callable[[_Target], object] |
+        Callable[[_TargetFST], object] |
+        Callable[[_Target, Callable[[str, object], object]], object] |
+        Callable[[_TargetFST, Callable[[str, object], object]], object]
+    )
 
     _requires = 'callback'  # for printing error message
 
-    pat: Callable[[_Target], object] | Callable[[_TargetFST], object]  ; """@private"""
+    pat: CallbackType  ; """@private"""
     tag_ret: bool  ; """@private"""
     fail_obj: object  ; """@private"""
+    pass_tags: bool  ; """@private"""
 
     def __init__(
         self,
-        anon_callback: Callable[[_Target], object] | Callable[[_TargetFST], object] = _SENTINEL,
+        anon_callback: CallbackType = _SENTINEL,
         /,
         tag_ret: bool = False,
         fail_obj: object = _SENTINEL,
+        pass_tags: bool = False,
         **tags,
     ) -> None:
         M.__init__(self, anon_callback, **tags)
@@ -3437,6 +3462,7 @@ class MCB(M):
 
         self.tag_ret = tag_ret
         self.fail_obj = fail_obj
+        self.pass_tags = pass_tags
 
     def __repr__(self) -> str:
         params =[f'{pat_tag}={self.pat.__qualname__}' if (pat_tag := self.pat_tag) else self.pat.__qualname__]
@@ -3454,9 +3480,9 @@ class MCB(M):
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if not mstate.is_FST or not isinstance(tgt, AST):
-            m = self.pat(tgt)
+            m = self.pat(tgt, mstate.get_tag) if self.pass_tags else self.pat(tgt)
         elif tgt := getattr(tgt, 'f', None):
-            m = self.pat(tgt)
+            m = self.pat(tgt, mstate.get_tag) if self.pass_tags else self.pat(tgt)
         else:
             raise MatchError('match found an AST node without an FST')
 
@@ -3525,7 +3551,7 @@ class MTAG(M):
         self._validate_tags((self.pat,))
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-        if (p := mstate.get_tag(self.pat)) is _SENTINEL:
+        if (p := mstate.get_tag(self.pat, _SENTINEL)) is _SENTINEL:
             return None
 
         if isinstance(p, fst.FST):
@@ -4009,7 +4035,7 @@ class _MatchState:
 
         return tags
 
-    def get_tag(self, tag: str) -> object:
+    def get_tag(self, tag: str, default: object = NoTag, /) -> object:
         """Walk running list of dictionaries backwards checking for `tag`."""
 
         for tagss in reversed(self.all_tagss):
@@ -4017,7 +4043,7 @@ class _MatchState:
                 if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
                     return v
 
-        return _SENTINEL
+        return default
 
     def fstview_as_pat(self, view: FSTView) -> _Pattern:
         """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached."""
