@@ -482,12 +482,12 @@ is a truthy value, otherwise the match is assumed to have failed).
 <FSTMatch <Name ROOT 0,0..0,9> {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
 
 An explicit fail value can be provided in case you want to be able to tag falsey values directly, it is checked by
-equality.
+identity.
 
->>> MCB(tag=lambda f: False, tag_ret=True, fail_val=None).match(FST('a'))
+>>> MCB(tag=lambda f: False, tag_ret=True, fail_obj=None).match(FST('a'))
 <FSTMatch <Name ROOT 0,0..0,1> {'tag': False}>
 
->>> MCB(tag=lambda f: None, tag_ret=True, fail_val=None).match(FST('a'))
+>>> MCB(tag=lambda f: None, tag_ret=True, fail_obj=None).match(FST('a'))
 
 The type of node passed to the callback depends on the type of tree that match is called on.
 

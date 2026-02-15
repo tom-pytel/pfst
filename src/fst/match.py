@@ -348,6 +348,7 @@ _SENTINEL = object()
 _EMPTY_LIST = []
 _EMPTY_SET = set()
 _EMPTY_DICT = {}
+_EMPTY_MAPPINGPROXY = MappingProxyType(_EMPTY_DICT)
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
 __DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique, doesn't need to be though
 
@@ -410,7 +411,7 @@ class FSTMatch:
     def __init__(self, pattern: _Pattern, matched: _TargetsOrFST, tags: Mapping[str, Any]) -> None:
         self.pattern = pattern
         self.matched = matched
-        self.tags = MappingProxyType(tags)
+        self.tags = MappingProxyType(tags) if tags else _EMPTY_MAPPINGPROXY
 
     def __repr__(self) -> str:
         if tags := self.tags:
@@ -2773,140 +2774,6 @@ class M_type_params(M_slice):  # pragma: no cover
 
 # ......................................................................................................................
 
-class _MatchState:
-    """Store running tags being built up during matching, which may be queried by `MTAG`. `tagss` is the plural of
-    `tags` and indicates a list of dictionaries of tags. Merged on exit from each node that builds them up as a list
-    like this."""
-
-    is_FST: bool
-    ast_ctx: bool
-    all_tagss: list[list[dict[str, Any]]]
-
-    cache: dict
-    """Stores:
-    - `{FSTView: _Pattern}`: For temporary conversions of `FSTView`s to `AST` patterns, specifically for `MTAG` match
-        previously matched multinode item from Dict, MatchMapping or arguments.
-    - `(pat_arg, pat_dflt, arg_fields, dflt_fields)`: For validated match parameters for matching a single `arguments`
-        arg against `FSTView`.
-    """
-
-    def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
-        self.is_FST = is_FST
-        self.ast_ctx = ast_ctx
-        self.all_tagss = []
-        self.cache = {}
-
-    def clear(self) -> None:
-        """Clean up anything from a previous match attempt."""
-
-        self.all_tagss.clear()
-        self.cache.clear()
-
-    def new_tagss(self) -> list:
-        """Add new list of tags dictionaries to add to, which may be discarded in its entirety quickly if match fails
-        that part, or merged and readded to the previous running list."""
-
-        self.all_tagss.append(tagss := [])
-
-        return tagss
-
-    def discard_tagss(self) -> None:
-        """Discard top level list of tags."""
-
-        del self.all_tagss[-1]
-
-        return None
-
-    def pop_merge_tagss(self) -> dict[str, Any]:
-        """Pop top level list of tags and merge into a single dictionary and return. No guarantee will be pushed back
-        to running list of lists."""
-
-        tagss = self.all_tagss.pop()
-
-        if not tagss:
-            return _EMPTY_DICT
-        if len(tagss) == 1:
-            return tagss[0]
-
-        tags = {}
-
-        for ts in tagss:
-            tags.update(ts)
-
-        return tags
-
-    def get_tag(self, tag: str) -> object:
-        """Walk running list of dictionaries backwards checking for `tag`."""
-
-        for tagss in reversed(self.all_tagss):
-            for m in reversed(tagss):
-                if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
-                    return v
-
-        return _SENTINEL
-
-    def fstview_as_pat(self, view: FSTView) -> _Pattern:
-        """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached."""
-
-        if pat := self.cache.get(view):
-            pass  # noop
-
-        elif isinstance(view, FSTView_Dict):
-            start, stop = view.start_and_stop
-            ast = view.base.a
-            pat = self.cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
-
-        elif isinstance(view, FSTView_arguments):
-            allargs = view.base._cached_allargs()
-            pat_args = {
-                'posonlyargs': [],
-                'args': [],
-                'vararg': [],
-                'kwonlyargs': [],
-                'kw_defaults': [],
-                'kwarg': [],
-                'defaults': [],
-            }
-
-            for v in view:
-                a = allargs[v.start]
-                f = a.f
-                field = f.pfield.name
-
-                pat_args[field].append(a)
-
-                if (d := f.next()) and (d_field := d.pfield.name) in _NODE_ARGUMENTS_DEFAULTS_FIELDS:
-                    pat_args[d_field].append(d.a)
-                elif field == 'kwonlyargs':
-                    pat_args['kw_defaults'].append(None)
-
-            pat = self.cache[view] = Marguments(
-                posonlyargs=pat_args['posonlyargs'] or ...,
-                args=pat_args['args'] or ...,
-                vararg=a[0] if (a := pat_args['vararg']) else ...,
-                kwonlyargs=pat_args['kwonlyargs'] or ...,
-                kw_defaults=pat_args['kw_defaults'],
-                kwarg=a[0] if (a := pat_args['kwarg']) else ...,
-                defaults=pat_args['defaults'],
-                _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
-            )
-
-        elif isinstance(view, FSTView_MatchMapping):
-            start, stop = view.start_and_stop
-            ast = view.base.a
-
-            if view.has_rest:
-                stop -= 1
-                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop], ast.rest)
-            else:
-                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
-
-        else:
-            raise MatchError('unsupported FSTView type')
-
-        return pat
-
-
 class M(M_Pattern):
     """Tagging pattern container. If the given pattern matches then tags specified here will be returned in the
     `FSTMatch` result object. The tags can be static values but also the matched node can be returned in a given tag if
@@ -3492,8 +3359,8 @@ class MCB(M):
         target matched. This only applies if the callback is passed as the first keyword in `tags` instead of in
         `anon_callback`, as in that case no target tag is available to return. Also keep in mind the "truthy value" bit
         in case a successful match might want to return a falsey value, it would need to be accomodated somehow (wrapped
-        in a tuple maybe). Or just provide an explicit `fail_val` to check against to determine failure.
-    - `fail_val`: An explicit value to check equality against to determine if the callback failed.
+        in a tuple maybe). Or just provide an explicit `fail_obj` to check against to determine failure.
+    - `fail_obj`: An explicit object to check identity against to determine if the callback failed.
 
     **Examples:**
 
@@ -3531,12 +3398,12 @@ class MCB(M):
     <FSTMatch <Name ROOT 0,0..0,9> {'upper': 'SOME_NAME', 'node': <Name ROOT 0,0..0,9>}>
 
     An explicit fail value can be provided in case you want to be able to tag falsey values directly, it is checked by
-    equality.
+    identity.
 
-    >>> MCB(tag=lambda f: False, tag_ret=True, fail_val=None) .match(FST('a'))
+    >>> MCB(tag=lambda f: False, tag_ret=True, fail_obj=None) .match(FST('a'))
     <FSTMatch <Name ROOT 0,0..0,1> {'tag': False}>
 
-    >>> MCB(tag=lambda f: None, tag_ret=True, fail_val=None) .match(FST('a'))
+    >>> MCB(tag=lambda f: None, tag_ret=True, fail_obj=None) .match(FST('a'))
 
     The type of node passed to the callback depends on the type of tree that `match()` is called on.
 
@@ -3553,14 +3420,14 @@ class MCB(M):
 
     pat: Callable[[_Target], object] | Callable[[_TargetFST], object]  ; """@private"""
     tag_ret: bool  ; """@private"""
-    fail_val: object  ; """@private"""
+    fail_obj: object  ; """@private"""
 
     def __init__(
         self,
         anon_callback: Callable[[_Target], object] | Callable[[_TargetFST], object] = _SENTINEL,
         /,
         tag_ret: bool = False,
-        fail_val: object = _SENTINEL,
+        fail_obj: object = _SENTINEL,
         **tags,
     ) -> None:
         M.__init__(self, anon_callback, **tags)
@@ -3569,7 +3436,7 @@ class MCB(M):
             raise ValueError('MCB can never tag the callback return since the callback does not have a tag')
 
         self.tag_ret = tag_ret
-        self.fail_val = fail_val
+        self.fail_obj = fail_obj
 
     def __repr__(self) -> str:
         params =[f'{pat_tag}={self.pat.__qualname__}' if (pat_tag := self.pat_tag) else self.pat.__qualname__]
@@ -3577,8 +3444,8 @@ class MCB(M):
         if tag_ret := self.tag_ret:
             params.append(f'tag_ret={tag_ret}')
 
-        if (fail_val := self.fail_val) is not _SENTINEL:
-            params.append(f'fail_val={_rpr(fail_val)}')
+        if (fail_obj := self.fail_obj) is not _SENTINEL:
+            params.append(f'fail_obj={_rpr(fail_obj)}')
 
         if static_tags := self.static_tags:
             params.append(', '.join(f'{t}={_rpr(p)}' for t, p in static_tags.items()))
@@ -3593,9 +3460,9 @@ class MCB(M):
         else:
             raise MatchError('match found an AST node without an FST')
 
-        fail_val = self.fail_val
+        fail_obj = self.fail_obj
 
-        if (not m if fail_val is _SENTINEL else m == fail_val):
+        if (not m if fail_obj is _SENTINEL else m is fail_obj):
             return None
 
         if pat_tag := self.pat_tag:
@@ -3652,11 +3519,10 @@ class MTAG(M):
 
     pat: str  ; """@private"""  # this is really a source tag name here
 
-    def __init__(self, anon_tag: str | None = None, /, **tags) -> None:
-        M.__init__(self, anon_tag or _SENTINEL, **tags)
+    def __init__(self, anon_tag: str = _SENTINEL, /, **tags) -> None:
+        M.__init__(self, anon_tag, **tags)
 
         self._validate_tags((self.pat,))
-        self._validate_tags(self.static_tags)
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if (p := mstate.get_tag(self.pat)) is _SENTINEL:
@@ -4073,12 +3939,146 @@ MQN.NG = NG
 del NG
 
 
-# ......................................................................................................................
+# ----------------------------------------------------------------------------------------------------------------------
 
 _QUANTIFIER_STANDALONES = {MQSTAR, MQPLUS, MQ01, MQSTAR.NG, MQPLUS.NG, MQ01.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
 
 _NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
+
+
+class _MatchState:
+    """Store running tags being built up during matching, which may be queried by `MTAG`. `tagss` is the plural of
+    `tags` and indicates a list of dictionaries of tags. Merged on exit from each node that builds them up as a list
+    like this."""
+
+    is_FST: bool
+    ast_ctx: bool
+    all_tagss: list[list[dict[str, Any]]]
+
+    cache: dict
+    """Stores:
+    - `{FSTView: _Pattern}`: For temporary conversions of `FSTView`s to `AST` patterns, specifically for `MTAG` match
+        previously matched multinode item from Dict, MatchMapping or arguments.
+    - `(pat_arg, pat_dflt, arg_fields, dflt_fields)`: For validated match parameters for matching a single `arguments`
+        arg against `FSTView`.
+    """
+
+    def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
+        self.is_FST = is_FST
+        self.ast_ctx = ast_ctx
+        self.all_tagss = []
+        self.cache = {}
+
+    def clear(self) -> None:
+        """Clean up anything from a previous match attempt."""
+
+        self.all_tagss.clear()
+        self.cache.clear()
+
+    def new_tagss(self) -> list:
+        """Add new list of tags dictionaries to add to, which may be discarded in its entirety quickly if match fails
+        that part, or merged and readded to the previous running list."""
+
+        self.all_tagss.append(tagss := [])
+
+        return tagss
+
+    def discard_tagss(self) -> None:
+        """Discard top level list of tags."""
+
+        del self.all_tagss[-1]
+
+        return None
+
+    def pop_merge_tagss(self) -> dict[str, Any]:
+        """Pop top level list of tags and merge into a single dictionary and return. No guarantee will be pushed back
+        to running list of lists."""
+
+        tagss = self.all_tagss.pop()
+
+        if not tagss:
+            return _EMPTY_DICT
+        if len(tagss) == 1:
+            return tagss[0]
+
+        tags = {}
+
+        for ts in tagss:
+            tags.update(ts)
+
+        return tags
+
+    def get_tag(self, tag: str) -> object:
+        """Walk running list of dictionaries backwards checking for `tag`."""
+
+        for tagss in reversed(self.all_tagss):
+            for m in reversed(tagss):
+                if (v := m.get(tag, _SENTINEL)) is not _SENTINEL:
+                    return v
+
+        return _SENTINEL
+
+    def fstview_as_pat(self, view: FSTView) -> _Pattern:
+        """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached."""
+
+        if pat := self.cache.get(view):
+            pass  # noop
+
+        elif isinstance(view, FSTView_Dict):
+            start, stop = view.start_and_stop
+            ast = view.base.a
+            pat = self.cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
+
+        elif isinstance(view, FSTView_arguments):
+            allargs = view.base._cached_allargs()
+            pat_args = {
+                'posonlyargs': [],
+                'args': [],
+                'vararg': [],
+                'kwonlyargs': [],
+                'kw_defaults': [],
+                'kwarg': [],
+                'defaults': [],
+            }
+
+            for v in view:
+                a = allargs[v.start]
+                f = a.f
+                field = f.pfield.name
+
+                pat_args[field].append(a)
+
+                if (d := f.next()) and (d_field := d.pfield.name) in _NODE_ARGUMENTS_DEFAULTS_FIELDS:
+                    pat_args[d_field].append(d.a)
+                elif field == 'kwonlyargs':
+                    pat_args['kw_defaults'].append(None)
+
+            pat = self.cache[view] = Marguments(
+                posonlyargs=pat_args['posonlyargs'] or ...,
+                args=pat_args['args'] or ...,
+                vararg=a[0] if (a := pat_args['vararg']) else ...,
+                kwonlyargs=pat_args['kwonlyargs'] or ...,
+                kw_defaults=pat_args['kw_defaults'],
+                kwarg=a[0] if (a := pat_args['kwarg']) else ...,
+                defaults=pat_args['defaults'],
+                _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
+            )
+
+        elif isinstance(view, FSTView_MatchMapping):
+            start, stop = view.start_and_stop
+            ast = view.base.a
+
+            if view.has_rest:
+                stop -= 1
+                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop], ast.rest)
+            else:
+                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
+
+        else:
+            raise MatchError('unsupported FSTView type')
+
+        return pat
 
 
 class _MatchList:
