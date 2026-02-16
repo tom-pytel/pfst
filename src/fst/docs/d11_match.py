@@ -1007,7 +1007,7 @@ Last few notes:
 - `vararg` and `kwarg` arguments must match exactly, they can never match with any other type of argument.
 
 - This discussion has been about matching INDIVIDUAL arguments in a virtual `_all` field. If you will be matching a
-  whole `.args` field of a `FunctionDef` to another one, it must match exactly.
+    whole `.args` field of a `FunctionDef` to another one, it must match exactly.
 
 
 ## `AST` nodes as pattern or target
@@ -1041,8 +1041,8 @@ vs.
 >>> FST('call(a, **b)').match(Call(..., args=['a'], keywords=['**b']))
 <FSTMatch <Call ROOT 0,0..0,12>>
 
-- And finally, your type checker will complain if you use any patterns, values or wildcards in `AST` fields which are not
-    expected to be there.
+- And finally, your type checker will complain if you use any patterns, values or wildcards in `AST` fields which are
+    not expected to be there.
 
 ```
 $ mypy -c "from ast import *; Call(..., args=['a'], keywords=['**b'])"
@@ -1053,6 +1053,89 @@ error: List item 0 has incompatible type "str"; expected "keyword"  [list-item]
 
 
 # Search
+
+`fst.fst.FST.search(pat)` is essentially just a walk over the nodes of the `FST` node it is called on and an attempted match
+against each of those, yielding the `FSTMatch` object if successful. So basically:
+
+```py
+def search(self, pat):
+    for f in self.walk():
+        if m := f.match(pat):
+            yield m
+```
+
+The real `FST.search()` function does analyze the pattern and restricts the match checking only to types which can
+possibly match the pattern. So it will never attempt to match a `MBinOp(..., '+', ...)`  against a `Compare` node for
+example. But if the pattern contains nodes at the top level where the matching type cannot be determined at the start of
+the search (like the callback `MCB` pattern where an arbitrary user-supplied function determines matching conditions)
+then all nodes walked need to attempt a match anyway.
+
+Here is an example of a search for a comparison for a `var.__class__` which `is` or `is not` a specific `ZST` or
+`zst.ZST`. Remember that the `search()` function returns a generator so you need to iterate over the results.
+
+>>> pat = Compare(
+...     left=MAttribute(attr='__class__'),
+...     ops=[MOR(IsNot, Is)],
+...     comparators=[MOR(Name('ZST'), Attribute('zst', 'ZST'))],
+... )
+
+>>> f = FST('''
+... if is_AST := ast_cls is not zst.ZST:
+...     ast = code.a
+...
+... if code_cls is keyword or (
+...         code_cls is zst.ZST and code.a.__class__ is keyword):
+...     return code_as_keyword(code, options, parse_params, sanitize=sanitize)
+...
+... if src_or_ast_or_fst.__class__ is ZST:
+...     return src_or_ast_or_fst.as_(
+...         mode, kwargs.get('copy', True), **filter_options(kwargs))
+...
+... return 'an ZST' if value.__class__ is not zst.ZST else None
+... '''.strip())
+
+>>> for m in f.search(pat):
+...     print(m.matched.src)
+src_or_ast_or_fst.__class__ is ZST
+value.__class__ is not zst.ZST
+
+And if you want just the first match then get the first element of the returned generator.
+
+>>> print(next(f.search(pat)).matched.src)
+src_or_ast_or_fst.__class__ is ZST
+
+The `search()` function accepts a few parameters to pass through on to the underlying walk function if you wish to
+refine the walk itself, they are: `self_`, `recurse`, `scope`, `back`, `asts`. If you want to know what they do then
+have a look at the `fst.fst.FST.walk()` function.
+
+>>> for m in f.search(pat, back=True):
+...     print(m.matched.src)
+value.__class__ is not zst.ZST
+src_or_ast_or_fst.__class__ is ZST
+
+Since the search generator yields the actual `FSTMatch` objects from the `match()` calls, you get all the tags that
+result from the match.
+
+>>> from pprint import pp
+
+>>> pat = MOR(M(Name, is_name=True), M(Attribute, is_attr=True))
+
+>>> pp(list(FST('[a, 1, 2, b.c, 3, d, 4]').search(pat)))
+[<FSTMatch <Name 0,1..0,2> {'is_name': True}>,
+ <FSTMatch <Attribute 0,10..0,13> {'is_attr': True}>,
+ <FSTMatch <Name 0,10..0,11> {'is_name': True}>,
+ <FSTMatch <Name 0,18..0,19> {'is_name': True}>]
+
+Notice the search recursed into the `Attribute` and found and returned the `Attribute.value` as a `Name`. By default the
+`search()` function will recurse into nested matches. If you don't want this behavior then if you are iterating the
+search generator yourself you can `send(False)` to it. Or you can just set the `nested` parameter to `False` on the call
+to `search()`.
+
+>>> pp(list(FST('[a, 1, 2, b.c, 3, d, 4]').search(pat, nested=False)))
+[<FSTMatch <Name 0,1..0,2> {'is_name': True}>,
+ <FSTMatch <Attribute 0,10..0,13> {'is_attr': True}>,
+ <FSTMatch <Name 0,18..0,19> {'is_name': True}>]
+
 
 # Substitute
 

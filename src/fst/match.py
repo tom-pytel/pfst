@@ -21,7 +21,7 @@ from __future__ import annotations
 import re
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
-from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequence, Set as tp_Set, Union
+from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as tp_Set, Union
 
 from . import fst
 
@@ -5336,22 +5336,22 @@ def _leaf_asts_type(pat: type) -> tp_Set[type[AST]]:
 
     return AST2ASTSLEAF[pat]
 
-_LEAF_ASTS_FUNCS = {
+_LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a top level where they would influence the types that need to be checked in a search()
     M:            M._leaf_asts,
     MNOT:         MNOT._leaf_asts,
     MOR:          MOR._leaf_asts,
     MAND:         MAND._leaf_asts,
     MTYPES:       MTYPES._leaf_asts,
-    MRE:          _leaf_asts_all,
-    MCB:          _leaf_asts_all,
-    MTAG:         _leaf_asts_all,
+    MRE:          _leaf_asts_all,  # can match source
+    MCB:          _leaf_asts_all,  # user determines match, so need to assume all
+    MTAG:         _leaf_asts_all,  # can match against arbitrary tags set by the user, not just previously matched nodes
     type:         _leaf_asts_type,
-    re_Pattern:   _leaf_asts_all,
-    EllipsisType: _leaf_asts_all,
+    re_Pattern:   _leaf_asts_all,  # can match source
+    EllipsisType: _leaf_asts_all,  # literally matches everything
     int:          _leaf_asts_none,
     float:        _leaf_asts_none,
     complex:      _leaf_asts_none,
-    str:          _leaf_asts_all,  # because this can match source
+    str:          _leaf_asts_all,  # can match source
     bytes:        _leaf_asts_none,
     bool:         _leaf_asts_none,
     NoneType:     _leaf_asts_none,
@@ -5460,6 +5460,7 @@ def match(
 def search(
     self: fst.FST,
     pat: _Pattern,
+    nested: bool = True,
     *,
     ast_ctx: bool = False,
     self_: bool = True,
@@ -5472,12 +5473,12 @@ def search(
     standard `walk()` and the various parameters to that function are accepted here and passed on (check self_,
     recursion, scope, walk backwards, etc...).
 
-    This function returns the `walk()` generator which can be interacted with in the same way as the standard one.
-    Meaning you can control the recursion into children by sending `True` or `False` to this generator. Replacement and
-    deletion of nodes during the walk is allowed according to the rules specified by `walk()`.
+    This function returns a generator similar to the `walk()` generator which can be interacted with in the same way as
+    that one. Meaning you can control the recursion into children by sending `True` or `False` to this generator.
+    Replacement and deletion of nodes during the search is allowed according to the rules specified by `walk()`.
 
     If you do not replace, delete or `send(False)` for any given node then the search will continue into that node with
-    the possibility of finding nested matches.
+    the possibility of finding nested matches, unless you pass `nested=False` to the `search()` call.
 
     **Note:** The generator returned by this function does not yield the matched nodes themselves, but rather the
     `FSTMatch` objects. You can get the matched nodes from these objects using the `matched` attribute, e.g.
@@ -5485,6 +5486,7 @@ def search(
 
     **Parameters:**
     - `pat`: The pattern to search for.
+    - `nested`: Whether to recurse into nested matches or not.
     - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -5494,8 +5496,8 @@ def search(
         function for their meanings.
 
     **Returns:**
-    - `Generator`: This is a `walk()` generator set up for matching. You can interact with this generator in the same
-        way as a normal walk generator in that you can send `True` or `False` to control recursion into child nodes.
+    - `Generator`: This is a `walk()` style generator which accepts `send(bool)` to decide whether to recurse into a
+        node or not.
 
     **Examples:**
 
@@ -5536,30 +5538,57 @@ def search(
     """
 
     pat_cls = pat.__class__
-    asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)
+    asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)  # which AST leaf nodes we need to actually check for match
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
     mstate = _MatchState(True, ast_ctx)
+    last_match = None  # gotten once in `all_func()` and yielded from our own generator instead of an FST node
 
-    if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # need to check all nodes
-        def all_func(f: fst.FST) -> FSTMatch | Literal[False]:
+    if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check
+        def all_func(f: fst.FST) -> bool:
+            nonlocal last_match
+
             mstate.clear()
 
-            m = match_func(pat, f.a, mstate)
+            if (m := match_func(pat, f.a, mstate)) is not None:
+                last_match = FSTMatch(pat, f, m)
 
-            return False if m is None else FSTMatch(pat, f, m)
+                return True
+
+            return False
 
     else:
-        def all_func(f: fst.FST) -> FSTMatch | Literal[False]:
+        def all_func(f: fst.FST) -> bool:
+            nonlocal last_match
+
             if f.a.__class__ not in asts_leaf:
                 return False
 
             mstate.clear()
 
-            m = match_func(pat, f.a, mstate)
+            if (m := match_func(pat, f.a, mstate)) is not None:
+                last_match = FSTMatch(pat, f, m)
 
-            return False if m is None else FSTMatch(pat, f, m)
+                return True
 
-    return self.walk(all_func, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+            return False
+
+    gen = self.walk(all_func, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+
+    if nested:
+        for _ in gen:
+            while (sent := (yield last_match)) is not None:
+                gen.send(sent)
+
+    else:
+        for _ in gen:
+            if (sent := (yield last_match)) is not None:
+                gen.send(sent)
+
+                while (sent := (yield last_match)) is not None:
+                    gen.send(sent)
+
+            elif not nested:  # if user didn't take control then we can decide not to recurse into match if user doesn't want nested matches
+                gen.send(False)
 
 
 def sub(
