@@ -70,6 +70,42 @@ __all__ = [
 import sys
 
 
+def ppmatch(fstmatch: object) -> None:
+    """Pretty print `FSTMatch` object."""
+
+    s = repr(fstmatch)
+
+    if fstmatch.__class__.__name__ == 'FSTMatch' and fstmatch.tags:
+        if len(s) >= 87:
+            u, v = s.split(' {', 1)
+
+            if len(v) < 84:
+                s = '\n  {'.join((u, v))
+
+            else:
+                from fst.match import _rpr
+
+                ls = [u[:len(u) + 2]]
+
+                for k, v in fstmatch.tags.items():
+                    if not isinstance(v, list) or len(v) < 2:
+                        ls.append(f'  {k!r}: {_rpr(v)},')
+
+                    else:
+                        ls.append(f'  {k!r}: [')
+
+                        for w in v:
+                            ls.append(f'    {_rpr(w)},')
+
+                        ls.append('  ],')
+
+                ls.append('}>')
+
+                s = '\n'.join(ls)
+
+    print(s)
+
+
 def pprint(src: str) -> None:
     print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
 

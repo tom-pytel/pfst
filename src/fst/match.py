@@ -3272,6 +3272,8 @@ class MRE(M_Pattern):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MRE('good|bad|ugly') .match(Name('ugly'))
     <FSTMatch Name(id='ugly')>
 
@@ -3279,16 +3281,23 @@ class MRE(M_Pattern):
 
     Has bad in it.
 
-    >>> MRE(tag='.*bad.*') .match(arg('this_arg_is_not_so_bad'))
-    <FSTMatch arg(arg='this_arg_is_not_so_bad', annotation=None, type_comment=None) {'tag': <re.Match object; span=(0, 22), match='this_arg_is_not_so_bad'>}>
+    >>> ppmatch(MRE(tag='.*bad.*') .match(arg('this_arg_is_not_so_bad')))
+    <FSTMatch arg(arg='this_arg_is_not_so_bad', annotation=None, type_comment=None)
+      {'tag': <re.Match object; span=(0, 22), match='this_arg_is_not_so_bad'>}>
 
     Another way so we can get the exact location from the `re.Match` object.
 
-    >>> MRE(tag='bad', search=True) .match(arg('this_arg_is_not_so_bad'))
-    <FSTMatch arg(arg='this_arg_is_not_so_bad', annotation=None, type_comment=None) {'tag': <re.Match object; span=(19, 22), match='bad'>}>
+    >>> ppmatch(MRE(tag='bad', search=True) .match(arg('this_arg_is_not_so_bad')))
+    <FSTMatch arg(arg='this_arg_is_not_so_bad', annotation=None, type_comment=None)
+      {'tag': <re.Match object; span=(19, 22), match='bad'>}>
 
-    >>> MDict(_all=[MQSTAR(t=MRE('a: .'))]) .match(FST('{a: b, a: z}'))
-    <FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
+    >>> ppmatch(MDict(_all=[MQSTAR(t=MRE('a: .'))]) .match(FST('{a: b, a: z}')))
+    <FSTMatch <Dict ROOT 0,0..0,12>
+      't': [
+        <FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>,
+        <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>,
+      ],
+    }>
     """
 
     pat: re_Pattern  ; """@private"""
@@ -3522,6 +3531,8 @@ class MTAG(M):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MBinOp(M(left='a'), right=MTAG('left')) .match(FST('a + a'))
     <FSTMatch <BinOp ROOT 0,0..0,5> {'left': <Name 0,0..0,1>}>
 
@@ -3535,8 +3546,14 @@ class MTAG(M):
 
     >>> pat = MList([M(first='a'), MQSTAR(st=MTAG('first'))])
 
-    >>> pat.match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'first': <Name 0,1..0,2>, 'st': [<FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(pat.match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      'first': <Name 0,1..0,2>,
+      'st': [
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
     >>> pat.match(FST('[a, a, a, b]'))
 
@@ -3613,6 +3630,8 @@ class MQ(M):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MList([MQ('a', 1, 2)]) .match(FST('[]'))
 
     >>> MList([MQ('a', 1, 2)]) .match(FST('[a]'))
@@ -3633,16 +3652,27 @@ class MQ(M):
 
     >>> pat = MList([MQSTAR.NG, MQ(t=MRE('c|d'), min=1, max=3), MQSTAR])
 
-    >>> FST('[a, b, c, c, d, c, e]') .match(pat)
-    <FSTMatch <List ROOT 0,0..0,21> {'t': [<FSTMatch <Name 0,7..0,8>>, <FSTMatch <Name 0,10..0,11>>, <FSTMatch <Name 0,13..0,14>>]}>
+    >>> ppmatch(m := FST('[a, b, c, c, d, c, e]') .match(pat))
+    <FSTMatch <List ROOT 0,0..0,21>
+      't': [
+        <FSTMatch <Name 0,7..0,8>>,
+        <FSTMatch <Name 0,10..0,11>>,
+        <FSTMatch <Name 0,13..0,14>>,
+      ],
+    }>
 
-    >>> [m.matched.src for m in _.t]
+    >>> [mm.matched.src for mm in m.t]
     ['c', 'c', 'd']
 
     Sublist matching, will match the sequence "a, b" twice in the example below.
 
-    >>> MList([MQ(t=['a', 'b'], min=1, max=2)]) .match(FST('[a, b, a, b]'))
-    <FSTMatch <List ROOT 0,0..0,12> {'t': [<FSTMatch [<Name 0,1..0,2>, <Name 0,4..0,5>]>, <FSTMatch [<Name 0,7..0,8>, <Name 0,10..0,11>]>]}>
+    >>> ppmatch(MList([MQ(t=['a', 'b'], min=1, max=2)]) .match(FST('[a, b, a, b]')))
+    <FSTMatch <List ROOT 0,0..0,12>
+      't': [
+        <FSTMatch [<Name 0,1..0,2>, <Name 0,4..0,5>]>,
+        <FSTMatch [<Name 0,7..0,8>, <Name 0,10..0,11>]>,
+      ],
+    }>
     """
 
     # This is mostly just a data class, the actual logic for these matches lives in `_match_default()`. The tags for the
@@ -3715,20 +3745,35 @@ class MQSTAR(MQ):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MList([MQSTAR(t='a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2> {'t': []}>
 
     >>> MList([MQSTAR(t='a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MQSTAR(t='a')]) .match(FST('[a, a]'))
-    <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+    >>> ppmatch(MList([MQSTAR(t='a')]) .match(FST('[a, a]')))
+    <FSTMatch <List ROOT 0,0..0,6>
+      {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MQSTAR(t='a')]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(MList([MQSTAR(t='a')]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      't': [
+        <FSTMatch <Name 0,1..0,2>>,
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
-    >>> MList([MQSTAR(t='a'), MQSTAR]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(MList([MQSTAR(t='a'), MQSTAR]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      't': [
+        <FSTMatch <Name 0,1..0,2>>,
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
     >>> MList([MQSTAR.NG(t='a'), MQSTAR]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': []}>
@@ -3771,19 +3816,34 @@ class MQPLUS(MQ):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MList([MQPLUS(t='a')]) .match(FST('[]'))
 
     >>> MList([MQPLUS(t='a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MQPLUS(t='a')]) .match(FST('[a, a]'))
-    <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+    >>> ppmatch(MList([MQPLUS(t='a')]) .match(FST('[a, a]')))
+    <FSTMatch <List ROOT 0,0..0,6>
+      {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MQPLUS(t='a')]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(MList([MQPLUS(t='a')]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      't': [
+        <FSTMatch <Name 0,1..0,2>>,
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
-    >>> MList([MQPLUS(t='a'), MQSTAR]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(MList([MQPLUS(t='a'), MQSTAR]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      't': [
+        <FSTMatch <Name 0,1..0,2>>,
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
     >>> MList([MQPLUS.NG(t='a'), MQSTAR]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
@@ -3878,21 +3938,37 @@ class MQMIN(MQ):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MList([MQMIN(t='a', min=2)]) .match(FST('[]'))
 
     >>> MList([MQMIN(t='a', min=2)]) .match(FST('[a]'))
 
-    >>> MList([MQMIN(t='a', min=2)]) .match(FST('[a, a]'))
-    <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+    >>> ppmatch(MList([MQMIN(t='a', min=2)]) .match(FST('[a, a]')))
+    <FSTMatch <List ROOT 0,0..0,6>
+      {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
-    >>> MList([MQMIN(t='a', min=2)]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(MList([MQMIN(t='a', min=2)]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      't': [
+        <FSTMatch <Name 0,1..0,2>>,
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
-    >>> MList([MQMIN(t='a', min=2), MQSTAR]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>, <FSTMatch <Name 0,7..0,8>>]}>
+    >>> ppmatch(MList([MQMIN(t='a', min=2), MQSTAR]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      't': [
+        <FSTMatch <Name 0,1..0,2>>,
+        <FSTMatch <Name 0,4..0,5>>,
+        <FSTMatch <Name 0,7..0,8>>,
+      ],
+    }>
 
-    >>> MList([MQMIN.NG(t='a', min=2), MQSTAR]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+    >>> ppmatch(MList([MQMIN.NG(t='a', min=2), MQSTAR]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
     """
 
     max = None
@@ -3936,19 +4012,23 @@ class MQMAX(MQ):
 
     **Examples:**
 
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
+
     >>> MList([MQMAX(t='a', max=2)]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2> {'t': []}>
 
     >>> MList([MQMAX(t='a', max=2)]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MQMAX(t='a', max=2)]) .match(FST('[a, a]'))
-    <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+    >>> ppmatch(MList([MQMAX(t='a', max=2)]) .match(FST('[a, a]')))
+    <FSTMatch <List ROOT 0,0..0,6>
+      {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
     >>> MList([MQMAX(t='a', max=2)]) .match(FST('[a, a, a]'))
 
-    >>> MList([MQMAX(t='a', max=2), MQSTAR]) .match(FST('[a, a, a]'))
-    <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+    >>> ppmatch(MList([MQMAX(t='a', max=2), MQSTAR]) .match(FST('[a, a, a]')))
+    <FSTMatch <List ROOT 0,0..0,9>
+      {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
 
     >>> MList([MQMAX.NG(t='a', max=2), MQSTAR]) .match(FST('[a, a, a]'))
     <FSTMatch <List ROOT 0,0..0,9> {'t': []}>
@@ -4029,6 +4109,12 @@ _QUANTIFIER_STANDALONES = {MQSTAR, MQPLUS, MQ01, MQSTAR.NG, MQPLUS.NG, MQ01.NG} 
 
 _NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
+
+_FSTVIEW_MULTINODE_SINGLE_TYPE = {
+    FSTView_Dict:         Dict,
+    FSTView_MatchMapping: MatchMapping,
+    FSTView_arguments:    arguments,
+}
 
 
 class _MatchState:
@@ -4839,15 +4925,20 @@ def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mstate: _Ma
     return _EMPTY_DICT
 
 def _match_type(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    """Just match the `AST` type (or equivalent `MAST` type)."""
-
-    if issubclass(pat, MQ):
-        raise MatchError(f'{pat.__qualname__} quantifier pattern in invalid location')
+    """Just match the `AST` type (or equivalent `MAST` type). Special consideration is taken when matching against a
+    multinode `FSTView`."""
 
     if issubclass(pat, M_Pattern):
+        if issubclass(pat, MQ):
+            raise MatchError(f'{pat.__qualname__} quantifier pattern in invalid location')
+
         pat = pat._types
 
-    if not isinstance(tgt, pat):
+    if t := _FSTVIEW_MULTINODE_SINGLE_TYPE.get(tgt.__class__):  # don't need to bother checking length 1
+        if not issubclass(t, pat):
+            return None
+
+    elif not isinstance(tgt, pat):
         return None
 
     return _EMPTY_DICT
@@ -4930,6 +5021,7 @@ _MATCH_FUNCS = {
     MQMIN.NG:            _match_quantifier_invalid_location,
     MQMAX:               _match_quantifier_invalid_location,
     MQMAX.NG:            _match_quantifier_invalid_location,
+    MQN:                 _match_quantifier_invalid_location,
     AST:                 _match_node,  # _match_node_nonleaf,
     Add:                 _match_node,
     And:                 _match_node,
@@ -5298,6 +5390,7 @@ def match(
 
     >>> import re
     >>> from fst.match import *
+    >>> from fst.docs import ppmatch  # pretty-print FSTMatch
 
     Quick and dirty use of `AST` nodes and strings and regex.
 
@@ -5317,7 +5410,7 @@ def match(
 
     Pattern for finding a `logger.info()` call that has a keyword argument named `cid`, returning that keyword in a tag
     called `cid_kw`. This one uses the pattern `MCall` and `Mkeyword` classes to avoid having to specify unused required
-    fields. The `...` are wildcards.
+    fields.
 
     >>> pat = MCall(
     ...    func=Attribute(Name('logger'), 'info'),
@@ -5352,8 +5445,9 @@ def match(
 
     >>> FST('a.__class__ is AST') .match(pat)
 
-    >>> FST('node_cls is zst.ZST') .match(pat)
-    <FSTMatch <Compare ROOT 0,0..0,19> {'is_name': True, 'obj': <Name 0,0..0,8>, 'is_is': <Is 0,9..0,11>}>
+    >>> ppmatch(FST('node_cls is zst.ZST') .match(pat))
+    <FSTMatch <Compare ROOT 0,0..0,19>
+      {'is_name': True, 'obj': <Name 0,0..0,8>, 'is_is': <Is 0,9..0,11>}>
 
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
@@ -5385,12 +5479,12 @@ def search(
     If you do not replace, delete or `send(False)` for any given node then the search will continue into that node with
     the possibility of finding nested matches.
 
-    **Note:** Yhe generator returned by this function does not yield the matched nodes themselves, but rather the match
-    objects. You can get the matched nodes from these objects using the `fst` attribute, e.g. `match.fst`.
+    **Note:** The generator returned by this function does not yield the matched nodes themselves, but rather the
+    `FSTMatch` objects. You can get the matched nodes from these objects using the `matched` attribute, e.g.
+    `match.matched`.
 
     **Parameters:**
-    - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
-        functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
+    - `pat`: The pattern to search for.
     - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.

@@ -15,7 +15,9 @@ from types import FunctionType, ModuleType
 import fst
 
 
-def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
+def cleanup_docstrs_recurse(obj, visited: set, exclude: set[str] = set()):
+    visited.add(obj)
+
     for name, o in obj.__dict__.items():
         if isinstance(o, (FunctionType, type, staticmethod, classmethod, property)):
             o = getattr(obj, name)
@@ -29,15 +31,15 @@ def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
                     pass
 
                 else:
-                    if not isinstance(o, property):
-                        cleanup_docstrs_recurse(o, exclude)
+                    if not isinstance(o, property) and o not in visited:
+                        cleanup_docstrs_recurse(o, visited, exclude)
 
 
 def cleanup_docstrs(obj, exclude: set[str] = set()):
     if doc := getattr(obj, '__doc__', None):  # at the module level
         obj.__doc__ = doc.replace('```', '')
 
-    cleanup_docstrs_recurse(obj, exclude)
+    cleanup_docstrs_recurse(obj, set(), exclude)
 
 
 def load_tests(loader, tests, ignore):
