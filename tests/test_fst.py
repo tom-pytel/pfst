@@ -8518,7 +8518,7 @@ es=[<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, <FSTMatch <Name 0,4..0,5
 all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, <FSTMatch <Name 0,4..0,5> {'cb': <Name 0,4..0,5>}>, <FSTMatch <Name 0,7..0,8> {'cb': <Name 0,7..0,8>}>]}, {'static1': True, 'static2': False}]]
 
 <FSTMatch <List ROOT 0,0..0,15> {'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, <FSTMatch <Name 0,4..0,5> {'cb': <Name 0,4..0,5>}>, <FSTMatch <Name 0,7..0,8> {'cb': <Name 0,7..0,8>}>, <FSTMatch <Name 0,10..0,11> {'cb': <Name 0,10..0,11>}>], 'static1': True, 'static2': False}>
-""".strip())
+        """.strip())
 
     def test_match_AST(self):
         pat = MConstant(M(t=...))
@@ -9523,6 +9523,103 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertEqual([], [m.matched.src for m in f.search(1)])
         self.assertEqual(['a'], [m.matched.src for m in f.search(substr('a'))])
         self.assertEqual([], [m.matched.src for m in f.search(subint(1))])
+
+        # indeterminate types
+
+        f = FST('pass')
+        lines = []
+        lambdaTrue = lambda t: True
+        lambdaFalse = lambda t: False
+        lambdaTrue.__qualname__ = lambdaFalse.__qualname__ = '<lambda>'
+
+        for pat in [
+            'pass',
+            'zzz',
+            MRE('.*'),
+            MRE('zzz'),
+            MCB(lambdaTrue),
+            MCB(lambdaFalse),
+            MTAG('yes'),
+            MTAG('no'),
+        ]:
+            lines.append(str(pat))
+            p = MAND(M(..., yes=...), pat)
+            lines.append(str(list(f.search(p))))
+            lines.append(str(f.match(p)))
+            lines.append('')
+
+            pat = MNOT(pat)
+            lines.append(str(pat))
+            p = MAND(M(..., yes=...), pat)
+            lines.append(str(list(f.search(p))))
+            lines.append(str(f.match(p)))
+            lines.append('')
+
+        self.assertEqual('\n'.join(lines).strip(), """
+pass
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MNOT('pass')
+[]
+None
+
+zzz
+[]
+None
+
+MNOT('zzz')
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MRE(re.compile('.*'))
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MNOT(MRE(re.compile('.*')))
+[]
+None
+
+MRE(re.compile('zzz'))
+[]
+None
+
+MNOT(MRE(re.compile('zzz')))
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MCB(<lambda>)
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MNOT(MCB(<lambda>))
+[]
+None
+
+MCB(<lambda>)
+[]
+None
+
+MNOT(MCB(<lambda>))
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MTAG('yes')
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+
+MNOT(MTAG('yes'))
+[]
+None
+
+MTAG('no')
+[]
+None
+
+MNOT(MTAG('no'))
+[<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
+<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
+        """.strip())
 
     def test_sub(self):
         pass

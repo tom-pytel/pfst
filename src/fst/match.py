@@ -3035,7 +3035,7 @@ class MOR(M_Pattern_Many):
         for pat in self.pats:
             la = _LEAF_ASTS_FUNCS.get(pat.__class__, _leaf_asts_default)(pat)
 
-            if la is None:  # if indeterminate then need to propagate that
+            if la is None:  # indeterminate ends search immediately
                 return None
 
             if len(la) >= _LEN_ASTS_LEAF__ALL:  # early out because we hit all possible types
@@ -3114,8 +3114,8 @@ class MAND(M_Pattern_Many):
             la = _LEAF_ASTS_FUNCS.get(pat.__class__, _leaf_asts_default)(pat)
 
             if not la:  # early out because everything gone
-                if la is None:  # if indeterminate then AND determines what can NOT be
-                    continue
+                if la is None:  # indeterminate ends search immediately
+                    return None
 
                 return la
 
@@ -5526,8 +5526,8 @@ def search(
     that one. Meaning you can control the recursion into children by sending `True` or `False` to this generator.
     Replacement and deletion of nodes during the search is allowed according to the rules specified by `walk()`.
 
-    If you do not replace, delete or `send(False)` for any given node then the search will continue into that node with
-    the possibility of finding nested matches, unless you pass `nested=False` to the `search()` call.
+    If you do not delete or `send(False)` for any given node then the search will continue into that node with the
+    possibility of finding nested matches, unless you pass `nested=False` to the `search()` call.
 
     **Note:** The generator returned by this function does not yield the matched nodes themselves, but rather the
     `FSTMatch` objects. You can get the matched nodes from these objects using the `matched` attribute, e.g.
@@ -5592,10 +5592,7 @@ def search(
     mstate = _MatchState(True, ast_ctx)
     last_match = None  # gotten once in `all_func()` and yielded from our own generator instead of an FST node
 
-    if asts_leaf is None:  # indeterminate becomes all
-        asts_leaf = ASTS_LEAF__ALL
-
-    if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check
+    if asts_leaf is None or len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check
         def all_func(f: fst.FST) -> bool:
             nonlocal last_match
 

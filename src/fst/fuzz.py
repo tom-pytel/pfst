@@ -1614,8 +1614,8 @@ class MatchSearch(Fuzzy):
     forever = True
     standard = False
 
-    MANY_MIN = 3
-    MANY_MAX = 6
+    MTYPES_MIN = 3
+    MTYPES_MAX = 6
     MOR_MIN = 1
     MOR_MAX = 3
     MAND_MIN = 20
@@ -1762,7 +1762,7 @@ class MatchSearch(Fuzzy):
     )
     ALL_ASTS__ALL = ASTS__ALL + MASTS__ALL
 
-    def rnd_pat(self, max_depth: int = 4) -> M_Pattern | type[M_Pattern] | type[AST]:
+    def rnd_pat(self, max_depth: int = 5) -> M_Pattern | type[M_Pattern] | type[AST]:
         max_depth -= 1
 
         if not max_depth or not (r := randint(0, 25)):
@@ -1770,7 +1770,7 @@ class MatchSearch(Fuzzy):
         elif r <= 4:
             return MNOT(self.rnd_pat(max_depth))
         elif r <= 8:
-            return MTYPES(choice(self.ALL_ASTS__ALL) for _ in range(randint(self.MANY_MIN, self.MANY_MAX)))
+            return MTYPES(choice(self.ALL_ASTS__ALL) for _ in range(randint(self.MTYPES_MIN, self.MTYPES_MAX)))
         elif r <= 12:
             return MOR(*(self.rnd_pat(max_depth) for _ in range(randint(self.MOR_MIN, self.MOR_MAX))))
         elif r <= 16:
