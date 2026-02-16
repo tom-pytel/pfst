@@ -3,6 +3,7 @@
 import argparse
 import gc
 import os
+import re
 import sys
 import sysconfig
 import tokenize
@@ -1764,16 +1765,34 @@ class MatchSearch(Fuzzy):
     def rnd_pat(self, max_depth: int = 4) -> M_Pattern | type[M_Pattern] | type[AST]:
         max_depth -= 1
 
-        if not max_depth or not (r := randint(0, 4)):
+        if not max_depth or not (r := randint(0, 25)):
             return choice(self.ALL_ASTS__ALL)
-        elif r == 1:
+        elif r <= 4:
             return MNOT(self.rnd_pat(max_depth))
-        elif r == 2:
+        elif r <= 8:
             return MTYPES(choice(self.ALL_ASTS__ALL) for _ in range(randint(self.MANY_MIN, self.MANY_MAX)))
-        elif r == 3:
+        elif r <= 12:
             return MOR(*(self.rnd_pat(max_depth) for _ in range(randint(self.MOR_MIN, self.MOR_MAX))))
-        elif r == 4:
+        elif r <= 16:
             return MAND(*(self.rnd_pat(max_depth) for _ in range(randint(self.MAND_MIN, self.MAND_MAX))))
+        elif r == 17:
+            return MCB(lambda t: True)
+        elif r == 18:
+            return MCB(lambda t: False)
+        elif r == 19:
+            return MTAG('tag')
+        elif r == 20:
+            return MRE('.*')
+        elif r == 21:
+            return MRE('34786532874590234756023475692348756')
+        elif r == 22:
+            return re.compile(r'\+')
+        elif r == 23:
+            return re.compile('34786532874590234756023475692348756')
+        elif r == 24:
+            return '-'
+        elif r == 25:
+            return '34786532874590234756023475692348756'
 
     def fuzz_one(self, fst, fnm) -> bool:
         for count in range(self.batch or 100):

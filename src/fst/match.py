@@ -2862,7 +2862,7 @@ class M(M_Pattern):
 
         return self.static_tags
 
-    def _leaf_asts(self) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
         return _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
 
 
@@ -2916,11 +2916,15 @@ class MNOT(M):
 
         return self.static_tags
 
-    def _leaf_asts(self) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
         leaf_asts = _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
 
         if not leaf_asts:
+            if leaf_asts is None:
+                return None
+
             return ASTS_LEAF__ALL
+
         elif len(leaf_asts) >= _LEN_ASTS_LEAF__ALL:  # >= because maybe some extra node types got in there from the future
             return _EMPTY_SET
 
@@ -3010,11 +3014,14 @@ class MOR(M_Pattern):
 
         return None
 
-    def _leaf_asts(self) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
         leaf_asts = set()
 
         for pat in self.pats:
             la = _LEAF_ASTS_FUNCS.get(pat.__class__, _leaf_asts_default)(pat)
+
+            if la is None:  # if indeterminate then need to propagate that
+                return None
 
             if len(la) >= _LEN_ASTS_LEAF__ALL:  # early out because we hit all possible types
                 return la
@@ -3083,13 +3090,16 @@ class MAND(MOR):
 
         return mstate.pop_merge_tagss()
 
-    def _leaf_asts(self) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
         leaf_asts = ASTS_LEAF__ALL
 
         for pat in self.pats:
             la = _LEAF_ASTS_FUNCS.get(pat.__class__, _leaf_asts_default)(pat)
 
             if not la:  # early out because everything gone
+                if la is None:  # if indeterminate then AND determines what can NOT be
+                    continue
+
                 return la
 
             leaf_asts = leaf_asts & la
@@ -3170,7 +3180,7 @@ class MTYPES(M_Pattern):
 
         return f'{name}({types})'
 
-    def _leaf_asts(self) -> tp_Set[type[AST]]:
+    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
         leaf_asts = set()
 
         for t in self._types:
@@ -5312,7 +5322,7 @@ _MATCH_FUNCS = {
 # ......................................................................................................................
 # get all leaf AST types that can possibly match a given _Pattern
 
-def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]]:
+def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]] | None:
     if isinstance(pat, M_Pattern):
         return AST2ASTSLEAF[pat._types]  # will be a single type here
 
@@ -5320,21 +5330,24 @@ def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]]:
         return AST2ASTSLEAF[pat.__class__]
 
     if isinstance(pat, str):  # gets here from a subclassed str
-        return ASTS_LEAF__ALL
+        return None
 
-    return _EMPTY_SET  # from some subclassed primitive
+    return _EMPTY_SET  # from quantifier or some subclassed primitive
 
-def _leaf_asts_all(pat: _Pattern) -> tp_Set[type[AST]]:
-    return ASTS_LEAF__ALL
-
-def _leaf_asts_none(pat: _Pattern) -> tp_Set[type[AST]]:
-    return _EMPTY_SET
-
-def _leaf_asts_type(pat: type) -> tp_Set[type[AST]]:
+def _leaf_asts_type(pat: type) -> tp_Set[type[AST]] | None:
     if issubclass(pat, M_Pattern):
         pat = pat._types  # guaranteed to be single element here
 
     return AST2ASTSLEAF[pat]
+
+def _leaf_asts_all(pat: _Pattern) -> tp_Set[type[AST]] | None:
+    return ASTS_LEAF__ALL
+
+def _leaf_asts_none(pat: _Pattern) -> tp_Set[type[AST]] | None:
+    return _EMPTY_SET
+
+def _leaf_asts_unknown(pat: _Pattern) -> tp_Set[type[AST]] | None:
+    return None
 
 _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a top level where they would influence the types that need to be checked in a search()
     M:            M._leaf_asts,
@@ -5342,16 +5355,16 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
     MOR:          MOR._leaf_asts,
     MAND:         MAND._leaf_asts,
     MTYPES:       MTYPES._leaf_asts,
-    MRE:          _leaf_asts_all,  # can match source
-    MCB:          _leaf_asts_all,  # user determines match, so need to assume all
-    MTAG:         _leaf_asts_all,  # can match against arbitrary tags set by the user, not just previously matched nodes
+    MRE:          _leaf_asts_unknown,  # can match source
+    MCB:          _leaf_asts_unknown,  # user determines match
+    MTAG:         _leaf_asts_unknown,  # can match against arbitrary tags set by the user, not just previously matched nodes
     type:         _leaf_asts_type,
-    re_Pattern:   _leaf_asts_all,  # can match source
+    re_Pattern:   _leaf_asts_unknown,  # can match source
     EllipsisType: _leaf_asts_all,  # literally matches everything
     int:          _leaf_asts_none,
     float:        _leaf_asts_none,
     complex:      _leaf_asts_none,
-    str:          _leaf_asts_all,  # can match source
+    str:          _leaf_asts_unknown,  # can match source
     bytes:        _leaf_asts_none,
     bool:         _leaf_asts_none,
     NoneType:     _leaf_asts_none,
@@ -5542,6 +5555,9 @@ def search(
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
     mstate = _MatchState(True, ast_ctx)
     last_match = None  # gotten once in `all_func()` and yielded from our own generator instead of an FST node
+
+    if asts_leaf is None:  # indeterminate becomes all
+        asts_leaf = ASTS_LEAF__ALL
 
     if len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check
         def all_func(f: fst.FST) -> bool:
