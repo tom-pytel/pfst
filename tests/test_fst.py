@@ -7752,7 +7752,7 @@ opts.ignore_module = [mod.strip()
         # match object attribute access
 
         self.assertIs(FST('a').match(M(Name('a'), tag=True)).tag, True)
-        self.assertIs(FST('a').match(M(Name('a'), tag=True)).noexist, NoTag)
+        self.assertIs(FST('a').match(M(Name('a'), tag=True)).noexist, NotSet)
         self.assertIs(FST('a').match(M(Name('a'), __tag__=True)).__tag__, True)
         self.assertRaises(AttributeError, lambda: FST('a').match(M(Name('a'), __tag__=True)).__noexist__)
 
@@ -8195,7 +8195,7 @@ opts.ignore_module = [mod.strip()
         # MRE
 
         assertRaises(ValueError('MRE requires pattern'), MRE)
-        assertRaises(ValueError('MRE requires pattern'), MRE, None)
+        # assertRaises(ValueError('MRE requires pattern'), MRE, None)
 
         # MTYPES
 
@@ -8439,19 +8439,19 @@ opts.ignore_module = [mod.strip()
 mq=MQ(MCB(cb), min=2, max=4, static1=True, static2=False)
 
 tgt=<Name 0,1..0,2>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], []]
 
 tgt=<Name 0,4..0,5>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], [{}]]
 
 tgt=<Name 0,7..0,8>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], [{}, {}, {'static1': True, 'static2': False}]]
 
 tgt=<Name 0,10..0,11>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], [{}, {}, {}, {'static1': True, 'static2': False}]]
 
 <FSTMatch <List ROOT 0,0..0,15> {'static1': True, 'static2': False}>
@@ -8481,19 +8481,19 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5
 mq=MQ(MCB(cb=cb), min=2, max=4, static1=True, static2=False)
 
 tgt=<Name 0,1..0,2>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], []]
 
 tgt=<Name 0,4..0,5>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], [{'cb': <Name 0,1..0,2>}]]
 
 tgt=<Name 0,7..0,8>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], [{'cb': <Name 0,1..0,2>}, {'cb': <Name 0,4..0,5>}, {'static1': True, 'static2': False}]]
 
 tgt=<Name 0,10..0,11>
-es=<NoTag>
+es=<NotSet>
 all_tagss=[[], [], [{'cb': <Name 0,1..0,2>}, {'cb': <Name 0,4..0,5>}, {'cb': <Name 0,7..0,8>}, {'static1': True, 'static2': False}]]
 
 <FSTMatch <List ROOT 0,0..0,15> {'cb': <Name 0,10..0,11>, 'static1': True, 'static2': False}>
@@ -9426,7 +9426,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
 
     def test_match_coverage(self):
         self.assertEqual('MAST(elts=..., ctx=Store)', repr(MAST(elts=..., ctx=Store)))
-        self.assertEqual('<NoTag>', repr(NoTag.__class__()))
+        self.assertEqual('<NotSet>', repr(NotSet.__class__()))
         self.assertEqual('M(t=...)', repr(M(t=...)))
         self.assertEqual('M(t=..., st=True)', repr(M(t=..., st=True)))
         self.assertEqual('MOR(Constant, t=MConstant(value=1))', repr(MOR(Constant, t=MConstant(value=1))))

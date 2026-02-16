@@ -519,7 +519,7 @@ A tag getter function can be passed to the callback so it can request tags that 
 ... ))
 
 >>> MList([m, m, m]) .match(FST('[a, b, c]'))
-this: <Name 0,1..0,2>, prev: <NoTag>
+this: <Name 0,1..0,2>, prev: <NotSet>
 this: <Name 0,4..0,5>, prev: <Name 0,1..0,2>
 this: <Name 0,7..0,8>, prev: <Name 0,4..0,5>
 <FSTMatch <List ROOT 0,0..0,9> {'prev': <Name 0,7..0,8>}>

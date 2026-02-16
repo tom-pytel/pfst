@@ -180,7 +180,7 @@ from .fst_options import check_options
 
 __all__ = [
     'MatchError',
-    'NoTag',
+    'NotSet',
     'FSTMatch',
     'M_Pattern',
 
@@ -344,13 +344,15 @@ __all__ = [
     'M_type_params',
 ]
 
+_SENTINEL = object()
 
-_SENTINEL = type('_SENTINEL', (object,), {'__repr__': lambda s: '<SENTINEL>'})()  # object()
 _EMPTY_LIST = []
 _EMPTY_SET = set()
 _EMPTY_DICT = {}
 _EMPTY_MAPPINGPROXY = MappingProxyType(_EMPTY_DICT)
+
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
+
 __DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique, doesn't need to be though
 
 _Target = AST | constant
@@ -380,21 +382,21 @@ def _rpr(o: object) -> str:
     return repr(o)
 
 
-class _NoTag:
+class _NotSet:
     """This exists for FSTMatch so that we can check value of any tag without needing to check if it exists first."""
 
     __slots__ = ()
 
-    def __new__(cls) -> FSTMatch._NoTag:
-        return NoTag
+    def __new__(cls) -> FSTMatch._NotSet:
+        return NotSet
 
     def __bool__(self) -> bool:
         return False
 
     def __repr__(self) -> str:
-        return '<NoTag>'
+        return '<NotSet>'
 
-NoTag = object.__new__(_NoTag)  ; """A falsey object returned if accessing a non-existent tag on the `FSTMatch` object as an attribute."""
+NotSet = object.__new__(_NotSet)  ; """A falsey object returned if accessing a non-existent tag on the `FSTMatch` object as an attribute."""
 
 
 class MatchError(RuntimeError):
@@ -403,7 +405,7 @@ class MatchError(RuntimeError):
 
 class FSTMatch:
     """Successful match object. Can look up tags directly on this object as attributes. Nonexistent tags will not raise
-    but return a falsey `NoTag`."""
+    but return a falsey `NotSet`."""
 
     tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
@@ -425,11 +427,11 @@ class FSTMatch:
             return v
 
         if not name.startswith('__'):
-            return NoTag
+            return NotSet
 
         raise AttributeError(name)  # nonexistence of dunders should not be masked
 
-    def get(self, tag: str, default: object = NoTag, /) -> object:
+    def get(self, tag: str, default: object = NotSet, /) -> object:
         """A `dict.get()` function for the match tags. Just a shortcut for `match.tags.get(tag, default)`."""
 
         return self.tags.get(tag, default)
@@ -2774,9 +2776,85 @@ class M_type_params(M_slice):  # pragma: no cover
 
 
 # ......................................................................................................................
-# TODO: clean up class hirearchy
 
-class M(M_Pattern):
+class M_Pattern_One(M_Pattern):
+    """Base class for most single-pattern classes. @private"""
+
+    _requires = 'pattern'  # for printing error message
+
+    pat: _Patterns  ; """@private"""
+    pat_tag: str | None  ; """@private"""
+    static_tags: Mapping[str, Any]  ; """@private"""
+
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
+        self._validate_tags(tags)
+
+        if anon_pat is not NotSet:
+            self.pat = anon_pat
+            self.pat_tag = None
+            self.static_tags = tags
+
+        elif (pat_tag := next(iter(tags), _SENTINEL)) is _SENTINEL:
+            raise ValueError(f'{self.__class__.__qualname__} requires {self._requires}')
+
+        else:
+            self.pat = tags.pop(pat_tag)
+            self.pat_tag = pat_tag
+            self.static_tags = tags
+
+    def __repr__(self) -> str:
+        tag = f'{pat_tag}={_rpr(self.pat)}' if (pat_tag := self.pat_tag) else _rpr(self.pat)
+        extra = self._repr_extra()
+
+        if static_tags := self.static_tags:
+            params = [tag, *extra, ', '.join(f'{t}={_rpr(p)}' for t, p in static_tags.items())]
+        else:
+            params = [tag, *extra]
+
+        return f'{self.__class__.__qualname__}({", ".join(params)})'
+
+    def _repr_extra(self) -> list[str]:
+        return _EMPTY_LIST
+
+    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
+        return _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
+
+
+class M_Pattern_Many(M_Pattern):
+    """Base class for multi-pattern classes `MOR` and `MAND`. @private"""
+
+    pats: list[_Patterns]  ; """@private"""
+    pat_tags: list[str | None]  ; """@private"""
+
+    def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
+        self._validate_tags(tagged_pats)
+
+        if anon_pats:
+            pats = list(anon_pats)
+            pat_tags = [None] * len(pats)
+
+            if tagged_pats:
+                pats.extend(tagged_pats.values())
+                pat_tags.extend(tagged_pats.keys())
+
+        elif tagged_pats:
+            pats = list(tagged_pats.values())
+            pat_tags = list(tagged_pats.keys())
+
+        else:
+            raise ValueError(f'{self.__class__.__qualname__} requires at least one pattern')
+
+        self.pats = pats
+        self.pat_tags = pat_tags
+
+    def __repr__(self) -> str:
+        name = self.__class__.__name__
+        tags = ', '.join(f'{t}={_rpr(p)}' if t else _rpr(p) for t, p in zip(self.pat_tags, self.pats, strict=True))
+
+        return f'{name}({tags})'
+
+
+class M(M_Pattern_One):
     """Tagging pattern container. If the given pattern matches then tags specified here will be returned in the
     `FSTMatch` result object. The tags can be static values but also the matched node can be returned in a given tag if
     the pattern is passed as a keyword parameter (the first one). This is useful for matching subparts of a target as
@@ -2806,41 +2884,7 @@ class M(M_Pattern):
     <FSTMatch Name(id='var') {'node': Name(id='var'), 'add1': 1, 'add2': 2}>
     """
 
-    _requires = 'pattern'  # for printing error message
-
-    pat: _Patterns  ; """@private"""
-    pat_tag: str | None  ; """@private"""
-    static_tags: Mapping[str, Any]  ; """@private"""
-
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
-        self._validate_tags(tags)
-
-        if anon_pat is not _SENTINEL:
-            self.pat = anon_pat
-            self.pat_tag = None
-            self.static_tags = tags
-
-        elif (pat_tag := next(iter(tags), _SENTINEL)) is _SENTINEL:
-            raise ValueError(f'{self.__class__.__qualname__} requires {self._requires}')
-
-        else:
-            self.pat = tags.pop(pat_tag)
-            self.pat_tag = pat_tag
-            self.static_tags = tags
-
-    def __repr__(self) -> str:
-        tag = f'{pat_tag}={_rpr(self.pat)}' if (pat_tag := self.pat_tag) else _rpr(self.pat)
-        extra = self._repr_extra()
-
-        if static_tags := self.static_tags:
-            params = [tag, *extra, ', '.join(f'{t}={_rpr(p)}' for t, p in static_tags.items())]
-        else:
-            params = [tag, *extra]
-
-        return f'{self.__class__.__qualname__}({", ".join(params)})'
-
-    def _repr_extra(self) -> list[str]:
-        return _EMPTY_LIST
+    __init__ = M_Pattern_One.__init__  # for the documentation
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mstate)
@@ -2862,11 +2906,8 @@ class M(M_Pattern):
 
         return self.static_tags
 
-    def _leaf_asts(self) -> tp_Set[type[AST]] | None:
-        return _LEAF_ASTS_FUNCS.get((p := self.pat).__class__, _leaf_asts_default)(p)
 
-
-class MNOT(M):
+class MNOT(M_Pattern_One):
     """Tagging NOT logic pattern container. If the given pattern **DOES NOT** match then tags specified here will be
     returned in the `FSTMatch` result object. The tags can be specified with static values but also the unmatched node
     can be returned in a given tag name.
@@ -2901,6 +2942,8 @@ class MNOT(M):
     <FSTMatch Name(id='NOT_VAR') {'add2': 2}>
     """
 
+    __init__ = M_Pattern_One.__init__  # for the documentation
+
     @staticmethod
     def _match(self: MNOT, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         m = _MATCH_FUNCS.get((p := self.pat).__class__, _match_default)(p, tgt, mstate)
@@ -2931,7 +2974,7 @@ class MNOT(M):
         return ASTS_LEAF__ALL - leaf_asts
 
 
-class MOR(M_Pattern):
+class MOR(M_Pattern_Many):
     """Simple OR pattern. Matches if any of the given patterns match.
 
     **Parameters:**
@@ -2969,35 +3012,7 @@ class MOR(M_Pattern):
     >>> pat.match(FST('bin + op'))
 """
 
-    pats: list[_Patterns]  ; """@private"""
-    pat_tags: list[str | None]  ; """@private"""
-
-    def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
-        self._validate_tags(tagged_pats)
-
-        if anon_pats:
-            pats = list(anon_pats)
-            pat_tags = [None] * len(pats)
-
-            if tagged_pats:
-                pats.extend(tagged_pats.values())
-                pat_tags.extend(tagged_pats.keys())
-
-        elif tagged_pats:
-            pats = list(tagged_pats.values())
-            pat_tags = list(tagged_pats.keys())
-
-        else:
-            raise ValueError(f'{self.__class__.__qualname__} requires at least one pattern')
-
-        self.pats = pats
-        self.pat_tags = pat_tags
-
-    def __repr__(self) -> str:
-        name = self.__class__.__name__
-        tags = ', '.join(f'{t}={_rpr(p)}' if t else _rpr(p) for t, p in zip(self.pat_tags, self.pats, strict=True))
-
-        return f'{name}({tags})'
+    __init__ = M_Pattern_Many.__init__  # for the documentation
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         for i, p in enumerate(self.pats):
@@ -3034,7 +3049,7 @@ class MOR(M_Pattern):
         return leaf_asts
 
 
-class MAND(MOR):
+class MAND(M_Pattern_Many):
     """Simple AND pattern. Matches only if all of the given patterns match. This pattern isn't terribly useful for
     straight node matches as if you try to combine different node types using this node their types become mutually
     exclusive and will make this always fail. Where this can come in handy for example is when examining list fields
@@ -3067,6 +3082,8 @@ class MAND(MOR):
     >>> pat.match(FST('[a, x, b, y, z, b, c, b]'))
     <FSTMatch <List ROOT 0,0..0,24>>
     """
+
+    __init__ = M_Pattern_Many.__init__  # for the documentation
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if mstate.is_FST and isinstance(tgt, AST):
@@ -3197,7 +3214,7 @@ class MTYPES(M_Pattern):
         return leaf_asts
 
 
-class MOPT(M):
+class MOPT(M_Pattern_One):
     """This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not
     be present. That is, both a normal value which matches the pattern and a `None` value are considered a successful
     match. A non-`None` value which does NOT match the pattern is considered a failure.
@@ -3239,6 +3256,8 @@ class MOPT(M):
     >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
     <FSTMatch <MatchMapping ROOT 0,0..0,6>>
     """
+
+    __init__ = M_Pattern_One.__init__  # for the documentation
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if tgt is None:
@@ -3316,11 +3335,11 @@ class MRE(M_Pattern):
     search: bool  ; """@private"""
 
     def __init__(
-        self, anon_re_pat: str | re_Pattern | None = None, /, flags: int = 0, search: bool = False, **tags
+        self, anon_re_pat: str | re_Pattern | _NotSet = NotSet, /, flags: int = 0, search: bool = False, **tags
     ) -> None:
         self._validate_tags(tags)
 
-        if anon_re_pat is not None:
+        if anon_re_pat is not NotSet:
             pat_tag = None
         elif (pat_tag := next(iter(tags), None)) is None:
             raise ValueError('MRE requires pattern')
@@ -3367,7 +3386,7 @@ class MRE(M_Pattern):
         return self.static_tags
 
 
-class MCB(M):
+class MCB(M_Pattern_One):
     """Callback to check target, which can be a node (`AST` or `FST` depending on the type of tree the pattern was
     called on) or constant or a list of `AST`s or constants.
 
@@ -3387,7 +3406,7 @@ class MCB(M):
     - `pass_tags`: If `False` then the normal single-object callback format is used. If `True` then will call the
         callback with an additional parameter which is a tag getter function which allows the callback to get tags which
         have been set up to this point. The tag getter works in the same way as `dict.get()` and the default for no tag
-        is `fst.match.NoTag`.
+        is `fst.match.NotSet`.
 
     **Examples:**
 
@@ -3450,7 +3469,7 @@ class MCB(M):
     ... ))
 
     >>> MList([m, m, m]) .match(FST('[a, b, c]'))
-    this: <Name 0,1..0,2>, prev: <NoTag>
+    this: <Name 0,1..0,2>, prev: <NotSet>
     this: <Name 0,4..0,5>, prev: <Name 0,1..0,2>
     this: <Name 0,7..0,8>, prev: <Name 0,4..0,5>
     <FSTMatch <List ROOT 0,0..0,9> {'prev': <Name 0,7..0,8>}>
@@ -3462,6 +3481,17 @@ class MCB(M):
         Callable[[_Target, Callable[[str, object], object]], object] |
         Callable[[_TargetFST, Callable[[str, object], object]], object]
     )
+    """Depending on if the match target is an `FST` or `AST` and if the `MCB` parameter `pass_tags` is `True` or
+    `False`, this callback will be one of:
+
+    - `Callable[[[AST | constant]], object]`
+    - `Callable[[[FST | constant]], object]`
+    - `Callable[[[AST | constant], Callable[[str, object], object]], object]`
+    - `Callable[[[FST | constant], Callable[[str, object], object]], object]`
+
+    Where `constant` is `ellipsis | int | float | complex | str | bytes | bool | None`.
+    """
+
 
     _requires = 'callback'  # for printing error message
 
@@ -3472,16 +3502,16 @@ class MCB(M):
 
     def __init__(
         self,
-        anon_callback: CallbackType = _SENTINEL,
+        anon_callback: CallbackType | _NotSet = NotSet,
         /,
         tag_ret: bool = False,
-        fail_obj: object = _SENTINEL,
+        fail_obj: object = NotSet,
         pass_tags: bool = False,
         **tags,
     ) -> None:
-        M.__init__(self, anon_callback, **tags)
+        M_Pattern_One.__init__(self, anon_callback, **tags)
 
-        if tag_ret and anon_callback is not _SENTINEL:
+        if tag_ret and anon_callback is not NotSet:
             raise ValueError('MCB can never tag the callback return since the callback does not have a tag')
 
         self.tag_ret = tag_ret
@@ -3494,7 +3524,7 @@ class MCB(M):
         if tag_ret := self.tag_ret:
             params.append(f'tag_ret={tag_ret}')
 
-        if (fail_obj := self.fail_obj) is not _SENTINEL:
+        if (fail_obj := self.fail_obj) is not NotSet:
             params.append(f'fail_obj={_rpr(fail_obj)}')
 
         if static_tags := self.static_tags:
@@ -3512,7 +3542,7 @@ class MCB(M):
 
         fail_obj = self.fail_obj
 
-        if (not m if fail_obj is _SENTINEL else m is fail_obj):
+        if (not m if fail_obj is NotSet else m is fail_obj):
             return None
 
         if pat_tag := self.pat_tag:
@@ -3524,7 +3554,7 @@ class MCB(M):
         return self.static_tags
 
 
-class MTAG(M):
+class MTAG(M_Pattern_One):
     """Match previously matched node (backreference). Looks through tags of current matches and if found then attempts
     to match against the value of the tag. Meant for matching previously matched nodes but can match anything which can
     work as a valid pattern in a tag, however it got there.
@@ -3577,8 +3607,8 @@ class MTAG(M):
 
     pat: str  ; """@private"""  # this is really a source tag name here
 
-    def __init__(self, anon_tag: str = _SENTINEL, /, **tags) -> None:
-        M.__init__(self, anon_tag, **tags)
+    def __init__(self, anon_tag: str | _NotSet = NotSet, /, **tags) -> None:
+        M_Pattern_One.__init__(self, anon_tag, **tags)
 
         self._validate_tags((self.pat,))
 
@@ -3609,7 +3639,7 @@ class MTAG(M):
         return self.static_tags
 
 
-class MQ(M):
+class MQ(M_Pattern_One):
     """Quantifier pattern. Can only be used inside list fields and matches at least `min` and at most `max` instances of
     the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a tag for the
     matched patterns they are given as a list of `FSTMatch` objects instead of just one.
@@ -3701,15 +3731,15 @@ class MQ(M):
 
     def __init__(
         self,
-        anon_pat: _Patterns = _SENTINEL,
+        anon_pat: _Patterns | _NotSet = NotSet,
         /,
-        min: int = _SENTINEL,
-        max: int | None = _SENTINEL,
+        min: int | _NotSet = NotSet,
+        max: int | None | _NotSet = NotSet,
         **tags,
     ) -> None:
-        M.__init__(self, anon_pat, **tags)
+        M_Pattern_One.__init__(self, anon_pat, **tags)
 
-        if min is _SENTINEL or max is _SENTINEL:
+        if min is NotSet or max is NotSet:
             raise ValueError(f'{self.__class__.__qualname__} requires both min and max values')
 
         if min < 0:
@@ -3792,7 +3822,7 @@ class MQSTAR(MQ):
     min = 0
     max = None
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
         M.__init__(self, anon_pat, **tags)
 
     def _repr_extra(self) -> list[str]:
@@ -3862,7 +3892,7 @@ class MQPLUS(MQ):
     min = 1
     max = None
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
         M.__init__(self, anon_pat, **tags)
 
     def _repr_extra(self) -> list[str]:
@@ -3916,7 +3946,7 @@ class MQ01(MQ):
     min = 0  # for direct type use
     max = 1
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
         M.__init__(self, anon_pat, **tags)
 
     def _repr_extra(self) -> list[str]:
@@ -3983,10 +4013,12 @@ class MQMIN(MQ):
 
     max = None
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, min: int = _SENTINEL, **tags) -> None:
+    def __init__(
+        self, anon_pat: _Patterns | _NotSet = NotSet, /, min: int | _NotSet = NotSet, **tags
+    ) -> None:
         M.__init__(self, anon_pat, **tags)
 
-        if min is _SENTINEL:
+        if min is NotSet:
             raise ValueError(f'{self.__class__.__qualname__} requires a min value')
         if min < 0:
             raise ValueError(f'{self.__class__.__qualname__} min cannot be negative')
@@ -4046,10 +4078,12 @@ class MQMAX(MQ):
 
     min = 0
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, max: int | None = _SENTINEL, **tags) -> None:
+    def __init__(
+        self, anon_pat: _Patterns | _NotSet = NotSet, /, max: int | None | _NotSet = NotSet, **tags
+    ) -> None:
         M.__init__(self, anon_pat, **tags)
 
-        if max is _SENTINEL:
+        if max is NotSet:
             raise ValueError(f'{self.__class__.__qualname__} requires a max value')
         if max is not None and max < 0:
             raise ValueError(f'{self.__class__.__qualname__} max cannot be negative')
@@ -4097,10 +4131,12 @@ class MQN(MQ):
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
     """
 
-    def __init__(self, anon_pat: _Patterns = _SENTINEL, /, n: int = _SENTINEL, **tags) -> None:
+    def __init__(
+        self, anon_pat: _Patterns | _NotSet = NotSet, /, n: int | _NotSet = NotSet, **tags
+    ) -> None:
         M.__init__(self, anon_pat, **tags)
 
-        if n is _SENTINEL:
+        if n is NotSet:
             raise ValueError(f'{self.__class__.__qualname__} requires a count value')
         if n is not None and n < 0:
             raise ValueError(f'{self.__class__.__qualname__} count cannot be negative')
@@ -4189,7 +4225,7 @@ class _MatchState:
 
         return tags
 
-    def get_tag(self, tag: str, default: object = NoTag, /) -> object:
+    def get_tag(self, tag: str, default: object = NotSet, /) -> object:
         """Walk running list of dictionaries backwards checking for `tag`."""
 
         for tagss in reversed(self.all_tagss):
