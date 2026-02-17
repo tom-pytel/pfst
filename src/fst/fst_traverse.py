@@ -861,10 +861,10 @@ def walk(
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
     - `asts`: If this is provided as a list of `AST` nodes then this is used for the initial list of nodes to walk and
         recurse into (if recurse allowed). In this case `self_` is ignored and no setup is done in case of `scope`,
-        though child scopes are not recursed into by default in this case. `recurse` and `back` are honored (`back`
-        will reverse the order of the walk for the given `asts` as expected). No syntax ordering is done on this list,
-        it is walked "as-is", so it may just be a collection of different nodes to walk individually. The `asts` list is
-        not consumed.
+        though `scope` is honored for recursing into child scopes. `recurse` and `back` are also honored (`back` will
+        reverse the order of the walk for the given `asts` as expected). No syntax ordering is done on this list, it is
+        walked "as-is", so it may just be a collection of different nodes to walk individually. The `asts` list is not
+        consumed.
 
     **Returns:**
     - `Generator`: This will yield the nodes which fit the parametes. Can also `send(True)` or `send(False)` to this

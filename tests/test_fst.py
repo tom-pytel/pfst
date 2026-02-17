@@ -8212,21 +8212,19 @@ opts.ignore_module = [mod.strip()
         self.assertEqual("<FSTMatch <FunctionDef ROOT 0,0..0,20>>", str(MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))))
         self.assertEqual("None", str(MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))))
         self.assertEqual("<FSTMatch <FunctionDef ROOT 0,0..0,13> {'t': []}>", str(MFunctionDef(returns=MOPT(t='int')).match(FST('def f(): pass'))))
-        self.assertEqual("<FSTMatch <FunctionDef ROOT 0,0..0,20> {'t': [<FSTMatch <Name 0,11..0,14>>]}>", str(MFunctionDef(returns=MOPT(t='int')).match(FST('def f() -> int: pass'))))
-        self.assertEqual("<FSTMatch <FunctionDef ROOT 0,0..0,20> {'t': [<FSTMatch <Name 0,11..0,14> {'m': <Name 0,11..0,14>}>]}>", str(MFunctionDef(returns=MOPT(t=M(m='int'))).match(FST('def f() -> int: pass'))))
+        self.assertEqual("<FSTMatch <FunctionDef ROOT 0,0..0,20> {'t': <Name 0,11..0,14>}>", str(MFunctionDef(returns=MOPT(t='int')).match(FST('def f() -> int: pass'))))
+        self.assertEqual("<FSTMatch <FunctionDef ROOT 0,0..0,20> {'m': <Name 0,11..0,14>, 't': <Name 0,11..0,14>}>", str(MFunctionDef(returns=MOPT(t=M(m='int'))).match(FST('def f() -> int: pass'))))
 
         p = MFunctionDef(returns=MOPT(t='int'))
         f = FST('def f() -> int: pass')
         m = p.match(f)
-        self.assertIs(m.t[0].pattern, p.returns.pat)
-        self.assertIs(m.t[0].matched, f.returns)
+        self.assertIs(m.t, f.returns)
 
         p = MFunctionDef(returns=MOPT(t=M(m='int')))
         f = FST('def f() -> int: pass')
         m = p.match(f)
-        self.assertIs(m.t[0].pattern, p.returns.pat)
-        self.assertIs(m.t[0].matched, f.returns)
-        self.assertIs(m.t[0].m, f.returns)
+        self.assertIs(m.t, f.returns)
+        self.assertIs(m.m, f.returns)
 
         # MCB
 
@@ -8635,6 +8633,67 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertIs((f := FST('a; b')).a.body, MAST(body=M(t=['a', 'b'])).match(f.a).t)
         self.assertIs((f := FST('a\nb')).a.body, MAST(body=M(t=['a', 'b'])).match(f.a).t)
 
+        # patterns in various structural locations
+
+        tgt_mod = FST('a', 'exec').copy_ast()
+        tgt_list = FST('[a]').copy_ast()
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a'))}>", str(MModule(body=[M(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))]}>", str(MModule(body=M(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(M(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a')}>", str(MList(elts=[M(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')]}>", str(MList(elts=M(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')])}>", str(M(t=MList(elts=[...])).match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a'))}>", str(MModule(body=[MNOT(t='NO!')]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))]}>", str(MModule(body=MNOT(t=['NO!'])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(MNOT(t=MModule(body=['NO!'])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a')}>", str(MList(elts=[MNOT(t='NO!')]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')]}>", str(MList(elts=MNOT(t=['NO!'])).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')])}>", str(MNOT(t=MList(elts=['NO!'])).match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a'))}>", str(MModule(body=[MOR(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))]}>", str(MModule(body=MOR(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(MOR(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a')}>", str(MList(elts=[MOR(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')]}>", str(MList(elts=MOR(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')])}>", str(MOR(t=MList(elts=[...])).match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a'))}>", str(MModule(body=[MAND(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))]}>", str(MModule(body=MAND(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(MAND(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a')}>", str(MList(elts=[MAND(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')]}>", str(MList(elts=MAND(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')])}>", str(MAND(t=MList(elts=[...])).match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a'))}>", str(MModule(body=[MOPT(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))]}>", str(MModule(body=MOPT(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(MOPT(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a')}>", str(MList(elts=[MOPT(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')]}>", str(MList(elts=MOPT(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')])}>", str(MOPT(t=MList(elts=[...])).match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a'))}>", str(MModule(body=[MCB(t=lambda t: t, tag_ret=True)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))]}>", str(MModule(body=MCB(t=lambda t: t, tag_ret=True)).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(MCB(t=lambda t: t, tag_ret=True).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a')}>", str(MList(elts=[MCB(t=lambda t: t, tag_ret=True)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')]}>", str(MList(elts=MCB(t=lambda t: t, tag_ret=True)).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')])}>", str(MCB(t=lambda t: t, tag_ret=True).match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MModule(body=[MRE(t='a$')]).match(tgt_mod)))
+        self.assertEqual("None", str(MModule(body=MRE(t='a$')).match(tgt_mod)))  # because is a list[AST], not clear what text to compare against
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MRE(t='a$').match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MList(elts=[MRE(t='a$')]).match(tgt_list)))
+        self.assertEqual("None", str(MList(elts=MRE(t='a$')).match(tgt_list)))  # because is a list[AST], not clear what text to compare against
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': <re.Match object; span=(0, 3), match='[a]'>}>", str(MRE(t=r'\[a\]$').match(tgt_list)))
+
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Expr(value=Name(id='a')), 'u': Expr(value=Name(id='a'))}>", str(MModule(body=[MAND(M(t=...), MTAG(u='t'))]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': [Expr(value=Name(id='a'))], 'u': [Expr(value=Name(id='a'))]}>", str(MModule(body=MAND(M(t=[...]), MTAG(u='t'))).match(tgt_mod)))
+        self.assertEqual("<FSTMatch Module(body=[Expr(value=Name(id='a'))], type_ignores=[]) {'t': Module(body=[Expr(value=Name(id='a'))], type_ignores=[]), 'u': Module(body=[Expr(value=Name(id='a'))], type_ignores=[])}>", str(MAND(M(t=MModule(body=[...])), MTAG(u='t')).match(tgt_mod)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': Name(id='a'), 'u': Name(id='a')}>", str(MList(elts=[MAND(M(t=...), MTAG(u='t'))]).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': [Name(id='a')], 'u': [Name(id='a')]}>", str(MList(elts=MAND(M(t=[...]), MTAG(u='t'))).match(tgt_list)))
+        self.assertEqual("<FSTMatch List(elts=[Name(id='a')]) {'t': List(elts=[Name(id='a')]), 'u': List(elts=[Name(id='a')])}>", str(MAND(M(t=MList(elts=[...])), MTAG(u='t')).match(tgt_list)))
+
     def test_match_FST(self):
         pat = MConstant(M(t=...))
 
@@ -8750,7 +8809,217 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertEqual(str((f := FST('a; b')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
         self.assertEqual(str((f := FST('a\nb')).body), str(MAST(body=M(t=['a', 'b'])).match(f).t))
 
-    def test_match_virtual_field_Dict_and_MatchMapping(self):
+        # patterns in various structural locations
+
+        tgt_mod = FST('a', 'exec')
+        tgt_list = FST('[a]')
+        tgt_dict = FST('{a: a}')
+        tgt_arguments = FST('a: int = 1', 'arguments')
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>}>", str(MModule(body=[M(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=M(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>}>", str(M(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>}>", str(MList(elts=[M(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=M(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>}>", str(M(t=MList(elts=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[M(t=...)]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=M(t=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>}>", str(M(t=MDict(_all=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[M(t=...)]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=M(t=[...])).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>}>", str(M(t=Marguments(_all=[...])).match(tgt_arguments)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>}>", str(MModule(body=[MNOT(t='NO!')]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=MNOT(t=['NO!'])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>}>", str(MNOT(t=MModule(body=['NO!'])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>}>", str(MList(elts=[MNOT(t='NO!')]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=MNOT(t=['NO!'])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>}>", str(MNOT(t=MList(elts=['NO!'])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[MNOT(t='NO!')]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=MNOT(t=['NO!'])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>}>", str(MNOT(t=MDict(_all=['NO!'])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[MNOT(t='NO!')]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=MNOT(t=['NO!'])).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>}>", str(MNOT(t=Marguments(_all=['NO!'])).match(tgt_arguments)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>}>", str(MModule(body=[MOR(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=MOR(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>}>", str(MOR(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>}>", str(MList(elts=[MOR(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=MOR(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>}>", str(MOR(t=MList(elts=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[MOR(t=...)]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=MOR(t=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>}>", str(MOR(t=MDict(_all=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[MOR(t=...)]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=MOR(t=[...])).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>}>", str(MOR(t=Marguments(_all=[...])).match(tgt_arguments)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>}>", str(MModule(body=[MAND(t=...)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=MAND(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>}>", str(MAND(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>}>", str(MList(elts=[MAND(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=MAND(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>}>", str(MAND(t=MList(elts=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[MAND(t=...)]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=MAND(t=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>}>", str(MAND(t=MDict(_all=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[MAND(t=...)]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=MAND(t=[...])).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>}>", str(MAND(t=Marguments(_all=[...])).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>}>", str(MModule(body=[MOPT(t=...)]).match(tgt_mod)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=MOPT(t=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>}>", str(MOPT(t=MModule(body=[...])).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>}>", str(MList(elts=[MOPT(t=...)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=MOPT(t=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>}>", str(MOPT(t=MList(elts=[...])).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[MOPT(t=...)]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=MOPT(t=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>}>", str(MOPT(t=MDict(_all=[...])).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[MOPT(t=...)]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=MOPT(t=[...])).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>}>", str(MOPT(t=Marguments(_all=[...])).match(tgt_arguments)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>}>", str(MModule(body=[MCB(t=lambda t: t, tag_ret=True)]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=MCB(t=lambda t: t, tag_ret=True)).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>}>", str(MCB(t=lambda t: t, tag_ret=True).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>}>", str(MList(elts=[MCB(t=lambda t: t, tag_ret=True)]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=MCB(t=lambda t: t, tag_ret=True)).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>}>", str(MCB(t=lambda t: t, tag_ret=True).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[MCB(t=lambda t: t, tag_ret=True)]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=MCB(t=lambda t: t, tag_ret=True)).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>}>", str(MCB(t=lambda t: t, tag_ret=True).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[MCB(t=lambda t: t, tag_ret=True)]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=MCB(t=lambda t: t, tag_ret=True)).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>}>", str(MCB(t=lambda t: t, tag_ret=True).match(tgt_arguments)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MModule(body=[MRE(t='a$')]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MModule(body=MRE(t='a$')).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MRE(t='a$').match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MList(elts=[MRE(t='a$')]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <re.Match object; span=(0, 1), match='a'>}>", str(MList(elts=MRE(t='a$')).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <re.Match object; span=(0, 3), match='[a]'>}>", str(MRE(t=r'\[a\]$').match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <re.Match object; span=(0, 4), match='a: a'>}>", str(MDict(_all=[MRE(t='a: a$')]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <re.Match object; span=(0, 4), match='a: a'>}>", str(MDict(_all=MRE(t='a: a$')).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <re.Match object; span=(0, 6), match='{a: a}'>}>", str(MRE(t='{a: a}$').match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <re.Match object; span=(0, 10), match='a: int = 1'>}>", str(Marguments(_all=[MRE(t='a: int = 1$')]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <re.Match object; span=(0, 10), match='a: int = 1'>}>", str(Marguments(_all=MRE(t='a: int = 1$')).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <re.Match object; span=(0, 10), match='a: int = 1'>}>", str(MRE(t='a: int = 1$').match(tgt_arguments)))
+
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Expr 0,0..0,1>, 'u': <Expr 0,0..0,1>}>", str(MModule(body=[MAND(M(t=...), MTAG(u='t'))]).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <<Module ROOT 0,0..0,1>.body>, 'u': <<Module ROOT 0,0..0,1>.body>}>", str(MModule(body=MAND(M(t=[...]), MTAG(u='t'))).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..0,1> {'t': <Module ROOT 0,0..0,1>, 'u': <Module ROOT 0,0..0,1>}>", str(MAND(M(t=MModule(body=[...])), MTAG(u='t')).match(tgt_mod)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <Name 0,1..0,2>, 'u': <Name 0,1..0,2>}>", str(MList(elts=[MAND(M(t=...), MTAG(u='t'))]).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>, 'u': <<List ROOT 0,0..0,3>.elts>}>", str(MList(elts=MAND(M(t=[...]), MTAG(u='t'))).match(tgt_list)))
+        self.assertEqual("<FSTMatch <List ROOT 0,0..0,3> {'t': <List ROOT 0,0..0,3>, 'u': <List ROOT 0,0..0,3>}>", str(MAND(M(t=MList(elts=[...])), MTAG(u='t')).match(tgt_list)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>, 'u': <<Dict ROOT 0,0..0,6>._all[:1]>}>", str(MDict(_all=[MAND(M(t=...), MTAG(u='t'))]).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all>, 'u': <<Dict ROOT 0,0..0,6>._all>}>", str(MDict(_all=MAND(M(t=[...]), MTAG(u='t'))).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <Dict ROOT 0,0..0,6> {'t': <Dict ROOT 0,0..0,6>, 'u': <Dict ROOT 0,0..0,6>}>", str(MAND(M(t=MDict(_all=[...])), MTAG(u='t')).match(tgt_dict)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all[:1]>, 'u': <<arguments ROOT 0,0..0,10>._all[:1]>}>", str(Marguments(_all=[MAND(M(t=...), MTAG(u='t'))]).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <<arguments ROOT 0,0..0,10>._all>, 'u': <<arguments ROOT 0,0..0,10>._all>}>", str(Marguments(_all=MAND(M(t=[...]), MTAG(u='t'))).match(tgt_arguments)))
+        self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,10> {'t': <arguments ROOT 0,0..0,10>, 'u': <arguments ROOT 0,0..0,10>}>", str(MAND(M(t=Marguments(_all=[...])), MTAG(u='t')).match(tgt_arguments)))
+
+    def test_match_FSTView(self):
+        self.assertTrue(MClassDef(_bases=['a', '*b', 'c=d', '**e']).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertFalse(MClassDef(_bases=['a', '*b', 'c=d', '**f']).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=['a', '*b', 'c=d', '**e']).match(FST('call(a, *b, c=d, **e)')))
+        self.assertFalse(MCall(_args=['a', '*b', 'c=d', '**f']).match(FST('call(a, *b, c=d, **e)')))
+        self.assertFalse(MClassDef(body=['a', 'b', 'c']).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=['a', 'b', 'c']).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MGlobal(names=['a', 'b', 'c']).match(FST('global a, b, c')))
+        self.assertFalse(MGlobal(names=['a', 'b', 'd']).match(FST('global a, b, c')))
+        self.assertTrue(MNonlocal(names=['a', 'b', 'c']).match(FST('nonlocal a, b, c')))
+        self.assertFalse(MNonlocal(names=['a', 'b', 'd']).match(FST('nonlocal a, b, c')))
+        self.assertTrue(MCompare(_all=['a', 'b', 'c']).match(FST('a < b < c')))
+        self.assertFalse(MCompare(_all=['a', 'b', 'd']).match(FST('a < b < c')))
+
+        self.assertTrue(MClassDef(_bases=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertFalse(MClassDef(_bases=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('f'))]).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('call(a, *b, c=d, **e)')))
+        self.assertFalse(MCall(_args=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('f'))]).match(FST('call(a, *b, c=d, **e)')))
+        self.assertFalse(MClassDef(body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MCompare(_all=[MName('a'), MName('b'), MName('c')]).match(FST('a < b < c')))
+        self.assertFalse(MCompare(_all=[MName('a'), MName('b'), MName('d')]).match(FST('a < b < c')))
+
+        self.assertTrue(MClassDef(_bases=[MQSTAR]).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=[MQSTAR]).match(FST('call(a, *b, c=d, **e)')))
+        self.assertTrue(MClassDef(body=[MQSTAR]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=[MQSTAR]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MGlobal(names=[MQSTAR]).match(FST('global a, b, c')))
+        self.assertTrue(MNonlocal(names=[MQSTAR]).match(FST('nonlocal a, b, c')))
+        self.assertTrue(MCompare(_all=[MQSTAR]).match(FST('a < b < c')))
+
+    def test_match_FSTView_to_FSTView(self):
+        # same type
+
+        self.assertTrue(MClassDef(_bases=FST('class c(a, *b, c=d, **e): pass')._bases).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertFalse(MClassDef(_bases=FST('class c(a, *b, c=d, **f): pass')._bases).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=FST('call(a, *b, c=d, **e)')._args).match(FST('call(a, *b, c=d, **e)')))
+        self.assertFalse(MCall(_args=FST('call(a, *b, c=d, **f)')._args).match(FST('call(a, *b, c=d, **e)')))
+
+        self.assertTrue(MClassDef(body=FST('class cls:\n """docstr"""\n a\n b\n c').body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertFalse(MClassDef(body=FST('class cls:\n """docstr"""\n a\n b\n c')._body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertFalse(MClassDef(_body=FST('class cls:\n """docstr"""\n a\n b\n c').body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=FST('class cls:\n """docstr"""\n a\n b\n c')._body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+
+        self.assertTrue(MGlobal(names=FST('global a, b, c').names).match(FST('global a, b, c')))
+        self.assertFalse(MGlobal(names=FST('global a, b, d').names).match(FST('global a, b, c')))
+        self.assertTrue(MNonlocal(names=FST('nonlocal a, b, c').names).match(FST('nonlocal a, b, c')))
+        self.assertFalse(MNonlocal(names=FST('nonlocal a, b, d').names).match(FST('nonlocal a, b, c')))
+
+        self.assertTrue(MCompare(_all=FST('a < b < c')._all).match(FST('a < b < c')))
+        self.assertFalse(MCompare(_all=FST('a < b < d')._all).match(FST('a < b < c')))
+        self.assertFalse(MCompare(_all=FST('a < b > d')._all).match(FST('a < b < c')))
+
+        # different type
+
+        self.assertTrue(MClassDef(_bases=FST('call(a, *b, c=d, **e)')._args).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertFalse(MClassDef(_bases=FST('call(a, *b, c=d, **f)')._args).match(FST('class c(a, *b, c=d, **e): pass')))
+        self.assertTrue(MCall(_args=FST('class c(a, *b, c=d, **e): pass')._bases).match(FST('call(a, *b, c=d, **e)')))
+        self.assertFalse(MCall(_args=FST('class c(a, *b, c=d, **f): pass')._bases).match(FST('call(a, *b, c=d, **e)')))
+
+        self.assertTrue(MClassDef(body=FST('def f():\n """docstr"""\n a\n b\n c').body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertFalse(MClassDef(body=FST('def f():\n """docstr"""\n a\n b\n c')._body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertFalse(MClassDef(_body=FST('def f():\n """docstr"""\n a\n b\n c').body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(MClassDef(_body=FST('def f():\n """docstr"""\n a\n b\n c')._body).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+
+        self.assertTrue(MGlobal(names=FST('nonlocal a, b, c').names).match(FST('global a, b, c')))
+        self.assertFalse(MGlobal(names=FST('nonlocal a, b, d').names).match(FST('global a, b, c')))
+        self.assertTrue(MNonlocal(names=FST('global a, b, c').names).match(FST('nonlocal a, b, c')))
+        self.assertFalse(MNonlocal(names=FST('global a, b, d').names).match(FST('nonlocal a, b, c')))
+
+    def test_match_virtual_field_Compare(self):
+        from fst.match import _SENTINEL
+        self.assertEqual("<FSTMatch <<Compare ROOT 0,0..0,5>._all[:0]>>", str(MCompare(_SENTINEL, [], []).match(FST('a < b')._all[:0])))
+
+        f = FST('a < b')
+        del f[1]
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,1>>", str(MCompare().match(f)))
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,1>>", str(MCompare('a').match(f)))
+        self.assertEqual("None", str(MCompare('b').match(f)))
+
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,5>>", str(MCompare(_all=FST('a < b')._all).match(FST('a < b'))))
+        self.assertEqual("None", str(MCompare(_all=FST('a > b')._all).match(FST('a < b'))))
+        self.assertEqual("None", str(MCompare(_all=FST('a < c')._all).match(FST('a < b'))))
+
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,9>>", str(MCompare(_all=FST('a < b < c')._all).match(FST('a < b < c'))))
+        self.assertEqual("None", str(MCompare(_all=FST('a < b > c')._all).match(FST('a < b < c'))))
+        self.assertEqual("None", str(MCompare(_all=FST('a < b < d')._all).match(FST('a < b < c'))))
+
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,9> {'t': <Name 0,0..0,1>}>", str(MCompare(_all=MCompare(M(t='a'), ['<', '>'], ['b', 'c'])).match(FST('a < b > c'))))
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,9> {'t': <Lt 0,2..0,3>}>", str(MCompare(_all=MCompare('a', [M(t='<'), '>'], ['b', 'c'])).match(FST('a < b > c'))))
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,9> {'t': <Gt 0,6..0,7>}>", str(MCompare(_all=MCompare('a', ['<', M(t='>')], ['b', 'c'])).match(FST('a < b > c'))))
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,9> {'t': <Name 0,4..0,5>}>", str(MCompare(_all=MCompare('a', ['<', '>'], [M(t='b'), 'c'])).match(FST('a < b > c'))))
+        self.assertEqual("<FSTMatch <Compare ROOT 0,0..0,9> {'t': <Name 0,8..0,9>}>", str(MCompare(_all=MCompare('a', ['<', '>'], ['b', M(t='c')])).match(FST('a < b > c'))))
+
+        self.assertFalse(MCompare(_all=MCompare('x', ['<', '>'], ['b', 'c'])).match(FST('a < b > c')))
+        self.assertFalse(MCompare(_all=MCompare('a', ['>', '>'], ['b', 'c'])).match(FST('a < b > c')))
+        self.assertFalse(MCompare(_all=MCompare('a', ['<', '<'], ['b', 'c'])).match(FST('a < b > c')))
+        self.assertFalse(MCompare(_all=MCompare('a', ['<', '>'], ['x', 'c'])).match(FST('a < b > c')))
+
+    def test_match_virtual_field_one_Dict(self):
         # string to multinode
 
         self.assertTrue(MDict(_all=['a: b']).match(FST('{a: b}')))
@@ -8763,21 +9032,6 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(MDict(_all=['** b']).match(FST('{**b}')))
         self.assertFalse(MDict(_all=['** b']).match(FST('{**  b}')))
 
-        self.assertTrue(MMatchMapping(_all=['1: b']).match(FST('{1: b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=['1: b']).match(FST('{ 1: b }', pattern)))
-        self.assertFalse(MMatchMapping(_all=['1: b']).match(FST('{1:b}', pattern)))
-        self.assertFalse(MMatchMapping(_all=['1: b']).match(FST('{1:  b}', pattern)))
-
-        self.assertTrue(MMatchMapping(_all=['** b']).match(FST('{** b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=['** b']).match(FST('{ ** b }', pattern)))
-        self.assertFalse(MMatchMapping(_all=['** b']).match(FST('{**b}', pattern)))
-        self.assertFalse(MMatchMapping(_all=['** b']).match(FST('{**  b}', pattern)))
-
-        self.assertTrue(Marguments(_all=['a: int = 1']).match(FST('a: int = 1', arguments)))
-        self.assertTrue(Marguments(_all=['a: int = 1']).match(FST('a: int = 1 ,', arguments)))
-        self.assertFalse(Marguments(_all=['a: int = 1']).match(FST('a:int=1', arguments)))
-        self.assertFalse(Marguments(_all=['a: int = 1']).match(FST('a  :  int  =  1', arguments)))
-
         # regex to multinode
 
         self.assertTrue(MDict(_all=[re.compile(r'a\s*:\s*b')]).match(FST('{a: b}')))
@@ -8789,20 +9043,6 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertTrue(MDict(_all=[re.compile(r'\*\*\s*b')]).match(FST('{** b}')))
         self.assertFalse(MDict(_all=[re.compile(r'\*\*\s*b')]).match(FST('{**c}')))
 
-        self.assertTrue(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{1: b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{1:b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{ 1 : b }', pattern)))
-        self.assertFalse(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{1: c}', pattern)))
-
-        self.assertTrue(MMatchMapping(_all=[re.compile(r'\*\*\s*b')]).match(FST('{**b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=[re.compile(r'\*\*\s*b')]).match(FST('{** b}', pattern)))
-        self.assertFalse(MMatchMapping(_all=[re.compile(r'\*\*\s*b')]).match(FST('{**c}', pattern)))
-
-        self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 1', arguments)))
-        self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a:int=1', arguments)))
-        self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
-        self.assertFalse(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
-
         # MRE to multinode
 
         self.assertTrue(MDict(_all=[MRE(r'a\s*:\s*b')]).match(FST('{a: b}')))
@@ -8813,20 +9053,6 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertTrue(MDict(_all=[MRE(r'\*\*\s*b')]).match(FST('{**b}')))
         self.assertTrue(MDict(_all=[MRE(r'\*\*\s*b')]).match(FST('{** b}')))
         self.assertFalse(MDict(_all=[MRE(r'\*\*\s*b')]).match(FST('{**c}')))
-
-        self.assertTrue(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{1: b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{1:b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{ 1 : b }', pattern)))
-        self.assertFalse(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{1: c}', pattern)))
-
-        self.assertTrue(MMatchMapping(_all=[MRE(r'\*\*\s*b')]).match(FST('{**b}', pattern)))
-        self.assertTrue(MMatchMapping(_all=[MRE(r'\*\*\s*b')]).match(FST('{** b}', pattern)))
-        self.assertFalse(MMatchMapping(_all=[MRE(r'\*\*\s*b')]).match(FST('{**c}', pattern)))
-
-        self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 1', arguments)))
-        self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a:int=1', arguments)))
-        self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
-        self.assertFalse(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
 
         # Concrete pattern to multinode Dict
 
@@ -8883,6 +9109,41 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertEqual("<FSTMatch <List ROOT 0,0..0,16> {'t': MDict(keys=[M(k=...)], values=[M(v=...)]), 'k': <Constant 0,10..0,11>, 'v': <Name 0,13..0,14>}>", str(pat.match(FST('[filler, {1: a}]'))))
 
         self.assertIsNone(MDict().match(FST('{1: a, 2: b}')._all))  # this is a truly unrealistic test, but hey, coverage
+
+    def test_match_virtual_field_one_MatchMapping(self):
+        # string to multinode
+
+        self.assertTrue(MMatchMapping(_all=['1: b']).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=['1: b']).match(FST('{ 1: b }', pattern)))
+        self.assertFalse(MMatchMapping(_all=['1: b']).match(FST('{1:b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=['1: b']).match(FST('{1:  b}', pattern)))
+
+        self.assertTrue(MMatchMapping(_all=['** b']).match(FST('{** b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=['** b']).match(FST('{ ** b }', pattern)))
+        self.assertFalse(MMatchMapping(_all=['** b']).match(FST('{**b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=['** b']).match(FST('{**  b}', pattern)))
+
+        # regex to multinode
+
+        self.assertTrue(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{1:b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{ 1 : b }', pattern)))
+        self.assertFalse(MMatchMapping(_all=[re.compile(r'1\s*:\s*b')]).match(FST('{1: c}', pattern)))
+
+        self.assertTrue(MMatchMapping(_all=[re.compile(r'\*\*\s*b')]).match(FST('{**b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[re.compile(r'\*\*\s*b')]).match(FST('{** b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[re.compile(r'\*\*\s*b')]).match(FST('{**c}', pattern)))
+
+        # MRE to multinode
+
+        self.assertTrue(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{1: b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{1:b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{ 1 : b }', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MRE(r'1\s*:\s*b')]).match(FST('{1: c}', pattern)))
+
+        self.assertTrue(MMatchMapping(_all=[MRE(r'\*\*\s*b')]).match(FST('{**b}', pattern)))
+        self.assertTrue(MMatchMapping(_all=[MRE(r'\*\*\s*b')]).match(FST('{** b}', pattern)))
+        self.assertFalse(MMatchMapping(_all=[MRE(r'\*\*\s*b')]).match(FST('{**c}', pattern)))
 
         # Concrete pattern to multinode MatchMapping
 
@@ -8948,22 +9209,29 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
 
         self.assertIsNone(MMatchMapping().match(FST('{1: a, 2: b}', pattern)._all))  # this is a truly unrealistic test, but hey, coverage
 
-        # others
+    def test_match_virtual_field_one_arguments(self):
+        self.assertFalse(Marguments().match(FST('a, b', arguments)._all))  # this is a truly unrealistic test, but hey, coverage
 
-        self.assertTrue(MClassDef(_bases=['a', '*b', 'c=d', '**e']).match(FST('class c(a, *b, c=d, **e): pass')))
-        self.assertTrue(MCall(_args=['a', '*b', 'c=d', '**e']).match(FST('call(a, *b, c=d, **e)')))
-        self.assertTrue(MCompare(_all=['a', 'b', 'c']).match(FST('a < b < c')))
-        self.assertFalse(MClassDef(body=['a', 'b', 'c']).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
-        self.assertTrue(MClassDef(_body=['a', 'b', 'c']).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        # string to multinode
 
-        self.assertTrue(MClassDef(_bases=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('class c(a, *b, c=d, **e): pass')))
-        self.assertTrue(MCall(_args=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('call(a, *b, c=d, **e)')))
-        self.assertTrue(MCompare(_all=[MName('a'), MName('b'), MName('c')]).match(FST('a < b < c')))
-        self.assertFalse(MClassDef(body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
-        self.assertTrue(MClassDef(_body=[MExpr(MName('a')), MExpr(MName('b')), MExpr(MName('c'))]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
+        self.assertTrue(Marguments(_all=['a: int = 1']).match(FST('a: int = 1', arguments)))
+        self.assertTrue(Marguments(_all=['a: int = 1']).match(FST('a: int = 1 ,', arguments)))
+        self.assertFalse(Marguments(_all=['a: int = 1']).match(FST('a:int=1', arguments)))
+        self.assertFalse(Marguments(_all=['a: int = 1']).match(FST('a  :  int  =  1', arguments)))
 
-    def test_match_virtual_field_arguments(self):
-        self.assertIsNone(Marguments().match(FST('a, b', arguments)._all))  # this is a truly unrealistic test, but hey, coverage
+        # regex to multinode
+
+        self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 1', arguments)))
+        self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a:int=1', arguments)))
+        self.assertTrue(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
+        self.assertFalse(Marguments(_all=[re.compile(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
+
+        # MRE to multinode
+
+        self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 1', arguments)))
+        self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a:int=1', arguments)))
+        self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
+        self.assertFalse(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
 
         # Invalid concrete pattern to multinode arguments
 
@@ -9369,7 +9637,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>", str(pat.match(FST('a=x, /', arguments))))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>", str(pat.match(FST('a=x', arguments))))
 
-        # previously matched args fstview to targed (any type to any type, pos/arg/kw)
+        # previously matched args FSTView to targed (any type to any type, pos/arg/kw)
 
         pat = MAST(body=[
             MFunctionDef(args=Marguments(_all=[M(t=Marguments(args=[...]))])),
@@ -9410,7 +9678,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertEqual("<FSTMatch <Module ROOT 0,0..1,22> {'t': <<arguments 0,6..0,15>._all[:1]>, 'u': <arguments 1,6..1,15>}>", str(pat.match(FST('def f(a: int, /): pass\ndef g(a: int, /): pass'))))
         self.assertFalse(pat.match(FST('def f(a: int, /): pass\ndef g(a: int = 1, /): pass')))
 
-        # match tags present in pattern for fstview
+        # match tags present in pattern for FSTView
 
         pat = MAST(body=[
             MFunctionDef(args=M(Marguments, t=Marguments(defaults=[M(d=...)]))),
@@ -9451,7 +9719,6 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MAND(t=...)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MCB(lambda: False)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MOPT(t=Constant)).match, f)
-        assertRaises(MatchError('unsupported FSTView type'), MAssign(M(t=...), value=MTAG('t')).match, f)
 
         f = FST('i = i')
         self.assertEqual("<FSTMatch <Assign ROOT 0,0..0,5> {'t': <Name 0,0..0,1>, 'u': <Name 0,4..0,5>}>", str(MAssign([M(t=...)], value=MTAG(u='t')).match(f)))
@@ -9620,6 +9887,24 @@ MNOT(MTAG('no'))
 [<FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>]
 <FSTMatch <Pass ROOT 0,0..0,4> {'yes': ...}>
         """.strip())
+
+        # passthrough parameters to walk()
+
+        pat = MName('i')
+        f = FST('def f(): i = [i := i for i in i]')
+
+        self.assertEqual('[<Name 0,9..0,10>, <Name 0,14..0,15>, <Name 0,19..0,20>, <Name 0,25..0,26>, <Name 0,30..0,31>]', str(list(m.matched for m in f.search(pat))))
+        self.assertEqual('[<Name 0,30..0,31>, <Name 0,25..0,26>, <Name 0,19..0,20>, <Name 0,14..0,15>, <Name 0,9..0,10>]', str(list(m.matched for m in f.search(pat, back=True))))
+        self.assertEqual('[<Name 0,9..0,10>, <Name 0,14..0,15>, <Name 0,30..0,31>]', str(list(m.matched for m in f.search(pat, scope=True))))
+        self.assertEqual('[<Name 0,30..0,31>, <Name 0,14..0,15>, <Name 0,9..0,10>]', str(list(m.matched for m in f.search(pat, scope=True, back=True))))
+        self.assertEqual('[<Name 0,9..0,10>]', str(list(m.matched for m in f.body[0].search(pat, recurse=False))))
+        self.assertEqual('[<Name 0,9..0,10>]', str(list(m.matched for m in f.body[0].search(pat, recurse=False, back=True))))
+        self.assertEqual('[<Name 0,9..0,10>, <Name 0,14..0,15>, <Name 0,19..0,20>, <Name 0,25..0,26>, <Name 0,30..0,31>]', str(list(m.matched for m in f.search(pat, asts=[f.a.body[0]]))))
+        self.assertEqual('[<Name 0,30..0,31>, <Name 0,25..0,26>, <Name 0,19..0,20>, <Name 0,14..0,15>, <Name 0,9..0,10>]', str(list(m.matched for m in f.search(pat, asts=[f.a.body[0]], back=True))))
+        self.assertEqual('[<Name 0,9..0,10>, <Name 0,14..0,15>, <Name 0,30..0,31>]', str(list(m.matched for m in f.search(pat, scope=True, asts=[f.a.body[0]]))))
+        self.assertEqual('[<Name 0,30..0,31>, <Name 0,14..0,15>, <Name 0,9..0,10>]', str(list(m.matched for m in f.search(pat, scope=True, asts=[f.a.body[0]], back=True))))
+        self.assertEqual('[]', str(list(m.matched for m in f.search(pat, recurse=False, asts=[f.a.body[0]]))))
+        self.assertEqual('[]', str(list(m.matched for m in f.search(pat, recurse=False, asts=[f.a.body[0]], back=True))))
 
     def test_sub(self):
         pass

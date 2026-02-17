@@ -108,19 +108,19 @@ class FSTView:
     def start(self) -> int:
         """Start position within the target field list this view references."""
 
-        return self._get_indices()[0]
+        return self._base_indices()[0]
 
     @property
     def stop(self) -> int:
         """One past the last element within the target field list this view references."""
 
-        return self._get_indices()[1]
+        return self._base_indices()[1]
 
     @property
     def start_and_stop(self) -> tuple[int, int]:
         """Start and stop positions within the target field list this view references."""
 
-        return self._get_indices()[:2]
+        return self._base_indices()[:2]
 
     @property
     def lines(self) -> list[str]:
@@ -161,7 +161,7 @@ class FSTView:
     def loc(self) -> fstloc | None:
         """Zero based character indexed location of view (including parentheses and / or decorators where present)."""
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if not (len_ := stop - start):
             return None
@@ -177,7 +177,7 @@ class FSTView:
     def ln(self) -> int | None:
         """Line number of the first line of this view (0 based)."""
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -188,7 +188,7 @@ class FSTView:
     def col(self) -> int | None:  # char index
         """CHARACTER index of the start of this view (0 based)."""
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -199,7 +199,7 @@ class FSTView:
     def end_ln(self) -> int | None:  # 0 based
         """Line number of the LAST LINE of this view (0 based)."""
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -210,7 +210,7 @@ class FSTView:
     def end_col(self) -> int | None:  # char index
         """CHARACTER index one past the end of this view (0 based)."""
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -261,15 +261,17 @@ class FSTView:
     def _deref_one(self, idx: int) -> AST | str:
         """Return a single element from field (which may not be a contiguous list). `idx` is the real index already
         absolute (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN NODE. Can
-        return `AST` or primitive or another `FSTView`."""
+        return `AST` or primitive or another `FSTView` if base field is multinode."""
 
         return getattr(self.base.a, self.field)[idx]
 
-    def _get_indices(self) -> tuple[int, int, int]:
-        """Refresh indices in case of field length change anywhere else and return them along with full length of field.
+    def _base_indices(self) -> tuple[int, int, int]:
+        """Refresh indices in case of field length change anywhere else and return adjusted REAL indices in REAL `base`
+        field with full length of that REAL field.
 
         **Returns:**
-        - `(start, stop, len_field)`: Good start and stop indices and full length of field currently.
+        - `(start, stop, len_field)`: Good start and stop REAL indices in the REAL field and full length of that REAL
+            field currently.
         """
 
         len_field = self._len_field()
@@ -294,7 +296,7 @@ class FSTView:
 
         **Returns:**
         - `(start, stop, len_field, idx_start | FST, idx_stop | None)`:
-            - `start`, `stop` and `len_field`: These come from `_get_indices()`.
+            - `start`, `stop` and `len_field`: These come from `_base_indices()`.
             - `idx_stop`: If `None` it indicates a single-element operation. Otherwise this and `idx_start` are the
                 indices from a `slice` object fixed up for the bounds of this view for a slice operation, including
                 converting `None` elements to the proper `int` bounds.
@@ -304,7 +306,7 @@ class FSTView:
                 name search results in an element of this view then it is returned as an `int` index instead.
         """
 
-        start, stop, len_field = self._get_indices()
+        start, stop, len_field = self._base_indices()
 
         if isinstance(idx, slice):
             if idx.step is not None:
@@ -356,13 +358,13 @@ class FSTView:
         self._stop = stop
 
     def __repr__(self) -> str:
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
         indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
 
         return f'<{self.base!r}.{self.field}{indices}>'
 
     def __len__(self) -> int:
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         return stop - start
 
@@ -547,7 +549,7 @@ class FSTView:
 
         check_options(options)
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         return self.base.get_slice(start, stop, self.field, cut=False, **options)
 
@@ -573,7 +575,7 @@ class FSTView:
 
         check_options(options)
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         f = self.base._get_slice(start, stop, self.field, True, options)
 
@@ -613,7 +615,7 @@ class FSTView:
 
         check_options(options)
 
-        start, stop, len_before = self._get_indices()
+        start, stop, len_before = self._base_indices()
 
         self.base = self.base._put_slice(code, start, stop, self.field, one, options)
 
@@ -641,7 +643,7 @@ class FSTView:
 
         check_options(options)
 
-        start, stop, len_before = self._get_indices()
+        start, stop, len_before = self._base_indices()
 
         self.base = self.base._put_slice(None, start, stop, self.field, True, options)
 
@@ -692,7 +694,7 @@ class FSTView:
 
         check_options(options)
 
-        start, stop, len_before = self._get_indices()
+        start, stop, len_before = self._base_indices()
         len_view = stop - start
 
         if idx == 'end' or idx > len_view:
@@ -730,7 +732,7 @@ class FSTView:
 
         check_options(options)
 
-        _, stop, _ = self._get_indices()
+        _, stop, _ = self._base_indices()
 
         self.base = self.base._put_slice(code, stop, stop, self.field, True, options)
 
@@ -768,7 +770,7 @@ class FSTView:
 
         check_options(options)
 
-        _, stop, len_before = self._get_indices()
+        _, stop, len_before = self._base_indices()
 
         self.base = self.base._put_slice(code, stop, stop, self.field, None if one is None else False, options)
 
@@ -800,7 +802,7 @@ class FSTView:
 
         check_options(options)
 
-        start, _, _ = self._get_indices()
+        start, _, _ = self._base_indices()
 
         self.base = self.base._put_slice(code, start, start, self.field, True, options)
 
@@ -838,7 +840,7 @@ class FSTView:
 
         check_options(options)
 
-        start, _, len_before = self._get_indices()
+        start, _, len_before = self._base_indices()
 
         self.base = self.base._put_slice(code, start, start, self.field, None if one is None else False, options)
 
@@ -873,7 +875,7 @@ class FSTView_Dict(FSTView):
         fstlocn(2, 0, 3, 4, n=0)
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -899,7 +901,7 @@ class FSTView_Dict(FSTView):
         2
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -921,7 +923,7 @@ class FSTView_Dict(FSTView):
         0
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -943,7 +945,7 @@ class FSTView_Dict(FSTView):
         3
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -965,7 +967,7 @@ class FSTView_Dict(FSTView):
         4
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1010,7 +1012,7 @@ class FSTView_MatchMapping(FSTView):
         fstloc(2, 0, 3, 2)
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1047,7 +1049,7 @@ class FSTView_MatchMapping(FSTView):
         2
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1075,7 +1077,7 @@ class FSTView_MatchMapping(FSTView):
         0
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1103,7 +1105,7 @@ class FSTView_MatchMapping(FSTView):
         3
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1131,7 +1133,7 @@ class FSTView_MatchMapping(FSTView):
         2
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1154,7 +1156,7 @@ class FSTView_MatchMapping(FSTView):
     def has_rest(self) -> bool:
         """Whether this slice contains the `rest` element or not."""
 
-        _, stop, _ = self._get_indices()
+        _, stop, _ = self._base_indices()
 
         return stop > len(self.base.a.patterns)  # means there is a .rest
 
@@ -1211,7 +1213,7 @@ class FSTView_arguments(FSTView):
         fstlocn(1, 1, 3, 6, n=0)
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if not (len_ := stop - start):
             return None
@@ -1251,7 +1253,7 @@ class FSTView_arguments(FSTView):
         4
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1282,7 +1284,7 @@ class FSTView_arguments(FSTView):
         4
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1313,7 +1315,7 @@ class FSTView_arguments(FSTView):
         4
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1344,7 +1346,7 @@ class FSTView_arguments(FSTView):
         7
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1415,7 +1417,7 @@ class FSTView_Global_Nonlocal(FSTView):
         fstloc(2, 1, 2, 2)
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if not (len_ := stop - start):
             return None
@@ -1443,7 +1445,7 @@ class FSTView_Global_Nonlocal(FSTView):
         2
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1467,7 +1469,7 @@ class FSTView_Global_Nonlocal(FSTView):
         1
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1491,7 +1493,7 @@ class FSTView_Global_Nonlocal(FSTView):
         2
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None
@@ -1515,7 +1517,7 @@ class FSTView_Global_Nonlocal(FSTView):
         2
         """
 
-        start, stop, _ = self._get_indices()
+        start, stop, _ = self._base_indices()
 
         if stop == start:
             return None

@@ -3,10 +3,6 @@ patterns as a wildcard and several extra functional pattern types are provided f
 logic operations, match check callbacks, match previously matched nodes (backreference) and greedy and non-greedy
 quantifiers.
 
-To be completely safe and future-proofed, you may want to only use the `M*` pattern types from this submodule, but for
-quick use normal `AST` types should be fine. Also you need to use the pattern types provided here if you will be using
-nodes or fields which do not exist in the version of the running Python.
-
 In the examples here you will see `AST` nodes used interchangeably with their `MAST` pattern counterparts. For the most
 part this is fine and there are only a few small differences between using the two. Except if you are using a type
 checker...
@@ -19,6 +15,7 @@ checker...
 from __future__ import annotations
 
 import re
+from itertools import repeat
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
 from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as tp_Set, Union
@@ -175,7 +172,19 @@ from .asttypes import (
 from .astutil import constant
 from .parsex import unparse
 from .code import Code, code_as_all
-from .view import FSTView, FSTView_Dict, FSTView_MatchMapping, FSTView_arguments
+
+from .view import (
+    FSTView,
+    FSTView_Dict,
+    FSTView_MatchMapping,
+    FSTView_Compare,
+    FSTView_arguments,
+    FSTView__body,
+    FSTView_arglikes,
+    FSTView_Global_Nonlocal,
+    FSTView_dummy,
+)
+
 from .fst_options import check_options
 
 __all__ = [
@@ -530,7 +539,7 @@ class MAST(M_Pattern):
     >>> pat.match(FST('class cls: pass'))
     """
 
-    _types = AST
+    _types: type[AST] | tuple[type[AST]] = AST  # the tuple-of-types is only used in functional pattern MTYPES
 
     def __init__(self, **fields: _Patterns) -> None:
         if fields:
@@ -3136,8 +3145,8 @@ class MTYPES(M_Pattern):
 
     **Parameters:**
     - `types`: An iterable of `AST` or `MAST` **TYPES**, not instances. In order to match successfully the target must
-        be at least one of these types (non-leaf types like `stmt` included). To match any node use `AST` or `MAST` for
-        for the type.
+        be at least one of these types (non-leaf types like `stmt` included). If you just want to match any possible
+        `AST` type with a given set of fields you can use `MAST(**fields)` instead of this.
     - `fields`: Field names which must be present (unless wildcard `...`) along with the patterns they need to match.
 
     **Examples:**
@@ -3276,7 +3285,10 @@ class MOPT(M_Pattern_One):
             if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
                 raise MatchError('match found an AST node without an FST')
 
-            return {pat_tag: [FSTMatch(pat, tgt, m)], **self.static_tags}
+            if m:
+                return {**m, pat_tag: tgt, **self.static_tags}
+
+            return {pat_tag: tgt, **self.static_tags}
 
         if m:
             return dict(m, **self.static_tags)
@@ -3640,9 +3652,9 @@ class MTAG(M_Pattern_One):
 
 
 class MQ(M_Pattern_One):
-    """Quantifier pattern. Can only be used inside list fields and matches at least `min` and at most `max` instances of
-    the given pattern. Since this pattern can match an arbitrary number of actual targets, if there is a tag for the
-    matched patterns they are given as a list of `FSTMatch` objects instead of just one.
+    """Quantifier pattern. Matches at least `min` and at most `max` instances of the given pattern. Since this pattern
+    can match an arbitrary number of actual targets, if there is a tag for the matched patterns they are given as a list
+    of `FSTMatch` objects instead of just one.
 
     This is the base class for `MQSTAR`, `MQPLUS`, `MQ01`, `MQMIN`, `MQMAX` and `MQN` and can do everything they can
     with the appropriate values for `min` and `max`. Those classes are provided regardless for convenience and cleaner
@@ -3651,8 +3663,14 @@ class MQ(M_Pattern_One):
     Using the wildcard pattern `...` means match anything the given number of times and is analogous to the regex dot
     `.` pattern.
 
-    Unlike other patterns, all the quantifier patterns can take a list of patterns as a pattern which allows matching
-    an arbitrary nunmber of patterns sequentially in the list field the quantifier pattern is matching.
+    Quantifiers can **ONLY** live as **DIRECT** children of a list field, so `MList(elts=[MQSTAR])` is valid while
+    `MList(elts=[M(MQSTAR)])` is not.
+
+    Unlike other patterns, all the quantifier patterns can take a sublist of patterns as a pattern which allows matching
+    an arbitrary nunmber this complete sublist sequentially in the list field the quantifier pattern is matching.
+
+    Quantifier pattern sublists can **ONLY** live as **DIRECT** child patterns of a quantifier, so `MQSTAR([...])` is
+    valid while `MQSTAR(M([...]))` is not.
 
     This pattern is greedy by default but has a non-greedy version child class `MQ.NG`. This pattern can be used in
     exactly the same way but will match non-greedily.
@@ -4174,8 +4192,9 @@ class _MatchState:
 
     cache: dict
     """Stores:
-    - `{FSTView: _Pattern}`: For temporary conversions of `FSTView`s to `AST` patterns, specifically for `MTAG` match
-        previously matched multinode item from Dict, MatchMapping or arguments.
+    - `{FSTView: _Patterns}`: For temporary conversions of `FSTView`s to `AST` patterns. Used for matching previously
+        matched `FSTView`s and for `MTAG` match previously matched multinode item from `Dict`, `MatchMapping` or
+        `arguments`.
     - `(pat_arg, pat_dflt, arg_fields, dflt_fields)`: For validated match parameters for matching a single `arguments`
         arg against `FSTView`.
     """
@@ -4236,67 +4255,6 @@ class _MatchState:
 
         return default
 
-    def fstview_as_pat(self, view: FSTView) -> _Pattern:
-        """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached."""
-
-        if pat := self.cache.get(view):
-            pass  # noop
-
-        elif isinstance(view, FSTView_Dict):
-            start, stop = view.start_and_stop
-            ast = view.base.a
-            pat = self.cache[view] = MDict(ast.keys[start : stop], ast.values[start: stop])
-
-        elif isinstance(view, FSTView_arguments):
-            allargs = view.base._cached_allargs()
-            pat_args = {
-                'posonlyargs': [],
-                'args': [],
-                'vararg': [],
-                'kwonlyargs': [],
-                'kw_defaults': [],
-                'kwarg': [],
-                'defaults': [],
-            }
-
-            for v in view:
-                a = allargs[v.start]
-                f = a.f
-                field = f.pfield.name
-
-                pat_args[field].append(a)
-
-                if (d := f.next()) and (d_field := d.pfield.name) in _NODE_ARGUMENTS_DEFAULTS_FIELDS:
-                    pat_args[d_field].append(d.a)
-                elif field == 'kwonlyargs':
-                    pat_args['kw_defaults'].append(None)
-
-            pat = self.cache[view] = Marguments(
-                posonlyargs=pat_args['posonlyargs'] or ...,
-                args=pat_args['args'] or ...,
-                vararg=a[0] if (a := pat_args['vararg']) else ...,
-                kwonlyargs=pat_args['kwonlyargs'] or ...,
-                kw_defaults=pat_args['kw_defaults'],
-                kwarg=a[0] if (a := pat_args['kwarg']) else ...,
-                defaults=pat_args['defaults'],
-                _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
-            )
-
-        elif isinstance(view, FSTView_MatchMapping):
-            start, stop = view.start_and_stop
-            ast = view.base.a
-
-            if view.has_rest:
-                stop -= 1
-                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop], ast.rest)
-            else:
-                pat = self.cache[view] = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
-
-        else:
-            raise MatchError('unsupported FSTView type')
-
-        return pat
-
 
 class _MatchList:
     seq: Sequence  # to be accessed directly
@@ -4321,7 +4279,7 @@ class _MatchList:
         return self.idx == self.len
 
 
-def _match_quantifier(
+def _match_iter_quantifier(
     mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList, pat: MQ, allow_partial: bool
 ) -> dict[str, Any] | None:
     """Match quantifier in list."""
@@ -4332,10 +4290,10 @@ def _match_quantifier(
         object and adding it to a dedicated match list which is in `tagss` as its own dictionary with key `pat_tag`."""
 
         if is_qpat_list:
-            qpat_iter.idx = 0  # reset quantifier list pattern to start since _match_list() doesn't reset it on success
+            qpat_iter.idx = 0  # reset quantifier list pattern to start since _match_iter_list() doesn't reset it on success
             tgt_idx = tgt_iter.idx
 
-            if (m := _match_list(mstate, qpat_iter, tgt_iter, True)) is None:
+            if (m := _match_iter_list(mstate, qpat_iter, tgt_iter, True)) is None:
                 return False
 
             t = tgt_seq[tgt_idx : tgt_iter.idx]
@@ -4434,7 +4392,7 @@ def _match_quantifier(
         matches_del_idx = -1 if pat_tag or not static_tags else -2
 
     while True:  # as long as we don't hit the last allowed count try to match rest of list
-        m = _match_list(mstate, pat_iter, tgt_iter, allow_partial)  # the allow_partial is a passthrough from a possible quantifier subsequence caller
+        m = _match_iter_list(mstate, pat_iter, tgt_iter, allow_partial)  # the allow_partial is a passthrough from a possible quantifier subsequence caller
 
         if m is not None:  # successful match to rest of list?
             break
@@ -4465,7 +4423,7 @@ def _match_quantifier(
     return mstate.pop_merge_tagss()
 
 
-def _match_list(
+def _match_iter_list(
     mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList, allow_partial: bool = False
 ) -> dict[str, Any] | None:
     """Match list. The sequence to match in `tgt_iter` can be either `list[AST]` or `FSTView`. If match fails then
@@ -4484,14 +4442,14 @@ def _match_list(
 
     while (p := pat_iter.next()) is not _SENTINEL:
         if p in _QUANTIFIER_STANDALONES or isinstance(p, MQ):  # quantifier
-            m = _match_quantifier(mstate, pat_iter, tgt_iter, p, allow_partial)
+            m = _match_iter_quantifier(mstate, pat_iter, tgt_iter, p, allow_partial)
 
             if m is None:
                 break  # fail
             if m:
                 tagss.append(m)
 
-            return mstate.pop_merge_tagss()  # _match_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
+            return mstate.pop_merge_tagss()  # _match_iter_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
 
         # concrete value
 
@@ -4517,96 +4475,185 @@ def _match_list(
 
 # ......................................................................................................................
 
-def _match_quantifier_invalid_location(pat: MQ, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    raise MatchError(f'{pat.__class__.__qualname__} quantifier pattern in invalid location')
-
 def _match_default(pat: _Patterns, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    """Match the fields of any `M_Pattern`, `AST` or a `str` (either as a primitive value or as source)."""
+    """Catch and dispatch anything that is not explicitly listed in jump table by class. Mostly user-subclassed
+    stuff."""
 
-    if isinstance(pat, list):
-        if not isinstance(tgt, list):
-            if not isinstance(tgt, FSTView):
-                return None
+    if isinstance(pat, list):  # subclass of list
+        return _match_list(pat, tgt, mstate)
 
-            if not len(tgt):
-                tgt = []
-            elif isinstance(tgt[0], (str, FSTView)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
-                tgt = list(tgt)
-            else:
-                tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
-
-        return _match_list(mstate, _MatchList(pat), _MatchList(tgt))
-
-    # maybe pattern is a previously matched multinode FSTView (Dict, MatchMapping, arguments)
-
-    if isinstance(pat, FSTView):
-        pat = mstate.fstview_as_pat(pat)
-
-        return _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mstate)
-
-    # got here through subclass of a primitive type
-
-    if isinstance(pat, str):
+    if isinstance(pat, str):  # subclass of str
         return _match_str(pat, tgt, mstate)
 
-    if isinstance(pat, M_Pattern):
+    if isinstance(pat, FSTView):
+        raise MatchError(f'unsupported FSTView type {pat.__class__.__qualname__}')
+
+    if isinstance(pat, M_Pattern):  # user tried to subclass a pattern
         raise RuntimeError('subclassing M_Pattern not supported')
 
-    return _match_primitive(pat, tgt, mstate)
+    return _match_primitive(pat, tgt, mstate)  # subclass of primitive
 
-def _match_str(pat: str, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    if isinstance(tgt, str):
-        if tgt != pat:
-            return None
+def _match_FSTView(pat: FSTView, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher.
 
-    elif isinstance(tgt, AST):
-        if not (f := getattr(tgt, 'f', None)) or not (loc := f.loc):
-            src = unparse(tgt)
+    We just create a list of `AST` nodes from the `FSTView.field` of the `FSTView.base` node offset by the possible
+    presence of a docstring.
+    """
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+        real_pat = mstate.cache[pat] = getattr(pat.base.a, pat.field)[start : stop]
+
+    return _match_list(real_pat, tgt, mstate)
+
+def _match_FSTView__body(pat: FSTView__body, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher.
+
+    We just create a list of `AST` nodes from the `body` field of the `FSTView__body.base` node offset by the possible
+    presence of a docstring.
+    """
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+        base = pat.base
+        has_docstr = base.has_docstr
+        real_pat = mstate.cache[pat] = base.a.body[start + has_docstr : stop + has_docstr]
+
+    return _match_list(real_pat, tgt, mstate)
+
+def _match_FSTView_arglikes(pat: FSTView_arglikes, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView_arglikes`. Created once and cached, then pass
+    control to appropriate node matcher.
+
+    We just create a list of `AST` nodes from the `args` or `bases` and `keywords` fields of the `FSTView_arglikes.base`
+    node ordered syntactically according to their location in the source.
+    """
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+        real_pat = mstate.cache[pat] = pat.base._cached_arglikes()[start : stop]
+
+    return _match_list(real_pat, tgt, mstate)
+
+def _match_FSTView_Compare(pat: FSTView_Compare, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher."""
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+
+        if stop == start:
+            real_pat = MCompare(_SENTINEL, [], [])  # _SENTINEL doesn't hold any special value, just doesn't match anything
+
         else:
-            src = f._get_src(*loc)  # because at root this is whole source which may include leading and trailing trivia that is not part of the node itself
+            ast = pat.base.a
+            comparators = ast.comparators
+            left = comparators[start - 1] if start else ast.left
+            stop -= 1
+            real_pat = MCompare(left, ast.ops[start : stop], comparators[start : stop])
 
-        if src != pat:  # match source against exact string
+        mstate.cache[pat] = real_pat
+
+    return _match_node_Compare(real_pat, tgt, mstate)
+
+def _match_FSTView_Dict(pat: FSTView_Dict, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher."""
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+        ast = pat.base.a
+        real_pat = mstate.cache[pat] = MDict(ast.keys[start : stop], ast.values[start: stop])
+
+    return _match_node_Dict(real_pat, tgt, mstate)
+
+def _match_FSTView_MatchMapping(
+    pat: FSTView_MatchMapping, tgt: _Targets, mstate: _MatchState
+) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher."""
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+        ast = pat.base.a
+
+        if pat.has_rest:
+            stop -= 1
+            real_pat = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop], ast.rest)
+        else:
+            real_pat = MMatchMapping(ast.keys[start : stop], ast.patterns[start : stop])
+
+        mstate.cache[pat] = real_pat
+
+    return _match_node_MatchMapping(real_pat, tgt, mstate)
+
+def _match_FSTView_arguments(pat: FSTView_arguments, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher."""
+
+    if not (real_pat := mstate.cache.get(pat)):
+        allargs = pat.base._cached_allargs()
+        pat_args = {
+            'posonlyargs': [],
+            'args': [],
+            'vararg': [],
+            'kwonlyargs': [],
+            'kw_defaults': [],
+            'kwarg': [],
+            'defaults': [],
+        }
+
+        for v in pat:
+            a = allargs[v.start]
+            f = a.f
+            field = f.pfield.name
+
+            pat_args[field].append(a)
+
+            if (d := f.next()) and (d_field := d.pfield.name) in _NODE_ARGUMENTS_DEFAULTS_FIELDS:
+                pat_args[d_field].append(d.a)
+            elif field == 'kwonlyargs':
+                pat_args['kw_defaults'].append(None)
+
+        real_pat = mstate.cache[pat] = Marguments(
+            posonlyargs=pat_args['posonlyargs'] or ...,
+            args=pat_args['args'] or ...,
+            vararg=a[0] if (a := pat_args['vararg']) else ...,
+            kwonlyargs=pat_args['kwonlyargs'] or ...,
+            kw_defaults=pat_args['kw_defaults'],
+            kwarg=a[0] if (a := pat_args['kwarg']) else ...,
+            defaults=pat_args['defaults'],
+            _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
+        )
+
+    return _match_node_arguments(real_pat, tgt, mstate)
+
+def _match_FSTView_dummy(pat: FSTView_dummy, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView_dummy`. Created once and cached, then pass
+    control to appropriate node matcher.
+
+    An `FSTView_dummy.field` implies always empty so just use an empty list.
+    """
+
+    return _match_list([], tgt, mstate)
+
+def _match_list(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Match a list pattern to a target list or `FSTView`."""
+
+    if not isinstance(tgt, list):
+        if not isinstance(tgt, FSTView):
             return None
 
-    elif isinstance(tgt, FSTView):
-        if tgt.src != pat:
-            return None
+        if not len(tgt):
+            tgt = []
+        elif isinstance(tgt[0], (str, FSTView)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
+            tgt = list(tgt)
+        else:
+            tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
 
-    else:
-        return None
-
-    return _EMPTY_DICT
-
-def _match_primitive(pat: constant, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    """Primitive value comparison. We explicitly disallow equality of different types so 0 != 0.0 != 0j != False. We do
-    all this to account for the possibility of subclassed primary types. This will not compare a `str` pattern against
-    source."""
-
-    if tgt is pat:
-        return _EMPTY_DICT
-
-    tgt_cls = tgt.__class__
-    pat_cls = pat.__class__
-
-    if tgt_cls is bool or pat_cls is bool:
-        return None
-
-    if issubclass(tgt_cls, int):
-        if not issubclass(pat_cls, int) or tgt != pat:
-            return None
-
-    elif issubclass(tgt_cls, float):
-        if not issubclass(pat_cls, float) or tgt != pat:
-            return None
-
-    elif issubclass(tgt_cls, complex):
-        if not issubclass(pat_cls, complex) or tgt != pat:
-            return None
-
-    elif tgt != pat:
-        return None
-
-    return _EMPTY_DICT
+    return _match_iter_list(mstate, _MatchList(pat), _MatchList(tgt))
 
 def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
@@ -4637,6 +4684,85 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Map
         m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)
 
         if m is None:
+            return mstate.discard_tagss()
+        if m:
+            tagss.append(m)
+
+    return mstate.pop_merge_tagss()
+
+def _match_node_Compare(pat: MCompare | Compare, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """`Compare` or `MCompare` leaf node. Possibly match against an `FSTView_Compare`, in which case `pat` must be a
+    concrete pattern without its own `_all` virtual field and without any quantifiers. The various fields, including
+    list fields, CAN be ... wildcard."""
+
+    if not isinstance(tgt, FSTView_Compare):
+        return _match_node(pat, tgt, mstate)
+
+    if getattr(pat, '_all', ...) is not ...:
+        raise MatchError('matching a Compare pattern against Compare._all the pattern cannot have its own _all field')
+
+    start, stop = tgt.start_and_stop
+    tgt_len = stop - start
+    left = getattr(pat, 'left', ...)
+
+    if left is _SENTINEL:  # this means came from empty FSTView
+        return _EMPTY_DICT if not tgt_len else None  # empty Compare matches empty FSTView_Compare, else no match
+
+    if not tgt_len:  # we have at least one element but target is empty?
+        return None
+
+    ops = getattr(pat, 'ops', ...)
+    comparators = getattr(pat, 'comparators', ...)
+    tgt_ast = tgt.base.a
+    tgt_comparators = tgt_ast.comparators
+    tgt_left = tgt_comparators[start - 1] if start else tgt_ast.left
+
+    if ops is ...:
+        if comparators is ...:  # if both wildcards then just need to match left to first element of target
+            return _MATCH_FUNCS.get(left.__class__, _match_default)(left, tgt_left, mstate)
+
+        if tgt_len != len(comparators) + 1:
+            return None
+
+        ops = repeat(...)
+        comparators = iter(comparators)
+
+    else:
+        if tgt_len != len(ops) + 1:
+            return None
+
+        if comparators is ...:
+            ops = iter(ops)
+            comparators = repeat(...)
+
+        else:
+            if len(ops) != len(comparators):
+                raise MatchError('length of Compare.ops does not match Compare.comparators')
+
+            ops = iter(ops)
+            comparators = iter(comparators)
+
+    if (m := _MATCH_FUNCS.get(left.__class__, _match_default)(left, tgt_left, mstate)) is None:
+        return None
+
+    tgt_ops = tgt_ast.ops
+
+    tagss = mstate.new_tagss()
+
+    if m:
+        tagss.append(m)
+
+    for i in range(start, stop - 1):
+        p = next(ops)
+
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt_ops[i], mstate)) is None:
+            return mstate.discard_tagss()
+        if m:
+            tagss.append(m)
+
+        p = next(comparators)
+
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt_comparators[i], mstate)) is None:
             return mstate.discard_tagss()
         if m:
             tagss.append(m)
@@ -5034,8 +5160,57 @@ def _match_re_Pattern(
 
     return m if re_func else _EMPTY_DICT
 
-def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    """Always succeeds."""
+def _match_str(pat: str, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    if isinstance(tgt, str):
+        if tgt != pat:
+            return None
+
+    elif isinstance(tgt, AST):
+        if not (f := getattr(tgt, 'f', None)) or not (loc := f.loc):
+            src = unparse(tgt)
+        else:
+            src = f._get_src(*loc)  # because at root this is whole source which may include leading and trailing trivia that is not part of the node itself
+
+        if src != pat:  # match source against exact string
+            return None
+
+    elif isinstance(tgt, FSTView):
+        if tgt.src != pat:
+            return None
+
+    else:
+        return None
+
+    return _EMPTY_DICT
+
+def _match_primitive(pat: constant, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Primitive value comparison. We explicitly disallow equality of different types so 0 != 0.0 != 0j != False. We do
+    all this to account for the possibility of subclassed primary types. This will not compare a `str` pattern against
+    source."""
+
+    if tgt is pat:
+        return _EMPTY_DICT
+
+    tgt_cls = tgt.__class__
+    pat_cls = pat.__class__
+
+    if tgt_cls is bool or pat_cls is bool:
+        return None
+
+    if issubclass(tgt_cls, int):
+        if not issubclass(pat_cls, int) or tgt != pat:
+            return None
+
+    elif issubclass(tgt_cls, float):
+        if not issubclass(pat_cls, float) or tgt != pat:
+            return None
+
+    elif issubclass(tgt_cls, complex):
+        if not issubclass(pat_cls, complex) or tgt != pat:
+            return None
+
+    elif tgt != pat:
+        return None
 
     return _EMPTY_DICT
 
@@ -5045,313 +5220,331 @@ def _match_None(pat: NoneType, tgt: _Targets, mstate: _MatchState) -> Mapping[st
 
     return _EMPTY_DICT
 
+def _match_Ellipsis(pat: EllipsisType, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    """Always succeeds."""
+
+    return _EMPTY_DICT
+
+def _match_quantifier_invalid_location(pat: MQ, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+    raise MatchError(f'{pat.__class__.__qualname__} quantifier pattern in invalid location')
+
 _MATCH_FUNCS = {
-    M:                   M._match,
-    MNOT:                MNOT._match,
-    MOR:                 MOR._match,
-    MAND:                MAND._match,
-    MTYPES:              _match_node,  # _match_node_arbitrary_fields,
-    MOPT:                MOPT._match,
-    MRE:                 MRE._match,
-    MCB:                 MCB._match,
-    MTAG:                MTAG._match,
-    MQ:                  _match_quantifier_invalid_location,
-    MQ.NG:               _match_quantifier_invalid_location,
-    MQSTAR:              _match_quantifier_invalid_location,
-    MQSTAR.NG:           _match_quantifier_invalid_location,
-    MQPLUS:              _match_quantifier_invalid_location,
-    MQPLUS.NG:           _match_quantifier_invalid_location,
-    MQ01:                _match_quantifier_invalid_location,
-    MQ01.NG:             _match_quantifier_invalid_location,
-    MQMIN:               _match_quantifier_invalid_location,
-    MQMIN.NG:            _match_quantifier_invalid_location,
-    MQMAX:               _match_quantifier_invalid_location,
-    MQMAX.NG:            _match_quantifier_invalid_location,
-    MQN:                 _match_quantifier_invalid_location,
-    AST:                 _match_node,  # _match_node_nonleaf,
-    Add:                 _match_node,
-    And:                 _match_node,
-    AnnAssign:           _match_node,
-    Assert:              _match_node,
-    Assign:              _match_node,
-    AsyncFor:            _match_node,
-    AsyncFunctionDef:    _match_node,
-    AsyncWith:           _match_node,
-    Attribute:           _match_node,
-    AugAssign:           _match_node,
-    Await:               _match_node,
-    BinOp:               _match_node,
-    BitAnd:              _match_node,
-    BitOr:               _match_node,
-    BitXor:              _match_node,
-    BoolOp:              _match_node,
-    Break:               _match_node,
-    Call:                _match_node,
-    ClassDef:            _match_node,
-    Compare:             _match_node,
-    Constant:            _match_node_Constant,
-    Continue:            _match_node,
-    Del:                 _match_node_expr_context,
-    Delete:              _match_node,
-    Dict:                _match_node_Dict,
-    DictComp:            _match_node,
-    Div:                 _match_node,
-    Eq:                  _match_node,
-    ExceptHandler:       _match_node,
-    Expr:                _match_node,
-    Expression:          _match_node,
-    FloorDiv:            _match_node,
-    For:                 _match_node,
-    FormattedValue:      _match_node,
-    FunctionDef:         _match_node,
-    FunctionType:        _match_node,
-    GeneratorExp:        _match_node,
-    Global:              _match_node,
-    Gt:                  _match_node,
-    GtE:                 _match_node,
-    If:                  _match_node,
-    IfExp:               _match_node,
-    Import:              _match_node,
-    ImportFrom:          _match_node,
-    In:                  _match_node,
-    Interactive:         _match_node,
-    Invert:              _match_node,
-    Is:                  _match_node,
-    IsNot:               _match_node,
-    JoinedStr:           _match_node,
-    LShift:              _match_node,
-    Lambda:              _match_node,
-    List:                _match_node,
-    ListComp:            _match_node,
-    Load:                _match_node_expr_context,
-    Lt:                  _match_node,
-    LtE:                 _match_node,
-    MatMult:             _match_node,
-    Match:               _match_node,
-    MatchAs:             _match_node,
-    MatchClass:          _match_node,
-    MatchMapping:        _match_node_MatchMapping,
-    MatchOr:             _match_node,
-    MatchSequence:       _match_node,
-    MatchSingleton:      _match_node,
-    MatchStar:           _match_node,
-    MatchValue:          _match_node,
-    Mod:                 _match_node,
-    Module:              _match_node,
-    Mult:                _match_node,
-    Name:                _match_node,
-    NamedExpr:           _match_node,
-    Nonlocal:            _match_node,
-    Not:                 _match_node,
-    NotEq:               _match_node,
-    NotIn:               _match_node,
-    Or:                  _match_node,
-    Pass:                _match_node,
-    Pow:                 _match_node,
-    RShift:              _match_node,
-    Raise:               _match_node,
-    Return:              _match_node,
-    Set:                 _match_node,
-    SetComp:             _match_node,
-    Slice:               _match_node,
-    Starred:             _match_node,
-    Store:               _match_node_expr_context,
-    Sub:                 _match_node,
-    Subscript:           _match_node,
-    Try:                 _match_node,
-    Tuple:               _match_node,
-    TypeIgnore:          _match_node,
-    UAdd:                _match_node,
-    USub:                _match_node,
-    UnaryOp:             _match_node,
-    While:               _match_node,
-    With:                _match_node,
-    Yield:               _match_node,
-    YieldFrom:           _match_node,
-    alias:               _match_node,
-    arg:                 _match_node,
-    arguments:           _match_node_arguments,
-    boolop:              _match_node,
-    cmpop:               _match_node,
-    comprehension:       _match_node,
-    excepthandler:       _match_node,  # _match_node_nonleaf,
-    expr:                _match_node,  # _match_node_nonleaf,
-    expr_context:        _match_node,  # _match_node_nonleaf,
-    keyword:             _match_node,
-    match_case:          _match_node,
-    mod:                 _match_node,  # _match_node_nonleaf,
-    operator:            _match_node,
-    pattern:             _match_node,  # _match_node_nonleaf,
-    stmt:                _match_node,  # _match_node_nonleaf,
-    type_ignore:         _match_node,  # _match_node_nonleaf,
-    unaryop:             _match_node,
-    withitem:            _match_node,
-    TryStar:             _match_node,
-    TypeAlias:           _match_node,
-    type_param:          _match_node,  # _match_node_nonleaf,
-    TypeVar:             _match_node,
-    ParamSpec:           _match_node,
-    TypeVarTuple:        _match_node,
-    TemplateStr:         _match_node,
-    Interpolation:       _match_node,
-    _slice:              _match_node,  # _match_node_nonleaf,
-    _ExceptHandlers:     _match_node,
-    _match_cases:        _match_node,
-    _Assign_targets:     _match_node,
-    _decorator_list:     _match_node,
-    _arglikes:           _match_node,
-    _comprehensions:     _match_node,
-    _comprehension_ifs:  _match_node,
-    _aliases:            _match_node,
-    _withitems:          _match_node,
-    _type_params:        _match_node,
-    MAST:                _match_node,  # _match_node_arbitrary_fields,
-    MAdd:                _match_node,
-    MAnd:                _match_node,
-    MAnnAssign:          _match_node,
-    MAssert:             _match_node,
-    MAssign:             _match_node,
-    MAsyncFor:           _match_node,
-    MAsyncFunctionDef:   _match_node,
-    MAsyncWith:          _match_node,
-    MAttribute:          _match_node,
-    MAugAssign:          _match_node,
-    MAwait:              _match_node,
-    MBinOp:              _match_node,
-    MBitAnd:             _match_node,
-    MBitOr:              _match_node,
-    MBitXor:             _match_node,
-    MBoolOp:             _match_node,
-    MBreak:              _match_node,
-    MCall:               _match_node,
-    MClassDef:           _match_node,
-    MCompare:            _match_node,
-    MConstant:           _match_node_Constant,
-    MContinue:           _match_node,
-    MDel:                _match_node,
-    MDelete:             _match_node,
-    MDict:               _match_node_Dict,
-    MDictComp:           _match_node,
-    MDiv:                _match_node,
-    MEq:                 _match_node,
-    MExceptHandler:      _match_node,
-    MExpr:               _match_node,
-    MExpression:         _match_node,
-    MFloorDiv:           _match_node,
-    MFor:                _match_node,
-    MFormattedValue:     _match_node,
-    MFunctionDef:        _match_node,
-    MFunctionType:       _match_node,
-    MGeneratorExp:       _match_node,
-    MGlobal:             _match_node,
-    MGt:                 _match_node,
-    MGtE:                _match_node,
-    MIf:                 _match_node,
-    MIfExp:              _match_node,
-    MImport:             _match_node,
-    MImportFrom:         _match_node,
-    MIn:                 _match_node,
-    MInteractive:        _match_node,
-    MInvert:             _match_node,
-    MIs:                 _match_node,
-    MIsNot:              _match_node,
-    MJoinedStr:          _match_node,
-    MLShift:             _match_node,
-    MLambda:             _match_node,
-    MList:               _match_node,
-    MListComp:           _match_node,
-    MLoad:               _match_node,
-    MLt:                 _match_node,
-    MLtE:                _match_node,
-    MMatMult:            _match_node,
-    MMatch:              _match_node,
-    MMatchAs:            _match_node,
-    MMatchClass:         _match_node,
-    MMatchMapping:       _match_node_MatchMapping,
-    MMatchOr:            _match_node,
-    MMatchSequence:      _match_node,
-    MMatchSingleton:     _match_node,
-    MMatchStar:          _match_node,
-    MMatchValue:         _match_node,
-    MMod:                _match_node,
-    MModule:             _match_node,
-    MMult:               _match_node,
-    MName:               _match_node,
-    MNamedExpr:          _match_node,
-    MNonlocal:           _match_node,
-    MNot:                _match_node,
-    MNotEq:              _match_node,
-    MNotIn:              _match_node,
-    MOr:                 _match_node,
-    MPass:               _match_node,
-    MPow:                _match_node,
-    MRShift:             _match_node,
-    MRaise:              _match_node,
-    MReturn:             _match_node,
-    MSet:                _match_node,
-    MSetComp:            _match_node,
-    MSlice:              _match_node,
-    MStarred:            _match_node,
-    MStore:              _match_node,
-    MSub:                _match_node,
-    MSubscript:          _match_node,
-    MTry:                _match_node,
-    MTuple:              _match_node,
-    MTypeIgnore:         _match_node,
-    MUAdd:               _match_node,
-    MUSub:               _match_node,
-    MUnaryOp:            _match_node,
-    MWhile:              _match_node,
-    MWith:               _match_node,
-    MYield:              _match_node,
-    MYieldFrom:          _match_node,
-    Malias:              _match_node,
-    Marg:                _match_node,
-    Marguments:          _match_node_arguments,
-    Mboolop:             _match_node,
-    Mcmpop:              _match_node,
-    Mcomprehension:      _match_node,
-    Mexcepthandler:      _match_node,  # _match_node_arbitrary_fields,
-    Mexpr:               _match_node,  # _match_node_arbitrary_fields,
-    Mexpr_context:       _match_node,  # _match_node_arbitrary_fields,
-    Mkeyword:            _match_node,
-    Mmatch_case:         _match_node,
-    Mmod:                _match_node,  # _match_node_arbitrary_fields,
-    Moperator:           _match_node,
-    Mpattern:            _match_node,  # _match_node_arbitrary_fields,
-    Mstmt:               _match_node,  # _match_node_arbitrary_fields,
-    Mtype_ignore:        _match_node,  # _match_node_arbitrary_fields,
-    Munaryop:            _match_node,
-    Mwithitem:           _match_node,
-    MTryStar:            _match_node,
-    MTypeAlias:          _match_node,
-    Mtype_param:         _match_node,  # _match_node_arbitrary_fields,
-    MTypeVar:            _match_node,
-    MParamSpec:          _match_node,
-    MTypeVarTuple:       _match_node,
-    MTemplateStr:        _match_node,
-    MInterpolation:      _match_node,
-    M_slice:             _match_node,  # _match_node_arbitrary_fields,
-    M_ExceptHandlers:    _match_node,
-    M_match_cases:       _match_node,
-    M_Assign_targets:    _match_node,
-    M_decorator_list:    _match_node,
-    M_arglikes:          _match_node,
-    M_comprehensions:    _match_node,
-    M_comprehension_ifs: _match_node,
-    M_aliases:           _match_node,
-    M_withitems:         _match_node,
-    M_type_params:       _match_node,
-    type:                _match_type,
-    re_Pattern:          _match_re_Pattern,
-    EllipsisType:        _match_Ellipsis,
-    int:                 _match_primitive,
-    float:               _match_primitive,
-    complex:             _match_primitive,
-    str:                 _match_str,
-    bytes:               _match_primitive,
-    bool:                _match_primitive,
-    NoneType:            _match_None,
+    M:                        M._match,
+    MNOT:                     MNOT._match,
+    MOR:                      MOR._match,
+    MAND:                     MAND._match,
+    MTYPES:                   _match_node,  # _match_node_arbitrary_fields,
+    MOPT:                     MOPT._match,
+    MRE:                      MRE._match,
+    MCB:                      MCB._match,
+    MTAG:                     MTAG._match,
+    MQ:                       _match_quantifier_invalid_location,
+    MQ.NG:                    _match_quantifier_invalid_location,
+    MQSTAR:                   _match_quantifier_invalid_location,
+    MQSTAR.NG:                _match_quantifier_invalid_location,
+    MQPLUS:                   _match_quantifier_invalid_location,
+    MQPLUS.NG:                _match_quantifier_invalid_location,
+    MQ01:                     _match_quantifier_invalid_location,
+    MQ01.NG:                  _match_quantifier_invalid_location,
+    MQMIN:                    _match_quantifier_invalid_location,
+    MQMIN.NG:                 _match_quantifier_invalid_location,
+    MQMAX:                    _match_quantifier_invalid_location,
+    MQMAX.NG:                 _match_quantifier_invalid_location,
+    MQN:                      _match_quantifier_invalid_location,
+    FSTView:                  _match_FSTView,
+    FSTView_Global_Nonlocal:  _match_FSTView,
+    FSTView__body:            _match_FSTView__body,
+    FSTView_arglikes:         _match_FSTView_arglikes,
+    FSTView_Compare:          _match_FSTView_Compare,
+    FSTView_Dict:             _match_FSTView_Dict,
+    FSTView_MatchMapping:     _match_FSTView_MatchMapping,
+    FSTView_arguments:        _match_FSTView_arguments,
+    FSTView_dummy:            _match_FSTView_dummy,
+    list:                     _match_list,
+    type:                     _match_type,
+    re_Pattern:               _match_re_Pattern,
+    str:                      _match_str,
+    int:                      _match_primitive,
+    float:                    _match_primitive,
+    complex:                  _match_primitive,
+    bytes:                    _match_primitive,
+    bool:                     _match_primitive,
+    NoneType:                 _match_None,
+    EllipsisType:             _match_Ellipsis,
+    AST:                      _match_node,  # _match_node_nonleaf,
+    Add:                      _match_node,
+    And:                      _match_node,
+    AnnAssign:                _match_node,
+    Assert:                   _match_node,
+    Assign:                   _match_node,
+    AsyncFor:                 _match_node,
+    AsyncFunctionDef:         _match_node,
+    AsyncWith:                _match_node,
+    Attribute:                _match_node,
+    AugAssign:                _match_node,
+    Await:                    _match_node,
+    BinOp:                    _match_node,
+    BitAnd:                   _match_node,
+    BitOr:                    _match_node,
+    BitXor:                   _match_node,
+    BoolOp:                   _match_node,
+    Break:                    _match_node,
+    Call:                     _match_node,
+    ClassDef:                 _match_node,
+    Compare:                  _match_node_Compare,
+    Constant:                 _match_node_Constant,
+    Continue:                 _match_node,
+    Del:                      _match_node_expr_context,
+    Delete:                   _match_node,
+    Dict:                     _match_node_Dict,
+    DictComp:                 _match_node,
+    Div:                      _match_node,
+    Eq:                       _match_node,
+    ExceptHandler:            _match_node,
+    Expr:                     _match_node,
+    Expression:               _match_node,
+    FloorDiv:                 _match_node,
+    For:                      _match_node,
+    FormattedValue:           _match_node,
+    FunctionDef:              _match_node,
+    FunctionType:             _match_node,
+    GeneratorExp:             _match_node,
+    Global:                   _match_node,
+    Gt:                       _match_node,
+    GtE:                      _match_node,
+    If:                       _match_node,
+    IfExp:                    _match_node,
+    Import:                   _match_node,
+    ImportFrom:               _match_node,
+    In:                       _match_node,
+    Interactive:              _match_node,
+    Invert:                   _match_node,
+    Is:                       _match_node,
+    IsNot:                    _match_node,
+    JoinedStr:                _match_node,
+    LShift:                   _match_node,
+    Lambda:                   _match_node,
+    List:                     _match_node,
+    ListComp:                 _match_node,
+    Load:                     _match_node_expr_context,
+    Lt:                       _match_node,
+    LtE:                      _match_node,
+    MatMult:                  _match_node,
+    Match:                    _match_node,
+    MatchAs:                  _match_node,
+    MatchClass:               _match_node,
+    MatchMapping:             _match_node_MatchMapping,
+    MatchOr:                  _match_node,
+    MatchSequence:            _match_node,
+    MatchSingleton:           _match_node,
+    MatchStar:                _match_node,
+    MatchValue:               _match_node,
+    Mod:                      _match_node,
+    Module:                   _match_node,
+    Mult:                     _match_node,
+    Name:                     _match_node,
+    NamedExpr:                _match_node,
+    Nonlocal:                 _match_node,
+    Not:                      _match_node,
+    NotEq:                    _match_node,
+    NotIn:                    _match_node,
+    Or:                       _match_node,
+    Pass:                     _match_node,
+    Pow:                      _match_node,
+    RShift:                   _match_node,
+    Raise:                    _match_node,
+    Return:                   _match_node,
+    Set:                      _match_node,
+    SetComp:                  _match_node,
+    Slice:                    _match_node,
+    Starred:                  _match_node,
+    Store:                    _match_node_expr_context,
+    Sub:                      _match_node,
+    Subscript:                _match_node,
+    Try:                      _match_node,
+    Tuple:                    _match_node,
+    TypeIgnore:               _match_node,
+    UAdd:                     _match_node,
+    USub:                     _match_node,
+    UnaryOp:                  _match_node,
+    While:                    _match_node,
+    With:                     _match_node,
+    Yield:                    _match_node,
+    YieldFrom:                _match_node,
+    alias:                    _match_node,
+    arg:                      _match_node,
+    arguments:                _match_node_arguments,
+    boolop:                   _match_node,
+    cmpop:                    _match_node,
+    comprehension:            _match_node,
+    excepthandler:            _match_node,  # _match_node_nonleaf,
+    expr:                     _match_node,  # _match_node_nonleaf,
+    expr_context:             _match_node,  # _match_node_nonleaf,
+    keyword:                  _match_node,
+    match_case:               _match_node,
+    mod:                      _match_node,  # _match_node_nonleaf,
+    operator:                 _match_node,
+    pattern:                  _match_node,  # _match_node_nonleaf,
+    stmt:                     _match_node,  # _match_node_nonleaf,
+    type_ignore:              _match_node,  # _match_node_nonleaf,
+    unaryop:                  _match_node,
+    withitem:                 _match_node,
+    TryStar:                  _match_node,
+    TypeAlias:                _match_node,
+    type_param:               _match_node,  # _match_node_nonleaf,
+    TypeVar:                  _match_node,
+    ParamSpec:                _match_node,
+    TypeVarTuple:             _match_node,
+    TemplateStr:              _match_node,
+    Interpolation:            _match_node,
+    _slice:                   _match_node,  # _match_node_nonleaf,
+    _ExceptHandlers:          _match_node,
+    _match_cases:             _match_node,
+    _Assign_targets:          _match_node,
+    _decorator_list:          _match_node,
+    _arglikes:                _match_node,
+    _comprehensions:          _match_node,
+    _comprehension_ifs:       _match_node,
+    _aliases:                 _match_node,
+    _withitems:               _match_node,
+    _type_params:             _match_node,
+    MAST:                     _match_node,  # _match_node_arbitrary_fields,
+    MAdd:                     _match_node,
+    MAnd:                     _match_node,
+    MAnnAssign:               _match_node,
+    MAssert:                  _match_node,
+    MAssign:                  _match_node,
+    MAsyncFor:                _match_node,
+    MAsyncFunctionDef:        _match_node,
+    MAsyncWith:               _match_node,
+    MAttribute:               _match_node,
+    MAugAssign:               _match_node,
+    MAwait:                   _match_node,
+    MBinOp:                   _match_node,
+    MBitAnd:                  _match_node,
+    MBitOr:                   _match_node,
+    MBitXor:                  _match_node,
+    MBoolOp:                  _match_node,
+    MBreak:                   _match_node,
+    MCall:                    _match_node,
+    MClassDef:                _match_node,
+    MCompare:                 _match_node_Compare,
+    MConstant:                _match_node_Constant,
+    MContinue:                _match_node,
+    MDel:                     _match_node,
+    MDelete:                  _match_node,
+    MDict:                    _match_node_Dict,
+    MDictComp:                _match_node,
+    MDiv:                     _match_node,
+    MEq:                      _match_node,
+    MExceptHandler:           _match_node,
+    MExpr:                    _match_node,
+    MExpression:              _match_node,
+    MFloorDiv:                _match_node,
+    MFor:                     _match_node,
+    MFormattedValue:          _match_node,
+    MFunctionDef:             _match_node,
+    MFunctionType:            _match_node,
+    MGeneratorExp:            _match_node,
+    MGlobal:                  _match_node,
+    MGt:                      _match_node,
+    MGtE:                     _match_node,
+    MIf:                      _match_node,
+    MIfExp:                   _match_node,
+    MImport:                  _match_node,
+    MImportFrom:              _match_node,
+    MIn:                      _match_node,
+    MInteractive:             _match_node,
+    MInvert:                  _match_node,
+    MIs:                      _match_node,
+    MIsNot:                   _match_node,
+    MJoinedStr:               _match_node,
+    MLShift:                  _match_node,
+    MLambda:                  _match_node,
+    MList:                    _match_node,
+    MListComp:                _match_node,
+    MLoad:                    _match_node,
+    MLt:                      _match_node,
+    MLtE:                     _match_node,
+    MMatMult:                 _match_node,
+    MMatch:                   _match_node,
+    MMatchAs:                 _match_node,
+    MMatchClass:              _match_node,
+    MMatchMapping:            _match_node_MatchMapping,
+    MMatchOr:                 _match_node,
+    MMatchSequence:           _match_node,
+    MMatchSingleton:          _match_node,
+    MMatchStar:               _match_node,
+    MMatchValue:              _match_node,
+    MMod:                     _match_node,
+    MModule:                  _match_node,
+    MMult:                    _match_node,
+    MName:                    _match_node,
+    MNamedExpr:               _match_node,
+    MNonlocal:                _match_node,
+    MNot:                     _match_node,
+    MNotEq:                   _match_node,
+    MNotIn:                   _match_node,
+    MOr:                      _match_node,
+    MPass:                    _match_node,
+    MPow:                     _match_node,
+    MRShift:                  _match_node,
+    MRaise:                   _match_node,
+    MReturn:                  _match_node,
+    MSet:                     _match_node,
+    MSetComp:                 _match_node,
+    MSlice:                   _match_node,
+    MStarred:                 _match_node,
+    MStore:                   _match_node,
+    MSub:                     _match_node,
+    MSubscript:               _match_node,
+    MTry:                     _match_node,
+    MTuple:                   _match_node,
+    MTypeIgnore:              _match_node,
+    MUAdd:                    _match_node,
+    MUSub:                    _match_node,
+    MUnaryOp:                 _match_node,
+    MWhile:                   _match_node,
+    MWith:                    _match_node,
+    MYield:                   _match_node,
+    MYieldFrom:               _match_node,
+    Malias:                   _match_node,
+    Marg:                     _match_node,
+    Marguments:               _match_node_arguments,
+    Mboolop:                  _match_node,
+    Mcmpop:                   _match_node,
+    Mcomprehension:           _match_node,
+    Mexcepthandler:           _match_node,  # _match_node_arbitrary_fields,
+    Mexpr:                    _match_node,  # _match_node_arbitrary_fields,
+    Mexpr_context:            _match_node,  # _match_node_arbitrary_fields,
+    Mkeyword:                 _match_node,
+    Mmatch_case:              _match_node,
+    Mmod:                     _match_node,  # _match_node_arbitrary_fields,
+    Moperator:                _match_node,
+    Mpattern:                 _match_node,  # _match_node_arbitrary_fields,
+    Mstmt:                    _match_node,  # _match_node_arbitrary_fields,
+    Mtype_ignore:             _match_node,  # _match_node_arbitrary_fields,
+    Munaryop:                 _match_node,
+    Mwithitem:                _match_node,
+    MTryStar:                 _match_node,
+    MTypeAlias:               _match_node,
+    Mtype_param:              _match_node,  # _match_node_arbitrary_fields,
+    MTypeVar:                 _match_node,
+    MParamSpec:               _match_node,
+    MTypeVarTuple:            _match_node,
+    MTemplateStr:             _match_node,
+    MInterpolation:           _match_node,
+    M_slice:                  _match_node,  # _match_node_arbitrary_fields,
+    M_ExceptHandlers:         _match_node,
+    M_match_cases:            _match_node,
+    M_Assign_targets:         _match_node,
+    M_decorator_list:         _match_node,
+    M_arglikes:               _match_node,
+    M_comprehensions:         _match_node,
+    M_comprehension_ifs:      _match_node,
+    M_aliases:                _match_node,
+    M_withitems:              _match_node,
+    M_type_params:            _match_node,
 }
 
 
@@ -5396,14 +5589,14 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
     MTAG:         _leaf_asts_unknown,  # can match against arbitrary tags set by the user, not just previously matched nodes
     type:         _leaf_asts_type,
     re_Pattern:   _leaf_asts_unknown,  # can match source
-    EllipsisType: _leaf_asts_all,  # literally matches everything
+    str:          _leaf_asts_unknown,  # can match source
     int:          _leaf_asts_none,
     float:        _leaf_asts_none,
     complex:      _leaf_asts_none,
-    str:          _leaf_asts_unknown,  # can match source
     bytes:        _leaf_asts_none,
     bool:         _leaf_asts_none,
     NoneType:     _leaf_asts_none,
+    EllipsisType: _leaf_asts_all,  # literally matches everything
 }
 
 
