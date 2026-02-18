@@ -90,7 +90,7 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 >>> FST('if 1:\n a\n b').match(MIf(body=M(body=...)))
 <FSTMatch <If ROOT 0,0..2,2> {'body': <<If ROOT 0,0..2,2>.body>}>
 
->>> FST('if 1:\n a\n b').sub(MIf(test=M(test=...), body=M(body=...)), 'if not __fst_test:\n __fst_body').src
+>>> FST('if 1:\n a\n b').sub(MIf(test=M(test=...), body=M(body=...)), 'if not __FST_test:\n __FST_body').src
 'if not 1:\n a\n b'
 
 >>> FST('[a, a, a]').match(List([MQ(min=1, max=2, tag='a'), ...]))
@@ -122,13 +122,13 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 
 >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + b'))
 
->>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), 'BinOp(__fst_a, __fst_b)', nested=True).src
+>>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), 'BinOp(__FST_a, __FST_b)', nested=True).src
 'BinOp(a, BinOp(b, c))'
 
->>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__fst_a, __fst_b), __fst_)[1]', nested=True).src
+>>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__FST_a, __FST_b), __FST_)[1]', nested='tags').src
 '(BinOp(a, (BinOp(b, c), b + c)[1]), a + (b + c))[1]'
 
->>> FST('a + b').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__fst_a, __fst_b), __fst_)[1]', nested=True).src
+>>> FST('a + b').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__FST_a, __FST_b), __FST_)[1]', nested=True).src
 '(BinOp(a, b), a + b)[1]'
 
 >>> MConstant(..., M(k=...)).match(FST('u"a"'))

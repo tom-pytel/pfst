@@ -15,9 +15,10 @@ checker...
 from __future__ import annotations
 
 import re
+from ast import walk
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
-from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as tp_Set, Union
+from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequence, Set as tp_Set, Union
 
 from . import fst
 
@@ -360,8 +361,6 @@ _EMPTY_DICT = {}
 _EMPTY_MAPPINGPROXY = MappingProxyType(_EMPTY_DICT)
 
 _LEN_ASTS_LEAF__ALL = len(ASTS_LEAF__ALL)
-
-__DIRTY = 0xfc942b31  # for sub(), start at high enough number that it will probably be unique, doesn't need to be though
 
 _Target = AST | constant
 _TargetFST = Union['fst.FST', constant]
@@ -5736,8 +5735,8 @@ def search(
 def sub(
     self: fst.FST,
     pat: _Pattern,
-    repl: Code | Callable[[FSTMatch], Code],
-    nested: bool = False,
+    repl: Code,
+    nested: bool | Literal['tags'] = False,
     *,
     ast_ctx: bool = False,
     self_: bool = True,
@@ -5747,19 +5746,19 @@ def sub(
     asts: list[AST] | None = None,
     **options,
 ) -> fst.FST:  # -> self
-    """Substitute matching targets with a given `repl` template or dynamically generated node if `repl` is a function.
-    The template substitutions can include tagged elements from a match.
+    """Substitute matching targets with a given `repl` template. The template substitutions can include tagged elements
+    from a match, including the whole match.
 
     TODO: unfinished, document
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
-    - `repl`: Replacement template or function to generate replacement nodes.
+    - `repl`: Replacement template as an `FST`, `AST` or source.
     - `nested: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion
         due to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
         Regardless of this setting, when using a template `repl` this function will never recurse into full matched
-        target substitutions (`__fst_`).
+        target substitutions (`__FST_`).
     - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -5794,7 +5793,7 @@ def sub(
     ...    _args=M(all_args=...),
     ... )
 
-    >>> repl = '__fst_func(__fst_all_args, cid=CID)'
+    >>> repl = '__FST_func(__FST_all_args, cid=CID)'
 
     >>> print(FST(src).sub(pat, repl).src)
     logger.info('Hello world...', cid=CID)  # ok
@@ -5806,31 +5805,15 @@ def sub(
                   cid=CID)
     """
 
-    global __DIRTY
-
     check_options(options)
 
-    gen = self.search(pat, ast_ctx=ast_ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
-
-    if callable(repl):  # user function, very simple, just do its own loop
-        for m in gen:
-            tgt = m.matched  # will be FST node
-            sub = repl(m)
-
-            # TODO: user nested control, True, False or don't send anything
-
-            if sub is not tgt:
-                tgt.replace(sub, **options)
-
-            if not nested:
-                gen.send(False)
-
-        return
-
-    # template substitution, now it gets fun
-
     repl = code_as_all(repl, options, self.root.parse_params)
-    paths = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
+
+    nested_tags = nested == 'tags'
+    dirties = set()  # {AST, ...}
+    paths_tag = []  # [(tag, child_path), ...]
+    paths_matched = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
+    all_paths = (paths_matched, paths_tag)
 
     for f in repl.walk({Name, arg}):
         if (a := f.a).__class__ is Name:
@@ -5838,23 +5821,28 @@ def sub(
         else:  # a.__class__ is arg, it makes more sense to replace the whole arg, annotation included, rather than just the name
             n = a.arg
 
-        if n.startswith('__fst_'):
-            paths.append((n[6:], repl.child_path(f)))
+        if n.startswith('__FST_'):
+            path = repl.child_path(f)
 
-    dirty = __DIRTY = (__DIRTY + 1) & 0x7fffffffffffffff
-    dirties = []
+            if n := n[6:]:
+                paths_tag.append((n, path))
+            else:
+                paths_matched.append((n, path))
 
-    try:
-        for m in gen:
-            tgt = m.matched  # will be FST node
+    gen = self.search(pat, nested=bool(nested), ast_ctx=ast_ctx,
+                      self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
-            if getattr(tgt.a, '__DIRTY', None) is dirty:
-                gen.send(False)
+    for m in gen:
+        tgt = m.matched  # will be FST node
 
-                continue
+        if tgt.a in dirties:
+            continue
 
-            sub = repl.copy()
+        sub = repl.copy()
 
+        dirties.update(walk(sub.a))
+
+        for paths in all_paths:
             for tag, path in paths:
                 sub_tgt = sub.child_from_path(path)
                 one = True
@@ -5922,31 +5910,18 @@ def sub(
                             if (delta := len(view) - len_original_field) >= 0:  # only if replaced or added, if length contracted then there was deletion
                                 for f in view[new_idx : new_idx + 1 + delta]:
                                     if f:
-                                        (a := f.a).__DIRTY = dirty
-
-                                        dirties.append(a)
+                                        dirties.add(f.a)
 
                         continue
 
                 f = sub_tgt.replace(sub_sub, one=one, **options)
 
                 if not tag and f:  # replaced with original whole matched element, mark as dirty
-                    (a := f.a).__DIRTY = dirty
+                    dirties.add(f.a)
 
-                    dirties.append(a)
+            if nested_tags and paths is paths_matched:
+                dirties.update(walk(sub.a))
 
-            tgt = tgt.replace(sub, **options)
-
-            if tgt and getattr(tgt.a, '__DIRTY', None) is dirty:  # substituted node with same node `__fst_`?
-                gen.send(False)
-
-                continue
-
-            if not nested:
-                gen.send(False)
-
-    finally:
-        for a in dirties:  # clean up after ourselves
-            del a.__DIRTY
+        tgt = tgt.replace(sub, **options)
 
     return self

@@ -8,7 +8,7 @@
 - structural pattern matching
    - `FST.match()` match - `f.match(Mstmt(body=[Expr(Constant(str)), ...]))`
    - `FST.search()` search - `for m in f.search(Assign([Name], ListComp))`
-   - `FST.sub()` substitute - `f.sub(MCall('old_name', _args=M(all_args=...)), 'new_name(__fst_all_args, new_kw=3)')`
+   - `FST.sub()` substitute - `f.sub(MCall('old_name', _args=M(all_args=...)), 'new_name(__FST_all_args, new_kw=3)')`
 - `FST.find_def()` easily find (possibly nested) function and class definitions by name in a given scope by dotted name
   - added usage of this in indexing (single-element only, not slice): `method = module['class.method']`, `del someclass['method']`, etc...
 - `walk()`

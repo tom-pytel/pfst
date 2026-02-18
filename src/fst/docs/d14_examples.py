@@ -214,7 +214,7 @@ Note we are using the source from the previous example.
 ...        keywords=MNOT([MQSTAR, Mkeyword('correlation_id'), MQSTAR]),
 ...        _args=M(all_args=...),
 ...     ),
-...     '__fst_func(__fst_all_args, correlation_id=CID)',
+...     '__FST_func(__FST_all_args, correlation_id=CID)',
 ... ).src)
 logger.info('Hello world...', correlation_id=CID)  # ok
 logger.info('Already have id', correlation_id=other_cid)  # ok

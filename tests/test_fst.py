@@ -10132,7 +10132,7 @@ logger.info(a)
            _args=M(all_args=...),
         )
 
-        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_all_args)').src, '''
+        self.assertEqual(FST(src).sub(pat, '__FST_func.warning(__FST_all_args)').src, '''
 logger.warning(a, cid=-1)
 logger.info(a, cid=1)
 other_logger.warning(cid=-1, **b)
@@ -10144,7 +10144,7 @@ logger.info(a)
            keywords=[MQSTAR, M(kw=Mkeyword('cid', MUnaryOp(USub))), MQSTAR],
         )
 
-        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_kw)').src, '''
+        self.assertEqual(FST(src).sub(pat, '__FST_func.warning(__FST_kw)').src, '''
 logger.warning(cid=-1)
 logger.info(a, cid=1)
 other_logger.warning(cid=-1)
@@ -10156,7 +10156,7 @@ logger.info(a)
            args=[MQSTAR, M(arg='a'), MQSTAR],
         )
 
-        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_arg)').src, '''
+        self.assertEqual(FST(src).sub(pat, '__FST_func.warning(__FST_arg)').src, '''
 logger.warning(a)
 logger.warning(a)
 other_logger.info(cid=-1, **b)
@@ -10168,7 +10168,7 @@ logger.warning(a)
            _args=[MQSTAR, M(arg='a'), MQSTAR],
         )
 
-        self.assertEqual(FST(src).sub(pat, '__fst_func.warning(__fst_arg)').src, '''
+        self.assertEqual(FST(src).sub(pat, '__FST_func.warning(__FST_arg)').src, '''
 logger.warning(a)
 logger.warning(a)
 other_logger.info(cid=-1, **b)
@@ -10190,7 +10190,7 @@ class info(a): pass
            _bases=M(all_bases=...),
         )
 
-        self.assertEqual(FST(src).sub(pat, 'class warning(__fst_all_bases): pass', pep8space=False).src, '''
+        self.assertEqual(FST(src).sub(pat, 'class warning(__FST_all_bases): pass', pep8space=False).src, '''
 class warning(a, cid=-1): pass
 class info(a, cid=1): pass
 class other_info(cid=-1, **b): pass
@@ -10199,15 +10199,15 @@ class info(a): pass
 
         # Compare._all
 
-        self.assertEqual('x < a < b < y', FST('a < b').sub(MCompare(_all=M(all=...)), 'x < __fst_all < y').src)
-        self.assertEqual('x < (a < b) < y', FST('a < b').sub(M(all=MCompare(_all=...)), 'x < __fst_all < y').src)
+        self.assertEqual('x < a < b < y', FST('a < b').sub(MCompare(_all=M(all=...)), 'x < __FST_all < y').src)
+        self.assertEqual('x < (a < b) < y', FST('a < b').sub(M(all=MCompare(_all=...)), 'x < __FST_all < y').src)
 
         # arguments._all
 
         pat = MFunctionDef(args=M(args=arguments))
         src = 'def f(a, /, b=1, *c, d=2, **e): pass'
         fst_ = FST(src)
-        repl = 'def g(__fst_args): pass'
+        repl = 'def g(__FST_args): pass'
         self.assertEqual('def g(a, /, b=1, *c, d=2, **e): pass', fst_.sub(pat, repl).src)
 
         # body
@@ -10224,7 +10224,7 @@ if not d:
         '''.strip()
 
         pat = MIf(test=M(test=...), body=M(body=...))
-        repl = 'if not __fst_test:\n    __fst_body'
+        repl = 'if not __FST_test:\n    __FST_body'
 
         self.assertEqual(FST(src).sub(pat, repl).src, '''
 if not a:
