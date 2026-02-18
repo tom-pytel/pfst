@@ -6,8 +6,6 @@
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15a-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
-
 This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal with the details of:
 
 - Operator precedence and parentheses
@@ -15,26 +13,21 @@ This module exists in order to facilitate quick and easy high level editing of P
 - Commas, semicolons, and tuple edge cases
 - Comments and docstrings
 - Various Python version-specific syntax quirks
-- Lots more...
+- Etc...
 
-See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples.
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples. Or go straight to the [Documentation](https://tom-pytel.github.io/pfst/fst.html).
 
 ```py
 >>> import fst  # pip install pfst, import fst
 
->>> ext_ast = fst.parse('''
-... logger.info(  # just checking
-...     f'not a {thing}', extra=extra,  # blah
-... )'''.strip())
+>>> ext_ast = parse('logger.info("message", extra=extra)  # done')
 
->>> ext_ast.f.body[0].value.insert('\nid=CID  # comment', -1, trivia=())
+>>> ext_ast.f.body[0].value.insert('\nid=CID  # comment', -1)
 
 >>> print(fst.unparse(ext_ast))
-logger.info(  # just checking
-    f'not a {thing}',
-    id=CID,  # comment
-    extra=extra,  # blah
-)
+logger.info('message',
+            id=CID,  # comment
+            extra=extra)  # done
 ```
 
 The tree is just normal `AST` with metadata, so if you know `AST`, you know `FST`.
@@ -43,11 +36,8 @@ The tree is just normal `AST` with metadata, so if you know `AST`, you know `FST
 >>> import ast
 
 >>> print(ast.unparse(ext_ast))
-logger.info(f'not a {thing}', id=CID, extra=extra)
+logger.info('message', id=CID, extra=extra)
 ```
-
-`fst` works by adding `FST` nodes to existing standard Python `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided) which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
-
 
 ## Links
 
@@ -68,269 +58,6 @@ From GitHub using pip:
 From GitHub, after cloning for development:
 
     pip install -e .[dev]
-
-## Example
-
-Maybe you need to convert modern Python type annotations into older style type comments for something which doesn't
-understand annotations?
-
-```py
->>> from fst import *
-
->>> def type_annotations_to_type_comments(src: str) -> str:
-...     fst_ = FST(src)  # same as "fst.parse(src).f"
-...
-...     # walk the whole tree but only yield AnnAssign nodes
-...     for f in fst_.walk(AnnAssign):
-...         # if just an annotation then skip it, alternatively could
-...         # clean and store for later addition to __init__() assign in class
-...         if not f.value:
-...             continue
-...
-...         # own_src() gives us the original source exactly as written but dedented
-...         target = f.target.own_src()
-...         value = f.value.own_src()
-...
-...         # we use ast_src() for the annotation to get a clean type string
-...         annotation = f.annotation.ast_src()
-...
-...         # preserve any existing end-of-line comment
-...         comment = ' # ' + comment if (comment := f.get_line_comment()) else ''
-...
-...         # reconstruct the line using the PEP 484 type comment style
-...         new_src = f'{target} = {value}  # type: {annotation}{comment}'
-...
-...         # replace the node, trivia=False preserves any leading comments
-...         f.replace(new_src, trivia=False)
-...
-...     return fst_.src  # same as fst.unparse(fst_.a)
-```
-
-```py
->>> print(type_annotations_to_type_comments("""
-... def func():
-...     normal = assign
-...
-...     x: int = 1
-...
-...     # y is such and such
-...     y: float = 2.0  # more about y
-...     # y was a good variable...
-...
-...     structure: tuple[
-...         tuple[int, int],  # extraneous comment
-...         dict[str, Any],   # could break stuff
-...     ] | None = None# blah
-...
-...     call(  # invalid but just for demonstration purposes
-...         some_arg,          # non-extraneous comment
-...         some_kw=kw_value,  # will not break stuff
-...     )[start : stop].attr: SomeClass = getthis()
-... """.strip()))
-def func():
-    normal = assign
-
-    x = 1  # type: int
-
-    # y is such and such
-    y = 2.0  # type: float # more about y
-    # y was a good variable...
-
-    structure = None  # type: tuple[tuple[int, int], dict[str, Any]] | None # blah
-
-    call(  # invalid but just for demonstration purposes
-        some_arg,          # non-extraneous comment
-        some_kw=kw_value,  # will not break stuff
-    )[start : stop].attr = getthis()  # type: SomeClass
-```
-
-## Robust
-
-Crazy syntax is handled correctly, which is a main goal of this module.
-
-```py
->>> f = FST(r'''
-... if True:
-...     @decorator1
-...
-...     # pre-comment
-...     \
-...  @ \
-...   ( decorator2 )(
-...         a,
-...     ) \
-...     # post-comment
-...
-...     @ \
-...     decorator3()
-...
-...     def func(): weird\
-...  ; \
-... \
-... stuff()
-...
-...     pass
-... '''.strip())
-```
-
-```py
->>> deco = f.body[0].get_slice(1, 2, 'decorator_list', cut=True, trivia=('all-', 'all-'))
-```
-
-```py
->>> deco.dump('stmt+')
-0: # pre-comment
-1: \
-2: @ \
-3: ( decorator2 )(
-4:     a,
-5: ) \
-6: # post-comment
-_decorator_list - ROOT 0,0..8,0
-  .decorator_list[1]
-   0] Call - 4,0..6,1
-     .func Name 'decorator2' Load - 4,2..4,12
-     .args[1]
-      0] Name 'a' Load - 5,4..5,5
-```
-
-```py
->>> print(f.src)
-if True:
-    @decorator1
-    @ \
-    decorator3()
-
-    def func(): weird\
- ; \
-\
-stuff()
-
-    pass
-```
-
-```py
->>> f.body[0].put_slice(deco, 'decorator_list', trivia=('all-', 'all-'))
-
->>> f.body[0].body[0] = 'good'
-```
-
-```py
->>> print(f.src)
-if True:
-    # pre-comment
-    \
-    @ \
-    ( decorator2 )(
-        a,
-    ) \
-    # post-comment
-    def func():
-        good
-        stuff()
-
-    pass
-```
-
-## Misc
-
-Familiar AST structure and pythonic operations.
-
-```py
->>> f = FST('if a:\n    print(a)')
-
->>> f.test = 'not a'
-
->>> f.body.append('return a')
-
->>> print(f.src)
-if not a:
-    print(a)
-    return a
-```
-
-Higher level slice abstraction.
-
-```py
->>> print(FST('a < b < c')[:2].copy().src)
-a < b
-
->>> f = FST('case {1: a, 2: b, **c}: pass')  # match_case
-
->>> print(f.pattern.get_slice(1, 'end').src)
-{2: b, **c}
-
->>> f = FST('call(a, b=c, *d)')
-
->>> f[1:] = '*e, f=g, **h'
-
->>> print(f.src)
-call(a, *e, f=g, **h)
-
->>> print(FST('def f(a, /, b=2, *c, d=4, **e): pass').args[-2:].copy().src)
-*, d=4, **e
-```
-
-One-liner fun.
-
-```py
->>> src = '''
-class myclass:
-    def first_method(self):
-        something
-
-    @bad_decorator()
-    def bad_method(self):
-        something_bad
-
-    def last_method(self):
-        something_else
-'''.strip()
-
->>> print(FST(src, 'exec')
-...       .find_def('myclass.bad_method')
-...       .replace('def good_method(self):\n    return "YAY!"')
-...       .root.src)
-class myclass:
-    def first_method(self):
-        something
-
-    def good_method(self):
-        return "YAY!"
-
-    def last_method(self):
-        something_else
-```
-
-Traversal is in syntactic order.
-
-```py
->>> list(f.src for f in FST('call(a, x=1, *b, y=2, **c)').walk())[1:]
-['call', 'a', 'x=1', '1', '*b', 'b', 'y=2', '2', '**c', 'c']
-
->>> list(f.src for f in FST('def func[T](a=1, b=2) -> int: pass').walk())[1:]
-['T', 'a=1, b=2', 'a', '1', 'b', '2', 'int', 'pass']
-
->>> list(f.src for f in FST('{key1: val1, **val2, key3: val3}').walk())[1:]
-['key1', 'val1', 'val2', 'key3', 'val3']
-```
-
-Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
-nodes.
-
-```py
->>> FST('蟒=Æ+д').dump()
-Assign - ROOT 0,0..0,5
-  .targets[1]
-   0] Name '蟒' Store - 0,0..0,1
-  .value BinOp - 0,2..0,5
-    .left Name 'Æ' Load - 0,2..0,3
-    .op Add - 0,3..0,4
-    .right Name 'д' Load - 0,4..0,5
-```
-
-For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the
-tests in the `tests/` directory.
 
 ### TODO
 
