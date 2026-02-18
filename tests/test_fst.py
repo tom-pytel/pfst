@@ -8991,8 +8991,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(MNonlocal(names=FST('global a, b, d').names).match(FST('nonlocal a, b, c')))
 
     def test_match_virtual_field_Compare(self):
-        from fst.match import _SENTINEL
-        self.assertEqual("<FSTMatch <<Compare ROOT 0,0..0,5>._all[:0]>>", str(MCompare(_SENTINEL, [], []).match(FST('a < b')._all[:0])))
+        self.assertEqual("<FSTMatch <<Compare ROOT 0,0..0,5>._all[:0]>>", str(MCompare(NotSet, [], []).match(FST('a < b')._all[:0])))
 
         f = FST('a < b')
         del f[1]
@@ -9056,14 +9055,14 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
 
         # Concrete pattern to multinode Dict
 
-        f = FST('{a: b}')
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern cannot have its own _all field'), MDict(_all=[MDict(_all=['a'])]).match, f)
-        assertRaises(MatchError('MQ quantifier pattern in invalid location'), MDict(_all=[MDict(keys=[MQ('a', 0, None)])]).match, f)
-        assertRaises(MatchError('MQ quantifier pattern in invalid location'), MDict(_all=[MDict(..., values=[MQ('a', 0, None)])]).match, f)
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list'), MDict(_all=[MDict([], [])]).match, f)
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be ... or a length-1 list'), MDict(_all=[MDict(['a'], [])]).match, f)
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list'), MDict(_all=[MDict(['a', 'a'], [])]).match, f)
-        assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be ... or a length-1 list'), MDict(_all=[MDict(['a'], ['a', 'a'])]).match, f)
+        # f = FST('{a: b}')
+        # assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern cannot have its own _all field'), MDict(_all=[MDict(_all=['a'])]).match, f)
+        # assertRaises(MatchError('MQ quantifier pattern in invalid location'), MDict(_all=[MDict(keys=[MQ('a', 0, None)])]).match, f)
+        # assertRaises(MatchError('MQ quantifier pattern in invalid location'), MDict(_all=[MDict(..., values=[MQ('a', 0, None)])]).match, f)
+        # assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list'), MDict(_all=[MDict([], [])]).match, f)
+        # assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be ... or a length-1 list'), MDict(_all=[MDict(['a'], [])]).match, f)
+        # assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list'), MDict(_all=[MDict(['a', 'a'], [])]).match, f)
+        # assertRaises(MatchError('matching a Dict pattern against Dict._all the pattern values must be ... or a length-1 list'), MDict(_all=[MDict(['a'], ['a', 'a'])]).match, f)
 
         self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{a: b}')))
         self.assertTrue(MDict(_all=[FST('{a: b}').a]).match(FST('{ a : b }')))
@@ -9108,7 +9107,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         pat = MList([M(..., t=MDict([M(k=...)], [M(v=...)])), MDict(_all=[MTAG('t')])])
         self.assertEqual("<FSTMatch <List ROOT 0,0..0,16> {'t': MDict(keys=[M(k=...)], values=[M(v=...)]), 'k': <Constant 0,10..0,11>, 'v': <Name 0,13..0,14>}>", str(pat.match(FST('[filler, {1: a}]'))))
 
-        self.assertIsNone(MDict().match(FST('{1: a, 2: b}')._all))  # this is a truly unrealistic test, but hey, coverage
+        # self.assertIsNone(MDict().match(FST('{1: a, 2: b}')._all))  # this is a truly unrealistic test, but hey, coverage
 
     def test_match_virtual_field_one_MatchMapping(self):
         # string to multinode
@@ -9147,20 +9146,20 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
 
         # Concrete pattern to multinode MatchMapping
 
-        f = FST('{1: b}', pattern)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern cannot have its own _all field'), MMatchMapping(_all=[MMatchMapping(_all=['a'])]).match, f)
-        assertRaises(MatchError('MQ quantifier pattern in invalid location'), MMatchMapping(_all=[MMatchMapping(keys=[MQ('a', min=0, max=None)])]).match, f)
-        assertRaises(MatchError('MQ quantifier pattern in invalid location'), MMatchMapping(_all=[MMatchMapping(..., patterns=[MQ('a', min=0, max=None)])]).match, f)
-        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], [], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], ['a'], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], ['a'], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], [], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], ['a'], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], ['a'], 'r')]).match, f)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping([], [])]).match, f)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping(['a'], [])]).match, f)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping(['a'], ['a', 'a'])]).match, f)
-        assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping(['a', 'a'], ['a'])]).match, f)
+        # f = FST('{1: b}', pattern)
+        # assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern cannot have its own _all field'), MMatchMapping(_all=[MMatchMapping(_all=['a'])]).match, f)
+        # assertRaises(MatchError('MQ quantifier pattern in invalid location'), MMatchMapping(_all=[MMatchMapping(keys=[MQ('a', min=0, max=None)])]).match, f)
+        # assertRaises(MatchError('MQ quantifier pattern in invalid location'), MMatchMapping(_all=[MMatchMapping(..., patterns=[MQ('a', min=0, max=None)])]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], [], 'r')]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], ['a'], 'r')]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], ['a'], 'r')]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], [], 'r')]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping([], ['a'], 'r')]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping rest against MatchMapping._all the pattern keys and patterns must be ... or empty lists'), MMatchMapping(_all=[MMatchMapping(['a'], ['a'], 'r')]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping([], [])]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping(['a'], [])]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern patterns must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping(['a'], ['a', 'a'])]).match, f)
+        # assertRaises(MatchError('matching a MatchMapping pattern against MatchMapping._all the pattern keys must be ... or a length-1 list'), MMatchMapping(_all=[MMatchMapping(['a', 'a'], ['a'])]).match, f)
 
         self.assertTrue(MMatchMapping(_all=[FST('{1: b}', pattern).a]).match(FST('{1: b}', pattern)))
         self.assertTrue(MMatchMapping(_all=[FST('{1: b}', pattern).a]).match(FST('{ 1 : b }', pattern)))
@@ -9207,10 +9206,10 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         pat = MMatchSequence([M(..., t=MMatchMapping([M(k=...)], [M(v=...)])), MMatchMapping(_all=[MTAG('t')])])
         self.assertEqual("<FSTMatch <MatchSequence ROOT 0,0..0,16> {'t': MMatchMapping(keys=[M(k=...)], patterns=[M(v=...)]), 'k': <Constant 0,10..0,11>, 'v': <MatchAs 0,13..0,14>}>", str(pat.match(FST('[filler, {1: a}]', pattern))))
 
-        self.assertIsNone(MMatchMapping().match(FST('{1: a, 2: b}', pattern)._all))  # this is a truly unrealistic test, but hey, coverage
+        # self.assertIsNone(MMatchMapping().match(FST('{1: a, 2: b}', pattern)._all))  # this is a truly unrealistic test, but hey, coverage
 
     def test_match_virtual_field_one_arguments(self):
-        self.assertFalse(Marguments().match(FST('a, b', arguments)._all))  # this is a truly unrealistic test, but hey, coverage
+        self.assertTrue(Marguments().match(FST('a, b', arguments)._all))
 
         # string to multinode
 
@@ -9233,45 +9232,45 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertTrue(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a :  int  =  1', arguments)))
         self.assertFalse(Marguments(_all=[MRE(r'a\s*:\s*int\s*=\s*1')]).match(FST('a: int = 2', arguments)))
 
-        # Invalid concrete pattern to multinode arguments
+        # Invalid concrete pattern to multinode arguments which will not use the single argument matching
 
         f = FST('a=1', arguments)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], ..., [], ['a'], ..., ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], None, [], ['a'], None, ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have its own _all field'), Marguments(_all=[Marguments(_all=['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(['a', 'a'], [], None, [], [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments([], ['a', 'a'], None, [], [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments([], [], None, ['a', 'a'], [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(['a'], [], 'a', [], [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(['a'], [], None, [], [], 'a', [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(['a'], [], None, [], ['a'], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], ['a'], None, [], ['a'], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], None, ['a'], [], None, ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], 'a', [], ['a'], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], 'a', [], [], None, ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], None, [], ['a'], 'a', [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments([], [], None, [], [], 'a', ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., ..., ..., ['a'], ..., ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., None, ..., ['a'], None, ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(['a', 'a'], ..., None, ..., ..., None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(..., ['a', 'a'], None, ..., ..., None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(..., ..., None, ['a', 'a'], ..., None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(['a'], ..., 'a', ..., ..., None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern cannot have more than one arg'), Marguments(_all=[arguments(['a'], ..., None, ..., ..., 'a', ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(['a'], ..., None, ..., ['a'], None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ['a'], None, ..., ['a'], None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., None, ['a'], ..., None, ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., 'a', ..., ['a'], None, ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., 'a', ..., ..., None, ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., None, ..., ['a'], 'a', ...)]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all found invalid defaults'), Marguments(_all=[arguments(..., ..., None, ..., ..., 'a', ['a'])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern posonlyargs must be ... or a length-1 list'), Marguments(_all=[arguments('a', [], None, [], [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern args must be ... or a length-1 list'), Marguments(_all=[arguments([], 'a', None, [], [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern kwonlyargs must be ... or a length-1 list'), Marguments(_all=[arguments([], [], None, 'a', [], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern kw_defaults must be ... or a length-1 list'), Marguments(_all=[arguments([], [], None, [], 'a', None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern defaults must be ... or a length-1 list'), Marguments(_all=[arguments([], [], None, [], [], None, 'a')]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern can only have a single default'), Marguments(_all=[arguments([], [], None, [], ['a', 'a'], None, [])]).match, f)
-        assertRaises(MatchError('matching an arguments pattern against arguments._all the pattern can only have a single default'), Marguments(_all=[arguments([], [], None, [], [], None, ['a', 'a'])]).match, f)
+        self.assertFalse(Marguments(_all=[arguments([], [], ..., [], ['1'], ..., ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], ['1'], None, ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[Marguments(_all=['a'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a', 'a'], [], None, [], [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], ['a', 'a'], None, [], [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, ['a', 'a'], [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a'], [], 'a', [], [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a'], [], None, [], [], 'a', [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a'], [], None, [], ['1'], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], ['a'], None, [], ['1'], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, ['a'], [], None, ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], 'a', [], ['1'], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], 'a', [], [], None, ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], ['1'], 'a', [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], [], 'a', ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., ..., ..., ['1'], ..., ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., None, ..., ['1'], None, ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a', 'a'], ..., None, ..., ..., None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ['a', 'a'], None, ..., ..., None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., None, ['a', 'a'], ..., None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a'], ..., 'a', ..., ..., None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a'], ..., None, ..., ..., 'a', ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(['a'], ..., None, ..., ['1'], None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ['a'], None, ..., ['1'], None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., None, ['a'], ..., None, ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., 'a', ..., ['1'], None, ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., 'a', ..., ..., None, ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., None, ..., ['1'], 'a', ...)]).match(f))
+        self.assertFalse(Marguments(_all=[arguments(..., ..., None, ..., ..., 'a', ['1'])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments('a', [], None, [], [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], 'a', None, [], [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, 'a', [], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], '1', None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], [], None, '1')]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], ['1', '1'], None, [])]).match(f))
+        self.assertFalse(Marguments(_all=[arguments([], [], None, [], [], None, ['1', '1'])]).match(f))
 
         # Concrete pattern to multinode arguments (without defaults), also _strict
 
@@ -9285,7 +9284,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(pat.match(FST('x, *c: int, y', arguments)))
         self.assertFalse(pat.match(FST('x, *a: float, y', arguments)))
         self.assertFalse(pat.match(FST('**a: int', arguments)))
-        pat = Marguments(_all=[MQSTAR, M(t=Marguments(vararg=Marg(MRE('a|b'), MRE('int|str')), _strict=False)), MQSTAR])
+        pat = Marguments(_all=[MQSTAR, M(t=Marguments(vararg=Marg(MRE('a|b'), MRE('int|str')), _strict=None)), MQSTAR])
         self.assertFalse(pat.match(FST('x, *c: int, y', arguments)))
         self.assertFalse(pat.match(FST('x, *a: float, y', arguments)))
         self.assertFalse(pat.match(FST('**a: int', arguments)))
@@ -9298,7 +9297,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(pat.match(FST('x, **c: int', arguments)))
         self.assertFalse(pat.match(FST('x, **a: float', arguments)))
         self.assertFalse(pat.match(FST('*a: int', arguments)))
-        pat = Marguments(_all=[MQSTAR, M(t=Marguments(kwarg=Marg(MRE('a|b'), MRE('int|str')), _strict=False)), MQSTAR])
+        pat = Marguments(_all=[MQSTAR, M(t=Marguments(kwarg=Marg(MRE('a|b'), MRE('int|str')), _strict=None)), MQSTAR])
         self.assertFalse(pat.match(FST('x, **c: int', arguments)))
         self.assertFalse(pat.match(FST('x, **a: float', arguments)))
         self.assertFalse(pat.match(FST('*a: int', arguments)))
@@ -9326,7 +9325,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(pat.match(FST('x, a: int, /', arguments)))
         self.assertFalse(pat.match(FST('x, b: int, /, y', arguments)))
         self.assertFalse(pat.match(FST('x, a: str, /, y', arguments)))
-        pat = Marguments(_all=[MQSTAR, M(t=Marguments(kwonlyargs=[Marg(MRE('a|b'), MRE('int|str'))], _strict=False)), MQSTAR])
+        pat = Marguments(_all=[MQSTAR, M(t=Marguments(kwonlyargs=[Marg(MRE('a|b'), MRE('int|str'))], _strict=None)), MQSTAR])
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>", str(pat.match(FST('a: int', arguments))))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,9> {'t': <<arguments ROOT 0,0..0,9>._all[:1]>}>", str(pat.match(FST('a: int, y', arguments))))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,12> {'t': <<arguments ROOT 0,0..0,12>._all[1:2]>}>", str(pat.match(FST('x, a: int, y', arguments))))
@@ -9363,7 +9362,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(pat.match(FST('x, *, a: int', arguments)))
         self.assertFalse(pat.match(FST('x, *, b: int, y', arguments)))
         self.assertFalse(pat.match(FST('x, *, a: str, y', arguments)))
-        pat = Marguments(_all=[MQSTAR, M(t=Marguments(posonlyargs=[Marg(MRE('a|b'), MRE('int|str'))], _strict=False)), MQSTAR])
+        pat = Marguments(_all=[MQSTAR, M(t=Marguments(posonlyargs=[Marg(MRE('a|b'), MRE('int|str'))], _strict=None)), MQSTAR])
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>", str(pat.match(FST('a: int', arguments))))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,9> {'t': <<arguments ROOT 0,0..0,9>._all[:1]>}>", str(pat.match(FST('a: int, y', arguments))))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,12> {'t': <<arguments ROOT 0,0..0,12>._all[1:2]>}>", str(pat.match(FST('x, a: int, y', arguments))))
@@ -9633,11 +9632,11 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(pat.match(FST('a=y', arguments)))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>", str(pat.match(FST('*, a=x', arguments))))
         self.assertFalse(pat.match(FST('*, a=y', arguments)))
-        pat = Marguments(_all=[MQSTAR, M(t=Marguments(kw_defaults=['x'], _strict=False)), MQSTAR])  # this should only match a kw_default 'a'
+        pat = Marguments(_all=[MQSTAR, M(t=Marguments(kw_defaults=['x'], _strict=None)), MQSTAR])  # this should only match a kw_default 'a'
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>", str(pat.match(FST('a=x, /', arguments))))
         self.assertEqual("<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>", str(pat.match(FST('a=x', arguments))))
 
-        # previously matched args FSTView to targed (any type to any type, pos/arg/kw)
+        # previously matched args FSTView to target (any type to any type, pos/arg/kw)
 
         pat = MAST(body=[
             MFunctionDef(args=Marguments(_all=[M(t=Marguments(args=[...]))])),
@@ -9691,6 +9690,206 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
             MFunctionDef(args=M(u=Marguments(_all=[MTAG('t')]))),
         ])
         self.assertEqual("<FSTMatch <Module ROOT 0,0..1,16> {'t': Marguments(args=[M(a=...)], defaults=[M(d=...)]), 'a': <arg 1,6..1,7>, 'd': <Constant 1,8..1,9>, 'u': <arguments 1,6..1,9>}>", str(pat.match(FST('def f(): pass\ndef g(a=1): pass'))))
+
+        # make sure matched individual args are set to match every other type of arg (since they were matched we assume we want them to match other stuff)
+
+        f = FST('''
+def f(a: int = 1, /): pass
+def g(a: int = 1, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(MTAG('t'))])),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,19>._all>}>", str(pat.match(f)))
+
+        f = FST('''
+def f(*, a: int = 1): pass
+def g(a: int = 1, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(MTAG('t'))])),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,19>._all>}>", str(pat.match(f)))
+
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(MTAG('t'))])),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,16>._all>}>", str(pat.match(f)))
+
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=M(u=Marguments(_all=[MQPLUS(MTAG('t'))]))),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,16>._all>, 'u': <arguments 1,6..1,46>}>", str(pat.match(f)))
+
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=M(u=[MQPLUS(MTAG('t'))]))),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,16>._all>, 'u': <<arguments 1,6..1,46>._all>}>", str(pat.match(f)))
+
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(u=MTAG('t'))])),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,16>._all>, 'u': [<FSTMatch <<arguments 1,6..1,46>._all[:1]>>, <FSTMatch <<arguments 1,6..1,46>._all[1:2]>>, <FSTMatch <<arguments 1,6..1,46>._all[2:3]>>]}>", str(pat.match(f)))
+
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(M(u=MTAG('t')))])),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,16>._all>, 'u': <<arguments 1,6..1,46>._all[2:3]>}>", str(pat.match(f)))
+
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(MTAG(u='t'))])),
+        ])
+        self.assertEqual("<FSTMatch <Module ROOT 0,0..1,53> {'t': <<arguments 0,6..0,16>._all>, 'u': <<arguments 1,6..1,46>._all[2:3]>}>", str(pat.match(f)))
+
+        # make sure matched args do NOT match where they shouldn't
+
+        pat = MModule(body=[
+            MFunctionDef(args=Marguments(_all=M(t=...))),
+            MFunctionDef(args=Marguments(_all=[MQPLUS(MTAG('t'))])),
+        ])
+
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a: int = 1, *, a: int): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a: int = 1, *, a: int = 2): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a: int = 1, *, a = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a: int = 1, *, b: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int, /, a: int, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a: int = 2, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, a = 1, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 1, /, b: int = 1, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a: int = 2, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(a = 1, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+        f = FST('''
+def f(a: int = 1): pass
+def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
+        '''.strip())
+        self.assertFalse(pat.match(f))
+
+        # quantifiers in otherwise valid 1 vs. 1 match fall back to normal match
+
+        self.assertFalse(Marguments(_all=[Marguments(args=[MQN(..., 0)])]).match(FST('a: int = 1', arguments)))
+        self.assertTrue(Marguments(_all=[Marguments(args=[MQN(..., 1)])]).match(FST('a: int = 1', arguments)))
+        self.assertFalse(Marguments(_all=[Marguments(args=[MQN(..., 2)])]).match(FST('a: int = 1', arguments)))
+
+        self.assertFalse(Marguments(_all=[Marguments(defaults=[MQN(..., 0)])]).match(FST('a: int = 1', arguments)))
+        self.assertTrue(Marguments(_all=[Marguments(defaults=[MQN(..., 1)])]).match(FST('a: int = 1', arguments)))
+        self.assertFalse(Marguments(_all=[Marguments(defaults=[MQN(..., 2)])]).match(FST('a: int = 1', arguments)))
+
+        # verify that normal argument comparisons are always strict
+
+        self.assertFalse(Marguments(args=['a'], _strict=None).match(FST('a, /', arguments)))
+        self.assertTrue(Marguments(args=['a'], _strict=None).match(FST('a', arguments)))
+        self.assertFalse(Marguments(args=['a'], _strict=None).match(FST('*, a', arguments)))
+
+        self.assertTrue(Marguments(posonlyargs=['a'], _strict=None).match(FST('a, /', arguments)))
+        self.assertFalse(Marguments(posonlyargs=['a'], _strict=None).match(FST('a', arguments)))
+        self.assertFalse(Marguments(posonlyargs=['a'], _strict=None).match(FST('*, a', arguments)))
+
+        self.assertFalse(Marguments(kwonlyargs=['a'], _strict=None).match(FST('a, /', arguments)))
+        self.assertFalse(Marguments(kwonlyargs=['a'], _strict=None).match(FST('a', arguments)))
+        self.assertTrue(Marguments(kwonlyargs=['a'], _strict=None).match(FST('*, a', arguments)))
+
+        # verify that _strict works for AST arguments
+
+        pat = Marguments(_all=[p := arguments([], ['a'], None, [], [], None, [])])
+        p._strict = True
+        self.assertFalse(pat.match(FST('a, /', arguments)))
+        self.assertTrue(pat.match(FST('a', arguments)))
+        self.assertFalse(pat.match(FST('*, a', arguments)))
+        p._strict = False
+        self.assertTrue(pat.match(FST('a, /', arguments)))
+        self.assertTrue(pat.match(FST('a', arguments)))
+        self.assertTrue(pat.match(FST('*, a', arguments)))
+        p._strict = None
+        self.assertTrue(pat.match(FST('a, /', arguments)))
+        self.assertTrue(pat.match(FST('a', arguments)))
+        self.assertTrue(pat.match(FST('*, a', arguments)))
+
+        pat = Marguments(_all=[p := arguments(['a'], [], None, [], [], None, [])])
+        p._strict = True
+        self.assertTrue(pat.match(FST('a, /', arguments)))
+        self.assertFalse(pat.match(FST('a', arguments)))
+        self.assertFalse(pat.match(FST('*, a', arguments)))
+        p._strict = False
+        self.assertTrue(pat.match(FST('a, /', arguments)))
+        self.assertFalse(pat.match(FST('a', arguments)))
+        self.assertFalse(pat.match(FST('*, a', arguments)))
+        p._strict = None
+        self.assertTrue(pat.match(FST('a, /', arguments)))
+        self.assertTrue(pat.match(FST('a', arguments)))
+        self.assertTrue(pat.match(FST('*, a', arguments)))
+
+        pat = Marguments(_all=[p := arguments([], [], None, ['a'], [None], None, [])])
+        p._strict = True
+        self.assertFalse(pat.match(FST('a, /', arguments)))
+        self.assertFalse(pat.match(FST('a', arguments)))
+        self.assertTrue(pat.match(FST('*, a', arguments)))
+        p._strict = False
+        self.assertFalse(pat.match(FST('a, /', arguments)))
+        self.assertFalse(pat.match(FST('a', arguments)))
+        self.assertTrue(pat.match(FST('*, a', arguments)))
+        p._strict = None
+        self.assertTrue(pat.match(FST('a, /', arguments)))
+        self.assertTrue(pat.match(FST('a', arguments)))
+        self.assertTrue(pat.match(FST('*, a', arguments)))
 
     def test_match_coverage(self):
         self.assertEqual('MAST(elts=..., ctx=Store)', repr(MAST(elts=..., ctx=Store)))

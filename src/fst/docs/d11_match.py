@@ -580,8 +580,7 @@ certain unoptimal ways can cause pathological behavior in the same way as combin
 can.
 
 `MQ` is the base class for all the other quantifier patterns `MQSTAR`, `MQPLUS`, `MQ01`, `MQMIN`, `MQMAX` and `MQN` and
-can do everything that those classes can do. Those classes are provided however for cleaner and quicker pattern
-specification.
+can do everything that those classes can do. Those classes are provided for cleaner and quicker pattern specification.
 
 On a successful match, the matched target elements can be returned in a list if the pattern to match has a tag. In this
 case each matched target element of the list field will get its own `FSTMatch` object in the returned tag list.
@@ -689,24 +688,24 @@ the `MQSTAR`, `MQPLUS` and `MQ01` classes themselves (and their non-greedy versi
 actual predefined patterns.
 
 `MQSTAR(pat)` is the same as `MQ(pat, min=0, max=None)`. `MQSTAR` by itself is the same as `MQSTAR(...)` and is the
-equivalent of regex `.*`.
+equivalent of regex `'.*'`.
 
 `MQSTAR.NG(pat)` is the same as `MQ.NG(pat, min=0, max=None)`. `MQSTAR.NG` by itself is the same as `MQSTAR.NG(...)` and
-is the equivalent of regex `.*?`.
+is the equivalent of regex `'.*?'`.
 
 `MQPLUS(pat)` is the same as `MQ(pat, min=1, max=None)`. `MQPLUS` by itself is the same as `MQPLUS(...)` and is the
-equivalent of regex `.+`.
+equivalent of regex `'.+'`.
 
 `MQPLUS.NG(pat)` is the same as `MQ.NG(pat, min=1, max=None)`. `MQPLUS.NG` by itself is the same as `MQPLUS.NG(...)` and
-is the equivalent of regex `.+?`.
+is the equivalent of regex `'.+?'`.
 
 `MQ01(pat)` is the same as `MQ(pat, min=0, max=1)`. `MQ01` by itself is the same as `MQ01(...)` and is the equivalent of
-regex `.?`.
+regex `'.?'`.
 
 `MQ01.NG(pat)` is the same as `MQ.NG(pat, min=0, max=1)`. `MQ01.NG` by itself is the same as `MQ01.NG(...)` and is the
-equivalent of regex `.??`.
+equivalent of regex `'.??'`.
 
-The class types below cannot be used as instances by themselves as they have mandatory parameter.
+The class types below cannot be used as instances by themselves as they have a mandatory parameter.
 
 `MQMIN(pat, min)` is the same as `MQ(pat, min=min, max=None)`.
 
@@ -727,9 +726,9 @@ The class types below cannot be used as instances by themselves as they have man
 that start with an underscore like `_all` or `_args`. Matching against real fields of nodes that also have virtual
 fields proceeds normally and these rules do not apply to those matches.
 
-Virtual fields are algorithmic sequence views over the elements of a node that don't actually exist on their own in the
-given `AST` node but make sense to access as a sequence. It also makes sense to be able to match on these views and this
-is possible. There are two cases to consider.
+Virtual fields are algorithmic sequence views over the elements of a node that don't actually exist as a sequence on
+their own in the given `AST` node, but make sense to access as a sequence. It also makes sense to be able to match on
+these views and this is possible. There are two cases to consider.
 
 There are virtual fields that resolve to individual nodes when dereferenced to a single element. These are
 straightforward to match as you just use normal patterns in the virtual field list of the match pattern. For example, if
@@ -769,8 +768,8 @@ And in the next one the `_body` field is rectricted to exclude the first docstri
 <FSTMatch <ClassDef ROOT 0,0..4,19>
   {'t': [<FSTMatch <If 2,4..3,12>>, <FSTMatch <Expr 4,4..4,19>>]}>
 
-The second case are virtual fields where the individual elements do not resolve to a single node but to a group of
-nodes, and when dereferenced give another view instead of a node, a `Dict` for instance.
+The second case of virtual fields are those where the individual elements do not resolve to a single node but to a group
+of nodes, and when dereferenced give another view instead of a node, a `Dict` for instance.
 
 >>> FST('{a: b, c: d, **b}')._all[1]
 <<Dict ROOT 0,0..0,17>._all[1:2]>
@@ -791,23 +790,8 @@ None
 >>> ppmatch(pat.match(FST('{**b}')))
 <FSTMatch <Dict ROOT 0,0..0,5>>
 
-It will not work if you try with any less or more than a single element in the list fields.
-
->>> ppmatch(MDict(_all=[MDict([], ['b'])]).match(FST('{a: b}')))
-Traceback (most recent call last):
-...
-fst.match.MatchError: matching a Dict pattern against Dict._all the pattern keys must be ... or a length-1 list
-
-Also, quantifiers are not allowed in these multinode single element patterns, even quantifiers that would resolve to a
-single element.
-
->>> ppmatch(MDict(_all=[MDict([MQN('a', 1)], ['b'])]).match(FST('{a: b}')))
-Traceback (most recent call last):
-...
-fst.match.MatchError: MQN quantifier pattern in invalid location
-
 You can use a wildcard `...` in place of the list field to indicate match any single element. And you can use tagging
-patterns and quantifiers (outside of the single element to match) like with any other list field match.
+patterns like with any other list field match.
 
 >>> ppmatch(MDict(_all=[M(t=MDict(..., ['b']))]).match(FST('{a: b}')))
 <FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>
@@ -896,7 +880,7 @@ None
 None
 
 Notice how the positional argument pattern only matched the positional target argument. Likewise the keyword-only
-argument pattern only matched the keyword target argument.
+argument pattern only matches keyword target arguments.
 
 >>> pat_kw = Marguments(_all=[M(t=Marguments(kwonlyargs=['a'], kw_defaults=['1']))])
 
@@ -909,7 +893,7 @@ None
 >>> ppmatch(pat_kw.match(FST('*, a=1', 'arguments')))
 <FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
 
-However, by default the normal argument type matches all other types.
+However, by default the normal `args` argument type matches all other types.
 
 >>> pat_arg = Marguments(_all=[M(t=Marguments(args=['a'], defaults=['1']))])
 
@@ -941,7 +925,7 @@ This parameter can also be used to loosen the matching criteria for the other ty
 keyword-only.
 
 >>> pat_pos_nonstrict = Marguments(
-...     _all=[M(t=Marguments(posonlyargs=['a'], defaults=['1'], _strict=False))])
+...     _all=[M(t=Marguments(posonlyargs=['a'], defaults=['1'], _strict=None))])
 
 >>> ppmatch(pat_pos_nonstrict.match(FST('a=1, /', 'arguments')))
 <FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
@@ -963,7 +947,7 @@ required.
 >>> ppmatch(pat_def_required.match(FST('a', 'arguments')))
 None
 
-Or may be specifically excluded.
+Or a default may be specifically excluded by passing an empty list.
 
 >>> pat_def_excluded = Marguments(_all=[M(t=Marguments(args=['a'], defaults=[]))])
 
@@ -973,7 +957,7 @@ None
 >>> ppmatch(pat_def_excluded.match(FST('a', 'arguments')))
 <FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[:1]>}>
 
-Or may be optional.
+Or it may be optional by setting the appropriate defaults field to the `...` wildcard.
 
 >>> pat_def_optional = Marguments(_all=[M(t=Marguments(args=['a'], defaults=...))])
 
@@ -984,8 +968,8 @@ Or may be optional.
 <FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[:1]>}>
 
 Arguments can also be backreferenced, in which case the presence or absence of the default must match and the matching
-is done as if `_strict=False`. Meaning a previously matched positional or keyword-only argument will match any other
-type of argument.
+is done as if `_strict=None`. Meaning a previously matched positional or keyword-only argument will match ANY OTHER
+TYPE of argument (the rationale being that if it was matched then it should match others).
 
 Yes the following example is an invalid uncompilable arguments field but `fst` only deals with parsability so this is
 used here for demonstration purposes in place of a more complicated comparison against an arguments field in another
@@ -1006,8 +990,8 @@ Last few notes:
 
 - `vararg` and `kwarg` arguments must match exactly, they can never match with any other type of argument.
 
-- This discussion has been about matching INDIVIDUAL arguments in a virtual `_all` field. If you will be matching a
-    whole `.args` field of a `FunctionDef` to another one, it must match exactly.
+- This discussion has been about matching `arguments` nodes representing INDIVIDUAL arguments in a virtual `_all` field.
+If you will be matching a whole `.args` field of a `FunctionDef` to another one then normal exact matching rules apply.
 
 
 ## `AST` nodes as pattern or target
@@ -1054,8 +1038,8 @@ error: List item 0 has incompatible type "str"; expected "keyword"  [list-item]
 
 # Search
 
-`fst.fst.FST.search(pat)` is essentially just a walk over the nodes of the `FST` node it is called on and an attempted match
-against each of those, yielding the `FSTMatch` object if successful. So basically:
+`fst.fst.FST.search(pat)` is essentially just a walk over the children of the `FST` node it is called on and an
+attempted match against each of those, yielding the `FSTMatch` object if successful. So basically:
 
 ```py
 def search(self, pat):

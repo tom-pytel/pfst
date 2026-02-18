@@ -1181,6 +1181,8 @@ class FSTView_arguments(FSTView):
     """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. This indexes on the
     `arguments` node `_cached_allargs()`. @private"""
 
+    is_multinode = True
+
     @property
     def loc(self) -> fstloc | None:
         r"""Zero based character indexed location of view (including parentheses and or decorators where present).

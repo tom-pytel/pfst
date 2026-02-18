@@ -15,7 +15,6 @@ checker...
 from __future__ import annotations
 
 import re
-from itertools import repeat
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
 from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as tp_Set, Union
@@ -2253,13 +2252,13 @@ class Marguments(MAST):  # pragma: no cover
     `arguments` class for the same effect.
 
     **Parameters:**
-    - `_strict`: Set this to control matching, if not set defaults to `None`.
+    - `_strict`: Set this to control matching, if not set defaults to `False`.
         - `True`: `posonlyargs` only match to `posonlyargs`, `kwonlyargs` to `kwonlyargs` and `args` only to `args`.
             Their associated defaults only match to the same type of default as well.
-        - `None`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
+        - `False`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
             the target and `defaults` likewise can also match to `kw_defaults`. This allows the use of the standard args
             to search in all the args fields.
-        - `False`: All types of args and defaults can match to each other.
+        - `None`: All types of args and defaults can match to each other.
     """
     _types = arguments
 
@@ -2273,7 +2272,7 @@ class Marguments(MAST):  # pragma: no cover
         kwarg: _Patterns = ...,
         defaults: _Patterns = ...,
         _all: _Patterns = ...,
-        _strict: bool | None = None,  # `True` matches pos/arg/kw exclusively to same type, `None` allos match arg to all, `False` allows match all to all
+        _strict: bool | None = False,
     ) -> None:
         self._fields = fields = []
         self._strict = _strict
@@ -4195,8 +4194,8 @@ class _MatchState:
     - `{FSTView: _Patterns}`: For temporary conversions of `FSTView`s to `AST` patterns. Used for matching previously
         matched `FSTView`s and for `MTAG` match previously matched multinode item from `Dict`, `MatchMapping` or
         `arguments`.
-    - `(pat_arg, pat_dflt, arg_fields, dflt_fields)`: For validated match parameters for matching a single `arguments`
-        arg against `FSTView`.
+    - `(pat_arg, pat_dflt, arg_fields, dflt_fields) | False`: For validated single-argument match parameters for
+        matching a single `arguments` arg against `FSTView` single argument.
     """
 
     def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
@@ -4279,7 +4278,7 @@ class _MatchList:
         return self.idx == self.len
 
 
-def _match_iter_quantifier(
+def _match__inside_list_quantifier(
     mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList, pat: MQ, allow_partial: bool
 ) -> dict[str, Any] | None:
     """Match quantifier in list."""
@@ -4290,10 +4289,10 @@ def _match_iter_quantifier(
         object and adding it to a dedicated match list which is in `tagss` as its own dictionary with key `pat_tag`."""
 
         if is_qpat_list:
-            qpat_iter.idx = 0  # reset quantifier list pattern to start since _match_iter_list() doesn't reset it on success
+            qpat_iter.idx = 0  # reset quantifier list pattern to start since _match__inside_list() doesn't reset it on success
             tgt_idx = tgt_iter.idx
 
-            if (m := _match_iter_list(mstate, qpat_iter, tgt_iter, True)) is None:
+            if (m := _match__inside_list(mstate, qpat_iter, tgt_iter, True)) is None:
                 return False
 
             t = tgt_seq[tgt_idx : tgt_iter.idx]
@@ -4392,7 +4391,7 @@ def _match_iter_quantifier(
         matches_del_idx = -1 if pat_tag or not static_tags else -2
 
     while True:  # as long as we don't hit the last allowed count try to match rest of list
-        m = _match_iter_list(mstate, pat_iter, tgt_iter, allow_partial)  # the allow_partial is a passthrough from a possible quantifier subsequence caller
+        m = _match__inside_list(mstate, pat_iter, tgt_iter, allow_partial)  # the allow_partial is a passthrough from a possible quantifier subsequence caller
 
         if m is not None:  # successful match to rest of list?
             break
@@ -4423,7 +4422,7 @@ def _match_iter_quantifier(
     return mstate.pop_merge_tagss()
 
 
-def _match_iter_list(
+def _match__inside_list(
     mstate: _MatchState, pat_iter: _MatchList, tgt_iter: _MatchList, allow_partial: bool = False
 ) -> dict[str, Any] | None:
     """Match list. The sequence to match in `tgt_iter` can be either `list[AST]` or `FSTView`. If match fails then
@@ -4442,14 +4441,14 @@ def _match_iter_list(
 
     while (p := pat_iter.next()) is not _SENTINEL:
         if p in _QUANTIFIER_STANDALONES or isinstance(p, MQ):  # quantifier
-            m = _match_iter_quantifier(mstate, pat_iter, tgt_iter, p, allow_partial)
+            m = _match__inside_list_quantifier(mstate, pat_iter, tgt_iter, p, allow_partial)
 
             if m is None:
                 break  # fail
             if m:
                 tagss.append(m)
 
-            return mstate.pop_merge_tagss()  # _match_iter_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
+            return mstate.pop_merge_tagss()  # _match__inside_list_quantifier does the rest of the list and returns a merged dict with its own tags, so we just merge into what we have
 
         # concrete value
 
@@ -4471,6 +4470,41 @@ def _match_iter_list(
     tgt_iter.idx = tgt_idx_saved
 
     return mstate.discard_tagss()
+
+
+def _match__FSTView_w__all(
+    pat: MAST | AST, tgt: FSTView, mstate: _MatchState, start: int = -1, stop: int = -1
+) -> Mapping[str, Any] | None:
+    """Match an `AST` or `MAST` pattern against an `FSTView` which may be a fragment and is accessed by the `_all`
+    virtual field."""
+
+    if start == -1:
+        start, stop = tgt.start_and_stop
+
+    base = tgt.base
+    ast = base.a
+
+    tagss = mstate.new_tagss()
+
+    for field in pat._fields:
+        if (p := getattr(pat, field, ...)) is ...:
+            continue
+
+        if (t := getattr(ast, field, _SENTINEL)) is _SENTINEL:  # _SENTINEL means _all field because target AST nodes will have all other fields which may be present in the pattern
+            t = base._all[start : stop]
+
+        elif isinstance(t, list):
+            if not isinstance(p, list):
+                t = getattr(base, field)  # get the FSTView instead (for maybe capture to tag, is converted back to list of AST for compare, because was gotten as list from AST even if we are matching an FST)
+
+            t = t[start : stop]
+
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)) is None:
+            return mstate.discard_tagss()
+        if m:
+            tagss.append(m)
+
+    return mstate.pop_merge_tagss()
 
 
 # ......................................................................................................................
@@ -4545,7 +4579,7 @@ def _match_FSTView_Compare(pat: FSTView_Compare, tgt: _Targets, mstate: _MatchSt
         start, stop = pat.start_and_stop
 
         if stop == start:
-            real_pat = MCompare(_SENTINEL, [], [])  # _SENTINEL doesn't hold any special value, just doesn't match anything
+            real_pat = MCompare(NotSet, [], [])  # NotSet doesn't hold any special value, just means empty and doesn't match anything
 
         else:
             ast = pat.base.a
@@ -4625,7 +4659,7 @@ def _match_FSTView_arguments(pat: FSTView_arguments, tgt: _Targets, mstate: _Mat
             kw_defaults=pat_args['kw_defaults'],
             kwarg=a[0] if (a := pat_args['kwarg']) else ...,
             defaults=pat_args['defaults'],
-            _strict=False,  # so that any arg mathes any othjer, e.g. matched posonlyarg <-> target kwonlyarg, etc...
+            _strict=None,  # so that any arg matches any other when matching single args (rational is that this was matched in 1v1, only takes effect for single arg vs. single arg matches)
         )
 
     return _match_node_arguments(real_pat, tgt, mstate)
@@ -4647,13 +4681,16 @@ def _match_list(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, A
             return None
 
         if not len(tgt):
-            tgt = []
-        elif isinstance(tgt[0], (str, FSTView)):  # could be Global/Nonlocal.names or multi-node items like Dict/MatchMapping/arguments
+            tgt = _EMPTY_LIST
+        elif tgt.is_multinode or isinstance(tgt[0], str):  # could be Global/Nonlocal.names or MatchClass.kwd_attrs or multi-node items like Dict/MatchMapping/arguments
             tgt = list(tgt)
         else:
             tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
 
-    return _match_iter_list(mstate, _MatchList(pat), _MatchList(tgt))
+    if not tgt and not pat:  # early out, can't do more because quantifiers could still resolve to empty lists
+        return _EMPTY_DICT
+
+    return _match__inside_list(mstate, _MatchList(pat), _MatchList(tgt))
 
 def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`M_Pattern` or `AST` leaf node."""
@@ -4664,26 +4701,22 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Map
     if not isinstance(tgt, types):
         return None
 
+    is_FST = mstate.is_FST
+
     tagss = mstate.new_tagss()
 
     for field in pat._fields:
-        p = getattr(pat, field, ...)
-
-        if p is ...:  # ellipsis handled here without dispatching for various reasons
+        if (p := getattr(pat, field, ...)) is ...:  # ellipsis handled here without dispatching for various reasons
             continue
 
-        t = getattr(tgt, field, _SENTINEL)  # _SENTINEL for arbitrary fields, but also field may not exist in target because pattern may have fields from a greater python version than we are running
-
-        if t is _SENTINEL:
+        if (t := getattr(tgt, field, _SENTINEL)) is _SENTINEL:  # _SENTINEL for arbitrary fields, but also field may not exist in target because pattern may have fields from a greater python version than we are running
             if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), FSTView):  # maybe its a virtual field
                 return mstate.discard_tagss()
 
-        elif mstate.is_FST and isinstance(t, list):
-            t = getattr(tgt.f, field)  # get the FSTView instead (for maybe capture to tag, is converted back to list of AST for compare)
+        elif is_FST and isinstance(t, list) and not isinstance(p, list):
+            t = getattr(tgt.f, field)  # get the FSTView instead (for maybe capture to tag, is converted back to list of AST for compare, because was gotten as list from AST even if we are matching an FST)
 
-        m = _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)
-
-        if m is None:
+        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)) is None:
             return mstate.discard_tagss()
         if m:
             tagss.append(m)
@@ -4691,9 +4724,7 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Map
     return mstate.pop_merge_tagss()
 
 def _match_node_Compare(pat: MCompare | Compare, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-    """`Compare` or `MCompare` leaf node. Possibly match against an `FSTView_Compare`, in which case `pat` must be a
-    concrete pattern without its own `_all` virtual field and without any quantifiers. The various fields, including
-    list fields, CAN be ... wildcard."""
+    """`Compare` or `MCompare` leaf node. Possibly match against an `FSTView_Compare`."""
 
     if not isinstance(tgt, FSTView_Compare):
         return _match_node(pat, tgt, mstate)
@@ -4705,69 +4736,13 @@ def _match_node_Compare(pat: MCompare | Compare, tgt: _Targets, mstate: _MatchSt
     tgt_len = stop - start
     left = getattr(pat, 'left', ...)
 
-    if left is _SENTINEL:  # this means came from empty FSTView
+    if left is NotSet:  # this means came from empty FSTView and ops and comparators are empty as well
         return _EMPTY_DICT if not tgt_len else None  # empty Compare matches empty FSTView_Compare, else no match
 
     if not tgt_len:  # we have at least one element but target is empty?
         return None
 
-    ops = getattr(pat, 'ops', ...)
-    comparators = getattr(pat, 'comparators', ...)
-    tgt_ast = tgt.base.a
-    tgt_comparators = tgt_ast.comparators
-    tgt_left = tgt_comparators[start - 1] if start else tgt_ast.left
-
-    if ops is ...:
-        if comparators is ...:  # if both wildcards then just need to match left to first element of target
-            return _MATCH_FUNCS.get(left.__class__, _match_default)(left, tgt_left, mstate)
-
-        if tgt_len != len(comparators) + 1:
-            return None
-
-        ops = repeat(...)
-        comparators = iter(comparators)
-
-    else:
-        if tgt_len != len(ops) + 1:
-            return None
-
-        if comparators is ...:
-            ops = iter(ops)
-            comparators = repeat(...)
-
-        else:
-            if len(ops) != len(comparators):
-                raise MatchError('length of Compare.ops does not match Compare.comparators')
-
-            ops = iter(ops)
-            comparators = iter(comparators)
-
-    if (m := _MATCH_FUNCS.get(left.__class__, _match_default)(left, tgt_left, mstate)) is None:
-        return None
-
-    tgt_ops = tgt_ast.ops
-
-    tagss = mstate.new_tagss()
-
-    if m:
-        tagss.append(m)
-
-    for i in range(start, stop - 1):
-        p = next(ops)
-
-        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt_ops[i], mstate)) is None:
-            return mstate.discard_tagss()
-        if m:
-            tagss.append(m)
-
-        p = next(comparators)
-
-        if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, tgt_comparators[i], mstate)) is None:
-            return mstate.discard_tagss()
-        if m:
-            tagss.append(m)
-
-    return mstate.pop_merge_tagss()
+    return _match__FSTView_w__all(pat, tgt, mstate, start, stop)
 
 def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`Dict` or `MDict` leaf node. Possibly match against a single-item `FSTView_Dict`."""
@@ -4775,111 +4750,17 @@ def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mstate: _MatchState) -> M
     if not isinstance(tgt, FSTView_Dict):
         return _match_node(pat, tgt, mstate)
 
-    if getattr(pat, '_all', ...) is not ...:
-        raise MatchError('matching a Dict pattern against Dict._all the pattern cannot have its own _all field')
-
-    if len(tgt) != 1:
-        return None
-
-    key = getattr(pat, 'keys', ...)
-
-    if key is not ...:
-        if isinstance(key, list) and len(key) == 1:
-            key = key[0]
-        else:
-            raise MatchError('matching a Dict pattern against Dict._all'
-                             ' the pattern keys must be ... or a length-1 list')
-
-    value = getattr(pat, 'values', ...)
-
-    if value is not ...:
-        if isinstance(value, list) and len(value) == 1:
-            value = value[0]
-        else:
-            raise MatchError('matching a Dict pattern against Dict._all'
-                             ' the pattern values must be ... or a length-1 list')
-
-    idx = tgt.start
-    tgt = tgt.base.a
-
-    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mstate)) is None:
-        return None
-
-    if (mv := _MATCH_FUNCS.get(value.__class__, _match_default)(value, tgt.values[idx], mstate)) is None:
-        return None
-
-    if not mk:
-        return mv
-    if not mv:
-        return mk
-
-    return {**mk, **mv}
+    return _match__FSTView_w__all(pat, tgt, mstate)
 
 def _match_node_MatchMapping(
     pat: MatchMapping | MMatchMapping, tgt: _Targets, mstate: _MatchState
 ) -> Mapping[str, Any] | None:
-    """`MatchMapping` or `MMatchMapping` leaf node. Possibly match against a single-item `FSTView_MatchMapping`. Need to
-    do more than `Dict` here to handle possible `**rest` element."""
+    """`MatchMapping` or `MMatchMapping` leaf node. Possibly match against a single-item `FSTView_MatchMapping`."""
 
     if not isinstance(tgt, FSTView_MatchMapping):
         return _match_node(pat, tgt, mstate)
 
-    if getattr(pat, '_all', ...) is not ...:
-        raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                         ' the pattern cannot have its own _all field')
-
-    if len(tgt) != 1:
-        return None
-
-    rest = getattr(pat, 'rest', None)
-    key = getattr(pat, 'keys', ...)
-    pattern = getattr(pat, 'patterns', ...)
-
-    if rest is not None:  # matching against just **rest
-        if not (
-            (key is ... or (not key and isinstance(key, list)))
-            and (pattern is ... or (not pattern and isinstance(pattern, list)))
-        ):
-            raise MatchError('matching a MatchMapping rest against MatchMapping._all'
-                             ' the pattern keys and patterns must be ... or empty lists')
-
-        if not tgt.has_rest:
-            return None
-
-        return _MATCH_FUNCS.get(rest.__class__, _match_default)(rest, tgt.base.a.rest, mstate)
-
-    if key is not ...:
-        if isinstance(key, list) and len(key) == 1:
-            key = key[0]
-        else:
-            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                             ' the pattern keys must be ... or a length-1 list')
-
-    if pattern is not ...:
-        if isinstance(pattern, list) and len(pattern) == 1:
-            pattern = pattern[0]
-        else:
-            raise MatchError('matching a MatchMapping pattern against MatchMapping._all'
-                             ' the pattern patterns must be ... or a length-1 list')
-
-    if tgt.has_rest:  # if want to match a rest then we force user to do it explicitly on purpose since it is too different from regular nodes
-        return None
-
-    idx = tgt.start
-    tgt = tgt.base.a
-
-    if (mk := _MATCH_FUNCS.get(key.__class__, _match_default)(key, tgt.keys[idx], mstate)) is None:
-        return None
-
-    if (mp := _MATCH_FUNCS.get(pattern.__class__, _match_default)(pattern, tgt.patterns[idx], mstate)) is None:
-        return None
-
-    if not mk:
-        return mp
-    if not mp:
-        return mk
-
-    return {**mk, **mp}
+    return _match__FSTView_w__all(pat, tgt, mstate)
 
 def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`arguments` or `Marguments` leaf node. Possibly match against a single-item `FSTView_arguments`. Will match a
@@ -4887,139 +4768,158 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
     to target `args`, `posonlyargs` or `kwonlyargs`. Other type pattern args must match exactly (`posonlyargs` only to
     `posonlyargs`, `kwonlyargs` to `kwonlyargs`, `varag` to `vararg` and `kwarg` to `kwarg` (obviously), etc...).
     Standalone `defaults` matches to `defaults` or `kw_defaults` while standalone `kw_defaults` only matches to
-    `kw_defaults`."""
+    `kw_defaults`.
 
-    # TODO: come up with something cleaner and more controllable to match vs. any args or specific args
+    If the conditions for matching a single argument vs. a single argument don't exist then do normal match.
+    """
 
     if not isinstance(tgt, FSTView_arguments):
         return _match_node(pat, tgt, mstate)
 
-    if len(tgt) != 1:
-        return None
+    if len(tgt) != 1 or (cached := mstate.cache.get(pat)) is False:
+        return _match__FSTView_w__all(pat, tgt, mstate)
 
-    if cached := mstate.cache.get(pat):
+    if cached:
         pat_arg, pat_dflt, arg_fields, dflt_fields = cached
 
-    else:  # first time using this pattern preprocess and cache
-        if getattr(pat, '_all', ...) is not ...:
-            raise MatchError('matching an arguments pattern against arguments._all'
-                            ' the pattern cannot have its own _all field')
+    else:  # first time using this pattern, preprocess and cache
+        try:  # easiest way to fail-exit preprocessing is just to raise and catch it
+            strict = getattr(pat, '_strict', False)  # this controls allowing matching between the different kinds of args (pos, normal and kw)
 
-        strict = getattr(pat, '_strict', None)  # this controls allowing matching between the different kinds of args (pos, normal and kw)
-
-        # argument pattern (if any)
-
-        nargs = 0
-        pat_arg = ...
-        arg_fields = _NODE_ARGUMENTS_ARGS_FIELDS
-
-        if (posonlyargs := getattr(pat, 'posonlyargs', ...)) is ...:
-            posonlyargs = ()
-        elif not isinstance(posonlyargs, list):
-            raise MatchError('matching an arguments pattern against arguments._all'
-                            ' the pattern posonlyargs must be ... or a length-1 list')
-        elif posonlyargs:
-            if strict is not False:
-                arg_fields = ('posonlyargs',)
-
-            pat_arg = posonlyargs[0]
-            nargs += len(posonlyargs)
-
-        if (args := getattr(pat, 'args', ...)) is ...:
-            args = ()
-        elif not isinstance(args, list):
-            raise MatchError('matching an arguments pattern against arguments._all'
-                            ' the pattern args must be ... or a length-1 list')
-        elif args:
             if strict:
-                arg_fields = ('args',)
-
-            pat_arg = args[0]
-            nargs += len(args)
-
-        if (kwonlyargs := getattr(pat, 'kwonlyargs', ...)) is ...:
-            kwonlyargs = ()
-        elif not isinstance(kwonlyargs, list):
-            raise MatchError('matching an arguments pattern against arguments._all'
-                            ' the pattern kwonlyargs must be ... or a length-1 list')
-        elif kwonlyargs:
-            if strict is not False:
-                arg_fields = ('kwonlyargs',)
-
-            pat_arg = kwonlyargs[0]
-            nargs += len(kwonlyargs)
-
-        if (vararg := getattr(pat, 'vararg', None)) is ...:
-            vararg = None
-
-        elif vararg is not None:
-            arg_fields = ('vararg',)
-            pat_arg = vararg
-            nargs += 1
-
-        if (kwarg := getattr(pat, 'kwarg', None)) is ...:
-            kwarg = None
-
-        elif kwarg is not None:
-            arg_fields = ('kwarg',)
-            pat_arg = kwarg
-            nargs += 1
-
-        if nargs > 1:
-            raise MatchError('matching an arguments pattern against arguments._all'
-                            ' the pattern cannot have more than one arg')
-
-        # default pattern (if any)
-
-        ndflts = 0
-        pat_dflt = ...
-        dflt_fields = _NODE_ARGUMENTS_DEFAULTS_FIELDS  # args field matches all args lists so default matches all defaults, if posonlyargs present then the 'kw_defaults' doesn't matter because will exit due to kwonlyargs before that
-
-        if (defaults := getattr(pat, 'defaults', ...)) is not ...:
-            if not isinstance(defaults, list):
                 raise MatchError('matching an arguments pattern against arguments._all'
-                                ' the pattern defaults must be ... or a length-1 list')
-            if defaults:
-                if kwonlyargs or vararg or kwarg:
-                    raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
+                                 'strict=True fall back to normal match')
 
+            if getattr(pat, '_all', ...) is not ...:
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern cannot have its own _all field')
+
+            # argument pattern (if any)
+
+            nargs = 0
+            pat_arg = ...
+            arg_fields = _NODE_ARGUMENTS_ARGS_FIELDS
+
+            if (posonlyargs := getattr(pat, 'posonlyargs', ...)) is ...:
+                posonlyargs = ()
+            elif not isinstance(posonlyargs, list):
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern posonlyargs must be ... or a length-1 list')
+            elif posonlyargs:
+                if strict is not None:
+                    arg_fields = ('posonlyargs',)
+
+                pat_arg = posonlyargs[0]
+                nargs += len(posonlyargs)
+
+            if (args := getattr(pat, 'args', ...)) is ...:
+                args = ()
+            elif not isinstance(args, list):
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern args must be ... or a length-1 list')
+            elif args:
                 if strict:
-                    dflt_fields = ('defaults',)
+                    arg_fields = ('args',)
 
-                pat_dflt = defaults[0]
-                ndflts += len(defaults)
+                pat_arg = args[0]
+                nargs += len(args)
 
-            elif args or posonlyargs:
-                pat_dflt = _SENTINEL  # this means that there must not be a default, instead of any default
-
-        if (kw_defaults := getattr(pat, 'kw_defaults', ...)) is not ...:
-            if not isinstance(kw_defaults, list):
+            if (kwonlyargs := getattr(pat, 'kwonlyargs', ...)) is ...:
+                kwonlyargs = ()
+            elif not isinstance(kwonlyargs, list):
                 raise MatchError('matching an arguments pattern against arguments._all'
-                                ' the pattern kw_defaults must be ... or a length-1 list')
-            if kw_defaults:
-                if ndflts or args or posonlyargs or vararg or kwarg:
-                    raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
-
-                if strict is not False:
-                    dflt_fields = ('kw_defaults',)
-
-                pat_dflt = kw_defaults[0]
-
-                if pat_dflt is None:
-                    pat_dflt = _SENTINEL
-                else:
-                    ndflts += len(kw_defaults)
-
+                                 ' the pattern kwonlyargs must be ... or a length-1 list')
             elif kwonlyargs:
-                pat_dflt = _SENTINEL
+                if strict is not None:
+                    arg_fields = ('kwonlyargs',)
 
-        if ndflts > 1:
-            raise MatchError('matching an arguments pattern against arguments._all'
-                            ' the pattern can only have a single default')
+                pat_arg = kwonlyargs[0]
+                nargs += len(kwonlyargs)
 
-        mstate.cache[pat] = pat_arg, pat_dflt, arg_fields, dflt_fields
+            if (vararg := getattr(pat, 'vararg', None)) is ...:
+                vararg = None
 
-    # we know we have at most a single argument and at most a single keyword and if there are both then they are the correct matching kinds
+            elif vararg is not None:
+                arg_fields = ('vararg',)
+                pat_arg = vararg
+                nargs += 1
+
+            if (kwarg := getattr(pat, 'kwarg', None)) is ...:
+                kwarg = None
+
+            elif kwarg is not None:
+                arg_fields = ('kwarg',)
+                pat_arg = kwarg
+                nargs += 1
+
+            if nargs > 1:
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern cannot have more than one arg')
+
+            if nargs and pat_arg in _QUANTIFIER_STANDALONES or isinstance(pat_arg, MQ):  # quantifier
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern arg cannot contain quantifiers')
+
+            # default pattern (if any)
+
+            ndflts = 0
+            pat_dflt = ...
+            dflt_fields = _NODE_ARGUMENTS_DEFAULTS_FIELDS  # args field matches all args lists so default matches all defaults, if posonlyargs present then the 'kw_defaults' doesn't matter because will exit due to kwonlyargs before that
+
+            if (defaults := getattr(pat, 'defaults', ...)) is not ...:
+                if not isinstance(defaults, list):
+                    raise MatchError('matching an arguments pattern against arguments._all'
+                                     ' the pattern defaults must be ... or a length-1 list')
+                if defaults:
+                    if kwonlyargs or vararg or kwarg:
+                        raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
+
+                    if strict:
+                        dflt_fields = ('defaults',)
+
+                    pat_dflt = defaults[0]
+                    ndflts += len(defaults)
+
+                elif args or posonlyargs:
+                    pat_dflt = _SENTINEL  # this means that there must not be a default, instead of any default
+
+            if (kw_defaults := getattr(pat, 'kw_defaults', ...)) is not ...:
+                if not isinstance(kw_defaults, list):
+                    raise MatchError('matching an arguments pattern against arguments._all'
+                                     ' the pattern kw_defaults must be ... or a length-1 list')
+                if kw_defaults:
+                    if ndflts or args or posonlyargs or vararg or kwarg:
+                        raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
+
+                    if strict is not None:
+                        dflt_fields = ('kw_defaults',)
+
+                    pat_dflt = kw_defaults[0]
+
+                    if pat_dflt is None:
+                        pat_dflt = _SENTINEL
+                    else:
+                        ndflts += len(kw_defaults)
+
+                elif kwonlyargs:
+                    pat_dflt = _SENTINEL
+
+            if ndflts > 1:
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern can only have a single default')
+
+            if ndflts and pat_dflt in _QUANTIFIER_STANDALONES or isinstance(pat_dflt, MQ):  # quantifier
+                raise MatchError('matching an arguments pattern against arguments._all'
+                                 ' the pattern default cannot contain quantifiers')
+
+            mstate.cache[pat] = pat_arg, pat_dflt, arg_fields, dflt_fields
+
+        except MatchError:
+            mstate.cache[pat] = False  # mark for always normal compare
+
+            return _match__FSTView_w__all(pat, tgt, mstate)
+
+    # we know we are matching a target 1 arg and we have at most a single argument and at most a single keyword and if there are both then they are the correct matching kinds
 
     base = tgt.base
     idx = tgt.start

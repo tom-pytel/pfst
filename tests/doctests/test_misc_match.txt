@@ -1,0 +1,243 @@
+>>> import os; os.environ['NO_COLOR'] = '1'
+>>> import re
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+
+>>> from fst.match import *
+>>> from fst.asttypes import *
+
+>>> print(M(Load()))
+M(Load())
+
+>>> print(M(Load(), tag=True))
+M(Load(), tag=True)
+
+>>> print(M(obj=Load()))
+M(obj=Load())
+
+>>> print(M(obj=Load(), tag=True))
+M(obj=Load(), tag=True)
+
+>>> print(MNOT(Load()))
+MNOT(Load())
+
+>>> print(MNOT(Load(), tag=True))
+MNOT(Load(), tag=True)
+
+>>> print(MNOT(obj=Load()))
+MNOT(obj=Load())
+
+>>> print(MNOT(obj=Load(), tag=True))
+MNOT(obj=Load(), tag=True)
+
+>>> print(MOR(Load(), tag=Store()))
+MOR(Load(), tag=Store())
+
+>>> print(MAND(M(Load()), tag=MNOT(obj=Load(), tag=True)))
+MAND(M(Load()), tag=MNOT(obj=Load(), tag=True))
+
+>>> print(MOR(..., None, True, False, 0, 0.0, 0j, 'str', b'bytes'))
+MOR(..., None, True, False, 0, 0.0, 0j, 'str', b'bytes')
+
+>>> print(MRE('repat'))
+MRE(re.compile('repat'))
+
+>>> print(MRE(re.compile('repat')))
+MRE(re.compile('repat'))
+
+>>> print(MRE('repat', re.VERBOSE))
+MRE(re.compile('repat', re.VERBOSE))
+
+>>> print(MRE(re.compile('repat', re.VERBOSE)))
+MRE(re.compile('repat', re.VERBOSE))
+
+>>> print(MRE('repat', search=True))
+MRE(re.compile('repat'), search=True)
+
+>>> print(MTYPES([Tuple, List], elts=[..., 'a', ...], ctx=MOR(Load, Store())))
+MTYPES((Tuple, List), elts=[..., 'a', ...], ctx=MOR(Load, Store()))
+
+>>> print(MName(id='a', ctx=MStore()))
+MName(id='a', ctx=MStore())
+
+>>> print(Name(id='a', ctx=...))
+Name(id='a', ctx=Ellipsis)
+
+>>> print(M(Name(id='a', ctx=...)))
+M(Name(id='a'))
+
+>>> print(Mstmt(body=[..., Name(id='b'), ...]))
+Mstmt(body=[..., Name(id='b'), ...])
+
+>>> print(MAST(elts=[Call(Name('j'), args=[...], keywords=[])], ctx=MOR(Load, Store)))
+MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Store))
+
+>>> MNOT(MTYPES((MIfExp, MatchMapping, MSubscript, Compare))).match(FST('a[b]').a)
+
+>>> pat = MOR(MNOT(MAND(Mcomprehension, MMatchAs, operator, Mcomprehension, Yield, MStarred, _ExceptHandlers, Mpattern, M_ExceptHandlers, Mult, MMult, MMult, MEq, MTypeIgnore, DictComp, MBoolOp, MatchOr, MRShift, MAssert, MNotEq, TypeIgnore, Mexpr, Moperator, Eq, MDictComp, MIs, MUSub, MExpression)))
+
+>>> pat.match(FST('a + b').a)
+<FSTMatch BinOp(left=Name(id='a'), op=Add(), right=Name(id='b'))>
+
+>>> M(tt='name').match('name')
+<FSTMatch 'name' {'tt': 'name'}>
+
+>>> next(FST('a\nb\nc').search(M(p='b')))
+<FSTMatch <Expr 1,0..1,1> {'p': <Expr 1,0..1,1>}>
+
+>>> MCall(_args=M(v=[..., M(t='a=b'), ...])).match(FST('call(a, b, a=b)'))
+
+>>> MTYPES((Call,), _args=M(v=[..., M(t='a'), ...])).match(FST('call(a, b, a=b)'))
+
+>>> FST('if 1:\n a\n b').match(MIf(body=M(body=...)))
+<FSTMatch <If ROOT 0,0..2,2> {'body': <<If ROOT 0,0..2,2>.body>}>
+
+>>> FST('if 1:\n a\n b').sub(MIf(test=M(test=...), body=M(body=...)), 'if not __fst_test:\n __fst_body').src
+'if not 1:\n a\n b'
+
+>>> FST('[a, a, a]').match(List([MQ(min=1, max=2, tag='a'), ...]))
+<FSTMatch <List ROOT 0,0..0,9> {'tag': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
+
+>>> MAST(body=[MQSTAR('a')]).match(FST('x if y else z'))
+
+>>> MTYPES((List, IfExp), body=[MQSTAR('a')]).match(FST('x if y else z'))
+
+>>> MFunctionDef(returns=MOPT('int')).match(FST('def f(): pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,13>>
+
+>>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,20>>
+
+>>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))
+
+>>> MFunctionDef(returns=MOPT(t='int')).match(FST('def f(): pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,13> {'t': []}>
+
+>>> MFunctionDef(returns=MOPT(t='int')).match(FST('def f() -> int: pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,20> {'t': <Name 0,11..0,14>}>
+
+>>> MFunctionDef(returns=MOPT(t=(M(m='int')))).match(FST('def f() -> int: pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,20> {'m': <Name 0,11..0,14>, 't': <Name 0,11..0,14>}>
+
+>>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
+<FSTMatch <BinOp ROOT 0,0..0,5> {'left': <Name 0,0..0,1>}>
+
+>>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + b'))
+
+>>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), 'BinOp(__fst_a, __fst_b)', nested=True).src
+'BinOp(a, BinOp(b, c))'
+
+>>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__fst_a, __fst_b), __fst_)[1]', nested=True).src
+'(BinOp(a, (BinOp(b, c), b + c)[1]), a + (b + c))[1]'
+
+>>> FST('a + b').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__fst_a, __fst_b), __fst_)[1]', nested=True).src
+'(BinOp(a, b), a + b)[1]'
+
+>>> MConstant(..., M(k=...)).match(FST('u"a"'))
+
+>>> MMatchMapping(rest='a').match(FST('{1: x, **a}', pattern))
+<FSTMatch <MatchMapping ROOT 0,0..0,11>>
+
+>>> MMatchMapping(rest=MOPT('a')).match(FST('{1: x, **a}', pattern))
+<FSTMatch <MatchMapping ROOT 0,0..0,11>>
+
+>>> MMatchMapping(rest=MOPT('a')).match(FST('{1: x}', pattern))
+<FSTMatch <MatchMapping ROOT 0,0..0,6>>
+
+>>> MMatchMapping(rest=MOPT('a')).match(FST('{1: x, **b}', pattern))
+
+>>> v = FST('{(a):\n(b),\n(c):\n(d)}')._all
+
+>>> v.loc, v[-1:].loc
+(fstlocn(0, 1, 3, 3, n=0), fstlocn(2, 0, 3, 3, n=0))
+
+>>> MDict(_all=[MQSTAR(MRE('a: .'))]).match(FST('{a: b, c: d, a: z}'))
+
+>>> MDict(_all=[MRE('a: .')]).match(FST('{a: b}'))
+<FSTMatch <Dict ROOT 0,0..0,6>>
+
+>>> MDict(_all=[MQSTAR(t=MRE('a: .'))]).match(FST('{a: b, a: z}'))
+<FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
+
+>>> l = _.t
+
+>>> print(l[0].matched)
+<<Dict ROOT 0,0..0,12>._all[:1]>
+
+>>> print(l[1].matched)
+<<Dict ROOT 0,0..0,12>._all[1:2]>
+
+>>> FST('a:int=1, /, b:int=2, *, c:int=3')._all[0].copy().src
+'a:int=1, /'
+
+>>> FST('a:int=1, /, b:int=2, *, c:int=3')._all[1].copy().src
+'b:int=2'
+
+>>> FST('a:int=1, /, b:int=2, *, c:int=3')._all[2].copy().src
+'*, c:int=3'
+
+>>> FST('call(i for i in j)')._args.loc
+fstlocn(0, 4, 0, 18, n=0)
+
+>>> FST('call(i for i in j)')._args.pars()
+fstlocn(0, 4, 0, 18, n=0)
+
+>>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int')._all[0]
+<<arguments ROOT 0,0..0,45>._all[:1]>
+
+>>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int').get(0, '_all')
+<arguments ROOT 0,0..0,10>
+
+>>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int').get_slice(0, 1, '_all')
+<arguments ROOT 0,0..0,10>
+
+>>> FST('{1: a, 2: b, 3: c}').get(1).src
+'{2: b}'
+
+>>> FST('{1: a, 2: b, 3: c}').put('{-1: x}', 1).src
+'{1: a, -1: x, 3: c}'
+
+>>> FST('{1: a, 2: b, 3: c}', pattern).put('{-1: x}', 1).src
+'{1: a, -1: x, 3: c}'
+
+>>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int')._all[0].copy()
+<arguments ROOT 0,0..0,10>
+
+>>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int').put('x: float = -1.0', 1).src
+'a:int=1, /, x: float = -1.0, *c:int, d:int=1, **e:int'
+
+>>> MDict(_all=[..., FST('{a: b}').a, ...]).match(FST('{x: y, a: b, u: v}'))
+<FSTMatch <Dict ROOT 0,0..0,18>>
+
+>>> MTAG('tag')
+MTAG('tag')
+
+>>> MTAG('tag', st='atic')
+MTAG('tag', st='atic')
+
+>>> MTAG(tag='non_anon')
+MTAG(tag='non_anon')
+
+>>> MTAG(tag='non_anon', st='atic')
+MTAG(tag='non_anon', st='atic')
+
+>>> MList(elts=M(t=['a'])).match(FST('[a]'))
+<FSTMatch <List ROOT 0,0..0,3> {'t': <<List ROOT 0,0..0,3>.elts>}>
+
+>>> MList(elts=M(lf=[MQSTAR(q='a'), MQSTAR])).match(FST('[a, a, b, a]'))
+<FSTMatch <List ROOT 0,0..0,12> {'q': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>], 'lf': <<List ROOT 0,0..0,12>.elts>}>
+
+>>> MList(elts=M(lf=[MQSTAR(q='a'), MQSTAR(t=...)])).match(FST('[a, a, b, a]'))
+<FSTMatch <List ROOT 0,0..0,12> {'q': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>], 't': [<FSTMatch <Name 0,7..0,8>>, <FSTMatch <Name 0,10..0,11>>], 'lf': <<List ROOT 0,0..0,12>.elts>}>
+
+>>> FST('a, /, b, *, c').match(Marguments(_all=['a', 'b', 'c']))
+<FSTMatch <arguments ROOT 0,0..0,13>>
+
+>>> MDict(_all=[MQSTAR(t=MDict(['a'], ['b']))]).match(FST('{a: b, a: b}'))
+<FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
+
+>>> Marguments(_all=[Marguments(args=['a']), Marguments(args=['b']), ...]).match(FST('a, b, c', arguments))
+<FSTMatch <arguments ROOT 0,0..0,7>>
+
+

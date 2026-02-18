@@ -60,13 +60,13 @@ class Marguments(M{ast_base_name}):  # pragma: no cover
     `arguments` class for the same effect.
 
     **Parameters:**
-    - `_strict`: Set this to control matching, if not set defaults to `None`.
+    - `_strict`: Set this to control matching, if not set defaults to `False`.
         - `True`: `posonlyargs` only match to `posonlyargs`, `kwonlyargs` to `kwonlyargs` and `args` only to `args`.
             Their associated defaults only match to the same type of default as well.
-        - `None`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
+        - `False`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
             the target and `defaults` likewise can also match to `kw_defaults`. This allows the use of the standard args
             to search in all the args fields.
-        - `False`: All types of args and defaults can match to each other.
+        - `None`: All types of args and defaults can match to each other.
     """
     _types = arguments
 
@@ -80,7 +80,7 @@ class Marguments(M{ast_base_name}):  # pragma: no cover
         kwarg: _Patterns = ...,
         defaults: _Patterns = ...,
         _all: _Patterns = ...,
-        _strict: bool | None = None,  # `True` matches pos/arg/kw exclusively to same type, `None` allos match arg to all, `False` allows match all to all
+        _strict: bool | None = False,
     ) -> None:
         self._fields = fields = []
         self._strict = _strict
