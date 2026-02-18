@@ -1470,6 +1470,18 @@ def _put_slice_NOT_IMPLEMENTED_YET(
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
+def _put_slice_arguments_NOT_HANDLED(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    one: bool | None,
+    options: Mapping[str, Any],
+) -> None:
+    raise NodeError(f"cannot put slice individually to arguments.{field}, use arguments._all to put whole arguments")
+
+
 def _put_slice_Tuple_elts(
     self: fst.FST,
     code: Code | None,
@@ -3232,6 +3244,11 @@ _PUT_SLICE_HANDLERS = {
     (Call, '_args'):                          _put_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (comprehension, 'ifs'):                   _put_slice_comprehension_ifs,  # expr*
     (arguments, '_all'):                      _put_slice_arguments,  # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
+    (arguments, 'posonlyargs'):               _put_slice_arguments_NOT_HANDLED,  # arg*
+    (arguments, 'args'):                      _put_slice_arguments_NOT_HANDLED,  # arg*
+    (arguments, 'defaults'):                  _put_slice_arguments_NOT_HANDLED,  # expr*
+    (arguments, 'kwonlyargs'):                _put_slice_arguments_NOT_HANDLED,  # arg*
+    (arguments, 'kw_defaults'):               _put_slice_arguments_NOT_HANDLED,  # expr*
 
     (ListComp, 'generators'):                 _put_slice_generators,  # comprehension*
     (SetComp, 'generators'):                  _put_slice_generators,  # comprehension*

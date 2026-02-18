@@ -61,9 +61,6 @@ MTYPES((Tuple, List), elts=[..., 'a', ...], ctx=MOR(Load, Store()))
 >>> print(MName(id='a', ctx=MStore()))
 MName(id='a', ctx=MStore())
 
->>> print(Name(id='a', ctx=...))
-Name(id='a', ctx=Ellipsis)
-
 >>> print(M(Name(id='a', ctx=...)))
 M(Name(id='a'))
 

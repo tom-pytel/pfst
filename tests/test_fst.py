@@ -11918,7 +11918,7 @@ if 1:
                         getattr(f, field)[0] = put
 
             except (NodeError, ValueError) as exc:
-                if not str(exc).startswith('cannot put slice to'):
+                if not str(exc).startswith('cannot put slice'):
                     raise
 
                 getattr(f, field)[0] = put
