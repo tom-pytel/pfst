@@ -29,10 +29,10 @@ are set in a constructor, but should be enough to show how something more comple
 
 ```py
 >>> def type_annotations_to_type_comments(src: str) -> str:
-...     fst_ = FST(src, 'exec')  # same as "fst.parse(src).f"
+...     fst = FST(src)  # same as "fst.parse(src).f"
 ...
 ...     # walk the whole tree but only yield AnnAssign nodes
-...     for f in fst_.walk(AnnAssign):
+...     for f in fst.walk(AnnAssign):
 ...         # if just an annotation then skip it, alternatively could
 ...         # clean and store for later addition to __init__() assign in class
 ...         if not f.value:
@@ -54,7 +54,7 @@ are set in a constructor, but should be enough to show how something more comple
 ...         # replace the node, trivia=False preserves any leading comments
 ...         f.replace(new_src, trivia=False)
 ...
-...     return fst_.src  # same as fst.unparse(fst_.a)
+...     return fst.src  # same as fst.unparse(fst.a)
 ```
 
 ```py
@@ -131,17 +131,16 @@ def func():
 You want to add a `correlation_id=CID` keyword argument to all `logger.info()` calls, but only if its not already there.
 
 ```py
+>>> from fst.match import *
+
 >>> def inject_logging_metadata(src: str) -> str:
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
-...     for f in fst.walk(Call):
-...         if (f.func.is_Attribute
-...             and f.func.attr == 'info'
-...             and f.func.value.is_Name
-...             and f.func.value.id == 'logger'
-...             and not any(kw.arg == 'correlation_id' for kw in f.keywords)
-...         ):
-...             f.append('correlation_id=CID', trivia=())
+...     for m in fst.search(MCall(
+...         func=MAttribute('logger', 'info'),
+...         keywords=MNOT([MQSTAR, Mkeyword('correlation_id'), MQSTAR]),
+...     )):
+...         m.matched.append('correlation_id=CID', trivia=())
 ...
 ...     return fst.src
 ```
@@ -202,14 +201,9 @@ class cls:
 
 You can do the same thing using structural pattern substitution. You probably wouldn't do this if you want the best
 results as it doesn't give you nearly as much control as doing your own substitution, but for simple and quick-and-dirty
-modifications it exists. There are two other levels of structural pattern usage between the previous example and this
-one:
-
-- Normal `walk()` and `.match(PATTERN)` on each node to check if is the one you want.
-- Iterating `.search(PATTERN)` to get just matching nodes.
+modifications it exists.
 
 Note we are using the source from the previous example.
-
 
 ```py
 >>> from fst.match import *
@@ -248,7 +242,7 @@ and then inserting them above the `if` manually using `put_src()`. Eventually sh
 
 ```py
 >>> def else_if_chain_to_elifs(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
 ...         if (len(f.orelse) == 1
@@ -386,7 +380,7 @@ demonstration purposes.
 
 ```py
 >>> def pull_out_inner_funcs_safely(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk({FunctionDef, AsyncFunctionDef}):
 ...         if (parent_scope := f.parent_named_scope()).is_funcdef:  # func in a func
@@ -415,9 +409,7 @@ demonstration purposes.
 ...
 ...             # replace all occurrences of original inner name with new global one
 ...             # we do this first so that it includes the function being moved
-...             for g in parent_scope.walk(Name):
-...                 if g.id == func_name:
-...                     g.replace(global_name)
+...             parent_scope.sub(Name(func_name), global_name)
 ...
 ...             f = f.cut()
 ...             f.name = global_name
@@ -525,7 +517,7 @@ left in the same scope in case of nonlocals.
 
 ```py
 >>> def lambdas_to_defs(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...     indent = fst.indent  # to show its there, inferred from src, single level str
 ...
 ...     for f in fst.walk(Assign):
@@ -653,12 +645,10 @@ classes (like most `AST` types are).
 ... }
 
 >>> def isinstance_to_class_check(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk(Call):
-...         if (f.func.is_Name
-...             and f.func.id == 'isinstance'  # isinstance()
-...         ):
+...         if f.func.is_Name and f.func.id == 'isinstance':  # isinstance()
 ...             ftest, ftype = f.args  # assume there are two for isinstance()
 ...             fparent = f.parent
 ...
@@ -767,7 +757,7 @@ the `with ctx():` could be preserved explicitly but not doing it here, eventuall
 
 ```py
 >>> def squash_nested_withs(src: str) -> str:
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk(With):  # we only get With nodes
 ...         while f.body[0].is_With:  # first child is another With
@@ -842,7 +832,7 @@ constraint that it be as close to the function as possible but not after a `@con
 
 ```py
 >>> def insert_decorator_to_class_methods(src: str) -> str:
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk({FunctionDef, AsyncFunctionDef}):
 ...         if f.parent.is_ClassDef:
@@ -960,7 +950,7 @@ We build up a body and replace the original comprehension `Assign` statement wit
 
 ```py
 >>> def list_comprehensions_to_loops(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     # find single Name targets with a value which is a ListComp
 ...     for m in fst.search(Assign([Name], ListComp)):
@@ -1153,7 +1143,7 @@ ASTS_LEAF_IMPORT = {Import, ImportFrom}
 Processed:
 
 ```py
->>> fst = FST(src, 'exec')
+>>> fst = FST(src)
 >>> align_equals(fst)  # we pass as an FST so we can `.dump()` below
 >>> pprint(fst.src)
 a             = 1
@@ -1221,7 +1211,7 @@ change, but that would be slower.
 
 ```py
 >>> def self_document_fstring_expressions(src: str) -> str:
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk(FormattedValue):  # could add Interpolation to do both
 ...         _, _, end_ln, end_col = f.value.pars()  # value end after parentheses
@@ -1290,7 +1280,7 @@ that it precedes any comments. Otherwise it just replaces the docstring in the l
 
 ```py
 >>> def normalize_docstrings(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk():
 ...         if f.has_docstr:
@@ -1368,7 +1358,7 @@ aesthetic paradigm of any given project. This is just to show proper functional 
 
 ```py
 >>> def reparenthesize_simple(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk():
 ...         if f.is_parenthesizable():
@@ -1469,7 +1459,7 @@ not have been in normal locations to begin with.
 
 ```py
 >>> def reparenthesize_full(src):
-...     fst = FST(src, 'exec')
+...     fst = FST(src)
 ...
 ...     for f in fst.walk():
 ...         if f.is_parenthesizable():
@@ -1665,5 +1655,182 @@ src: '+z', args: (10,)
 src: '(z >= 0) * +z', args: (True, 10)
 src: '(z < 0) * -z + (z >= 0) * +z', args: (0, 10)
 10
+```
+
+
+## Misc
+
+Robust. Crazy syntax is handled correctly, which is a main goal of this module.
+
+```py
+>>> f = FST(r"""
+... if True:
+...     @decorator1
+...
+...     # pre-comment
+...     \
+...  @ \
+...   ( decorator2 )(
+...         a,
+...     ) \
+...     # post-comment
+...
+...     @ \
+...     decorator3()
+...
+...     def func(): weird\
+...  ; \
+... \
+... stuff()
+...
+...     pass
+... """.strip())
+```
+
+```py
+>>> deco = f.body[0].get_slice(
+...     1, 2, 'decorator_list', cut=True, trivia=('all-', 'all-'))
+```
+
+```py
+>>> deco.dump('stmt+')
+0: # pre-comment
+1: \
+2: @ \
+3: ( decorator2 )(
+4:     a,
+5: ) \
+6: # post-comment
+_decorator_list - ROOT 0,0..6,14
+  .decorator_list[1]
+   0] Call - 3,0..5,1
+     .func Name 'decorator2' Load - 3,2..3,12
+     .args[1]
+      0] Name 'a' Load - 4,4..4,5
+<_decorator_list ROOT 0,0..6,14>
+```
+
+```py
+>>> pprint(f.src)
+if True:
+    @decorator1
+    @ \
+    decorator3()
+ 
+    def func(): weird\
+ ; \
+\
+stuff()
+ 
+    pass
+```
+
+```py
+>>> f.body[0].put_slice(deco, 'decorator_list', trivia=('all-', 'all-'))
+<FunctionDef 8,4..11,7>
+
+>>> f.body[0].body[0] = 'good'
+```
+
+```py
+>>> pprint(f.src)
+if True:
+    # pre-comment
+    \
+    @ \
+    ( decorator2 )(
+        a,
+    ) \
+    # post-comment
+    def func():
+        good
+        stuff()
+ 
+    pass
+```
+
+Higher level slice abstraction.
+
+```py
+>>> print(FST('a < b < c')[:2].copy().src)
+a < b
+
+>>> f = FST('case {1: a, 2: b, **c}: pass')  # match_case
+
+>>> print(f.pattern.get_slice(1, 'end').src)
+{2: b, **c}
+
+>>> f = FST('call(a, b=c, *d)')
+
+>>> f[1:] = '*e, f=g, **h'
+
+>>> print(f.src)
+call(a, *e, f=g, **h)
+
+>>> print(FST('def f(a, /, b=2, *c, d=4, **e): pass').args[-2:].copy().src)
+*, d=4, **e
+```
+
+One-liner fun.
+
+```py
+>>> src = """
+... class myclass:
+...     def first_method(self):
+...         something
+...
+...     @bad_decorator()
+...     def bad_method(self):
+...         something_bad
+...
+...     def last_method(self):
+...         something_else
+... """.strip()
+
+>>> pprint(FST(src, 'exec')
+...       .find_def('myclass.bad_method')
+...       .replace('def good_method(self):\n    return "YAY!"')
+...       .root.src)
+class myclass:
+    def first_method(self):
+        something
+ 
+    def good_method(self):
+        return "YAY!"
+ 
+    def last_method(self):
+        something_else
+```
+
+Traversal is in syntactic order.
+
+```py
+>>> list(f.src for f in FST('call(a, x=1, *b, y=2, **c)').walk())[1:]
+['call', 'a', 'x=1', '1', '*b', 'b', 'y=2', '2', '**c', 'c']
+
+>>> list(f.src for f in FST('{key1: val1, **val2, key3: val3}').walk())[1:]
+['key1', 'val1', 'val2', 'key3', 'val3']
+
+>>> if py_version_ok_then_exec_else_print(12, __file__, 'LIST_START', 'LIST_STOP'):
+...     l = list(f.src for f in FST('def func[T](a=1, b=2) -> int: pass').walk())[1:]
+...     pprint(self_document_fstring_expressions(str(l)))  # LIST_START
+['T', 'a=1, b=2', 'a', '1', 'b', '2', 'int', 'pass']
+
+# LIST_STOP
+```
+
+Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
+nodes.
+
+```py
+>>> FST('蟒=Æ+д').dump()
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name '蟒' Store - 0,0..0,1
+  .value BinOp - 0,2..0,5
+    .left Name 'Æ' Load - 0,2..0,3
+    .op Add - 0,3..0,4
+    .right Name 'д' Load - 0,4..0,5
+<Assign ROOT 0,0..0,5>
 ```
 '''

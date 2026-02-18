@@ -40,15 +40,14 @@ already know the `pfst` node structure. Our focus on simple Pythonic operations 
 1. Parse source
 
 ```py
-# Parse source into a standard AST with attached FST nodes
 >>> import ast, fst
+
 >>> a = fst.parse('def func(): pass  # comment')
 ```
 
 2. Modify via `.f`
 
 ```py
-# Access the FST node via the .f attribute
 >>> f = a.body[0].f
 
 >>> f.returns = ast.Name('int')  # use nodes or text
@@ -61,7 +60,6 @@ already know the `pfst` node structure. Our focus on simple Pythonic operations 
 3. View formatted source
 
 ```py
-# f.src preserves your comments and specific spacing
 >>> print(f.src)
 def func(arg: int = 0) -> int:
     """I'm a happy
@@ -76,7 +74,6 @@ def func(arg: int = 0) -> int:
 4. Verify AST synchronization
 
 ```py
-# Standard ast.unparse() doesn't do formatting, but note the AST tree was kept in sync
 >>> print(ast.unparse(a))
 def func(arg: int=0) -> int:
     """I'm a happy
