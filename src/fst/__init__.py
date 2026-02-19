@@ -2,21 +2,30 @@ r'''
 Version {{VERSION}}
 
 
-# Overview
+# Introduction
 
 `pfst` (Python Formatted Syntax Tree) exists in order to allow quick and easy modification of Python source without
 losing formatting or comments. The goal is simple, Pythonic, container-like access to the `AST`, with the ability to
-modify any node without losing formatting.
+modify any node while preserving formatting in the rest of the tree.
 
 > Yes, we said "formatting" and "AST" in the same sentence.
 
-Normally `AST` nodes don't store any explicit formatting, much less comments. But `pfst` works by adding `FST` nodes to
-existing standard Python `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided). This keeps extra
-structure information, the original source, and provides the interface to format-preserving operations. Each operation
-through `FST` nodes is a simultaneous edit of the `AST` tree and the source code, and those are kept synchronized so
-that the current source will always parse to the current tree.
+Normally `AST` nodes don't store any explicit formatting, much less, comments. But `pfst` works by adding `FST` nodes to
+existing Python `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided). This keeps extra structure
+information, the original source, and provides the interface to format-preserving operations. Each operation through
+`FST` nodes is a simultaneous edit of the `AST` tree and the source code, and those are kept synchronized so that the
+current source will always parse to the current tree.
 
-If you just want to dive into the examples then go to `fst.docs.d14_examples.html`.
+`pfst` automatically handles:
+
+- Operator precedence and parentheses
+- Indentation and line continuations
+- Commas, semicolons, and tuple edge cases
+- Comments and docstrings
+- Various Python version-specific syntax quirks
+- Lots more...
+
+If you just want to dive into the examples then go to `fst.docs.d14_examples`.
 
 
 # Index
@@ -34,8 +43,8 @@ If you just want to dive into the examples then go to `fst.docs.d14_examples.htm
 
 # Getting Started
 
-Since `pfst` is built directly on Python's standard `AST` nodes, if you are familiar with the standard library, you
-already know the `pfst` node structure. Our focus on simple Pythonic operations means you can get up to speed quickly.
+Since `pfst` is built directly on Python's standard `AST` nodes, if you are familiar with those then you already know
+the `FST` node structure. Our focus on simple Pythonic operations means you can get up to speed quickly.
 
 1. Parse source
 
@@ -83,11 +92,57 @@ def func(arg: int=0) -> int:
     return arg
 ```
 
+Here is an example of some more advanced usage, replace lambda functions with function definitions in one line.
+
+```py
+>>> from fst.match import *
+```
+
+```py
+>>> src = """
+... class cls:
+...     mymin = lambda a, b: a if a < b else b
+...     name = lambda self: str(self)
+...
+...     def method(self, a, b):
+...         add = lambda: a + b
+...
+...         return add()
+... """.strip()
+```
+
+```py
+>>> pattern = MAssign([M(name=Name)], MLambda(M(args=...), M(ret=...)))
+```
+
+```py
+>>> repl = """
+... def __FST_name(__FST_args):
+...     return __FST_ret
+... """.strip()
+```
+
+```py
+>>> print(FST(src).sub(pattern, repl).src)
+class cls:
+    def mymin(a, b):
+        return a if a < b else b
+
+    def name(self):
+        return str(self)
+
+    def method(self, a, b):
+        def add():
+            return a + b
+
+        return add()
+```
+
 
 # vs. LibCST
 
-There is no "vs." here. [LibCST](https://github.com/Instagram/LibCST) is a powerful, industrial-grade library suitable
-for the most complex complex codemods.
+There is no "vs.", [LibCST](https://github.com/Instagram/LibCST) is a powerful, industrial-grade library suitable for
+the most complex complex codemods.
 
 So where does `pfst` fit?
 
@@ -96,10 +151,10 @@ elements for anything beyond basic modifications. `pfst` takes more of a "do wha
 I say" approach. The idea is that `pfst` handles the "formatting math" so you can focus on the functional content of
 the code.
 
-Another useful property of `pfst` is that it works directly with `AST` trees. This means that you can pass a `pfst` tree
-directly on to other code you may have that works with `AST` trees. `pfst` even has a mechanism for incorporating any
-changes external code may make to the tree and preserving what formatting can be preserved, see
-`fst.docs.d13_reconcile`.
+A useful property of `pfst` is that it works directly with `AST` trees. This means that you can process some source with
+`pfst` then pass the tree directly on to other code you may have that works with `AST` nodes. `pfst` even has a
+mechanism for incorporating any changes external code may make to the tree and preserving what formatting can be
+preserved, see `fst.docs.d13_reconcile`.
 
 
 
