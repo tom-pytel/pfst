@@ -16,8 +16,7 @@ structure information, the original source, and provides the interface to format
 through `FST` nodes is a simultaneous edit of the `AST` tree and the source code, and those are kept synchronized so
 that the current source will always parse to the current tree.
 
-If you just want to dive into the examples then go to
-[Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d14_examples.html).
+If you just want to dive into the examples then go to `fst.docs.d14_examples.html`.
 
 
 # Index
@@ -93,9 +92,19 @@ for the most complex complex codemods.
 So where does `pfst` fit?
 
 LibCST gives you complete control over every minute element of the source, which requires you to actually manage those
-elements for anything beyond basic modifications. `pfst` takes more of a "do what I mean" rather than "do exactly what I
-say" approach. The idea is that `pfst` handles the "formatting math" so you can focus on the functional content of
+elements for anything beyond basic modifications. `pfst` takes more of a "do what I mean" rather than a "do exactly what
+I say" approach. The idea is that `pfst` handles the "formatting math" so you can focus on the functional content of
 the code.
+
+Another useful property of `pfst` is that it works directly with `AST` trees. This means that you can pass a `pfst` tree
+directly on to other code you may have that works with `AST` trees. `pfst` even has a mechanism for incorporating any
+changes external code may make to the tree and preserving what formatting can be preserved, see
+`fst.docs.d13_reconcile`.
+
+
+
+
+
 
 
 # Notes

@@ -6154,14 +6154,14 @@ match a:
  case 1 as a: pass
 '''), (None,
 r'''_'''),
-r'''**ValueError("cannot change MatchAs with pattern into wildcard '_'")**'''),
+r'''**NodeError("cannot change MatchAs with pattern into wildcard '_'")**'''),
 
 ('body[0].cases[0].pattern', None, None, 'name', {}, ('exec', r'''
 match a:
  case 1 as a: pass
 '''), (None,
 r'''**DEL**'''),
-r'''**ValueError("cannot change MatchAs with pattern into wildcard '_'")**'''),
+r'''**NodeError("cannot change MatchAs with pattern into wildcard '_'")**'''),
 
 ('body[0].cases[0].pattern', None, None, 'name', {}, ('exec', r'''
 match a:
@@ -13215,6 +13215,11 @@ new
 cls
 '''),
 r'''**NotImplementedError('cannot put multiline Attribute to MatchClass pattern expression')**'''),
+
+('', 0, None, 'kwd_attrs', {}, ('MatchClass',
+r'''cls(a=b)'''), (None,
+r'''_'''),
+r'''**NodeError("MatchClass.kwd_attrs cannot be wildcard '_'")**'''),
 ],
 
 'MatchMapping': [  # ................................................................................
@@ -13283,6 +13288,11 @@ MatchMapping - ROOT 0,0..1,5
    0] MatchAs - 1,3..1,4
      .name 'a'
 '''),
+
+('', None, None, 'rest', {}, ('MatchMapping',
+r'''{**rest}'''), (None,
+r'''_'''),
+r'''**NodeError("MatchMapping.rest cannot be wildcard '_'")**'''),
 ],
 
 'type_params': [  # ................................................................................

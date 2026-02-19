@@ -2264,7 +2264,7 @@ r'''**None**'''),
 
 ('', None, None, 'name', {}, (MatchAs,
 r'''pat as name'''),
-r'''**ValueError("cannot change MatchAs with pattern into wildcard '_'")**''',
+r'''**NodeError("cannot change MatchAs with pattern into wildcard '_'")**''',
 "\n'name'\n",
 r'''<class 'str'>'''),
 

@@ -1761,12 +1761,16 @@ def _put_one_identifier_required(
     child: str,
     static: onestatic,
     options: Mapping[str, Any],
+    validated: int = 0,
 ) -> str:
     """Put a single required identifier."""
 
-    _, idx = _validate_put(self, code, idx, field, child)
+    if not validated:
+        _, idx = _validate_put(self, code, idx, field, child)
 
-    code = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_() so sanitize not needed
+    if validated < 2:
+        code = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_() so sanitize not needed
+
     info = static.getinfo(self, static, idx, field)
 
     self._put_src(code, *info.loc_prim, True)
@@ -1783,10 +1787,12 @@ def _put_one_identifier_optional(
     child: str | None,
     static: onestatic,
     options: Mapping[str, Any],
+    validated: int = 0,
 ) -> _PutOneCode:
     """Put new, replace or delete an optional identifier."""
 
-    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
+    if not validated:
+        child, idx = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None and child is None:  # delete nonexistent identifier, noop
         return None
@@ -1803,7 +1809,8 @@ def _put_one_identifier_optional(
 
         return None
 
-    code = static.code_as(code, options, self.root.parse_params)
+    if validated < 2:
+        code = static.code_as(code, options, self.root.parse_params)
 
     if child is not None:  # replace existing identifier
         self._put_src(code, *info.loc_prim, True)
@@ -1866,6 +1873,58 @@ def _put_one_keyword_arg(
     return _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
 
+def _put_one_MatchMapping_rest(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> str:  # child: str
+    """MatchMapping.rest cannot be '_'."""
+
+    if code is None:
+        validated = 0
+
+    else:
+        validated = 2
+
+        child, idx = _validate_put(self, code, idx, field, child, can_del=True)
+        code = code_as_identifier(code, options, self.root.parse_params)
+
+        if code == '_':
+            raise NodeError("MatchMapping.rest cannot be wildcard '_'")
+
+    return _put_one_identifier_optional(self, code, idx, field, child, static, options, validated)
+
+
+def _put_one_MatchClass_kwd_attrs(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> str:  # child: str
+    """MatchClass.kwd_attrs cannot be '_'."""
+
+    if code is None:
+        validated = 0
+
+    else:
+        validated = 2
+
+        child, idx = _validate_put(self, code, idx, field, child)
+        code = code_as_identifier(code, options, self.root.parse_params)
+
+        if code == '_':
+            raise NodeError("MatchClass.kwd_attrs cannot be wildcard '_'")
+
+    return _put_one_identifier_required(self, code, idx, field, child, static, options, validated)
+
+
 def _put_one_MatchStar_name(
     self: fst.FST,
     code: _PutOneCode,
@@ -1875,7 +1934,7 @@ def _put_one_MatchStar_name(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> str:  # child: str
-    """Slightly annoying MatchStar.name. '_' really means delete."""
+    """Slightly annoying MatchStar.name. '_' present in source really means `None`."""
 
     if code is None:
         code = '_'
@@ -1906,7 +1965,7 @@ def _put_one_MatchAs_name(
         code = code_as_identifier(code, options, self.root.parse_params)
 
     if self.a.pattern and code == '_':
-        raise ValueError("cannot change MatchAs with pattern into wildcard '_'")
+        raise NodeError("cannot change MatchAs with pattern into wildcard '_'")
 
     ret = _put_one_identifier_required(self, code, idx, field, child, static, options)
 
@@ -2729,11 +2788,11 @@ _PUT_ONE_HANDLERS = {
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprlike_required, onestatic(_one_info_exprlike_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=code_as_identifier)),  # identifier?
+    (MatchMapping, 'rest'):               (False, _put_one_MatchMapping_rest, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchMapping, '_all'):               (True,  None, None),  # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprlike_required, onestatic(_one_info_exprlike_required, _is_valid_MatchClass_cls)),  # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=code_as_identifier)),  # identifier*
+    (MatchClass, 'kwd_attrs'):            (False, _put_one_MatchClass_kwd_attrs, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=code_as_identifier)),  # identifier*
     (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=code_as_pattern)),  # pattern?

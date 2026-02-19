@@ -10153,14 +10153,12 @@ MNOT(MTAG('no'))
         # self.assertEqual("zzz", (f := FST('SUB.ATTR')).sub(M(attr=Attribute), 'from . import __FST_attr as asname').src)
 
         self.assertEqual("{1: a, **SUB}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a, **__FST_name}', 'pattern')).src)
-        # self.assertEqual("zzz", (f := FST('_')).sub(M(name=Name), FST('{1: a, **__FST_name}', 'pattern')).src)
         self.assertEqual("{1: a}", (f := FST('SUB')).sub(M(Name, name=None), FST('{1: a, **__FST_name}', 'pattern')).src)
         self.assertEqual("{1: a}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a}', 'pattern')).src)
         self.assertEqual("{1: a, **NOSUB}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a, **NOSUB}', 'pattern')).src)
 
         self.assertEqual("cls(a, SUB1=c, SUB2=e)", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), FST('cls(a, __FST_name1=c, __FST_name2=e)', 'pattern')).src)
         self.assertEqual("cls(a, SUB1=c, SUB2=e)", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), FST('cls(a, __FST_name1=c, __FST_name2=e)', 'pattern')).src)
-        # self.assertEqual("zzz", (f := FST('_')).sub(M(name=Name), FST('cls(a, __FST_name=c)', 'pattern')).src)
 
         self.assertEqual("*SUB", (f := FST('SUB')).sub(M(st=Name), FST('*__FST_st', 'pattern')).src)
         self.assertEqual("*_", (f := FST('SUB')).sub(M(Name, st=None), FST('*__FST_st', 'pattern')).src)
@@ -10169,8 +10167,6 @@ MNOT(MTAG('no'))
         self.assertEqual("*NOSUB", (f := FST('SUB')).sub(M(st=Name), FST('*NOSUB', 'pattern')).src)
 
         self.assertEqual("a as SUB", (f := FST('SUB')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)
-        # self.assertEqual("zzz", (f := FST('_')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)  # GOOD! this is not allowed
-        # self.assertEqual("zzz", (f := FST('SUB')).sub(M(Name, name=None), FST('a as __FST_name', 'pattern')).src)
         self.assertEqual("a as SUB", (f := FST('SUB')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)
         self.assertEqual("a as SUB", (f := FST('SUB')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)
         self.assertEqual("SUB", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name', 'pattern')).src)
