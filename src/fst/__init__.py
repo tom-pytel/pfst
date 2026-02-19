@@ -16,7 +16,8 @@ structure information, the original source, and provides the interface to format
 through `FST` nodes is a simultaneous edit of the `AST` tree and the source code, and those are kept synchronized so
 that the current source will always parse to the current tree.
 
-If you just want to dive into the examples then go here [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d14_examples.html).
+If you just want to dive into the examples then go to
+[Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d14_examples.html).
 
 
 # Index

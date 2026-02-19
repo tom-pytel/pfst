@@ -10116,7 +10116,114 @@ MNOT(MTAG('no'))
 
 
 
-    def test_sub_special(self):
+    def test_sub_identifier(self):
+        self.assertEqual("def SUB(): pass", (f := FST('SUB')).sub(M(name=Name), 'def __FST_name(): pass').src)
+        self.assertEqual("async def SUB(): pass", (f := FST('SUB')).sub(M(name=Name), 'async def __FST_name(): pass').src)
+        self.assertEqual("class SUB: pass", (f := FST('SUB')).sub(M(name=Name), 'class __FST_name: pass').src)
+
+        self.assertEqual("from .SUB import *", (f := FST('SUB')).sub(M(mod=Name), 'from .__FST_mod import *').src)
+        self.assertEqual("from . import *", (f := FST('SUB')).sub(M(Name, mod=None), 'from .__FST_mod import *').src)
+        self.assertEqual("from . import *", (f := FST('SUB')).sub(M(mod=Name), 'from . import *').src)
+        self.assertEqual("from .NOSUB import *", (f := FST('SUB')).sub(M(mod=Name), 'from .NOSUB import *').src)
+        self.assertEqual("from .SUB.ATTR import *", (f := FST('SUB.ATTR')).sub(M(attr=Attribute), 'from .__FST_attr import *').src)
+
+        self.assertEqual("global SUB1, b, SUB2", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), 'global __FST_name1, b, __FST_name2').src)
+        self.assertEqual("nonlocal a, SUB1, SUB2, c", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), 'nonlocal a, __FST_name1, __FST_name2, c').src)
+
+        self.assertEqual("value.SUB", (f := FST('SUB')).sub(M(attr=Name), 'value.__FST_attr').src)
+
+        self.assertEqual("SUB", (f := FST('SUB')).sub(M(name=Name), '__FST_name').src)
+
+        self.assertEqual("except Exception as SUB: pass", (f := FST('SUB')).sub(M(name=Name), 'except Exception as __FST_name: pass').src)
+        self.assertEqual("except Exception: pass", (f := FST('SUB')).sub(M(Name, name=None), 'except Exception as __FST_name: pass').src)
+        self.assertEqual("except Exception: pass", (f := FST('SUB')).sub(M(name=Name), 'except Exception: pass').src)
+        self.assertEqual("except Exception as NOSUB: pass", (f := FST('SUB')).sub(M(name=Name), 'except Exception as NOSUB: pass').src)
+
+        self.assertEqual("SUB", (f := FST('SUB')).sub(M(arg=Name), FST('__FST_arg', 'arg')).src)
+        self.assertEqual("SUB: int", (f := FST('SUB')).sub(M(arg=Name), FST('__FST_arg: int', 'arg')).src)
+
+        self.assertEqual("call(SUB=value)", (f := FST('SUB')).sub(M(kw=Name), 'call(__FST_kw=value)').src)
+        self.assertEqual("call(**value)", (f := FST('SUB')).sub(M(Name, kw=None), 'call(__FST_kw=value)').src)
+        self.assertEqual("call(**value)", (f := FST('SUB')).sub(M(kw=Name), 'call(**value)').src)
+        self.assertEqual("call(NOSUB=value)", (f := FST('SUB')).sub(M(kw=Name), 'call(NOSUB=value)').src)
+
+        self.assertEqual("import SUB1 as SUB2", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), 'import __FST_name1 as __FST_name2').src)
+        self.assertEqual("from . import SUB1 as SUB2", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), 'from . import __FST_name1 as __FST_name2').src)
+        self.assertEqual("import SUB.ATTR as asname", (f := FST('SUB.ATTR')).sub(M(attr=Attribute), 'import __FST_attr as asname').src)
+        # self.assertEqual("zzz", (f := FST('SUB.ATTR')).sub(M(attr=Attribute), 'from . import __FST_attr as asname').src)
+
+        self.assertEqual("{1: a, **SUB}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a, **__FST_name}', 'pattern')).src)
+        # self.assertEqual("zzz", (f := FST('_')).sub(M(name=Name), FST('{1: a, **__FST_name}', 'pattern')).src)
+        self.assertEqual("{1: a}", (f := FST('SUB')).sub(M(Name, name=None), FST('{1: a, **__FST_name}', 'pattern')).src)
+        self.assertEqual("{1: a}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a}', 'pattern')).src)
+        self.assertEqual("{1: a, **NOSUB}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a, **NOSUB}', 'pattern')).src)
+
+        self.assertEqual("cls(a, SUB1=c, SUB2=e)", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), FST('cls(a, __FST_name1=c, __FST_name2=e)', 'pattern')).src)
+        self.assertEqual("cls(a, SUB1=c, SUB2=e)", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), FST('cls(a, __FST_name1=c, __FST_name2=e)', 'pattern')).src)
+        # self.assertEqual("zzz", (f := FST('_')).sub(M(name=Name), FST('cls(a, __FST_name=c)', 'pattern')).src)
+
+        self.assertEqual("*SUB", (f := FST('SUB')).sub(M(st=Name), FST('*__FST_st', 'pattern')).src)
+        self.assertEqual("*_", (f := FST('SUB')).sub(M(Name, st=None), FST('*__FST_st', 'pattern')).src)
+        self.assertEqual("*_", (f := FST('_')).sub(M(st=Name), FST('*__FST_st', 'pattern')).src)
+        self.assertEqual("*_", (f := FST('SUB')).sub(M(st=Name), FST('*_', 'pattern')).src)
+        self.assertEqual("*NOSUB", (f := FST('SUB')).sub(M(st=Name), FST('*NOSUB', 'pattern')).src)
+
+        self.assertEqual("a as SUB", (f := FST('SUB')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)
+        # self.assertEqual("zzz", (f := FST('_')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)  # GOOD! this is not allowed
+        # self.assertEqual("zzz", (f := FST('SUB')).sub(M(Name, name=None), FST('a as __FST_name', 'pattern')).src)
+        self.assertEqual("a as SUB", (f := FST('SUB')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)
+        self.assertEqual("a as SUB", (f := FST('SUB')).sub(M(name=Name), FST('a as __FST_name', 'pattern')).src)
+        self.assertEqual("SUB", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name', 'pattern')).src)
+        self.assertEqual("_", (f := FST('_')).sub(M(name=Name), FST('__FST_name', 'pattern')).src)  # GOOD! this is not allowed
+        self.assertEqual("_", (f := FST('SUB')).sub(M(Name, name=None), FST('__FST_name', 'pattern')).src)
+        self.assertEqual("SUB", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name', 'pattern')).src)
+        self.assertEqual("SUB", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name', 'pattern')).src)
+
+        if PYGE12:
+            self.assertEqual("SUB", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name', 'TypeVar')).src)
+            self.assertEqual("SUB: int", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name: int', 'TypeVar')).src)
+            self.assertEqual("*SUB", (f := FST('*SUB', 'TypeVarTuple')).sub(M(name=Name), FST('__FST_name', 'TypeVar')).src)
+            self.assertEqual("**SUB", (f := FST('**SUB', 'ParamSpec')).sub(M(name=Name), FST('__FST_name', 'TypeVar')).src)
+
+            self.assertEqual("**SUB", (f := FST('SUB')).sub(M(name=Name), FST('**__FST_name', 'ParamSpec')).src)
+
+            self.assertEqual("*SUB", (f := FST('SUB')).sub(M(name=Name), FST('*__FST_name', 'TypeVarTuple')).src)
+
+        if PYGE13:
+            self.assertEqual("SUB = bool", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name = bool', 'TypeVar')).src)
+            self.assertEqual("SUB: int = bool", (f := FST('SUB')).sub(M(name=Name), FST('__FST_name: int = bool', 'TypeVar')).src)
+            self.assertEqual("**SUB = bool", (f := FST('SUB')).sub(M(name=Name), FST('**__FST_name = bool', 'ParamSpec')).src)
+            self.assertEqual("*SUB = bool", (f := FST('SUB')).sub(M(name=Name), FST('*__FST_name = bool', 'TypeVarTuple')).src)
+
+    def test_sub_stmts(self):
+        # body
+
+        src = '''
+if a:
+    call()
+if c := b():
+    while c:
+        c = c()
+if not d:
+    e ; f
+    g
+        '''.strip()
+
+        pat = MIf(test=M(test=...), body=M(body=...))
+        repl = 'if not __FST_test:\n    __FST_body'
+
+        self.assertEqual(FST(src).sub(pat, repl).src, '''
+if not a:
+    call()
+if not (c := b()):
+    while c:
+        c = c()
+if not not d:
+    e ; f
+    g
+        '''.strip())
+
+    def test_sub_virtual_fields(self):
         # Call.args/keywords
 
         src = '''
@@ -10209,33 +10316,6 @@ class info(a): pass
         fst_ = FST(src)
         repl = 'def g(__FST_args): pass'
         self.assertEqual('def g(a, /, b=1, *c, d=2, **e): pass', fst_.sub(pat, repl).src)
-
-        # body
-
-        src = '''
-if a:
-    call()
-if c := b():
-    while c:
-        c = c()
-if not d:
-    e ; f
-    g
-        '''.strip()
-
-        pat = MIf(test=M(test=...), body=M(body=...))
-        repl = 'if not __FST_test:\n    __FST_body'
-
-        self.assertEqual(FST(src).sub(pat, repl).src, '''
-if not a:
-    call()
-if not (c := b()):
-    while c:
-        c = c()
-if not not d:
-    e ; f
-    g
-        '''.strip())
 
     def test_find_def(self):
         def test(fst_, path, recurse=True, asts=None):

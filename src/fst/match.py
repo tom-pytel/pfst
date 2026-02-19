@@ -23,6 +23,8 @@ from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequenc
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_DEF,
+    ASTS_LEAF_VAR_SCOPE_DECL,
     ASTS_LEAF__ALL,
     AST2ASTSLEAF,
 
@@ -5732,6 +5734,10 @@ def search(
                 gen.send(False)
 
 
+_SUB_IDENTIFIER_TYPES = {FunctionDef, AsyncFunctionDef, ClassDef, ImportFrom, Global, Nonlocal, Attribute, Name,
+                        ExceptHandler, arg, keyword, alias, MatchMapping, MatchClass, MatchStar, MatchAs,
+                        TypeVar, ParamSpec, TypeVarTuple}
+
 def sub(
     self: fst.FST,
     pat: _Pattern,
@@ -5758,7 +5764,7 @@ def sub(
     - `nested: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion
         due to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
         Regardless of this setting, when using a template `repl` this function will never recurse into full matched
-        target substitutions (`__FST_`).
+        target substitutions (`__FST_`).  # TODO: document 'tags' mode
     - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -5810,24 +5816,130 @@ def sub(
     repl = code_as_all(repl, options, self.root.parse_params)
 
     nested_tags = nested == 'tags'
-    dirties = set()  # {AST, ...}
-    paths_tag = []  # [(tag, child_path), ...]
-    paths_matched = []  # [(tag, child_path), ...]  an empty string tag means replace with the node matched
-    all_paths = (paths_matched, paths_tag)
+    dirty = set()  # {AST, ...}
+    paths_matched = []  # [(tag, path, (field, idx | None) | None, ...]  an empty string tag means replace with the node matched, will only be empty in this one, will never be empty in paths_tags
+    paths_tag = []  # same format as paths_matched
+    all_paths = (paths_matched, paths_tag)  # we have two lists because whenever we replace with whole matched target we have to mark it as dirty so we don't recurse into it again, don't need to do this for tags
 
-    for f in repl.walk({Name, arg}):
-        if (a := f.a).__class__ is Name:
-            n = a.id
-        else:  # a.__class__ is arg, it makes more sense to replace the whole arg, annotation included, rather than just the name
-            n = a.arg
+    for f in repl.walk(_SUB_IDENTIFIER_TYPES):
+        a = f.a
+        a_cls = a.__class__
 
-        if n.startswith('__FST_'):
-            path = repl.child_path(f)
+        if a_cls is Name:
+            tag = a.id
 
-            if n := n[6:]:
-                paths_tag.append((n, path))
+        elif a_cls is arg:
+            tag = a.arg
+
+            if a.annotation:
+                if tag.startswith('__FST_'):
+                    paths_tag.append((tag[6:], repl.child_path(f), ('arg', None)))  # non-node replacements can all go into the tag list because they do not need to be marked as dirty
+
+                continue
+
+        elif a_cls is TypeVar:
+            tag = a.name
+
+            if a.bound or getattr(a, 'default_value', False):  # default_value does not exist on py < 3.13
+                if tag.startswith('__FST_'):
+                    paths_tag.append((tag[6:], repl.child_path(f), ('name', None)))  # non-node replacements can all go into the tag list because they do not need to be marked as dirty
+
+                continue
+
+        else:
+            if a_cls is Attribute:
+                tag = a.attr
+                child = ('attr', None)
+
+            elif a_cls in ASTS_LEAF_DEF:
+                tag = a.name
+                child = ('name', None)
+
+            elif a_cls is keyword:
+                if not (tag := a.arg):
+                    continue
+
+                child = ('arg', None)
+
+            elif a_cls is alias:
+                path = repl.child_path(f)
+                tag = a.name
+
+                if tag.startswith('__FST_'):
+                    paths_tag.append((tag[6:], path, ('name', None)))
+
+                if tag := a.asname:
+                    if tag.startswith('__FST_'):
+                        paths_tag.append((tag[6:], path, ('asname', None)))
+
+                continue
+
+            elif a_cls is ImportFrom:
+                if not (tag := a.module):
+                    continue
+
+                child = ('module', None)
+
+            elif a_cls in ASTS_LEAF_VAR_SCOPE_DECL:
+                path = repl.child_path(f)
+
+                for idx, tag in list(enumerate(a.names))[::-1]:
+                    if tag.startswith('__FST_'):
+                        paths_tag.append((tag[6:], path, ('names', idx)))
+
+                continue
+
+            elif a_cls is ParamSpec:
+                tag = a.name
+                child = ('name', None)
+
+            elif a_cls is TypeVarTuple:
+                tag = a.name
+                child = ('name', None)
+
+            elif a_cls is MatchAs:
+                if not (tag := a.name):
+                    continue
+
+                child = ('name', None)
+
+            elif a_cls is MatchMapping:
+                if not (tag := a.rest):
+                    continue
+
+                child = ('rest', None)
+
+            elif a_cls is MatchClass:
+                path = repl.child_path(f)
+
+                for idx, tag in list(enumerate(a.kwd_attrs))[::-1]:
+                    if tag.startswith('__FST_'):
+                        paths_tag.append((tag[6:], path, ('kwd_attrs', idx)))
+
+                continue
+
+            elif a_cls is MatchStar:
+                if not (tag := a.name):
+                    continue
+
+                child = ('name', None)
+
+            elif a_cls is ExceptHandler:
+                if not (tag := a.name):
+                    continue
+
+                child = ('name', None)
+
             else:
-                paths_matched.append((n, path))
+                raise RuntimeError('should not get here')
+
+            if tag.startswith('__FST_'):
+                paths_tag.append((tag[6:], repl.child_path(f), child))  # non-node replacements can all go into the tag list because they do not need to be marked as dirty
+
+            continue
+
+        if tag.startswith('__FST_'):
+            (paths_tag if (tag := tag[6:]) else paths_matched).append((tag, repl.child_path(f), None))
 
     gen = self.search(pat, nested=bool(nested), ast_ctx=ast_ctx,
                       self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
@@ -5835,22 +5947,24 @@ def sub(
     for m in gen:
         tgt = m.matched  # will be FST node
 
-        if tgt.a in dirties:
+        if tgt.a in dirty:
             continue
 
         sub = repl.copy()
 
-        dirties.update(walk(sub.a))
+        dirty.update(walk(sub.a))
 
         for paths in all_paths:
-            for tag, path in paths:
+            for tag, path, child in paths:
                 sub_tgt = sub.child_from_path(path)
                 one = True
 
                 if not tag:
                     sub_sub = tgt.copy()
+
                 elif (sub_sub := m.tags.get(tag, _SENTINEL)) is _SENTINEL:
                     raise MatchError(f'{tag!r} tag not found for substitution')
+
                 elif isinstance(sub_sub, fst.FST):
                     sub_sub = sub_sub.copy()
 
@@ -5858,69 +5972,75 @@ def sub(
                     sub_sub = sub_sub.copy()
                     one = False  # this will be a slice of some kind so make sure we put as a slice
 
-                elif not isinstance(sub_sub, (str, AST)):
-                    raise MatchError(f'match substitution must be FST, AST or str, got {sub_sub}')
+                elif not isinstance(sub_sub, (AST, str, NoneType)):
+                    raise MatchError(f'match substitution must be FST, AST, str or None, got {sub_sub}')
 
-                if parent := sub_tgt.parent:  # some fields are special-cased for simplicity and common-sense sake
-                    parenta_cls = parent.a.__class__
-                    field, idx = sub_tgt.pfield
-                    new_idx = None
+                if child is not None:  # path includes a child field which means its not a real node but an identifier
+                    field, idx = child
 
-                    if parenta_cls is Expr:  # maybe replacing with single or body of statements
-                        if not one and sub_sub.a.__class__ is Module and (grandparent := parent.parent):
-                            field, new_idx = parent.pfield
-                            parent = grandparent
+                    sub_tgt.put(sub_sub, idx, field, **options)
 
-                    elif parenta_cls is Call:  # Call._args?
-                        if field in ('args', 'keywords'):
-                            field = '_args'
-                            new_idx = parent._cached_arglikes().index(sub_tgt.a)
+                else:
+                    if parent := sub_tgt.parent:  # some fields are special-cased for simplicity and common-sense sake
+                        parenta_cls = parent.a.__class__
+                        field, idx = sub_tgt.pfield
+                        new_idx = None
 
-                    elif parenta_cls is arguments:
-                        if sub_sub.a.__class__ is arguments:
-                            field = '_all'
-                            allargs = parent._cached_allargs()
-                            one = False
+                        if parenta_cls is Expr:  # maybe replacing with single or body of statements
+                            if not one and sub_sub.a.__class__ is Module and (grandparent := parent.parent):
+                                field, new_idx = parent.pfield
+                                parent = grandparent
 
-                            try:
-                                new_idx = allargs.index(sub_tgt.a)
-                            except ValueError:
-                                raise MatchError('cannot substitute arguments for a non-arg') from None
+                        elif parenta_cls is Call:  # Call._args?
+                            if field in ('args', 'keywords'):
+                                field = '_args'
+                                new_idx = parent._cached_arglikes().index(sub_tgt.a)
 
-                    elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
-                        if not one:  # only if came from existing Compare slice
-                            field = '_all'
-                            new_idx = 0 if idx is None else idx + 1
+                        elif parenta_cls is arguments:
+                            if sub_sub.a.__class__ is arguments:
+                                field = '_all'
+                                allargs = parent._cached_allargs()
+                                one = False
 
-                    elif parenta_cls is ClassDef:  # ClassDef._bases?
-                        if field in ('bases', 'keywords'):
-                            field = '_bases'
-                            new_idx = parent._cached_arglikes().index(sub_tgt.a)
+                                try:
+                                    new_idx = allargs.index(sub_tgt.a)
+                                except ValueError:
+                                    raise MatchError('cannot substitute arguments for a non-arg') from None
 
-                    if new_idx is not None:
-                        if tag:  # not replacing with original whole node so don't need to mark dirty
-                            parent._put_slice(sub_sub, new_idx, new_idx + 1, field, one, options)
+                        elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
+                            if not one:  # only if came from existing Compare slice
+                                field = '_all'
+                                new_idx = 0 if idx is None else idx + 1
 
-                        else:  # need to do extra stuff to mark possibly multiple replacements as dirty
-                            view = getattr(parent, field)
-                            len_original_field = len(view)
+                        elif parenta_cls is ClassDef:  # ClassDef._bases?
+                            if field in ('bases', 'keywords'):
+                                field = '_bases'
+                                new_idx = parent._cached_arglikes().index(sub_tgt.a)
 
-                            parent._put_slice(sub_sub, new_idx, new_idx + 1, field, one, options)
+                        if new_idx is not None:
+                            if tag:  # not replacing with original whole node so don't need to mark dirty
+                                parent._put_slice(sub_sub, new_idx, new_idx + 1, field, one, options)
 
-                            if (delta := len(view) - len_original_field) >= 0:  # only if replaced or added, if length contracted then there was deletion
-                                for f in view[new_idx : new_idx + 1 + delta]:
-                                    if f:
-                                        dirties.add(f.a)
+                            else:  # need to do extra stuff to mark possibly multiple replacements as dirty
+                                view = getattr(parent, field)
+                                len_original_field = len(view)
 
-                        continue
+                                parent._put_slice(sub_sub, new_idx, new_idx + 1, field, one, options)
 
-                f = sub_tgt.replace(sub_sub, one=one, **options)
+                                if (delta := len(view) - len_original_field) >= 0:  # only if replaced or added, if length contracted then there was deletion
+                                    for f in view[new_idx : new_idx + 1 + delta]:
+                                        if f:
+                                            dirty.add(f.a)
 
-                if not tag and f:  # replaced with original whole matched element, mark as dirty
-                    dirties.add(f.a)
+                            continue
+
+                    f = sub_tgt.replace(sub_sub, one=one, **options)
+
+                    if not tag and f:  # replaced with original whole matched element, mark as dirty
+                        dirty.add(f.a)
 
             if nested_tags and paths is paths_matched:
-                dirties.update(walk(sub.a))
+                dirty.update(walk(sub.a))
 
         tgt = tgt.replace(sub, **options)
 
