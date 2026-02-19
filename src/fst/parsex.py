@@ -230,6 +230,13 @@ _re_parse_all_category = re.compile(r'''
     (?P<tilde>                         (?: ~ ) )
 ''', re.MULTILINE | re.VERBOSE)
 
+
+class ParseError(SyntaxError):
+    """Not technically a syntax error but mostly not the code we were expecting."""
+
+    __module__ = 'fst'  # so the exception shows up as 'fst.ParseError'
+
+
 Mode = Literal[
     'all',                 # noqa: PYI051
     'strict',              # noqa: PYI051
@@ -289,9 +296,9 @@ most other locations which take expressions.
     of the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing
     present then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be
     parsable by python, just anything that can be parsed natively by `ast.parse()`.
-- `'exec'`: Parse to a `Module`. Same as passing `Module` type or `'stmts'`. Same as `ast.parse()` mode 'exec'.
-- `'eval'`: Parse to an `Expression`. Same as passing `Expression` type. Same as `ast.parse()` mode 'eval'.
-- `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type. Same as `ast.parse()` mode 'single'.
+- `'exec'`: Parse to a `Module`. Same as passing `Module` type or `'stmts'`. Same as `ast.parse()` mode `'exec'`.
+- `'eval'`: Parse to an `Expression`. Same as passing `Expression` type. Same as `ast.parse()` mode `'eval'`.
+- `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type. Same as `ast.parse()` mode `'single'`.
 - `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'` or `Module`.
 - `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
@@ -299,8 +306,8 @@ most other locations which take expressions.
 - `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
 - `'_match_cases'`: Parse zero or more `match_case`s returned in a `_match_cases` SPECIAL SLICE.
 - `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following modes by
-    the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as passing
-    `expr` type.
+    the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors, but `*st` is not.
+    Same as passing `expr` type.
 - `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined (but
     unparenthesized in that case).
 - `'expr_arglike'`: Accept special syntax for `Starred` (call argument, class base definition, slice implicit tuple),
@@ -311,7 +318,7 @@ most other locations which take expressions.
 - `'Tuple_elt'`: "tuple element expression" as in a `Tuple` that can be anywhere including a `Subscript.slice`. Same
     as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v` parses to a starred expression
     `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s or arglike expressions.
-- `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s and arglike
+- `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice` and arglike
     expressions. If it contains `Slice`s or arglikes then it must not be parenthesized (as per python syntax).
 - `'_Assign_targets'`: Parse zero or more `Assign` targets returned in a `_Assign_targets` SPECIAL SLICE, with `=` as
     separators and an optional trailing `=`.
@@ -356,7 +363,7 @@ most other locations which take expressions.
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
-    `AST` type `expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for example
+    `AST` type `expr` is the same as passing `'expr'`. Not all string specified modes can be matched, for example
     `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode. `Tuple` parse also allows parsing
     `Slice`s in the `Tuple` as well as otherwise invalid star notation `*not a`.
 - `str(type[AST])`: Same as `type[AST]`.
@@ -797,12 +804,6 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-
-class ParseError(SyntaxError):
-    """Not technically a syntax error but mostly not the code we were expecting."""
-
-    __module__ = 'fst'  # so the exception shows up as 'fst.ParseError'
-
 
 def unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as

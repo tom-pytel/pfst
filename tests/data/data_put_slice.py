@@ -19272,6 +19272,19 @@ Set - ROOT 0,0..0,3
 '''),
 ],
 
+'Dict': [  # ................................................................................
+
+('', 0, 1, 'keys', {}, ('Dict',
+r'''{1: a}'''), (None,
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to Dict.keys, use the '_all' field")**'''),
+
+('', 0, 1, 'values', {}, ('Dict',
+r'''{1: a}'''), (None,
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to Dict.values, use the '_all' field")**'''),
+],
+
 'Delete_targets': [  # ................................................................................
 
 ('body[0]', 0, 'end', None, {}, ('exec',
@@ -37218,6 +37231,31 @@ arguments - ROOT 0,0..0,3
   .defaults[1]
    0] Constant 4 - 0,2..0,3
 '''),
+
+('', 0, 1, 'posonlyargs', {}, ('arguments',
+r'''a=1, /'''), ('arguments',
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to arguments.posonlyargs, use the '_all' field")**'''),
+
+('', 0, 1, 'args', {}, ('arguments',
+r'''a=1'''), ('arguments',
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to arguments.args, use the '_all' field")**'''),
+
+('', 0, 1, 'kwonlyargs', {}, ('arguments',
+r'''*, a=1'''), ('arguments',
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to arguments.kwonlyargs, use the '_all' field")**'''),
+
+('', 0, 1, 'kw_defaults', {}, ('arguments',
+r'''*, a=1'''), ('arguments',
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to arguments.kw_defaults, use the '_all' field")**'''),
+
+('', 0, 1, 'defaults', {}, ('arguments',
+r'''a=1'''), ('arguments',
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to arguments.defaults, use the '_all' field")**'''),
 ],
 
 'arguments_markers': [  # ................................................................................
@@ -39713,6 +39751,16 @@ r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 r'''{1: a, **b}'''), ('pattern',
 r'''{2: x, **y}'''),
 r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
+
+('', 0, 1, 'keys', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to MatchMapping.keys, use the '_all' field")**'''),
+
+('', 0, 1, 'patterns', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''**DEL**'''),
+r'''**NodeError("cannot put slice individually to MatchMapping.patterns, use the '_all' field")**'''),
 ],
 
 'MatchClass_patterns': [  # ................................................................................

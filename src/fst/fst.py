@@ -370,7 +370,7 @@ def dump(
     indent: int | str | None = None,
     show_empty: bool = True,
 ) -> str:
-    """This function is a convenience function and only exists to make python version 3.13 and above `ast.dump()` output
+    """This is a convenience function and only exists to make python version 3.13 and above `ast.dump()` output
     compatible on a default call with previous python versions (important for doctests). All arguments correspond to
     their respective `ast.dump()` arguments and `show_empty` is eaten on python versions below 3.13."""
 

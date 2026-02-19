@@ -1467,10 +1467,10 @@ def _put_slice_NOT_IMPLEMENTED_YET(
     one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
-    raise NotImplementedError("not implemented yet, try with option raw='auto'")
+    raise NotImplementedError("not implemented yet, try with option raw=True")
 
 
-def _put_slice_arguments_NOT_HANDLED(
+def _put_slice_NOT_HANDLED_try__all(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'],
@@ -1479,7 +1479,7 @@ def _put_slice_arguments_NOT_HANDLED(
     one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
-    raise NodeError(f"cannot put slice individually to arguments.{field}, use arguments._all to put whole arguments")
+    raise NodeError(f"cannot put slice individually to {self.a.__class__.__qualname__}.{field}, use the '_all' field")
 
 
 def _put_slice_Tuple_elts(
@@ -3227,6 +3227,8 @@ _PUT_SLICE_HANDLERS = {
     (List, 'elts'):                           _put_slice_List_elts,  # expr*
     (Set, 'elts'):                            _put_slice_Set_elts,  # expr*
 
+    (Dict, 'keys'):                           _put_slice_NOT_HANDLED_try__all,  # expr?*
+    (Dict, 'values'):                         _put_slice_NOT_HANDLED_try__all,  # expr*
     (Dict, '_all'):                           _put_slice_Dict__all,  # key:value*
 
     (FunctionDef, 'decorator_list'):          _put_slice_decorator_list,  # expr*
@@ -3244,11 +3246,11 @@ _PUT_SLICE_HANDLERS = {
     (Call, '_args'):                          _put_slice_Call_ClassDef_arglikes,  # (expr|keyword)*
     (comprehension, 'ifs'):                   _put_slice_comprehension_ifs,  # expr*
     (arguments, '_all'):                      _put_slice_arguments,  # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
-    (arguments, 'posonlyargs'):               _put_slice_arguments_NOT_HANDLED,  # arg*
-    (arguments, 'args'):                      _put_slice_arguments_NOT_HANDLED,  # arg*
-    (arguments, 'defaults'):                  _put_slice_arguments_NOT_HANDLED,  # expr*
-    (arguments, 'kwonlyargs'):                _put_slice_arguments_NOT_HANDLED,  # arg*
-    (arguments, 'kw_defaults'):               _put_slice_arguments_NOT_HANDLED,  # expr*
+    (arguments, 'posonlyargs'):               _put_slice_NOT_HANDLED_try__all,  # arg*
+    (arguments, 'args'):                      _put_slice_NOT_HANDLED_try__all,  # arg*
+    (arguments, 'defaults'):                  _put_slice_NOT_HANDLED_try__all,  # expr*
+    (arguments, 'kwonlyargs'):                _put_slice_NOT_HANDLED_try__all,  # arg*
+    (arguments, 'kw_defaults'):               _put_slice_NOT_HANDLED_try__all,  # expr*
 
     (ListComp, 'generators'):                 _put_slice_generators,  # comprehension*
     (SetComp, 'generators'):                  _put_slice_generators,  # comprehension*
@@ -3262,6 +3264,8 @@ _PUT_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                     _put_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _put_slice_MatchSequence_patterns,  # pattern*
+    (MatchMapping, 'keys'):                   _put_slice_NOT_HANDLED_try__all,  # expr*
+    (MatchMapping, 'patterns'):               _put_slice_NOT_HANDLED_try__all,  # pattern*
     (MatchMapping, '_all'):                   _put_slice_MatchMapping__all,  # key:pattern*
     (MatchClass, 'patterns'):                 _put_slice_MatchClass_patterns,  # pattern*
     (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*

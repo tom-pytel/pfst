@@ -1309,13 +1309,13 @@ JoinedStr - ROOT 0,0..0,8
 
 ('', 0, None, 'values', {'_ver': 12}, (JoinedStr,
 r'''f"a{val:<16!r}c"'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**NotImplementedError('not implemented yet, try with option raw=True')**''',
 "\n'a'\n",
 r'''Constant 'a' - ROOT 0,0..0,3'''),
 
 ('', 1, None, 'values', {'_ver': 12}, (JoinedStr,
 r'''f"a{val:<16!r}c"'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**NotImplementedError('not implemented yet, try with option raw=True')**''',
 r'''f"{val:<16!r}"''', r'''
 JoinedStr - ROOT 0,0..0,14
   .values[1]
@@ -1355,13 +1355,13 @@ JoinedStr - ROOT 0,0..0,8
 
 ('', 0, None, 'values', {'_ver': 14}, (TemplateStr,
 r'''t"a{val:<16!r}c"'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**NotImplementedError('not implemented yet, try with option raw=True')**''',
 "\n'a'\n",
 r'''Constant 'a' - ROOT 0,0..0,3'''),
 
 ('', 1, None, 'values', {'_ver': 14}, (TemplateStr,
 r'''t"a{val:<16!r}c"'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**NotImplementedError('not implemented yet, try with option raw=True')**''',
 r'''t"{val:<16!r}"''', r'''
 TemplateStr - ROOT 0,0..0,14
   .values[1]
