@@ -12618,6 +12618,11 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''import _'''), (None,
 r'''(a)'''),
 r'''**SyntaxError('invalid syntax')**'''),
+
+('', 0, None, 'names', {}, ('Import',
+r'''import _'''), ('alias',
+r'''*'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'ImportFrom_names': [  # ................................................................................
@@ -13034,6 +13039,45 @@ r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 r'''from . import _'''), (None,
 r'''(a, b)'''),
 r'''**ParseError('expecting single alias')**'''),
+
+('', 0, None, 'names', {}, ('ImportFrom',
+r'''from . import _'''), ('alias',
+r'''*'''),
+r'''from . import *''', r'''
+ImportFrom - ROOT 0,0..0,15
+  .names[1]
+   0] alias - 0,14..0,15
+     .name '*'
+  .level 1
+'''),
+
+('', 0, None, 'names', {}, ('ImportFrom',
+r'''from . import a, b'''), ('alias',
+r'''*'''),
+r'''**NodeError('cannot put star alias to ImportFrom.names containing multiple aliases')**'''),
+
+('', 0, None, 'names', {}, ('ImportFrom',
+r'''from . import _'''), ('alias',
+r'''x.y'''),
+r'''**SyntaxError('invalid syntax')**'''),
+],
+
+'_aliases': [  # ................................................................................
+
+('', 0, None, 'names', {}, ('_aliases',
+r'''a'''), ('alias',
+r'''*'''),
+r'''*''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name '*'
+'''),
+
+('', 0, None, 'names', {}, ('_aliases',
+r'''a, b'''), ('alias',
+r'''*'''),
+r'''**NodeError('cannot put star alias to _aliases.names containing multiple aliases')**'''),
 ],
 
 'Global_names': [  # ................................................................................

@@ -1148,7 +1148,7 @@ def _put_one_ImportFrom_names(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, options, root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if is_star := ('*' in code.a.name):  # `in` just in case some whitespace got in there somehow
+    if is_star := (code.a.name == '*'):
         if len(self.a.names) != 1:
             raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases')
 
@@ -1767,6 +1767,28 @@ def _put_one__arglikes_arglikes(
     validate_put_arglike(ast.arglikes, idx, idx + 1, code.a)
 
     return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2, arglike=True)
+
+
+def _put_one__aliases_names(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Disallow put star to list of multiple names."""
+
+    child, idx = _validate_put(self, code, idx, field, child)
+    code = static.code_as(code, options, self.root.parse_params, sanitize=True,
+                          coerce=fst.FST.get_option('coerce', options))
+
+    if code.a.name == '*':
+        if len(self.a.names) != 1:
+            raise NodeError('cannot put star alias to _aliases.names containing multiple aliases')
+
+    return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
 
 
 # ......................................................................................................................
@@ -2845,7 +2867,7 @@ _PUT_ONE_HANDLERS = {
     (_arglikes, 'arglikes'):              (True, _put_one__arglikes_arglikes, _onestatic__arglike_required),  # (expr|keyword)*
     (_comprehensions, 'generators'):      (True, _put_one_exprlike_required, _onestatic_comprehension_required),  # comprehension*
     (_comprehension_ifs, 'ifs'):          (True, _put_one_exprlike_required, _onestatic_expr_required),  # expr*
-    (_aliases, 'names'):                  (True, _put_one_exprlike_required, _onestatic_alias_required),  # alias*
+    (_aliases, 'names'):                  (True, _put_one__aliases_names, _onestatic_alias_required),  # alias*
     (_withitems, 'items'):                (True, _put_one_exprlike_required, _onestatic_withitem_required),  # withitem*
     (_type_params, 'type_params'):        (True, _put_one_exprlike_required, _onestatic_type_param_required),  # type_param*
 

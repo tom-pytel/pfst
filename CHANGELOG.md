@@ -11,14 +11,16 @@
    - `FST.sub()` substitute - `f.sub(MCall('old_name', _args=M(all_args=...)), 'new_name(__FST_all_args, new_kw=3)')`
 - `FST.find_def()` easily find (possibly nested) function and class definitions by name in a given scope by dotted name
   - added usage of this in indexing (single-element only, not slice): `method = module['class.method']`, `del someclass['method']`, etc...
-- `walk()`
-  - can take explicit list of nodes to walk instead of just "all children of self"
-  - can take user callback for `all` parameter for deciding if node matches
 - `FST` / `fstview` interoperability for convenience
   - added `src`, `lines`, `loc/ln/col/end_ln/end_col`, `bloc/bln/bcol/bend_ln/bend_col` and `pars()` to `fstview`
   - added `base` to `FST` so that you can do `f.base.get_src(*f.loc)` without knowing if is `FST` or `fstview`
-- added `top` parameter to `step_fwd/back()` to restrict stepping above a given parent
-- finally validating options
+- `walk()`
+  - can take explicit list of nodes to walk instead of just "all children of self"
+  - can take user callback for the `all` parameter for deciding if node matches
+- added to `step_fwd/back()`
+  - `top` parameter to `step_fwd/back()` to restrict stepping above a given parent
+  - `stop_at` parameter to allow stop at arbitrary nodes that don't match `all`
+- finally validating `options`
 - trivia option shorthand `()` for `(False, False)`
 
 ### Changed
@@ -32,6 +34,7 @@
 - replacement of single statement no longer replaces that statement's `FST`, allowing `walk()` to recurse into replaced children
 - disallow put `_` as name to `MatchMapping.rest` and `MatchClass.kwd_attrs`
 - disallow put `*` or dotted as name to `alias.name` if context does not allow
+- disallow put `*` to `_aliases.names` if there are multiple names (only allowed to replace a single one)
 
 
 ## 0.2.6 - alpha - 2026-01-31

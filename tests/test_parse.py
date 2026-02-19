@@ -4126,9 +4126,9 @@ match a:
 
         self.assertRaises(NodeError, code.code_as__ImportFrom_names, FST('a.b', '_aliases'))
 
-        f = FST('a, b', '_aliases')
-        f.names[0] = '*'
-        self.assertRaises(NodeError, code.code_as__ImportFrom_names, f)
+        # f = FST('a, b', '_aliases')
+        # f.names[0] = '*'
+        # self.assertRaises(NodeError, code.code_as__ImportFrom_names, f)
 
         f = FST('a.b')
         self.assertRaises(ValueError, code.code_as_identifier, f.value)
