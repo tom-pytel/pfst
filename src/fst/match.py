@@ -5817,7 +5817,7 @@ def sub(
 
     nested_tags = nested == 'tags'
     dirty = set()  # {AST, ...}
-    paths_matched = []  # [(tag, path, (field, idx | None) | None, ...]  an empty string tag means replace with the node matched, will only be empty in this one, will never be empty in paths_tags
+    paths_matched = []  # [(tag, path, (field, idx | None) | None), ...]  an empty string tag means replace with the node matched, will only be empty in this one, will never be empty in paths_tags
     paths_tag = []  # same format as paths_matched
     all_paths = (paths_matched, paths_tag)  # we have two lists because whenever we replace with whole matched target we have to mark it as dirty so we don't recurse into it again, don't need to do this for tags
 
