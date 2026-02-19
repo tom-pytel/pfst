@@ -13198,6 +13198,94 @@ Module - ROOT 0,0..0,13
 '''),
 ],
 
+'alias': [  # ................................................................................
+
+('', None, None, 'asname', {}, ('alias',
+r'''*'''), (None,
+r'''name'''),
+r'''**NodeError("cannot put asname to alias which is a '*' star")**'''),
+
+('names[0]', None, None, 'name', {}, ('ImportFrom',
+r'''from . import a as b'''), (None,
+r'''x.y'''),
+r'''**ParseError("expecting identifier, got 'x.y'")**'''),
+
+('names[0]', None, None, 'name', {}, ('ImportFrom',
+r'''from . import a'''), (None,
+r'''*'''),
+r'''from . import *''',
+r'''**ParseError("expecting identifier or '*', got ''")**''', r'''
+ImportFrom - ROOT 0,0..0,15
+  .names[1]
+   0] alias - 0,14..0,15
+     .name '*'
+  .level 1
+'''),
+
+('names[0]', None, None, 'name', {}, ('ImportFrom',
+r'''from . import a as b'''), (None,
+r'''*'''),
+r'''**ParseError("expecting identifier, got '*'")**'''),
+
+('names[0]', None, None, 'name', {}, ('ImportFrom',
+r'''from . import a, b'''), (None,
+r'''*'''),
+r'''**ParseError("expecting identifier, got '*'")**'''),
+
+('names[0]', None, None, 'name', {}, ('Import',
+r'''import a as b'''), (None,
+r'''*'''),
+r'''**ParseError("expecting dotted identifier, got '*'")**'''),
+
+('names[0]', None, None, 'name', {}, ('Import',
+r'''import a'''), (None,
+r'''*'''),
+r'''**ParseError("expecting dotted identifier, got '*'")**'''),
+
+('names[0]', None, None, 'name', {}, ('Import',
+r'''import a as b'''), (None,
+r'''x.y'''),
+r'''import x.y as b''', r'''
+Import - ROOT 0,0..0,15
+  .names[1]
+   0] alias - 0,7..0,15
+     .name 'x.y'
+     .asname 'b'
+'''),
+
+('names[0]', None, None, 'name', {}, ('_aliases',
+r'''a as b'''), (None,
+r'''x.y'''),
+r'''x.y as b''', r'''
+_aliases - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,0..0,8
+     .name 'x.y'
+     .asname 'b'
+'''),
+
+('names[0]', None, None, 'name', {}, ('_aliases',
+r'''a as b'''), (None,
+r'''*'''),
+r'''**ParseError("expecting dotted identifier, got '*'")**'''),
+
+('names[0]', None, None, 'name', {}, ('_aliases',
+r'''a, b'''), (None,
+r'''*'''),
+r'''**ParseError("expecting dotted identifier, got '*'")**'''),
+
+('names[0]', None, None, 'name', {}, ('_aliases',
+r'''a'''), (None,
+r'''*'''),
+r'''*''',
+r'''**ParseError("expecting dotted identifier or '*', got ''")**''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name '*'
+'''),
+],
+
 'MatchClass': [  # ................................................................................
 
 ('', None, None, 'cls', {}, ('MatchClass',
@@ -13219,7 +13307,7 @@ r'''**NotImplementedError('cannot put multiline Attribute to MatchClass pattern 
 ('', 0, None, 'kwd_attrs', {}, ('MatchClass',
 r'''cls(a=b)'''), (None,
 r'''_'''),
-r'''**NodeError("MatchClass.kwd_attrs cannot be wildcard '_'")**'''),
+r'''**NodeError("pattern '_' wildcard identifier not allowed")**'''),
 ],
 
 'MatchMapping': [  # ................................................................................
@@ -13292,7 +13380,7 @@ MatchMapping - ROOT 0,0..1,5
 ('', None, None, 'rest', {}, ('MatchMapping',
 r'''{**rest}'''), (None,
 r'''_'''),
-r'''**NodeError("MatchMapping.rest cannot be wildcard '_'")**'''),
+r'''**NodeError("pattern '_' wildcard identifier not allowed")**'''),
 ],
 
 'type_params': [  # ................................................................................

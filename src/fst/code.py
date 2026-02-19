@@ -4167,7 +4167,7 @@ def code_as_identifier_dotted(
     sanitize: bool = False,
     coerce: bool = False,
 ) -> str:
-    """Convert `code` to valid dotted identifier string if possible (for Import module).
+    """Convert `code` to valid dotted identifier string if possible (for Import module, star not allowed).
 
     **Note:** `sanitize` does nothing.
     """
@@ -4199,7 +4199,7 @@ def code_as_identifier_star(
     sanitize: bool = False,
     coerce: bool = False,
 ) -> str:
-    """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names).
+    """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names, dotted not allowed).
 
     **Note:** `sanitize` does nothing.
     """

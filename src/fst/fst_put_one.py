@@ -181,6 +181,7 @@ from .code import (
     code_as_type_param,
     code_as_identifier,
     code_as_identifier_dotted,
+    code_as_identifier_star,
     code_as_identifier_alias,
     code_as_constant,
 )
@@ -274,6 +275,24 @@ def _validate_pattern_attr(self: fst.FST) -> Name:
             raise NodeError(f'cannot put {ast_cls.__name__} to pattern expression')
 
         self = ast.value.f
+
+
+def _code_as_identifier_non_pat_wildcard(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+) -> str:
+    """Do not allow '_' pattern wildcard identifier."""
+
+    ret = code_as_identifier(code, options, parse_params, sanitize=sanitize, coerce=coerce)
+
+    if ret == '_':
+        raise NodeError("pattern '_' wildcard identifier not allowed")
+
+    return ret
 
 
 def _is_valid_MatchClass_cls(ast: AST) -> bool:
@@ -1761,16 +1780,12 @@ def _put_one_identifier_required(
     child: str,
     static: onestatic,
     options: Mapping[str, Any],
-    validated: int = 0,
 ) -> str:
     """Put a single required identifier."""
 
-    if not validated:
-        _, idx = _validate_put(self, code, idx, field, child)
+    _, idx = _validate_put(self, code, idx, field, child)
 
-    if validated < 2:
-        code = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_() so sanitize not needed
-
+    code = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_() so sanitize not needed
     info = static.getinfo(self, static, idx, field)
 
     self._put_src(code, *info.loc_prim, True)
@@ -1787,12 +1802,10 @@ def _put_one_identifier_optional(
     child: str | None,
     static: onestatic,
     options: Mapping[str, Any],
-    validated: int = 0,
 ) -> _PutOneCode:
     """Put new, replace or delete an optional identifier."""
 
-    if not validated:
-        child, idx = _validate_put(self, code, idx, field, child, can_del=True)
+    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None and child is None:  # delete nonexistent identifier, noop
         return None
@@ -1809,8 +1822,7 @@ def _put_one_identifier_optional(
 
         return None
 
-    if validated < 2:
-        code = static.code_as(code, options, self.root.parse_params)
+    code = static.code_as(code, options, self.root.parse_params)
 
     if child is not None:  # replace existing identifier
         self._put_src(code, *info.loc_prim, True)
@@ -1873,7 +1885,7 @@ def _put_one_keyword_arg(
     return _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
 
-def _put_one_MatchMapping_rest(
+def _put_one_alias_name(
     self: fst.FST,
     code: _PutOneCode,
     idx: int | None,
@@ -1882,24 +1894,32 @@ def _put_one_MatchMapping_rest(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> str:  # child: str
-    """MatchMapping.rest cannot be '_'."""
+    """Enforce rules about stars and dotted names, involving checking what parent allows (`Import` vs. `ImporFrom` vs.
+    `_aliases`)."""
 
-    if code is None:
-        validated = 0
+    ast = self.a
+
+    if not (parent := self.parent):
+        if ast.asname:  # top level alias, only restriction is no star if has asname
+            static = _onestatic_alias_name_dotted
+
+    elif (parent_cls := (parenta := parent.a).__class__) is ImportFrom:  # this depends on if only element and if has asname
+        static = _onestatic_alias_name_only if ast.asname or len(parenta.names) > 1 else _onestatic_alias_name_star
+
+    elif parent_cls is Import:  # this only dotted or normal name
+        static = _onestatic_alias_name_dotted
+
+    elif parent_cls is _aliases:
+        if ast.asname or len(parenta.names) > 1:
+            static = _onestatic_alias_name_dotted
 
     else:
-        validated = 2
+        raise RuntimeError(f'should not get here, unexpected parent for alias {parent_cls.__qualname__}')
 
-        child, idx = _validate_put(self, code, idx, field, child, can_del=True)
-        code = code_as_identifier(code, options, self.root.parse_params)
-
-        if code == '_':
-            raise NodeError("MatchMapping.rest cannot be wildcard '_'")
-
-    return _put_one_identifier_optional(self, code, idx, field, child, static, options, validated)
+    return _put_one_identifier_required(self, code, idx, field, child, static, options)
 
 
-def _put_one_MatchClass_kwd_attrs(
+def _put_one_alias_asname(
     self: fst.FST,
     code: _PutOneCode,
     idx: int | None,
@@ -1908,21 +1928,12 @@ def _put_one_MatchClass_kwd_attrs(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> str:  # child: str
-    """MatchClass.kwd_attrs cannot be '_'."""
+    """Do not allow put `asname` if `name` is a star `'*'`."""
 
-    if code is None:
-        validated = 0
+    if self.a.name == '*':
+        raise NodeError("cannot put asname to alias which is a '*' star")
 
-    else:
-        validated = 2
-
-        child, idx = _validate_put(self, code, idx, field, child)
-        code = code_as_identifier(code, options, self.root.parse_params)
-
-        if code == '_':
-            raise NodeError("MatchClass.kwd_attrs cannot be wildcard '_'")
-
-    return _put_one_identifier_required(self, code, idx, field, child, static, options, validated)
+    return _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
 
 def _put_one_MatchStar_name(
@@ -2035,6 +2046,11 @@ def _one_info_identifier_alias(
                                         end_col if end_ln == ln else 0x7fffffffffffffff).end()  # must be there
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
+
+_onestatic_alias_name_all    = onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier_alias)
+_onestatic_alias_name_dotted = onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier_dotted)
+_onestatic_alias_name_star   = onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier_star)
+_onestatic_alias_name_only   = onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_FunctionDef_name(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'def')
@@ -2775,8 +2791,8 @@ _PUT_ONE_HANDLERS = {
     (arg, 'annotation'):                  (False, _put_one_arg_annotation, onestatic(_one_info_arg_annotation, _restrict_default)),  # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
     (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (keyword, 'value'):                   (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
-    (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier_alias)),  # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
-    (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=code_as_identifier)),  # identifier?
+    (alias, 'name'):                      (False, _put_one_alias_name, _onestatic_alias_name_all),  # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
+    (alias, 'asname'):                    (False, _put_one_alias_asname, onestatic(_one_info_alias_asname, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (withitem, 'context_expr'):           (False, _put_one_withitem_context_expr, _onestatic_expr_required),  # expr
     (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx_cls=Store)),  # expr?
     (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required),  # pattern
@@ -2788,11 +2804,11 @@ _PUT_ONE_HANDLERS = {
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprlike_required, onestatic(_one_info_exprlike_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchMapping, 'rest'):               (False, _put_one_MatchMapping_rest, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=code_as_identifier)),  # identifier?
+    (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier?
     (MatchMapping, '_all'):               (True,  None, None),  # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprlike_required, onestatic(_one_info_exprlike_required, _is_valid_MatchClass_cls)),  # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchClass, 'kwd_attrs'):            (False, _put_one_MatchClass_kwd_attrs, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=code_as_identifier)),  # identifier*
+    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier*
     (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=code_as_pattern)),  # pattern?

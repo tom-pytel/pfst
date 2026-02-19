@@ -10150,7 +10150,6 @@ MNOT(MTAG('no'))
         self.assertEqual("import SUB1 as SUB2", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), 'import __FST_name1 as __FST_name2').src)
         self.assertEqual("from . import SUB1 as SUB2", (f := FST('SUB1 = SUB2')).sub(MAssign([M(name1=Name)], M(name2=Name)), 'from . import __FST_name1 as __FST_name2').src)
         self.assertEqual("import SUB.ATTR as asname", (f := FST('SUB.ATTR')).sub(M(attr=Attribute), 'import __FST_attr as asname').src)
-        # self.assertEqual("zzz", (f := FST('SUB.ATTR')).sub(M(attr=Attribute), 'from . import __FST_attr as asname').src)
 
         self.assertEqual("{1: a, **SUB}", (f := FST('SUB')).sub(M(name=Name), FST('{1: a, **__FST_name}', 'pattern')).src)
         self.assertEqual("{1: a}", (f := FST('SUB')).sub(M(Name, name=None), FST('{1: a, **__FST_name}', 'pattern')).src)

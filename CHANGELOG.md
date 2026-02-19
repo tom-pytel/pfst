@@ -17,7 +17,7 @@
 - `FST` / `fstview` interoperability for convenience
   - added `src`, `lines`, `loc/ln/col/end_ln/end_col`, `bloc/bln/bcol/bend_ln/bend_col` and `pars()` to `fstview`
   - added `base` to `FST` so that you can do `f.base.get_src(*f.loc)` without knowing if is `FST` or `fstview`
-- added `top` and `stop_at` parameters to `step_fwd/back()`
+- added `top` parameter to `step_fwd/back()` to restrict stepping above a given parent
 - finally validating options
 - trivia option shorthand `()` for `(False, False)`
 
@@ -30,7 +30,8 @@
 
 - fixed `step_fwd/back()` for anything that wasn't `all=True/False/'loc'`
 - replacement of single statement no longer replaces that statement's `FST`, allowing `walk()` to recurse into replaced children
-- disallow put `_` as name for `MatchMapping.rest` and `MatchClass.kwd_attrs`
+- disallow put `_` as name to `MatchMapping.rest` and `MatchClass.kwd_attrs`
+- disallow put `*` or dotted as name to `alias.name` if context does not allow
 
 
 ## 0.2.6 - alpha - 2026-01-31
