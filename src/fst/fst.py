@@ -4275,7 +4275,10 @@ class FST:
 
         path.reverse()
 
-        return '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path) if as_str else path
+        if as_str:
+            return '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+
+        return path
 
     def child_from_path(self, path: list[astfield] | builtins.str, last_valid: bool = False) -> FST | Literal[False]:
         """Get child node specified by `path` if it exists. If succeeds then it doesn't mean that the child node is

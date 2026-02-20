@@ -2615,33 +2615,34 @@ MNOT(MTAG('no'))
             self.assertEqual("*SUB = bool", (f := FST('SUB')).sub(M(name=Name), FST('*__FST_name = bool', 'TypeVarTuple')).src)
             f.verify()
 
+    def test_sub_nested(self):
+        self.assertEqual("(BinOp(a, (BinOp(b, c), b + c)[1]), a + (BinOp(b, c), b + c)[1])[1]", FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__FST_a, __FST_b), __FST_)[1]', nested=True).src)
+        self.assertEqual("(BinOp(a, (BinOp(b, c), b + c)[1]), a + (BinOp(b, c), b + c)[1])[1]", FST('a + (b + c)').sub(M(top=MBinOp(M(a=...), ..., M(b=...))), '(BinOp(__FST_a, __FST_b), __FST_top)[1]', nested=True).src)
+
+        self.assertEqual("(BinOp(a, b + c), a + (b + c))[1]", FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__FST_a, __FST_b), __FST_)[1]', nested=False).src)
+        self.assertEqual("(BinOp(a, b + c), a + (b + c))[1]", FST('a + (b + c)').sub(M(top=MBinOp(M(a=...), ..., M(b=...))), '(BinOp(__FST_a, __FST_b), __FST_top)[1]', nested=False).src)
+
+        self.assertEqual("log(a) + log(log(b).c) + log(log(d)[log(e)])", FST('a + b.c + d[e]').sub(MOR(Name, Attribute, Subscript), 'log(__FST_)', nested=True).src)
+        self.assertEqual("log(a) + log(log(b).c) + log(log(d)[log(e)])", FST('a + b.c + d[e]').sub(M(top=MOR(Name, Attribute, Subscript)), 'log(__FST_top)', nested=True).src)
+
+        self.assertEqual("log(a) + log(b.c) + log(d[e])", FST('a + b.c + d[e]').sub(MOR(Name, Attribute, Subscript), 'log(__FST_)', nested=False).src)
+        self.assertEqual("log(a) + log(b.c) + log(d[e])", FST('a + b.c + d[e]').sub(M(top=MOR(Name, Attribute, Subscript)), 'log(__FST_top)', nested=False).src)
+
     def test_sub_stmts(self):
-        # body
+        self.assertEqual("while something():\n    pass", FST('if something(): pass').sub(MIf(test=M(test=...), body=M(body=...)), 'while __FST_test: __FST_body').src)
+        self.assertEqual("while something():\n    this(); that()", FST('if something(): this(); that()').sub(MIf(test=M(test=...), body=M(body=...)), 'while __FST_test: __FST_body').src)
+        self.assertEqual("while something():\n    this()\n    that()", FST('if something():\n  this()\n  that()').sub(MIf(test=M(test=...), body=M(body=...)), 'while __FST_test: __FST_body').src)
+        self.assertEqual("while something(): that()", FST('if something():\n  this()\n  that()\n  the_other()').sub(MIf(test=M(test=...), body=[MQSTAR, M(that=MExpr(MCall('that'))), MQSTAR]), 'while __FST_test: __FST_that').src)
+        self.assertEqual("while something():\n    that()", FST('if something():\n  this()\n  that()\n  the_other()').sub(MIf(test=M(test=...), body=[MQSTAR, M(that=MExpr(MCall('that'))), MQSTAR]), 'while __FST_test:\n    __FST_that').src)
 
-        src = '''
-if a:
-    call()
-if c := b():
-    while c:
-        c = c()
-if not d:
-    e ; f
-    g
-        '''.strip()
 
-        pat = MIf(test=M(test=...), body=M(body=...))
-        repl = 'if not __FST_test:\n    __FST_body'
 
-        self.assertEqual(FST(src).sub(pat, repl).src, '''
-if not a:
-    call()
-if not (c := b()):
-    while c:
-        c = c()
-if not not d:
-    e ; f
-    g
-        '''.strip())
+
+
+
+
+
+
 
     def test_sub_virtual_fields(self):
         # Call.args/keywords
@@ -2736,6 +2737,31 @@ class info(a): pass
         fst_ = FST(src)
         repl = 'def g(__FST_args): pass'
         self.assertEqual('def g(a, /, b=1, *c, d=2, **e): pass', fst_.sub(pat, repl).src)
+
+        # body
+
+        src = '''
+if a:
+    call()
+if c := b():
+    while c:
+        c = c()
+if not d:
+    e ; f
+    g
+        '''.strip()
+        pat = MIf(test=M(test=...), body=M(body=...))
+        repl = 'if not __FST_test:\n    __FST_body'
+        self.assertEqual(FST(src).sub(pat, repl).src, '''
+if not a:
+    call()
+if not (c := b()):
+    while c:
+        c = c()
+if not not d:
+    e ; f
+    g
+        '''.strip())
 
 
 if __name__ == '__main__':
