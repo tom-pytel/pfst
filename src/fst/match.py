@@ -23,8 +23,6 @@ from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequenc
 from . import fst
 
 from .asttypes import (
-    ASTS_LEAF_DEF,
-    ASTS_LEAF_VAR_SCOPE_DECL,
     ASTS_LEAF__ALL,
     AST2ASTSLEAF,
 
@@ -172,6 +170,7 @@ from .asttypes import (
 )
 
 from .astutil import constant
+from .common import astfield
 from .parsex import unparse
 from .code import Code, code_as_all
 
@@ -5450,7 +5449,7 @@ _MATCH_FUNCS = {
 
 
 # ......................................................................................................................
-# get all leaf AST types that can possibly match a given _Pattern
+# get all leaf AST types that can possibly match a given _Pattern, for search()
 
 def _leaf_asts_default(pat: _Pattern) -> tp_Set[type[AST]] | None:
     if isinstance(pat, M_Pattern):
@@ -5498,6 +5497,143 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
     bool:         _leaf_asts_none,
     NoneType:     _leaf_asts_none,
     EllipsisType: _leaf_asts_all,  # literally matches everything
+}
+
+
+# ......................................................................................................................
+# sub() support stuff, these add paths to repl teplate substitution points in the repl template, which can be actual node like Name, arg or TypeVar or non-node identifier children of real nodes
+
+def _sub_identifier_name(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    if tag := fst_.a.name:
+        if tag.startswith('__FST_'):
+            pathss[1].append((tag[6:], repl.child_path(fst_), ('name', None)))
+
+def _sub_identifier_ImportFrom(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    if tag := fst_.a.module:
+        if tag.startswith('__FST_'):
+            pathss[1].append((tag[6:], repl.child_path(fst_), ('module', None)))
+
+def _sub_identifier_Global_Nonlocal(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    paths_tag = pathss[1]
+    path = None
+
+    for idx, tag in list(enumerate(fst_.a.names))[::-1]:
+        if tag.startswith('__FST_'):
+            if path is None:
+                path = repl.child_path(fst_)
+
+            paths_tag.append((tag[6:], path, ('names', idx)))
+
+def _sub_identifier_Attribute(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    if (tag := fst_.a.attr).startswith('__FST_'):
+        pathss[1].append((tag[6:], repl.child_path(fst_), ('attr', None)))
+
+def _sub_identifier_Name(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    if (tag := fst_.a.id).startswith('__FST_'):
+        (pathss[1] if (tag := tag[6:]) else pathss[0]).append((tag, repl.child_path(fst_), None))
+
+def _sub_identifier_arg(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    ast = fst_.a
+
+    if (tag := ast.arg).startswith('__FST_'):
+        if ast.annotation:
+            pathss[1].append((tag[6:], repl.child_path(fst_), ('arg', None)))
+        else:
+            (pathss[1] if (tag := tag[6:]) else pathss[0]).append((tag, repl.child_path(fst_), None))
+
+def _sub_identifier_keyword(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    if tag := fst_.a.arg:
+        if tag.startswith('__FST_'):
+            pathss[1].append((tag[6:], repl.child_path(fst_), ('arg', None)))
+
+def _sub_identifier_alias(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    ast = fst_.a
+    path = None
+
+    if (tag := ast.name).startswith('__FST_'):
+        path = repl.child_path(fst_)
+
+        pathss[1].append((tag[6:], path, ('name', None)))
+
+    if tag := ast.asname:
+        if tag.startswith('__FST_'):
+            if path is None:
+                path = repl.child_path(fst_)
+
+            pathss[1].append((tag[6:], path, ('asname', None)))
+
+def _sub_identifier_MatchMapping(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    if tag := fst_.a.rest:
+        if tag.startswith('__FST_'):
+            pathss[1].append((tag[6:], repl.child_path(fst_), ('rest', None)))
+
+def _sub_identifier_MatchClass(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    paths_tag = pathss[1]
+    path = None
+
+    for idx, tag in list(enumerate(fst_.a.kwd_attrs))[::-1]:
+        if tag.startswith('__FST_'):
+            if path is None:
+                path = repl.child_path(fst_)
+
+            paths_tag.append((tag[6:], path, ('kwd_attrs', idx)))
+
+def _sub_identifier_TypeVar(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    ast = fst_.a
+
+    if (tag := ast.name).startswith('__FST_'):
+        if ast.bound or getattr(ast, 'default_value', False):  # default_value does not exist on py < 3.13
+            pathss[1].append((tag[6:], repl.child_path(fst_), ('name', None)))
+        else:
+            (pathss[1] if (tag := tag[6:]) else pathss[0]).append((tag, repl.child_path(fst_), None))
+
+def _sub_identifier_INVALID(
+    pathss: tuple[list[list[astfield]], list[list[astfield]]], repl: fst.FST, fst_: fst.FST
+) -> None:
+    raise RuntimeError('should not get here')
+
+_SUB_IDENTIFIER_FUNCS = {
+    FunctionDef:      _sub_identifier_name,
+    AsyncFunctionDef: _sub_identifier_name,
+    ClassDef:         _sub_identifier_name,
+    ImportFrom:       _sub_identifier_ImportFrom,
+    Global:           _sub_identifier_Global_Nonlocal,
+    Nonlocal:         _sub_identifier_Global_Nonlocal,
+    Attribute:        _sub_identifier_Attribute,
+    Name:             _sub_identifier_Name,
+    ExceptHandler:    _sub_identifier_name,
+    arg:              _sub_identifier_arg,
+    keyword:          _sub_identifier_keyword,
+    alias:            _sub_identifier_alias,
+    MatchMapping:     _sub_identifier_MatchMapping,
+    MatchClass:       _sub_identifier_MatchClass,
+    MatchStar:        _sub_identifier_name,
+    MatchAs:          _sub_identifier_name,
+    TypeVar:          _sub_identifier_TypeVar,
+    ParamSpec:        _sub_identifier_name,
+    TypeVarTuple:     _sub_identifier_name,
 }
 
 
@@ -5734,10 +5870,6 @@ def search(
                 gen.send(False)
 
 
-_SUB_IDENTIFIER_TYPES = {FunctionDef, AsyncFunctionDef, ClassDef, ImportFrom, Global, Nonlocal, Attribute, Name,
-                        ExceptHandler, arg, keyword, alias, MatchMapping, MatchClass, MatchStar, MatchAs,
-                        TypeVar, ParamSpec, TypeVarTuple}
-
 def sub(
     self: fst.FST,
     pat: _Pattern,
@@ -5819,127 +5951,10 @@ def sub(
     dirty = set()  # {AST, ...}
     paths_matched = []  # [(tag, path, (field, idx | None) | None), ...]  an empty string tag means replace with the node matched, will only be empty in this one, will never be empty in paths_tags
     paths_tag = []  # same format as paths_matched
-    all_paths = (paths_matched, paths_tag)  # we have two lists because whenever we replace with whole matched target we have to mark it as dirty so we don't recurse into it again, don't need to do this for tags
+    pathss = (paths_matched, paths_tag)  # we have two lists because whenever we replace with whole matched target we have to mark it as dirty so we don't recurse into it again, don't need to do this for tags
 
-    for f in repl.walk(_SUB_IDENTIFIER_TYPES):
-        a = f.a
-        a_cls = a.__class__
-
-        if a_cls is Name:
-            tag = a.id
-
-        elif a_cls is arg:
-            tag = a.arg
-
-            if a.annotation:
-                if tag.startswith('__FST_'):
-                    paths_tag.append((tag[6:], repl.child_path(f), ('arg', None)))  # non-node replacements can all go into the tag list because they do not need to be marked as dirty
-
-                continue
-
-        elif a_cls is TypeVar:
-            tag = a.name
-
-            if a.bound or getattr(a, 'default_value', False):  # default_value does not exist on py < 3.13
-                if tag.startswith('__FST_'):
-                    paths_tag.append((tag[6:], repl.child_path(f), ('name', None)))  # non-node replacements can all go into the tag list because they do not need to be marked as dirty
-
-                continue
-
-        else:
-            if a_cls is Attribute:
-                tag = a.attr
-                child = ('attr', None)
-
-            elif a_cls in ASTS_LEAF_DEF:
-                tag = a.name
-                child = ('name', None)
-
-            elif a_cls is keyword:
-                if not (tag := a.arg):
-                    continue
-
-                child = ('arg', None)
-
-            elif a_cls is alias:
-                path = repl.child_path(f)
-                tag = a.name
-
-                if tag.startswith('__FST_'):
-                    paths_tag.append((tag[6:], path, ('name', None)))
-
-                if tag := a.asname:
-                    if tag.startswith('__FST_'):
-                        paths_tag.append((tag[6:], path, ('asname', None)))
-
-                continue
-
-            elif a_cls is ImportFrom:
-                if not (tag := a.module):
-                    continue
-
-                child = ('module', None)
-
-            elif a_cls in ASTS_LEAF_VAR_SCOPE_DECL:
-                path = repl.child_path(f)
-
-                for idx, tag in list(enumerate(a.names))[::-1]:
-                    if tag.startswith('__FST_'):
-                        paths_tag.append((tag[6:], path, ('names', idx)))
-
-                continue
-
-            elif a_cls is ParamSpec:
-                tag = a.name
-                child = ('name', None)
-
-            elif a_cls is TypeVarTuple:
-                tag = a.name
-                child = ('name', None)
-
-            elif a_cls is MatchAs:
-                if not (tag := a.name):
-                    continue
-
-                child = ('name', None)
-
-            elif a_cls is MatchMapping:
-                if not (tag := a.rest):
-                    continue
-
-                child = ('rest', None)
-
-            elif a_cls is MatchClass:
-                path = repl.child_path(f)
-
-                for idx, tag in list(enumerate(a.kwd_attrs))[::-1]:
-                    if tag.startswith('__FST_'):
-                        paths_tag.append((tag[6:], path, ('kwd_attrs', idx)))
-
-                continue
-
-            elif a_cls is MatchStar:
-                if not (tag := a.name):
-                    continue
-
-                child = ('name', None)
-
-            elif a_cls is ExceptHandler:
-                if not (tag := a.name):
-                    continue
-
-                child = ('name', None)
-
-            else:
-                raise RuntimeError('should not get here')
-
-            if tag.startswith('__FST_'):
-                paths_tag.append((tag[6:], repl.child_path(f), child))  # non-node replacements can all go into the tag list because they do not need to be marked as dirty
-
-            continue
-
-        if tag.startswith('__FST_'):
-            (paths_tag if (tag := tag[6:]) else paths_matched).append((tag, repl.child_path(f), None))
+    for f in repl.walk(_SUB_IDENTIFIER_FUNCS):
+        _SUB_IDENTIFIER_FUNCS.get(f.a.__class__, _sub_identifier_INVALID)(pathss, repl, f)
 
     gen = self.search(pat, nested=bool(nested), ast_ctx=ast_ctx,
                       self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
@@ -5954,7 +5969,7 @@ def sub(
 
         dirty.update(walk(sub.a))
 
-        for paths in all_paths:
+        for paths in pathss:
             for tag, path, child in paths:
                 sub_tgt = sub.child_from_path(path)
                 one = True

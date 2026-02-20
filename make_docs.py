@@ -53,7 +53,7 @@ if __name__ == "__main__":
         version = f.read().strip()
 
     fst.__doc__ = fst.__doc__.replace('{{VERSION}}', version)
-    all_funcs   = set(v for k, v in FST.__dict__.items() if isinstance(v, FunctionType))
+    all_funcs = set(v for k, v in FST.__dict__.items() if isinstance(v, FunctionType))
 
     render.configure(
         docformat='markdown',
@@ -70,6 +70,6 @@ if __name__ == "__main__":
         template_directory=None,
     )
 
-    fst.__all__ = ['docs', 'fst', 'view', 'common', 'parsex', 'match']#, 'astutil']
+    fst.__all__ = ['docs', 'fst', 'match', 'view', 'common', 'parsex']#, 'astutil']
 
     pdoc('fst', output_directory=Path('docs'))
