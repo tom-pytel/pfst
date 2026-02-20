@@ -2,14 +2,25 @@ import re
 import sys
 from typing import Any, Callable, Generator, Literal, NamedTuple
 
+from fst import fst
 from fst import FST
+from fst import match
 from fst.astutil import copy_ast, compare_asts
 from fst.code import code_as
 from fst.fst_options import _ALL_OPTIONS
 
 from ast import AST
 
-__all__ = ['ParseCases', 'CoerceCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases', 'assertRaises']
+__all__ = [
+    'ParseCases',
+    'CoerceCases',
+    'SubCases',
+    'GetCases',
+    'GetSliceCases',
+    'PutCases',
+    'PutSliceCases',
+    'assertRaises',
+]
 
 
 _SENTINEL = object()
@@ -20,7 +31,6 @@ _PYVER = sys.version_info[1]
 ParseMode = str | type[AST] | None
 
 _ALL_TEST_OPTIONS = {*_ALL_OPTIONS, 'one', 'cut'}  # we also allow these keywords as options because it is convenient for testing
-
 
 
 def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[ParseMode, str]:
@@ -268,6 +278,30 @@ class CoerceCases(BaseCases):
 
         if h and (not g or not same):
             rest.append(h.root.dump(out='str'))
+
+        return rest
+
+
+class SubCases(BaseCases):
+    GLOBALS = {**fst.__dict__, **match.__dict__}
+
+    def __init__(self, fnm) -> None:
+        super().__init__(fnm, None)
+
+    def exec(self, case) -> list[str | tuple[str, str]]:  # rest
+        rest = case.rest
+        pat = eval(rest[0], SubCases.GLOBALS)
+        repl = _make_fst(rest[1], '')
+        rest = rest[:2]
+        f = _make_fst(case.code, case.attr)
+
+        try:
+            f.sub(pat, repl, **{k: v for k, v in case.options.items() if not k.startswith('_')})
+        except Exception as exc:
+            rest.append(f'**{_san_exc(exc)!r}**')
+        else:
+            rest.append(f.root.src)
+            rest.append(f.root.dump(out='str'))
 
         return rest
 
