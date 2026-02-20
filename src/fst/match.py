@@ -18,7 +18,7 @@ import re
 from ast import walk
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
-from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequence, Set as tp_Set, Union
+from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as tp_Set, Union
 
 from . import fst
 
@@ -5503,25 +5503,24 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
 # ......................................................................................................................
 # sub() support stuff
 
-# These add paths to repl teplate substitution points in the repl template, which can be actual node like Name, arg or
-# TypeVar or non-node identifier children of real nodes. If a substitution tag references the root matched node then the
-# tag is stored as a empty string as those substitutions can be handled differently from subnodes of the matched node.
+# These add paths to repl teplate substitution slots in the repl template, which can be actual node like Name, arg or
+# TypeVar or non-node identifier children of real nodes.
 
-def _sub_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """These are all optionally-present identifiers."""
 
     if tag := fst_.a.name:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('name', None)))
 
-def _sub_path_ImportFrom(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_ImportFrom(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Optionally-present identifier."""
 
     if tag := fst_.a.module:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('module', None)))
 
-def _sub_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """List of definitely-present identifiers."""
 
     path = None
@@ -5533,19 +5532,19 @@ def _sub_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, fst_: 
 
             paths.append((tag[6:], path, ('names', idx)))
 
-def _sub_path_Attribute(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_Attribute(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present identifier."""
 
     if (tag := fst_.a.attr).startswith('__FST_'):
         paths.append((tag[6:], repl.child_path(fst_), ('attr', None)))
 
-def _sub_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present whole node."""
 
     if (tag := fst_.a.id).startswith('__FST_'):
         paths.append((tag[6:], repl.child_path(fst_), None))
 
-def _sub_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present whole node OR identifier, depending on presence of annotations in template."""
 
     ast = fst_.a
@@ -5553,14 +5552,14 @@ def _sub_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> 
     if (tag := ast.arg).startswith('__FST_'):
         paths.append((tag[6:], repl.child_path(fst_), ('arg', None) if ast.annotation else None))
 
-def _sub_path_keyword(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_keyword(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Optionally-present identifier."""
 
     if tag := fst_.a.arg:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('arg', None)))
 
-def _sub_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """One Definitely-present and one optionally-present identifier."""
 
     ast = fst_.a
@@ -5578,14 +5577,14 @@ def _sub_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -
 
             paths.append((tag[6:], path, ('asname', None)))
 
-def _sub_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Optionally-present identifier."""
 
     if tag := fst_.a.rest:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('rest', None)))
 
-def _sub_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """List of definitely-present identifiers."""
 
     path = None
@@ -5597,7 +5596,7 @@ def _sub_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: fst.F
 
             paths.append((tag[6:], path, ('kwd_attrs', idx)))
 
-def _sub_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present whole node OR identifier, depending on presence of bound or default_value in template."""
 
     ast = fst_.a
@@ -5607,29 +5606,29 @@ def _sub_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST)
 
         paths.append((tag[6:], repl.child_path(fst_), child))
 
-def _sub_path_INVALID(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_INVALID(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     raise RuntimeError('should not get here')
 
-_SUB_PATH_FUNCS = {
-    FunctionDef:      _sub_path_name,
-    AsyncFunctionDef: _sub_path_name,
-    ClassDef:         _sub_path_name,
-    ImportFrom:       _sub_path_ImportFrom,
-    Global:           _sub_path_Global_Nonlocal,
-    Nonlocal:         _sub_path_Global_Nonlocal,
-    Attribute:        _sub_path_Attribute,
-    Name:             _sub_path_Name,
-    ExceptHandler:    _sub_path_name,
-    arg:              _sub_path_arg,
-    keyword:          _sub_path_keyword,
-    alias:            _sub_path_alias,
-    MatchMapping:     _sub_path_MatchMapping,
-    MatchClass:       _sub_path_MatchClass,
-    MatchStar:        _sub_path_name,
-    MatchAs:          _sub_path_name,
-    TypeVar:          _sub_path_TypeVar,
-    ParamSpec:        _sub_path_name,
-    TypeVarTuple:     _sub_path_name,
+_SUB_REPL_PATH_FUNCS = {
+    FunctionDef:      _sub_repl_path_name,
+    AsyncFunctionDef: _sub_repl_path_name,
+    ClassDef:         _sub_repl_path_name,
+    ImportFrom:       _sub_repl_path_ImportFrom,
+    Global:           _sub_repl_path_Global_Nonlocal,
+    Nonlocal:         _sub_repl_path_Global_Nonlocal,
+    Attribute:        _sub_repl_path_Attribute,
+    Name:             _sub_repl_path_Name,
+    ExceptHandler:    _sub_repl_path_name,
+    arg:              _sub_repl_path_arg,
+    keyword:          _sub_repl_path_keyword,
+    alias:            _sub_repl_path_alias,
+    MatchMapping:     _sub_repl_path_MatchMapping,
+    MatchClass:       _sub_repl_path_MatchClass,
+    MatchStar:        _sub_repl_path_name,
+    MatchAs:          _sub_repl_path_name,
+    TypeVar:          _sub_repl_path_TypeVar,
+    ParamSpec:        _sub_repl_path_name,
+    TypeVarTuple:     _sub_repl_path_name,
 }
 
 
@@ -5813,57 +5812,31 @@ def search(
     """
 
     pat_cls = pat.__class__
-    asts_leaf = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)  # which AST leaf nodes we need to actually check for match
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
+    walk_all = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)  # which AST leaf nodes we need to actually check for match
     mstate = _MatchState(True, ast_ctx)
-    last_match = None  # gotten once in `all_func()` and yielded from our own generator instead of an FST node
 
-    if asts_leaf is None or len(asts_leaf) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check
-        def all_func(f: fst.FST) -> bool:
-            nonlocal last_match
+    if walk_all is None or len(walk_all) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check, if None then indeterminate and we need to check all nodes
+        walk_all = True
 
-            mstate.clear()
+    gen = self.walk(walk_all, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
-            if (m := match_func(pat, f.a, mstate)) is not None:
-                last_match = FSTMatch(pat, f, m)
+    for f in gen:
+        mstate.clear()
 
-                return True
+        if (m := match_func(pat, f.a, mstate)) is None:
+            continue
 
-            return False
+        match = FSTMatch(pat, f, m)
 
-    else:
-        def all_func(f: fst.FST) -> bool:
-            nonlocal last_match
+        if (sent := (yield match)) is not None:
+            gen.send(sent)
 
-            if f.a.__class__ not in asts_leaf:
-                return False
-
-            mstate.clear()
-
-            if (m := match_func(pat, f.a, mstate)) is not None:
-                last_match = FSTMatch(pat, f, m)
-
-                return True
-
-            return False
-
-    gen = self.walk(all_func, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
-
-    if nested:
-        for _ in gen:
-            while (sent := (yield last_match)) is not None:
+            while (sent := (yield match)) is not None:
                 gen.send(sent)
 
-    else:
-        for _ in gen:
-            if (sent := (yield last_match)) is not None:
-                gen.send(sent)
-
-                while (sent := (yield last_match)) is not None:
-                    gen.send(sent)
-
-            elif not nested:  # if user didn't take control then we can decide not to recurse into match if user doesn't want nested matches
-                gen.send(False)
+        elif not nested:  # if user didn't take control then we can decide not to recurse into match if user doesn't want nested matches
+            gen.send(False)
 
 
 def sub(
@@ -5871,7 +5844,10 @@ def sub(
     pat: _Pattern,
     repl: Code,
     nested: bool = False,
+    count: int = 0,
     *,
+    copy_options: dict[str, Any] | None = None,
+    repl_options: dict[str, Any] | None = None,
     ast_ctx: bool = False,
     self_: bool = True,
     recurse: bool = True,
@@ -5893,6 +5869,10 @@ def sub(
         due to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
         Regardless of this setting, when using a template `repl` this function will never recurse into full matched
         target substitutions (`__FST_`).
+    - `count`: If this is above 0 then only this number of substitutions will be made.
+    - `copy_options`: Options to use when copying from matched nodes for putting into the `repl` template. If `None`
+        then just uses `options`.
+    - `repl_options`: Options to use when putting into the `repl` template. If `None` then just uses `options`.
     - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
         don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
@@ -5900,7 +5880,7 @@ def sub(
         is set to wildcard.
     - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
         function for their meanings.
-    - `options`: The options to use for the `replace()` calls. See `options()`.
+    - `options`: The options to use when replacing matched nodes in `self`. See `options()`.
 
     **Returns:**
     - `self`
@@ -5941,13 +5921,19 @@ def sub(
 
     check_options(options)
 
-    repl = code_as_all(repl, options, self.root.parse_params)
+    repl = code_as_all(repl, parse_params=self.root.parse_params)
     paths = []  # [(tag, path, (field, idx | None) | None), ...]
-
-    for f in repl.walk(_SUB_PATH_FUNCS):
-        _SUB_PATH_FUNCS.get(f.a.__class__, _sub_path_INVALID)(paths, repl, f)
-
     dirty = set()  # {AST, ...}
+
+    if copy_options is None:
+        copy_options = options
+
+    if repl_options is None:
+        repl_options = options
+
+    for f in repl.walk(_SUB_REPL_PATH_FUNCS):
+        _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, repl, f)
+
     gen = self.search(pat, nested, ast_ctx=ast_ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
@@ -5956,37 +5942,37 @@ def sub(
         if matched.a in dirty:
             continue
 
-        repl_ = repl.copy()
+        repl_ = repl.copy()  # this is duplication of repl template so no options needed
 
         dirty.update(walk(repl_.a))  # by default nothing from the repl template gets substituted
 
         for tag, path, child in paths:
             repl_slot = repl_.child_from_path(path)
-            is_slot_new_matched_root = False  # if the new node for the repl slot is the top level matched node (which should itself not be substituted again)
+            slot_sub_is_matched_root = False  # if the new node for the repl slot is the top level matched node (which should itself not be substituted again)
             one = True
 
             if not tag:  # this means we are replacing with the whole matched node
-                is_slot_new_matched_root = True
-                slot_new = matched.copy()
+                slot_sub_is_matched_root = True
+                slot_sub = matched.copy(**copy_options)
 
-            elif (slot_new := m.tags.get(tag, _SENTINEL)) is _SENTINEL:  # if tag not found then default to delete
-                slot_new = None  # raise MatchError(f'{tag!r} tag not found for substitution')
+            elif (slot_sub := m.tags.get(tag, _SENTINEL)) is _SENTINEL:  # if tag not found then default to delete
+                slot_sub = None  # raise MatchError(f'{tag!r} tag not found for substitution')
 
-            elif isinstance(slot_new, fst.FST):
-                is_slot_new_matched_root = slot_new is matched
-                slot_new = slot_new.copy()
+            elif isinstance(slot_sub, fst.FST):
+                slot_sub_is_matched_root = slot_sub is matched
+                slot_sub = slot_sub.copy(**copy_options)
 
-            elif isinstance(slot_new, FSTView):  # we get a normal single node container (which may contain multiple elements) for putting as a slice
-                slot_new = slot_new.copy()
+            elif isinstance(slot_sub, FSTView):  # we get a normal single node container (which may contain multiple elements) for putting as a slice
+                slot_sub = slot_sub.copy(**copy_options)
                 one = False  # this will be a slice of some kind so make sure we put as a slice
 
-            elif not isinstance(slot_new, (AST, str, NoneType)):
-                raise MatchError(f'match substitution must be FST, AST, str or None, got {slot_new}')
+            elif not isinstance(slot_sub, (AST, str, NoneType)):
+                raise MatchError(f'match substitution must be FST, AST, str or None, got {slot_sub}')
 
             if child is not None:  # path includes a child field which means its not a real node but a str identifier
                 field, idx = child
 
-                repl_slot._put_one(slot_new, idx, field, options, False)
+                repl_slot._put_one(slot_sub, idx, field, repl_options, False)
 
             else:
                 if parent := repl_slot.parent:  # some fields are special-cased for simplicity and common-sense sake
@@ -5995,7 +5981,7 @@ def sub(
                     new_idx = None
 
                     if parenta_cls is Expr:  # maybe replacing with single or body of statements
-                        if not one and slot_new.a.__class__ is Module and (grandparent := parent.parent):
+                        if not one and slot_sub.a.__class__ is Module and (grandparent := parent.parent):
                             field, new_idx = parent.pfield
                             parent = grandparent
 
@@ -6005,7 +5991,7 @@ def sub(
                             new_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     elif parenta_cls is arguments:
-                        if slot_new.a.__class__ is arguments:
+                        if slot_sub.a.__class__ is arguments:
                             field = '_all'
                             allargs = parent._cached_allargs()
                             one = False
@@ -6026,27 +6012,30 @@ def sub(
                             new_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     if new_idx is not None:  # replace is a slice operation
-                        if not is_slot_new_matched_root:  # not replacing with original whole node so don't need to mark anything dirty
-                            parent._put_slice(slot_new, new_idx, new_idx + 1, field, one, options)
+                        if not slot_sub_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
+                            parent._put_slice(slot_sub, new_idx, new_idx + 1, field, one, repl_options)
 
                         else:  # need to do extra stuff to mark possibly multiple replacements as dirty
-                            view = getattr(parent, field)
-                            len_original_field = len(view)
+                            body = getattr(parent, field)
+                            len_body = len(body)
 
-                            parent._put_slice(slot_new, new_idx, new_idx + 1, field, one, options)
+                            parent._put_slice(slot_sub, new_idx, new_idx + 1, field, one, repl_options)
 
-                            if (delta := len(view) - len_original_field) >= 0:  # only if replaced or added, if length contracted then there was deletion
-                                for f in view[new_idx : new_idx + 1 + delta]:
+                            if (delta := len(body) - len_body) >= 0:  # only if replaced or added, if length contracted then there was deletion
+                                for f in body[new_idx : new_idx + 1 + delta]:
                                     if f:
                                         dirty.add(f.a)
 
                         continue
 
-                f = repl_slot.replace(slot_new, one=one, **options)
+                f = repl_slot.replace(slot_sub, one=one, **repl_options)
 
-                if is_slot_new_matched_root and f:  # replaced with original whole matched element, mark top node as dirty otherwise would cause infinite recursion
+                if slot_sub_is_matched_root and f:  # replaced with whole matched node, mark top node as dirty otherwise would cause infinite recursion
                     dirty.add(f.a)
 
         matched.replace(repl_, **options)
+
+        if not (count := count - 1):
+            break
 
     return self

@@ -125,9 +125,6 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 >>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), 'BinOp(__FST_a, __FST_b)', nested=True).src
 'BinOp(a, BinOp(b, c))'
 
->>> FST('a + (b + c)').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__FST_a, __FST_b), __FST_)[1]', nested='tags').src
-'(BinOp(a, (BinOp(b, c), b + c)[1]), a + (b + c))[1]'
-
 >>> FST('a + b').sub(MBinOp(M(a=...), ..., M(b=...)), '(BinOp(__FST_a, __FST_b), __FST_)[1]', nested=True).src
 '(BinOp(a, b), a + b)[1]'
 

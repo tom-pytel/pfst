@@ -2628,21 +2628,18 @@ MNOT(MTAG('no'))
         self.assertEqual("log(a) + log(b.c) + log(d[e])", FST('a + b.c + d[e]').sub(MOR(Name, Attribute, Subscript), 'log(__FST_)', nested=False).src)
         self.assertEqual("log(a) + log(b.c) + log(d[e])", FST('a + b.c + d[e]').sub(M(top=MOR(Name, Attribute, Subscript)), 'log(__FST_top)', nested=False).src)
 
+    def test_sub_count(self):
+        self.assertEqual('b, b, b', FST('a, a, a').sub(Name, 'b').src)
+        self.assertEqual('b, b, a', FST('a, a, a').sub(Name, 'b', count=2).src)
+        self.assertEqual('b, a, a', FST('a, a, a').sub(Name, 'b', count=1).src)
+        self.assertEqual('b, b, b', FST('a, a, a').sub(Name, 'b', count=0).src)
+
     def test_sub_stmts(self):
         self.assertEqual("while something():\n    pass", FST('if something(): pass').sub(MIf(test=M(test=...), body=M(body=...)), 'while __FST_test: __FST_body').src)
         self.assertEqual("while something():\n    this(); that()", FST('if something(): this(); that()').sub(MIf(test=M(test=...), body=M(body=...)), 'while __FST_test: __FST_body').src)
         self.assertEqual("while something():\n    this()\n    that()", FST('if something():\n  this()\n  that()').sub(MIf(test=M(test=...), body=M(body=...)), 'while __FST_test: __FST_body').src)
         self.assertEqual("while something(): that()", FST('if something():\n  this()\n  that()\n  the_other()').sub(MIf(test=M(test=...), body=[MQSTAR, M(that=MExpr(MCall('that'))), MQSTAR]), 'while __FST_test: __FST_that').src)
         self.assertEqual("while something():\n    that()", FST('if something():\n  this()\n  that()\n  the_other()').sub(MIf(test=M(test=...), body=[MQSTAR, M(that=MExpr(MCall('that'))), MQSTAR]), 'while __FST_test:\n    __FST_that').src)
-
-
-
-
-
-
-
-
-
 
     def test_sub_virtual_fields(self):
         # Call.args/keywords

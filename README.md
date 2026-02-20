@@ -57,7 +57,7 @@ the `FST` node structure. Our focus on simple Pythonic operations means you can 
 1. Parse source
 
 ```py
->>> import ast, fst
+>>> import ast, fst  # pip install pfst, import fst
 
 >>> a = fst.parse('def func(): pass  # comment')
 ```

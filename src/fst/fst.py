@@ -2279,7 +2279,7 @@ class FST:
 
             parent = parent._put_slice(code, idx, idx + 1, field, None if one is None else False, options)
 
-            if code is None or not parent:
+            if code is None:
                 return None
 
             if a := pfield.get_default(parent.a, None):  # may not be there due to removal of last element or raw reparsing of weird *(^$
