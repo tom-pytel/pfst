@@ -224,9 +224,9 @@ class cls:
     def method(self, thing, extra):
         if not thing:
             (logger).info(
-                          f'not a {thing}',  # this is fine
-                          extra=extra,       # also this
-                          correlation_id=CID)
+                       f'not a {thing}',  # this is fine
+                       extra=extra,       # also this
+                       correlation_id=CID)
 ```
 
 

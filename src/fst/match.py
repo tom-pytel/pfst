@@ -5526,7 +5526,7 @@ def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, f
 
     path = None
 
-    for idx, tag in list(enumerate(fst_.a.names))[::-1]:
+    for idx, tag in enumerate(fst_.a.names):
         if tag.startswith('__FST_'):
             if path is None:
                 path = repl.child_path(fst_)
@@ -5595,12 +5595,21 @@ def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: 
 
     path = None
 
-    for idx, tag in list(enumerate(fst_.a.kwd_attrs))[::-1]:
+    for idx, tag in enumerate(fst_.a.kwd_attrs):
         if tag.startswith('__FST_'):
             if path is None:
                 path = repl.child_path(fst_)
 
             paths.append((tag[6:], path, ('kwd_attrs', idx)))
+
+def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    """Definitely-present whole node OR identifier, depending on presence of pattern in template."""
+
+    ast = fst_.a
+
+    if tag := ast.name:
+        if tag.startswith('__FST_'):
+            paths.append((tag[6:], repl.child_path(fst_), ('name', None) if ast.pattern else None))
 
 def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present whole node OR identifier, depending on presence of bound or default_value in template."""
@@ -5631,7 +5640,7 @@ _SUB_REPL_PATH_FUNCS = {
     MatchMapping:     _sub_repl_path_MatchMapping,
     MatchClass:       _sub_repl_path_MatchClass,
     MatchStar:        _sub_repl_path_name,
-    MatchAs:          _sub_repl_path_name,
+    MatchAs:          _sub_repl_path_MatchAs,
     TypeVar:          _sub_repl_path_TypeVar,
     ParamSpec:        _sub_repl_path_name,
     TypeVarTuple:     _sub_repl_path_name,
@@ -5920,9 +5929,9 @@ def sub(
     logger.info('Already have id', cid=other_cid)  # ok
     logger.info(cid=CID)  # yes, no logger message, too bad
     (logger).info(
-                  f'not a {thing}',  # this is fine
-                  extra=extra,       # also this
-                  cid=CID)
+               f'not a {thing}',  # this is fine
+               extra=extra,       # also this
+               cid=CID)
     """
 
     options = check_options(options, mark_checked=True)
@@ -5935,6 +5944,8 @@ def sub(
 
     for f in repl.walk(_SUB_REPL_PATH_FUNCS):
         _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, repl, f)
+
+    paths.reverse()  # we do this because there might be deletions which will change indices which follow them, so we do higher indices first
 
     gen = self.search(pat, nested, ast_ctx=ast_ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 

@@ -102,8 +102,6 @@ def func(arg: int=0) -> int:
 
 ### TODO
 
-This module is not finished but functional enough that it can be useful.
-
 * Put one to:
   * `FormattedValue.conversion`
   * `FormattedValue.format_spec`

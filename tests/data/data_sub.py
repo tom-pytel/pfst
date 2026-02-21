@@ -3420,6 +3420,540 @@ Call - ROOT 0,0..0,18
 '''),
 ],
 
+'basic_FormattedValue': [  # ................................................................................
+
+('', None, None, None, {'_ver': 12}, ('JoinedStr',
+r'''f"{a}"'''),
+r'''MJoinedStr(values=[MFormattedValue(value=M(v=...))])''', (None,
+r'''f"{__FST_v}"'''),
+r'''f"{a}"''', r'''
+JoinedStr - ROOT 0,0..0,6
+  .values[1]
+   0] FormattedValue - 0,2..0,5
+     .value Name 'a' Load - 0,3..0,4
+     .conversion -1
+'''),
+],
+
+'basic_Interpolation': [  # ................................................................................
+
+('', None, None, None, {'_ver': 14}, ('TemplateStr',
+r'''t"{a}"'''),
+r'''MTemplateStr(values=[MInterpolation(value=M(v=...))])''', (None,
+r'''t"{__FST_v}"'''),
+r'''t"{a}"''', r'''
+TemplateStr - ROOT 0,0..0,6
+  .values[1]
+   0] Interpolation - 0,2..0,5
+     .value Name 'a' Load - 0,3..0,4
+     .str 'a'
+     .conversion -1
+'''),
+],
+
+'basic_Constant': [  # ................................................................................
+
+('', None, None, None, {}, ('Constant',
+r'''"a"'''),
+r'''MConstant(value=M(v=...))''', (None,
+r'''__FST_v'''),
+r'''a''',
+r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, ('Constant',
+r'''"a"'''),
+r'''MConstant(value=M(v=...))''', (None,
+r'''global __FST_v'''),
+r'''global a''', r'''
+Global - ROOT 0,0..0,8
+  .names[1]
+   0] 'a'
+'''),
+],
+
+'basic_Attribute': [  # ................................................................................
+
+('', None, None, None, {}, ('Attribute',
+r'''a.b'''),
+r'''MAttribute(value=M(v=...))''', (None,
+r'''__FST_v'''),
+r'''a''',
+r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, ('Attribute',
+r'''a.b'''),
+r'''MAttribute(value=M(v=...))''', (None,
+r'''__FST_v.x'''),
+r'''a.x''', r'''
+Attribute - ROOT 0,0..0,3
+  .value Name 'a' Load - 0,0..0,1
+  .attr 'x'
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Attribute',
+r'''a.b'''),
+r'''MAttribute(value=M(v=...))''', (None,
+r'''__FST_v.__FST_v'''),
+r'''a.a''', r'''
+Attribute - ROOT 0,0..0,3
+  .value Name 'a' Load - 0,0..0,1
+  .attr 'a'
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Attribute',
+r'''a.b'''),
+r'''MAttribute(value=M(v=...), attr=M(a=...))''', (None,
+r'''__FST_a.__FST_v'''),
+r'''b.a''', r'''
+Attribute - ROOT 0,0..0,3
+  .value Name 'b' Load - 0,0..0,1
+  .attr 'a'
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Attribute',
+r'''a.b'''),
+r'''MAttribute(attr=M(a=...))''', (None,
+r'''__FST_a'''),
+r'''b''',
+r'''Name 'b' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, ('Attribute',
+r'''a.b'''),
+r'''MAttribute(attr=M(a=...))''', (None,
+r'''__FST_a.__FST_a'''),
+r'''b.b''', r'''
+Attribute - ROOT 0,0..0,3
+  .value Name 'b' Load - 0,0..0,1
+  .attr 'b'
+  .ctx Load
+'''),
+],
+
+'basic_Subscript': [  # ................................................................................
+
+('', None, None, None, {}, ('Subscript',
+r'''a[b]'''),
+r'''MSubscript(value=M(v=...))''', (None,
+r'''__FST_v'''),
+r'''a''',
+r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, ('Subscript',
+r'''a[b]'''),
+r'''MSubscript(value=M(v=...))''', (None,
+r'''__FST_v[x]'''),
+r'''a[x]''', r'''
+Subscript - ROOT 0,0..0,4
+  .value Name 'a' Load - 0,0..0,1
+  .slice Name 'x' Load - 0,2..0,3
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Subscript',
+r'''a[b]'''),
+r'''MSubscript(value=M(v=...))''', (None,
+r'''__FST_v[__FST_v]'''),
+r'''a[a]''', r'''
+Subscript - ROOT 0,0..0,4
+  .value Name 'a' Load - 0,0..0,1
+  .slice Name 'a' Load - 0,2..0,3
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Subscript',
+r'''a[b]'''),
+r'''MSubscript(value=M(v=...), slice=M(s=...))''', (None,
+r'''__FST_s[__FST_v]'''),
+r'''b[a]''', r'''
+Subscript - ROOT 0,0..0,4
+  .value Name 'b' Load - 0,0..0,1
+  .slice Name 'a' Load - 0,2..0,3
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Subscript',
+r'''a[b]'''),
+r'''MSubscript(slice=M(s=...))''', (None,
+r'''__FST_s'''),
+r'''b''',
+r'''Name 'b' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, ('Subscript',
+r'''a[b]'''),
+r'''MSubscript(slice=M(s=...))''', (None,
+r'''__FST_s[__FST_s]'''),
+r'''b[b]''', r'''
+Subscript - ROOT 0,0..0,4
+  .value Name 'b' Load - 0,0..0,1
+  .slice Name 'b' Load - 0,2..0,3
+  .ctx Load
+'''),
+],
+
+'basic_Starred': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''*a'''),
+r'''MStarred(value=M(v=...))''',
+r'''*__FST_v  # new''',
+r'''*a  # new''', r'''
+Starred - ROOT 0,0..0,2
+  .value Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+],
+
+'basic_Name': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''a'''),
+r'''MName''',
+r'''__FST  # new''',
+r'''__FST  # new''',
+r'''Name '__FST' Load - ROOT 0,0..0,5'''),
+
+('', None, None, None, {}, (None,
+r'''a'''),
+r'''MName(id=M(i=...))''',
+r'''__FST_i  # new''',
+r'''a''',
+r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, (None,
+r'''a'''),
+r'''MName(id=M(i=...))''',
+r'''[__FST_i, __FST_i]''',
+r'''[a, a]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'a' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a'''),
+r'''MName(id=M(i=...))''',
+r'''global __FST_i, __FST_i''',
+r'''global a, a''', r'''
+Global - ROOT 0,0..0,11
+  .names[2]
+   0] 'a'
+   1] 'a'
+'''),
+],
+
+'basic_List': [  # ................................................................................
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c]'''),
+r'''MList''', (None,
+r'''[__FST_, __FST_]'''),
+r'''[[a, b, c], [a, b, c]]''', r'''
+List - ROOT 0,0..0,22
+  .elts[2]
+   0] List - 0,1..0,10
+     .elts[3]
+      0] Name 'a' Load - 0,2..0,3
+      1] Name 'b' Load - 0,5..0,6
+      2] Name 'c' Load - 0,8..0,9
+     .ctx Load
+   1] List - 0,12..0,21
+     .elts[3]
+      0] Name 'a' Load - 0,13..0,14
+      1] Name 'b' Load - 0,16..0,17
+      2] Name 'c' Load - 0,19..0,20
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c]'''),
+r'''MList(elts=M(e=...))''', (None,
+r'''[__FST_e]'''),
+r'''[a, b, c]''', r'''
+List - ROOT 0,0..0,9
+  .elts[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'c' Load - 0,7..0,8
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c]'''),
+r'''MList(elts=[..., M(e=...), ...])''', (None,
+r'''[__FST_e]'''),
+r'''[b]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c]'''),
+r'''MList(elts=M(e=...))''', (None,
+r'''[x, __FST_e, y]'''),
+r'''[x, a, b, c, y]''', r'''
+List - ROOT 0,0..0,15
+  .elts[5]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'a' Load - 0,4..0,5
+   2] Name 'b' Load - 0,7..0,8
+   3] Name 'c' Load - 0,10..0,11
+   4] Name 'y' Load - 0,13..0,14
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c]'''),
+r'''MList(elts=[..., M(e=...), ...])''', (None,
+r'''[x, __FST_e, y]'''),
+r'''[x, b, y]''', r'''
+List - ROOT 0,0..0,9
+  .elts[3]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'y' Load - 0,7..0,8
+  .ctx Load
+'''),
+],
+
+'basic_Tuple': [  # ................................................................................
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple''', (None,
+r'''(__FST_, __FST_)'''),
+r'''((a, b, c), (a, b, c))''', r'''
+Tuple - ROOT 0,0..0,22
+  .elts[2]
+   0] Tuple - 0,1..0,10
+     .elts[3]
+      0] Name 'a' Load - 0,2..0,3
+      1] Name 'b' Load - 0,5..0,6
+      2] Name 'c' Load - 0,8..0,9
+     .ctx Load
+   1] Tuple - 0,12..0,21
+     .elts[3]
+      0] Name 'a' Load - 0,13..0,14
+      1] Name 'b' Load - 0,16..0,17
+      2] Name 'c' Load - 0,19..0,20
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple(elts=M(e=...))''', (None,
+r'''(__FST_e)'''),
+r'''(a, b, c)''', r'''
+Tuple - ROOT 0,0..0,9
+  .elts[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'c' Load - 0,7..0,8
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple(elts=[..., M(e=...), ...])''', (None,
+r'''(__FST_e)'''),
+r'''b''',
+r'''Name 'b' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple(elts=[..., M(e=...), ...])''', (None,
+r'''(__FST_e,)'''),
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple(elts=M(e=...))''', (None,
+r'''(x, __FST_e, y)'''),
+r'''(x, a, b, c, y)''', r'''
+Tuple - ROOT 0,0..0,15
+  .elts[5]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'a' Load - 0,4..0,5
+   2] Name 'b' Load - 0,7..0,8
+   3] Name 'c' Load - 0,10..0,11
+   4] Name 'y' Load - 0,13..0,14
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple(elts=[..., M(e=...), ...])''', (None,
+r'''(x, __FST_e, y)'''),
+r'''(x, b, y)''', r'''
+Tuple - ROOT 0,0..0,9
+  .elts[3]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'y' Load - 0,7..0,8
+  .ctx Load
+'''),
+],
+
+'basic_Slice': [  # ................................................................................
+
+('', None, None, None, {}, ('Slice',
+r'''a:b:c'''),
+r'''MSlice''', (None,
+r'''__FST_'''),
+r'''a:b:c''', r'''
+Slice - ROOT 0,0..0,5
+  .lower Name 'a' Load - 0,0..0,1
+  .upper Name 'b' Load - 0,2..0,3
+  .step Name 'c' Load - 0,4..0,5
+'''),
+
+('', None, None, None, {}, ('Slice',
+r'''a:b:c'''),
+r'''MSlice(lower=M(l=...), upper=M(u=...), step=M(s=...))''', (None,
+r'''__FST_s:__FST_l:__FST_u'''),
+r'''c:a:b''', r'''
+Slice - ROOT 0,0..0,5
+  .lower Name 'c' Load - 0,0..0,1
+  .upper Name 'a' Load - 0,2..0,3
+  .step Name 'b' Load - 0,4..0,5
+'''),
+],
+
+'basic_comprehension': [  # ................................................................................
+
+('', None, None, None, {}, ('comprehension',
+r'''for a in b if c if d'''),
+r'''Mcomprehension''', (None,
+r'''__FST_'''),
+r'''for a in b if c if d''', r'''
+comprehension - ROOT 0,0..0,20
+  .target Name 'a' Store - 0,4..0,5
+  .iter Name 'b' Load - 0,9..0,10
+  .ifs[2]
+   0] Name 'c' Load - 0,14..0,15
+   1] Name 'd' Load - 0,19..0,20
+  .is_async 0
+'''),
+
+('', None, None, None, {}, ('comprehension',
+r'''for a in b if c if d'''),
+r'''Mcomprehension(target=M(t=...), iter=M(i=...), ifs=M(f=...))''', (None,
+r'''for __FST_t in __FST_i if __FST_f if __FST_f'''),
+r'''for a in b if c if d if c if d''', r'''
+comprehension - ROOT 0,0..0,30
+  .target Name 'a' Store - 0,4..0,5
+  .iter Name 'b' Load - 0,9..0,10
+  .ifs[4]
+   0] Name 'c' Load - 0,14..0,15
+   1] Name 'd' Load - 0,19..0,20
+   2] Name 'c' Load - 0,24..0,25
+   3] Name 'd' Load - 0,29..0,30
+  .is_async 0
+'''),
+
+('', None, None, None, {}, ('comprehension',
+r'''for a in b if c if d'''),
+r'''Mcomprehension(target=M(t=...), iter=M(i=...), ifs=M(f=...))''', (None,
+r'''for __FST_i in __FST_t if x if __FST_f if y if __FST_f if z'''),
+r'''for b in a if x if c if d if y if c if d if z''', r'''
+comprehension - ROOT 0,0..0,45
+  .target Name 'b' Store - 0,4..0,5
+  .iter Name 'a' Load - 0,9..0,10
+  .ifs[7]
+   0] Name 'x' Load - 0,14..0,15
+   1] Name 'c' Load - 0,19..0,20
+   2] Name 'd' Load - 0,24..0,25
+   3] Name 'y' Load - 0,29..0,30
+   4] Name 'c' Load - 0,34..0,35
+   5] Name 'd' Load - 0,39..0,40
+   6] Name 'z' Load - 0,44..0,45
+  .is_async 0
+'''),
+],
+
+'basic_ExceptHandler': [  # ................................................................................
+
+('', None, None, None, {}, ('ExceptHandler',
+r'''except: pass'''),
+r'''MExceptHandler(type=M(t=...), name=M(n=...), body=M(b=...))''', (None,
+r'''except __FST_t as __FST_n: __FST_b; return'''),
+r'''**ValueError('cannot delete ExceptHandler.type in this state')**'''),
+
+('', None, None, None, {}, ('ExceptHandler',
+r'''except: pass'''),
+r'''MExceptHandler(type=M(t=...), name=M(n=...), body=M(b=...))''', (None,
+r'''except __FST_t: __FST_b; return'''), r'''
+except:
+    pass
+    return
+''', r'''
+ExceptHandler - ROOT 0,0..2,10
+  .body[2]
+   0] Pass - 1,4..1,8
+   1] Return - 2,4..2,10
+'''),
+
+('', None, None, None, {}, ('ExceptHandler',
+r'''except Exception as exc: pass'''),
+r'''MExceptHandler(type=M(t=...), name=M(n=...), body=M(b=...))''', (None,
+r'''except __FST_t as __FST_n: __FST_b; __FST_b'''), r'''
+except Exception as exc:
+    pass
+    pass
+''', r'''
+ExceptHandler - ROOT 0,0..2,8
+  .type Name 'Exception' Load - 0,7..0,16
+  .name 'exc'
+  .body[2]
+   0] Pass - 1,4..1,8
+   1] Pass - 2,4..2,8
+'''),
+
+('', None, None, None, {}, ('ExceptHandler',
+r'''except Exception as exc: pass'''),
+r'''MExceptHandler(type=M(t=...), name=M(n=...), body=M(b=...))''', (None,
+r'''except __FST_n: __FST_b; __FST_b'''), r'''
+except exc:
+    pass
+    pass
+''', r'''
+ExceptHandler - ROOT 0,0..2,8
+  .type Name 'exc' Load - 0,7..0,10
+  .body[2]
+   0] Pass - 1,4..1,8
+   1] Pass - 2,4..2,8
+'''),
+
+('', None, None, None, {}, ('ExceptHandler',
+r'''except Exception as exc: pass'''),
+r'''MExceptHandler(type=M(t=...), name=M(n=...), body=M(b=...))''', (None,
+r'''except __FST_n as __FST_t: __FST_b; __FST_b'''), r'''
+except exc as Exception:
+    pass
+    pass
+''', r'''
+ExceptHandler - ROOT 0,0..2,8
+  .type Name 'exc' Load - 0,7..0,10
+  .name 'Exception'
+  .body[2]
+   0] Pass - 1,4..1,8
+   1] Pass - 2,4..2,8
+'''),
+],
+
 'basic_arguments': [  # ................................................................................
 
 ('', None, None, None, {}, ('FunctionDef',
@@ -3519,6 +4053,1333 @@ arguments - ROOT 0,0..0,4
      .arg 'x'
    1] arg - 0,3..0,4
      .arg 'z'
+'''),
+
+('', None, None, None, {}, ('arguments',
+r'''a=0, /, b=1, *, c=2'''),
+r'''Marguments(posonlyargs=[M(pos=...)], args=[M(arg=...)], kwonlyargs=[M(kw=...)], defaults=[M(d0=...), M(d1=...)], kw_defaults=[M(dk=...)])''', ('arguments',
+r'''__FST_kw=__FST_d1, /, __FST_pos=__FST_dk, *, __FST_arg=__FST_d0'''),
+r'''c=1, /, a=2, *, b=0''', r'''
+arguments - ROOT 0,0..0,19
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'c'
+  .args[1]
+   0] arg - 0,8..0,9
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,16..0,17
+     .arg 'b'
+  .kw_defaults[1]
+   0] Constant 0 - 0,18..0,19
+  .defaults[2]
+   0] Constant 1 - 0,2..0,3
+   1] Constant 2 - 0,10..0,11
+'''),
+
+('', None, None, None, {}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''**NodeError('posonlyargs cannot follow kwonlyargs')**'''),
+
+('', None, None, None, {'args_as': 'arg'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''c=3, a=1, b=2''', r'''
+arguments - ROOT 0,0..0,13
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'c'
+   1] arg - 0,5..0,6
+     .arg 'a'
+   2] arg - 0,10..0,11
+     .arg 'b'
+  .defaults[3]
+   0] Constant 3 - 0,2..0,3
+   1] Constant 1 - 0,7..0,8
+   2] Constant 2 - 0,12..0,13
+'''),
+
+('', None, None, None, {'args_as': 'pos'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''**NodeError('posonlyargs cannot follow args')**'''),
+
+('', None, None, None, {'args_as': 'pos'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, __FST_a0, __FST_a1'''),
+r'''**NodeError('posonlyargs cannot follow args')**'''),
+
+('', None, None, None, {'args_as': 'pos'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, __FST_a0, __FST_a1, /'''),
+r'''c=3, a=1, b=2, /''', r'''
+arguments - ROOT 0,0..0,16
+  .posonlyargs[3]
+   0] arg - 0,0..0,1
+     .arg 'c'
+   1] arg - 0,5..0,6
+     .arg 'a'
+   2] arg - 0,10..0,11
+     .arg 'b'
+  .defaults[3]
+   0] Constant 3 - 0,2..0,3
+   1] Constant 1 - 0,7..0,8
+   2] Constant 2 - 0,12..0,13
+'''),
+
+('', None, None, None, {'args_as': 'arg'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''c=3, a=1, b=2''', r'''
+arguments - ROOT 0,0..0,13
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'c'
+   1] arg - 0,5..0,6
+     .arg 'a'
+   2] arg - 0,10..0,11
+     .arg 'b'
+  .defaults[3]
+   0] Constant 3 - 0,2..0,3
+   1] Constant 1 - 0,7..0,8
+   2] Constant 2 - 0,12..0,13
+'''),
+
+('', None, None, None, {'args_as': 'arg'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1, __FST_a1'''),
+r'''**NodeError('args cannot follow kwonlyargs')**'''),
+
+('', None, None, None, {'args_as': 'arg'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, __FST_a1, __FST_a1'''),
+r'''c=3, a=1, b=2, b=2''', r'''
+arguments - ROOT 0,0..0,18
+  .args[4]
+   0] arg - 0,0..0,1
+     .arg 'c'
+   1] arg - 0,5..0,6
+     .arg 'a'
+   2] arg - 0,10..0,11
+     .arg 'b'
+   3] arg - 0,15..0,16
+     .arg 'b'
+  .defaults[4]
+   0] Constant 3 - 0,2..0,3
+   1] Constant 1 - 0,7..0,8
+   2] Constant 2 - 0,12..0,13
+   3] Constant 2 - 0,17..0,18
+'''),
+
+('', None, None, None, {'args_as': 'kw'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''*, c=3, a=1, b=2''', r'''
+arguments - ROOT 0,0..0,16
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'c'
+   1] arg - 0,8..0,9
+     .arg 'a'
+   2] arg - 0,13..0,14
+     .arg 'b'
+  .kw_defaults[3]
+   0] Constant 3 - 0,5..0,6
+   1] Constant 1 - 0,10..0,11
+   2] Constant 2 - 0,15..0,16
+'''),
+
+('', None, None, None, {'args_as': 'kw'}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''*, c=3, a=1, b=2''', r'''
+arguments - ROOT 0,0..0,16
+  .kwonlyargs[3]
+   0] arg - 0,3..0,4
+     .arg 'c'
+   1] arg - 0,8..0,9
+     .arg 'a'
+   2] arg - 0,13..0,14
+     .arg 'b'
+  .kw_defaults[3]
+   0] Constant 3 - 0,5..0,6
+   1] Constant 1 - 0,10..0,11
+   2] Constant 2 - 0,15..0,16
+'''),
+],
+
+'basic_arg': [  # ................................................................................
+
+('', None, None, None, {}, ('arg',
+r'''a: int'''),
+r'''Marg(arg=M(a=...), annotation=M(n=...))''',
+r'''__FST_a = __FST_n''',
+r'''a = int''', r'''
+Assign - ROOT 0,0..0,7
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+  .value Name 'int' Load - 0,4..0,7
+'''),
+
+('', None, None, None, {}, ('arg',
+r'''a: int'''),
+r'''Marg(arg=M(a=...), annotation=M(n=...))''', ('arg',
+r'''__FST_a: __FST_n'''),
+r'''a: int''', r'''
+arg - ROOT 0,0..0,6
+  .arg 'a'
+  .annotation Name 'int' Load - 0,3..0,6
+'''),
+
+('', None, None, None, {}, ('arg',
+r'''a: int'''),
+r'''Marg(arg=M(a=...), annotation=M(n=...))''', ('arg',
+r'''__FST_a: __FST_DEL'''),
+r'''a''', r'''
+arg - ROOT 0,0..0,1
+  .arg 'a'
+'''),
+
+('', None, None, None, {}, ('arg',
+r'''a: int'''),
+r'''Marg(arg=M(a=...), annotation=M(n=...))''', ('arg',
+r'''__FST_n: __FST_a'''),
+r'''int: a''', r'''
+arg - ROOT 0,0..0,6
+  .arg 'int'
+  .annotation Name 'a' Load - 0,5..0,6
+'''),
+],
+
+'basic_keyword': [  # ................................................................................
+
+('', None, None, None, {}, ('keyword',
+r'''k=w'''),
+r'''Mkeyword(arg=M(a=...), value=M(v=...))''',
+r'''__FST_a = __FST_v''',
+r'''k = w''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'k' Store - 0,0..0,1
+  .value Name 'w' Load - 0,4..0,5
+'''),
+
+('', None, None, None, {}, ('keyword',
+r'''k=w'''),
+r'''Mkeyword(arg=M(a=...), value=M(v=...))''', ('keyword',
+r'''__FST_a=__FST_v'''),
+r'''k=w''', r'''
+keyword - ROOT 0,0..0,3
+  .arg 'k'
+  .value Name 'w' Load - 0,2..0,3
+'''),
+
+('', None, None, None, {}, ('keyword',
+r'''k=w'''),
+r'''Mkeyword(arg=M(a=...), value=M(v=...))''', ('keyword',
+r'''**__FST_v'''),
+r'''**w''', r'''
+keyword - ROOT 0,0..0,3
+  .value Name 'w' Load - 0,2..0,3
+'''),
+
+('', None, None, None, {}, ('keyword',
+r'''k=w'''),
+r'''Mkeyword(arg=M(a=...), value=M(v=...))''', ('keyword',
+r'''__FST_v=__FST_a'''),
+r'''w=k''', r'''
+keyword - ROOT 0,0..0,3
+  .arg 'w'
+  .value Name 'k' Load - 0,2..0,3
+'''),
+],
+
+'basic_alias': [  # ................................................................................
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''',
+r'''__FST_n = __FST_a''',
+r'''name = asname''', r'''
+Assign - ROOT 0,0..0,13
+  .targets[1]
+   0] Name 'name' Store - 0,0..0,4
+  .value Name 'asname' Load - 0,7..0,13
+'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', ('alias',
+r'''__FST_a as __FST_n'''),
+r'''asname as name''', r'''
+alias - ROOT 0,0..0,14
+  .name 'asname'
+  .asname 'name'
+'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', ('alias',
+r'''__FST_n as __FST_a'''),
+r'''name as asname''', r'''
+alias - ROOT 0,0..0,14
+  .name 'name'
+  .asname 'asname'
+'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', ('alias',
+r'''__FST_n as __FST_DEL'''),
+r'''name''', r'''
+alias - ROOT 0,0..0,4
+  .name 'name'
+'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', ('alias',
+r'''__FST_a'''),
+r'''asname''',
+r'''Name 'asname' Load - ROOT 0,0..0,6'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', ('alias',
+r'''__FST_n'''),
+r'''name''',
+r'''Name 'name' Load - ROOT 0,0..0,4'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', (None,
+r'''import __FST_a'''),
+r'''import asname''', r'''
+Import - ROOT 0,0..0,13
+  .names[1]
+   0] alias - 0,7..0,13
+     .name 'asname'
+'''),
+
+('', None, None, None, {}, ('alias',
+r'''name as asname'''),
+r'''Malias(name=M(n=...), asname=M(a=...))''', (None,
+r'''import __FST_n'''),
+r'''import name''', r'''
+Import - ROOT 0,0..0,11
+  .names[1]
+   0] alias - 0,7..0,11
+     .name 'name'
+'''),
+],
+
+'basic_withitem': [  # ................................................................................
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''',
+r'''__FST_n = __FST_a''',
+r'''context_expr = optional_vars''', r'''
+Assign - ROOT 0,0..0,28
+  .targets[1]
+   0] Name 'context_expr' Store - 0,0..0,12
+  .value Name 'optional_vars' Load - 0,15..0,28
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', ('withitem',
+r'''__FST_a as __FST_n'''),
+r'''optional_vars as context_expr''', r'''
+withitem - ROOT 0,0..0,29
+  .context_expr Name 'optional_vars' Load - 0,0..0,13
+  .optional_vars Name 'context_expr' Store - 0,17..0,29
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', ('withitem',
+r'''__FST_n as __FST_a'''),
+r'''context_expr as optional_vars''', r'''
+withitem - ROOT 0,0..0,29
+  .context_expr Name 'context_expr' Load - 0,0..0,12
+  .optional_vars Name 'optional_vars' Store - 0,16..0,29
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', ('withitem',
+r'''__FST_n as __FST_DEL'''),
+r'''context_expr''', r'''
+withitem - ROOT 0,0..0,12
+  .context_expr Name 'context_expr' Load - 0,0..0,12
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', ('withitem',
+r'''__FST_a'''),
+r'''optional_vars''', r'''
+withitem - ROOT 0,0..0,13
+  .context_expr Name 'optional_vars' Load - 0,0..0,13
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', ('withitem',
+r'''__FST_n'''),
+r'''context_expr''', r'''
+withitem - ROOT 0,0..0,12
+  .context_expr Name 'context_expr' Load - 0,0..0,12
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', (None,
+r'''with __FST_a: pass'''),
+r'''with optional_vars: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[1]
+   0] withitem - 0,5..0,18
+     .context_expr Name 'optional_vars' Load - 0,5..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', (None,
+r'''with __FST_n: pass'''),
+r'''with context_expr: pass''', r'''
+With - ROOT 0,0..0,23
+  .items[1]
+   0] withitem - 0,5..0,17
+     .context_expr Name 'context_expr' Load - 0,5..0,17
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', (None,
+r'''with __FST_: pass'''),
+r'''with context_expr as optional_vars: pass''', r'''
+With - ROOT 0,0..0,40
+  .items[1]
+   0] withitem - 0,5..0,34
+     .context_expr Name 'context_expr' Load - 0,5..0,17
+     .optional_vars Name 'optional_vars' Store - 0,21..0,34
+  .body[1]
+   0] Pass - 0,36..0,40
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''context_expr as optional_vars'''),
+r'''Mwithitem(context_expr=M(n=...), optional_vars=M(a=...))''', (None,
+r'''with __FST_a as __FST_n: pass'''),
+r'''with optional_vars as context_expr: pass''', r'''
+With - ROOT 0,0..0,40
+  .items[1]
+   0] withitem - 0,5..0,34
+     .context_expr Name 'optional_vars' Load - 0,5..0,18
+     .optional_vars Name 'context_expr' Store - 0,22..0,34
+  .body[1]
+   0] Pass - 0,36..0,40
+'''),
+],
+
+'basic_match_case': [  # ................................................................................
+
+('', None, None, None, {}, ('match_case',
+r'''case _ if a: pass'''),
+r'''Mmatch_case(pattern=M(p=...), guard=M(g=...), body=M(b=...))''',
+r'''__FST_''',
+r'''case _ if a: pass''', r'''
+match_case - ROOT 0,0..0,17
+  .pattern MatchAs - 0,5..0,6
+  .guard Name 'a' Load - 0,10..0,11
+  .body[1]
+   0] Pass - 0,13..0,17
+'''),
+
+('', None, None, None, {}, ('match_case',
+r'''case _ if a: pass'''),
+r'''Mmatch_case(pattern=M(p=...), guard=M(g=...), body=M(b=...))''',
+r'''case __FST_g if __FST_p: __FST_b; __FST_p; __FST_g''', r'''
+case a if _:
+    pass
+    _; a
+''', r'''
+match_case - ROOT 0,0..2,8
+  .pattern MatchAs - 0,5..0,6
+    .name 'a'
+  .guard Name '_' Load - 0,10..0,11
+  .body[3]
+   0] Pass - 1,4..1,8
+   1] Expr - 2,4..2,5
+     .value Name '_' Load - 2,4..2,5
+   2] Expr - 2,7..2,8
+     .value Name 'a' Load - 2,7..2,8
+'''),
+
+('', None, None, None, {}, ('match_case',
+r'''case [a, b]: pass'''),
+r'''Mmatch_case(pattern=MMatchSequence(patterns=[M(p0=...), M(p1=...)]), guard=M(g=...), body=M(b=...))''',
+r'''case __FST_p1 as __FST_p0 if __FST_g: __FST_b; __FST_b''', r'''
+case b as a:
+    pass
+    pass
+''', r'''
+match_case - ROOT 0,0..2,8
+  .pattern MatchAs - 0,5..0,11
+    .pattern MatchAs - 0,5..0,6
+      .name 'b'
+    .name 'a'
+  .body[2]
+   0] Pass - 1,4..1,8
+   1] Pass - 2,4..2,8
+'''),
+],
+
+'basic_MatchValue': [  # ................................................................................
+
+('', None, None, None, {}, ('pattern',
+r'''1'''),
+r'''MMatchValue(value=M(v=...))''',
+r'''a = __FST_v''',
+r'''a = 1''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+  .value Constant 1 - 0,4..0,5
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''1'''),
+r'''MMatchValue''',
+r'''a = __FST_''',
+r'''a = 1''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+  .value Constant 1 - 0,4..0,5
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''1'''),
+r'''MMatchValue''', ('pattern',
+r'''[__FST_DEL]'''),
+r'''[]''',
+r'''MatchSequence - ROOT 0,0..0,2'''),
+
+('', None, None, None, {}, ('pattern',
+r'''1'''),
+r'''MMatchValue''', ('pattern',
+r'''[__FST_, __FST_DEL, __FST_]'''),
+r'''[1, 1]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchValue - 0,1..0,2
+     .value Constant 1 - 0,1..0,2
+   1] MatchValue - 0,4..0,5
+     .value Constant 1 - 0,4..0,5
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''1'''),
+r'''MMatchValue(value=M(v=...))''', ('pattern',
+r'''[__FST_v, __FST_v]'''),
+r'''[1, 1]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchValue - 0,1..0,2
+     .value Constant 1 - 0,1..0,2
+   1] MatchValue - 0,4..0,5
+     .value Constant 1 - 0,4..0,5
+'''),
+],
+
+'basic_MatchSequence': [  # ................................................................................
+
+('', None, None, None, {}, ('pattern',
+r'''[a, b]'''),
+r'''MMatchSequence(patterns=M(p=...))''', ('pattern',
+r'''__FST_'''),
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''[a, b]'''),
+r'''MMatchSequence(patterns=M(p=...))''', ('pattern',
+r'''[__FST_]'''),
+r'''[[a, b]]''', r'''
+MatchSequence - ROOT 0,0..0,8
+  .patterns[1]
+   0] MatchSequence - 0,1..0,7
+     .patterns[2]
+      0] MatchAs - 0,2..0,3
+        .name 'a'
+      1] MatchAs - 0,5..0,6
+        .name 'b'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''[a, b]'''),
+r'''MMatchSequence(patterns=M(p=...))''', ('pattern',
+r'''[__FST_p]'''),
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''[a, b]'''),
+r'''MMatchSequence(patterns=M(p=...))''', ('pattern',
+r'''[x, __FST_, y]'''),
+r'''[x, [a, b], y]''', r'''
+MatchSequence - ROOT 0,0..0,14
+  .patterns[3]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchSequence - 0,4..0,10
+     .patterns[2]
+      0] MatchAs - 0,5..0,6
+        .name 'a'
+      1] MatchAs - 0,8..0,9
+        .name 'b'
+   2] MatchAs - 0,12..0,13
+     .name 'y'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''[a, b]'''),
+r'''MMatchSequence(patterns=M(p=...))''', ('pattern',
+r'''[x, __FST_p, y]'''),
+r'''[x, a, b, y]''', r'''
+MatchSequence - ROOT 0,0..0,12
+  .patterns[4]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchAs - 0,4..0,5
+     .name 'a'
+   2] MatchAs - 0,7..0,8
+     .name 'b'
+   3] MatchAs - 0,10..0,11
+     .name 'y'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''[a, b]'''),
+r'''MMatchSequence(patterns=[M(p0=...), M(p1=...)])''', ('pattern',
+r'''[__FST_p1, x, y, __FST_p0,]'''),
+r'''[b, x, y, a,]''', r'''
+MatchSequence - ROOT 0,0..0,13
+  .patterns[4]
+   0] MatchAs - 0,1..0,2
+     .name 'b'
+   1] MatchAs - 0,4..0,5
+     .name 'x'
+   2] MatchAs - 0,7..0,8
+     .name 'y'
+   3] MatchAs - 0,10..0,11
+     .name 'a'
+'''),
+],
+
+'basic_MatchMapping': [  # ................................................................................
+
+('', None, None, None, {}, ('MatchMapping',
+r'''{a.b: c.d}'''),
+r'''MMatchMapping(keys=[M(k=...)], patterns=[M(v=...)])''', ('pattern',
+r'''{__FST_v.x: __FST_k}'''),
+r'''{c.d.x: a.b}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[1]
+   0] Attribute - 0,1..0,6
+     .value Attribute - 0,1..0,4
+       .value Name 'c' Load - 0,1..0,2
+       .attr 'd'
+       .ctx Load
+     .attr 'x'
+     .ctx Load
+  .patterns[1]
+   0] MatchValue - 0,8..0,11
+     .value Attribute - 0,8..0,11
+       .value Name 'a' Load - 0,8..0,9
+       .attr 'b'
+       .ctx Load
+'''),
+
+('', None, None, None, {}, ('MatchMapping',
+r'''{a.b: c.d}'''),
+r'''MMatchMapping(_all=[M(e=...)])''', ('pattern',
+r'''__FST_e'''),
+r'''{a.b: c.d}''', r'''
+MatchMapping - ROOT 0,0..0,10
+  .keys[1]
+   0] Attribute - 0,1..0,4
+     .value Name 'a' Load - 0,1..0,2
+     .attr 'b'
+     .ctx Load
+  .patterns[1]
+   0] MatchValue - 0,6..0,9
+     .value Attribute - 0,6..0,9
+       .value Name 'c' Load - 0,6..0,7
+       .attr 'd'
+       .ctx Load
+'''),
+
+('', None, None, None, {}, ('MatchMapping',
+r'''{1: u, a.b: c.d, 2: v}'''),
+r'''MMatchMapping(_all=[..., M(e=...), ...])''', ('pattern',
+r'''__FST_e'''),
+r'''{a.b: c.d}''', r'''
+MatchMapping - ROOT 0,0..0,10
+  .keys[1]
+   0] Attribute - 0,1..0,4
+     .value Name 'a' Load - 0,1..0,2
+     .attr 'b'
+     .ctx Load
+  .patterns[1]
+   0] MatchValue - 0,6..0,9
+     .value Attribute - 0,6..0,9
+       .value Name 'c' Load - 0,6..0,7
+       .attr 'd'
+       .ctx Load
+'''),
+
+('', None, None, None, {}, ('MatchMapping',
+r'''{1: u, a.b: c.d, 2: v}'''),
+r'''MMatchMapping(_all=M(e=...))''', ('pattern',
+r'''__FST_e'''),
+r'''{1: u, a.b: c.d, 2: v}''', r'''
+MatchMapping - ROOT 0,0..0,22
+  .keys[3]
+   0] Constant 1 - 0,1..0,2
+   1] Attribute - 0,7..0,10
+     .value Name 'a' Load - 0,7..0,8
+     .attr 'b'
+     .ctx Load
+   2] Constant 2 - 0,17..0,18
+  .patterns[3]
+   0] MatchAs - 0,4..0,5
+     .name 'u'
+   1] MatchValue - 0,12..0,15
+     .value Attribute - 0,12..0,15
+       .value Name 'c' Load - 0,12..0,13
+       .attr 'd'
+       .ctx Load
+   2] MatchAs - 0,20..0,21
+     .name 'v'
+'''),
+
+('', None, None, None, {}, ('MatchMapping',
+r'''{a.b: c.d, **rest}'''),
+r'''MMatchMapping(keys=[M(k=...)], patterns=[M(v=...)], rest=M(r=...))''', ('pattern',
+r'''{__FST_r.x: __FST_r, **__FST_r}'''),
+r'''{rest.x: rest, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,22
+  .keys[1]
+   0] Attribute - 0,1..0,7
+     .value Name 'rest' Load - 0,1..0,5
+     .attr 'x'
+     .ctx Load
+  .patterns[1]
+   0] MatchAs - 0,9..0,13
+     .name 'rest'
+  .rest 'rest'
+'''),
+
+('', None, None, None, {}, ('MatchMapping',
+r'''{a.b: c.d, **rest}'''),
+r'''MMatchMapping(keys=[M(k=...)], patterns=[M(v=...)], rest=M(r=...))''', ('pattern',
+r'''{__FST_r.x: __FST_r, **__FST_DEL}'''),
+r'''{rest.x: rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Attribute - 0,1..0,7
+     .value Name 'rest' Load - 0,1..0,5
+     .attr 'x'
+     .ctx Load
+  .patterns[1]
+   0] MatchAs - 0,9..0,13
+     .name 'rest'
+'''),
+],
+
+'basic_MatchClass': [  # ................................................................................
+
+('', None, None, None, {}, ('MatchClass',
+r'''cls(a, b)'''),
+r'''MMatchClass(cls=M(c=...), patterns=M(p=...))''', ('pattern',
+r'''newcls(__FST_c, __FST_p)'''),
+r'''newcls(cls, a, b)''', r'''
+MatchClass - ROOT 0,0..0,17
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[3]
+   0] MatchAs - 0,7..0,10
+     .name 'cls'
+   1] MatchAs - 0,12..0,13
+     .name 'a'
+   2] MatchAs - 0,15..0,16
+     .name 'b'
+'''),
+
+('', None, None, None, {}, ('MatchClass',
+r'''cls(a=b)'''),
+r'''MMatchClass(kwd_attrs=[M(a=...)], kwd_patterns=[M(p=...)])''', ('pattern',
+r'''__FST_a(__FST_p=__FST_a)'''),
+r'''a(b=a)''', r'''
+MatchClass - ROOT 0,0..0,6
+  .cls Name 'a' Load - 0,0..0,1
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
+],
+
+'basic_MatchStar': [  # ................................................................................
+
+('', None, None, None, {}, ('MatchStar',
+r'''*s'''),
+r'''MMatchStar(name=M(n=...))''', ('MatchStar',
+r'''*__FST_n'''),
+r'''*s''', r'''
+MatchStar - ROOT 0,0..0,2
+  .name 's'
+'''),
+
+('', None, None, None, {}, ('MatchStar',
+r'''*s'''),
+r'''MMatchStar(name=M(n=...))''', ('pattern',
+r'''__FST_'''),
+r'''*s''', r'''
+MatchStar - ROOT 0,0..0,2
+  .name 's'
+'''),
+],
+
+'basic_MatchAs': [  # ................................................................................
+
+('', None, None, None, {}, ('pattern',
+r'''a as b'''),
+r'''MMatchAs(pattern=M(p=...), name=M(n=...))''', ('pattern',
+r'''__FST_n as __FST_p'''),
+r'''b as a''', r'''
+MatchAs - ROOT 0,0..0,6
+  .pattern MatchAs - 0,0..0,1
+    .name 'b'
+  .name 'a'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a as b'''),
+r'''MMatchAs(pattern=M(p=...), name=M(n=...))''', ('pattern',
+r'''__FST_DEL as __FST_p'''),
+r'''a''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a'''),
+r'''MMatchAs(name=M(n=...))''', ('pattern',
+r'''__FST_n as __FST_n'''),
+r'''a as a''', r'''
+MatchAs - ROOT 0,0..0,6
+  .pattern MatchAs - 0,0..0,1
+    .name 'a'
+  .name 'a'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a as b'''),
+r'''MMatchAs(pattern=M(p=...))''', ('pattern',
+r'''__FST_p'''),
+r'''a''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'''),
+],
+
+'basic_MatchOr': [  # ................................................................................
+
+('', None, None, None, {}, ('pattern',
+r'''a | b | c'''),
+r'''MMatchOr''', ('pattern',
+r'''[__FST_, __FST_]'''),
+r'''[a | b | c, a | b | c]''', r'''
+MatchSequence - ROOT 0,0..0,22
+  .patterns[2]
+   0] MatchOr - 0,1..0,10
+     .patterns[3]
+      0] MatchAs - 0,1..0,2
+        .name 'a'
+      1] MatchAs - 0,5..0,6
+        .name 'b'
+      2] MatchAs - 0,9..0,10
+        .name 'c'
+   1] MatchOr - 0,12..0,21
+     .patterns[3]
+      0] MatchAs - 0,12..0,13
+        .name 'a'
+      1] MatchAs - 0,16..0,17
+        .name 'b'
+      2] MatchAs - 0,20..0,21
+        .name 'c'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a | b | c'''),
+r'''MMatchOr(patterns=[..., M(p=...), ...])''', ('pattern',
+r'''__FST_'''),
+r'''a | b | c''', r'''
+MatchOr - ROOT 0,0..0,9
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+   2] MatchAs - 0,8..0,9
+     .name 'c'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a | b | c'''),
+r'''MMatchOr(patterns=[..., M(p=...), ...])''', ('pattern',
+r'''__FST_p'''),
+r'''b''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'b'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a | b | c'''),
+r'''MMatchOr''', ('pattern',
+r'''x | __FST_ | y'''),
+r'''x | (a | b | c) | y''', r'''
+MatchOr - ROOT 0,0..0,19
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchOr - 0,5..0,14
+     .patterns[3]
+      0] MatchAs - 0,5..0,6
+        .name 'a'
+      1] MatchAs - 0,9..0,10
+        .name 'b'
+      2] MatchAs - 0,13..0,14
+        .name 'c'
+   2] MatchAs - 0,18..0,19
+     .name 'y'
+'''),
+
+('', None, None, None, {}, ('pattern',
+r'''a | b | c'''),
+r'''MMatchOr(patterns=M(p=...))''', ('pattern',
+r'''x | __FST_p | y'''),
+r'''x | a | b | c | y''', r'''
+MatchOr - ROOT 0,0..0,17
+  .patterns[5]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 0,4..0,5
+     .name 'a'
+   2] MatchAs - 0,8..0,9
+     .name 'b'
+   3] MatchAs - 0,12..0,13
+     .name 'c'
+   4] MatchAs - 0,16..0,17
+     .name 'y'
+'''),
+],
+
+'basic_TypeVar': [  # ................................................................................
+
+('', None, None, None, {'_ver': 12}, ('TypeVar',
+r'''T: int'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...))''',
+r'''__FST_b = __FST_n''',
+r'''int = T''', r'''
+Assign - ROOT 0,0..0,7
+  .targets[1]
+   0] Name 'int' Store - 0,0..0,3
+  .value Name 'T' Load - 0,6..0,7
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVar',
+r'''T: int'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...))''', ('TypeVar',
+r'''__FST_n: __FST_b'''),
+r'''T: int''', r'''
+TypeVar - ROOT 0,0..0,6
+  .name 'T'
+  .bound Name 'int' Load - 0,3..0,6
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVar',
+r'''T: int'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...))''', ('TypeVar',
+r'''__FST_b: __FST_n'''),
+r'''int: T''', r'''
+TypeVar - ROOT 0,0..0,6
+  .name 'int'
+  .bound Name 'T' Load - 0,5..0,6
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVar',
+r'''T'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...))''', ('TypeVar',
+r'''__FST_n: __FST_b'''),
+r'''T''', r'''
+TypeVar - ROOT 0,0..0,1
+  .name 'T'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVar',
+r'''T: int'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...))''', ('TypeVar',
+r'''__FST_'''),
+r'''T: int''', r'''
+TypeVar - ROOT 0,0..0,6
+  .name 'T'
+  .bound Name 'int' Load - 0,3..0,6
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVar',
+r'''T: int'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...))''', ('TypeAlias',
+r'''type t[__FST_n] = ...'''),
+r'''type t[T] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'T'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVar',
+r'''T: int = bool'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...), default_value=M(d=...))''', ('TypeVar',
+r'''__FST_n: __FST_b = __FST_d'''),
+r'''T: int = bool''', r'''
+TypeVar - ROOT 0,0..0,13
+  .name 'T'
+  .bound Name 'int' Load - 0,3..0,6
+  .default_value Name 'bool' Load - 0,9..0,13
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVar',
+r'''T'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...), default_value=M(d=...))''', ('TypeVar',
+r'''__FST_n: __FST_b = __FST_d'''),
+r'''T''', r'''
+TypeVar - ROOT 0,0..0,1
+  .name 'T'
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVar',
+r'''T: int = bool'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...), default_value=M(d=...))''', ('type_param',
+r'''*__FST_n = __FST_d'''),
+r'''*T = bool''', r'''
+TypeVarTuple - ROOT 0,0..0,9
+  .name 'T'
+  .default_value Name 'bool' Load - 0,5..0,9
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVar',
+r'''T: int = bool'''),
+r'''MTypeVar(name=M(n=...), bound=M(b=...), default_value=M(d=...))''', ('type_param',
+r'''**__FST_n = __FST_d'''),
+r'''**T = bool''', r'''
+ParamSpec - ROOT 0,0..0,10
+  .name 'T'
+  .default_value Name 'bool' Load - 0,6..0,10
+'''),
+],
+
+'basic_ParamSpec': [  # ................................................................................
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('type_param',
+r'''__FST_'''),
+r'''**V''', r'''
+ParamSpec - ROOT 0,0..0,3
+  .name 'V'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('type_param',
+r'''**__FST_n'''),
+r'''**V''', r'''
+ParamSpec - ROOT 0,0..0,3
+  .name 'V'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('type_param',
+r'''*__FST_n'''),
+r'''*V''', r'''
+TypeVarTuple - ROOT 0,0..0,2
+  .name 'V'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('type_param',
+r'''*__FST_'''),
+r'''**ParseError("expecting identifier, got '**V'")**'''),
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('type_param',
+r'''__FST_n'''),
+r'''V''',
+r'''Name 'V' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('TypeAlias',
+r'''type t[__FST_n] = ...'''),
+r'''type t[V] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'V'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', None, None, None, {'_ver': 12}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...))''', ('TypeAlias',
+r'''type t[__FST_] = ...'''),
+r'''type t[**V] = ...''', r'''
+TypeAlias - ROOT 0,0..0,17
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] ParamSpec - 0,7..0,10
+     .name 'V'
+  .value Constant Ellipsis - 0,14..0,17
+'''),
+
+('', None, None, None, {'_ver': 13}, ('ParamSpec',
+r'''**V = ()'''),
+r'''MParamSpec(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''__FST_n = __FST_d'''),
+r'''V = ()''', r'''
+TypeVar - ROOT 0,0..0,6
+  .name 'V'
+  .default_value Tuple - 0,4..0,6
+    .ctx Load
+'''),
+
+('', None, None, None, {'_ver': 13}, ('ParamSpec',
+r'''**V = ()'''),
+r'''MParamSpec(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''**__FST_n = __FST_d'''),
+r'''**V = ()''', r'''
+ParamSpec - ROOT 0,0..0,8
+  .name 'V'
+  .default_value Tuple - 0,6..0,8
+    .ctx Load
+'''),
+
+('', None, None, None, {'_ver': 13}, ('ParamSpec',
+r'''**V = ()'''),
+r'''MParamSpec(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''*__FST_n = __FST_d'''),
+r'''*V = ()''', r'''
+TypeVarTuple - ROOT 0,0..0,7
+  .name 'V'
+  .default_value Tuple - 0,5..0,7
+    .ctx Load
+'''),
+
+('', None, None, None, {'_ver': 13}, ('ParamSpec',
+r'''**V = ()'''),
+r'''MParamSpec(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''__FST_n'''),
+r'''V''',
+r'''Name 'V' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {'_ver': 13}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''__FST_n = __FST_d'''),
+r'''V''', r'''
+TypeVar - ROOT 0,0..0,1
+  .name 'V'
+'''),
+
+('', None, None, None, {'_ver': 13}, ('ParamSpec',
+r'''**V'''),
+r'''MParamSpec(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''*__FST_n = __FST_d'''),
+r'''*V''', r'''
+TypeVarTuple - ROOT 0,0..0,2
+  .name 'V'
+'''),
+],
+
+'basic_TypeVarTuple': [  # ................................................................................
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('type_param',
+r'''__FST_'''),
+r'''*U''', r'''
+TypeVarTuple - ROOT 0,0..0,2
+  .name 'U'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('type_param',
+r'''*__FST_n'''),
+r'''*U''', r'''
+TypeVarTuple - ROOT 0,0..0,2
+  .name 'U'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('type_param',
+r'''*__FST_'''),
+r'''**ParseError("expecting identifier, got '*U'")**'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('type_param',
+r'''**__FST_n'''),
+r'''**U''', r'''
+ParamSpec - ROOT 0,0..0,3
+  .name 'U'
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('type_param',
+r'''**__FST_'''),
+r'''**ParseError("expecting identifier, got '*U'")**'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('type_param',
+r'''__FST_n'''),
+r'''U''',
+r'''Name 'U' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('TypeAlias',
+r'''type t[__FST_n] = ...'''),
+r'''type t[U] = ...''', r'''
+TypeAlias - ROOT 0,0..0,15
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,8
+     .name 'U'
+  .value Constant Ellipsis - 0,12..0,15
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...))''', ('TypeAlias',
+r'''type t[__FST_] = ...'''),
+r'''type t[*U] = ...''', r'''
+TypeAlias - ROOT 0,0..0,16
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVarTuple - 0,7..0,9
+     .name 'U'
+  .value Constant Ellipsis - 0,13..0,16
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVarTuple',
+r'''*U = ()'''),
+r'''MTypeVarTuple(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''__FST_n = __FST_d'''),
+r'''U = ()''', r'''
+TypeVar - ROOT 0,0..0,6
+  .name 'U'
+  .default_value Tuple - 0,4..0,6
+    .ctx Load
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVarTuple',
+r'''*U = ()'''),
+r'''MTypeVarTuple(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''**__FST_n = __FST_d'''),
+r'''**U = ()''', r'''
+ParamSpec - ROOT 0,0..0,8
+  .name 'U'
+  .default_value Tuple - 0,6..0,8
+    .ctx Load
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVarTuple',
+r'''*U = ()'''),
+r'''MTypeVarTuple(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''*__FST_n = __FST_d'''),
+r'''*U = ()''', r'''
+TypeVarTuple - ROOT 0,0..0,7
+  .name 'U'
+  .default_value Tuple - 0,5..0,7
+    .ctx Load
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVarTuple',
+r'''*U = ()'''),
+r'''MTypeVarTuple(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''__FST_n'''),
+r'''U''',
+r'''Name 'U' Load - ROOT 0,0..0,1'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''__FST_n = __FST_d'''),
+r'''U''', r'''
+TypeVar - ROOT 0,0..0,1
+  .name 'U'
+'''),
+
+('', None, None, None, {'_ver': 13}, ('TypeVarTuple',
+r'''*U'''),
+r'''MTypeVarTuple(name=M(n=...), default_value=M(d=...))''', ('type_param',
+r'''*__FST_n = __FST_d'''),
+r'''*U''', r'''
+TypeVarTuple - ROOT 0,0..0,2
+  .name 'U'
 '''),
 ],
 
@@ -4770,24 +6631,21 @@ MatchAs - ROOT 0,0..0,8
 r'''SUB'''),
 r'''M(name=Name)''', ('pattern',
 r'''__FST_name'''),
-r'''SUB''', r'''
-MatchAs - ROOT 0,0..0,3
-  .name 'SUB'
-'''),
+r'''SUB''',
+r'''Name 'SUB' Load - ROOT 0,0..0,3'''),
 
 ('', None, None, None, {}, (None,
 r'''_'''),
 r'''M(name=Name)''', ('pattern',
 r'''__FST_name'''),
 r'''_''',
-r'''MatchAs - ROOT 0,0..0,1'''),
+r'''Name '_' Load - ROOT 0,0..0,1'''),
 
 ('', None, None, None, {}, (None,
 r'''SUB'''),
 r'''M(Name)''', ('pattern',
 r'''__FST_DEL'''),
-r'''_''',
-r'''MatchAs - ROOT 0,0..0,1'''),
+r'''**ValueError('cannot delete root node')**'''),
 
 ('', None, None, None, {'_ver': 12}, (None,
 r'''SUB'''),

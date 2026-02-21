@@ -198,6 +198,7 @@ def check_options(options: Mapping[str, Any], all: bool = True, mark_checked: bo
 
     return options
 
+
 def filter_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Copy just actual options from `options` and return."""
 
