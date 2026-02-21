@@ -23,6 +23,7 @@ from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_STMT,
     ASTS_LEAF__ALL,
     AST2ASTSLEAF,
 
@@ -5563,19 +5564,24 @@ def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.F
     """One Definitely-present and one optionally-present identifier."""
 
     ast = fst_.a
+    asname = ast.asname
     path = None
 
     if (tag := ast.name).startswith('__FST_'):
         path = repl.child_path(fst_)
 
+        if not asname:  # if no asname then bump up to alias node level
+            paths.append((tag[6:], path, None))
+
+            return
+
         paths.append((tag[6:], path, ('name', None)))
 
-    if tag := ast.asname:
-        if tag.startswith('__FST_'):
-            if path is None:
-                path = repl.child_path(fst_)
+    if asname and asname.startswith('__FST_'):
+        if path is None:
+            path = repl.child_path(fst_)
 
-            paths.append((tag[6:], path, ('asname', None)))
+        paths.append((asname[6:], path, ('asname', None)))
 
 def _sub_repl_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Optionally-present identifier."""
@@ -5919,17 +5925,13 @@ def sub(
                   cid=CID)
     """
 
-    check_options(options)
+    options = check_options(options, mark_checked=True)
+    copy_options = options if copy_options is None else check_options(copy_options, mark_checked=True)
+    repl_options = options if repl_options is None else check_options(repl_options, mark_checked=True)
 
     repl = code_as_all(repl, parse_params=self.root.parse_params)
     paths = []  # [(tag, path, (field, idx | None) | None), ...]
     dirty = set()  # {AST, ...}
-
-    if copy_options is None:
-        copy_options = options
-
-    if repl_options is None:
-        repl_options = options
 
     for f in repl.walk(_SUB_REPL_PATH_FUNCS):
         _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, repl, f)
@@ -5948,51 +5950,62 @@ def sub(
 
         for tag, path, child in paths:
             repl_slot = repl_.child_from_path(path)
-            slot_sub_is_matched_root = False  # if the new node for the repl slot is the top level matched node (which should itself not be substituted again)
+            repl_slot_new_is_matched_root = False  # if the new node for the repl slot is the top level matched node (which should itself not be substituted again)
             one = True
 
             if not tag:  # this means we are replacing with the whole matched node
-                slot_sub_is_matched_root = True
-                slot_sub = matched.copy(**copy_options)
+                repl_slot_new_is_matched_root = True
+                repl_slot_new = matched.copy(**copy_options)
 
-            elif (slot_sub := m.tags.get(tag, _SENTINEL)) is _SENTINEL:  # if tag not found then default to delete
-                slot_sub = None  # raise MatchError(f'{tag!r} tag not found for substitution')
+            elif (repl_slot_new := m.tags.get(tag, None)) is None:  # if tag not found then default to delete
+                pass  # noop
 
-            elif isinstance(slot_sub, fst.FST):
-                slot_sub_is_matched_root = slot_sub is matched
-                slot_sub = slot_sub.copy(**copy_options)
+            elif isinstance(repl_slot_new, fst.FST):
+                repl_slot_new_is_matched_root = repl_slot_new is matched
+                repl_slot_new = repl_slot_new.copy(**copy_options)
 
-            elif isinstance(slot_sub, FSTView):  # we get a normal single node container (which may contain multiple elements) for putting as a slice
-                slot_sub = slot_sub.copy(**copy_options)
-                one = False  # this will be a slice of some kind so make sure we put as a slice
+            elif isinstance(repl_slot_new, FSTView):  # we get a normal single node container (which may contain multiple elements) for putting as a slice
+                repl_slot_new = repl_slot_new.copy(**copy_options)
+                one = False  # this will be a slice of some kind so make sure we put as a slice, even if it is a single arg in arguments posing as a slice it is fine to treat it as a slice
 
-            elif not isinstance(slot_sub, (AST, str, NoneType)):
-                raise MatchError(f'match substitution must be FST, AST, str or None, got {slot_sub}')
+            elif not isinstance(repl_slot_new, str):  # str could have come from static tag
+                raise MatchError('match substitution must be FST, None or str,'
+                                 f' got {repl_slot_new.__class__.__qualname__}')
 
-            if child is not None:  # path includes a child field which means its not a real node but a str identifier
+            if child is not None:  # path includes a child field which means its not a real node but a str identifier, doesn't need to be marked dirty
                 field, idx = child
 
-                repl_slot._put_one(slot_sub, idx, field, repl_options, False)
+                if one:
+                    repl_slot._put_one(repl_slot_new, idx, field, repl_options, False)
+                else:
+                    repl_slot._put_slice(repl_slot_new, idx, idx + 1, field, repl_options)  # Global / Nonlocal
 
             else:
                 if parent := repl_slot.parent:  # some fields are special-cased for simplicity and common-sense sake
-                    parenta_cls = parent.a.__class__
+                    parenta = parent.a
+                    parenta_cls = parenta.__class__
                     field, idx = repl_slot.pfield
                     new_idx = None
 
-                    if parenta_cls is Expr:  # maybe replacing with single or body of statements
-                        if not one and slot_sub.a.__class__ is Module and (grandparent := parent.parent):
-                            field, new_idx = parent.pfield
-                            parent = grandparent
+                    if parenta_cls is Expr:  # Name with parent Expr, maybe replacing with single or body of statements
+                        if (not isinstance(repl_slot_new, fst.FST) or
+                            (repl_slot_new_cls := repl_slot_new.a.__class__) in ASTS_LEAF_STMT
+                        ):
+                            repl_slot = parent
+
+                        elif repl_slot_new_cls is Module:
+                            repl_slot = parent
+                            # repl_slot_new_is_matched_root = False  # because Module will disappear as it is a container  # TODO: need this?
+                            one = False
 
                     elif parenta_cls is Call:  # Call._args?
                         if field in ('args', 'keywords'):
-                            field = '_args'
+                            new_field = '_args'
                             new_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     elif parenta_cls is arguments:
-                        if slot_sub.a.__class__ is arguments:
-                            field = '_all'
+                        if not repl_slot_new or repl_slot_new.a.__class__ is arguments:
+                            new_field = '_all'
                             allargs = parent._cached_allargs()
                             one = False
 
@@ -6003,37 +6016,61 @@ def sub(
 
                     elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
                         if not one:  # only if came from existing Compare slice
-                            field = '_all'
+                            new_field = '_all'
                             new_idx = 0 if idx is None else idx + 1
 
                     elif parenta_cls is ClassDef:  # ClassDef._bases?
                         if field in ('bases', 'keywords'):
-                            field = '_bases'
+                            new_field = '_bases'
                             new_idx = parent._cached_arglikes().index(repl_slot.a)
 
-                    if new_idx is not None:  # replace is a slice operation
-                        if not slot_sub_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
-                            parent._put_slice(slot_sub, new_idx, new_idx + 1, field, one, repl_options)
+                    elif parenta_cls is withitem:  # can be whole withitem with optional_vars to put as withitem or multiple _withitems
+                        # TODO: full review of behavior, allow other sequences to put slice as items?
+
+                        if field == 'context_expr' and not parenta.optional_vars:
+                            if (not isinstance(repl_slot_new, fst.FST)
+                                or (repl_slot_new_cls := repl_slot_new.a.__class__) is _withitems
+                            ):
+                                repl_slot = parent
+                                one = False
+
+                            elif repl_slot_new_cls is withitem:
+                                repl_slot = parent
+
+                    if new_idx is not None:  # replace is a special virtual field slice operation
+                        if not repl_slot_new_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
+                            parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
 
                         else:  # need to do extra stuff to mark possibly multiple replacements as dirty
-                            body = getattr(parent, field)
+                            body = getattr(parent, new_field)
                             len_body = len(body)
 
-                            parent._put_slice(slot_sub, new_idx, new_idx + 1, field, one, repl_options)
+                            parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
 
-                            if (delta := len(body) - len_body) >= 0:  # only if replaced or added, if length contracted then there was deletion
-                                for f in body[new_idx : new_idx + 1 + delta]:
-                                    if f:
-                                        dirty.add(f.a)
+                            # if (delta := len(body) - len_body) >= 0:  # only if replaced or added, if length contracted then there was deletion
+                            #     for f in body[new_idx : new_idx + 1 + delta]:
+                            #         if f:
+                            #             dirty.add(f.a)
+
+                            # TODO: verify this is good in all cases and doesn't mark something unnecessarily dirty (looking at arguments)
+                            if len(body) == len_body:  # only mark dirty if replaced exactly one element because otherwise it was a deletion or subslice
+                                if f := body[new_idx]:
+                                    dirty.add(f.a)
 
                         continue
 
-                f = repl_slot.replace(slot_sub, one=one, **repl_options)
+                repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options)
 
-                if slot_sub_is_matched_root and f:  # replaced with whole matched node, mark top node as dirty otherwise would cause infinite recursion
-                    dirty.add(f.a)
+                if repl_slot_new_is_matched_root:  # replaced with whole matched node, mark top node as dirty otherwise would cause infinite recursion, we know repl_slot_new exists because repl_slot_new_is_matched_root means it was a node going in
+                    dirty.add(repl_slot_new.a)
 
-        matched.replace(repl_, **options)
+        one = True
+
+        if matched.a.__class__ in ASTS_LEAF_STMT:  # if putting potentially multiple statements to one then make it a slice replace
+            if repl_.a.__class__ is Module:
+                one = False
+
+        matched.replace(repl_, one=one, **options)
 
         if not (count := count - 1):
             break

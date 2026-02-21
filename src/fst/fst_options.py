@@ -165,7 +165,7 @@ _GLOBAL_OPTION_CHECK_FUNCS = {o: v for o, v in _ALL_OPTION_CHECK_FUNCS.items() i
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def check_options(options: Mapping[str, Any], all: bool = True) -> None:
+def check_options(options: Mapping[str, Any], all: bool = True, mark_checked: bool = False) -> Mapping[str, Any]:
     """Make sure all options are actual options and do a quick check on their values. Since some options depend on
     context (`norm`) or require more expensive validation (`op`), this function does not do that. It is not a full
     validation but rather screens out values which can never be correct. Final validation is done wherever the options
@@ -176,7 +176,13 @@ def check_options(options: Mapping[str, Any], all: bool = True) -> None:
     - `all`: Which options to allow and check.
         - `True`: All options, including call-only.
         - `False: Only global options.
+    - `mark_checked`: If `True` then will add a marker option to indicate that the rest of the options have already been
+        checked and return in a new `Dict`. This prevents redundant checks on known good options when calling with same
+        options multiple times.
     """
+
+    if not options or '__options_checked' in options:
+        return options
 
     option_check_func =_ALL_OPTION_CHECK_FUNCS if all else _GLOBAL_OPTION_CHECK_FUNCS
 
@@ -186,6 +192,11 @@ def check_options(options: Mapping[str, Any], all: bool = True) -> None:
 
         if (res := check(option, value)) is not None:
             raise ValueError(f"invalid {option!r} option value {value!r}, must be {res}")
+
+    if mark_checked:
+        return dict(options, __options_checked=True)
+
+    return options
 
 def filter_options(options: Mapping[str, Any]) -> dict[str, Any]:
     """Copy just actual options from `options` and return."""
