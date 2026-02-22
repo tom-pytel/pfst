@@ -17,9 +17,7 @@
 - `walk()`
   - can take explicit list of nodes to walk instead of just "all children of self"
   - can take user callback for the `all` parameter for deciding if node matches
-- added to `step_fwd/back()`
-  - `top` parameter to `step_fwd/back()` to restrict stepping above a given parent
-  - `stop_at` parameter to allow stop at arbitrary nodes that don't match `all`
+- added `top` parameter to `step_fwd/back()` to restrict stepping above a given parent
 - finally validating `options`
 - trivia option shorthand `()` for `(False, False)`
 

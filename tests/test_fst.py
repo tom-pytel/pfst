@@ -5386,6 +5386,13 @@ with a as b, c as d:
         test('[a, [c], [2, 3, [b]]]', Name)
         test('[a, [c], [2, 3, [b]]]', Constant)
 
+    def test_traverse_misc(self):
+        f = FST('{{}, 1}')
+        self.assertIsNone(f.elts[0].step_fwd(top=f.elts[0]))
+
+        f = FST('{1, {}}')
+        self.assertIsNone(f.elts[1].step_back(top=f.elts[1]))
+
     def test_child_path(self):
         f = parse('if 1: a = (1, 2, {1: 2})').f
         p = f.child_path(f.body[0].body[0].value.elts[2].keys[0], True)

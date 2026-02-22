@@ -520,7 +520,6 @@ def step_fwd(
     recurse_self: bool = True,
     *,
     top: fst.FST | None = None,
-    stop_at: fst.FST | Container[fst.FST] | None = None,
 ) -> fst.FST | None:
     """Step forward in the tree in syntactic order, as if `walk()`ing forward, **NOT** the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
@@ -541,15 +540,10 @@ def step_fwd(
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes of
         `self` on start.
-    - `top`: If present, specifies the top of the container we are walking. This is only checked on the way up out of
+    - `top`: If present, specifies the top of the container we are walking. This is checked on the way up out of
         children and not returned when encountered, rather `None` is returned. Passing this allows you to restrict a
-        walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
-        without problem.
-    - `stop_at`: If present, can be a single `FST` or a container of `FST` nodes to stop the walk at and return the
-        node. This is provided since the stop node(s) may not fit the `all` criteria so the caller would not have the
-        chance to look for them in that case. If one of these nodes is reached then it is returned regardless of if it
-        fits `all` or not. The walk can continue from that node afterwards (`self` is not checked against `stop_at` on
-        entry).
+        walk to a certain scope or container. It is checked on entry if there are no children, so you can make the first
+        call on this node without problem.
 
     **Returns:**
     - `None` if last valid node in tree, otherwise next node in order.
@@ -620,34 +614,21 @@ def step_fwd(
     a
     b
     c
-
-    >>> g = f = FST('[a, [c], [2, 3, [b]]]')
-
-    >>> while g := g.step_fwd(Name, stop_at={f.elts[1], f.elts[2].elts[1]}):
-    ...     print(g.src)
-    a
-    [c]
-    c
-    3
-    b
     """
-
-    if top is None:
-        top = (None,)
-    else:
-        top = (top, None,)
-
-    if stop_at is None:
-        stop_at = ()
-    elif isinstance(stop_at, fst.FST):
-        stop_at = {stop_at}
 
     if recurse_self:
         while fst_ := self.first_child(True):
-            if _check_all_param(fst_, all) or fst_ in stop_at:
+            if _check_all_param(fst_, all):
                 return fst_
 
             self = fst_
+
+    if top is None:
+        top = (None,)
+    elif self is top:  # calling on empty Set which is top for example
+        return None
+    else:
+        top = (top, None)
 
     while True:
         while not (fst_ := self.next(True)):
@@ -655,7 +636,7 @@ def step_fwd(
                 return None
 
         while True:
-            if _check_all_param(fst_, all) or fst_ in stop_at:
+            if _check_all_param(fst_, all):
                 return fst_
 
             self = fst_
@@ -670,7 +651,6 @@ def step_back(
     recurse_self: bool = True,
     *,
     top: fst.FST | None = None,
-    stop_at: fst.FST | Container[fst.FST] | None = None,
 ) -> fst.FST | None:
     """Step backward in the tree in syntactic order, as if `walk()`ing backward, **NOT** the inverse of `step_fwd()`.
     Will walk up parents and down children to get the next node, returning `None` only when we are at the beginning
@@ -691,15 +671,10 @@ def step_back(
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to previous nodes
         of `self` on start.
-    - `top`: If present, specifies the top of the container we are walking. This is only checked on the way up out of
+    - `top`: If present, specifies the top of the container we are walking. This is checked on the way up out of
         children and not returned when encountered, rather `None` is returned. Passing this allows you to restrict a
-        walk to a certain scope or container. It is not checked on entry so you can make the first call on this node
-        without problem.
-    - `stop_at`: If present, can be a single `FST` or a container of `FST` nodes to stop the walk at and return the
-        node. This is provided since the stop node(s) may not fit the `all` criteria so the caller would not have the
-        chance to look for them in that case. If one of these nodes is reached then it is returned regardless of if it
-        fits `all` or not. The walk can continue from that node afterwards (`self` is not checked against `stop_at` on
-        entry).
+        walk to a certain scope or container. It is checked on entry if there are no children, so you can make the first
+        call on this node without problem.
 
     **Returns:**
     - `None` if first valid node in tree, otherwise previous node in order.
@@ -740,34 +715,21 @@ def step_back(
     d
     c
     b
-
-    >>> g = f = FST('[a, [c], [2, 3, [b]]]')
-
-    >>> while g := g.step_back(Name, stop_at={f.elts[1], f.elts[2].elts[1]}):
-    ...     print(g.src)
-    b
-    3
-    [c]
-    c
-    a
     """
-
-    if top is None:
-        top = (None,)
-    else:
-        top = (top, None,)
-
-    if stop_at is None:
-        stop_at = ()
-    elif isinstance(stop_at, fst.FST):
-        stop_at = {stop_at}
 
     if recurse_self:
         while fst_ := self.last_child(True):
-            if _check_all_param(fst_, all) or fst_ in stop_at:
+            if _check_all_param(fst_, all):
                 return fst_
 
             self = fst_
+
+    if top is None:
+        top = (None,)
+    elif self is top:  # calling on empty Set which is top for example
+        return None
+    else:
+        top = (top, None)
 
     while True:
         while not (fst_ := self.prev(True)):
@@ -775,7 +737,7 @@ def step_back(
                 return None
 
         while True:
-            if _check_all_param(fst_, all) or fst_ in stop_at:
+            if _check_all_param(fst_, all):
                 return fst_
 
             self = fst_
@@ -804,22 +766,25 @@ def walk(
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
-    Node **REPLACEMENT** and **DELETION** during the walk is supported with some caveats, the rules are:
+    Node **REPLACEMENT** and **DELETION** during the walk is supported with some caveats. The most important and useful
+    rule to remember is:
     - The current node can always be deleted, replaced or inserted before or after (if list field). If replaced the new
-        children will be walked next unless you explicitly `send(False)` to the generator. Sibling nodes inserted after
-        this one will not be walked. Note that on replace the new children can only be walked if the replacement was of
-        the single current node as a single element operation. If the replacement was with a slice operation then the
-        children will not be walked.
+        children will be walked next unless you explicitly `send(False)` to the generator. Note that on replace the new
+        children can only be walked if the replacement was of the single current node as a single element operation. If
+        the replacement was with a slice operation then the children will not be walked.
+
+    The rest of the details are:
     - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
+    - Sibling nodes of either this node or any parents which have not been walked yet can be deleted, replaced or
+        inserted before but the new nodes will not be walked (and neither will any deleted nodes).
     - Previously walked nodes can likewise be deleted, replaced or inserted before.
     - Replacing or deleting a node in the current parent chain is allowed and will cause the walk to continue at its
         following siblings which were not modified.
-    - Sibling nodes of either this node or any parents which have not been walked yet can be deleted, replaced or
-        inserted before but the new nodes will not be walked (and neither will any deleted nodes).
     - The header said replacement and deletion, so `del`, `remove()`, `replace()`, `put()`, etc... Not `.cut()` or
-        `get(..., cut=True)`, with or without inserting them somewhere else. The cut or moved nodes may still be walked,
-        even if transferred to a different tree. If you wish to do this kind of operation during a walk then either
-        explicitly copy then delete the node(s), or defer the cut and move until after the walk.
+        `get(..., cut=True)`, with or without inserting them somewhere else. If cut, those nodes may still wind up
+        being walked as part of this walk, even if transferred to a different tree. If you wish to do this kind of
+        operation during a walk then either explicitly copy then delete the node(s), or defer the cut and move until
+        after the walk.
     - `raw` operations can change a lot of nodes and cause the walk to miss some you thought would get walked, but they
         will not cause the walk to break.
 
