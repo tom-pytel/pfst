@@ -1487,24 +1487,6 @@ With - ROOT 0,0..0,12
 '''),
 
 ('', None, None, None, {}, (None,
-r'''a, b, c'''),
-r'''MTuple''',
-r'''with __FST_: pass''',
-r'''with ((a, b, c)): pass''', r'''
-With - ROOT 0,0..0,22
-  .items[1]
-   0] withitem - 0,5..0,16
-     .context_expr Tuple - 0,6..0,15
-       .elts[3]
-        0] Name 'a' Load - 0,7..0,8
-        1] Name 'b' Load - 0,10..0,11
-        2] Name 'c' Load - 0,13..0,14
-       .ctx Load
-  .body[1]
-   0] Pass - 0,18..0,22
-'''),
-
-('', None, None, None, {}, (None,
 r'''a'''),
 r'''MName''',
 r'''with x, __FST_DEL: pass''',
@@ -1609,18 +1591,17 @@ With - ROOT 0,0..0,17
 r'''a, b, c'''),
 r'''MTuple''',
 r'''with __FST_: pass''',
-r'''with ((a, b, c)): pass''', r'''
-With - ROOT 0,0..0,22
-  .items[1]
-   0] withitem - 0,5..0,16
-     .context_expr Tuple - 0,6..0,15
-       .elts[3]
-        0] Name 'a' Load - 0,7..0,8
-        1] Name 'b' Load - 0,10..0,11
-        2] Name 'c' Load - 0,13..0,14
-       .ctx Load
+r'''with a, b, c: pass''', r'''
+With - ROOT 0,0..0,18
+  .items[3]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'a' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'b' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'c' Load - 0,11..0,12
   .body[1]
-   0] Pass - 0,18..0,22
+   0] Pass - 0,14..0,18
 '''),
 
 ('', None, None, None, {}, (None,
@@ -5698,6 +5679,306 @@ Module - ROOT 0,0..3,19
       0] Name 'a' Load - 3,11..3,12
      .body[1]
       0] Pass - 3,15..3,19
+'''),
+],
+
+'withitem': [  # ................................................................................
+
+('', None, None, None, {}, ('withitem',
+r'''a as b'''),
+r'''Mwithitem''', ('withitem',
+r'''__FST_'''),
+r'''a as b''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Name 'a' Load - 0,0..0,1
+  .optional_vars Name 'b' Store - 0,5..0,6
+'''),
+
+('', None, None, None, {}, ('_withitems',
+r'''a as b, c as d'''),
+r'''M_withitems''', ('withitem',
+r'''__FST_'''),
+r'''a as b, c as d''', r'''
+_withitems - ROOT 0,0..0,14
+  .items[2]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'b' Store - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'c' Load - 0,8..0,9
+     .optional_vars Name 'd' Store - 0,13..0,14
+'''),
+
+('', None, None, None, {}, ('withitem',
+r'''a as b'''),
+r'''Mwithitem''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a as b, z: pass''', r'''
+With - ROOT 0,0..0,23
+  .items[3]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'a' Load - 0,8..0,9
+     .optional_vars Name 'b' Store - 0,13..0,14
+   2] withitem - 0,16..0,17
+     .context_expr Name 'z' Load - 0,16..0,17
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', None, None, None, {}, ('_withitems',
+r'''a as b, c as d'''),
+r'''M_withitems''', ('With',
+r'''with __FST_: pass'''),
+r'''with a as b, c as d: pass''', r'''
+With - ROOT 0,0..0,25
+  .items[2]
+   0] withitem - 0,5..0,11
+     .context_expr Name 'a' Load - 0,5..0,6
+     .optional_vars Name 'b' Store - 0,10..0,11
+   1] withitem - 0,13..0,19
+     .context_expr Name 'c' Load - 0,13..0,14
+     .optional_vars Name 'd' Store - 0,18..0,19
+  .body[1]
+   0] Pass - 0,21..0,25
+'''),
+
+('', None, None, None, {}, ('_withitems',
+r'''a as b, c as d'''),
+r'''M_withitems''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a as b, c as d, z: pass''', r'''
+With - ROOT 0,0..0,31
+  .items[4]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'a' Load - 0,8..0,9
+     .optional_vars Name 'b' Store - 0,13..0,14
+   2] withitem - 0,16..0,22
+     .context_expr Name 'c' Load - 0,16..0,17
+     .optional_vars Name 'd' Store - 0,21..0,22
+   3] withitem - 0,24..0,25
+     .context_expr Name 'z' Load - 0,24..0,25
+  .body[1]
+   0] Pass - 0,27..0,31
+'''),
+
+('', None, None, None, {}, ('Set',
+r'''{a, b, c}'''),
+r'''MSet''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c]'''),
+r'''MList''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c)'''),
+r'''MTuple''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('MatchSequence',
+r'''[a, b, c]'''),
+r'''MMatchSequence''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('_Assign_targets',
+r'''a = b = c ='''),
+r'''M_Assign_targets''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('_decorator_list', r'''
+@a
+@b
+@c
+'''),
+r'''M_decorator_list''', ('With',
+r'''with x, __FST_, z: pass'''), r'''
+with (x, a,
+     b,
+     c, z): pass
+''', r'''
+With - ROOT 0,0..2,16
+  .items[5]
+   0] withitem - 0,6..0,7
+     .context_expr Name 'x' Load - 0,6..0,7
+   1] withitem - 0,9..0,10
+     .context_expr Name 'a' Load - 0,9..0,10
+   2] withitem - 1,5..1,6
+     .context_expr Name 'b' Load - 1,5..1,6
+   3] withitem - 2,5..2,6
+     .context_expr Name 'c' Load - 2,5..2,6
+   4] withitem - 2,8..2,9
+     .context_expr Name 'z' Load - 2,8..2,9
+  .body[1]
+   0] Pass - 2,12..2,16
+'''),
+
+('', None, None, None, {}, ('_arglikes',
+r'''a, b, c'''),
+r'''M_arglikes''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('_comprehension_ifs',
+r'''if a if b if c'''),
+r'''M_comprehension_ifs''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {}, ('_aliases',
+r'''a, b, c'''),
+r'''M_aliases''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
+'''),
+
+('', None, None, None, {'_ver': 12}, ('_type_params',
+r'''a, b, c'''),
+r'''M_type_params''', ('With',
+r'''with x, __FST_, z: pass'''),
+r'''with x, a, b, c, z: pass''', r'''
+With - ROOT 0,0..0,24
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'a' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'b' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'c' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'z' Load - 0,17..0,18
+  .body[1]
+   0] Pass - 0,20..0,24
 '''),
 ],
 

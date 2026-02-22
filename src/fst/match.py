@@ -5504,8 +5504,8 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
 # ......................................................................................................................
 # sub() support stuff
 
-# These add paths to repl teplate substitution slots in the repl template, which can be actual node like Name, arg or
-# TypeVar or non-node identifier children of real nodes.
+# These calculate paths to repl teplate substitution slots in the repl template, which can be actual node like Name, arg
+# or TypeVar or non-node identifier children of real nodes. This can also depend on other attributes of the node.
 
 def _sub_repl_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """These are all optionally-present identifiers."""
@@ -5645,6 +5645,9 @@ _SUB_REPL_PATH_FUNCS = {
     ParamSpec:        _sub_repl_path_name,
     TypeVarTuple:     _sub_repl_path_name,
 }
+
+_SUB_WITHITEM_SLICES = {Set, List, Tuple, MatchSequence, _Assign_targets, _decorator_list, _arglikes,
+                        _comprehension_ifs, _aliases, _withitems, _type_params}
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -5980,8 +5983,8 @@ def sub(
                 one = False  # this will be a slice of some kind so make sure we put as a slice, even if it is a single arg in arguments posing as a slice it is fine to treat it as a slice
 
             elif not isinstance(repl_slot_new, str):  # str could have come from static tag
-                raise MatchError('match substitution must be FST, None or str,'
-                                 f' got {repl_slot_new.__class__.__qualname__}')
+                raise MatchError('match substitution must be FST, None or str'
+                                 f', got {repl_slot_new.__class__.__qualname__}')
 
             if child is not None:  # path includes a child field which means its not a real node but a str identifier, doesn't need to be marked dirty
                 field, idx = child
@@ -6006,7 +6009,6 @@ def sub(
 
                         elif repl_slot_new_cls is Module:
                             repl_slot = parent
-                            # repl_slot_new_is_matched_root = False  # because Module will disappear as it is a container  # TODO: need this?
                             one = False
 
                     elif parenta_cls is Call:  # Call._args?
@@ -6036,11 +6038,9 @@ def sub(
                             new_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     elif parenta_cls is withitem:  # can be whole withitem with optional_vars to put as withitem or multiple _withitems
-                        # TODO: full review of behavior, allow other sequences to put slice as items?
-
                         if field == 'context_expr' and not parenta.optional_vars:
                             if (not isinstance(repl_slot_new, fst.FST)
-                                or (repl_slot_new_cls := repl_slot_new.a.__class__) is _withitems
+                                or (repl_slot_new_cls := repl_slot_new.a.__class__) in _SUB_WITHITEM_SLICES
                             ):
                                 repl_slot = parent
                                 one = False
@@ -6058,12 +6058,6 @@ def sub(
 
                             parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
 
-                            # if (delta := len(body) - len_body) >= 0:  # only if replaced or added, if length contracted then there was deletion
-                            #     for f in body[new_idx : new_idx + 1 + delta]:
-                            #         if f:
-                            #             dirty.add(f.a)
-
-                            # TODO: verify this is good in all cases and doesn't mark something unnecessarily dirty (looking at arguments)
                             if len(body) == len_body:  # only mark dirty if replaced exactly one element because otherwise it was a deletion or subslice
                                 if f := body[new_idx]:
                                     dirty.add(f.a)
