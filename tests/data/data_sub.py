@@ -2226,25 +2226,39 @@ ImportFrom - ROOT 0,0..0,15
 r'''from . import *'''),
 r'''MImportFrom(names=M(n=...))''', (None,
 r'''from . import __FST_n as z  # new'''),
-r'''**TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")**'''),
+r'''**ParseError("expecting identifier, got '*'")**'''),
 
 ('', None, None, None, {}, ('Import',
 r'''import a, b.c, d as e'''),
 r'''MImport(names=M(n=...))''', (None,
 r'''from .__FST_n import *'''),
-r'''**TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")**'''),
+r'''**ParseError("expecting dotted identifier, got 'a, b.c, d as e'")**'''),
 
 ('', None, None, None, {}, ('Import',
 r'''import a'''),
 r'''MImport(names=M(n=...))''', (None,
 r'''from .__FST_n import *'''),
-r'''**TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")**'''),
+r'''from .a import *''', r'''
+ImportFrom - ROOT 0,0..0,16
+  .module 'a'
+  .names[1]
+   0] alias - 0,15..0,16
+     .name '*'
+  .level 1
+'''),
 
 ('', None, None, None, {}, ('Import',
 r'''import a.b'''),
 r'''MImport(names=M(n=...))''', (None,
 r'''from .__FST_n import *'''),
-r'''**TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")**'''),
+r'''from .a.b import *''', r'''
+ImportFrom - ROOT 0,0..0,18
+  .module 'a.b'
+  .names[1]
+   0] alias - 0,17..0,18
+     .name '*'
+  .level 1
+'''),
 
 ('', None, None, None, {}, ('Import',
 r'''import a.b'''),

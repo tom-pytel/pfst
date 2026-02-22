@@ -24,6 +24,7 @@ from . import fst
 
 from .asttypes import (
     ASTS_LEAF_STMT,
+    ASTS_LEAF_VAR_SCOPE_DECL,
     ASTS_LEAF__ALL,
     AST2ASTSLEAF,
 
@@ -3705,8 +3706,13 @@ class MQ(M_Pattern_One):
 
     >>> pat = MGlobal([MQSTAR.NG, MQ(t='c', min=1, max=2), MQSTAR])
 
-    >>> FST('global a, b, c, c, d, e') .match(pat)
-    <FSTMatch <Global ROOT 0,0..0,23> {'t': [<FSTMatch 'c'>, <FSTMatch 'c'>]}>
+    >>> ppmatch(FST('global a, b, c, c, d, e') .match(pat))
+    <FSTMatch <Global ROOT 0,0..0,23>
+      't': [
+        <FSTMatch <<Global ROOT 0,0..0,23>.names[2:3]>>,
+        <FSTMatch <<Global ROOT 0,0..0,23>.names[3:4]>>,
+      ],
+    }>
 
     >>> pat = MList([MQSTAR.NG, MQ(t=MRE('c|d'), min=1, max=3), MQSTAR])
 
@@ -4683,7 +4689,7 @@ def _match_list(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, A
 
         if not len(tgt):
             tgt = _EMPTY_LIST
-        elif tgt.is_multinode or isinstance(tgt[0], str):  # could be Global/Nonlocal.names or MatchClass.kwd_attrs or multi-node items like Dict/MatchMapping/arguments
+        elif not tgt.is_deref_FST or isinstance(tgt[0], str):  # could be Global/Nonlocal.names or MatchClass.kwd_attrs or multi-node items like Dict/MatchMapping/arguments
             tgt = list(tgt)
         else:
             tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
@@ -4711,10 +4717,15 @@ def _match_node(pat: M_Pattern | AST, tgt: _Targets, mstate: _MatchState) -> Map
             continue
 
         if (t := getattr(tgt, field, _SENTINEL)) is _SENTINEL:  # _SENTINEL for arbitrary fields, but also field may not exist in target because pattern may have fields from a greater python version than we are running
-            if not (f := getattr(tgt, 'f', None)) or not isinstance(t := getattr(f, field, None), FSTView):  # maybe its a virtual field
+            if (not (f := getattr(tgt, 'f', None))
+                or not isinstance(t := getattr(f, field, None), FSTView)
+            ):  # maybe its a virtual field
                 return mstate.discard_tagss()
 
-        elif is_FST and isinstance(t, list) and not isinstance(p, list):
+        elif (is_FST
+              and isinstance(t, list)
+              and (not isinstance(p, list) or tgt.__class__ in ASTS_LEAF_VAR_SCOPE_DECL)  # ASTS_LEAF_VAR_SCOPE_DECL to make sure we match Global/Nonlocal.names as FSTView instead of list of strings
+        ):
             t = getattr(tgt.f, field)  # get the FSTView instead (for maybe capture to tag, is converted back to list of AST for compare, because was gotten as list from AST even if we are matching an FST)
 
         if (m := _MATCH_FUNCS.get(p.__class__, _match_default)(p, t, mstate)) is None:
@@ -5982,6 +5993,21 @@ def sub(
                 repl_slot_new = repl_slot_new.copy(**copy_options)
                 one = False  # this will be a slice of some kind so make sure we put as a slice, even if it is a single arg in arguments posing as a slice it is fine to treat it as a slice
 
+            # elif isinstance(repl_slot_new, list):  # this is from a quantifier, in which case convert it to a slice (all whole list fields come back as FSTView)
+            #     one = False
+
+            #     if not repl_slot_new:  # empty list is delete
+            #         repl_slot_new = None
+
+            #     elif not isinstance(m0 := repl_slot_new[0], FSTMatch):
+            #         raise MatchError('expecting FSTMatch objects in list from quantifier'
+            #                          f', got {m0.__class__.__qualname__}')
+
+            #     else:  # we assume all the rest are FSTMatch as well and a contiguous slice
+            #         print(m0.matched)
+            #         print(repl_slot_new[-1].matched)
+            #         1/0
+
             elif not isinstance(repl_slot_new, str):  # str could have come from static tag
                 raise MatchError('match substitution must be FST, None or str'
                                  f', got {repl_slot_new.__class__.__qualname__}')
@@ -5989,7 +6015,7 @@ def sub(
             if child is not None:  # path includes a child field which means its not a real node but a str identifier, doesn't need to be marked dirty
                 field, idx = child
 
-                if one:
+                if one or idx is None:
                     repl_slot._put_one(repl_slot_new, idx, field, repl_options, False)
                 else:
                     repl_slot._put_slice(repl_slot_new, idx, idx + 1, field, repl_options)  # Global / Nonlocal

@@ -1782,7 +1782,7 @@ class FST:
         <<Global ROOT 0,0..0,14>.names>
 
         >>> FST('global a, b, c')[1]
-        'b'
+        <<Global ROOT 0,0..0,14>.names[1:2]>
 
         @public
         """

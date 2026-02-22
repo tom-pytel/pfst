@@ -25,6 +25,7 @@
 
 - allow get and put as `one=True` single-item `Dict` or `MatchMapping` instead of error, makes more sense
 - simplified `trivia` option to always specify entire state, no more merging with current state
+- `Global/Nonlocal.names` views now return a single-element `FSTView` when dereferencing a single element instead of the string value at that index
 
 ### Fixed
 

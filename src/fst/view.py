@@ -102,7 +102,7 @@ class FSTView:
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
-    is_multinode = False  ; """Whether the view is on a possibly multi-node sequence like a `Dict`, `MatchMapping` or `arguments`. These will not give individual nodes on single element index but rather another FSTView."""
+    is_deref_FST = True  ; """Whether single item indexing on this view yields an `FST` node or not. Where this is not the case are multi-node sequences like a `Dict`, `MatchMapping` and `arguments` or string sequences like 'Global` and `Nonlocal`. Dereferencing these views will not give individual nodes or values but rather another `FSTView`."""
 
     @property
     def start(self) -> int:
@@ -406,8 +406,10 @@ class FSTView:
         >>> FST('global a, b, c').names
         <<Global ROOT 0,0..0,14>.names>
 
+        If indexing a single element does not give an `FST` node then it will give another `FSTView`.
+
         >>> FST('global a, b, c').names[1]
-        'b'
+        <<Global ROOT 0,0..0,14>.names[1:2]>
 
         @public
         """
@@ -853,7 +855,7 @@ class FSTView:
 class FSTView_Dict(FSTView):
     """View for `Dict` combined `key:value` virtual field `_all`. @private"""
 
-    is_multinode = True
+    is_deref_FST = False
 
     @property
     def loc(self) -> fstloc | None:
@@ -990,7 +992,7 @@ class FSTView_Dict(FSTView):
 class FSTView_MatchMapping(FSTView):
     """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`. @private"""
 
-    is_multinode = True
+    is_deref_FST = False
 
     @property
     def loc(self) -> fstloc | None:
@@ -1181,7 +1183,7 @@ class FSTView_arguments(FSTView):
     """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. This indexes on the
     `arguments` node `_cached_allargs()`. @private"""
 
-    is_multinode = True
+    is_deref_FST = False
 
     @property
     def loc(self) -> fstloc | None:
@@ -1396,8 +1398,12 @@ class FSTView_arglikes(FSTView):
 
 
 class FSTView_Global_Nonlocal(FSTView):
-    """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly. Currently only really needed for `loc`
-    and `src`, but may expand in future if control given over primitive vs. `FST` presentation of primitive fields."""
+    """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly."""
+
+    is_deref_FST = False
+
+    def _deref_one(self, idx: int) -> AST | str:
+        return FSTView_Global_Nonlocal(self.base, 'names', idx, idx + 1)
 
     @property
     def loc(self) -> fstloc | None:

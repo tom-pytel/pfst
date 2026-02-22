@@ -740,7 +740,8 @@ class TestMatch(unittest.TestCase):
         m = f.match(MNonlocal([MQSTAR(MRE(r='.*'))]))
         self.assertEqual("<FSTMatch <Nonlocal ROOT 0,0..0,17> {'r': <re.Match object; span=(0, 3), match='bcd'>}>", str(m))
         m = f.match(MNonlocal([MQSTAR(t=MRE(r='.*'))]))
-        self.assertEqual("<FSTMatch <Nonlocal ROOT 0,0..0,17> {'t': [<FSTMatch 'abc' {'r': <re.Match object; span=(0, 3), match='abc'>}>, <FSTMatch 'bcd' {'r': <re.Match object; span=(0, 3), match='bcd'>}>]}>", str(m))
+        # self.assertEqual("<FSTMatch <Nonlocal ROOT 0,0..0,17> {'t': [<FSTMatch 'abc' {'r': <re.Match object; span=(0, 3), match='abc'>}>, <FSTMatch 'bcd' {'r': <re.Match object; span=(0, 3), match='bcd'>}>]}>", str(m))
+        self.assertEqual("<FSTMatch <Nonlocal ROOT 0,0..0,17> {'t': [<FSTMatch <<Nonlocal ROOT 0,0..0,17>.names[:1]> {'r': <re.Match object; span=(0, 3), match='abc'>}>, <FSTMatch <<Nonlocal ROOT 0,0..0,17>.names[1:2]> {'r': <re.Match object; span=(0, 3), match='bcd'>}>]}>", str(m))
 
         # greedy vs. non-greedy
 
@@ -1180,7 +1181,9 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertIs((f := FST('False')).a.value, pat.match(f).t)
         self.assertIs((f := FST('None')).a.value, pat.match(f).t)
 
-        self.assertIs((f := FST('global abc')).names[0], MGlobal([M(t='abc')]).match(f).t)
+        # self.assertIs((f := FST('global abc')).names[0], MGlobal([M(t='abc')]).match(f).t)
+        self.assertEqual(str((f := FST('global abc')).names[0]), str(MGlobal([M(t='abc')]).match(f).t))
+        self.assertEqual("<<Global ROOT 0,0..0,10>.names[:1]>", str(MGlobal([M(t='abc')]).match(FST('global abc')).t))
 
         self.assertEqual(str((f := FST('global a, b')).names), str(MGlobal(M(t=['a', 'b'])).match(f).t))
         self.assertEqual(str((f := FST('a, b')).elts), str(MTuple(M(t=['a', 'b'])).match(f).t))
