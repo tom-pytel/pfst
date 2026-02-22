@@ -3739,9 +3739,9 @@ class MQ(M_Pattern_One):
     }>
     """
 
-    # This is mostly just a data class, the actual logic for these matches lives in `_match_default()`. The tags for the
-    # individual child matches are handled according to if the pattern is passed anonymously or in a tag. The static
-    # tags are added once at the end of the arbitrary-length match.
+    # This is mostly just a data class, the actual logic for these matches lives in `_match__inside_list_quantifier()`.
+    # The tags for the individual child matches are handled according to if the pattern is passed anonymously or in a
+    # tag. The static tags are added once at the end of a valid arbitrary-length match.
 
     pat = ...  # for direct subclass type use as a pattern
     pat_tag = None
@@ -3763,8 +3763,14 @@ class MQ(M_Pattern_One):
     ) -> None:
         M_Pattern_One.__init__(self, anon_pat, **tags)
 
-        if min is NotSet or max is NotSet:
-            raise ValueError(f'{self.__class__.__qualname__} requires both min and max values')
+        if min is NotSet:
+            if max is NotSet:
+                raise ValueError(f'{self.__class__.__qualname__} requires min and max values')
+
+            raise ValueError(f'{self.__class__.__qualname__} requires a min value')
+
+        elif max is NotSet:
+            raise ValueError(f'{self.__class__.__qualname__} requires a max value')
 
         if min < 0:
             raise ValueError(f'{self.__class__.__qualname__} min cannot be negative')
@@ -3777,6 +3783,34 @@ class MQ(M_Pattern_One):
 
         self.min = min
         self.max = max
+        pat = self.pat
+
+        if isinstance(pat, list):  # if quantifier is unbounded and has sublist then make sure that listmust match at least one item (including any sublists in that, etc...), otherwise will get infinite loop
+            if max is None:
+                stack = pat[:]
+
+                while stack:
+                    p = stack.pop()
+
+                    if p in _QUANTIFIER_STANDALONES_MAYBE_0_LEN:
+                        continue
+
+                    if isinstance(p, MQ):
+                        if not p.min:
+                            continue
+
+                        if isinstance(p := p.pat, list):
+                            stack.extend(p)
+                        else:
+                            break
+                    else:
+                        break
+                else:
+                    raise ValueError(f'unbounded {self.__class__.__qualname__} with sublist cannot have'
+                                     ' possible zero-length matches')
+
+        elif pat in _QUANTIFIER_STANDALONES or isinstance(pat, MQ):
+            raise ValueError(f'{self.__class__.__qualname__} cannot have another quantifier as a direct child pattern')
 
     def _repr_extra(self) -> list[str]:
         return [f'min={self.min}, max={self.max}']
@@ -3843,11 +3877,11 @@ class MQSTAR(MQ):
     <FSTMatch <List ROOT 0,0..0,9> {'t': []}>
     """
 
-    min = 0
+    min = 0  # for direct type use
     max = None
 
     def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
-        M.__init__(self, anon_pat, **tags)
+        MQ.__init__(self, anon_pat, 0, None, **tags)
 
     def _repr_extra(self) -> list[str]:
         return _EMPTY_LIST
@@ -3913,11 +3947,11 @@ class MQPLUS(MQ):
     <FSTMatch <List ROOT 0,0..0,9> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
     """
 
-    min = 1
+    min = 1  # for direct type use
     max = None
 
     def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
-        M.__init__(self, anon_pat, **tags)
+        MQ.__init__(self, anon_pat, 1, None, **tags)
 
     def _repr_extra(self) -> list[str]:
         return _EMPTY_LIST
@@ -3971,7 +4005,7 @@ class MQ01(MQ):
     max = 1
 
     def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
-        M.__init__(self, anon_pat, **tags)
+        MQ.__init__(self, anon_pat, 0, 1, **tags)
 
     def _repr_extra(self) -> list[str]:
         return _EMPTY_LIST
@@ -4035,19 +4069,10 @@ class MQMIN(MQ):
       {'t': [<FSTMatch <Name 0,1..0,2>>, <FSTMatch <Name 0,4..0,5>>]}>
     """
 
-    max = None
-
     def __init__(
         self, anon_pat: _Patterns | _NotSet = NotSet, /, min: int | _NotSet = NotSet, **tags
     ) -> None:
-        M.__init__(self, anon_pat, **tags)
-
-        if min is NotSet:
-            raise ValueError(f'{self.__class__.__qualname__} requires a min value')
-        if min < 0:
-            raise ValueError(f'{self.__class__.__qualname__} min cannot be negative')
-
-        self.min = min
+        MQ.__init__(self, anon_pat, min, None, **tags)
 
     def _repr_extra(self) -> list[str]:
         return [f'min={self.min}']
@@ -4105,14 +4130,7 @@ class MQMAX(MQ):
     def __init__(
         self, anon_pat: _Patterns | _NotSet = NotSet, /, max: int | None | _NotSet = NotSet, **tags
     ) -> None:
-        M.__init__(self, anon_pat, **tags)
-
-        if max is NotSet:
-            raise ValueError(f'{self.__class__.__qualname__} requires a max value')
-        if max is not None and max < 0:
-            raise ValueError(f'{self.__class__.__qualname__} max cannot be negative')
-
-        self.max = max
+        MQ.__init__(self, anon_pat, 0, max, **tags)
 
     def _repr_extra(self) -> list[str]:
         return [f'max={self.max}']
@@ -4158,14 +4176,12 @@ class MQN(MQ):
     def __init__(
         self, anon_pat: _Patterns | _NotSet = NotSet, /, n: int | _NotSet = NotSet, **tags
     ) -> None:
-        M.__init__(self, anon_pat, **tags)
-
         if n is NotSet:
             raise ValueError(f'{self.__class__.__qualname__} requires a count value')
-        if n is not None and n < 0:
-            raise ValueError(f'{self.__class__.__qualname__} count cannot be negative')
+        if n is None or n < 0:
+            raise ValueError(f'{self.__class__.__qualname__} count must be a non-negative integer')
 
-        self.min = self.max = n
+        MQ.__init__(self, anon_pat, n, n, **tags)
 
     def _repr_extra(self) -> list[str]:
         return [f'n={self.min}']
@@ -4175,7 +4191,8 @@ MQN.NG = MQN
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-_QUANTIFIER_STANDALONES = {MQSTAR, MQPLUS, MQ01, MQSTAR.NG, MQPLUS.NG, MQ01.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
+_QUANTIFIER_STANDALONES = {MQSTAR, MQSTAR.NG, MQPLUS, MQPLUS.NG, MQ01, MQ01.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
+_QUANTIFIER_STANDALONES_MAYBE_0_LEN = {MQSTAR, MQSTAR.NG, MQ01, MQ01.NG}
 
 _NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
@@ -6003,7 +6020,7 @@ def sub(
             #         raise MatchError('expecting FSTMatch objects in list from quantifier'
             #                          f', got {m0.__class__.__qualname__}')
 
-            #     else:  # we assume all the rest are FSTMatch as well and a contiguous slice
+            #     else:  # we assume all the rest are FSTMatch as well (and a contiguous slice), we support subsequences
             #         print(m0.matched)
             #         print(repl_slot_new[-1].matched)
             #         1/0

@@ -638,6 +638,83 @@ class TestMatch(unittest.TestCase):
         self.assertFalse(FST('y').match(pat))
 
     def test_match_quantifiers(self):
+        # no quantifier direct children
+
+        for kls, args in [
+            (MQ, (0, None)),
+            (MQ.NG, (0, None)),
+            (MQSTAR, ()),
+            (MQSTAR.NG, ()),
+            (MQPLUS, ()),
+            (MQPLUS.NG, ()),
+            (MQ01, ()),
+            (MQ01.NG, ()),
+            (MQMIN, (0,)),
+            (MQMIN.NG, (0,)),
+            (MQMAX, (None,)),
+            (MQMAX.NG, (None,)),
+            (MQN, (1,)),
+            (MQN.NG, (1,)),
+        ]:
+            error = ValueError(f'{kls.__qualname__} cannot have another quantifier as a direct child pattern')
+
+            assertRaises(error, kls, MQ(..., 0, None), *args)
+            assertRaises(error, kls, MQ.NG(..., 0, None), *args)
+            assertRaises(error, kls, MQSTAR, *args)
+            assertRaises(error, kls, MQSTAR.NG, *args)
+            assertRaises(error, kls, MQPLUS, *args)
+            assertRaises(error, kls, MQPLUS.NG, *args)
+            assertRaises(error, kls, MQ01, *args)
+            assertRaises(error, kls, MQ01.NG, *args)
+            assertRaises(error, kls, MQMIN(..., 0), *args)
+            assertRaises(error, kls, MQMIN.NG(..., 0), *args)
+            assertRaises(error, kls, MQMAX(..., None), *args)
+            assertRaises(error, kls, MQMAX.NG(..., None), *args)
+            assertRaises(error, kls, MQN(..., 1), *args)
+            assertRaises(error, kls, MQN.NG(..., 1), *args)
+
+        # no infinite-loop quantifier sublists
+
+        for kls, args in [
+            (MQ, (0, None)),
+            (MQ.NG, (0, None)),
+            (MQSTAR, ()),
+            (MQSTAR.NG, ()),
+            (MQPLUS, ()),
+            (MQPLUS.NG, ()),
+            (MQMIN, (0,)),
+            (MQMIN.NG, (0,)),
+            (MQMAX, (None,)),
+            (MQMAX.NG, (None,)),
+        ]:
+            error = ValueError(f'unbounded {kls.__qualname__} with sublist cannot have possible zero-length matches')
+
+            assertRaises(error, kls, [MQ(..., 0, None)], *args)
+            assertRaises(error, kls, [MQ.NG(..., 0, None)], *args)
+            assertRaises(error, kls, [MQSTAR], *args)
+            assertRaises(error, kls, [MQSTAR.NG], *args)
+            assertRaises(error, kls, [MQ01], *args)
+            assertRaises(error, kls, [MQ01.NG], *args)
+            assertRaises(error, kls, [MQMIN(..., 0)], *args)
+            assertRaises(error, kls, [MQMIN.NG(..., 0)], *args)
+            assertRaises(error, kls, [MQMAX(..., None)], *args)
+            assertRaises(error, kls, [MQMAX.NG(..., None)], *args)
+            assertRaises(error, kls, [MQN(..., 0)], *args)
+            assertRaises(error, kls, [MQN.NG(..., 0)], *args)
+
+            assertRaises(error, kls, [MQN([MQ(..., 0, None)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQ.NG(..., 0, None)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQSTAR], 1)], *args)
+            assertRaises(error, kls, [MQN([MQSTAR.NG], 1)], *args)
+            assertRaises(error, kls, [MQN([MQ01], 1)], *args)
+            assertRaises(error, kls, [MQN([MQ01.NG], 1)], *args)
+            assertRaises(error, kls, [MQN([MQMIN(..., 0)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQMIN.NG(..., 0)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQMAX(..., None)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQMAX.NG(..., None)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQN(..., 0)], 1)], *args)
+            assertRaises(error, kls, [MQN([MQN.NG(..., 0)], 1)], *args)
+
         # MQ tags in lists
 
         patl = MList([MQ(MOR(is_a='a', is_b='b'), min=1, max=2, static='y')])
