@@ -347,7 +347,6 @@ __all__ = [
     'ASTS_LEAF_MAYBE_DOCSTR',
     'ASTS_LEAF__SLICE',
     'ASTS_LEAF__ALL',
-    'AST2ASTSLEAF',
 ]
 
 

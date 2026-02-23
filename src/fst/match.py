@@ -5678,6 +5678,66 @@ _SUB_WITHITEM_SLICES = {Set, List, Tuple, MatchSequence, _Assign_targets, _decor
                         _comprehension_ifs, _aliases, _withitems, _type_params}
 
 
+def _sub_quantifier_list_end_item(qlist: list, last: bool) -> tuple[fst.FST, str, int] | None:
+    """Find the first (or last) element in a list of `FSTMatch` objects from a quantifier match, which can have a
+    matched FST or FSTView or a sublist containing those.
+
+    **Returns:**
+    - `(FST, field, idx)`: Information on element found.
+        - `FST`: The node in which the field of the sequence lives.
+        - `field`: The name of the field, may be virtual field.
+        - `idx`: The index (in the FST field) of the extremal element found. Start index if first element, stop index
+            (last + 1) if last element.
+    - `None`: No items found.
+    """
+
+    for match in reversed(qlist) if last else qlist:
+        if not isinstance(match, FSTMatch):
+            raise MatchError(f'expecting FSTMatch in list, got {match.__class__.__qualname__}')
+
+        matched = match.matched
+
+        if not isinstance(matched, list):
+            break
+
+        if matched:
+            matched = matched[-1] if last else matched[0]
+
+            break
+
+    else:  # exhausted list so no item found
+        return None
+
+    if isinstance(matched, FSTView):  # should be a single element FSTView
+        assert len(matched) == 1
+
+        return matched.base, matched.field, matched.stop if last else matched.start
+
+    if not isinstance(matched, fst.FST):  # can be None from Dict.keys or arguments.kw_defaults, these are not sliceable fields anyway so we don't even attempt to handle it
+        raise MatchError(f'expected FST or FSTView, got {matched.__class__.__qualname__}')
+
+    field, idx = matched.pfield
+    parent = matched.parent
+    parent_cls = parent.a.__class__
+
+    if parent_cls is Call:
+        if field in ('args', 'keywords'):
+            idx = parent._cached_arglikes().index(matched.a)
+            field = '_args'
+
+    elif parent_cls is Compare:
+        if field != 'ops':
+            idx = 0 if field == 'left' else idx + 1
+            field = '_all'
+
+    elif parent_cls is ClassDef:
+        if field in ('bases', 'keywords'):
+            idx = parent._cached_arglikes().index(matched.a)
+            field = '_bases'
+
+    return parent, field, idx + 1 if last else idx
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # public FST class methods
 
@@ -6010,20 +6070,21 @@ def sub(
                 repl_slot_new = repl_slot_new.copy(**copy_options)
                 one = False  # this will be a slice of some kind so make sure we put as a slice, even if it is a single arg in arguments posing as a slice it is fine to treat it as a slice
 
-            # elif isinstance(repl_slot_new, list):  # this is from a quantifier, in which case convert it to a slice (all whole list fields come back as FSTView)
-            #     one = False
+            elif isinstance(repl_slot_new, list):  # this is from a quantifier, in which case convert it to a slice (all whole list fields come back as FSTView)
+                one = False
 
-            #     if not repl_slot_new:  # empty list is delete
-            #         repl_slot_new = None
+                if not repl_slot_new or not (first := _sub_quantifier_list_end_item(repl_slot_new, False)):  # empty list is delete
+                    repl_slot_new = None
 
-            #     elif not isinstance(m0 := repl_slot_new[0], FSTMatch):
-            #         raise MatchError('expecting FSTMatch objects in list from quantifier'
-            #                          f', got {m0.__class__.__qualname__}')
+                else:
+                    last_base, last_field, last_idx = _sub_quantifier_list_end_item(repl_slot_new, True)
+                    first_base, first_field, first_idx = first
 
-            #     else:  # we assume all the rest are FSTMatch as well (and a contiguous slice), we support subsequences
-            #         print(m0.matched)
-            #         print(repl_slot_new[-1].matched)
-            #         1/0
+                    assert last_base is first_base
+                    assert last_field == first_field
+                    assert last_idx > first_idx
+
+                    repl_slot_new = first_base._get_slice(first_idx, last_idx, first_field, False, copy_options)
 
             elif not isinstance(repl_slot_new, str):  # str could have come from static tag
                 raise MatchError('match substitution must be FST, None or str'

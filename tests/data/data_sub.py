@@ -503,6 +503,44 @@ Module - ROOT 0,0..3,10
         .value Call - 3,4..3,10
           .func Name 'post' Load - 3,4..3,8
 '''),
+
+('', None, None, None, {}, ('FunctionDef',
+r'''def f(a, b=1, /, c=2, *d, **e): a ; b ; c ; d ; e'''),
+r'''MFunctionDef(args=Marguments(_all=[..., MQSTAR(a=...), ...]), body=[..., MQSTAR(b=...), ...])''', ('FunctionDef',
+r'''def g(x, /, __FST_a): x; __FST_b; y'''), r'''
+def g(x, b=1, /, c=2, *d):
+    x
+    b ; c ; d
+    y
+''', r'''
+FunctionDef - ROOT 0,0..3,5
+  .name 'g'
+  .args arguments - 0,6..0,24
+    .posonlyargs[2]
+     0] arg - 0,6..0,7
+       .arg 'x'
+     1] arg - 0,9..0,10
+       .arg 'b'
+    .args[1]
+     0] arg - 0,17..0,18
+       .arg 'c'
+    .vararg arg - 0,23..0,24
+      .arg 'd'
+    .defaults[2]
+     0] Constant 1 - 0,11..0,12
+     1] Constant 2 - 0,19..0,20
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+'''),
 ],
 
 'basic_AsyncFunctionDef': [  # ................................................................................
@@ -518,6 +556,44 @@ Module - ROOT 0,0..0,26
      .name 'funcname'
      .body[1]
       0] Pass - 0,22..0,26
+'''),
+
+('', None, None, None, {}, ('AsyncFunctionDef',
+r'''async def f(a, b=1, /, c=2, *d, **e): a ; b ; c ; d ; e'''),
+r'''MAsyncFunctionDef(args=Marguments(_all=[..., MQSTAR(a=...), ...]), body=[..., MQSTAR(b=...), ...])''', ('AsyncFunctionDef',
+r'''async def g(x, /, __FST_a): x; __FST_b; y'''), r'''
+async def g(x, b=1, /, c=2, *d):
+    x
+    b ; c ; d
+    y
+''', r'''
+AsyncFunctionDef - ROOT 0,0..3,5
+  .name 'g'
+  .args arguments - 0,12..0,30
+    .posonlyargs[2]
+     0] arg - 0,12..0,13
+       .arg 'x'
+     1] arg - 0,15..0,16
+       .arg 'b'
+    .args[1]
+     0] arg - 0,23..0,24
+       .arg 'c'
+    .vararg arg - 0,29..0,30
+      .arg 'd'
+    .defaults[2]
+     0] Constant 1 - 0,17..0,18
+     1] Constant 2 - 0,25..0,26
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
 '''),
 ],
 
@@ -873,6 +949,43 @@ Module - ROOT 0,0..3,10
         .value Call - 3,4..3,10
           .func Name 'post' Load - 3,4..3,8
 '''),
+
+('', None, None, None, {}, ('ClassDef',
+r'''class cls(a, c=c, *b, **d, **e): a ; b ; c ; d ; e'''),
+r'''MClassDef(_bases=[..., MQSTAR(a=...), ...], body=[..., MQSTAR(b=...), ...])''', ('ClassDef',
+r'''class kls(x, __FST_a, **y): x; __FST_b; y'''), r'''
+class kls(x, c=c, *b, **d, **y):
+    x
+    b ; c ; d
+    y
+''', r'''
+ClassDef - ROOT 0,0..3,5
+  .name 'kls'
+  .bases[2]
+   0] Name 'x' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'b' Load - 0,19..0,20
+     .ctx Load
+  .keywords[3]
+   0] keyword - 0,13..0,16
+     .arg 'c'
+     .value Name 'c' Load - 0,15..0,16
+   1] keyword - 0,22..0,25
+     .value Name 'd' Load - 0,24..0,25
+   2] keyword - 0,27..0,30
+     .value Name 'y' Load - 0,29..0,30
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+'''),
 ],
 
 'basic_Return': [  # ................................................................................
@@ -933,6 +1046,20 @@ Delete - ROOT 0,0..0,11
    0] Name 'x' Del - 0,4..0,5
    1] Name 'b' Del - 0,7..0,8
    2] Name 'y' Del - 0,10..0,11
+'''),
+
+('', None, None, None, {}, ('Delete',
+r'''del a, b, c, d, e'''),
+r'''MDelete(targets=[..., MQSTAR(t=...), ...])''', ('Delete',
+r'''del x, __FST_t, y'''),
+r'''del x, b, c, d, y''', r'''
+Delete - ROOT 0,0..0,17
+  .targets[5]
+   0] Name 'x' Del - 0,4..0,5
+   1] Name 'b' Del - 0,7..0,8
+   2] Name 'c' Del - 0,10..0,11
+   3] Name 'd' Del - 0,13..0,14
+   4] Name 'y' Del - 0,16..0,17
 '''),
 ],
 
@@ -1028,6 +1155,20 @@ Assign - ROOT 0,0..0,21
    4] Name 'y' Store - 0,16..0,17
   .value Name 'z' Load - 0,20..0,21
 '''),
+
+('', None, None, None, {}, ('Assign',
+r'''a = b = c = d = e = u'''),
+r'''MAssign(targets=[..., MQSTAR(t=...), ...])''', ('Assign',
+r'''x = __FST_t = y'''),
+r'''x = b = c = d = y''', r'''
+Assign - ROOT 0,0..0,17
+  .targets[4]
+   0] Name 'x' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+   2] Name 'c' Store - 0,8..0,9
+   3] Name 'd' Store - 0,12..0,13
+  .value Name 'y' Load - 0,16..0,17
+'''),
 ],
 
 'basic_TypeAlias': [  # ................................................................................
@@ -1074,6 +1215,27 @@ TypeAlias - ROOT 0,0..0,13
    0] TypeVar - 0,7..0,8
      .name 'T'
   .value Name 'b' Load - 0,12..0,13
+'''),
+
+('', None, None, None, {'_ver': 12}, ('TypeAlias',
+r'''type t[a, b, c, d, e] = ...'''),
+r'''MTypeAlias(type_params=[..., MQSTAR(t=...), ...])''', ('TypeAlias',
+r'''type t[x, __FST_t, y] = z'''),
+r'''type t[x, b, c, d, y] = z''', r'''
+TypeAlias - ROOT 0,0..0,25
+  .name Name 't' Store - 0,5..0,6
+  .type_params[5]
+   0] TypeVar - 0,7..0,8
+     .name 'x'
+   1] TypeVar - 0,10..0,11
+     .name 'b'
+   2] TypeVar - 0,13..0,14
+     .name 'c'
+   3] TypeVar - 0,16..0,17
+     .name 'd'
+   4] TypeVar - 0,19..0,20
+     .name 'y'
+  .value Name 'z' Load - 0,24..0,25
 '''),
 ],
 
@@ -1273,6 +1435,42 @@ For - ROOT 0,0..1,10
      .value Call - 1,4..1,10
        .func Name 'call' Load - 1,4..1,8
 '''),
+
+('', None, None, None, {}, ('For',
+r'''for x in x: a ; b ; c ; d ; e'''),
+r'''MFor(body=[..., MQSTAR(b=...), ...])''', ('For', r'''
+for y in y: x; __FST_b; y
+else: __FST_b
+'''), r'''
+for y in y:
+    x
+    b ; c ; d
+    y
+else:
+    b ; c ; d
+''', r'''
+For - ROOT 0,0..5,13
+  .target Name 'y' Store - 0,4..0,5
+  .iter Name 'y' Load - 0,9..0,10
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+  .orelse[3]
+   0] Expr - 5,4..5,5
+     .value Name 'b' Load - 5,4..5,5
+   1] Expr - 5,8..5,9
+     .value Name 'c' Load - 5,8..5,9
+   2] Expr - 5,12..5,13
+     .value Name 'd' Load - 5,12..5,13
+'''),
 ],
 
 'basic_AsyncFor': [  # ................................................................................
@@ -1291,6 +1489,42 @@ AsyncFor - ROOT 0,0..0,27
     .ctx Load
   .body[1]
    0] Pass - 0,23..0,27
+'''),
+
+('', None, None, None, {}, ('AsyncFor',
+r'''async for x in x: a ; b ; c ; d ; e'''),
+r'''MAsyncFor(body=[..., MQSTAR(b=...), ...])''', ('AsyncFor', r'''
+async for y in y: x; __FST_b; y
+else: __FST_b
+'''), r'''
+async for y in y:
+    x
+    b ; c ; d
+    y
+else:
+    b ; c ; d
+''', r'''
+AsyncFor - ROOT 0,0..5,13
+  .target Name 'y' Store - 0,10..0,11
+  .iter Name 'y' Load - 0,15..0,16
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+  .orelse[3]
+   0] Expr - 5,4..5,5
+     .value Name 'b' Load - 5,4..5,5
+   1] Expr - 5,8..5,9
+     .value Name 'c' Load - 5,8..5,9
+   2] Expr - 5,12..5,13
+     .value Name 'd' Load - 5,12..5,13
 '''),
 ],
 
@@ -1374,6 +1608,41 @@ While - ROOT 0,0..1,10
      .value Call - 1,4..1,10
        .func Name 'call' Load - 1,4..1,8
 '''),
+
+('', None, None, None, {}, ('While',
+r'''while x: a ; b ; c ; d ; e'''),
+r'''MWhile(body=[..., MQSTAR(b=...), ...])''', ('While', r'''
+while y: x; __FST_b; y
+else: __FST_b
+'''), r'''
+while y:
+    x
+    b ; c ; d
+    y
+else:
+    b ; c ; d
+''', r'''
+While - ROOT 0,0..5,13
+  .test Name 'y' Load - 0,6..0,7
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+  .orelse[3]
+   0] Expr - 5,4..5,5
+     .value Name 'b' Load - 5,4..5,5
+   1] Expr - 5,8..5,9
+     .value Name 'c' Load - 5,8..5,9
+   2] Expr - 5,12..5,13
+     .value Name 'd' Load - 5,12..5,13
+'''),
 ],
 
 'basic_If': [  # ................................................................................
@@ -1455,6 +1724,41 @@ If - ROOT 0,0..1,10
    0] Expr - 1,4..1,10
      .value Call - 1,4..1,10
        .func Name 'call' Load - 1,4..1,8
+'''),
+
+('', None, None, None, {}, ('If',
+r'''if x: a ; b ; c ; d ; e'''),
+r'''MIf(body=[..., MQSTAR(b=...), ...])''', ('If', r'''
+if y: x; __FST_b; y
+else: __FST_b
+'''), r'''
+if y:
+    x
+    b ; c ; d
+    y
+else:
+    b ; c ; d
+''', r'''
+If - ROOT 0,0..5,13
+  .test Name 'y' Load - 0,3..0,4
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+  .orelse[3]
+   0] Expr - 5,4..5,5
+     .value Name 'b' Load - 5,4..5,5
+   1] Expr - 5,8..5,9
+     .value Name 'c' Load - 5,8..5,9
+   2] Expr - 5,12..5,13
+     .value Name 'd' Load - 5,12..5,13
 '''),
 ],
 
@@ -1688,6 +1992,40 @@ With - ROOT 0,0..1,8
   .body[1]
    0] Pass - 1,4..1,8
 '''),
+
+('', None, None, None, {}, ('With',
+r'''with a, b, c, d, e: a ; b ; c ; d ; e'''),
+r'''MWith(items=[..., MQSTAR(i=...), ...], body=[..., MQSTAR(b=...), ...])''', ('With',
+r'''with x, __FST_i, y: x; __FST_b; y'''), r'''
+with x, b, c, d, y:
+    x
+    b ; c ; d
+    y
+''', r'''
+With - ROOT 0,0..3,5
+  .items[5]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'b' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'c' Load - 0,11..0,12
+   3] withitem - 0,14..0,15
+     .context_expr Name 'd' Load - 0,14..0,15
+   4] withitem - 0,17..0,18
+     .context_expr Name 'y' Load - 0,17..0,18
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+'''),
 ],
 
 'basic_AsyncWith': [  # ................................................................................
@@ -1703,6 +2041,40 @@ AsyncWith - ROOT 0,0..0,18
      .context_expr Name 'b' Load - 0,11..0,12
   .body[1]
    0] Pass - 0,14..0,18
+'''),
+
+('', None, None, None, {}, ('AsyncWith',
+r'''async with a, b, c, d, e: a ; b ; c ; d ; e'''),
+r'''MAsyncWith(items=[..., MQSTAR(i=...), ...], body=[..., MQSTAR(b=...), ...])''', ('AsyncWith',
+r'''async with x, __FST_i, y: x; __FST_b; y'''), r'''
+async with x, b, c, d, y:
+    x
+    b ; c ; d
+    y
+''', r'''
+AsyncWith - ROOT 0,0..3,5
+  .items[5]
+   0] withitem - 0,11..0,12
+     .context_expr Name 'x' Load - 0,11..0,12
+   1] withitem - 0,14..0,15
+     .context_expr Name 'b' Load - 0,14..0,15
+   2] withitem - 0,17..0,18
+     .context_expr Name 'c' Load - 0,17..0,18
+   3] withitem - 0,20..0,21
+     .context_expr Name 'd' Load - 0,20..0,21
+   4] withitem - 0,23..0,24
+     .context_expr Name 'y' Load - 0,23..0,24
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
 '''),
 ],
 
@@ -1897,6 +2269,65 @@ Try - ROOT 0,0..1,12
      .body[1]
       0] Pass - 1,8..1,12
 '''),
+
+('', None, None, None, {}, ('Try', r'''
+try: a ; b ; c ; d ; e
+finally: pass
+'''),
+r'''MTry(body=[..., MQSTAR(b=...), ...])''', ('Try', r'''
+try: x; __FST_b; y
+except: __FST_b
+else: __FST_b
+finally: __FST_b
+'''), r'''
+try:
+    x
+    b ; c ; d
+    y
+except:
+    b ; c ; d
+
+else:
+    b ; c ; d
+finally:
+    b ; c ; d
+''', r'''
+Try - ROOT 0,0..10,13
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+  .handlers[1]
+   0] ExceptHandler - 4,0..5,13
+     .body[3]
+      0] Expr - 5,4..5,5
+        .value Name 'b' Load - 5,4..5,5
+      1] Expr - 5,8..5,9
+        .value Name 'c' Load - 5,8..5,9
+      2] Expr - 5,12..5,13
+        .value Name 'd' Load - 5,12..5,13
+  .orelse[3]
+   0] Expr - 8,4..8,5
+     .value Name 'b' Load - 8,4..8,5
+   1] Expr - 8,8..8,9
+     .value Name 'c' Load - 8,8..8,9
+   2] Expr - 8,12..8,13
+     .value Name 'd' Load - 8,12..8,13
+  .finalbody[3]
+   0] Expr - 10,4..10,5
+     .value Name 'b' Load - 10,4..10,5
+   1] Expr - 10,8..10,9
+     .value Name 'c' Load - 10,8..10,9
+   2] Expr - 10,12..10,13
+     .value Name 'd' Load - 10,12..10,13
+'''),
 ],
 
 'basic_TryStar': [  # ................................................................................
@@ -2036,6 +2467,66 @@ TryStar - ROOT 0,0..1,23
      .body[1]
       0] Pass - 1,19..1,23
 '''),
+
+('', None, None, None, {'_ver': 11}, ('TryStar', r'''
+try: a ; b ; c ; d ; e
+except* Exception: pass
+'''),
+r'''MTryStar(body=[..., MQSTAR(b=...), ...])''', ('TryStar', r'''
+try: x; __FST_b; y
+except* Exception: __FST_b
+else: __FST_b
+finally: __FST_b
+'''), r'''
+try:
+    x
+    b ; c ; d
+    y
+except* Exception:
+    b ; c ; d
+
+else:
+    b ; c ; d
+finally:
+    b ; c ; d
+''', r'''
+TryStar - ROOT 0,0..10,13
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+  .handlers[1]
+   0] ExceptHandler - 4,0..5,13
+     .type Name 'Exception' Load - 4,8..4,17
+     .body[3]
+      0] Expr - 5,4..5,5
+        .value Name 'b' Load - 5,4..5,5
+      1] Expr - 5,8..5,9
+        .value Name 'c' Load - 5,8..5,9
+      2] Expr - 5,12..5,13
+        .value Name 'd' Load - 5,12..5,13
+  .orelse[3]
+   0] Expr - 8,4..8,5
+     .value Name 'b' Load - 8,4..8,5
+   1] Expr - 8,8..8,9
+     .value Name 'c' Load - 8,8..8,9
+   2] Expr - 8,12..8,13
+     .value Name 'd' Load - 8,12..8,13
+  .finalbody[3]
+   0] Expr - 10,4..10,5
+     .value Name 'b' Load - 10,4..10,5
+   1] Expr - 10,8..10,9
+     .value Name 'c' Load - 10,8..10,9
+   2] Expr - 10,12..10,13
+     .value Name 'd' Load - 10,12..10,13
+'''),
 ],
 
 'basic_Assert': [  # ................................................................................
@@ -2129,6 +2620,25 @@ r'''from . import *'''),
 r'''MImportFrom(names=M(n=...))''', (None,
 r'''import __FST_n  # new'''),
 r'''**NodeError("'*' star alias not allowed")**'''),
+
+('', None, None, None, {}, ('Import',
+r'''import a, b, c, d, e'''),
+r'''MImport(names=[..., MQSTAR(i=...), ...])''', ('Import',
+r'''import x, __FST_i, y'''),
+r'''import x, b, c, d, y''', r'''
+Import - ROOT 0,0..0,20
+  .names[5]
+   0] alias - 0,7..0,8
+     .name 'x'
+   1] alias - 0,10..0,11
+     .name 'b'
+   2] alias - 0,13..0,14
+     .name 'c'
+   3] alias - 0,16..0,17
+     .name 'd'
+   4] alias - 0,19..0,20
+     .name 'y'
+'''),
 ],
 
 'basic_ImportFrom': [  # ................................................................................
@@ -2271,6 +2781,26 @@ ImportFrom - ROOT 0,0..0,15
      .name '*'
   .level 1
 '''),
+
+('', None, None, None, {}, ('ImportFrom',
+r'''from . import a, b, c, d, e'''),
+r'''MImportFrom(names=[..., MQSTAR(i=...), ...])''', ('ImportFrom',
+r'''from . import x, __FST_i, y'''),
+r'''from . import x, b, c, d, y''', r'''
+ImportFrom - ROOT 0,0..0,27
+  .names[5]
+   0] alias - 0,14..0,15
+     .name 'x'
+   1] alias - 0,17..0,18
+     .name 'b'
+   2] alias - 0,20..0,21
+     .name 'c'
+   3] alias - 0,23..0,24
+     .name 'd'
+   4] alias - 0,26..0,27
+     .name 'y'
+  .level 1
+'''),
 ],
 
 'basic_Global': [  # ................................................................................
@@ -2328,6 +2858,20 @@ Global - ROOT 0,0..0,14
    1] 'b'
    2] 'c'
 '''),
+
+('', None, None, None, {}, ('Global',
+r'''global a, b, c, d, e'''),
+r'''MGlobal(names=[..., MQSTAR(i=...), ...])''', ('Global',
+r'''global x, __FST_i, y'''),
+r'''global x, b, c, d, y''', r'''
+Global - ROOT 0,0..0,20
+  .names[5]
+   0] 'x'
+   1] 'b'
+   2] 'c'
+   3] 'd'
+   4] 'y'
+'''),
 ],
 
 'basic_Nonlocal': [  # ................................................................................
@@ -2342,6 +2886,20 @@ Nonlocal - ROOT 0,0..0,16
    0] 'a'
    1] 'b'
    2] 'c'
+'''),
+
+('', None, None, None, {}, ('Nonlocal',
+r'''nonlocal a, b, c, d, e'''),
+r'''MNonlocal(names=[..., MQSTAR(i=...), ...])''', ('Nonlocal',
+r'''nonlocal x, __FST_i, y'''),
+r'''nonlocal x, b, c, d, y''', r'''
+Nonlocal - ROOT 0,0..0,22
+  .names[5]
+   0] 'x'
+   1] 'b'
+   2] 'c'
+   3] 'd'
+   4] 'y'
 '''),
 ],
 
@@ -2586,6 +3144,21 @@ BoolOp - ROOT 0,0..0,20
       1] Name 'b' Load - 0,12..0,13
    2] Name 'y' Load - 0,19..0,20
 '''),
+
+('', None, None, None, {}, ('BoolOp',
+r'''a or b or c or d or e'''),
+r'''MBoolOp(values=[..., MQSTAR(i=...), ...])''', ('BoolOp',
+r'''x or __FST_i or y'''),
+r'''x or b or c or d or y''', r'''
+BoolOp - ROOT 0,0..0,21
+  .op Or
+  .values[5]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'b' Load - 0,5..0,6
+   2] Name 'c' Load - 0,10..0,11
+   3] Name 'd' Load - 0,15..0,16
+   4] Name 'y' Load - 0,20..0,21
+'''),
 ],
 
 'basic_NamedExpr': [  # ................................................................................
@@ -2741,6 +3314,29 @@ r'''lambda __FST_DEL: True'''),
 r'''lambda: True''', r'''
 Lambda - ROOT 0,0..0,12
   .body Constant True - 0,8..0,12
+'''),
+
+('', None, None, None, {}, ('Lambda',
+r'''lambda a, b=1, /, c=2, *d, **e: None'''),
+r'''MLambda(args=Marguments(_all=[..., MQSTAR(a=...), ...]))''', ('Lambda',
+r'''lambda x, /, __FST_a: True'''),
+r'''lambda x, b=1, /, c=2, *d: True''', r'''
+Lambda - ROOT 0,0..0,31
+  .args arguments - 0,7..0,25
+    .posonlyargs[2]
+     0] arg - 0,7..0,8
+       .arg 'x'
+     1] arg - 0,10..0,11
+       .arg 'b'
+    .args[1]
+     0] arg - 0,18..0,19
+       .arg 'c'
+    .vararg arg - 0,24..0,25
+      .arg 'd'
+    .defaults[2]
+     0] Constant 1 - 0,12..0,13
+     1] Constant 2 - 0,20..0,21
+  .body Constant True - 0,27..0,31
 '''),
 ],
 
@@ -2915,6 +3511,20 @@ Set - ROOT 0,0..0,9
    0] Name 'x' Load - 0,1..0,2
    1] Name 'b' Load - 0,4..0,5
    2] Name 'y' Load - 0,7..0,8
+'''),
+
+('', None, None, None, {}, ('Set',
+r'''{a, b, c, d, e}'''),
+r'''MSet(elts=[..., MQSTAR(a=...), ...])''', ('Set',
+r'''{x, __FST_a, y}'''),
+r'''{x, b, c, d, y}''', r'''
+Set - ROOT 0,0..0,15
+  .elts[5]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'c' Load - 0,7..0,8
+   3] Name 'd' Load - 0,10..0,11
+   4] Name 'y' Load - 0,13..0,14
 '''),
 ],
 
@@ -3286,6 +3896,23 @@ Compare - ROOT 0,0..0,17
      .ctx Load
    1] Name 'y' Load - 0,16..0,17
 '''),
+
+('', None, None, None, {}, ('Compare',
+r'''a < b <= c >= d > e'''),
+r'''MCompare(_all=[..., MQSTAR(a=...), ...])''', ('Compare',
+r'''__FST_a != y'''),
+r'''b <= c >= d != y''', r'''
+Compare - ROOT 0,0..0,16
+  .left Name 'b' Load - 0,0..0,1
+  .ops[3]
+   0] LtE - 0,2..0,4
+   1] GtE - 0,7..0,9
+   2] NotEq - 0,12..0,14
+  .comparators[3]
+   0] Name 'c' Load - 0,5..0,6
+   1] Name 'd' Load - 0,10..0,11
+   2] Name 'y' Load - 0,15..0,16
+'''),
 ],
 
 'basic_Call': [  # ................................................................................
@@ -3412,6 +4039,28 @@ Call - ROOT 0,0..0,18
      .value Name 'd' Load - 0,11..0,12
    1] keyword - 0,14..0,17
      .value Name 'y' Load - 0,16..0,17
+'''),
+
+('', None, None, None, {}, ('Call',
+r'''call(a, c=c, *b, **d, **e)'''),
+r'''MCall(_args=[..., MQSTAR(a=...), ...])''', ('Call',
+r'''kall(x, __FST_a, **y)'''),
+r'''kall(x, c=c, *b, **d, **y)''', r'''
+Call - ROOT 0,0..0,26
+  .func Name 'kall' Load - 0,0..0,4
+  .args[2]
+   0] Name 'x' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'b' Load - 0,14..0,15
+     .ctx Load
+  .keywords[3]
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'c' Load - 0,10..0,11
+   1] keyword - 0,17..0,20
+     .value Name 'd' Load - 0,19..0,20
+   2] keyword - 0,22..0,25
+     .value Name 'y' Load - 0,24..0,25
 '''),
 ],
 
@@ -3716,6 +4365,21 @@ List - ROOT 0,0..0,9
    2] Name 'y' Load - 0,7..0,8
   .ctx Load
 '''),
+
+('', None, None, None, {}, ('List',
+r'''[a, b, c, d, e]'''),
+r'''MList(elts=[..., MQSTAR(a=...), ...])''', ('List',
+r'''[x, __FST_a, y]'''),
+r'''[x, b, c, d, y]''', r'''
+List - ROOT 0,0..0,15
+  .elts[5]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'c' Load - 0,7..0,8
+   3] Name 'd' Load - 0,10..0,11
+   4] Name 'y' Load - 0,13..0,14
+  .ctx Load
+'''),
 ],
 
 'basic_Tuple': [  # ................................................................................
@@ -3798,6 +4462,21 @@ Tuple - ROOT 0,0..0,9
    0] Name 'x' Load - 0,1..0,2
    1] Name 'b' Load - 0,4..0,5
    2] Name 'y' Load - 0,7..0,8
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('Tuple',
+r'''(a, b, c, d, e)'''),
+r'''MTuple(elts=[..., MQSTAR(a=...), ...])''', ('Tuple',
+r'''(x, __FST_a, y)'''),
+r'''(x, b, c, d, y)''', r'''
+Tuple - ROOT 0,0..0,15
+  .elts[5]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'c' Load - 0,7..0,8
+   3] Name 'd' Load - 0,10..0,11
+   4] Name 'y' Load - 0,13..0,14
   .ctx Load
 '''),
 ],
@@ -4212,6 +4891,27 @@ arguments - ROOT 0,0..0,16
    1] Constant 1 - 0,10..0,11
    2] Constant 2 - 0,15..0,16
 '''),
+
+('', None, None, None, {}, ('arguments',
+r'''a, b=1, /, c=2, *d, **e'''),
+r'''Marguments(_all=[..., MQSTAR(a=...), ...])''', ('arguments',
+r'''x, /, __FST_a'''),
+r'''x, b=1, /, c=2, *d''', r'''
+arguments - ROOT 0,0..0,18
+  .posonlyargs[2]
+   0] arg - 0,0..0,1
+     .arg 'x'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .args[1]
+   0] arg - 0,11..0,12
+     .arg 'c'
+  .vararg arg - 0,17..0,18
+    .arg 'd'
+  .defaults[2]
+   0] Constant 1 - 0,5..0,6
+   1] Constant 2 - 0,13..0,14
+'''),
 ],
 
 'basic_arg': [  # ................................................................................
@@ -4545,6 +5245,31 @@ match_case - ROOT 0,0..2,8
    0] Pass - 1,4..1,8
    1] Pass - 2,4..2,8
 '''),
+
+('', None, None, None, {}, ('match_case',
+r'''case _: a ; b ; c ; d ; e'''),
+r'''Mmatch_case(body=[..., MQSTAR(b=...), ...])''', ('match_case',
+r'''case x: x; __FST_b; y'''), r'''
+case x:
+    x
+    b ; c ; d
+    y
+''', r'''
+match_case - ROOT 0,0..3,5
+  .pattern MatchAs - 0,5..0,6
+    .name 'x'
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+'''),
 ],
 
 'basic_MatchValue': [  # ................................................................................
@@ -4700,6 +5425,25 @@ MatchSequence - ROOT 0,0..0,13
    3] MatchAs - 0,10..0,11
      .name 'a'
 '''),
+
+('', None, None, None, {}, ('MatchSequence',
+r'''[a, b, c, d, e]'''),
+r'''MMatchSequence(patterns=[..., MQSTAR(a=...), ...])''', ('MatchSequence',
+r'''[x, __FST_a, y]'''),
+r'''[x, b, c, d, y]''', r'''
+MatchSequence - ROOT 0,0..0,15
+  .patterns[5]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+   2] MatchAs - 0,7..0,8
+     .name 'c'
+   3] MatchAs - 0,10..0,11
+     .name 'd'
+   4] MatchAs - 0,13..0,14
+     .name 'y'
+'''),
 ],
 
 'basic_MatchMapping': [  # ................................................................................
@@ -4854,6 +5598,26 @@ MatchClass - ROOT 0,0..0,6
    0] MatchAs - 0,4..0,5
      .name 'a'
 '''),
+
+('', None, None, None, {}, ('MatchClass',
+r'''cls(a, b, c, d, e)'''),
+r'''MMatchClass(patterns=[..., MQSTAR(a=...), ...])''', ('MatchClass',
+r'''kls(x, __FST_a, y)'''),
+r'''kls(x, b, c, d, y)''', r'''
+MatchClass - ROOT 0,0..0,18
+  .cls Name 'kls' Load - 0,0..0,3
+  .patterns[5]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'c'
+   3] MatchAs - 0,13..0,14
+     .name 'd'
+   4] MatchAs - 0,16..0,17
+     .name 'y'
+'''),
 ],
 
 'basic_MatchStar': [  # ................................................................................
@@ -5007,6 +5771,25 @@ MatchOr - ROOT 0,0..0,17
      .name 'b'
    3] MatchAs - 0,12..0,13
      .name 'c'
+   4] MatchAs - 0,16..0,17
+     .name 'y'
+'''),
+
+('', None, None, None, {}, ('MatchOr',
+r'''a | b | c | d | e'''),
+r'''MMatchOr(patterns=[..., MQSTAR(a=...), ...])''', ('MatchOr',
+r'''x | __FST_a | y'''),
+r'''x | b | c | d | y''', r'''
+MatchOr - ROOT 0,0..0,17
+  .patterns[5]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+   2] MatchAs - 0,8..0,9
+     .name 'c'
+   3] MatchAs - 0,12..0,13
+     .name 'd'
    4] MatchAs - 0,16..0,17
      .name 'y'
 '''),
@@ -7500,6 +8283,64 @@ Assign - ROOT 0,0..0,7
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
   .value Name 'SUB' Load - 0,4..0,7
+'''),
+],
+
+'nested_quantifier_lists': [  # ................................................................................
+
+('', None, None, None, {}, ('List',
+r'''[a, a, b, b, c, c, d, d]'''),
+r'''MList([MQPLUS.NG, MQMIN(t=[M(u=...), MTAG('u')], min=1), MQPLUS])''', ('List',
+r'''[x, __FST_t, y]'''),
+r'''[x, b, b, c, c, y]''', r'''
+List - ROOT 0,0..0,18
+  .elts[6]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'b' Load - 0,7..0,8
+   3] Name 'c' Load - 0,10..0,11
+   4] Name 'c' Load - 0,13..0,14
+   5] Name 'y' Load - 0,16..0,17
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, a, b, b, b, c, c, c, c, d, d]'''),
+r'''MList([MQPLUS.NG, MQMIN(t=[M(u=...), MQPLUS([MTAG('u')])], min=1), MQPLUS])''', ('List',
+r'''[x, __FST_t, y]'''),
+r'''[x, b, b, b, c, c, c, c, y]''', r'''
+List - ROOT 0,0..0,27
+  .elts[9]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'b' Load - 0,7..0,8
+   3] Name 'b' Load - 0,10..0,11
+   4] Name 'c' Load - 0,13..0,14
+   5] Name 'c' Load - 0,16..0,17
+   6] Name 'c' Load - 0,19..0,20
+   7] Name 'c' Load - 0,22..0,23
+   8] Name 'y' Load - 0,25..0,26
+  .ctx Load
+'''),
+
+('', None, None, None, {}, ('List',
+r'''[a, a, b, b, b, b, c, c, c, c, d, d]'''),
+r'''MList([MQPLUS.NG, MQMIN(t=[MQ([M(u=...), MQPLUS([MTAG('u')])], min=1, max=2)], min=1), MQPLUS])''', ('List',
+r'''[x, __FST_t, y]'''),
+r'''[x, b, b, b, b, c, c, c, c, y]''', r'''
+List - ROOT 0,0..0,30
+  .elts[10]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+   2] Name 'b' Load - 0,7..0,8
+   3] Name 'b' Load - 0,10..0,11
+   4] Name 'b' Load - 0,13..0,14
+   5] Name 'c' Load - 0,16..0,17
+   6] Name 'c' Load - 0,19..0,20
+   7] Name 'c' Load - 0,22..0,23
+   8] Name 'c' Load - 0,25..0,26
+   9] Name 'y' Load - 0,28..0,29
+  .ctx Load
 '''),
 ],
 
