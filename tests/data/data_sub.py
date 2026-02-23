@@ -9299,6 +9299,173 @@ Assign - ROOT 0,0..0,7
 '''),
 ],
 
+'stringify': [  # ................................................................................
+
+('', None, None, None, {}, ('Name',
+r'''a'''),
+r'''Name''',
+r'''log(__FST_, "__FST_")''',
+r'''log(a, "a")''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'log' Load - 0,0..0,3
+  .args[2]
+   0] Name 'a' Load - 0,4..0,5
+   1] Constant '__FST_' - 0,7..0,10
+'''),
+
+('', None, None, None, {}, ('exec', r'''
+pass
+if a:
+    pass
+pass
+'''),
+r'''Module(body=[..., M(t=...), ...])''',
+r'''middle = "__FST_t"''',
+r'''middle = "if a:\n    pass"''', r'''
+Assign - ROOT 0,0..0,26
+  .targets[1]
+   0] Name 'middle' Store - 0,0..0,6
+  .value Constant '__FST_t' - 0,9..0,26
+'''),
+
+('', None, None, None, {}, ('exec', r'''
+pass
+if a: \
+    pass
+call('str')
+pass
+'''),
+r'''Module(body=[..., MQSTAR(t=...), ...])''', r'''
+middle = "__FST_t"
+__FST_t
+''', r'''
+middle = "if a: \\\n    pass\ncall(\'str\')"
+if a: \
+    pass
+call('str')
+''', r'''
+Module - ROOT 0,0..3,11
+  .body[3]
+   0] Assign - 0,0..0,44
+     .targets[1]
+      0] Name 'middle' Store - 0,0..0,6
+     .value Constant '__FST_t' - 0,9..0,44
+   1] If - 1,0..2,8
+     .test Name 'a' Load - 1,3..1,4
+     .body[1]
+      0] Pass - 2,4..2,8
+   2] Expr - 3,0..3,11
+     .value Call - 3,0..3,11
+       .func Name 'call' Load - 3,0..3,4
+       .args[1]
+        0] Constant 'str' - 3,5..3,10
+'''),
+
+('', None, None, None, {}, (None,
+r'''a + b.c + d[e]'''),
+r'''M(t=MOR(Name, Attribute, Subscript))''',
+r'''log(__FST_t, '__FST_t')''',
+r'''log(a, 'a') + log(b.c, 'b.c') + log(d[e], 'd[e]')''', r'''
+BinOp - ROOT 0,0..0,49
+  .left BinOp - 0,0..0,29
+    .left Call - 0,0..0,11
+      .func Name 'log' Load - 0,0..0,3
+      .args[2]
+       0] Name 'a' Load - 0,4..0,5
+       1] Constant '__FST_t' - 0,7..0,10
+    .op Add - 0,12..0,13
+    .right Call - 0,14..0,29
+      .func Name 'log' Load - 0,14..0,17
+      .args[2]
+       0] Attribute - 0,18..0,21
+         .value Name 'b' Load - 0,18..0,19
+         .attr 'c'
+         .ctx Load
+       1] Constant '__FST_t' - 0,23..0,28
+  .op Add - 0,30..0,31
+  .right Call - 0,32..0,49
+    .func Name 'log' Load - 0,32..0,35
+    .args[2]
+     0] Subscript - 0,36..0,40
+       .value Name 'd' Load - 0,36..0,37
+       .slice Name 'e' Load - 0,38..0,39
+       .ctx Load
+     1] Constant '__FST_t' - 0,42..0,48
+'''),
+
+('', None, None, None, {'nested': True}, (None,
+r'''a + b.c + d[e]'''),
+r'''M(t=MOR(Name, Attribute, Subscript))''',
+r'''log(__FST_t, '__FST_t')''',
+r'''log(a, 'a') + log(log(b, 'b').c, 'b.c') + log(log(d, 'd')[log(e, 'e')], 'd[e]')''', r'''
+BinOp - ROOT 0,0..0,79
+  .left BinOp - 0,0..0,39
+    .left Call - 0,0..0,11
+      .func Name 'log' Load - 0,0..0,3
+      .args[2]
+       0] Name 'a' Load - 0,4..0,5
+       1] Constant '__FST_t' - 0,7..0,10
+    .op Add - 0,12..0,13
+    .right Call - 0,14..0,39
+      .func Name 'log' Load - 0,14..0,17
+      .args[2]
+       0] Attribute - 0,18..0,31
+         .value Call - 0,18..0,29
+           .func Name 'log' Load - 0,18..0,21
+           .args[2]
+            0] Name 'b' Load - 0,22..0,23
+            1] Constant '__FST_t' - 0,25..0,28
+         .attr 'c'
+         .ctx Load
+       1] Constant '__FST_t' - 0,33..0,38
+  .op Add - 0,40..0,41
+  .right Call - 0,42..0,79
+    .func Name 'log' Load - 0,42..0,45
+    .args[2]
+     0] Subscript - 0,46..0,70
+       .value Call - 0,46..0,57
+         .func Name 'log' Load - 0,46..0,49
+         .args[2]
+          0] Name 'd' Load - 0,50..0,51
+          1] Constant '__FST_t' - 0,53..0,56
+       .slice Call - 0,58..0,69
+         .func Name 'log' Load - 0,58..0,61
+         .args[2]
+          0] Name 'e' Load - 0,62..0,63
+          1] Constant '__FST_t' - 0,65..0,68
+       .ctx Load
+     1] Constant '__FST_t' - 0,72..0,78
+'''),
+
+('', None, None, None, {'nested': True, 'count': 2}, (None,
+r'''a + b.c + d[e]'''),
+r'''M(t=MOR(Name, Attribute, Subscript))''',
+r'''log(__FST_t, '__FST_t')''',
+r'''log(a, 'a') + log(b.c, 'b.c') + d[e]''', r'''
+BinOp - ROOT 0,0..0,36
+  .left BinOp - 0,0..0,29
+    .left Call - 0,0..0,11
+      .func Name 'log' Load - 0,0..0,3
+      .args[2]
+       0] Name 'a' Load - 0,4..0,5
+       1] Constant '__FST_t' - 0,7..0,10
+    .op Add - 0,12..0,13
+    .right Call - 0,14..0,29
+      .func Name 'log' Load - 0,14..0,17
+      .args[2]
+       0] Attribute - 0,18..0,21
+         .value Name 'b' Load - 0,18..0,19
+         .attr 'c'
+         .ctx Load
+       1] Constant '__FST_t' - 0,23..0,28
+  .op Add - 0,30..0,31
+  .right Subscript - 0,32..0,36
+    .value Name 'd' Load - 0,32..0,33
+    .slice Name 'e' Load - 0,34..0,35
+    .ctx Load
+'''),
+],
+
 'trivia_all_options_stmt': [  # ................................................................................
 
 ('', None, None, None, {}, ('exec', r'''

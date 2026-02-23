@@ -5536,7 +5536,13 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
 # These calculate paths to repl teplate substitution slots in the repl template, which can be actual node like Name, arg
 # or TypeVar or non-node identifier children of real nodes. This can also depend on other attributes of the node.
 
-def _sub_repl_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+_PathsList = list[tuple[str, list[astfield], tuple[str, int | None] | None]]
+_StrTagsList = list[tuple[str, int, int, int]]
+
+_re_FST_tag = re.compile(r'\b__FST_(\w*)\b')
+
+
+def _sub_repl_path_name(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """These are all optionally-present identifiers."""
 
     if tag := fst_.a.name:
@@ -5545,7 +5551,7 @@ def _sub_repl_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FS
 
     return True
 
-def _sub_repl_path_ImportFrom(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_ImportFrom(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Optionally-present identifier."""
 
     if tag := fst_.a.module:
@@ -5554,7 +5560,7 @@ def _sub_repl_path_ImportFrom(paths: list[list[astfield]], repl: fst.FST, fst_: 
 
     return True
 
-def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_Global_Nonlocal(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """List of definitely-present identifiers."""
 
     path = None
@@ -5568,7 +5574,34 @@ def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, f
 
     return True
 
-def _sub_repl_path_Attribute(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_Constant(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
+    """Locations of slots inside `str` and `bytes` constants. It is possible for comment tags to be marked for
+    substitution if they are between parts of inside innate strings, this is harmless."""
+
+    value = fst_.a.value
+
+    if isinstance(value, (str, bytes)):
+        lines = repl._lines
+        ln, col, end_ln, end_col = fst_.loc
+        cur_end_col = 0x7fffffffffffffff
+
+        while ln <= end_ln:
+            if ln == end_ln:
+                cur_end_col = end_col
+
+            l = lines[ln]
+
+            while m := _re_FST_tag.search(l, col, cur_end_col):
+                start, col = m.span()
+
+                str_tags.append((m.group()[6:], (ln, start, col), True))
+
+            col = 0
+            ln += 1
+
+    return True
+
+def _sub_repl_path_Attribute(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present identifier."""
 
     if (tag := fst_.a.attr).startswith('__FST_'):
@@ -5576,7 +5609,7 @@ def _sub_repl_path_Attribute(paths: list[list[astfield]], repl: fst.FST, fst_: f
 
     return True
 
-def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_Name(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node."""
 
     if (tag := fst_.a.id).startswith('__FST_'):
@@ -5601,7 +5634,7 @@ def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FS
 
     return True
 
-def _sub_repl_path_comprehension(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_comprehension(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Possibly the whole `comprehension` if format "for __FST_tag in '...'"."""
 
     ast = fst_.a
@@ -5622,7 +5655,7 @@ def _sub_repl_path_comprehension(paths: list[list[astfield]], repl: fst.FST, fst
 
     return True
 
-def _sub_repl_path_ExceptHandler(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_ExceptHandler(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Just `ExceptHandler.name` or the whole thing if format "except '...': __FST_tag"."""
 
     ast = fst_.a
@@ -5647,7 +5680,7 @@ def _sub_repl_path_ExceptHandler(paths: list[list[astfield]], repl: fst.FST, fst
 
     return True
 
-def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_arg(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of annotations in template."""
 
     ast = fst_.a
@@ -5657,7 +5690,7 @@ def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST
 
     return True
 
-def _sub_repl_path_keyword(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_keyword(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Optionally-present identifier."""
 
     if tag := fst_.a.arg:
@@ -5666,7 +5699,7 @@ def _sub_repl_path_keyword(paths: list[list[astfield]], repl: fst.FST, fst_: fst
 
     return True
 
-def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_alias(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """One Definitely-present and one optionally-present identifier."""
 
     ast = fst_.a
@@ -5691,7 +5724,7 @@ def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.F
 
     return True
 
-def _sub_repl_path_match_case(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_match_case(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Possibly the whole `match_case` if format "case '...': __FST_tag"."""
 
     ast = fst_.a
@@ -5714,7 +5747,7 @@ def _sub_repl_path_match_case(paths: list[list[astfield]], repl: fst.FST, fst_: 
 
     return True
 
-def _sub_repl_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_MatchMapping(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Optionally-present identifier."""
 
     if tag := fst_.a.rest:
@@ -5723,7 +5756,7 @@ def _sub_repl_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_
 
     return True
 
-def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_MatchClass(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """List of definitely-present identifiers."""
 
     path = None
@@ -5737,7 +5770,7 @@ def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: 
 
     return True
 
-def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_MatchAs(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of pattern in template."""
 
     ast = fst_.a
@@ -5770,7 +5803,7 @@ def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst
 
     return True
 
-def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_TypeVar(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of bound or default_value in template."""
 
     ast = fst_.a
@@ -5782,7 +5815,7 @@ def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst
 
     return True
 
-def _sub_repl_path_INVALID(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+def _sub_repl_path_INVALID(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     raise RuntimeError('should not get here')
 
 _SUB_REPL_PATH_FUNCS = {
@@ -5792,6 +5825,7 @@ _SUB_REPL_PATH_FUNCS = {
     ImportFrom:       _sub_repl_path_ImportFrom,
     Global:           _sub_repl_path_Global_Nonlocal,
     Nonlocal:         _sub_repl_path_Global_Nonlocal,
+    Constant:         _sub_repl_path_Constant,
     Attribute:        _sub_repl_path_Attribute,
     Name:             _sub_repl_path_Name,
     comprehension:    _sub_repl_path_comprehension,
@@ -6140,15 +6174,17 @@ def sub(
     repl_options = options if repl_options is None else check_options(repl_options, mark_checked=True)
 
     repl = code_as_all(repl, parse_params=self.root.parse_params)
-    paths = []  # [(tag, path, (field, idx | None) | None), ...]
-    dirty = set()  # {AST, ...}
+    paths = []  # [(tag, path, (field, idx | None) | None), ...]  - paths to repl template substitution slots
+    str_tags = []  # [(tag,( ln, col, end_col), True), ...]  - locations of substitution slots in strings (and bytes)
 
     for f in (gen := repl.walk(_SUB_REPL_PATH_FUNCS)):
-        if not _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, repl, f):
+        if not _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, str_tags, repl, f):
             gen.send(False)
 
+    paths.extend(str_tags)  # these will wind up being processed first, from end to start
     paths.reverse()  # we do this because there might be deletions which will change indices which follow them, so we do higher indices first
 
+    dirty = set()  # {AST, ...}
     gen = self.search(pat, nested, ast_ctx=ast_ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
@@ -6162,7 +6198,6 @@ def sub(
         dirty.update(walk(repl_.a))  # by default nothing from the repl template gets substituted
 
         for tag, path, child in paths:
-            repl_slot = repl_.child_from_path(path)
             repl_slot_new_is_matched_root = False  # if the new node for the repl slot is the top level matched node (which should itself not be substituted again)
             one = True
 
@@ -6201,6 +6236,28 @@ def sub(
                 raise MatchError('match substitution must be FST, None or str'
                                  f', got {repl_slot_new.__class__.__qualname__}')
 
+            if child is True:  # this is a slot inside a string so we just replace it with escaped source of matched element
+                ln, col, end_col = path  # path is really these three coordinates
+
+                if not isinstance(repl_slot_new, fst.FST):  # is None or a string
+                    src = repl_slot_new
+
+                else:  # there is an actual node
+                    src = ''.join(
+                        f'\\{c}'
+                        if c in '"\'\\' else
+                        c.encode('unicode_escape').decode('ascii')
+                        if not c.isprintable() else
+                        c
+                        for c in repl_slot_new.src
+                    )
+
+                repl_._put_src(src, ln, col, ln, end_col, True)
+
+                continue
+
+            repl_slot = repl_.child_from_path(path)
+
             if child is not None:  # path includes a child field which means its not a real node but a str identifier, doesn't need to be marked dirty
                 field, idx = child
 
@@ -6209,82 +6266,83 @@ def sub(
                 else:
                     repl_slot._put_slice(repl_slot_new, idx, idx + 1, field, repl_options)  # Global / Nonlocal
 
-            else:
-                if parent := repl_slot.parent:  # some fields are special-cased for simplicity and common-sense sake
-                    parenta = parent.a
-                    parenta_cls = parenta.__class__
-                    field, idx = repl_slot.pfield
-                    new_idx = None
+                continue
 
-                    if parenta_cls is Expr:  # Name with parent Expr, maybe replacing with single or body of statements, or maybe just an expression
-                        if (not isinstance(repl_slot_new, fst.FST) or
-                            (repl_slot_new_cls := repl_slot_new.a.__class__) in ASTS_LEAF_STMT
+            if parent := repl_slot.parent:  # some fields are special-cased for simplicity and common-sense sake
+                parenta = parent.a
+                parenta_cls = parenta.__class__
+                field, idx = repl_slot.pfield
+                new_idx = None
+
+                if parenta_cls is Expr:  # Name with parent Expr, maybe replacing with single or body of statements, or maybe just an expression
+                    if (not isinstance(repl_slot_new, fst.FST) or
+                        (repl_slot_new_cls := repl_slot_new.a.__class__) in ASTS_LEAF_STMT
+                    ):
+                        repl_slot = parent
+
+                    elif repl_slot_new_cls is Module:
+                        repl_slot = parent
+                        one = False
+
+                elif parenta_cls is Call:  # Call._args?
+                    if field in ('args', 'keywords'):
+                        new_field = '_args'
+                        new_idx = parent._cached_arglikes().index(repl_slot.a)
+
+                elif parenta_cls is arguments:
+                    if (field in _NODE_ARGUMENTS_ARGS_ALL_FIELDS
+                        and (not repl_slot_new or repl_slot_new.a.__class__ is arguments)
+                    ):
+                        new_field = '_all'
+                        allargs = parent._cached_allargs()
+                        one = False
+
+                        try:
+                            new_idx = allargs.index(repl_slot.a)
+                        except ValueError:
+                            raise MatchError('cannot substitute arguments for a non-arg') from None
+
+                elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
+                    if not one:  # only if came from existing Compare slice
+                        new_field = '_all'
+                        new_idx = 0 if idx is None else idx + 1
+
+                elif parenta_cls is ClassDef:  # ClassDef._bases?
+                    if field in ('bases', 'keywords'):
+                        new_field = '_bases'
+                        new_idx = parent._cached_arglikes().index(repl_slot.a)
+
+                elif parenta_cls is withitem:  # can be whole withitem with optional_vars to put as withitem or multiple _withitems
+                    if field == 'context_expr' and not parenta.optional_vars:
+                        if (not isinstance(repl_slot_new, fst.FST)
+                            or (repl_slot_new_cls := repl_slot_new.a.__class__) in _SUB_WITHITEM_SLICES
                         ):
-                            repl_slot = parent
-
-                        elif repl_slot_new_cls is Module:
                             repl_slot = parent
                             one = False
 
-                    elif parenta_cls is Call:  # Call._args?
-                        if field in ('args', 'keywords'):
-                            new_field = '_args'
-                            new_idx = parent._cached_arglikes().index(repl_slot.a)
+                        elif repl_slot_new_cls is withitem:
+                            repl_slot = parent
 
-                    elif parenta_cls is arguments:
-                        if (field in _NODE_ARGUMENTS_ARGS_ALL_FIELDS
-                            and (not repl_slot_new or repl_slot_new.a.__class__ is arguments)
-                        ):
-                            new_field = '_all'
-                            allargs = parent._cached_allargs()
-                            one = False
+                if new_idx is not None:  # replace is a special virtual field slice operation
+                    if not repl_slot_new_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
+                        parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
 
-                            try:
-                                new_idx = allargs.index(repl_slot.a)
-                            except ValueError:
-                                raise MatchError('cannot substitute arguments for a non-arg') from None
+                    else:  # need to do extra stuff to mark possibly multiple replacements as dirty
+                        body = getattr(parent, new_field)
+                        len_body = len(body)
 
-                    elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
-                        if not one:  # only if came from existing Compare slice
-                            new_field = '_all'
-                            new_idx = 0 if idx is None else idx + 1
+                        parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
 
-                    elif parenta_cls is ClassDef:  # ClassDef._bases?
-                        if field in ('bases', 'keywords'):
-                            new_field = '_bases'
-                            new_idx = parent._cached_arglikes().index(repl_slot.a)
+                        if len(body) == len_body:  # only mark dirty if replaced exactly one element because otherwise it was a deletion or subslice
+                            if f := body[new_idx]:
+                                dirty.add(f.a)
 
-                    elif parenta_cls is withitem:  # can be whole withitem with optional_vars to put as withitem or multiple _withitems
-                        if field == 'context_expr' and not parenta.optional_vars:
-                            if (not isinstance(repl_slot_new, fst.FST)
-                                or (repl_slot_new_cls := repl_slot_new.a.__class__) in _SUB_WITHITEM_SLICES
-                            ):
-                                repl_slot = parent
-                                one = False
+                    continue
 
-                            elif repl_slot_new_cls is withitem:
-                                repl_slot = parent
+            repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options)
 
-                    if new_idx is not None:  # replace is a special virtual field slice operation
-                        if not repl_slot_new_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
-                            parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
-
-                        else:  # need to do extra stuff to mark possibly multiple replacements as dirty
-                            body = getattr(parent, new_field)
-                            len_body = len(body)
-
-                            parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
-
-                            if len(body) == len_body:  # only mark dirty if replaced exactly one element because otherwise it was a deletion or subslice
-                                if f := body[new_idx]:
-                                    dirty.add(f.a)
-
-                        continue
-
-                repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options)
-
-                if repl_slot_new_is_matched_root:  # replaced with whole matched node, mark top node as dirty otherwise would cause infinite recursion, we know repl_slot_new exists because repl_slot_new_is_matched_root means it was a node going in
-                    dirty.add(repl_slot_new.a)
+            if repl_slot_new_is_matched_root:  # replaced with whole matched node, mark top node as dirty otherwise would cause infinite recursion, we know repl_slot_new exists because repl_slot_new_is_matched_root means it was a node going in
+                dirty.add(repl_slot_new.a)
 
         one = True
 
