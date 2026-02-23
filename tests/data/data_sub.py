@@ -2148,6 +2148,39 @@ Raise - ROOT 0,0..0,16
   .exc Name 'exc' Load - 0,6..0,9
   .cause Name 'b' Load - 0,15..0,16
 '''),
+
+('', None, None, None, {}, (None,
+r'''raise a from b'''),
+r'''MRaise(exc=M(e=...), cause=M(c=...))''', (None,
+r'''raise __FST_e from __FST_c'''),
+r'''raise a from b''', r'''
+Raise - ROOT 0,0..0,14
+  .exc Name 'a' Load - 0,6..0,7
+  .cause Name 'b' Load - 0,13..0,14
+'''),
+
+('', None, None, None, {}, (None,
+r'''raise a'''),
+r'''MRaise(exc=M(e=...), cause=M(c=...))''', (None,
+r'''raise __FST_e from __FST_c'''),
+r'''raise a''', r'''
+Raise - ROOT 0,0..0,7
+  .exc Name 'a' Load - 0,6..0,7
+'''),
+
+('', None, None, None, {}, (None,
+r'''raise'''),
+r'''MRaise(exc=M(e=...), cause=M(c=...))''', (None,
+r'''raise __FST_e from __FST_c'''),
+r'''raise''',
+r'''Raise - ROOT 0,0..0,5'''),
+
+('', None, None, None, {}, (None,
+r'''raise a from b'''),
+r'''MRaise(exc=M(e=...), cause=M(c=...))''', (None,
+r'''raise __FST__DEL from __FST_c'''),
+r'''raise''',
+r'''Raise - ROOT 0,0..0,5'''),
 ],
 
 'basic_Try': [  # ................................................................................
@@ -3730,6 +3763,42 @@ DictComp - ROOT 0,0..0,16
      .iter Name '_' Load - 0,14..0,15
      .is_async 0
 '''),
+
+('', None, None, None, {'_ver': 15}, ('DictComp',
+r'''{a: b for a, b in c}'''),
+r'''MDictComp(key=M(k=...), value=M(v=...))''', (None,
+r'''{__FST_k: __FST_v for __FST_k, __FST_v in _}'''),
+r'''{a: b for a, b in _}''', r'''
+DictComp - ROOT 0,0..0,20
+  .key Name 'a' Load - 0,1..0,2
+  .value Name 'b' Load - 0,4..0,5
+  .generators[1]
+   0] comprehension - 0,6..0,19
+     .target Tuple - 0,10..0,14
+       .elts[2]
+        0] Name 'a' Store - 0,10..0,11
+        1] Name 'b' Store - 0,13..0,14
+       .ctx Store
+     .iter Name '_' Load - 0,18..0,19
+     .is_async 0
+'''),
+
+('', None, None, None, {'_ver': 15}, ('DictComp',
+r'''{**a for a in c}'''),
+r'''MDictComp(key=M(k=...), value=M(v=...))''', (None,
+r'''{__FST_k: __FST_v for __FST_k, __FST_v in _}'''),
+r'''{**a for a, in _}''', r'''
+DictComp - ROOT 0,0..0,17
+  .key Name 'a' Load - 0,3..0,4
+  .generators[1]
+   0] comprehension - 0,5..0,16
+     .target Tuple - 0,9..0,11
+       .elts[1]
+        0] Name 'a' Store - 0,9..0,10
+       .ctx Store
+     .iter Name '_' Load - 0,15..0,16
+     .is_async 0
+'''),
 ],
 
 'basic_GeneratorExp': [  # ................................................................................
@@ -4615,8 +4684,16 @@ comprehension - ROOT 0,0..0,45
 ('', None, None, None, {}, ('ExceptHandler',
 r'''except: pass'''),
 r'''MExceptHandler(type=M(t=...), name=M(n=...), body=M(b=...))''', (None,
-r'''except __FST_t as __FST_n: __FST_b; return'''),
-r'''**ValueError('cannot delete ExceptHandler.type in this state')**'''),
+r'''except __FST_t as __FST_n: __FST_b; return'''), r'''
+except:
+    pass
+    return
+''', r'''
+ExceptHandler - ROOT 0,0..2,10
+  .body[2]
+   0] Pass - 1,4..1,8
+   1] Return - 2,4..2,10
+'''),
 
 ('', None, None, None, {}, ('ExceptHandler',
 r'''except: pass'''),

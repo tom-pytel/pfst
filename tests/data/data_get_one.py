@@ -641,7 +641,8 @@ r'''Name 'exc' Load - ROOT 0,0..0,3'''),
 
 ('', None, None, 'exc', {}, (Raise,
 r'''raise exc from cause'''),
-r'''**ValueError('cannot delete Raise.exc in this state')**''',
+r'''raise''',
+r'''Raise - ROOT 0,0..0,5''',
 r'''exc''',
 r'''Name 'exc' Load - ROOT 0,0..0,3'''),
 
@@ -1735,7 +1736,11 @@ r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
 ('', None, None, 'type', {}, (ExceptHandler,
 r'''except Exception as exc: pass'''),
-r'''**ValueError('cannot delete ExceptHandler.type in this state')**''',
+r'''except: pass''', r'''
+ExceptHandler - ROOT 0,0..0,12
+  .body[1]
+   0] Pass - 0,8..0,12
+''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
@@ -1772,13 +1777,13 @@ r'''Pass - ROOT 0,0..0,4'''),
 
 ('', None, None, 'type', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''),
-r'''**ValueError('cannot delete ExceptHandler.type in this state')**''',
+r'''**ValueError('cannot delete ExceptHandler.type from except*')**''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
 ('', None, None, 'type', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception as exc: pass'''),
-r'''**ValueError('cannot delete ExceptHandler.type in this state')**''',
+r'''**ValueError('cannot delete ExceptHandler.type from except*')**''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 

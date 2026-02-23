@@ -1933,7 +1933,11 @@ Module - ROOT 0,0..0,5
 ('body[0]', None, None, None, {}, ('exec',
 r'''raise e from cause'''), (None,
 r'''**DEL**'''),
-r'''**ValueError('cannot delete Raise.exc in this state')**'''),
+r'''raise''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Raise - 0,0..0,5
+'''),
 
 ('body[0]', None, None, None, {}, ('exec',
 r'''raise'''), (None,
@@ -5312,8 +5316,20 @@ Module - ROOT 0,0..1,12
 try: pass
 except e as n: pass
 '''), (None,
-r'''**DEL**'''),
-r'''**ValueError('cannot delete ExceptHandler.type in this state')**'''),
+r'''**DEL**'''), r'''
+try: pass
+except: pass
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+   0] Try - 0,0..1,12
+     .body[1]
+      0] Pass - 0,5..0,9
+     .handlers[1]
+      0] ExceptHandler - 1,0..1,12
+        .body[1]
+         0] Pass - 1,8..1,12
+'''),
 
 ('body[0].handlers[0]', None, None, 'type', {}, ('exec', r'''
 try: pass

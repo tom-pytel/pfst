@@ -1114,6 +1114,23 @@ def _put_one_AnnAssign_target(
     return ret
 
 
+def _put_one_Raise_exc(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """If deleting `exc` then delete `cause` first if present."""
+
+    if code is None and self.a.cause:  # if cause exists then delete that first
+        _put_one(self, None, None, 'cause', {}, force_modifying=True)  # it is safe to delete cause when holding modifying context on exc because parent is statement so no f/t-strings possible
+
+    return _put_one_exprlike_optional(self, code, idx, field, child, static, options)
+
+
 def _put_one_Import_names(
     self: fst.FST,
     code: _PutOneCode,
@@ -1534,6 +1551,32 @@ def _put_one_Tuple_elts(
             self._maybe_add_singleton_comma(is_delimited)
 
     return ret
+
+
+def _put_one_ExceptHandler_type(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """If deleting `type` then delete `name` first if present."""
+
+    if code is None:
+        if self.is_except_star():  # this is also checked in the info func, but we need to know now because can't delete type from this
+            raise ValueError('cannot delete ExceptHandler.type from except*')
+
+        if self.a.name:  # XXX if has name then just remove it here, regardless of _modifying() not being held for it as we know it doesn't do anything for an ExceptHandler
+            _, _, ln, col = child.f.pars()
+            _, _, end_ln, end_col = self._loc_block_header_end()
+
+            self._put_src(None, ln, col, end_ln, end_col - 1, True)
+
+            self.a.name = None
+
+    return _put_one_exprlike_optional(self, code, idx, field, child, static, options)
 
 
 def _put_one_Dict_keys(
@@ -2105,7 +2148,7 @@ def _one_info_AnnAssign_value(self: fst.FST, static: onestatic, idx: int | None,
     return oneinfo(' = ', fstloc((loc := self.a.annotation.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
 
 def _one_info_Raise_exc(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if self.a.cause:
+    if self.a.cause:  # XXX this no longer applies as cause is automatically deleted first if exc is being deleted, leaving just in case
         return _oneinfo_default  # can not del (and exists, so can't put new)
 
     ln, col, end_ln, end_col = self.loc
@@ -2233,7 +2276,7 @@ _onestatic_Slice_step = onestatic(_one_info_Slice_step, _restrict_default)
 def _one_info_ExceptHandler_type(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ast = self.a
 
-    if ast.name:
+    if ast.name:  # XXX this no longer applies as name is automatically deleted first if type is being deleted, leaving just in case
         return _oneinfo_default  # can not del (and exists, so can't put new)
 
     if type_ := ast.type:
@@ -2707,7 +2750,7 @@ _PUT_ONE_HANDLERS = {
     (AsyncWith, 'body'):                  (True,  None, None),  # stmt*
     (Match, 'subject'):                   (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Match, 'cases'):                     (True,  None, None),  # match_case*
-    (Raise, 'exc'):                       (False, _put_one_exprlike_optional, onestatic(_one_info_Raise_exc, _restrict_default)),  # expr?
+    (Raise, 'exc'):                       (False, _put_one_Raise_exc, onestatic(_one_info_Raise_exc, _restrict_default)),  # expr?
     (Raise, 'cause'):                     (False, _put_one_exprlike_optional, onestatic(_one_info_Raise_cause, _restrict_default)),  # expr?
     (Try, 'body'):                        (True,  None, None),  # stmt*
     (Try, 'handlers'):                    (True,  None, None),  # excepthandler*
@@ -2798,7 +2841,7 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'iter'):              (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (comprehension, 'ifs'):               (True,  _put_one_exprlike_required, _onestatic_expr_required),  # expr*
     (comprehension, 'is_async'):          (False, _put_one_comprehension_is_async, None),  # int
-    (ExceptHandler, 'type'):              (False, _put_one_exprlike_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)),  # expr?
+    (ExceptHandler, 'type'):              (False, _put_one_ExceptHandler_type, onestatic(_one_info_ExceptHandler_type, _restrict_default)),  # expr?
     (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (ExceptHandler, 'body'):              (True,  None, None),  # stmt*
     (arguments, 'posonlyargs'):           (False, _put_one_arg, _onestatic_arg_required),  # arg*
@@ -3060,7 +3103,8 @@ def _put_one(
     idx: int | None,
     field: str,
     options: Mapping[str, Any] = {},
-    ret_child: bool = True
+    ret_child: bool = True,
+    force_modifying: bool = False,
 ) -> fst.FST | None:  # -> child or reparsed child or self or reparsed self or could disappear due to raw
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
@@ -3074,6 +3118,9 @@ def _put_one(
     - `ret_child`: If `True` then this function returns the new child node if it was replaced or `None` if deleted or
         otherwise raw repared out. If `False` then attepmts to return `self` or a new `self` if was raw reparsed
         and `None` if disappeared due to that.
+    - `force_modifying`: For special situations. If it is known that the new modification will not cause problems with a
+        currently ongoing modification then this can be set to `True` to skip the nested modification abort check. For
+        example to delete `Raise.cause` when deleting `Raise.exc`.
 
     **Returns:**
     - `FST | None`: New child or `self` if reparsed (and requested via `ret_self=True`) or `None` if deleted either
@@ -3159,7 +3206,7 @@ def _put_one(
             if not handler:  # came from the default to _PUT_ONE_HANDLERS.get() because otherwise all (cls,field) keys in the table should be either 'sliceable' or have a  handler
                 raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}.{field}")
 
-            with self._modifying(field):
+            with self._modifying(field, force=force_modifying):
                 child = handler(self, code, idx, field, child, static, options)
 
                 return child if ret_child else self
@@ -3171,7 +3218,7 @@ def _put_one(
             nonraw_exc = exc
             code = preserved_code
 
-    with self._modifying(field, True):  # raw put, either explicit by raw=True or fallback by raw='auto'
+    with self._modifying(field, True, force=force_modifying):  # raw put, either explicit by raw=True or fallback by raw='auto'
         try:
             child = _put_one_raw(self, code, idx, field, child, static, options)
 

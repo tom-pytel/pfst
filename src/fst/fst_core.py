@@ -241,13 +241,18 @@ class _Modifying:
     field: astfield
     data:  list
 
-    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool | None = False) -> None:
+    def __init__(
+        self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool | None = False, force: bool = False
+    ) -> None:
         """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
         `.success()` should be called on a successful modification. Can be used as a context manager or can just call
         `.enter()`, `.success()` and `.fail()` manually.
 
+        Currently this class just updates f/t-string self-documenting debug strings for any changes to their
+        expressions. So at the moment anything above expression level doesn't really need this.
+
         It is assumed that neither the `fst_` node passed in (or its parent if `field=False`) nor its parents will be
-        changed, otherwise this must be used manually and not as a context manager and the changed node must be passed
+        replaced, otherwise this must be used manually and not as a context manager and the replaced node must be passed
         into the `.success()` method on success. In this case currently no parents are updated as it is assumed the
         changes are due to raw reparse which goes up to the statement level and would thus include any modifications
         this class would make.
@@ -259,9 +264,11 @@ class _Modifying:
             parent and field will be gotten from `self`.
         - `raw`: Whether this is going to be a raw modification or not. Special value of `None` is an override for
             python version < 3.12 to allow the modification, used for specical case of `put_src(action='offset'`).
+        - `force`: For special situations. If it is known that the new modification will not cause problems with a
+            currently ongoing modification then this can be set to `True` to skip the nested modification abort check.
         """
 
-        self._params = fst_, field, raw
+        self._params = fst_, field, raw, force
 
     def __enter__(self) -> '_Modifying':
         return self.enter()
@@ -280,10 +287,10 @@ class _Modifying:
         """This is called on manual use and should be called immediately after creating the class to avoid the
         parameters being invalidated by some other modification."""
 
-        fst_, field, raw = self._params
+        fst_, field, raw, force = self._params
         self.root = root = fst_.root
 
-        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0]:
+        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0] and not force:
             raise RuntimeError(f'nested modification of different nodes not allowed on {root}')
 
         if raw:
@@ -407,10 +414,13 @@ class _Modifying:
 
 @pyver(lt=12)  # override _Modifying if py too low
 class _Modifying:
-    """Dummy because py < 3.12 doesn't have f-string location information and we are too lazy to do the work ourself."""
+    """Dummy because py < 3.12 doesn't have f-string location information and we are too lazy to do the work ourself.
+    We keep the nested checking just to keep modification permission behavior identical."""
 
-    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
-        self._params = fst_, field, raw
+    def __init__(
+        self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False, force: bool = False
+    ) -> None:
+        self._params = fst_, field, raw, force
 
     def __enter__(self) -> '_Modifying':
         return self.enter()
@@ -426,10 +436,10 @@ class _Modifying:
         return False
 
     def enter(self) -> '_Modifying':
-        fst_, _, raw = self._params
+        fst_, _, raw, force = self._params
         self.root = root = fst_.root
 
-        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0]:
+        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0] and not force:
             raise RuntimeError(f'nested modification of different nodes not allowed on {root}')
 
         if raw is False:
@@ -1534,10 +1544,12 @@ def _get_indentable_lns(
     return lns
 
 
-def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool | None = False) -> _Modifying:
+def _modifying(
+    self: fst.FST, field: str | Literal[False] = False, raw: bool | None = False, *, force: bool = False
+) -> _Modifying:
     """See `_Modifying`."""
 
-    return _Modifying(self, field, raw)
+    return _Modifying(self, field, raw, force)
 
 
 def _touch(self: fst.FST) -> fst.FST:  # -> self

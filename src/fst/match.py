@@ -5574,14 +5574,14 @@ def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FS
     if (tag := fst_.a.id).startswith('__FST_'):
         path = repl.child_path(fst_)
 
-        if parent := fst_.parent:  # allow replacement of entire key:value pair of Dict
+        if parent := fst_.parent:  # if we are a "value" of Dict and the key is a single-quoted string '...' then the substitution is of the whole key:value pair
             field, idx = fst_.pfield
 
             if (field == 'values'
                 and (parenta := parent.a).__class__ is Dict
                 and (key := parenta.keys[idx]).__class__ is Constant
                 and key.value == '...'
-            ):  # if are we a "value" of Dict and the key is a single-quoted string '...' then the substitution is of the whole key:value pair
+            ):
                 _, col, _, end_col = key.f.loc
 
                 if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
@@ -5662,14 +5662,14 @@ def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst
 
                 return
 
-            if parent := fst_.parent:  # allow replacement of entire key:pattern pair of MatchMapping
+            if parent := fst_.parent:  # if we are a "value" of MatchMapping and the key is a single-quoted string '...' then the substitution is of the whole key:pattern pair
                 field, idx = fst_.pfield
 
                 if (field == 'patterns'
                     and (parenta := parent.a).__class__ is MatchMapping
                     and (key := parenta.keys[idx]).__class__ is Constant
                     and key.value == '...'
-                ):  # if are we a "value" of MatchMapping and the key is a single-quoted string '...' then the substitution is of the whole key:pattern pair
+                ):
                     _, col, _, end_col = key.f.loc
 
                     if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
@@ -5713,6 +5713,7 @@ _SUB_REPL_PATH_FUNCS = {
     ParamSpec:        _sub_repl_path_name,
     TypeVarTuple:     _sub_repl_path_name,
 }
+
 
 _SUB_WITHITEM_SLICES = {Set, List, Tuple, MatchSequence, _Assign_targets, _decorator_list, _arglikes,
                         _comprehension_ifs, _aliases, _withitems, _type_params}
@@ -6145,7 +6146,7 @@ def sub(
                     field, idx = repl_slot.pfield
                     new_idx = None
 
-                    if parenta_cls is Expr:  # Name with parent Expr, maybe replacing with single or body of statements
+                    if parenta_cls is Expr:  # Name with parent Expr, maybe replacing with single or body of statements, or maybe just an expression
                         if (not isinstance(repl_slot_new, fst.FST) or
                             (repl_slot_new_cls := repl_slot_new.a.__class__) in ASTS_LEAF_STMT
                         ):
