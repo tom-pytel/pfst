@@ -2116,6 +2116,172 @@ Match - ROOT 0,0..2,12
      .body[1]
       0] Pass - 2,8..2,12
 '''),
+
+('', None, None, None, {}, ('Match', r'''
+match old:
+    case a if b:  # blah
+        a = b  # bloh
+'''),
+r'''MMatch(cases=M(m=...))''', ('Match', r'''
+match new:
+    case '...': __FST_m
+    case '...': __FST_m
+'''), r'''
+match new:
+    case a if b:  # blah
+        a = b  # bloh
+    case a if b:  # blah
+        a = b  # bloh
+''', r'''
+Match - ROOT 0,0..4,13
+  .subject Name 'new' Load - 0,6..0,9
+  .cases[2]
+   0] match_case - 1,4..2,13
+     .pattern MatchAs - 1,9..1,10
+       .name 'a'
+     .guard Name 'b' Load - 1,14..1,15
+     .body[1]
+      0] Assign - 2,8..2,13
+        .targets[1]
+         0] Name 'a' Store - 2,8..2,9
+        .value Name 'b' Load - 2,12..2,13
+   1] match_case - 3,4..4,13
+     .pattern MatchAs - 3,9..3,10
+       .name 'a'
+     .guard Name 'b' Load - 3,14..3,15
+     .body[1]
+      0] Assign - 4,8..4,13
+        .targets[1]
+         0] Name 'a' Store - 4,8..4,9
+        .value Name 'b' Load - 4,12..4,13
+'''),
+
+('', None, None, None, {}, ('Match', r'''
+match old:
+    case a if b: pass
+    case b as a: pass
+'''),
+r'''MMatch(cases=M(m=...))''', ('Match', r'''
+match new:
+    case '...': __FST_m
+    case '...': __FST_m
+'''), r'''
+match new:
+    case a if b: pass
+    case b as a: pass
+    case a if b: pass
+    case b as a: pass
+''', r'''
+Match - ROOT 0,0..4,21
+  .subject Name 'new' Load - 0,6..0,9
+  .cases[4]
+   0] match_case - 1,4..1,21
+     .pattern MatchAs - 1,9..1,10
+       .name 'a'
+     .guard Name 'b' Load - 1,14..1,15
+     .body[1]
+      0] Pass - 1,17..1,21
+   1] match_case - 2,4..2,21
+     .pattern MatchAs - 2,9..2,15
+       .pattern MatchAs - 2,9..2,10
+         .name 'b'
+       .name 'a'
+     .body[1]
+      0] Pass - 2,17..2,21
+   2] match_case - 3,4..3,21
+     .pattern MatchAs - 3,9..3,10
+       .name 'a'
+     .guard Name 'b' Load - 3,14..3,15
+     .body[1]
+      0] Pass - 3,17..3,21
+   3] match_case - 4,4..4,21
+     .pattern MatchAs - 4,9..4,15
+       .pattern MatchAs - 4,9..4,10
+         .name 'b'
+       .name 'a'
+     .body[1]
+      0] Pass - 4,17..4,21
+'''),
+
+('', None, None, None, {}, ('Match', r'''
+match old:
+    case a: pass
+    case b: pass
+    case c: pass
+    case d: pass
+    case e: pass
+'''),
+r'''MMatch(cases=[..., MQSTAR(m=...), ...])''', ('Match', r'''
+match new:
+    case x: pass
+    case '...': __FST_m
+    case y: pass
+'''), r'''
+match new:
+    case x: pass
+    case b: pass
+    case c: pass
+    case d: pass
+    case y: pass
+''', r'''
+Match - ROOT 0,0..5,16
+  .subject Name 'new' Load - 0,6..0,9
+  .cases[5]
+   0] match_case - 1,4..1,16
+     .pattern MatchAs - 1,9..1,10
+       .name 'x'
+     .body[1]
+      0] Pass - 1,12..1,16
+   1] match_case - 2,4..2,16
+     .pattern MatchAs - 2,9..2,10
+       .name 'b'
+     .body[1]
+      0] Pass - 2,12..2,16
+   2] match_case - 3,4..3,16
+     .pattern MatchAs - 3,9..3,10
+       .name 'c'
+     .body[1]
+      0] Pass - 3,12..3,16
+   3] match_case - 4,4..4,16
+     .pattern MatchAs - 4,9..4,10
+       .name 'd'
+     .body[1]
+      0] Pass - 4,12..4,16
+   4] match_case - 5,4..5,16
+     .pattern MatchAs - 5,9..5,10
+       .name 'y'
+     .body[1]
+      0] Pass - 5,12..5,16
+'''),
+
+('', None, None, None, {}, ('Match', r'''
+match old:
+    case a: pass
+'''),
+r'''MMatch(cases=M(m=...))''', ('Match', r'''
+match new:
+    case x: pass
+    case '...': __FST_DEL
+    case y: pass
+'''), r'''
+match new:
+    case x: pass
+    case y: pass
+''', r'''
+Match - ROOT 0,0..2,16
+  .subject Name 'new' Load - 0,6..0,9
+  .cases[2]
+   0] match_case - 1,4..1,16
+     .pattern MatchAs - 1,9..1,10
+       .name 'x'
+     .body[1]
+      0] Pass - 1,12..1,16
+   1] match_case - 2,4..2,16
+     .pattern MatchAs - 2,9..2,10
+       .name 'y'
+     .body[1]
+      0] Pass - 2,12..2,16
+'''),
 ],
 
 'basic_Raise': [  # ................................................................................
@@ -2360,6 +2526,165 @@ Try - ROOT 0,0..10,13
      .value Name 'c' Load - 10,8..10,9
    2] Expr - 10,12..10,13
      .value Name 'd' Load - 10,12..10,13
+'''),
+
+('', None, None, None, {}, ('Try', r'''
+try: old
+except a as b:  # blah
+    a = b  # bloh
+'''),
+r'''MTry(handlers=M(m=...))''', ('Try', r'''
+try: new
+except '...': __FST_m
+except '...': __FST_m
+'''), r'''
+try: new
+except a as b:  # blah
+    a = b  # bloh
+except a as b:  # blah
+    a = b  # bloh
+''', r'''
+Try - ROOT 0,0..4,9
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[2]
+   0] ExceptHandler - 1,0..2,9
+     .type Name 'a' Load - 1,7..1,8
+     .name 'b'
+     .body[1]
+      0] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'a' Store - 2,4..2,5
+        .value Name 'b' Load - 2,8..2,9
+   1] ExceptHandler - 3,0..4,9
+     .type Name 'a' Load - 3,7..3,8
+     .name 'b'
+     .body[1]
+      0] Assign - 4,4..4,9
+        .targets[1]
+         0] Name 'a' Store - 4,4..4,5
+        .value Name 'b' Load - 4,8..4,9
+'''),
+
+('', None, None, None, {}, ('Try', r'''
+try: old
+except a as b: pass
+except b as a: pass
+'''),
+r'''MTry(handlers=M(m=...))''', ('Try', r'''
+try: new
+except '...': __FST_m
+except '...': __FST_m
+'''), r'''
+try: new
+except a as b: pass
+except b as a: pass
+except a as b: pass
+except b as a: pass
+''', r'''
+Try - ROOT 0,0..4,19
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[4]
+   0] ExceptHandler - 1,0..1,19
+     .type Name 'a' Load - 1,7..1,8
+     .name 'b'
+     .body[1]
+      0] Pass - 1,15..1,19
+   1] ExceptHandler - 2,0..2,19
+     .type Name 'b' Load - 2,7..2,8
+     .name 'a'
+     .body[1]
+      0] Pass - 2,15..2,19
+   2] ExceptHandler - 3,0..3,19
+     .type Name 'a' Load - 3,7..3,8
+     .name 'b'
+     .body[1]
+      0] Pass - 3,15..3,19
+   3] ExceptHandler - 4,0..4,19
+     .type Name 'b' Load - 4,7..4,8
+     .name 'a'
+     .body[1]
+      0] Pass - 4,15..4,19
+'''),
+
+('', None, None, None, {}, ('Try', r'''
+try: old
+except a: pass
+except b: pass
+except c: pass
+except d: pass
+except e: pass
+'''),
+r'''MTry(handlers=[..., MQSTAR(m=...), ...])''', ('Try', r'''
+try: new
+except x: pass
+except '...': __FST_m
+except y: pass
+'''), r'''
+try: new
+except x: pass
+except b: pass
+except c: pass
+except d: pass
+except y: pass
+''', r'''
+Try - ROOT 0,0..5,14
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[5]
+   0] ExceptHandler - 1,0..1,14
+     .type Name 'x' Load - 1,7..1,8
+     .body[1]
+      0] Pass - 1,10..1,14
+   1] ExceptHandler - 2,0..2,14
+     .type Name 'b' Load - 2,7..2,8
+     .body[1]
+      0] Pass - 2,10..2,14
+   2] ExceptHandler - 3,0..3,14
+     .type Name 'c' Load - 3,7..3,8
+     .body[1]
+      0] Pass - 3,10..3,14
+   3] ExceptHandler - 4,0..4,14
+     .type Name 'd' Load - 4,7..4,8
+     .body[1]
+      0] Pass - 4,10..4,14
+   4] ExceptHandler - 5,0..5,14
+     .type Name 'y' Load - 5,7..5,8
+     .body[1]
+      0] Pass - 5,10..5,14
+'''),
+
+('', None, None, None, {}, ('Try', r'''
+try: old
+except a: pass
+'''),
+r'''MTry(handlers=M(m=...))''', ('Try', r'''
+try: new
+except x: pass
+except '...': __FST_DEL
+except y: pass
+'''), r'''
+try: new
+except x: pass
+except y: pass
+''', r'''
+Try - ROOT 0,0..2,14
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[2]
+   0] ExceptHandler - 1,0..1,14
+     .type Name 'x' Load - 1,7..1,8
+     .body[1]
+      0] Pass - 1,10..1,14
+   1] ExceptHandler - 2,0..2,14
+     .type Name 'y' Load - 2,7..2,8
+     .body[1]
+      0] Pass - 2,10..2,14
 '''),
 ],
 

@@ -5536,21 +5536,25 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
 # These calculate paths to repl teplate substitution slots in the repl template, which can be actual node like Name, arg
 # or TypeVar or non-node identifier children of real nodes. This can also depend on other attributes of the node.
 
-def _sub_repl_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+def _sub_repl_path_name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """These are all optionally-present identifiers."""
 
     if tag := fst_.a.name:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('name', None)))
 
-def _sub_repl_path_ImportFrom(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_ImportFrom(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Optionally-present identifier."""
 
     if tag := fst_.a.module:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('module', None)))
 
-def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """List of definitely-present identifiers."""
 
     path = None
@@ -5562,13 +5566,17 @@ def _sub_repl_path_Global_Nonlocal(paths: list[list[astfield]], repl: fst.FST, f
 
             paths.append((tag[6:], path, ('names', idx)))
 
-def _sub_repl_path_Attribute(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_Attribute(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present identifier."""
 
     if (tag := fst_.a.attr).startswith('__FST_'):
         paths.append((tag[6:], repl.child_path(fst_), ('attr', None)))
 
-def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node."""
 
     if (tag := fst_.a.id).startswith('__FST_'):
@@ -5587,11 +5595,39 @@ def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FS
                 if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
                     paths.append((tag[6:], path[:-1], ('_all', idx)))
 
-                    return
+                    return True
 
         paths.append((tag[6:], path, None))
 
-def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_ExceptHandler(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+    """Just `ExceptHandler.name` or the whole thing if format "except '...': __FST_tag"."""
+
+    ast = fst_.a
+
+    if tag := ast.name:
+        if tag.startswith('__FST_'):
+            paths.append((tag[6:], repl.child_path(fst_), ('name', None)))
+
+    elif ((type_ := ast.type).__class__ is Constant
+        and type_.value == '...'
+        and (body := ast.body)
+        and (b0 := body[0]).__class__ is Expr
+        and (name := b0.value).__class__ is Name
+        and (tag := name.id).startswith('__FST_')
+    ):  # except '...': __FST_tag
+        _, col, _, end_col = type_.f.loc
+
+        if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
+            paths.append((tag[6:], repl.child_path(fst_), None))
+
+            return False  # tell caller not recurse into this node
+
+    return True
+
+
+def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of annotations in template."""
 
     ast = fst_.a
@@ -5599,14 +5635,18 @@ def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST
     if (tag := ast.arg).startswith('__FST_'):
         paths.append((tag[6:], repl.child_path(fst_), ('arg', None) if ast.annotation else None))
 
-def _sub_repl_path_keyword(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_keyword(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Optionally-present identifier."""
 
     if tag := fst_.a.arg:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('arg', None)))
 
-def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """One Definitely-present and one optionally-present identifier."""
 
     ast = fst_.a
@@ -5619,7 +5659,7 @@ def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.F
         if not asname:  # if no asname then bump up to alias node level
             paths.append((tag[6:], path, None))
 
-            return
+            return True
 
         paths.append((tag[6:], path, ('name', None)))
 
@@ -5629,14 +5669,41 @@ def _sub_repl_path_alias(paths: list[list[astfield]], repl: fst.FST, fst_: fst.F
 
         paths.append((asname[6:], path, ('asname', None)))
 
-def _sub_repl_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_match_case(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+    """Possibly the whole `match_case` if format "case '...': __FST_tag"."""
+
+    ast = fst_.a
+
+    if (not ast.guard
+        and (pattern := ast.pattern).__class__ is MatchValue
+        and (pat_value := pattern.value).__class__ is Constant
+        and pat_value.value == '...'
+        and (body := ast.body)
+        and (b0 := body[0]).__class__ is Expr
+        and (name := b0.value).__class__ is Name
+        and (tag := name.id).startswith('__FST_')
+    ):  # case '...': __FST_tag
+        _, col, _, end_col = pat_value.f.loc
+
+        if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
+            paths.append((tag[6:], repl.child_path(fst_), None))
+
+            return False  # tell caller not recurse into this node
+
+    return True
+
+def _sub_repl_path_MatchMapping(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Optionally-present identifier."""
 
     if tag := fst_.a.rest:
         if tag.startswith('__FST_'):
             paths.append((tag[6:], repl.child_path(fst_), ('rest', None)))
 
-def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """List of definitely-present identifiers."""
 
     path = None
@@ -5648,7 +5715,9 @@ def _sub_repl_path_MatchClass(paths: list[list[astfield]], repl: fst.FST, fst_: 
 
             paths.append((tag[6:], path, ('kwd_attrs', idx)))
 
-def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of pattern in template."""
 
     ast = fst_.a
@@ -5660,7 +5729,7 @@ def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst
             if ast.pattern:
                 paths.append((tag[6:], path, ('name', None)))
 
-                return
+                return True
 
             if parent := fst_.parent:  # if we are a "value" of MatchMapping and the key is a single-quoted string '...' then the substitution is of the whole key:pattern pair
                 field, idx = fst_.pfield
@@ -5675,11 +5744,13 @@ def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst
                     if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
                         paths.append((tag[6:], path[:-1], ('_all', idx)))
 
-                        return
+                        return True
 
             paths.append((tag[6:], path, None))
 
-def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of bound or default_value in template."""
 
     ast = fst_.a
@@ -5689,7 +5760,9 @@ def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst
 
         paths.append((tag[6:], repl.child_path(fst_), child))
 
-def _sub_repl_path_INVALID(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
+    return True
+
+def _sub_repl_path_INVALID(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     raise RuntimeError('should not get here')
 
 _SUB_REPL_PATH_FUNCS = {
@@ -5701,10 +5774,11 @@ _SUB_REPL_PATH_FUNCS = {
     Nonlocal:         _sub_repl_path_Global_Nonlocal,
     Attribute:        _sub_repl_path_Attribute,
     Name:             _sub_repl_path_Name,
-    ExceptHandler:    _sub_repl_path_name,
+    ExceptHandler:    _sub_repl_path_ExceptHandler,
     arg:              _sub_repl_path_arg,
     keyword:          _sub_repl_path_keyword,
     alias:            _sub_repl_path_alias,
+    match_case:       _sub_repl_path_match_case,
     MatchMapping:     _sub_repl_path_MatchMapping,
     MatchClass:       _sub_repl_path_MatchClass,
     MatchStar:        _sub_repl_path_name,
@@ -6074,8 +6148,9 @@ def sub(
     paths = []  # [(tag, path, (field, idx | None) | None), ...]
     dirty = set()  # {AST, ...}
 
-    for f in repl.walk(_SUB_REPL_PATH_FUNCS):
-        _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, repl, f)
+    for f in (gen := repl.walk(_SUB_REPL_PATH_FUNCS)):
+        if not _SUB_REPL_PATH_FUNCS.get(f.a.__class__, _sub_repl_path_INVALID)(paths, repl, f):
+            gen.send(False)
 
     paths.reverse()  # we do this because there might be deletions which will change indices which follow them, so we do higher indices first
 
