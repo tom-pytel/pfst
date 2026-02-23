@@ -2885,6 +2885,165 @@ TryStar - ROOT 0,0..10,13
    2] Expr - 10,12..10,13
      .value Name 'd' Load - 10,12..10,13
 '''),
+
+('', None, None, None, {'_ver': 11}, ('TryStar', r'''
+try: old
+except* a as b:  # blah
+    a = b  # bloh
+'''),
+r'''MTryStar(handlers=M(m=...))''', ('TryStar', r'''
+try: new
+except* '...': __FST_m
+except* '...': __FST_m
+'''), r'''
+try: new
+except* a as b:  # blah
+    a = b  # bloh
+except* a as b:  # blah
+    a = b  # bloh
+''', r'''
+TryStar - ROOT 0,0..4,9
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[2]
+   0] ExceptHandler - 1,0..2,9
+     .type Name 'a' Load - 1,8..1,9
+     .name 'b'
+     .body[1]
+      0] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'a' Store - 2,4..2,5
+        .value Name 'b' Load - 2,8..2,9
+   1] ExceptHandler - 3,0..4,9
+     .type Name 'a' Load - 3,8..3,9
+     .name 'b'
+     .body[1]
+      0] Assign - 4,4..4,9
+        .targets[1]
+         0] Name 'a' Store - 4,4..4,5
+        .value Name 'b' Load - 4,8..4,9
+'''),
+
+('', None, None, None, {'_ver': 11}, ('TryStar', r'''
+try: old
+except* a as b: pass
+except* b as a: pass
+'''),
+r'''MTryStar(handlers=M(m=...))''', ('TryStar', r'''
+try: new
+except* '...': __FST_m
+except* '...': __FST_m
+'''), r'''
+try: new
+except* a as b: pass
+except* b as a: pass
+except* a as b: pass
+except* b as a: pass
+''', r'''
+TryStar - ROOT 0,0..4,20
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[4]
+   0] ExceptHandler - 1,0..1,20
+     .type Name 'a' Load - 1,8..1,9
+     .name 'b'
+     .body[1]
+      0] Pass - 1,16..1,20
+   1] ExceptHandler - 2,0..2,20
+     .type Name 'b' Load - 2,8..2,9
+     .name 'a'
+     .body[1]
+      0] Pass - 2,16..2,20
+   2] ExceptHandler - 3,0..3,20
+     .type Name 'a' Load - 3,8..3,9
+     .name 'b'
+     .body[1]
+      0] Pass - 3,16..3,20
+   3] ExceptHandler - 4,0..4,20
+     .type Name 'b' Load - 4,8..4,9
+     .name 'a'
+     .body[1]
+      0] Pass - 4,16..4,20
+'''),
+
+('', None, None, None, {'_ver': 11}, ('TryStar', r'''
+try: old
+except* a: pass
+except* b: pass
+except* c: pass
+except* d: pass
+except* e: pass
+'''),
+r'''MTryStar(handlers=[..., MQSTAR(m=...), ...])''', ('TryStar', r'''
+try: new
+except* x: pass
+except* '...': __FST_m
+except* y: pass
+'''), r'''
+try: new
+except* x: pass
+except* b: pass
+except* c: pass
+except* d: pass
+except* y: pass
+''', r'''
+TryStar - ROOT 0,0..5,15
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[5]
+   0] ExceptHandler - 1,0..1,15
+     .type Name 'x' Load - 1,8..1,9
+     .body[1]
+      0] Pass - 1,11..1,15
+   1] ExceptHandler - 2,0..2,15
+     .type Name 'b' Load - 2,8..2,9
+     .body[1]
+      0] Pass - 2,11..2,15
+   2] ExceptHandler - 3,0..3,15
+     .type Name 'c' Load - 3,8..3,9
+     .body[1]
+      0] Pass - 3,11..3,15
+   3] ExceptHandler - 4,0..4,15
+     .type Name 'd' Load - 4,8..4,9
+     .body[1]
+      0] Pass - 4,11..4,15
+   4] ExceptHandler - 5,0..5,15
+     .type Name 'y' Load - 5,8..5,9
+     .body[1]
+      0] Pass - 5,11..5,15
+'''),
+
+('', None, None, None, {'_ver': 11}, ('TryStar', r'''
+try: old
+except* a: pass
+'''),
+r'''MTryStar(handlers=M(m=...))''', ('TryStar', r'''
+try: new
+except* x: pass
+except* '...': __FST_DEL
+except* y: pass
+'''), r'''
+try: new
+except* x: pass
+except* y: pass
+''', r'''
+TryStar - ROOT 0,0..2,15
+  .body[1]
+   0] Expr - 0,5..0,8
+     .value Name 'new' Load - 0,5..0,8
+  .handlers[2]
+   0] ExceptHandler - 1,0..1,15
+     .type Name 'x' Load - 1,8..1,9
+     .body[1]
+      0] Pass - 1,11..1,15
+   1] ExceptHandler - 2,0..2,15
+     .type Name 'y' Load - 2,8..2,9
+     .body[1]
+      0] Pass - 2,11..2,15
+'''),
 ],
 
 'basic_Assert': [  # ................................................................................
@@ -6792,6 +6951,69 @@ _arglikes - ROOT 0,0..0,15
 '''),
 ],
 
+'basic__comprehensions': [  # ................................................................................
+
+('', None, None, None, {}, ('_comprehensions',
+r'''for a in b async for c in d if c'''),
+r'''M_comprehensions(generators=M(f=...))''', ('_comprehensions',
+r'''for __FST_f in "..." for __FST_f in "..."'''),
+r'''for a in b async for c in d if c for a in b async for c in d if c''', r'''
+_comprehensions - ROOT 0,0..0,65
+  .generators[4]
+   0] comprehension - 0,0..0,10
+     .target Name 'a' Store - 0,4..0,5
+     .iter Name 'b' Load - 0,9..0,10
+     .is_async 0
+   1] comprehension - 0,11..0,32
+     .target Name 'c' Store - 0,21..0,22
+     .iter Name 'd' Load - 0,26..0,27
+     .ifs[1]
+      0] Name 'c' Load - 0,31..0,32
+     .is_async 1
+   2] comprehension - 0,33..0,43
+     .target Name 'a' Store - 0,37..0,38
+     .iter Name 'b' Load - 0,42..0,43
+     .is_async 0
+   3] comprehension - 0,44..0,65
+     .target Name 'c' Store - 0,54..0,55
+     .iter Name 'd' Load - 0,59..0,60
+     .ifs[1]
+      0] Name 'c' Load - 0,64..0,65
+     .is_async 1
+'''),
+
+('', None, None, None, {}, ('_comprehensions',
+r'''for a in b async for c in d if c for e in f if e if c if a for g in h'''),
+r'''M_comprehensions(generators=[..., MQSTAR(f=...), ...])''', ('_comprehensions',
+r'''for x in x for __FST_f in '...' for y in y'''),
+r'''for x in x async for c in d if c for e in f if e if c if a for y in y''', r'''
+_comprehensions - ROOT 0,0..0,69
+  .generators[4]
+   0] comprehension - 0,0..0,10
+     .target Name 'x' Store - 0,4..0,5
+     .iter Name 'x' Load - 0,9..0,10
+     .is_async 0
+   1] comprehension - 0,11..0,32
+     .target Name 'c' Store - 0,21..0,22
+     .iter Name 'd' Load - 0,26..0,27
+     .ifs[1]
+      0] Name 'c' Load - 0,31..0,32
+     .is_async 1
+   2] comprehension - 0,33..0,58
+     .target Name 'e' Store - 0,37..0,38
+     .iter Name 'f' Load - 0,42..0,43
+     .ifs[3]
+      0] Name 'e' Load - 0,47..0,48
+      1] Name 'c' Load - 0,52..0,53
+      2] Name 'a' Load - 0,57..0,58
+     .is_async 0
+   3] comprehension - 0,59..0,69
+     .target Name 'y' Store - 0,63..0,64
+     .iter Name 'y' Load - 0,68..0,69
+     .is_async 0
+'''),
+],
+
 'basic__comprehension_ifs': [  # ................................................................................
 
 ('', None, None, None, {}, ('_comprehension_ifs',
@@ -9074,6 +9296,928 @@ Assign - ROOT 0,0..0,7
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
   .value Name 'SUB' Load - 0,4..0,7
+'''),
+],
+
+'trivia_all_options_stmt': [  # ................................................................................
+
+('', None, None, None, {}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre ORG
+
+# pre-pre REPL
+
+# pre ORG
+statement  # line ORG
+# post REPL
+
+# post-post REPL
+# post ORG
+
+# post-post ORG
+''', r'''
+Module - ROOT 0,0..11,15
+  .body[1]
+   0] Expr - 5,0..5,9
+     .value Name 'statement' Load - 5,0..5,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all')}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+''', r'''
+Module - ROOT 0,0..6,15
+  .body[1]
+   0] Expr - 3,0..3,9
+     .value Name 'statement' Load - 3,0..3,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''),
+r'''statement''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value Name 'statement' Load - 0,0..0,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ()}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+
+# pre REPL
+statement
+# line REPL
+# post REPL
+
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..7,16
+  .body[1]
+   0] Expr - 3,0..3,9
+     .value Name 'statement' Load - 3,0..3,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': (False, True)}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+
+# pre REPL
+statement
+# post REPL
+
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..6,16
+  .body[1]
+   0] Expr - 3,0..3,9
+     .value Name 'statement' Load - 3,0..3,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ('block', 'block')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+
+statement
+
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..4,16
+  .body[1]
+   0] Expr - 2,0..2,9
+     .value Name 'statement' Load - 2,0..2,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ('block+', 'block+')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+statement
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..2,16
+  .body[1]
+   0] Expr - 1,0..1,9
+     .value Name 'statement' Load - 1,0..1,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ('all', 'all')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''),
+r'''statement''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value Name 'statement' Load - 0,0..0,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': (False, False)}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+
+# pre REPL
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+# line REPL
+# post REPL
+
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..13,16
+  .body[1]
+   0] Expr - 6,0..6,9
+     .value Name 'statement' Load - 6,0..6,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': (False, 'line')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+
+# pre REPL
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+# post REPL
+
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..12,16
+  .body[1]
+   0] Expr - 6,0..6,9
+     .value Name 'statement' Load - 6,0..6,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': ('block', 'block')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..10,16
+  .body[1]
+   0] Expr - 5,0..5,9
+     .value Name 'statement' Load - 5,0..5,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': ('block+', 'block+')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre REPL
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+# post-post REPL
+''', r'''
+Module - ROOT 0,0..8,16
+  .body[1]
+   0] Expr - 4,0..4,9
+     .value Name 'statement' Load - 4,0..4,9
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': ('all', 'all')}}, ('exec', r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+'''),
+r'''Mstmt''', ('exec', r'''
+# pre-pre REPL
+
+# pre REPL
+__FST_  # line REPL
+# post REPL
+
+# post-post REPL
+'''), r'''
+# pre-pre ORG
+
+# pre ORG
+statement  # line ORG
+# post ORG
+
+# post-post ORG
+''', r'''
+Module - ROOT 0,0..6,15
+  .body[1]
+   0] Expr - 3,0..3,9
+     .value Name 'statement' Load - 3,0..3,9
+'''),
+],
+
+'trivia_all_options_expr_slice': [  # ................................................................................
+
+('', None, None, None, {}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+# pre ORG
+statement,  # line ORG
+# post REPL
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..8,1
+  .elts[1]
+   0] Name 'statement' Load - 4,0..4,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all')}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+''', r'''
+List - ROOT 0,0..8,1
+  .elts[1]
+   0] Name 'statement' Load - 4,0..4,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+statement
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'statement' Load - 1,0..1,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ()}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+# pre REPL
+statement, # line REPL
+# post REPL
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..8,1
+  .elts[1]
+   0] Name 'statement' Load - 4,0..4,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': (False, True)}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+# pre REPL
+statement
+# post REPL
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..8,1
+  .elts[1]
+   0] Name 'statement' Load - 4,0..4,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ('block', 'block')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+statement
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..6,1
+  .elts[1]
+   0] Name 'statement' Load - 3,0..3,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ('block+', 'block+')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+statement
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..4,1
+  .elts[1]
+   0] Name 'statement' Load - 2,0..2,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ()}, 'repl_options': {'trivia': ('all', 'all')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+statement
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'statement' Load - 1,0..1,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': (False, False)}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+# pre REPL
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+# line REPL
+# post REPL
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..15,1
+  .elts[1]
+   0] Name 'statement' Load - 7,0..7,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': (False, 'line')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+# pre REPL
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+# post REPL
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..14,1
+  .elts[1]
+   0] Name 'statement' Load - 7,0..7,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': ('block', 'block')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..12,1
+  .elts[1]
+   0] Name 'statement' Load - 6,0..6,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': ('block+', 'block+')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre REPL
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+# post-post REPL
+]
+''', r'''
+List - ROOT 0,0..10,1
+  .elts[1]
+   0] Name 'statement' Load - 5,0..5,9
+  .ctx Load
+'''),
+
+('', None, None, None, {'trivia': ('all', 'all'), 'copy_options': {'trivia': ('all', 'all')}, 'repl_options': {'trivia': ('all', 'all')}}, ('List', r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+'''),
+r'''MList(elts=M(e=...))''', ('List', r'''
+[
+# pre-pre REPL
+
+# pre REPL
+__FST_e,  # line REPL
+# post REPL
+
+# post-post REPL
+]
+'''), r'''
+[
+# pre-pre ORG
+
+# pre ORG
+statement,  # line ORG
+# post ORG
+
+# post-post ORG
+]
+''', r'''
+List - ROOT 0,0..8,1
+  .elts[1]
+   0] Name 'statement' Load - 4,0..4,9
+  .ctx Load
 '''),
 ],
 

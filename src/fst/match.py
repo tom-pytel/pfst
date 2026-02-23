@@ -5601,6 +5601,27 @@ def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FS
 
     return True
 
+def _sub_repl_path_comprehension(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
+    """Possibly the whole `comprehension` if format "for __FST_tag in '...'"."""
+
+    ast = fst_.a
+
+    if (not ast.ifs
+        and not ast.is_async
+        and (iter := ast.iter).__class__ is Constant
+        and iter.value == '...'
+        and (target := ast.target).__class__ is Name
+        and (tag := target.id).startswith('__FST_')
+    ):  # for __FST_tag in '...'
+        _, col, _, end_col = iter.f.loc
+
+        if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
+            paths.append((tag[6:], repl.child_path(fst_), None))
+
+            return False  # tell caller not recurse into this node
+
+    return True
+
 def _sub_repl_path_ExceptHandler(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Just `ExceptHandler.name` or the whole thing if format "except '...': __FST_tag"."""
 
@@ -5625,7 +5646,6 @@ def _sub_repl_path_ExceptHandler(paths: list[list[astfield]], repl: fst.FST, fst
             return False  # tell caller not recurse into this node
 
     return True
-
 
 def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node OR identifier, depending on presence of annotations in template."""
@@ -5774,6 +5794,7 @@ _SUB_REPL_PATH_FUNCS = {
     Nonlocal:         _sub_repl_path_Global_Nonlocal,
     Attribute:        _sub_repl_path_Attribute,
     Name:             _sub_repl_path_Name,
+    comprehension:    _sub_repl_path_comprehension,
     ExceptHandler:    _sub_repl_path_ExceptHandler,
     arg:              _sub_repl_path_arg,
     keyword:          _sub_repl_path_keyword,
@@ -6084,12 +6105,12 @@ def sub(
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
-        functional patterns of these). Because you're matching against nodes, otherwise nothing will match.
+        functional patterns of these).
     - `repl`: Replacement template as an `FST`, `AST` or source.
-    - `nested: Whether to allow recursion into nested substitutions or not. Allowing this can cause infinite recursion
-        due to replacement with things that match the pattern, so don't use unless you are sure this can not happen.
-        Regardless of this setting, when using a template `repl` this function will never recurse into full matched
-        target substitutions (`__FST_`).
+    - `nested: Whether to allow recursion into nested substitutions or not. In order to prevent infinite recursion,
+        regardless of this parameter, none of the original nodes of the `repl` template are ever substituted, even if
+        they match the pattern. If the full original match is put anywhere in the tepmlate then it is not considered for
+        substitution again either. Subparts of the matched template can be matched and substituted again.
     - `count`: If this is above 0 then only this number of substitutions will be made.
     - `copy_options`: Options to use when copying from matched nodes for putting into the `repl` template. If `None`
         then just uses `options`.
@@ -6101,43 +6122,17 @@ def sub(
         is set to wildcard.
     - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
         function for their meanings.
-    - `options`: The options to use when replacing matched nodes in `self`. See `options()`.
+    - `options`: The options to use when replacing matched nodes in `self` with the `repl` template. See `options()`.
 
     **Returns:**
-    - `self`
+    - `self`: Mutated in-place.
 
     **Examples:**
 
     >>> from fst.match import *
 
-    Add a 'cid=CID' keyword parameter to all `logger.info()` calls that don't have a `cid` already.
+    TODO: unfinished, document
 
-    >>> src = '''
-    ... logger.info('Hello world...')  # ok
-    ... logger.info('Already have id', cid=other_cid)  # ok
-    ... logger.info()  # yes, no logger message, too bad
-    ... (logger).info(  # just checking
-    ...     f'not a {thing}',  # this is fine
-    ...     extra=extra,       # also this
-    ... )
-    ... '''.strip()
-
-    >>> pat = MCall(
-    ...    func=M(func=MAttribute('logger', 'info')),
-    ...    keywords=MNOT([MQSTAR, Mkeyword('cid'), MQSTAR]),
-    ...    _args=M(all_args=...),
-    ... )
-
-    >>> repl = '__FST_func(__FST_all_args, cid=CID)'
-
-    >>> print(FST(src).sub(pat, repl).src)
-    logger.info('Hello world...', cid=CID)  # ok
-    logger.info('Already have id', cid=other_cid)  # ok
-    logger.info(cid=CID)  # yes, no logger message, too bad
-    (logger).info(
-               f'not a {thing}',  # this is fine
-               extra=extra,       # also this
-               cid=CID)
     """
 
     options = check_options(options, mark_checked=True)
