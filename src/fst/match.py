@@ -4192,9 +4192,10 @@ MQN.NG = MQN
 # ----------------------------------------------------------------------------------------------------------------------
 
 _QUANTIFIER_STANDALONES = {MQSTAR, MQSTAR.NG, MQPLUS, MQPLUS.NG, MQ01, MQ01.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
-_QUANTIFIER_STANDALONES_MAYBE_0_LEN = {MQSTAR, MQSTAR.NG, MQ01, MQ01.NG}
+_QUANTIFIER_STANDALONES_MAYBE_0_LEN = {MQSTAR, MQSTAR.NG, MQ01, MQ01.NG}  # these can result in a zero-length match
 
-_NODE_ARGUMENTS_ARGS_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
+_NODE_ARGUMENTS_ARGS_LIST_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
+_NODE_ARGUMENTS_ARGS_ALL_FIELDS = _NODE_ARGUMENTS_ARGS_LIST_FIELDS | {'vararg', 'kwarg'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
 _FSTVIEW_MULTINODE_SINGLE_TYPE = {
@@ -4827,7 +4828,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
 
             nargs = 0
             pat_arg = ...
-            arg_fields = _NODE_ARGUMENTS_ARGS_FIELDS
+            arg_fields = _NODE_ARGUMENTS_ARGS_LIST_FIELDS
 
             if (posonlyargs := getattr(pat, 'posonlyargs', ...)) is ...:
                 posonlyargs = ()
@@ -5571,7 +5572,24 @@ def _sub_repl_path_Name(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FS
     """Definitely-present whole node."""
 
     if (tag := fst_.a.id).startswith('__FST_'):
-        paths.append((tag[6:], repl.child_path(fst_), None))
+        path = repl.child_path(fst_)
+
+        if parent := fst_.parent:  # allow replacement of entire key:value pair of Dict
+            field, idx = fst_.pfield
+
+            if (field == 'values'
+                and (parenta := parent.a).__class__ is Dict
+                and (key := parenta.keys[idx]).__class__ is Constant
+                and key.value == '...'
+            ):  # if are we a "value" of Dict and the key is a single-quoted string '...' then the substitution is of the whole key:value pair
+                _, col, _, end_col = key.f.loc
+
+                if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
+                    paths.append((tag[6:], path[:-1], ('_all', idx)))
+
+                    return
+
+        paths.append((tag[6:], path, None))
 
 def _sub_repl_path_arg(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present whole node OR identifier, depending on presence of annotations in template."""
@@ -5637,7 +5655,29 @@ def _sub_repl_path_MatchAs(paths: list[list[astfield]], repl: fst.FST, fst_: fst
 
     if tag := ast.name:
         if tag.startswith('__FST_'):
-            paths.append((tag[6:], repl.child_path(fst_), ('name', None) if ast.pattern else None))
+            path = repl.child_path(fst_)
+
+            if ast.pattern:
+                paths.append((tag[6:], path, ('name', None)))
+
+                return
+
+            if parent := fst_.parent:  # allow replacement of entire key:pattern pair of MatchMapping
+                field, idx = fst_.pfield
+
+                if (field == 'patterns'
+                    and (parenta := parent.a).__class__ is MatchMapping
+                    and (key := parenta.keys[idx]).__class__ is Constant
+                    and key.value == '...'
+                ):  # if are we a "value" of MatchMapping and the key is a single-quoted string '...' then the substitution is of the whole key:pattern pair
+                    _, col, _, end_col = key.f.loc
+
+                    if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
+                        paths.append((tag[6:], path[:-1], ('_all', idx)))
+
+                        return
+
+            paths.append((tag[6:], path, None))
 
 def _sub_repl_path_TypeVar(paths: list[list[astfield]], repl: fst.FST, fst_: fst.FST) -> None:
     """Definitely-present whole node OR identifier, depending on presence of bound or default_value in template."""
@@ -6068,7 +6108,7 @@ def sub(
 
             elif isinstance(repl_slot_new, FSTView):  # we get a normal single node container (which may contain multiple elements) for putting as a slice
                 repl_slot_new = repl_slot_new.copy(**copy_options)
-                one = False  # this will be a slice of some kind so make sure we put as a slice, even if it is a single arg in arguments posing as a slice it is fine to treat it as a slice
+                one = False  # this will be a slice of some kind so make sure we put as a slice, even if it is a single arg in arguments posing as a slice it is fine to treat it as a slice, same for Dict and MatchMapping
 
             elif isinstance(repl_slot_new, list):  # this is from a quantifier, in which case convert it to a slice (all whole list fields come back as FSTView)
                 one = False
@@ -6121,7 +6161,9 @@ def sub(
                             new_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     elif parenta_cls is arguments:
-                        if not repl_slot_new or repl_slot_new.a.__class__ is arguments:
+                        if (field in _NODE_ARGUMENTS_ARGS_ALL_FIELDS
+                            and (not repl_slot_new or repl_slot_new.a.__class__ is arguments)
+                        ):
                             new_field = '_all'
                             allargs = parent._cached_allargs()
                             one = False
