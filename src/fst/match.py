@@ -6123,20 +6123,29 @@ def sub(
     asts: list[AST] | None = None,
     **options,
 ) -> fst.FST:  # -> self
-    """Substitute matching targets with a given `repl` template. The template substitutions can include tagged elements
-    from a match, including the whole match.
+    r"""Substitute matching targets with a given `repl` template. The template substitutions can include tagged elements
+    from a match. These are specified in the `repl` template as `__FST_<tag>` names, where the `<tag>` maps to a matched
+    tag or is left empty to indicate the whole matched node. The replacement template can be passed as source or an
+    `FST` or `AST` node.
 
-    TODO: unfinished, document
+    Individual options can be passed for the three phases of each substitution:
+
+    - Copy tagged node from matched element of `self`.
+    - Put tagged node to `repl` template tag slots `__FST_<tag>`.
+    - Put filled `repl` template back to `self` node which was matched by the pattern.
+
+    Can handle individual node or slice substitutions, including compound patterns like `Dict` key:value pairs and whole
+    `ExceptHandler` or `match_case` entries.
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these).
     - `repl`: Replacement template as an `FST`, `AST` or source.
-    - `nested: Whether to allow recursion into nested substitutions or not. In order to prevent infinite recursion,
+    - `nested`: Whether to allow recursion into nested substitutions or not. In order to prevent infinite recursion,
         regardless of this parameter, none of the original nodes of the `repl` template are ever substituted, even if
-        they match the pattern. If the full original match is put anywhere in the tepmlate then the top node is not
-        considered for substitution again either (even though by definition it matches the pattern). Subparts of that
-        matched template can be matched and substituted again as that cannot cause infinite recursion.
+        they match the pattern. If the full original match is put anywhere in the template then the top node of that is
+        not considered for substitution again either (even though by definition it matches the pattern). Subparts of
+        that matched template can be matched and substituted again as that cannot cause infinite recursion.
     - `count`: If this is above 0 then only this number of substitutions will be made.
     - `copy_options`: Options to use when copying from matched nodes for putting into the `repl` template. If `None`
         then just uses `options`.
@@ -6157,7 +6166,114 @@ def sub(
 
     >>> from fst.match import *
 
-    TODO: unfinished, document
+    Simple substitution.
+
+    >>> FST('a + b.c').sub(Name, 'log(__FST_)').src
+    'log(a) + log(b).c'
+
+    >>> FST('a + b.c').sub(MOR(Name, Attribute), 'log(__FST_)').src
+    'log(a) + log(b.c)'
+
+    Allow nested.
+
+    >>> FST('a + b.c').sub(MOR(Name, Attribute), 'log(__FST_)', nested=True).src
+    'log(a) + log(log(b).c)'
+
+    Statements and optional parts of block statements are handled (like `else` or `finally`).
+
+    >>> print(FST('''
+    ... if a:
+    ...     a_true()
+    ... else:
+    ...     a_false()
+    ...     fail()
+    ... '''.strip())
+    ... .sub(MIf(test=M(t=...), body=M(b=...), orelse=M(e=...)), '''
+    ... if not __FST_t:
+    ...     __FST_e
+    ... else:
+    ...     __FST_b
+    ... '''.strip()).src)
+    if not a:
+        a_false()
+        fail()
+    else:
+        a_true()
+
+    Multinode elements of sequences like `Dict` and `MatchMapping` can be substituted.
+
+    >>> print(
+    ... FST('{a: b, c: d, e: f}')
+    ... .sub(MDict(_all=[..., M(mid=...), ...]),
+    ... '{x: y, "...": __FST_mid}',
+    ... ).src)
+    {x: y, c: d}
+
+    `arguments` can be substituted as well, including changing type of argument (with some caveats, see documentation).
+
+    >>> print(
+    ... FST('def f(a=1, /, b=2, *, c=3): pass')
+    ... .sub(Marguments(_all=[MQSTAR, M(a=Marguments(args=['c'])), MQSTAR]),
+    ... FST('__FST_a', 'arguments'),
+    ... args_as='pos',
+    ... ).src)
+    def f(c=3, /): pass
+
+    Entire `ExceptHandlers` and `match_cases` can be substituted using their respective templates
+    `except '...': __FST_<tag>` and `case '...': __FST_<tag>`.
+
+    >>> print(FST('''
+    ... try: pass
+    ... except a: a()
+    ... except b: b()
+    ... except c: c()
+    ... except d: d()
+    ... '''.strip())
+    ... .sub(MTry(handlers=[..., MQSTAR(hand=...), ...]), '''
+    ... try: new()
+    ... except x: pass
+    ... except '...': __FST_hand
+    ... except y: pass
+    ... '''.strip()).src)
+    try: new()
+    except x: pass
+    except b: b()
+    except c: c()
+    except y: pass
+
+    `comprehension` nodes have the template `for __FST_<tag> in '...'`.
+
+    >>> print(
+    ... FST('i = [a for a in b if a]')
+    ... .sub(MListComp(generators=[M(comp=Mcomprehension)]),
+    ... '{f(a) for __FST_comp in "..."}'
+    ... ).src)
+    i = {f(a) for a in b if a}
+
+    Substitutions inside string constants are put as source appropriately escaped for the string.
+
+    >>> print(FST(r'''
+    ... something()
+    ... if a:
+    ...     while a: \
+    ...         a = call(a, 'str')
+    ... something_else()
+    ... '''.strip())
+    ... .sub(MWhile,
+    ... 'used_to_be_while = "now is string: __FST_ <--"'
+    ... ).src)
+    something()
+    if a:
+        used_to_be_while = "now is string: while a: \\\n    a = call(a, \'str\') <--"
+    something_else()
+
+
+
+
+
+
+
+
 
     """
 
