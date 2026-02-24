@@ -2361,6 +2361,8 @@ def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
         self.assertTrue(pat.match(FST('*, a', arguments)))
 
     def test_match_coverage(self):
+        from fst.view import FSTView_dummy
+
         self.assertEqual('MAST(elts=..., ctx=Store)', repr(MAST(elts=..., ctx=Store)))
         self.assertEqual('<NotSet>', repr(NotSet.__class__()))
         self.assertEqual('M(t=...)', repr(M(t=...)))
@@ -2378,6 +2380,9 @@ def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
         assertRaises(ValueError('MTYPES requires at least one AST type to match'), MTYPES, [])
         assertRaises(ValueError('MRE cannot take flags for already compiled re.Pattern'), MRE, re.compile('a'), re.M)
         assertRaises(ValueError('MCB can never tag the callback return since the callback does not have a tag'), MCB, lambda: False, tag_ret=True)
+        assertRaises(ValueError('MQN requires a count value'), MQN, ...)
+        assertRaises(ValueError('MQN count must be a non-negative integer'), MQN, ..., None)
+        assertRaises(ValueError('MQN count must be a non-negative integer'), MQN, ..., -1)
 
         f = FST('i = 1')
         f.a.value.f = None
@@ -2408,7 +2413,6 @@ def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
         self.assertTrue(MAssign(value=MConstant(MOPT(1))).match(f))
         self.assertFalse(MAssign(value=MConstant(MOPT(2))).match(f))
         self.assertTrue(MAssign(value=(MOPT(M(t=MConstant), st='static'))).match(f))
-        # self.assertFalse(MAST(_all=[MQSTAR]).match(FST('{1: 2}')))
         self.assertFalse(MList(['a']).match(FST('[]')))
         self.assertTrue(MList([MQSTAR, MQSTAR, MQSTAR]).match(FST('[]')))
         self.assertFalse(MList([MQSTAR, MQ('a', 1, None)]).match(FST('[b, c]')))
@@ -2416,12 +2420,21 @@ def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
         self.assertTrue(MConstant("a", M(u='u')).match(FST('u"a"')))
         self.assertFalse(MAssign(value=re.compile(b'v')).match(FST('a = v')))
         self.assertFalse(MConstant(re.compile('v')).match(FST('1')))
+        self.assertTrue(MList(elts=[MQSTAR([MQPLUS(...)])]).match(FST('[a, b, c]')))
+        self.assertFalse(MCompare(_all=[M(z=..., t=FST('a < b')[0:0]), MTAG('t'), MQSTAR]).match(FST('a < b')))
+        self.assertTrue(MList(elts=FSTView_dummy(None, None, 0, None)).match(FST('[]')))
+        assertRaises(MatchError('matching a Compare pattern against Compare._all the pattern cannot have its own _all field'), MCompare(_all=[...]).match, FST('a < b')._all)
+        self.assertFalse(MCompare().match(FST('a < b')._all[0:0]))
+        self.assertFalse(MGlobal(names=[stmt]).match(FST('global a')))
+        self.assertFalse(MDict(_all=[stmt]).match(FST('{a: b}')))
 
-        class substr(str): pass
         class subint(int): pass
+        class substr(str): pass
+        class sublist(list): pass
 
-        self.assertTrue(MConstant(substr('a')).match(FST('"a"')))
         self.assertTrue(MConstant(subint(1)).match(FST('1')))
+        self.assertTrue(MConstant(substr('a')).match(FST('"a"')))
+        self.assertTrue(MList(elts=sublist([...])).match(FST('[a]')))
 
         from fst.asttypes import ASTS_LEAF__ALL, ASTS_LEAF_STMT
         self.assertTrue(list(FST('1').search(MTYPES((AST,)))))
@@ -2433,6 +2446,12 @@ def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
         self.assertEqual("<FSTMatch <Constant ROOT 0,0..0,4> {'k': 'u'}>", str(FST('u"a"').match(pat)))
 
         self.assertFalse(Marguments(_all=[MRE(b'a')]).match(FST('a', arguments)))
+
+        self.assertTrue(next(FST('a').search(MOR(MCB(lambda t: True))), False))  # MOR._leaf_asts()
+
+        assertRaises(ValueError('MQ requires min and max values'), MQ, ...)  # MQ.__init__()
+        assertRaises(ValueError('MQ requires a max value'), MQ, ..., min=1)  # MQ.__init__()
+        assertRaises(ValueError('MQ requires a min value'), MQ, ..., max=1)  # MQ.__init__()
 
     def test_search(self):
         f = FST('[1, a, x.y]')
@@ -2574,10 +2593,42 @@ MNOT(MTAG('no'))
         self.assertEqual('[]', str(list(m.matched for m in f.search(pat, recurse=False, asts=[f.a.body[0]]))))
         self.assertEqual('[]', str(list(m.matched for m in f.search(pat, recurse=False, asts=[f.a.body[0]], back=True))))
 
+    def test_search_nested(self):
+        # nested and send()
+
+        f = FST('([a, [b, [c]]], [d])')
+        self.assertEqual('[a, [b, [c]]], [b, [c]], [c], [d]', ', '.join(m.matched.src for m in f.search(List, nested=True)))
+        self.assertEqual('[a, [b, [c]]], [d]', ', '.join(m.matched.src for m in f.search(List, nested=False)))
+
+        l = []
+        for m in (gen := f.search(List, nested=True)):
+            l.append((g := m.matched).src)
+            if g.src == '[b, [c]]':
+                gen.send(False)
+                gen.send(False)
+        self.assertEqual('[a, [b, [c]]], [b, [c]], [d]', ', '.join(l))
+
+        l = []
+        for m in (gen := f.search(List, nested=False)):
+            l.append((g := m.matched).src)
+            if g.src == '[a, [b, [c]]]':
+                gen.send(True)
+                gen.send(True)
+        self.assertEqual('[a, [b, [c]]], [b, [c]], [d]', ', '.join(l))
+
     def test_sub(self):
         for case, rest in DATA_SUB.iterate(True):
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
+
+    def test_sub_coverage(self):
+        assertRaises(MatchError('expected FST or FSTView, got NoneType'), FST('{**a}').sub, MDict(keys=[MQSTAR(t=[...])]), '__FST_t')
+        assertRaises(MatchError('expected FSTMatch in list, got str'), FST('[a]').sub, MList(elts=[MQSTAR(..., t=['blah'])]), '__FST_t')
+        assertRaises(MatchError('match substitution must be FST, None or str, got int'), FST('[a]').sub, M(MList, t=123), '__FST_t')
+
+        self.assertEqual('[]', FST('[a]').sub(MList(elts=[MQ01(t=[MQSTAR('b')]), MQSTAR]), '[__FST_t]').src)
+        self.assertEqual('""', FST('[a]').sub(M(MList, t=None), '"__FST_t"').src)
+        self.assertEqual('"123"', FST('[a]').sub(M(MList, t='123'), '"__FST_t"').src)
 
 
 if __name__ == '__main__':

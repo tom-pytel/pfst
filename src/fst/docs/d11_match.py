@@ -661,7 +661,7 @@ None
 The following is truly an academic excercise, as this is done much more quickly an easily with code and a walk over the
 list, but just to show what can be done with matching...
 
-One of the uses for quantifiers in subsequences can be filtering and grouping. The example below will filter all names
+One of the uses for quantifiers in subsequences can be filtering and grouping. The example below will group all names
 from a list and return a match object with a list of matches where each one has a list that starts with a single `Name`
 node.
 

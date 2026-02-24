@@ -3785,7 +3785,7 @@ class MQ(M_Pattern_One):
         self.max = max
         pat = self.pat
 
-        if isinstance(pat, list):  # if quantifier is unbounded and has sublist then make sure that listmust match at least one item (including any sublists in that, etc...), otherwise will get infinite loop
+        if isinstance(pat, list):  # if quantifier is unbounded and has sublist then make sure that list must match at least one item (including any sublists in that, etc...), otherwise will get infinite loop
             if max is None:
                 stack = pat[:]
 
@@ -4198,10 +4198,11 @@ _NODE_ARGUMENTS_ARGS_LIST_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
 _NODE_ARGUMENTS_ARGS_ALL_FIELDS = _NODE_ARGUMENTS_ARGS_LIST_FIELDS | {'vararg', 'kwarg'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
-_FSTVIEW_MULTINODE_SINGLE_TYPE = {
-    FSTView_Dict:         Dict,
-    FSTView_MatchMapping: MatchMapping,
-    FSTView_arguments:    arguments,
+_FSTVIEW_NON_DEREF_FST_SINGLE_TYPE = {
+    FSTView_Dict:            Dict,
+    FSTView_MatchMapping:    MatchMapping,
+    FSTView_arguments:       arguments,
+    FSTView_Global_Nonlocal: Name,
 }
 
 
@@ -4545,7 +4546,7 @@ def _match_default(pat: _Patterns, tgt: _Targets, mstate: _MatchState) -> Mappin
         return _match_str(pat, tgt, mstate)
 
     if isinstance(pat, FSTView):
-        raise MatchError(f'unsupported FSTView type {pat.__class__.__qualname__}')
+        raise RuntimeError(f'should not get here, FSTView type not coded {pat.__class__.__qualname__}')  # pragma: no cover
 
     if isinstance(pat, M_Pattern):  # user tried to subclass a pattern
         raise RuntimeError('subclassing M_Pattern not supported')
@@ -4603,7 +4604,7 @@ def _match_FSTView_Compare(pat: FSTView_Compare, tgt: _Targets, mstate: _MatchSt
     if not (real_pat := mstate.cache.get(pat)):
         start, stop = pat.start_and_stop
 
-        if stop == start:
+        if stop == start:  # zero length Compare slice, shouldn't really be encountered in normal usage
             real_pat = MCompare(NotSet, [], [])  # NotSet doesn't hold any special value, just means empty and doesn't match anything
 
         else:
@@ -4848,8 +4849,8 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
                 raise MatchError('matching an arguments pattern against arguments._all'
                                  ' the pattern args must be ... or a length-1 list')
             elif args:
-                if strict:
-                    arg_fields = ('args',)
+                # if strict:  # strict=True doesn't get here anymore, leaving for now just in case
+                #     arg_fields = ('args',)
 
                 pat_arg = args[0]
                 nargs += len(args)
@@ -4904,8 +4905,8 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
                     if kwonlyargs or vararg or kwarg:
                         raise MatchError('matching an arguments pattern against arguments._all found invalid defaults')
 
-                    if strict:
-                        dflt_fields = ('defaults',)
+                    # if strict:  # strict=True doesn't get here anymore, leaving for now just in case
+                    #     dflt_fields = ('defaults',)
 
                     pat_dflt = defaults[0]
                     ndflts += len(defaults)
@@ -5036,7 +5037,7 @@ def _match_type(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, A
 
         pat = pat._types
 
-    if t := _FSTVIEW_MULTINODE_SINGLE_TYPE.get(tgt.__class__):  # don't need to bother checking length 1
+    if t := _FSTVIEW_NON_DEREF_FST_SINGLE_TYPE.get(tgt.__class__):  # don't need to bother checking length 1
         if not issubclass(t, pat):
             return None
 
@@ -5816,7 +5817,7 @@ def _sub_repl_path_TypeVar(paths: _PathsList, str_tags: _StrTagsList, repl: fst.
     return True
 
 def _sub_repl_path_INVALID(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
-    raise RuntimeError('should not get here')
+    raise RuntimeError('should not get here')  # pragma: no cover
 
 _SUB_REPL_PATH_FUNCS = {
     FunctionDef:      _sub_repl_path_name,
@@ -5861,9 +5862,9 @@ def _sub_quantifier_list_end_item(qlist: list, last: bool) -> tuple[fst.FST, str
     - `None`: No items found.
     """
 
-    for match in reversed(qlist) if last else qlist:
+    for match in (reversed(qlist) if last else qlist):
         if not isinstance(match, FSTMatch):
-            raise MatchError(f'expecting FSTMatch in list, got {match.__class__.__qualname__}')
+            raise MatchError(f'expected FSTMatch in list, got {match.__class__.__qualname__}')
 
         matched = match.matched
 
@@ -5878,7 +5879,7 @@ def _sub_quantifier_list_end_item(qlist: list, last: bool) -> tuple[fst.FST, str
     else:  # exhausted list so no item found
         return None
 
-    if isinstance(matched, FSTView):  # should be a single element FSTView
+    if isinstance(matched, FSTView):  # if FSTView then should be a single element
         assert len(matched) == 1
 
         return matched.base, matched.field, matched.stop if last else matched.start
@@ -6294,13 +6295,8 @@ def sub(
                         and (not repl_slot_new or repl_slot_new.a.__class__ is arguments)
                     ):
                         new_field = '_all'
-                        allargs = parent._cached_allargs()
+                        new_idx = parent._cached_allargs().index(repl_slot.a)
                         one = False
-
-                        try:
-                            new_idx = allargs.index(repl_slot.a)
-                        except ValueError:
-                            raise MatchError('cannot substitute arguments for a non-arg') from None
 
                 elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
                     if not one:  # only if came from existing Compare slice
