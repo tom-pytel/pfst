@@ -154,7 +154,7 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 >>> MDict(_all=[MQSTAR(t=MRE('a: .'))]).match(FST('{a: b, a: z}'))
 <FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
 
->>> l = _.t
+>>> l = _['t']
 
 >>> print(l[0].matched)
 <<Dict ROOT 0,0..0,12>._all[:1]>

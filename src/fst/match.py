@@ -416,8 +416,7 @@ class MatchError(RuntimeError):
 
 
 class FSTMatch:
-    """Successful match object. Can look up tags directly on this object as attributes. Nonexistent tags will not raise
-    but return a falsey `NotSet`."""
+    """Successful match object."""
 
     tags: Mapping[str, Any]  ; """Full match tags dictionary. Only successful matches get their tags included."""
     pattern: _Pattern  ; """The pattern used for the match. Can be any valid pattern including `AST` node, primitive values, compiled `re.Pattern`, etc..."""
@@ -434,21 +433,15 @@ class FSTMatch:
         else:
             return f'<FSTMatch {_rpr(self.matched)}>'
 
-    def __getattr__(self, name: str) -> object:
-        if (v := self.tags.get(name, _SENTINEL)) is not _SENTINEL:
-            return v
+    def __getitem__(self, name: str) -> object:
+        """Get item from `tags`, returning `NotSet` on failure."""
 
-        if not name.startswith('__'):
-            return NotSet
-
-        raise AttributeError(name)  # nonexistence of dunders should not be masked
+        return self.tags.get(name, NotSet)
 
     def get(self, tag: str, default: object = NotSet, /) -> object:
-        """A `dict.get()` function for the match tags. Just a shortcut for `match.tags.get(tag, default)`."""
+        """A `dict.get()` function for the match tags. Just a shortcut for `FSTMatch.tags.get(tag, default)`."""
 
         return self.tags.get(tag, default)
-
-_INVALID_TAGS = frozenset(dir(FSTMatch)) | set(FSTMatch.__annotations__)
 
 
 class M_Pattern:
@@ -457,11 +450,6 @@ class M_Pattern:
 
     _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
     _types: type[AST] | tuple[type[AST]] = AST  # only the MTYPES pattern has a tuple here
-
-    def _validate_tags(self, tags: Iterable[str]) -> None:
-        for tag in tags:
-            if tag in _INVALID_TAGS:
-                raise ValueError(f'invalid tag {tag!r} shadows match class attribute')
 
     def match(self, target: _TargetsOrFST, *, ast_ctx: bool = False) -> FSTMatch | None:
         """Match this pattern against given target. This can take `FST` nodes or `AST` (whether they are part of an
@@ -2799,7 +2787,7 @@ class M_Pattern_One(M_Pattern):
     static_tags: Mapping[str, Any]  ; """@private"""
 
     def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
-        self._validate_tags(tags)
+        # self._validate_tags(tags)
 
         if anon_pat is not NotSet:
             self.pat = anon_pat
@@ -2839,7 +2827,7 @@ class M_Pattern_Many(M_Pattern):
     pat_tags: list[str | None]  ; """@private"""
 
     def __init__(self, *anon_pats: _Patterns, **tagged_pats: _Patterns) -> None:
-        self._validate_tags(tagged_pats)
+        # self._validate_tags(tagged_pats)
 
         if anon_pats:
             pats = list(anon_pats)
@@ -3352,7 +3340,7 @@ class MRE(M_Pattern):
     def __init__(
         self, anon_re_pat: str | re_Pattern | _NotSet = NotSet, /, flags: int = 0, search: bool = False, **tags
     ) -> None:
-        self._validate_tags(tags)
+        # self._validate_tags(tags)
 
         if anon_re_pat is not NotSet:
             pat_tag = None
@@ -3625,7 +3613,7 @@ class MTAG(M_Pattern_One):
     def __init__(self, anon_tag: str | _NotSet = NotSet, /, **tags) -> None:
         M_Pattern_One.__init__(self, anon_tag, **tags)
 
-        self._validate_tags((self.pat,))
+        # self._validate_tags((self.pat,))
 
     def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
         if (p := mstate.get_tag(self.pat, _SENTINEL)) is _SENTINEL:
@@ -3727,7 +3715,7 @@ class MQ(M_Pattern_One):
       ],
     }>
 
-    >>> [mm.matched.src for mm in m.t]
+    >>> [mm.matched.src for mm in m['t']]
     ['c', 'c', 'd']
 
     Sublist matching, will match the sequence "a, b" twice in the example below.
@@ -5542,7 +5530,7 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
 _PathsList = list[tuple[str, list[astfield], tuple[str, int | None] | None]]
 _StrTagsList = list[tuple[str, int, int, int]]
 
-_re_FST_tag = re.compile(r'\b__FST_(\w*)\b')
+_re_FST_tag = re.compile(r'\b__FST_(\w*)\b')  # for tags inside strings
 
 
 def _sub_repl_path_name(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
@@ -5993,7 +5981,7 @@ def match(
     >>> FST('a.__class__ is not ZST') .match(pat)
     <FSTMatch <Compare ROOT 0,0..0,22> {'obj': <Name 0,0..0,1>}>
 
-    >>> bool(_.is_is)
+    >>> bool(_['is_is'])
     False
 
     >>> FST('a.__class__ is AST') .match(pat)
@@ -6146,8 +6134,9 @@ def sub(
     - `repl`: Replacement template as an `FST`, `AST` or source.
     - `nested: Whether to allow recursion into nested substitutions or not. In order to prevent infinite recursion,
         regardless of this parameter, none of the original nodes of the `repl` template are ever substituted, even if
-        they match the pattern. If the full original match is put anywhere in the tepmlate then it is not considered for
-        substitution again either. Subparts of the matched template can be matched and substituted again.
+        they match the pattern. If the full original match is put anywhere in the tepmlate then the top node is not
+        considered for substitution again either (even though by definition it matches the pattern). Subparts of that
+        matched template can be matched and substituted again as that cannot cause infinite recursion.
     - `count`: If this is above 0 then only this number of substitutions will be made.
     - `copy_options`: Options to use when copying from matched nodes for putting into the `repl` template. If `None`
         then just uses `options`.

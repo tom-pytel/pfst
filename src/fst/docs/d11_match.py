@@ -222,26 +222,17 @@ These tags can be accessed via the `.tags` attribute on the match object.
 >>> m.tags
 mappingproxy({'tag': 'string', 'static_tag': True})
 
-Or as a convenience directly as attributes.
+Or as a convenience accessing directly on the `FSTMatch` object.
 
->>> m.tag
+>>> m['tag']
 'string'
 
->>> m.static_tag
+>>> m['static_tag']
 True
 
-You do not have to worry about tags shadowing real `FSTMatch` attributes as tags which would do that are not allowed and
-raise an exception if you try to create a pattern with them.
+Looking up tags directly on the `FSTMatch` object does not raise `AttributeError` but rather returns a falsey object.
 
->>> M(tags=...)
-Traceback (most recent call last):
-...
-ValueError: invalid tag 'tags' shadows match class attribute
-
-Attribute tag access allows quick existence checking as nonexistent tags do not raise `AttributeError` but rather return
-a falsey object.
-
->>> bool(m.nonexistent_tag)
+>>> bool(m['nonexistent_tag'])
 False
 
 Otherwise you can just access the `.tags` dictionary directly or call `.get()` on the match object just like you would
