@@ -412,6 +412,8 @@ NotSet = object.__new__(_NotSet)  ; """A falsey object returned if accessing a n
 class MatchError(RuntimeError):
     """An error during matching."""
 
+    __module__ = 'fst'  # so the exception shows up as 'fst.NodeError'
+
 
 class FSTMatch:
     """Successful match object. Can look up tags directly on this object as attributes. Nonexistent tags will not raise

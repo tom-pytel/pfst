@@ -310,7 +310,7 @@ fields.
 >>> MList([M(MQSTAR)]).match(FST('[1, 2, 3]'))
 Traceback (most recent call last):
 ...
-fst.match.MatchError: MQSTAR quantifier pattern in invalid location
+fst.MatchError: MQSTAR quantifier pattern in invalid location
 
 
 ## `MNOT()` pattern
