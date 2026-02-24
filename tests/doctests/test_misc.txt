@@ -235,22 +235,24 @@ replace() end of sequence with nothing
 >>> f.body[1].replace(None)
 >>> f.body[1].replace('')
 Traceback (most recent call last):
-  File "<python-input-4>", line 1, in <module>
+  File "<doctest test_misc.txt[70]>", line 1, in <module>
     f.body[1].replace('')
     ~~~~~~~~~~~~~~~~~^^^^
-  File "/home/tom/work/fst/pfst/src/fst/fst.py", line 1576, in replace
+  File "/home/tom/work/fst/pfst/src/fst/fst.py", line 2275, in replace
     return parent._put_one(code, idx, field, options)
-           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/tom/work/fst/pfst/src/fst/fst_put_one.py", line 2793, in _put_one
+            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tom/work/fst/pfst/src/fst/fst_put_one.py", line 3172, in _put_one
     new_self = self._put_slice(code, idx, idx + 1, field, True, options)  # MAYBE new self, or just old self
-  File "/home/tom/work/fst/pfst/src/fst/fst_put_slice.py", line 2881, in _put_slice
+  File "/home/tom/work/fst/pfst/src/fst/fst_put_slice.py", line 3739, in _put_slice
     handler(self, code, start, stop, field, one, options)
     ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/tom/work/fst/pfst/src/fst/slice_stmtlike.py", line 1462, in put_slice_stmtlike
+  File "/home/tom/work/fst/pfst/src/fst/slice_stmtlike.py", line 1488, in put_slice_stmtlike
     put_fst_end_nl = _put_slice_stmtlike_old(self, code, start, stop, field, one, options)
-  File "/home/tom/work/fst/pfst/src/fst/slice_stmtlike.py", line 1128, in _put_slice_stmtlike_old
-    raise ValueError('expecting a single element')
-ValueError: expecting a single element
+  File "/home/tom/work/fst/pfst/src/fst/slice_stmtlike.py", line 1122, in _put_slice_stmtlike_old
+    raise ValueError(
+    ...<3 lines>...
+    )
+ValueError: expecting single statement
 >>> f.body[1].replace('', one=False)
 <Expr 1,0..1,1>
 >>> _.src

@@ -6266,15 +6266,6 @@ def sub(
     if a:
         used_to_be_while = "now is string: while a: \\\n    a = call(a, \'str\') <--"
     something_else()
-
-
-
-
-
-
-
-
-
     """
 
     options = check_options(options, mark_checked=True)

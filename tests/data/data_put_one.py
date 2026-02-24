@@ -21601,6 +21601,23 @@ Import - ROOT 0,0..0,10
    0] alias - 0,7..0,10
      .name 'b.c'
 '''),
+
+('', 0, None, 'orelse', {}, (None, r'''
+if 1:
+    pass
+else:
+    pass
+'''), (None,
+r'''  '''),
+r'''**ValueError('expecting single statement')**'''),
+
+('', 0, None, 'finalbody', {}, (None, r'''
+try: pass
+except: pass
+finally: pass
+'''), (None,
+r'''  '''),
+r'''**ValueError('expecting single statement')**'''),
 ],
 
 'py_3_15_comprehension_unpacking': [  # ................................................................................

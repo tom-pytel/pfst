@@ -1114,13 +1114,20 @@ def _put_slice_stmtlike_old(
             put_fst = code_as_stmts(code, options, root.parse_params, coerce=True)
             put_body = put_fst.a.body
 
-        # NOTE: we do not convert an empty put_body to put_fst=None because we may be putting just comments and/or empty space
-
-        put_fst_lines = put_fst._lines
-        put_fst_end_nl = not put_fst_lines[-1]
+            if not put_body and field != 'body' and len_slice == len_body:  # if putting empty body to optional field that would delete all elememnt there then convert to a delete regardless of what trivia might be in the body to put because otherwise we would wind up with a hanging empty 'else:' or `finally:`
+                put_fst = None
+                put_fst_end_nl = False
 
         if one and len(put_body) != 1:
-            raise ValueError('expecting a single element')
+            raise ValueError(
+                'expecting single except handler' if is_handlers else
+                'expecting single match case' if field == 'cases' else
+                'expecting single statement'
+            )
+
+        if put_fst:  # maybe empty put to `orelse` or `finalbody` was converted to delete
+            put_fst_lines = put_fst._lines
+            put_fst_end_nl = not put_fst_lines[-1]
 
     if not len_slice and (not put_fst or (not put_body and len(put_fst_lines) == 1 and not put_fst_lines[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
         return True

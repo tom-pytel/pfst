@@ -47711,19 +47711,70 @@ Match - ROOT 0,0..3,22
            .value Constant 0 - 3,19..3,20
 '''),
 
+('', 0, 1, 'orelse', {}, (None, r'''
+if 1:
+    pass
+else:
+    pass
+'''), (None,
+r'''  '''), r'''
+if 1:
+    pass
+''', r'''
+If - ROOT 0,0..1,8
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
 ('', 0, 0, 'orelse', {}, (None, r'''
 if 1:
     pass
 '''), (None,
-r'''  '''),
-r'''**ValueError("cannot insert empty statement into empty 'orelse' field")**'''),
+r'''  '''), r'''
+if 1:
+    pass
+''', r'''
+If - ROOT 0,0..1,8
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', 0, 1, 'finalbody', {}, (None, r'''
+try: pass
+except: pass
+finally: pass
+'''), (None,
+r'''  '''), r'''
+try: pass
+except: pass
+''', r'''
+Try - ROOT 0,0..1,12
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+'''),
 
 ('', 0, 0, 'finalbody', {}, (None, r'''
 try: pass
 except: pass
 '''), (None,
-r'''  '''),
-r'''**ValueError("cannot insert empty statement into empty 'finalbody' field")**'''),
+r'''  '''), r'''
+try: pass
+except: pass
+''', r'''
+Try - ROOT 0,0..1,12
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+'''),
 
 ('', 0, 1, None, {}, ('exec', r'''
 

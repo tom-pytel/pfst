@@ -36,6 +36,7 @@
 - disallow put `_` as name to `MatchMapping.rest` and `MatchClass.kwd_attrs`
 - disallow put `*` or dotted as name to `alias.name` if context does not allow
 - disallow put `*` to `_aliases.names` if there are multiple names (only allowed to replace a single one)
+- put empty slice of statementlikes containing only trivia erasing whole `orelse` or `finalbody` field now deletes the whole field instead of leaving a hanging `else:` or `finally:`
 
 
 ## 0.2.6 - alpha - 2026-01-31
