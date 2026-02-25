@@ -16,6 +16,7 @@ You will see a lot of `.replace()` of nodes while `.walk()`ing them, this is all
 To be able to execute the examples, import this.
 
 >>> from fst import *
+>>> from fst.match import *
 
 Now some helper functions just for this documentation, you can ignore their usage.
 
@@ -197,39 +198,6 @@ class cls:
 ```
 
 
-## Inject metadata using `sub()`
-
-You can do the same thing using structural pattern substitution. You probably wouldn't do this if you want the best
-results as it doesn't give you nearly as much control as doing your own substitution, but for simple and quick-and-dirty
-modifications it exists.
-
-Note we are using the source from the previous example.
-
-```py
->>> from fst.match import *
-
->>> pprint(FST(src).sub(
-...     MCall(
-...        func=M(func=MAttribute('logger', 'info')),
-...        keywords=MNOT([MQSTAR, Mkeyword('correlation_id'), MQSTAR]),
-...        _args=M(all_args=...),
-...     ),
-...     '__FST_func(__FST_all_args, correlation_id=CID)',
-... ).src)
-logger.info('Hello world...', correlation_id=CID)  # ok
-logger.info('Already have id', correlation_id=other_cid)  # ok
-logger.info(correlation_id=CID)  # yes, no logger message, too bad
- 
-class cls:
-    def method(self, thing, extra):
-        if not thing:
-            (logger).info(
-                       f'not a {thing}',  # this is fine
-                       extra=extra,       # also this
-                       correlation_id=CID)
-```
-
-
 ## `else if` chain to `elif`
 
 `fst` has `elif` <-> `else if` code built in as its needed for statement insertions and deletions from conditional
@@ -372,7 +340,7 @@ This is a bit trickier than it sounds because of possible nonlocal accesses by t
 checking for those accesses and not pulling those functions out. Names are also changed to avoid collision at the global
 scope.
 
-The nonlocal variable check is not complete as a full check would check if the "free" symbols aren't actually global or
+The nonlocal variable check is not complete as a full check would verify if the "free" symbols aren't actually global or
 builtins, in which case they can be ignored and the function can be moved. We also don't check possible `type_params`
 or function `returns` fields for possible nonlocal references but just assume they are all global for this example. We
 also don't check for name override in children when replacing function name, but that is another detail not needed for
@@ -749,7 +717,7 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
 ```
 
 
-## Squash nested `with`s
+## Squash nested `with`
 
 Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway. Yes
 the alignment is ugly, it will eventually be done properly, first priority was functional correctness. The comment on
@@ -1658,7 +1626,432 @@ src: '(z < 0) * -z + (z >= 0) * +z', args: (0, 10)
 ```
 
 
-## Misc
+
+# Structural pattern substitution
+
+This section exists mostly to show what is possible with substitution, rather than suggest this is the way these things
+should be done.
+
+`pfst` provides fairly robust node pattern substitution through the `sub()` function. This is not really meant for final
+complete refactoring as it does not give nearly as much control as custom code does, especially over comments, but can
+be useful for smaller replacements or quick-and-dirty substitutions.
+
+## Inject logging metadata
+
+This does the same thing as the hardcoded example above but using `sub()`.
+
+```py
+>>> src = """
+... logger.info('Hello world...')  # ok
+... logger.info('Already have id', correlation_id=other_cid)  # ok
+... logger.info()  # yes, no logger message, too bad
+...
+... class cls:
+...     def method(self, thing, extra):
+...         if not thing:
+...             (logger).info(  # just checking
+...                 f'not a {thing}',  # this is fine
+...                 extra=extra,       # also this
+...             )
+... """.strip()
+
+>>> pat = MCall(
+...    func=M(func=MAttribute('logger', 'info')),
+...    keywords=MNOT([MQSTAR, Mkeyword('correlation_id'), MQSTAR]),
+...    _args=M(all_args=...),
+... )
+
+>>> repl = '__FST_func(__FST_all_args, correlation_id=CID)'
+```
+
+```py
+>>> pprint(FST(src).sub(pat, repl).src)
+logger.info('Hello world...', correlation_id=CID)  # ok
+logger.info('Already have id', correlation_id=other_cid)  # ok
+logger.info(correlation_id=CID)  # yes, no logger message, too bad
+ 
+class cls:
+    def method(self, thing, extra):
+        if not thing:
+            (logger).info(
+                       f'not a {thing}',  # this is fine
+                       extra=extra,       # also this
+                       correlation_id=CID)
+```
+
+
+## `else if` chain to `elif`
+
+Here, basic comments were left in place to show they are preserved, but attempting to preserve comments on or around the
+`if` and `else` statements gets messy and is only partially successful, so it is left out for the purposes of clarity of
+the intended demonstration.
+
+```py
+>>> src = r"""
+... if a:
+...     i = 1  # i
+... else:
+...     if b:
+...         j = 2  # j
+...     else:
+...         if c:
+...             k = 3  # k
+...         else:
+...             if d:
+...                 l = 4  # l
+...             else:
+...                 if e:
+...                     m = 5  # m
+... """.strip()
+
+>>> pat = MIf(
+...     test=M(main_test=...),
+...     body=M(main_body=...),
+...     orelse=[MIf(
+...         test=M(else_test=...),
+...         body=M(else_body=...),
+...         orelse=M(else_else=...),
+...     )],
+... )
+
+>>> repl = """
+... if __FST_main_test:
+...     __FST_main_body
+... elif __FST_else_test:
+...     __FST_else_body
+... else:
+...     __FST_else_else
+... """.strip()
+```
+
+```py
+>>> pprint(FST(src).sub(pat, repl, nested=True).src)
+if a:
+    i = 1  # i
+elif b:
+    j = 2  # j
+elif c:
+    k = 3  # k
+elif d:
+    l = 4  # l
+elif e:
+    m = 5  # m
+```
+
+
+## Pull out nested functions
+
+This can only pull out a single function and obviously doesn't check for dependent nonlocals from the parent.
+
+```py
+>>> src = """
+... class cls:
+...     @classmethod
+...     def method(cls, a, b):
+...         @lru_cache
+...         def fib(n):
+...             if n <= 1:
+...                 return n
+...
+...             return fib(n - 1) + fib(n - 2)
+...
+...         return fib(n)
+... """.strip()
+
+>>> pat_out = MFunctionDef(
+...     name=M(name=...),
+...     args=M(args=...),
+...     decorator_list=M(decorator_list=...),
+...     returns=M(returns=...),
+...     body=[
+...         MQSTAR(pre=MNOT(FunctionDef)),
+...         M(nested_func=FunctionDef),
+...         MQSTAR(post=...),
+...     ],
+...     # type_params=M(type_params=...),  # for py < 3.12 compatibility
+... )
+
+>>> repl_out = """
+... __FST_nested_func
+...
+... @__FST_decorator_list
+... def __FST_name(__FST_args) -> __FST_returns:
+...     __FST_pre
+...     __FST_post
+... """.strip()
+```
+
+```py
+>>> pprint(FST(src).sub(pat_out, repl_out, pep8space=1).src)
+class cls:
+    @lru_cache
+    def fib(n):
+        if n <= 1:
+            return n
+ 
+        return fib(n - 1) + fib(n - 2)
+ 
+    @classmethod
+    def method(cls, a, b):
+        return fib(n)
+```
+
+
+## `lambda` to `def`
+
+This one is relatively straightforward.
+
+```py
+>>> src = r"""
+... # lambda comment
+... mymin = lambda a, b: a if a < b else b  # inline lambda comment
+...
+... # class comment
+... class cls:
+...     name = lambda self: str(self)
+...
+...     def method(self, a, b):
+...         add = lambda a, b: a + b
+...
+...         return add(a, b)
+... """.strip()
+
+>>> pat = MAssign(
+...     targets=[M(name=...)],
+...     value=MLambda(args=M(args=...), body=M(body=...)),
+... )
+
+>>> repl = """
+... def __FST_name(__FST_args):
+...     return __FST_body
+... """.strip()
+```
+
+```py
+>>> pprint(FST(src).sub(pat, repl, pep8space=1, trivia=False).src)
+# lambda comment
+def mymin(a, b):
+    return a if a < b else b
+ 
+# class comment
+class cls:
+    def name(self):
+        return str(self)
+ 
+    def method(self, a, b):
+        def add(a, b):
+            return a + b
+ 
+        return add(a, b)
+```
+
+Now lets chain it with the substitution from the previous example to pull out the newly created nested functions.
+
+```py
+>>> pprint(FST(src)
+...     .sub(pat, repl, pep8space=1, trivia=False)
+...     .sub(pat_out, repl_out, pep8space=1)
+... .src)
+# lambda comment
+def mymin(a, b):
+    return a if a < b else b
+ 
+# class comment
+class cls:
+    def name(self):
+        return str(self)
+ 
+    def add(a, b):
+        return a + b
+ 
+    def method(self, a, b):
+        return add(a, b)
+```
+
+
+## Squash nested `with`
+
+This is also doable, though this one starts to show some more of the limitations of the of substitution. Unlike the
+hardcoded example, this one cannot handle an infinite number of nested `with` statement, the maximum that can possibly
+be squashed per match needs to be encoded in the pattern.
+
+This is because in order to apply the pattern recursively the `sub()` logic would need to apply the substitution
+multiple times to the same location in the tree until there was no more match. This is a big no-no as it would quickly
+lead to infinite recursion in many cases, so we just stick with the deterministic method and deal with the limitations.
+
+One thing to note is the use of the `MQ01` quantifier in the second nested `MWith` in the pattern. This is necessary to
+make the second one optional as without this only three succeeding nested `with` statements would be matched, but not
+two.
+
+```py
+>>> src = r"""
+... with open(a) as f:
+...     with (
+...         lock1,  # first lock
+...         func() as lock2,  # this gets preserved
+...     ):
+...         with ctx():  # this does not belong to ctx()
+...             # body comment
+...             pass
+...             # end body comment
+... """.strip()
+
+>>> pat = MWith(
+...     items=M(outer_items=...),
+...     body=[
+...         MWith(
+...             items=M(inner_items=...),
+...             body=[
+...                 MQ01(MWith(
+...                     items=M(inner_items2=...),
+...                     body=M(inner_body2=...),
+...                 )),
+...                 MQSTAR(inner_body=...),
+...             ],
+...         ),
+...         MQSTAR(outer_body=...),
+...     ],
+... )
+
+>>> repl = """
+... with __FST_outer_items, __FST_inner_items, __FST_inner_items2:
+...     __FST_inner_body2
+...     __FST_inner_body
+...     __FST_outer_body
+... """.strip()
+```
+
+```py
+>>> print(FST(src).sub(pat, repl, trivia=('block',)).src)
+with (open(a) as f,
+     lock1,  # first lock
+     func() as lock2,  # this gets preserved
+     ctx()):
+    # body comment
+    pass
+    # end body comment
+```
+
+Despite the fact that the maximum number of levels to squash is encoded in the pattern, it does not mean that the
+pattern does not work for **FEWER** levels than this. In fact it works just fine on any number of levels **UP TO** the
+maximum, and after this it just restarts at the next nested level.
+
+```py
+>>> print(FST(r"""
+... with a:
+...     with b:
+...         with c:
+...             with d:
+...                 with e:
+...                     pass
+... """.strip()).sub(pat, repl, nested=True).src)
+with a, b, c:
+    with d, e:
+        pass
+```
+
+```py
+>>> print(FST(r"""
+... with a:
+...     with b:
+...         pass
+... """.strip()).sub(pat, repl).src)
+with a, b:
+    pass
+```
+
+```py
+>>> print(FST(r"""
+... with a:
+...     pass
+... """.strip()).sub(pat, repl).src)
+with a:
+    pass
+```
+
+
+## Add decorator to class methods
+
+We can even do this one with the same constraint as the hardcoded version, namely that it be as close to the function as
+possible, but not after a `@contextmanager`. What we cannot do is apply to both sync and `async` function definitions in
+the same substitution.
+
+This is because even though we can make a pattern that recognizes and differentiates between the two, storing the same
+tags for the same elements, there is no way to encode a conditional `def` vs. `async def` in the replacement template.
+
+```py
+>>> src = r"""
+... class SomeClass:
+...     @staticmethod
+...     def get_options() -> dict[str, Any]:
+...         ...
+...
+...     @classmethod
+...     def get_cls_option(option: str, options: Mapping[str, Any] = {}) -> object:
+...         ...
+...
+...     def set_inst_options(**options) -> dict[str, Any]:
+...         ...
+...
+...     @ \
+... staticmethod
+...     @ (
+...         contextmanager
+...     )
+...     def options(**options) -> Iterator[dict[str, Any]]:
+...         ...
+... """.strip()
+
+>>> pat = MFunctionDef(
+...     name=M(name=...),
+...     args=M(args=...),
+...     decorator_list=[
+...         MQSTAR(pre_ctxmgr=MNOT(MName('contextmanager'))),
+...         MQSTAR(ctxmgr_and_post=...),
+...     ],
+...     returns=M(returns=...),
+...     body=M(body=...),
+... )
+
+>>> repl = """
+... @__FST_pre_ctxmgr
+... @our_decorator
+... @__FST_ctxmgr_and_post
+... def __FST_name(__FST_args) -> __FST_returns:
+...     __FST_body
+... """.strip()
+```
+
+```py
+>>> pprint(FST(src).sub(pat, repl).src)
+class SomeClass:
+    @staticmethod
+    @our_decorator
+    def get_options() -> dict[str, Any]:
+        ...
+ 
+    @classmethod
+    @our_decorator
+    def get_cls_option(option: str, options: Mapping[str, Any] = {}) -> object:
+        ...
+ 
+    @our_decorator
+    def set_inst_options(**options) -> dict[str, Any]:
+        ...
+ 
+    @ \
+    staticmethod
+    @our_decorator
+    @ (
+        contextmanager
+    )
+    def options(**options) -> Iterator[dict[str, Any]]:
+        ...
+```
+
+
+
+# Misc
 
 Robust. Crazy syntax is handled correctly, which is a main goal of this module.
 
