@@ -3212,9 +3212,12 @@ class MTYPES(M_Pattern):
     a list pattern vs. a non-list and vice versa is just treated as a non-match.
 
     **Parameters:**
-    - `types`: An iterable of `AST` or `MAST` **TYPES**, not instances. In order to match successfully the target must
-        be at least one of these types (non-leaf types like `stmt` included). If you just want to match any possible
-        `AST` type with a given set of fields you can use `MAST(**fields)` instead of this.
+    - `anon_types`: If the types to match are provided in this then the matched node is not returned in tags. If this is
+        missing then there must be at least one element in `tags` and the first keyword there will be taken to be the
+        types to match and the name of the tag to use for the matched node. The types to match are an iterable of `AST`
+        or `MAST` **TYPES**, not instances. In order to match successfully the target must be at least one of these
+        types (non-leaf types like `stmt` included). If you just want to match any possible `AST` type with a given set
+        of fields you can use `MAST(**fields)` instead of this.
     - `fields`: Field names which must be present (unless wildcard `...`) along with the patterns they need to match.
 
     **Examples:**
@@ -3235,14 +3238,30 @@ class MTYPES(M_Pattern):
 
     >>> pat.match(FST('class cls: "docstr"; pass'))
     <FSTMatch <ClassDef ROOT 0,0..0,25>>
+
+    >>> pat = MTYPES(
+    ...     tag=(ClassDef, FunctionDef, AsyncFunctionDef),
+    ...     body=[Expr(MConstant(str)), MQSTAR],
+    ... )
+
+    >>> pat.match(FST('class cls: "docstr"; pass'))
+    <FSTMatch <ClassDef ROOT 0,0..0,25> {'tag': <ClassDef ROOT 0,0..0,25>}>
     """
 
+    pat_tag: str | None  ; """@private"""
     fields: Mapping[str, _Patterns]  ; """@private"""
 
-    def __init__(self, types: Iterable[type[AST | MAST]], /, **fields: _Patterns) -> None:
+    def __init__(self, anon_types: Iterable[type[AST | MAST]] | _NotSet = NotSet, /, **fields: _Patterns) -> None:
+        if anon_types is not NotSet:
+            pat_tag = None
+        elif (pat_tag := next(iter(fields), None)) is None:
+            raise ValueError('MTYPES requires types')
+        else:
+            anon_types = fields.pop(pat_tag)
+
         ts = {}
 
-        for t in types:
+        for t in anon_types:
             if not isinstance(t, type):
                 raise ValueError('MTYPES types can only be AST or MAST')
             elif issubclass(t, MAST):
@@ -3253,6 +3272,7 @@ class MTYPES(M_Pattern):
             ts[t] = True
 
         self._types = types = tuple(ts)
+        self.pat_tag = pat_tag
         self.fields = fields
 
         if not types:
@@ -3273,6 +3293,18 @@ class MTYPES(M_Pattern):
             return f'{name}({types}, {", ".join(f"{f}={_rpr(v)}" for f, v in fields.items())})'
 
         return f'{name}({types})'
+
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        if (m := _match_node(self, tgt, mstate)) is None:
+            return None
+
+        if (pat_tag := self.pat_tag) is None:
+            return m
+
+        if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+            raise MatchError('match found an AST node without an FST')
+
+        return {**m, pat_tag: tgt}
 
     def _leaf_asts(self) -> tp_Set[type[AST]] | None:
         leaf_asts = set()
@@ -5161,7 +5193,7 @@ _MATCH_FUNCS = {
     MOR:                      MOR._match,
     MAND:                     MAND._match,
     MMAYBE:                   MMAYBE._match,
-    MTYPES:                   _match_node,  # _match_node_arbitrary_fields,
+    MTYPES:                   MTYPES._match,  # _match_node_arbitrary_fields,
     MRE:                      MRE._match,
     MCB:                      MCB._match,
     MTAG:                     MTAG._match,
@@ -6143,8 +6175,8 @@ def sub(
 
     If either `copy_options` or `repl_options` are not provided then the normal top level `options` are used for those.
 
-    This function handle individual node or slice substitutions, including compound patterns like `Dict` key:value pairs
-    and whole `ExceptHandler` or `match_case` entries.
+    This function can handle individual node or slice substitutions, including compound patterns like `Dict` key:value
+    pairs and whole `ExceptHandler` or `match_case` entries.
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,

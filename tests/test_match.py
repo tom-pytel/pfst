@@ -2374,8 +2374,10 @@ def g(b: int = 1, /, a: int = 1, *, a: int = 1): pass
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MNOT(t=Name)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MOR(t=...)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MAND(t=...)).match, f)
-        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MCB(lambda: False)).match, f)
         assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MMAYBE(t=Constant)).match, f)
+        assertRaises(MatchError('match found an AST node without an FST'), MAssign(value=MCB(lambda: False)).match, f)
+        f.a.f = None
+        assertRaises(MatchError('match found an AST node without an FST'), MTYPES(t=(Assign,)).match, f)
 
         f = FST('i = i')
         self.assertEqual("<FSTMatch <Assign ROOT 0,0..0,5> {'t': <Name 0,0..0,1>, 'u': <Name 0,4..0,5>}>", str(MAssign([M(t=...)], value=MTAG(u='t')).match(f)))
