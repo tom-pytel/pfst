@@ -1575,11 +1575,10 @@ ValueError: cannot delete all elements from Try.finalbody without norm_self=Fals
 
 Substituting `arguments` can range from the very simple substitution of the whole `FunctionDef.args` field into a new
 function, to the very painful one-by-one argument substitution in a complicated replacement template mixing
-position-only and keyword-only arguments. Not to mention `vararg` and `kwarg`.
+position-only and keyword-only arguments. Not to mention `vararg` and `kwarg` and argument defaults.
 
-Starting with the whole `arguments` node substitution, even adding other arguments to either side of the original
-normally works fine. As long as you take into account the possibility of position-only or keyword-only arguments from
-the source.
+Lets start with whole `arguments` node substitution. This substitution to a single target `repl` template argument will
+always copy the entire `arguments` node exactly from source to the template.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1587,31 +1586,61 @@ the source.
 ... ).src)
 def new(a, /, b, *, c): pass
 
-This type of replacement pattern will always succeed as there is no chance for argument type collisions. Likewise the
-following additions to either end will always work as they accommodate the possibility of source position-only and
-keyword-only arguments at the beginning and end.
+Anything other than this and argument type (position-only, normal, keyword-only) starts having to be taken into account
+and argument type transformations start being possible, either explicitly specified or automatic.
+
+If there is more than one substitution slot (or even argument) in the `repl` template then the matched arguments will
+attempt to be coerced to the type of argument they are replacing.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(other_arg, __FST_a): pass',
+... ).src)
+def new(other_arg, a, b, c): pass
+
+This also happens if there is only one argument but it is explicitly a position-only or keyword-only argument.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a, /): pass',
+... ).src)
+def new(a, b, c, /): pass
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(*, __FST_a): pass',
+... ).src)
+def new(*, a, b, c): pass
+
+If you want to disable this behavior, you can pass `args_as=None`.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
 ...     'def new(pre, /, __FST_a, *, post): pass',
+...     args_as=None,
 ... ).src)
 def new(pre, a, /, b, *, c, post): pass
 
-If you try to do this replacement without the explicit posonly and kwonly markers in the template you will get an error
-as the source matched arguments have those and the ordering rules would be violated.
+This however is more prone to failures as the resulting arguments must still conform to the standard argument ordering
+of position-only, then normal, then keyword-only. If you try to do this type of replacement without the explicit posonly
+and kwonly markers in the template you will get an error as the source matched arguments have those and the ordering
+rules would be violated.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
 ...     'def new(pre, __FST_a, post): pass',
+...     args_as=None,
 ... ).src)
 Traceback (most recent call last):
 ...
 fst.NodeError: posonlyargs cannot follow args
 
-You can get around this in many cases by using the `args_as` option to convert arguments. In this example we will tell
-the `put()` function from the matched `arguments` to the target `arguments` in the `repl` template to convert them all
-to normal non-position/non-keyword arguments so that they will satisfy the rules when put to the normal arguments of the
-`repl` template.
+If you don't want to allow the `sub()` function to convert the arguments automatically (if possible), then you can get
+around this in many cases by specifying the `args_as` value yourself to convert arguments.
+
+In this example we will tell the `put()` function from the matched `arguments` to the target `arguments` in the `repl`
+template to convert them all to normal non-position/non-keyword arguments so that they will satisfy the rules when put
+to the normal arguments of the `repl` template.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1684,9 +1713,11 @@ You may notice that none of the previous examples had argument defaults. Default
 constraints to the existing argument type rules. Namely, non-keyword arguments without defaults cannot follow
 non-keyword arguments with defaults.
 
+**Note:** In the following examples, the default argument value `...` is just a placeholder.
+
 >>> print(FST('def old(a, b): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
-...     'def new(pre=1, __FST_a="..."): pass',
+...     'def new(pre=1, __FST_a=...): pass',
 ... ).src)
 Traceback (most recent call last):
 ...
@@ -1694,7 +1725,7 @@ fst.NodeError: args without defaults cannot follow args with defaults
 
 >>> print(FST('def old(a=2, b=3): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
-...     'def new(pre=1, __FST_a="..."): pass',
+...     'def new(pre=1, __FST_a=...): pass',
 ... ).src)
 def new(pre=1, a=2, b=3): pass
 
@@ -1751,6 +1782,7 @@ actually be a behavior you would want in this case so keep that in mind.
 >>> print(FST('def old(a, /, b, c): pass').sub(
 ...     pat,
 ...     'def new(__FST_va): pass',
+...     args_as=None,
 ... ).src)
 def old(a, /, b, c): pass
 
@@ -1763,6 +1795,7 @@ Or you can do the inverse and remove the vararg from any arguments.
 >>> print(FST('def old(a, /, b, *va, c): pass').sub(
 ...     pat,
 ...     'def new(__FST_pre, __FST_post): pass',
+...     args_as=None,
 ... ).src)
 def new(a, /, b, *, c): pass
 

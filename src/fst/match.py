@@ -4223,8 +4223,9 @@ MQN.NG = MQN
 _QUANTIFIER_STANDALONES = {MQSTAR, MQSTAR.NG, MQPLUS, MQPLUS.NG, MQOPT, MQOPT.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
 _QUANTIFIER_STANDALONES_MAYBE_0_LEN = {MQSTAR, MQSTAR.NG, MQOPT, MQOPT.NG}  # these can result in a zero-length match
 
-_NODE_ARGUMENTS_ARGS_LIST_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
-_NODE_ARGUMENTS_ARGS_ALL_FIELDS = _NODE_ARGUMENTS_ARGS_LIST_FIELDS | {'vararg', 'kwarg'}
+_NODE_ARGUMENTS_ARGS_LIST_ONLY_FIELDS = {'kwonlyargs', 'posonlyargs'}
+_NODE_ARGUMENTS_ARGS_LIST_FIELDS = {'kwonlyargs', 'posonlyargs', 'args'}
+_NODE_ARGUMENTS_ARGS_ALL_FIELDS = {'kwonlyargs', 'posonlyargs', 'args', 'vararg', 'kwarg'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
 _FSTVIEW_NON_DEREF_FST_SINGLE_TYPE = {
@@ -6414,6 +6415,8 @@ def sub(
 
                 continue
 
+            repl_options_ = repl_options
+
             if parent := repl_slot.parent:  # some fields are special-cased for simplicity and common-sense sake
                 parenta = parent.a
                 parenta_cls = parenta.__class__
@@ -6440,8 +6443,21 @@ def sub(
                         and (not repl_slot_new or repl_slot_new.a.__class__ is arguments)
                     ):
                         new_field = '_all'
-                        new_idx = parent._cached_allargs().index(repl_slot.a)
+                        allargs = parent._cached_allargs()
+                        new_idx = allargs.index(repl_slot.a)
                         one = False
+
+                        if repl_options_.get('args_as', _SENTINEL) is _SENTINEL:  # can pass args_as=None to disable the following behavior
+                            if len(allargs) == 1:
+                                if field in _NODE_ARGUMENTS_ARGS_LIST_ONLY_FIELDS:  # if replacement slot is a posonly or kwonly and user did not explicitly specify an args_as transformation for putting to repl template then do it ourselves here as the user clearly intended for these to be this type of args :)
+                                    repl_options_ = dict(repl_options_, args_as=
+                                                         'kw_maybe' if field == 'kwonlyargs' else 'pos_maybe')
+                            else:
+                                if field in _NODE_ARGUMENTS_ARGS_LIST_FIELDS:  # more than one args slot present so in this case if replacement slot is a posonly, kwonly OR normal arg and user did not explicitly specify an args_as transformation for putting to repl template then do it ourselves here as this solves a lot of other problems
+                                    repl_options_ = dict(repl_options_, args_as=
+                                                         'arg_maybe' if field == 'args' else
+                                                         'kw_maybe' if field == 'kwonlyargs' else
+                                                         'pos_maybe')
 
                 elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
                     if not one:  # only if came from existing Compare slice
@@ -6466,13 +6482,13 @@ def sub(
 
                 if new_idx is not None:  # replace is a special virtual field slice operation
                     if not repl_slot_new_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
-                        parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
+                        parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options_)
 
                     else:  # need to do extra stuff to mark possibly multiple replacements as dirty
                         body = getattr(parent, new_field)
                         len_body = len(body)
 
-                        parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options)
+                        parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options_)
 
                         if len(body) == len_body:  # only mark dirty if replaced exactly one element because otherwise it was a deletion or subslice
                             if f := body[new_idx]:
@@ -6480,7 +6496,7 @@ def sub(
 
                     continue
 
-            repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options)
+            repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options_)
 
             if repl_slot_new_is_matched_root:  # replaced with whole matched node, mark top node as dirty otherwise would cause infinite recursion, we know repl_slot_new exists because repl_slot_new_is_matched_root means it was a node going in
                 dirty.add(repl_slot_new.a)

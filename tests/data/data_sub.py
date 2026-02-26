@@ -309,7 +309,24 @@ Module - ROOT 0,0..0,23
 r'''def g(a, b, /): pass'''),
 r'''MFunctionDef(args=M(fargs=...))''', ('exec',
 r'''def f(x, __FST_fargs, y): pass'''),
-r'''**NodeError('posonlyargs cannot follow args')**'''),
+r'''def f(x, a, b, y): pass''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] FunctionDef - 0,0..0,23
+     .name 'f'
+     .args arguments - 0,6..0,16
+       .args[4]
+        0] arg - 0,6..0,7
+          .arg 'x'
+        1] arg - 0,9..0,10
+          .arg 'a'
+        2] arg - 0,12..0,13
+          .arg 'b'
+        3] arg - 0,15..0,16
+          .arg 'y'
+     .body[1]
+      0] Pass - 0,19..0,23
+'''),
 
 ('', None, None, None, {'args_as': 'arg'}, ('FunctionDef',
 r'''def g(a, b, /): pass'''),
@@ -508,6 +525,44 @@ Module - ROOT 0,0..3,10
 r'''def f(a, b=1, /, c=2, *d, **e): a ; b ; c ; d ; e'''),
 r'''MFunctionDef(args=Marguments(_all=[..., MQSTAR(a=...), ...]), body=[..., MQSTAR(b=...), ...])''', ('FunctionDef',
 r'''def g(x, /, __FST_a): x; __FST_b; y'''), r'''
+def g(x, /, b=1, c=2, *d):
+    x
+    b ; c ; d
+    y
+''', r'''
+FunctionDef - ROOT 0,0..3,5
+  .name 'g'
+  .args arguments - 0,6..0,24
+    .posonlyargs[1]
+     0] arg - 0,6..0,7
+       .arg 'x'
+    .args[2]
+     0] arg - 0,12..0,13
+       .arg 'b'
+     1] arg - 0,17..0,18
+       .arg 'c'
+    .vararg arg - 0,23..0,24
+      .arg 'd'
+    .defaults[2]
+     0] Constant 1 - 0,14..0,15
+     1] Constant 2 - 0,19..0,20
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+'''),
+
+('', None, None, None, {'args_as': None}, ('FunctionDef',
+r'''def f(a, b=1, /, c=2, *d, **e): a ; b ; c ; d ; e'''),
+r'''MFunctionDef(args=Marguments(_all=[..., MQSTAR(a=...), ...]), body=[..., MQSTAR(b=...), ...])''', ('FunctionDef',
+r'''def g(x, /, __FST_a): x; __FST_b; y'''), r'''
 def g(x, b=1, /, c=2, *d):
     x
     b ; c ; d
@@ -559,6 +614,44 @@ Module - ROOT 0,0..0,26
 '''),
 
 ('', None, None, None, {}, ('AsyncFunctionDef',
+r'''async def f(a, b=1, /, c=2, *d, **e): a ; b ; c ; d ; e'''),
+r'''MAsyncFunctionDef(args=Marguments(_all=[..., MQSTAR(a=...), ...]), body=[..., MQSTAR(b=...), ...])''', ('AsyncFunctionDef',
+r'''async def g(x, /, __FST_a): x; __FST_b; y'''), r'''
+async def g(x, /, b=1, c=2, *d):
+    x
+    b ; c ; d
+    y
+''', r'''
+AsyncFunctionDef - ROOT 0,0..3,5
+  .name 'g'
+  .args arguments - 0,12..0,30
+    .posonlyargs[1]
+     0] arg - 0,12..0,13
+       .arg 'x'
+    .args[2]
+     0] arg - 0,18..0,19
+       .arg 'b'
+     1] arg - 0,23..0,24
+       .arg 'c'
+    .vararg arg - 0,29..0,30
+      .arg 'd'
+    .defaults[2]
+     0] Constant 1 - 0,20..0,21
+     1] Constant 2 - 0,25..0,26
+  .body[5]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+   2] Expr - 2,8..2,9
+     .value Name 'c' Load - 2,8..2,9
+   3] Expr - 2,12..2,13
+     .value Name 'd' Load - 2,12..2,13
+   4] Expr - 3,4..3,5
+     .value Name 'y' Load - 3,4..3,5
+'''),
+
+('', None, None, None, {'args_as': None}, ('AsyncFunctionDef',
 r'''async def f(a, b=1, /, c=2, *d, **e): a ; b ; c ; d ; e'''),
 r'''MAsyncFunctionDef(args=Marguments(_all=[..., MQSTAR(a=...), ...]), body=[..., MQSTAR(b=...), ...])''', ('AsyncFunctionDef',
 r'''async def g(x, /, __FST_a): x; __FST_b; y'''), r'''
@@ -3837,6 +3930,29 @@ Lambda - ROOT 0,0..0,12
 r'''lambda a, b=1, /, c=2, *d, **e: None'''),
 r'''MLambda(args=Marguments(_all=[..., MQSTAR(a=...), ...]))''', ('Lambda',
 r'''lambda x, /, __FST_a: True'''),
+r'''lambda x, /, b=1, c=2, *d: True''', r'''
+Lambda - ROOT 0,0..0,31
+  .args arguments - 0,7..0,25
+    .posonlyargs[1]
+     0] arg - 0,7..0,8
+       .arg 'x'
+    .args[2]
+     0] arg - 0,13..0,14
+       .arg 'b'
+     1] arg - 0,18..0,19
+       .arg 'c'
+    .vararg arg - 0,24..0,25
+      .arg 'd'
+    .defaults[2]
+     0] Constant 1 - 0,15..0,16
+     1] Constant 2 - 0,20..0,21
+  .body Constant True - 0,27..0,31
+'''),
+
+('', None, None, None, {'args_as': None}, ('Lambda',
+r'''lambda a, b=1, /, c=2, *d, **e: None'''),
+r'''MLambda(args=Marguments(_all=[..., MQSTAR(a=...), ...]))''', ('Lambda',
+r'''lambda x, /, __FST_a: True'''),
 r'''lambda x, b=1, /, c=2, *d: True''', r'''
 Lambda - ROOT 0,0..0,31
   .args arguments - 0,7..0,25
@@ -5368,6 +5484,28 @@ arguments - ROOT 0,0..0,19
 r'''a=1, /, b=2, *, c=3'''),
 r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
 r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
+r'''c=3, /, a=1, *, b=2''', r'''
+arguments - ROOT 0,0..0,19
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'c'
+  .args[1]
+   0] arg - 0,8..0,9
+     .arg 'a'
+  .kwonlyargs[1]
+   0] arg - 0,16..0,17
+     .arg 'b'
+  .kw_defaults[1]
+   0] Constant 2 - 0,18..0,19
+  .defaults[2]
+   0] Constant 3 - 0,2..0,3
+   1] Constant 1 - 0,10..0,11
+'''),
+
+('', None, None, None, {'args_as': None}, ('arguments',
+r'''a=1, /, b=2, *, c=3'''),
+r'''Marguments(_all=[M(a0=...), M(a1=...), M(a2=...)])''', ('arguments',
+r'''__FST_a2, /, __FST_a0, *, __FST_a1'''),
 r'''**NodeError('posonlyargs cannot follow kwonlyargs')**'''),
 
 ('', None, None, None, {'args_as': 'arg'}, ('arguments',
@@ -5506,6 +5644,27 @@ arguments - ROOT 0,0..0,16
 '''),
 
 ('', None, None, None, {}, ('arguments',
+r'''a, b=1, /, c=2, *d, **e'''),
+r'''Marguments(_all=[..., MQSTAR(a=...), ...])''', ('arguments',
+r'''x, /, __FST_a'''),
+r'''x, /, b=1, c=2, *d''', r'''
+arguments - ROOT 0,0..0,18
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .args[2]
+   0] arg - 0,6..0,7
+     .arg 'b'
+   1] arg - 0,11..0,12
+     .arg 'c'
+  .vararg arg - 0,17..0,18
+    .arg 'd'
+  .defaults[2]
+   0] Constant 1 - 0,8..0,9
+   1] Constant 2 - 0,13..0,14
+'''),
+
+('', None, None, None, {'args_as': None}, ('arguments',
 r'''a, b=1, /, c=2, *d, **e'''),
 r'''Marguments(_all=[..., MQSTAR(a=...), ...])''', ('arguments',
 r'''x, /, __FST_a'''),
