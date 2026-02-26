@@ -1879,7 +1879,7 @@ This is because in order to apply the pattern recursively the `sub()` logic woul
 multiple times to the same location in the tree until there was no more match. This is a big no-no as it would quickly
 lead to infinite recursion in many cases, so we just stick with the deterministic method and deal with the limitations.
 
-One thing to note is the use of the `MQ01` quantifier in the second nested `MWith` in the pattern. This is necessary to
+One thing to note is the use of the `MQOPT` quantifier in the second nested `MWith` in the pattern. This is necessary to
 make the second one optional as without this only three succeeding nested `with` statements would be matched, but not
 two.
 
@@ -1902,7 +1902,7 @@ two.
 ...         MWith(
 ...             items=M(inner_items=...),
 ...             body=[
-...                 MQ01(MWith(
+...                 MQOPT(MWith(
 ...                     items=M(inner_items2=...),
 ...                     body=M(inner_body2=...),
 ...                 )),

@@ -200,15 +200,15 @@ __all__ = [
     'MNOT',
     'MOR',
     'MAND',
+    'MMAYBE',
     'MTYPES',
-    'MOPT',
     'MRE',
     'MCB',
     'MTAG',
     'MQ',
     'MQSTAR',
     'MQPLUS',
-    'MQ01',
+    'MQOPT',
     'MQMIN',
     'MQMAX',
     'MQN',
@@ -3127,6 +3127,83 @@ class MAND(M_Pattern_Many):
         return leaf_asts
 
 
+class MMAYBE(M_Pattern_One):
+    """This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not
+    be present. That is, both a normal value which matches the pattern and a `None` value are considered a successful
+    match. A non-`None` value which does NOT match the pattern is a failure.
+
+    This is essentially `MOR(pattern, None)`.
+
+    **Parameters:**
+    - `anon_pat`: If the pattern to match is provided in this then the matched node is not returned in tags. If this is
+        missing then there must be at least one element in `tags` and the first keyword there will be taken to be the
+        pattern to match and the name of the tag to use for the matched node.
+    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
+        not provided in `anon_pat`). These are added AFTER all the child match tags.
+
+    **Examples:**
+
+    Single optional nodes.
+
+    >>> MFunctionDef(returns=MMAYBE('int')) .match(FST('def f(): pass'))
+    <FSTMatch <FunctionDef ROOT 0,0..0,13>>
+
+    >>> MFunctionDef(returns=MMAYBE('int')) .match(FST('def f() -> int: pass'))
+    <FSTMatch <FunctionDef ROOT 0,0..0,20>>
+
+    >>> MFunctionDef(returns=MMAYBE('int')) .match(FST('def f() -> str: pass'))
+
+    Parts of multinode elements.
+
+    >>> MDict([MMAYBE('a')], ['b']) .match(FST('{a: b}'))
+    <FSTMatch <Dict ROOT 0,0..0,6>>
+
+    >>> MDict([MMAYBE('a')], ['b']) .match(FST('{**b}'))
+    <FSTMatch <Dict ROOT 0,0..0,5>>
+
+    >>> MDict([MMAYBE('a')], ['b']) .match(FST('{x: b}'))
+
+    Non-node primitive fields.
+
+    >>> MExceptHandler(name=MMAYBE('n')) .match(FST('except x as n: pass'))
+    <FSTMatch <ExceptHandler ROOT 0,0..0,19>>
+
+    >>> MExceptHandler(name=MMAYBE('n')) .match(FST('except x as o: pass'))
+
+    >>> MExceptHandler(name=MMAYBE('n')) .match(FST('except x: pass'))
+    <FSTMatch <ExceptHandler ROOT 0,0..0,14>>
+    """
+
+    __init__ = M_Pattern_One.__init__  # for the documentation
+
+    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
+        if tgt is None:
+            if pat_tag := self.pat_tag:
+                return {pat_tag: [], **self.static_tags}
+
+            return self.static_tags
+
+        pat = self.pat
+        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mstate)
+
+        if m is None:
+            return None
+
+        if pat_tag := self.pat_tag:
+            if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
+                raise MatchError('match found an AST node without an FST')
+
+            if m:
+                return {**m, pat_tag: tgt, **self.static_tags}
+
+            return {pat_tag: tgt, **self.static_tags}
+
+        if m:
+            return dict(m, **self.static_tags)
+
+        return self.static_tags
+
+
 class MTYPES(M_Pattern):
     """This pattern matches any one of the given types and arbitrary fields if present. This is essentially
     `MAND(MOR(*types), MAST(**fields))`. But the types must be actual types, not other patterns.
@@ -3212,85 +3289,6 @@ class MTYPES(M_Pattern):
                 return leaf_asts
 
         return leaf_asts
-
-
-class MOPT(M_Pattern_One):
-    """This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not
-    be present. That is, both a normal value which matches the pattern and a `None` value are considered a successful
-    match. A non-`None` value which does NOT match the pattern is considered a failure.
-
-    This is essentially `MOR(pattern, None)`.
-
-    **Parameters:**
-    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
-        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
-        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
-        case the keyword is used as a tag which is used to return a list of `FSTMatch` objects for each node matched by
-        the pattern.
-    - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
-        not provided in `anon_pat`). These are added AFTER all the child match tags.
-
-    **Examples:**
-
-    Single optional nodes.
-
-    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
-    <FSTMatch <FunctionDef ROOT 0,0..0,13>>
-
-    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
-    <FSTMatch <FunctionDef ROOT 0,0..0,20>>
-
-    >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
-
-    Parts of multinode elements.
-
-    >>> MDict([MOPT('a')], ['b']) .match(FST('{a: b}'))
-    <FSTMatch <Dict ROOT 0,0..0,6>>
-
-    >>> MDict([MOPT('a')], ['b']) .match(FST('{**b}'))
-    <FSTMatch <Dict ROOT 0,0..0,5>>
-
-    >>> MDict([MOPT('a')], ['b']) .match(FST('{x: b}'))
-
-    Non-node primitive fields.
-
-    >>> MExceptHandler(name=MOPT('n')) .match(FST('except x as n: pass'))
-    <FSTMatch <ExceptHandler ROOT 0,0..0,19>>
-
-    >>> MExceptHandler(name=MOPT('n')) .match(FST('except x as o: pass'))
-
-    >>> MExceptHandler(name=MOPT('n')) .match(FST('except x: pass'))
-    <FSTMatch <ExceptHandler ROOT 0,0..0,14>>
-    """
-
-    __init__ = M_Pattern_One.__init__  # for the documentation
-
-    def _match(self, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
-        if tgt is None:
-            if pat_tag := self.pat_tag:
-                return {pat_tag: [], **self.static_tags}
-
-            return self.static_tags
-
-        pat = self.pat
-        m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, tgt, mstate)
-
-        if m is None:
-            return None
-
-        if pat_tag := self.pat_tag:
-            if mstate.is_FST and isinstance(tgt, AST) and not (tgt := getattr(tgt, 'f', None)):
-                raise MatchError('match found an AST node without an FST')
-
-            if m:
-                return {**m, pat_tag: tgt, **self.static_tags}
-
-            return {pat_tag: tgt, **self.static_tags}
-
-        if m:
-            return dict(m, **self.static_tags)
-
-        return self.static_tags
 
 
 class MRE(M_Pattern):
@@ -3653,7 +3651,7 @@ class MQ(M_Pattern_One):
     can match an arbitrary number of actual targets, if there is a tag for the matched patterns they are given as a list
     of `FSTMatch` objects instead of just one.
 
-    This is the base class for `MQSTAR`, `MQPLUS`, `MQ01`, `MQMIN`, `MQMAX` and `MQN` and can do everything they can
+    This is the base class for `MQSTAR`, `MQPLUS`, `MQOPT`, `MQMIN`, `MQMAX` and `MQN` and can do everything they can
     with the appropriate values for `min` and `max`. Those classes are provided regardless for convenience and cleaner
     pattern structuring.
 
@@ -3962,39 +3960,41 @@ MQPLUS.NG = NG
 del NG
 
 
-class MQ01(MQ):
-    """Zero or one quantifier pattern. Shortcut for `MQ(anon_pat, min=0, max=1, **tags)`. Has non-greedy version child
-    class `MQ01.NG`.
+class MQOPT(MQ):
+    """Zero or one (optional) quantifier pattern. Shortcut for `MQ(anon_pat, min=0, max=1, **tags)`. Has non-greedy
+    version child class `MQOPT.NG`.
 
-    This class type itself as well as the the non-greedy version can be used directly as a shortcut for `MQ01(...)` or
-    `MQ01.NG(...)`, the equivalents of regex `.?` and `.??`.
+    This class type itself as well as the the non-greedy version can be used directly as a shortcut for `MQOPT(...)` or
+    `MQOPT.NG(...)`, the equivalents of regex `.?` and `.??`.
 
     **Parameters:**
-    - `anon_pat`: If the pattern to match is provided in this then the matched nodes tags are all merged in order and
-        returned as normal tags, with later match tags overriding earlier if same. If this is missing then there must be
-        at least one element in `tags` and the first keyword there will be taken to be the pattern to match. In this
-        case the keyword is used as a tag which is used to return a list of `FSTMatch` objects for each node matched by
-        the pattern.
+    - `anon_pat`: If the pattern to match is provided in this then the matched node tags are returned as normal tags.
+        If this is missing then there must be at least one element in `tags` and the first keyword there will be taken
+        to be the pattern to match. In this case the keyword is used as a tag which is used to return either an empty
+        list or a list with a single `FSTMatch` object for the node matched by the pattern.
     - `tags`: Any static tags to return on a successful match (including the pattern to match as the first keyword if
         not provided in `anon_pat`). These are added AFTER all the child match tags.
 
     **Examples:**
 
-    >>> MList([MQ01(t='a')]) .match(FST('[]'))
+    >>> MList([MQOPT(t='a')]) .match(FST('[]'))
     <FSTMatch <List ROOT 0,0..0,2> {'t': []}>
 
-    >>> MList([MQ01(t='a')]) .match(FST('[a]'))
+    >>> MList([MQOPT(t='a')]) .match(FST('[a]'))
     <FSTMatch <List ROOT 0,0..0,3> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MQ01(t='a')]) .match(FST('[b]'))
+    >>> MList([MQOPT(t='a')]) .match(FST('[b]'))
 
-    >>> MList([MQ01(t='a')]) .match(FST('[a, a]'))
+    >>> MList([MQOPT(t='a')]) .match(FST('[a, a]'))
 
-    >>> MList([MQ01(t='a'), MQSTAR]) .match(FST('[a, a]'))
+    >>> MList([MQOPT(t='a'), MQSTAR]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
 
-    >>> MList([MQ01.NG(t='a'), MQSTAR]) .match(FST('[a, a]'))
+    >>> MList([MQOPT.NG(t='a'), MQSTAR]) .match(FST('[a, a]'))
     <FSTMatch <List ROOT 0,0..0,6> {'t': []}>
+
+    >>> MList([MQOPT.NG(t='a'), 'b']) .match(FST('[a, b]'))
+    <FSTMatch <List ROOT 0,0..0,6> {'t': [<FSTMatch <Name 0,1..0,2>>]}>
     """
 
     min = 0  # for direct type use
@@ -4006,13 +4006,13 @@ class MQ01(MQ):
     def _repr_extra(self) -> list[str]:
         return _EMPTY_LIST
 
-class NG(MQ01):
-    """Non-greedy version of `MQ01` quantifier pattern."""
+class NG(MQOPT):
+    """Non-greedy version of `MQOPT` quantifier pattern."""
 
-    __qualname__ = 'MQ01.NG'
+    __qualname__ = 'MQOPT.NG'
     greedy = False
 
-MQ01.NG = NG
+MQOPT.NG = NG
 del NG
 
 
@@ -4187,8 +4187,8 @@ MQN.NG = MQN
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-_QUANTIFIER_STANDALONES = {MQSTAR, MQSTAR.NG, MQPLUS, MQPLUS.NG, MQ01, MQ01.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
-_QUANTIFIER_STANDALONES_MAYBE_0_LEN = {MQSTAR, MQSTAR.NG, MQ01, MQ01.NG}  # these can result in a zero-length match
+_QUANTIFIER_STANDALONES = {MQSTAR, MQSTAR.NG, MQPLUS, MQPLUS.NG, MQOPT, MQOPT.NG}  # these classes types themselves (as opposed to instances) can be used in list fields
+_QUANTIFIER_STANDALONES_MAYBE_0_LEN = {MQSTAR, MQSTAR.NG, MQOPT, MQOPT.NG}  # these can result in a zero-length match
 
 _NODE_ARGUMENTS_ARGS_LIST_FIELDS = {'args', 'kwonlyargs', 'posonlyargs'}
 _NODE_ARGUMENTS_ARGS_ALL_FIELDS = _NODE_ARGUMENTS_ARGS_LIST_FIELDS | {'vararg', 'kwarg'}
@@ -5160,8 +5160,8 @@ _MATCH_FUNCS = {
     MNOT:                     MNOT._match,
     MOR:                      MOR._match,
     MAND:                     MAND._match,
+    MMAYBE:                   MMAYBE._match,
     MTYPES:                   _match_node,  # _match_node_arbitrary_fields,
-    MOPT:                     MOPT._match,
     MRE:                      MRE._match,
     MCB:                      MCB._match,
     MTAG:                     MTAG._match,
@@ -5171,8 +5171,8 @@ _MATCH_FUNCS = {
     MQSTAR.NG:                _match_quantifier_invalid_location,
     MQPLUS:                   _match_quantifier_invalid_location,
     MQPLUS.NG:                _match_quantifier_invalid_location,
-    MQ01:                     _match_quantifier_invalid_location,
-    MQ01.NG:                  _match_quantifier_invalid_location,
+    MQOPT:                    _match_quantifier_invalid_location,
+    MQOPT.NG:                 _match_quantifier_invalid_location,
     MQMIN:                    _match_quantifier_invalid_location,
     MQMIN.NG:                 _match_quantifier_invalid_location,
     MQMAX:                    _match_quantifier_invalid_location,

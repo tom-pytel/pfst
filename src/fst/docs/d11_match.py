@@ -200,9 +200,9 @@ True
 
 ## `FSTMatch` object and tags
 
-So far we have been showing the return of `match()` as a `bool`, but the actual return value is either `None` for no match
-or an `FSTMatch` object for a successful match. This match object may contain tagged values which we have not show yet,
-so here they are
+So far we have been showing the return of `match()` as a `bool`, but the actual return value is either `None` for no
+match or an `FSTMatch` object for a successful match. This match object may contain tagged values which we have not
+shown yet, so here they are
 
 >>> m = MConstant(M(tag=..., static_tag=True)).match(FST('"string"', Constant))
 
@@ -245,8 +245,8 @@ on the `.tags` dictionary.
 
 The `M()` pattern was used above to attach tags to a successful match. This class can tag whatever is matched directly
 below it in the eventual `FSTMatch` object if the given `M` object lives in a successful match path, as well as any
-number of static value tags. The target matched may or MAY NOT be added to tags depending on if the match pattern is
-specified with a keyword or as an anonymous positional argument.
+number of static value tags. The target matched may or MAY NOT be added to tags depending on whether the match pattern
+is specified with a keyword or as an anonymous positional argument.
 
 This will match successfully, but as there is no tag provided for the match the target matched will not be added to
 tags.
@@ -346,10 +346,47 @@ Or to the individual elements.
 <FSTMatch <Name ROOT 0,0..0,1> {'static': True, 'tag_c': <Name ROOT 0,0..0,1>}>
 
 
+## `MMAYBE()` pattern
+
+This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not be
+present. That is, both a normal value which matches the pattern and a `None` value are considered a successful match.
+A non-`None` value which does NOT match the pattern is a failure.
+
+Single optional nodes.
+
+>>> MFunctionDef(returns=MMAYBE('int')) .match(FST('def f(): pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,13>>
+
+>>> MFunctionDef(returns=MMAYBE('int')) .match(FST('def f() -> int: pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,20>>
+
+>>> MFunctionDef(returns=MMAYBE('int')) .match(FST('def f() -> str: pass'))
+
+Parts of multinode elements.
+
+>>> MDict([MMAYBE('a')], ['b']) .match(FST('{a: b}'))
+<FSTMatch <Dict ROOT 0,0..0,6>>
+
+>>> MDict([MMAYBE('a')], ['b']) .match(FST('{**b}'))
+<FSTMatch <Dict ROOT 0,0..0,5>>
+
+>>> MDict([MMAYBE('a')], ['b']) .match(FST('{x: b}'))
+
+Non-node primitive fields.
+
+>>> MExceptHandler(name=MMAYBE('n')) .match(FST('except x as n: pass'))
+<FSTMatch <ExceptHandler ROOT 0,0..0,19>>
+
+>>> MExceptHandler(name=MMAYBE('n')) .match(FST('except x as o: pass'))
+
+>>> MExceptHandler(name=MMAYBE('n')) .match(FST('except x: pass'))
+<FSTMatch <ExceptHandler ROOT 0,0..0,14>>
+
+
 ## `MTYPES()` pattern
 
 This is essentially a combination of type check with arbitrary fields. It takes an iterable of `AST` and `MAST` types
-and an arbitrarly list of keyword-specified fields to match.
+and an arbitrary list of keyword-specified fields to match.
 
 The following will match any statement node which can and does have a docstring
 
@@ -409,43 +446,6 @@ Using `search=True` you can narrow down the location of whatever you are looking
 
 >>> f.match(MRE(m=r'hidden', search=True))
 <FSTMatch <Name ROOT 0,0..0,15> {'m': <re.Match object; span=(5, 11), match='hidden'>}>
-
-
-## `MOPT()` pattern
-
-This is a pattern or `None` match. It can be used to optionally match single-element fields which may or may not be
-present. That is, both a normal value which matches the pattern and a `None` value are considered a successful match.
-A non-`None` value which does NOT match the pattern is considered a failure.
-
-Single optional nodes.
-
->>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
-<FSTMatch <FunctionDef ROOT 0,0..0,13>>
-
->>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> int: pass'))
-<FSTMatch <FunctionDef ROOT 0,0..0,20>>
-
->>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
-
-Parts of multinode elements.
-
->>> MDict([MOPT('a')], ['b']) .match(FST('{a: b}'))
-<FSTMatch <Dict ROOT 0,0..0,6>>
-
->>> MDict([MOPT('a')], ['b']) .match(FST('{**b}'))
-<FSTMatch <Dict ROOT 0,0..0,5>>
-
->>> MDict([MOPT('a')], ['b']) .match(FST('{x: b}'))
-
-Non-node primitive fields.
-
->>> MExceptHandler(name=MOPT('n')) .match(FST('except x as n: pass'))
-<FSTMatch <ExceptHandler ROOT 0,0..0,19>>
-
->>> MExceptHandler(name=MOPT('n')) .match(FST('except x as o: pass'))
-
->>> MExceptHandler(name=MOPT('n')) .match(FST('except x: pass'))
-<FSTMatch <ExceptHandler ROOT 0,0..0,14>>
 
 
 ## `MCB()` pattern
@@ -569,10 +569,10 @@ reiterate, they can only live in and match elements inside a list field, not ind
 fields like `Dict._all`.
 
 **Disclaimer:** Before going any further it needs to be noted that these quantifiers can backtrack and combining them in
-certain unoptimal ways can cause pathological behavior in the same way as combining quantifiers poorly in Python regexes
-can.
+certain suboptimal ways can cause pathological behavior in the same way as combining quantifiers poorly in Python
+regexes can.
 
-`MQ` is the base class for all the other quantifier patterns `MQSTAR`, `MQPLUS`, `MQ01`, `MQMIN`, `MQMAX` and `MQN` and
+`MQ` is the base class for all the other quantifier patterns `MQSTAR`, `MQPLUS`, `MQOPT`, `MQMIN`, `MQMAX` and `MQN` and
 can do everything that those classes can do. Those classes are provided for cleaner and quicker pattern specification.
 
 On a successful match, the matched target elements can be returned in a list if the pattern to match has a tag. In this
@@ -651,7 +651,7 @@ None
   ],
 }>
 
-The following is truly an academic excercise, as this is done much more quickly an easily with code and a walk over the
+The following is truly an academic exercise, as this is done much more quickly an easily with code and a walk over the
 list, but just to show what can be done with matching...
 
 One of the uses for quantifiers in subsequences can be filtering and grouping. The example below will group all names
@@ -673,11 +673,11 @@ node.
 }>
 
 
-## `MQSTAR()`, `MQPLUS()`, `MQ01()`, `MQMIN()`, `MQMAX()` and `MQN()` quantifier patterns
+## `MQSTAR()`, `MQPLUS()`, `MQOPT()`, `MQMIN()`, `MQMAX()` and `MQN()` quantifier patterns
 
 These are just convenience classes subclassed off of `MQ` which provide predefined `min` and / or `max` values, so we
 won't go into much detail for each. There is one particularly useful thing some of these classes provide. You can use
-the `MQSTAR`, `MQPLUS` and `MQ01` classes themselves (and their non-greedy versions) in place of their instances as
+the `MQSTAR`, `MQPLUS` and `MQOPT` classes themselves (and their non-greedy versions) in place of their instances as
 actual predefined patterns.
 
 `MQSTAR(pat)` is the same as `MQ(pat, min=0, max=None)`. `MQSTAR` by itself is the same as `MQSTAR(...)` and is the
@@ -692,11 +692,11 @@ equivalent of regex `'.+'`.
 `MQPLUS.NG(pat)` is the same as `MQ.NG(pat, min=1, max=None)`. `MQPLUS.NG` by itself is the same as `MQPLUS.NG(...)` and
 is the equivalent of regex `'.+?'`.
 
-`MQ01(pat)` is the same as `MQ(pat, min=0, max=1)`. `MQ01` by itself is the same as `MQ01(...)` and is the equivalent of
-regex `'.?'`.
+`MQOPT(pat)` is the same as `MQ(pat, min=0, max=1)`. `MQOPT` by itself is the same as `MQOPT(...)` and is the equivalent
+of regex `'.?'`.
 
-`MQ01.NG(pat)` is the same as `MQ.NG(pat, min=0, max=1)`. `MQ01.NG` by itself is the same as `MQ01.NG(...)` and is the
-equivalent of regex `'.??'`.
+`MQOPT.NG(pat)` is the same as `MQ.NG(pat, min=0, max=1)`. `MQOPT.NG` by itself is the same as `MQOPT.NG(...)` and is
+the equivalent of regex `'.??'`.
 
 The class types below cannot be used as instances by themselves as they have a mandatory parameter.
 
@@ -749,7 +749,7 @@ In the example below the single `_args` virtual field matches against both the `
   ],
 }>
 
-And in the next one the `_body` field is rectricted to exclude the first docstring `Expr` node.
+And in the next one the `_body` field is restricted to exclude the first docstring `Expr` node.
 
 >>> ppmatch(MClassDef(_body=[MQSTAR(t=...)]).match(FST('''
 ... class cls:
@@ -929,7 +929,7 @@ keyword-only.
 >>> ppmatch(pat_pos_nonstrict.match(FST('*, a=1', 'arguments')))
 <FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
 
-The `_strict` parameter only applies to argument type, not to the presence of absence of a default value. Which may be
+The `_strict` parameter only applies to argument type, not to the presence or absence of a default value. Which may be
 required.
 
 >>> pat_def_required = Marguments(_all=[M(t=Marguments(args=['a'], defaults=['1']))])
@@ -1493,7 +1493,7 @@ if a:  # NEW
 The whole `else` section was removed in the template. Technically this is not the `sub()` function but rather the
 standard `put()` mechanics of `fst`. The `sub()` function just finds a missing `orelse` tag which is represented as
 `None`, and when `None` is put to an optional statement list field and deletes everything there, the whole part
-disappears. Here it is appied to a `Try` statement.
+disappears. Here it is applied to a `Try` statement.
 
 >>> pat = MTry(
 ...     body=M(body=...),
@@ -1558,7 +1558,7 @@ try:
     a()
 
 The substitution still succeeded since temporary deletion of required structures is normally allowed for editing
-purposes by `fst`. But if you want to catch these potential errors then you should do substution operations with
+purposes by `fst`. But if you want to catch these potential errors then you should do substitution operations with
 `norm=True` to ensure that either only valid code results or an exception is raised.
 
 >>> print(FST('''
@@ -1573,11 +1573,11 @@ ValueError: cannot delete all elements from Try.finalbody without norm_self=Fals
 ## Function `arguments`
 
 Substituting `arguments` can range from the very simple substitution of the whole `FunctionDef.args` field into a new
-function, to the very painful one-by-one argument substitution in a complicate replacement template mixing position-only
-and keyword-only arguments. Not to mention `vararg` and `kwarg`.
+function, to the very painful one-by-one argument substitution in a complicated replacement template mixing
+position-only and keyword-only arguments. Not to mention `vararg` and `kwarg`.
 
 Starting with the whole `arguments` node substitution, even adding other arguments to either side of the original
-normally works fine. As long as you take into account the possibility of position-only or keyword-only arugments from
+normally works fine. As long as you take into account the possibility of position-only or keyword-only arguments from
 the source.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
@@ -1587,7 +1587,7 @@ the source.
 def new(a, /, b, *, c): pass
 
 This type of replacement pattern will always succeed as there is no chance for argument type collisions. Likewise the
-following additions to either end will always work as they accomodate the possibility of source position-only and
+following additions to either end will always work as they accommodate the possibility of source position-only and
 keyword-only arguments at the beginning and end.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
@@ -1597,7 +1597,7 @@ keyword-only arguments at the beginning and end.
 def new(pre, a, /, b, *, c, post): pass
 
 If you try to do this replacement without the explicit posonly and kwonly markers in the template you will get an error
-as the source matched arguments have those and the ordering rules woule be violated.
+as the source matched arguments have those and the ordering rules would be violated.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1609,7 +1609,7 @@ fst.NodeError: posonlyargs cannot follow args
 
 You can get around this in many cases by using the `args_as` option to convert arguments. In this example we will tell
 the `put()` function from the matched `arguments` to the target `arguments` in the `repl` template to convert them all
-to normal non-position/non-keyword arguments so that they will satisfy the rules when put to the normal arugments of the
+to normal non-position/non-keyword arguments so that they will satisfy the rules when put to the normal arguments of the
 `repl` template.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
@@ -1722,7 +1722,7 @@ vararg.
 >>> pat_vararg = Marguments(vararg=MNOT(None))
 
 >>> pat = MFunctionDef(args=Marguments(
-...     _all=[MQSTAR(MNOT(pat_vararg)), MQ01(va=pat_vararg), MQSTAR],
+...     _all=[MQSTAR(MNOT(pat_vararg)), MQOPT(va=pat_vararg), MQSTAR],
 ... ))
 
 >>> print(FST('def old(a, /, b, *va, c): pass').sub(
@@ -1731,7 +1731,7 @@ vararg.
 ... ).src)
 def new(*va): pass
 
-A quick note, the `MQ01` is needed to ensure the pattern matches even if there is no vararg, in which case the
+A quick note, the `MQOPT` is needed to ensure the pattern matches even if there is no vararg, in which case the
 substitution proceeds like any other missing tag substitution and deletes the argument from the `repl` template.
 
 >>> print(FST('def old(a, /, b, c): pass').sub(
@@ -1740,8 +1740,8 @@ substitution proceeds like any other missing tag substitution and deletes the ar
 ... ).src)
 def new(): pass
 
-Without the `MQ01` the match would fail if no vararg was found and the subtitution would not be made. Which may actually
-be a behavior you would want in this case so keep that in mind.
+Without the `MQOPT` the match would fail if no vararg was found and the substitution would not be made. Which may
+actually be a behavior you would want in this case so keep that in mind.
 
 >>> pat = MFunctionDef(args=Marguments(
 ...     _all=[MQSTAR(MNOT(pat_vararg)), M(va=pat_vararg), MQSTAR],
@@ -1756,7 +1756,7 @@ def old(a, /, b, c): pass
 Or you can do the inverse and remove the vararg from any arguments.
 
 >>> pat = MFunctionDef(args=Marguments(
-...     _all=[MQSTAR(pre=MNOT(pat_vararg)), MQ01(pat_vararg), MQSTAR(post=...)],
+...     _all=[MQSTAR(pre=MNOT(pat_vararg)), MQOPT(pat_vararg), MQSTAR(post=...)],
 ... ))
 
 >>> print(FST('def old(a, /, b, *va, c): pass').sub(
@@ -1765,7 +1765,7 @@ Or you can do the inverse and remove the vararg from any arguments.
 ... ).src)
 def new(a, /, b, *, c): pass
 
-You can go even deeper down the argument substitution rabbithole but at that point you are probably better off just
+You can go even deeper down the argument substitution rabbit hole but at that point you are probably better off just
 hardcoding the substitution.
 
 
@@ -1950,7 +1950,7 @@ a = b
 another_call()
 ```
 
-We will end this discussion here as going any furtheron this topic may constitute a violation of the Geneva Convention
+We will end this discussion here as going any further on this topic may constitute a violation of the Geneva Convention
 with respect to the reader. Suffice it to say that trivia handling in substitution is possible but quirky. If you want
 to truly figure it out then the best method would be to actually try it in practice in the cases where you want to use
 it and see what works.

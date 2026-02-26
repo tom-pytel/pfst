@@ -1810,8 +1810,8 @@ class MatchSearch(Fuzzy):
                     if m := f.match(pat):
                         match.append(m)
 
-                searchf = [m.fst for m in search]
-                matchf = [m.fst for m in match]
+                searchf = [m.matched for m in search]
+                matchf = [m.matched for m in match]
 
                 assert searchf == matchf
 

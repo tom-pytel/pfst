@@ -100,21 +100,21 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 
 >>> MTYPES((List, IfExp), body=[MQSTAR('a')]).match(FST('x if y else z'))
 
->>> MFunctionDef(returns=MOPT('int')).match(FST('def f(): pass'))
+>>> MFunctionDef(returns=MMAYBE('int')).match(FST('def f(): pass'))
 <FSTMatch <FunctionDef ROOT 0,0..0,13>>
 
->>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> int: pass'))
+>>> MFunctionDef(returns=MMAYBE('int')).match(FST('def f() -> int: pass'))
 <FSTMatch <FunctionDef ROOT 0,0..0,20>>
 
->>> MFunctionDef(returns=MOPT('int')).match(FST('def f() -> str: pass'))
+>>> MFunctionDef(returns=MMAYBE('int')).match(FST('def f() -> str: pass'))
 
->>> MFunctionDef(returns=MOPT(t='int')).match(FST('def f(): pass'))
+>>> MFunctionDef(returns=MMAYBE(t='int')).match(FST('def f(): pass'))
 <FSTMatch <FunctionDef ROOT 0,0..0,13> {'t': []}>
 
->>> MFunctionDef(returns=MOPT(t='int')).match(FST('def f() -> int: pass'))
+>>> MFunctionDef(returns=MMAYBE(t='int')).match(FST('def f() -> int: pass'))
 <FSTMatch <FunctionDef ROOT 0,0..0,20> {'t': <Name 0,11..0,14>}>
 
->>> MFunctionDef(returns=MOPT(t=(M(m='int')))).match(FST('def f() -> int: pass'))
+>>> MFunctionDef(returns=MMAYBE(t=(M(m='int')))).match(FST('def f() -> int: pass'))
 <FSTMatch <FunctionDef ROOT 0,0..0,20> {'m': <Name 0,11..0,14>, 't': <Name 0,11..0,14>}>
 
 >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
@@ -133,13 +133,13 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 >>> MMatchMapping(rest='a').match(FST('{1: x, **a}', pattern))
 <FSTMatch <MatchMapping ROOT 0,0..0,11>>
 
->>> MMatchMapping(rest=MOPT('a')).match(FST('{1: x, **a}', pattern))
+>>> MMatchMapping(rest=MMAYBE('a')).match(FST('{1: x, **a}', pattern))
 <FSTMatch <MatchMapping ROOT 0,0..0,11>>
 
->>> MMatchMapping(rest=MOPT('a')).match(FST('{1: x}', pattern))
+>>> MMatchMapping(rest=MMAYBE('a')).match(FST('{1: x}', pattern))
 <FSTMatch <MatchMapping ROOT 0,0..0,6>>
 
->>> MMatchMapping(rest=MOPT('a')).match(FST('{1: x, **b}', pattern))
+>>> MMatchMapping(rest=MMAYBE('a')).match(FST('{1: x, **b}', pattern))
 
 >>> v = FST('{(a):\n(b),\n(c):\n(d)}')._all
 
