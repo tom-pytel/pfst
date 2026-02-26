@@ -1,6 +1,10 @@
 r"""
 # Match, search and substitute
 
+A quick note on this section. Throught you may see node types like `Name` and `MName` or `Assign` and `MAssign` used
+interchangeably. For the purposes the purposes of match patterns they are interchangeable. The only real differences
+being default arguments, and if you are using a type checker, how much it complains about your misuse of `AST` nodes.
+
 To be able to execute the examples, import this.
 
 >>> import ast, re
@@ -1207,10 +1211,7 @@ fst.NodeError: invalid value for Assign.targets, got Call
 i = log(a).b
 del c, log(e)[log(f)]
 
-The substitution skipped any `Name` which was not a `Load` operation because did not match the `ctx=Load` pattern. We
-also changed the pattern type from `Name` to `MName` as the second is type-safe and specifically allows a single element
-like the `ctx` field without an `id`. Otherwise it is mostly the same to use an `AST` node vs. its corresponding "Match"
-class like `Attribute` and `MAttribute`.
+The substitution skipped any `Name` which was not a `Load` operation because did not match the `ctx=Load` pattern.
 
 
 ## Sequences

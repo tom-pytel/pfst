@@ -169,9 +169,9 @@ class TestMatch(unittest.TestCase):
         self.assertTrue(FST(Load()).match(Load()))
         self.assertTrue(FST(Load()).match(Store()))
         self.assertTrue(FST(Load()).match(Del()))
-        self.assertTrue(FST(Load()).match(Load(), ast_ctx=True))
-        self.assertFalse(FST(Load()).match(Store(), ast_ctx=True))
-        self.assertFalse(FST(Load()).match(Del(), ast_ctx=True))
+        self.assertTrue(FST(Load()).match(Load(), ctx=True))
+        self.assertFalse(FST(Load()).match(Store(), ctx=True))
+        self.assertFalse(FST(Load()).match(Del(), ctx=True))
         self.assertTrue(FST(Load()).match(MLoad()))
         self.assertFalse(FST(Load()).match(MStore()))
         self.assertFalse(FST(Load()).match(MDel()))
@@ -179,9 +179,9 @@ class TestMatch(unittest.TestCase):
         self.assertTrue(FST(Name('i')).match(Name('i', Load())))
         self.assertTrue(FST(Name('i')).match(Name('i', Store())))
         self.assertTrue(FST(Name('i')).match(Name('i', Del())))
-        self.assertTrue(FST(Name('i')).match(Name('i', Load()), ast_ctx=True))
-        self.assertFalse(FST(Name('i')).match(Name('i', Store()), ast_ctx=True))
-        self.assertFalse(FST(Name('i')).match(Name('i', Del()), ast_ctx=True))
+        self.assertTrue(FST(Name('i')).match(Name('i', Load()), ctx=True))
+        self.assertFalse(FST(Name('i')).match(Name('i', Store()), ctx=True))
+        self.assertFalse(FST(Name('i')).match(Name('i', Del()), ctx=True))
 
         # str
 
@@ -620,6 +620,14 @@ class TestMatch(unittest.TestCase):
         pat = MCB(tag=lambda f: f.a.id == 'x' and f, tag_ret=True)
         self.assertEqual({'tag': (f := FST('x'))}, f.match(pat).tags)
         self.assertFalse(FST('y').match(pat))
+
+        # MTAG
+
+        self.assertTrue(FST('[a, a]').match(MList(elts=[M(t=...), MTAG('t')])))
+        self.assertFalse(FST('[a, b]').match(MList(elts=[M(t=...), MTAG('t')])))
+
+        self.assertTrue(FST('a = a').match(MAssign(targets=[M(t=...)], value=MTAG('t'))))
+        self.assertFalse(FST('a = a').match(MAssign(targets=[M(t=...)], value=MTAG('t')), ctx=True))
 
     def test_match_quantifiers(self):
         # no quantifier direct children

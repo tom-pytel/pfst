@@ -451,18 +451,19 @@ class M_Pattern:
     _fields: tuple[str] = ()  # these AST attributes are here so that non-AST patterns like MOR and MF can work against ASTs, they can be overridden on a per-instance basis
     _types: type[AST] | tuple[type[AST]] = AST  # only the MTYPES pattern has a tuple here
 
-    def match(self, target: _TargetsOrFST, *, ast_ctx: bool = False) -> FSTMatch | None:
+    def match(self, target: _TargetsOrFST, *, ctx: bool = False) -> FSTMatch | None:
         """Match this pattern against given target. This can take `FST` nodes or `AST` (whether they are part of an
         `FST` tree or not, meaning it can match against pure `AST` trees). Can also match primitives and lists of nodes
         if the pattern is set up for that.
 
         **Parameters:**
         - `target`: The target to match. Can be an `AST` or `FST` node or constant or a list of `AST` nodes or constants.
-        - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
-            Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
-            don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
-            Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
-            is set to wildcard.
+        - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). Defaults to
+            `False` to allow matching backreferences with different `ctx` values with each other, such as a `Name` as a
+            target of an `Assign` with the same name later used in an expression (`Store` vs. `Load`). Also as a
+            conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
+            you don't specify it so may inadvertantly break matches where you don't want to take that into
+            consideration.
 
         **Returns:**
         - `FSTMatch`: The match object on successful match.
@@ -476,7 +477,7 @@ class M_Pattern:
         elif not (tgt := target.a):
             raise ValueError(f'{self.__class__.__qualname__}.match() called with dead FST node')
 
-        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _MatchState(is_FST, ast_ctx))
+        m = _MATCH_FUNCS.get(self.__class__, _match_default)(self, tgt, _MatchState(is_FST, ctx))
 
         return None if m is None else FSTMatch(self, target, m)
 
@@ -515,7 +516,7 @@ class MAST(M_Pattern):
 
     Will match any statement which has a `Constant` string as the first element of its body, in other words a docstring.
 
-    >>> pat = Mstmt(body=[Expr(MConstant(str)), MQSTAR])
+    >>> pat = Mstmt(body=[MExpr(MConstant(str)), MQSTAR])
 
     >>> pat.match(FST('def f(): "docstr"; pass'))
     <FSTMatch <FunctionDef ROOT 0,0..0,23>>
@@ -3226,7 +3227,7 @@ class MTYPES(M_Pattern):
 
     >>> pat = MTYPES(
     ...     (ClassDef, FunctionDef, AsyncFunctionDef),
-    ...     body=[Expr(MConstant(str)), MQSTAR],
+    ...     body=[MExpr(MConstant(str)), MQSTAR],
     ... )
 
     >>> pat.match(FST('def f(): "docstr"; pass'))
@@ -3241,7 +3242,7 @@ class MTYPES(M_Pattern):
 
     >>> pat = MTYPES(
     ...     tag=(ClassDef, FunctionDef, AsyncFunctionDef),
-    ...     body=[Expr(MConstant(str)), MQSTAR],
+    ...     body=[MExpr(MConstant(str)), MQSTAR],
     ... )
 
     >>> pat.match(FST('class cls: "docstr"; pass'))
@@ -4240,7 +4241,7 @@ class _MatchState:
     like this."""
 
     is_FST: bool
-    ast_ctx: bool
+    ctx: bool
     all_tagss: list[list[dict[str, Any]]]
 
     cache: dict
@@ -4252,9 +4253,9 @@ class _MatchState:
         matching a single `arguments` arg against `FSTView` single argument.
     """
 
-    def __init__(self, is_FST: bool, ast_ctx: bool) -> None:
+    def __init__(self, is_FST: bool, ctx: bool) -> None:
         self.is_FST = is_FST
-        self.ast_ctx = ast_ctx
+        self.ctx = ctx
         self.all_tagss = []
         self.cache = {}
 
@@ -5047,10 +5048,10 @@ def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mstate: _Matc
 
 def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
-    the match option `ast_ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
+    the match option `ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
     `None` must also match one of these successfully for py < 3.13."""
 
-    if not isinstance(tgt, expr_context) or (mstate.ast_ctx and tgt.__class__ is not pat.__class__):
+    if not isinstance(tgt, expr_context) or (mstate.ctx and tgt.__class__ is not pat.__class__):
         return None
 
     return _EMPTY_DICT
@@ -5944,7 +5945,7 @@ def match(
     self: fst.FST,
     pat: _Pattern,
     *,
-    ast_ctx: bool = False,
+    ctx: bool = False,
 ) -> FSTMatch | None:
     r"""This will attempt to match this `self` against the given pattern. The pattern may be any of the `fst.match` `M*`
     patterns or it can be a pure `AST` pattern. Attempt to match against a `str` will check the source against that
@@ -5955,11 +5956,12 @@ def match(
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these). Because you're matching against a node, otherwise nothing will match.
-    - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
-        Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
-        don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
-        Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
-        is set to wildcard.
+    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). Defaults to
+        `False` to allow matching backreferences with different `ctx` values with each other, such as a `Name` as a
+        target of an `Assign` with the same name later used in an expression (`Store` vs. `Load`). Also as a
+        conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
+        you don't specify it so may inadvertantly break matches where you don't want to take that into
+        consideration.
 
     **Returns:**
     - `FSTMatch`: The match object on successful match.
@@ -6031,7 +6033,7 @@ def match(
     >>> FST('node_cls_bad is zst.ZST') .match(pat)
     """
 
-    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _MatchState(True, ast_ctx))
+    m = _MATCH_FUNCS.get(pat.__class__, _match_default)(pat, self.a, _MatchState(True, ctx))
 
     return None if m is None else FSTMatch(pat, self, m)
 
@@ -6041,7 +6043,7 @@ def search(
     pat: _Pattern,
     nested: bool = True,
     *,
-    ast_ctx: bool = False,
+    ctx: bool = False,
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
@@ -6066,11 +6068,12 @@ def search(
     **Parameters:**
     - `pat`: The pattern to search for.
     - `nested`: Whether to recurse into nested matches or not.
-    - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
-        Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
-        don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
-        Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
-        is set to wildcard.
+    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). Defaults to
+        `False` to allow matching backreferences with different `ctx` values with each other, such as a `Name` as a
+        target of an `Assign` with the same name later used in an expression (`Store` vs. `Load`). Also as a
+        conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
+        you don't specify it so may inadvertantly break matches where you don't want to take that into
+        consideration.
     - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
         function for their meanings.
 
@@ -6119,7 +6122,7 @@ def search(
     pat_cls = pat.__class__
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
     walk_all = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)  # which AST leaf nodes we need to actually check for match
-    mstate = _MatchState(True, ast_ctx)
+    mstate = _MatchState(True, ctx)
 
     if walk_all is None or len(walk_all) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check, if None then indeterminate and we need to check all nodes
         walk_all = True
@@ -6153,7 +6156,7 @@ def sub(
     *,
     copy_options: dict[str, Any] | None = None,
     repl_options: dict[str, Any] | None = None,
-    ast_ctx: bool = False,
+    ctx: bool = False,
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
@@ -6191,11 +6194,12 @@ def sub(
     - `copy_options`: Options to use when copying from matched nodes from `self` for putting into the `repl` template.
         If `None` then just uses `options`.
     - `repl_options`: Options to use when putting into the `repl` template. If `None` then just uses `options`.
-    - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
-        Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
-        don't specify it so may inadvertantly break matches where you don't want to take that into consideration.
-        Will always check `ctx` field for `MAST` patterns because there it is well behaved and if not specified
-        is set to wildcard.
+    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). Defaults to
+        `False` to allow matching backreferences with different `ctx` values with each other, such as a `Name` as a
+        target of an `Assign` with the same name later used in an expression (`Store` vs. `Load`). Also as a
+        conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
+        you don't specify it so may inadvertantly break matches where you don't want to take that into
+        consideration.
     - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
         function for their meanings.
     - `options`: The options to use when replacing matched nodes in `self` with the `repl` template. See `options()`.
@@ -6327,7 +6331,7 @@ def sub(
     paths.reverse()  # we do this because there might be deletions which will change indices which follow them, so we do higher indices first
 
     dirty = set()  # {AST, ...}
-    gen = self.search(pat, nested, ast_ctx=ast_ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+    gen = self.search(pat, nested, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
         matched = m.matched  # will be FST node
