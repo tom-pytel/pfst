@@ -367,12 +367,12 @@ Default values must also wind up without any gaps for `posonlyargs` and `args`.
 >>> FST('a, b, c=1, d=2', 'arguments').insert('x=0', 1)
 Traceback (most recent call last):
 ...
-fst.NodeError: args without defaults cannot followargs with defaults
+fst.NodeError: args without defaults cannot follow args with defaults
 
 >>> FST('a, b, c=1, d=2', 'arguments').insert('x', 3)
 Traceback (most recent call last):
 ...
-fst.NodeError: args without defaults cannot followargs with defaults
+fst.NodeError: args without defaults cannot follow args with defaults
 
 Matching argument types may not always be possible so for this reason `fst` provides a mechanism for converting the
 different types of arguments to each other. The `args_as` option can be specified on a slice get or a slice put and

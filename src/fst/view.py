@@ -96,13 +96,13 @@ class FSTView:
     '[*star]'
     """
 
-    base:   fst.FST     ; """The target `FST` node this view references."""
+    base:   fst.FST     ; """The target `FST` node this view references (the container)."""
     field:  str         ; """The target field this view references. Can be virtual field like `_all`."""
     _start: int         ; """Start position within the target field list this view references."""
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
-    is_deref_FST = True  ; """Whether single item indexing on this view yields an `FST` node or not. Where this is not the case are multi-node sequences like a `Dict`, `MatchMapping` and `arguments` or string sequences like 'Global` and `Nonlocal`. Dereferencing these views will not give individual nodes or values but rather another `FSTView`."""
+    is_deref_FST = True  ; """Whether single item indexing on this view yields an `FST` node or not. Where this is not the case are multi-node sequences like a `Dict`, `MatchMapping` and `arguments` or string sequences like `Global` and `Nonlocal`. Dereferencing these views will not give individual nodes or values but rather another `FSTView`."""
 
     @property
     def start(self) -> int:
@@ -1398,7 +1398,7 @@ class FSTView_arglikes(FSTView):
 
 
 class FSTView_Global_Nonlocal(FSTView):
-    """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly."""
+    """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly. @private"""
 
     is_deref_FST = False
 

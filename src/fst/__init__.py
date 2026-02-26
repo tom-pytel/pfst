@@ -92,101 +92,46 @@ def func(arg: int=0) -> int:
     return arg
 ```
 
-Here is an example of some more advanced usage, replace lambda functions with function definitions in one line.
-
-```py
->>> from fst.match import *
-```
-
-```py
->>> src = """
-... class cls:
-...     mymin = lambda a, b: a if a < b else b
-...     name = lambda self: str(self)
-...
-...     def method(self, a, b):
-...         add = lambda: a + b
-...
-...         return add()
-... """.strip()
-```
-
-```py
->>> pattern = MAssign([M(name=Name)], MLambda(M(args=...), M(ret=...)))
-```
-
-```py
->>> repl = """
-... def __FST_name(__FST_args):
-...     return __FST_ret
-... """.strip()
-```
-
-```py
->>> print(FST(src).sub(pattern, repl).src)
-class cls:
-    def mymin(a, b):
-        return a if a < b else b
-
-    def name(self):
-        return str(self)
-
-    def method(self, a, b):
-        def add():
-            return a + b
-
-        return add()
-```
+Beyond basic editing, `pfst` provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
+substitution, and a mechanism for reconciling external `AST` mutations with the formatted tree, preserving comments and
+layout wherever the structure still permits it.
 
 
-# vs. LibCST
+# Comparison with LibCST
 
-There is no "vs.", [LibCST](https://github.com/Instagram/LibCST) is a powerful, industrial-grade library suitable for
-the most complex complex codemods.
+[LibCST](https://github.com/Instagram/LibCST) is a powerful, industrial-grade library built for precise, large-scale
+codemods. It models Python as a fully concrete syntax tree, preserving every token and piece of whitespace. That gives
+you complete control, but it also means you are responsible for managing formatting details when making non-trivial
+changes.
 
-So where does `pfst` fit?
+`pfst` takes a different approach. Instead of requiring you to explicitly manage formatting, it treats layout as
+something to preserve and reconcile automatically. You focus on structural and semantic transformations and `pfst`
+handles the "formatting math" needed to keep the result clean and stable.
 
-LibCST gives you complete control over every minute element of the source, which requires you to actually manage those
-elements for anything beyond basic modifications. `pfst` takes more of a "do what I mean" rather than a "do exactly what
-I say" approach. The idea is that `pfst` handles the "formatting math" so you can focus on the functional content of
-the code.
-
-A useful property of `pfst` is that it works directly with `AST` trees. This means that you can process some source with
-`pfst` then pass the tree directly on to other code you may have that works with `AST` nodes. `pfst` even has a
-mechanism for incorporating any changes external code may make to the tree and preserving what formatting can be
-preserved, see `fst.docs.d13_reconcile`.
-
-
-
-
-
+In short:
+- LibCST: “Do exactly what I say.”
+- pfst: “Do what I mean.”
 
 
 # Notes
 
-Disclaimer: You can reformat a large codebase with `pfst` but it won't be quite as sprightly as other libraries more apt
+- Disclaimer: You can reformat a large codebase with `pfst` but it won't be quite as sprightly as other libraries more apt
 to the task. The main focus of `pfst` is not necessarily to be fast but rather easy and to handle all the weird cases
 of python syntax correctly so that functional code always results. Use a formatter as needed afterwards.
 
-`pfst` was written and tested on Python versions 3.10 through 3.15a.
+- `pfst` was written and tested on Python versions 3.10 through 3.15a.
 
-`pfst` works by keeping a copy of the entire source at the root `FST` node of a tree and modifying this source alongside
-the node tree anytime an operation is performed natively. It is meant to be a drop-in replacement for the python `ast`
-module. It provides its own versions of the `parse` and `unparse` functions as well as passing through all symbols
-available from `ast`. The `parse` function returns the same `AST` tree that `ast.parse()` would return except augmented
-with `pfst` metadata.
-
-`pfst` does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
+- `pfst` does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
 parsing but also that it is limited to the syntax of the running Python version (many options exist for running any
 specific version of Python).
 
-`pfst` validates for parsability, not compilability. This means that for `fst`, `*a, *b = c` and `def f(a, a): pass` are
-both valid even though they are uncompilable.
+- `pfst` validates for parsability, not compilability. This means that `*a, *b = c` and `def f(a, a): pass` are both
+considered valid even though they are uncompilable.
 
-The aesthetics of multiline slice operation alignment are not concretized yet. The current alignment behavior basically
+- The aesthetics of multiline slice operation alignment are not concretized yet. The current alignment behavior basically
 just aligns, not necessarily always at the place you may want, it will get more standard and controllable in the future.
 
-If you will be playing with this module then the `FST.dump()` method will be your friend.
+- If you will be playing with this module then the `FST.dump()` method will be your friend.
 '''
 
 import ast

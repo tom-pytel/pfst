@@ -410,7 +410,7 @@ NotSet = object.__new__(_NotSet)  ; """A falsey object returned if accessing a n
 
 
 class MatchError(RuntimeError):
-    """An error during matching."""
+    """An error during matching or substitution."""
 
     __module__ = 'fst'  # so the exception shows up as 'fst.NodeError'
 
@@ -3232,6 +3232,8 @@ class MOPT(M_Pattern_One):
 
     **Examples:**
 
+    Single optional nodes.
+
     >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
     <FSTMatch <FunctionDef ROOT 0,0..0,13>>
 
@@ -3239,6 +3241,8 @@ class MOPT(M_Pattern_One):
     <FSTMatch <FunctionDef ROOT 0,0..0,20>>
 
     >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
+
+    Parts of multinode elements.
 
     >>> MDict([MOPT('a')], ['b']) .match(FST('{a: b}'))
     <FSTMatch <Dict ROOT 0,0..0,6>>
@@ -3248,13 +3252,15 @@ class MOPT(M_Pattern_One):
 
     >>> MDict([MOPT('a')], ['b']) .match(FST('{x: b}'))
 
-    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **a}', 'pattern'))
-    <FSTMatch <MatchMapping ROOT 0,0..0,11>>
+    Non-node primitive fields.
 
-    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **b}', 'pattern'))
+    >>> MExceptHandler(name=MOPT('n')) .match(FST('except x as n: pass'))
+    <FSTMatch <ExceptHandler ROOT 0,0..0,19>>
 
-    >>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
-    <FSTMatch <MatchMapping ROOT 0,0..0,6>>
+    >>> MExceptHandler(name=MOPT('n')) .match(FST('except x as o: pass'))
+
+    >>> MExceptHandler(name=MOPT('n')) .match(FST('except x: pass'))
+    <FSTMatch <ExceptHandler ROOT 0,0..0,14>>
     """
 
     __init__ = M_Pattern_One.__init__  # for the documentation
@@ -6128,14 +6134,17 @@ def sub(
     tag or is left empty to indicate the whole matched node. The replacement template can be passed as source or an
     `FST` or `AST` node.
 
-    Individual options can be passed for the three phases of each substitution:
+    Individual options can be passed for each of the three phases of each substitution. The phases and their options are
+    as follows:
 
-    - Copy tagged node from matched element of `self`.
-    - Put tagged node to `repl` template tag slots `__FST_<tag>`.
-    - Put filled `repl` template back to `self` node which was matched by the pattern.
+    - `copy_options`: Copy tagged nodes from matched element of `self`.
+    - `repl_options`: Put tagged nodes to `repl` template tag slots `__FST_<tag>`.
+    - `options`: Put filled `repl` template back to `self` node which was matched by the pattern.
 
-    Can handle individual node or slice substitutions, including compound patterns like `Dict` key:value pairs and whole
-    `ExceptHandler` or `match_case` entries.
+    If either `copy_options` or `repl_options` are not provided then the normal top level `options` are used for those.
+
+    This function handle individual node or slice substitutions, including compound patterns like `Dict` key:value pairs
+    and whole `ExceptHandler` or `match_case` entries.
 
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
@@ -6147,8 +6156,8 @@ def sub(
         not considered for substitution again either (even though by definition it matches the pattern). Subparts of
         that matched template can be matched and substituted again as that cannot cause infinite recursion.
     - `count`: If this is above 0 then only this number of substitutions will be made.
-    - `copy_options`: Options to use when copying from matched nodes for putting into the `repl` template. If `None`
-        then just uses `options`.
+    - `copy_options`: Options to use when copying from matched nodes from `self` for putting into the `repl` template.
+        If `None` then just uses `options`.
     - `repl_options`: Options to use when putting into the `repl` template. If `None` then just uses `options`.
     - `ast_ctx`: Whether to match against the `ctx` field of `AST` patterns or not (as opposed to `MAST` patterns).
         Defaults to `False` because when creating `AST` nodes the `ctx` field may be created automatically if you
@@ -6174,10 +6183,10 @@ def sub(
     >>> FST('a + b.c').sub(MOR(Name, Attribute), 'log(__FST_)').src
     'log(a) + log(b.c)'
 
-    Allow nested.
+    Allow nested substitutions and don't substitute target expressions.
 
-    >>> FST('a + b.c').sub(MOR(Name, Attribute), 'log(__FST_)', nested=True).src
-    'log(a) + log(log(b).c)'
+    >>> FST('i = j.k = a + b.c').sub(Mexpr(ctx=Load), 'log(__FST_)', nested=True).src
+    'i = log(j).k = log(a) + log(log(b).c)'
 
     Statements and optional parts of block statements are handled (like `else` or `finally`).
 
@@ -6200,7 +6209,8 @@ def sub(
     else:
         a_true()
 
-    Multinode elements of sequences like `Dict` and `MatchMapping` can be substituted.
+    Multinode elements of sequences like `Dict` and `MatchMapping` can be substituted, in these two cases with the
+    `'...': __FST_<tag>` template.
 
     >>> print(
     ... FST('{a: b, c: d, e: f}')
@@ -6209,7 +6219,8 @@ def sub(
     ... ).src)
     {x: y, c: d}
 
-    `arguments` can be substituted as well, including changing type of argument (with some caveats, see documentation).
+    `arguments` can be substituted as well, including changing the type of argument (with some caveats, see
+    the documentation).
 
     >>> print(
     ... FST('def f(a=1, /, b=2, *, c=3): pass')

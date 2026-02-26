@@ -37218,7 +37218,7 @@ FunctionDef - ROOT 0,0..3,22
 ('', 1, 2, '_all', {}, ('arguments',
 r'''a=1, b=2'''), ('arguments',
 r'''c'''),
-r'''**NodeError('args without defaults cannot followargs with defaults')**'''),
+r'''**NodeError('args without defaults cannot follow args with defaults')**'''),
 
 ('', 0, 'end', '_all', {'raw': True}, ('arguments',
 r'''a=1, b=2, c=3'''), ('arguments',

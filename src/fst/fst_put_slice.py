@@ -2373,7 +2373,7 @@ def _put_slice_arguments(
                 if (g := f.next()) and g.pfield.name == 'defaults':
                     defaults_started = True
                 elif defaults_started:
-                    raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} without defaults cannot follow'
+                    raise NodeError(f'{_ARG_CAT2NAME[arg_cat]} without defaults cannot follow '
                                     f'{_ARG_CAT2NAME[prev_arg_cat]} with defaults')
 
                 if not arg_cat and a is not new_allargs[-1]:

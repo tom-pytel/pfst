@@ -9361,6 +9361,28 @@ Module - ROOT 0,0..3,11
         0] Constant 'str' - 3,5..3,10
 '''),
 
+('', None, None, None, {}, ('exec', r'''
+pass
+if a: \
+    pass
+call('str')
+pass
+'''),
+r'''Module(body=[..., MQSTAR(t=...), ...])''', r'''
+middle = """__FST_t
+__FST_t
+__FST_t"""
+''', r'''
+middle = """if a: \\\n    pass\ncall(\'str\')
+if a: \\\n    pass\ncall(\'str\')
+if a: \\\n    pass\ncall(\'str\')"""
+''', r'''
+Assign - ROOT 0,0..2,36
+  .targets[1]
+   0] Name 'middle' Store - 0,0..0,6
+  .value Constant '__FST_t\n__FST_t\n__FST_t' - 0,9..2,36
+'''),
+
 ('', None, None, None, {}, (None,
 r'''a + b.c + d[e]'''),
 r'''M(t=MOR(Name, Attribute, Subscript))''',

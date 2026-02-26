@@ -1632,13 +1632,13 @@ src: '(z < 0) * -z + (z >= 0) * +z', args: (0, 10)
 This section exists mostly to show what is possible with substitution, rather than suggest this is the way these things
 should be done.
 
-`pfst` provides fairly robust node pattern substitution through the `sub()` function. This is not really meant for final
-complete refactoring as it does not give nearly as much control as custom code does, especially over comments, but can
-be useful for smaller replacements or quick-and-dirty substitutions.
+`fst` provides fairly robust node pattern substitution through the `fst.fst.FST.sub()` function. This is not really
+meant for final complete refactoring as it does not give nearly as much control as custom code does, especially over
+comments, but can be useful for smaller replacements or quick-and-dirty substitutions.
 
 ## Inject logging metadata
 
-This does the same thing as the hardcoded example above but using `sub()`.
+This does the same thing as the hardcoded example with the same name but using the `sub()` function.
 
 ```py
 >>> src = """

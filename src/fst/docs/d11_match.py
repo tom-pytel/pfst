@@ -7,9 +7,9 @@ To be able to execute the examples, import this.
 >>> from fst import *
 >>> from fst.match import *
 
-This is just a pretty-print function for long `FSTMatch` objects.
+Now some helper functions just for this documentation, you can ignore their usage.
 
->>> from fst.docs import ppmatch
+>>> from fst.docs import pprint, ppmatch
 
 
 # Match
@@ -18,9 +18,9 @@ This is just a pretty-print function for long `FSTMatch` objects.
 special `M_Pattern` classes provided by `fst`, or just normal `AST` classes, though type checkers might complain about
 that usage.
 
-The matcher supports wildcards, regex, logic operations, callbacks, backreferences and quantifiers with backtracking and
-subsequences. Additionally, you can tag arbitrary matched subparts of the target or even set static tags along the way
-at any point during the matching to be returned in a successful `FSTMatch` object.
+The matcher supports wildcards, regex, logic operations, callbacks, backreferences and quantifiers (greedy and
+non-greedy) with backtracking and subsequences. Additionally, you can tag arbitrary matched subparts of the target or
+even set static tags along the way at any point during the matching to be returned in a successful `FSTMatch` object.
 
 Here is an example of a structural match to give you an idea, it will be explained below. This pattern will match any
 `logger.info()` call which has a `cid` keyword argument:
@@ -121,11 +121,6 @@ True
 
 >>> bool(MImportFrom(module=re.compile(r'.*\.submod'))
 ...      .match(FST('from mod . submod import *')))
-True
-
-These are matched by value even in list fields of strings.
-
->>> bool(FST('global a, b, c, d, e, f').match(Global([MQSTAR, 'c', MQSTAR])))
 True
 
 
@@ -230,7 +225,8 @@ Or as a convenience accessing directly on the `FSTMatch` object.
 >>> m['static_tag']
 True
 
-Looking up tags directly on the `FSTMatch` object does not raise `AttributeError` but rather returns a falsey object.
+Looking up tags directly on the `FSTMatch` object does not raise `IndexError` if the tag does not exist but rather
+returns a falsey object.
 
 >>> bool(m['nonexistent_tag'])
 False
@@ -389,7 +385,7 @@ Multiple fields to match.
 
 >>> pat.match(FST('class cls: "docstring"; pass'))
 
-Note that the `returns` field which don't exist on the `ClassDef` node does not cause an error, just a match fail.
+Note that the `returns` field which doesn't exist on the `ClassDef` node does not cause an error, just a match fail.
 
 Like `MOR` and `MAND`, this pattern doesn't allow static tags. It doesn't even allow match tags as all keywords are used
 to specify fields.
@@ -421,6 +417,8 @@ This is a pattern or `None` match. It can be used to optionally match single-ele
 present. That is, both a normal value which matches the pattern and a `None` value are considered a successful match.
 A non-`None` value which does NOT match the pattern is considered a failure.
 
+Single optional nodes.
+
 >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f(): pass'))
 <FSTMatch <FunctionDef ROOT 0,0..0,13>>
 
@@ -428,6 +426,8 @@ A non-`None` value which does NOT match the pattern is considered a failure.
 <FSTMatch <FunctionDef ROOT 0,0..0,20>>
 
 >>> MFunctionDef(returns=MOPT('int')) .match(FST('def f() -> str: pass'))
+
+Parts of multinode elements.
 
 >>> MDict([MOPT('a')], ['b']) .match(FST('{a: b}'))
 <FSTMatch <Dict ROOT 0,0..0,6>>
@@ -437,13 +437,15 @@ A non-`None` value which does NOT match the pattern is considered a failure.
 
 >>> MDict([MOPT('a')], ['b']) .match(FST('{x: b}'))
 
->>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **a}', 'pattern'))
-<FSTMatch <MatchMapping ROOT 0,0..0,11>>
+Non-node primitive fields.
 
->>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x, **b}', 'pattern'))
+>>> MExceptHandler(name=MOPT('n')) .match(FST('except x as n: pass'))
+<FSTMatch <ExceptHandler ROOT 0,0..0,19>>
 
->>> MMatchMapping(rest=MOPT('a')) .match(FST('{1: x}', 'pattern'))
-<FSTMatch <MatchMapping ROOT 0,0..0,6>>
+>>> MExceptHandler(name=MOPT('n')) .match(FST('except x as o: pass'))
+
+>>> MExceptHandler(name=MOPT('n')) .match(FST('except x: pass'))
+<FSTMatch <ExceptHandler ROOT 0,0..0,14>>
 
 
 ## `MCB()` pattern
@@ -522,8 +524,8 @@ This pattern allows you to match against tags that exist at the point that this 
 matching against already matched nodes, but can also be used to match against arbitrary tag values as well as long as
 they are valid patterns.
 
->>> MBinOp(M(left_='a'), right=MTAG('left_')).match(FST('a + a'))
-<FSTMatch <BinOp ROOT 0,0..0,5> {'left_': <Name 0,0..0,1>}>
+>>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
+<FSTMatch <BinOp ROOT 0,0..0,5> {'left': <Name 0,0..0,1>}>
 
 In the example above we match a `BinOp` which has the same node on the right as the left. It will fail if they are
 different.
@@ -551,9 +553,9 @@ As stated, the tag to match does not have to come from an actual previous match,
 
 Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
 
->>> ppmatch(MDict(_all=[M(s=...), MQSTAR, MTAG(e='s')]).match(FST('{1:a,1:a}')))
-<FSTMatch <Dict ROOT 0,0..0,9>
-  {'s': <<Dict ROOT 0,0..0,9>._all[:1]>, 'e': <<Dict ROOT 0,0..0,9>._all[1:2]>}>
+>>> ppmatch(MDict(_all=[M(s=...), MQSTAR, MTAG(e='s')]).match(FST('{1: a, 1: a}')))
+<FSTMatch <Dict ROOT 0,0..0,12>
+  {'s': <<Dict ROOT 0,0..0,12>._all[:1]>, 'e': <<Dict ROOT 0,0..0,12>._all[1:2]>}>
 
 >>> MDict(_all=[M(start=...), ..., MTAG('start')]).match(FST('{**b, 1: a, **b}'))
 <FSTMatch <Dict ROOT 0,0..0,16> {'start': <<Dict ROOT 0,0..0,16>._all[:1]>}>
@@ -561,7 +563,7 @@ Can match previously matched multinode items from `Dict`, `MatchMapping` or `arg
 
 ## `MQ()` quantifier pattern
 
-The quantifiers allow matching a given pattern between zero and an unbounded number of times in a LIST FIELD. To
+The quantifiers allow matching a given pattern between zero and an unbounded number of times in a **LIST FIELD**. To
 reiterate, they can only live in and match elements inside a list field, not individual non-list fields like
 `BinOp.left` or `FunctionDef.returns`. So only fields like `Module.body`, `List.elts`, `Dict.keys` or even virtual
 fields like `Dict._all`.
@@ -679,7 +681,7 @@ the `MQSTAR`, `MQPLUS` and `MQ01` classes themselves (and their non-greedy versi
 actual predefined patterns.
 
 `MQSTAR(pat)` is the same as `MQ(pat, min=0, max=None)`. `MQSTAR` by itself is the same as `MQSTAR(...)` and is the
-equivalent of regex `'.*'`.
+spiritual equivalent of regex `'.*'`.
 
 `MQSTAR.NG(pat)` is the same as `MQ.NG(pat, min=0, max=None)`. `MQSTAR.NG` by itself is the same as `MQSTAR.NG(...)` and
 is the equivalent of regex `'.*?'`.
@@ -848,14 +850,14 @@ All these same mechanisms apply to `MatchMapping._all`, with the small change th
 
 This type is considered multinode because the individual arguments can have defaults, and when indexing an argument the
 default has to be included, which is a separate node. This is handled fine by both `FSTView` which just gives you
-another arguments `FSTView` when dereferencing and when copying a single "argument" it gets returned as another
+another arguments `FSTView` when dereferencing, and when copying a single "argument" it gets returned as another
 single-argument `arguments` node.
 
 Where it gets a little complicated is that there are three types of arguments, `posonlyargs`, `args` and `kwonlyargs`.
 The complication is which ones to allow to compare with one another to constitute a match. The rules `fst` currently
 uses are a best guess at what would work well and may need some tweaking in the future depending on use.
 
-Just like `Dict`, when matching the `_all` field of arguments the individual elements inside the `_all` list field must
+Just like `Dict`, when matching the `_all` field of arguments, the individual elements inside the `_all` list field must
 be `arguments` or `Marguments` with a single argument element and / or a single default element (if both present then
 they must match, no `kw_defaults` with a `posonlyarg`).
 
@@ -959,8 +961,8 @@ Or it may be optional by setting the appropriate defaults field to the `...` wil
 <FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[:1]>}>
 
 Arguments can also be backreferenced, in which case the presence or absence of the default must match and the matching
-is done as if `_strict=None`. Meaning a previously matched positional or keyword-only argument will match ANY OTHER
-TYPE of argument (the rationale being that if it was matched then it should match others).
+is done as if `_strict=None`. Meaning a previously matched positional or keyword-only argument will match **ANY OTHER
+TYPE** of argument (the rationale being that if it was matched then it should match others).
 
 Yes the following example is an invalid uncompilable arguments field but `fst` only deals with parsability so this is
 used here for demonstration purposes in place of a more complicated comparison against an arguments field in another
@@ -1112,10 +1114,910 @@ to `search()`.
  <FSTMatch <Name 0,18..0,19> {'is_name': True}>]
 
 
+
 # Substitute
 
+Substitution is carried out using the `fst.fst.FST.sub()` function and allows you substitute a given template for
+anything matching a given pattern in a tree, with the possibility of reusing matched subparts from tags in the
+replacement template.
 
 
+## Basic
 
+A simple example is replacing all `Name` nodes with a call to a logging function (which is assumed to return the value
+of the expression).
+
+>>> f = FST('a + b.c')
+
+>>> pat = Name
+
+>>> repl = 'log(__FST_)'
+
+>>> g = f.sub(pat, repl)
+
+>>> print(g.src)
+log(a) + log(b).c
+
+And to show that it is actual node substitution and not just source.
+
+>>> _ = g.dump()
+BinOp - ROOT 0,0..0,17
+  .left Call - 0,0..0,6
+    .func Name 'log' Load - 0,0..0,3
+    .args[1]
+     0] Name 'a' Load - 0,4..0,5
+  .op Add - 0,7..0,8
+  .right Attribute - 0,9..0,17
+    .value Call - 0,9..0,15
+      .func Name 'log' Load - 0,9..0,12
+      .args[1]
+       0] Name 'b' Load - 0,13..0,14
+    .attr 'c'
+    .ctx Load
+
+This only substituted `Name` nodes, but what if you also want to substitute the `Attribute`? Note that we recreate the
+`FST` node as the substitution is a mutating operation on the original node.
+
+>>> pat = MOR(Name, Attribute)
+
+>>> print(FST('a + b.c').sub(pat, repl).src)
+log(a) + log(b.c)
+
+Here the `Attribute` was substituted but the `Name` inside of it was not. This is because by default the `sub()`
+function does not apply to nested matches. This can be controlled with the `nested` parameter.
+
+>>> print(FST('a + b.c').sub(pat, repl, nested=True).src)
+log(a) + log(log(b).c)
+
+The same thing could have been done with just an `expr` pattern instead of the `MOR()` to match all expressions, but
+the `MOR()` was used to show one way of restricting to just these types.
+
+Maybe the `log()` function also takes a string to print along with the value? Substitution can be done inside string
+constants.
+
+>>> pat = MOR(Name, Attribute)
+
+>>> repl = 'log(__FST_, "__FST_")'
+
+>>> print(FST('a + b.c').sub(pat, repl, nested=True).src)
+log(a, "a") + log(log(b, "b").c, "b.c")
+
+To finish this simple example, something to keep in mind. We used `Name` and `Attribute` types for a clearer
+demonstration, but in real usage where this pattern may be applied to statements you would want to further restrict
+these substitutions to only non-target nodes. This can be done with the pattern `ctx=Load` as the replacement template
+function call is not a valid target for an `Assign` or `Delete`.
+
+>>> pat = Name
+
+>>> repl = 'log(__FST_)'
+
+>>> f = FST('''
+... i = a.b
+... del c, e[f]
+... '''.strip())
+
+>>> print(f.sub(pat, repl, nested=True).src)
+Traceback (most recent call last):
+...
+fst.NodeError: invalid value for Assign.targets, got Call
+
+>>> pat = MName(ctx=Load)
+
+>>> print(f.sub(pat, repl, nested=True).src)
+i = log(a).b
+del c, log(e)[log(f)]
+
+The substitution skipped any `Name` which was not a `Load` operation because did not match the `ctx=Load` pattern. We
+also changed the pattern type from `Name` to `MName` as the second is type-safe and specifically allows a single element
+like the `ctx` field without an `id`. Otherwise it is mostly the same to use an `AST` node vs. its corresponding "Match"
+class like `Attribute` and `MAttribute`.
+
+
+## Sequences
+
+Arbitrary length list fields or parts of list fields can also be matched and substituted.
+
+>>> _ = FST('[a, b]').sub(
+...     MList(elts=M(tag=...)),
+...     '{__FST_tag}',
+... ).dump('S')
+0: {a, b}
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+
+Here we converted a `List` into a `Set` by capturing its entire `elts` field and putting it into the `Set`. The
+`elts=M(tag=...)` captured the entire `List` contents, but partial contents can be used as well.
+
+>>> print(FST('[a, b, c, d, e]').sub(
+...     MList(elts=[..., MQSTAR(tag=...), ...]),
+...     '{__FST_tag}',
+... ).src)
+{b, c, d}
+
+Here we stripped the first and last nodes from the `List.elts` field and just used everything in the middle. Quantifier
+matches can be used to insert parts of matches into the replacement template, including compound matches with
+quantifier subsequences.
+
+>>> print(FST('[a, b, c, d, d, e, e, f, g]').sub(
+...     MList(elts=[MQSTAR.NG, MQPLUS(tag=[M(t=...), MTAG('t')]), MQSTAR]),
+...     '{__FST_tag}',
+... ).src)
+{d, d, e, e}
+
+This sequence matching applies to all list fields, including statements, exception handlers, match cases, etc...
+
+>>> print(FST('''
+... a()
+... b()
+... c()
+... d()
+... '''.strip()).sub(
+... MModule(body=[..., MQSTAR(tag=...), ...]),
+... '__FST_tag'
+... ).src)
+b()
+c()
+
+Except handlers and match cases cannot be specified with a name tag only due to their syntactic location within a `Try`
+or `Match` statement, so there is a special format for specifying their replacement template substitution slots.
+
+>>> print(FST('''
+... try: pass
+... except a: a()
+... except b: b()
+... except c: c()
+... except d: d()
+... '''.strip()).sub(
+... MTry(handlers=[..., MQSTAR(tag=...), ...]),
+... '''
+... try: new()
+... except '...': __FST_tag
+... '''.strip()
+... ).src)
+try: new()
+except b: b()
+except c: c()
+
+The `except '...': __FST_tag` exception handler takes the place of a single `__FST_tag` in expressions as a substitution
+point for exception handlers. A similar construct exists for substituting match cases - `case '...': __FST_tag`.
+
+>>> print(FST('''
+... match old:
+...    case a: a()
+...    case b: b()
+...    case c: c()
+...    case d: d()
+... '''.strip()).sub(
+... MMatch(cases=[..., MQSTAR(tag=...), ...]),
+... '''
+... match new:
+...    case '...': __FST_tag
+... '''.strip()
+... ).src)
+match new:
+   case b: b()
+   case c: c()
+
+`comprehension` nodes also constitute sequences when they are in the `generators` field of a Comprehension and they also
+have their own special template for substitution, `for __FST_<tag> in '...'`.
+
+>>> print(FST('i = [a for b in c for a in b]').sub(
+...     MListComp(generators=M(tag=...)),
+...     '{a for c in d for __FST_tag in "..."}',
+... ).src)
+i = {a for c in d for b in c for a in b}
+
+A note on the special templates for these sequences which contain the `'...'` string. These are only recognized as a
+templates if the dotted string is one continuous single-quoted string. If it is triple-quoted like `'''...'''`, or an
+innate string like `'..' '.'` then it does not trigger the template behavior. This is done on purpose in order to allow
+these string values to be used specifically without triggering templates.
+
+
+## Virtual fields
+
+Special `fst` virtual sequence fields can be substituted just like normal sequence fields. There are two kinds of
+virtual fields, those which have their individual elements resolve to a single `FST` node and multielement virtual
+fields like `Dict._all` which do not. Here we describe the first category.
+
+The `Call._args` virtual field combines the `args` and `keywords` fields in syntactic order and can be treated as such
+a sequence when substituting.
+
+>>> pprint(FST('call(a, *b, c=d, **e)').sub(
+...     MCall(_args=M(tag=...)),
+...     'new_call(__FST_tag)',
+... ).src)
+new_call(a, *b, c=d, **e)
+
+Including substituting a part of this sequence.
+
+>>> pprint(FST('call(a, *b, c=d, **e)').sub(
+...     MCall(_args=[..., MQSTAR(tag=...), ...]),
+...     'new_call(x, __FST_tag, **y)',
+... ).src)
+new_call(x, *b, c=d, **y)
+
+The same exact logic applies to `ClassDef._bases`.
+
+>>> pprint(FST('class cls(a, *b, c=d, **e): pass').sub(
+...     MClassDef(_bases=[..., MQSTAR(tag=...), ...]),
+...     'class new_cls(x, __FST_tag, **y): pass',
+... ).src)
+class new_cls(x, *b, c=d, **y): pass
+
+`Compare._all` combines the `Compare.left` node with the rest of the `Compare.comparators` to create a single sequence
+of all comparators. In the following example we strip the first and last comparator while leaving the middle. The
+operators between the nodes are handled automatically.
+
+>>> pprint(FST('a < b <= c >= d > e').sub(
+...     MCompare(_all=[..., MQSTAR(tag=...), ...]),
+...     '__FST_tag',
+... ).src)
+b <= c >= d
+
+Remember that these nodes can also still be matched and substituted on their normal non-virtual fields. Though there is
+not currently a way to substitute operators individually in `repl` templates.
+
+>>> pprint(FST('a < b').sub(
+...     MCompare(left=M(l=...), comparators=[M(c=...)]),
+...     '__FST_c > __FST_l',
+... ).src)
+b > a
+
+
+## Multinode element virtual fields
+
+Multinode element virtual fields are those where a single item of the sequence cannot always be represented with a
+single `AST` node. The most obvious examples of these are the `Dict` and `MatchMapping` mapping structures which have
+both a key and a value per sequence "element".
+
+These can have subsequences substituted using similar template constructions as above. For both these mapping types the
+template is `'...': __FST_tag`.
+
+>>> print(FST('{a: b, c: d, e: f}').sub(
+...     MDict(_all=[..., MQSTAR(tag=...), ...]),
+...     '{"...": __FST_tag}',
+... ).src)
+{c: d}
+
+It works for one element, or any number of elements, including any other static elements in the replacement template as
+well (just like all other sequences).
+
+>>> print(FST('{a: b, c: d, **f, g: h, i: j}').sub(
+...     MDict(_all=[..., MQSTAR(tag=...), ...]),
+...     '{x: y, "...": __FST_tag, u: v}',
+... ).src)
+{x: y, c: d, **f, g: h, u: v}
+
+The above showed how to treat "key:value" pairs as single replaceable elements, but it is still possible to deal with
+individual keys and values alone.
+
+>>> print(FST('{a: b, c: d}').sub(
+...     MDict(keys=[M(k=...), MQSTAR], values=[M(v=...), MQSTAR]),
+...     '({__FST_k: __FST_v, __FST_v: __FST_k}, __FST_k, __FST_v)',
+... ).src)
+({a: b, b: a}, a, b)
+
+Just keep in mind that as individual fields, those cannot be gotten or put as slices.
+
+>>> print(FST('{a: b, c: d, **f, g: h, i: j}').sub(
+...     MDict(keys=M(k=...)),
+...     '[__FST_k]',
+... ).src)
+Traceback (most recent call last):
+...
+ValueError: cannot get slice from Dict.keys
+
+
+## Optional fields and missing tags
+
+Some fields in `AST` nodes may be optional, represented by either an actual node or a `None`. One example of this is
+the `returns` field of a `FunctionDef`. The `sub()` function deals with these by putting them if they were present in
+a match and a template, and otherwise removing them from a template if not in a match.
+
+In the following example we will not capture and replace the name or arguments or body, just the returns field to show
+how that works.
+
+>>> pat = MFunctionDef(returns=M(ret=...))
+
+>>> repl = 'def new() -> __FST_ret: pass'
+
+>>> print(FST('def old() -> tuple[int]: pass').sub(pat, repl).src)
+def new() -> tuple[int]: pass
+
+In the above example, the `returns` node was matched and captured in the `ret` tag and could subsequently be put into
+the `repl` template in that `returns` field. However, if the match still had the wildcard for the `returns` field but
+there was no node for that field in the original tree, it will simply not be put into the replacement while still
+succeeding the substitution.
+
+>>> print(FST('def old(): pass').sub(pat, repl).src)
+def new(): pass
+
+Keep in mind this was because the match pattern for the `returns` field ultimately was a wildcard `...` which will
+accept a missing field. If we have a pattern there which expects an actual node (like an `expr` in the following case),
+and that is not present, then the match will fail and no substitution will be made.
+
+>>> pat = MFunctionDef(returns=M(ret=expr))
+
+>>> print(FST('def old(): pass  # OLD!').sub(pat, repl).src)
+def old(): pass  # OLD!
+
+>>> print(FST('def old() -> int: pass  # OLD!').sub(pat, repl).src)
+def new() -> int: pass
+
+And finally, if you reference a tag that doesn't exist in the template (because that tag was not matched or captured but
+the overall match succeeded, or even if you just had a typo), then if an overall match still occurs then that tag acts
+as if it was an optional missing tag and is removed from the replacement template.
+
+>>> repl = 'def new() -> __FST_bad_tag: pass'
+
+>>> print(FST('def old() -> int: pass  # OLD!').sub(pat, repl).src)
+def new(): pass
+
+
+## Optional statement list fields
+
+Just like optional individual fields, whole optional list fields like `orelse` or `finalbody` will behave in the same
+way and optionally be put or not.
+
+>>> pat = MIf(test=M(test=...), body=M(body=...), orelse=M(orelse=...))
+
+>>> repl = '''
+... if __FST_test:  # NEW
+...     __FST_body
+... else:  # NEW
+...     __FST_orelse
+... '''.strip()
+
+>>> print(FST('''
+... if a:  # OLD
+...     body()
+... else:  # OLD
+...     orelse()
+... '''.strip()).sub(pat, repl).src)
+if a:  # NEW
+    body()
+else:  # NEW
+    orelse()
+
+And here the same pattern and replacement template but no `else` in the source `FST`.
+
+>>> print(FST('''
+... if a:  # OLD
+...     body()
+... '''.strip()).sub(pat, repl).src)
+if a:  # NEW
+    body()
+
+The whole `else` section was removed in the template. Technically this is not the `sub()` function but rather the
+standard `put()` mechanics of `fst`. The `sub()` function just finds a missing `orelse` tag which is represented as
+`None`, and when `None` is put to an optional statement list field and deletes everything there, the whole part
+disappears. Here it is appied to a `Try` statement.
+
+>>> pat = MTry(
+...     body=M(body=...),
+...     handlers=M(handlers=...),
+...     orelse=M(orelse=...),
+...     finalbody=M(finalbody=...),
+... )
+
+>>> repl = '''
+... try: __FST_body
+... except '...': __FST_handlers
+... else:  # NEW
+...     __FST_orelse
+... finally:  # NEW
+...     __FST_finalbody
+... '''.strip()
+
+>>> print(FST('''
+... try: a()
+... except: b()
+... else: c()
+... finally: d()
+... '''.strip()).sub(pat, repl).src)
+try:
+    a()
+except: b()
+else:  # NEW
+    c()
+finally:  # NEW
+    d()
+
+And if not present in the source, they disappear.
+
+>>> print(FST('''
+... try: a()
+... except: b()
+... '''.strip()).sub(pat, repl).src)
+try:
+    a()
+except: b()
+
+Keep in mind that there are some rules that still apply, for example a `Try` needs at least one of an `except` or
+`finally`. So if you wind up with a match / substitute mismatch where you expect one of those and it is not present and
+you don't have the other in the template then you get invalid code.
+
+>>> pat = MTry(
+...     body=M(body=...),
+...     finalbody=M(finalbody=...),
+... )
+
+>>> repl = '''
+... try: __FST_body
+... finally:  # NEW
+...     __FST_finalbody
+... '''.strip()
+
+>>> print(FST('''
+... try: a()
+... except: b()
+... '''.strip()).sub(pat, repl).src)
+try:
+    a()
+
+The substitution still succeeded since temporary deletion of required structures is normally allowed for editing
+purposes by `fst`. But if you want to catch these potential errors then you should do substution operations with
+`norm=True` to ensure that either only valid code results or an exception is raised.
+
+>>> print(FST('''
+... try: a()
+... except: b()
+... '''.strip()).sub(pat, repl, norm=True).src)
+Traceback (most recent call last):
+...
+ValueError: cannot delete all elements from Try.finalbody without norm_self=False
+
+
+## Function `arguments`
+
+Substituting `arguments` can range from the very simple substitution of the whole `FunctionDef.args` field into a new
+function, to the very painful one-by-one argument substitution in a complicate replacement template mixing position-only
+and keyword-only arguments. Not to mention `vararg` and `kwarg`.
+
+Starting with the whole `arguments` node substitution, even adding other arguments to either side of the original
+normally works fine. As long as you take into account the possibility of position-only or keyword-only arugments from
+the source.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a): pass',
+... ).src)
+def new(a, /, b, *, c): pass
+
+This type of replacement pattern will always succeed as there is no chance for argument type collisions. Likewise the
+following additions to either end will always work as they accomodate the possibility of source position-only and
+keyword-only arguments at the beginning and end.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(pre, /, __FST_a, *, post): pass',
+... ).src)
+def new(pre, a, /, b, *, c, post): pass
+
+If you try to do this replacement without the explicit posonly and kwonly markers in the template you will get an error
+as the source matched arguments have those and the ordering rules woule be violated.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(pre, __FST_a, post): pass',
+... ).src)
+Traceback (most recent call last):
+...
+fst.NodeError: posonlyargs cannot follow args
+
+You can get around this in many cases by using the `args_as` option to convert arguments. In this example we will tell
+the `put()` function from the matched `arguments` to the target `arguments` in the `repl` template to convert them all
+to normal non-position/non-keyword arguments so that they will satisfy the rules when put to the normal arugments of the
+`repl` template.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(pre, __FST_a, post): pass',
+...     args_as='arg',
+... ).src)
+def new(pre, a, b, c, post): pass
+
+You can likewise use this to set all arguments to position-only or keyword-only, as long as they still fulfill the
+order validity constraints when put to the `repl` template.
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a): pass',
+...     args_as='pos',
+... ).src)
+def new(a, b, c, /): pass
+
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a): pass',
+...     args_as='kw',
+... ).src)
+def new(*, a, b, c): pass
+
+This will work as long as the conversion can be carried out, which may not be the case if a `vararg` is present.
+
+>>> print(FST('def old(a, /, b, *va, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a): pass',
+...     args_as='kw',
+... ).src)
+Traceback (most recent call last):
+...
+fst.NodeError: cannot have vararg for args_as='kw'
+
+In which case you can tell it to convert whatever arguments possible towards keywords using `kw_maybe`, avoiding an
+exception but possibly not getting all keyword-only arguments.
+
+>>> print(FST('def old(a, /, b, *va, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a): pass',
+...     args_as='kw_maybe',
+... ).src)
+def new(a, b, *va, c): pass
+
+A similar option `pos_maybe` exists for converting to position-only. Only those arguments which can be converted are
+done so.
+
+>>> print(FST('def old(a, /, b, *va, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(__FST_a): pass',
+...     args_as='pos_maybe',
+... ).src)
+def new(a, b, /, *va, c): pass
+
+And all of this as long as the converted arguments still satisfy ordering rules when put to any existing arguments
+already present in the `repl` template.
+
+>>> print(FST('def old(a, /, b, *va, c): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(normal_arg, __FST_a): pass',
+...     args_as='pos_maybe',
+... ).src)
+Traceback (most recent call last):
+...
+fst.NodeError: posonlyargs cannot follow args
+
+You may notice that none of the previous examples had argument defaults. Defaults work fine but add another layer of
+constraints to the existing argument type rules. Namely, non-keyword arguments without defaults cannot follow
+non-keyword arguments with defaults.
+
+>>> print(FST('def old(a, b): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(pre=1, __FST_a="..."): pass',
+... ).src)
+Traceback (most recent call last):
+...
+fst.NodeError: args without defaults cannot follow args with defaults
+
+>>> print(FST('def old(a=2, b=3): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(pre=1, __FST_a="..."): pass',
+... ).src)
+def new(pre=1, a=2, b=3): pass
+
+Keyword-only arguments don't have this constraint.
+
+>>> print(FST('def old(*, a, b=1): pass').sub(
+...     MFunctionDef(args=M(a=...)),
+...     'def new(*, __FST_a, post): pass',
+... ).src)
+def new(*, a, b=1, post): pass
+
+As you can see, many cases can arise when mixing posonly and kwonly arguments and defaults that can fail a substitution.
+The only two things you are guaranteed to always be able to do regardless of the composition of the source arguments
+are:
+
+- Substitute whole arguments without any additions.
+- Prepend any number of position-only arguments WITHOUT defaults.
+
+Even appending a keyword `kw=value` to the end is not guaranteed to succeed if the source arguments contain a `**kwarg`.
+And this is all when replacing the whole `arguments` from a matched source. It is also possible to extract and replace
+individual arguments using the `arguments._all` virtual field.
+
+The following is an example of a substitution which considers the source arguments one by one to extract only the
+vararg.
+
+>>> pat_vararg = Marguments(vararg=MNOT(None))
+
+>>> pat = MFunctionDef(args=Marguments(
+...     _all=[MQSTAR(MNOT(pat_vararg)), MQ01(va=pat_vararg), MQSTAR],
+... ))
+
+>>> print(FST('def old(a, /, b, *va, c): pass').sub(
+...     pat,
+...     'def new(__FST_va): pass',
+... ).src)
+def new(*va): pass
+
+A quick note, the `MQ01` is needed to ensure the pattern matches even if there is no vararg, in which case the
+substitution proceeds like any other missing tag substitution and deletes the argument from the `repl` template.
+
+>>> print(FST('def old(a, /, b, c): pass').sub(
+...     pat,
+...     'def new(__FST_va): pass',
+... ).src)
+def new(): pass
+
+Without the `MQ01` the match would fail if no vararg was found and the subtitution would not be made. Which may actually
+be a behavior you would want in this case so keep that in mind.
+
+>>> pat = MFunctionDef(args=Marguments(
+...     _all=[MQSTAR(MNOT(pat_vararg)), M(va=pat_vararg), MQSTAR],
+... ))
+
+>>> print(FST('def old(a, /, b, c): pass').sub(
+...     pat,
+...     'def new(__FST_va): pass',
+... ).src)
+def old(a, /, b, c): pass
+
+Or you can do the inverse and remove the vararg from any arguments.
+
+>>> pat = MFunctionDef(args=Marguments(
+...     _all=[MQSTAR(pre=MNOT(pat_vararg)), MQ01(pat_vararg), MQSTAR(post=...)],
+... ))
+
+>>> print(FST('def old(a, /, b, *va, c): pass').sub(
+...     pat,
+...     'def new(__FST_pre, __FST_post): pass',
+... ).src)
+def new(a, /, b, *, c): pass
+
+You can go even deeper down the argument substitution rabbithole but at that point you are probably better off just
+hardcoding the substitution.
+
+
+## Trivia
+
+Trivia (specifically comments) with substitution can be tricky and does not provide nearly as much control as doing it
+manually through code. Still, for blocks of statements or sequences it is mostly preserved. It can get complicated
+though so you have been warned.
+
+The main complexity with trivia is that for any given match substitution, there can be up to three operations, each of
+which can modify trivia. These operations are:
+
+- Copy tagged nodes from matched element of `self`.
+- Put tagged nodes to `repl` template tag slots `__FST_<tag>`.
+- Put filled `repl` template back to `self` node which was matched by the pattern.
+
+The first two operations only happen if the `repl` template has its own substitution slots for tagged matched nodes,
+which it normally will. But we will use this fact to start with a simple example of trivia handling where the first two
+operations do not occur.
+
+```py
+>>> f = FST('''
+... call()
+...
+... # PRE
+... a = b  # LINE
+... # POST
+...
+... another_call()
+... '''.strip())
+```
+
+>>> pat = Assign
+
+```py
+>>> pprint(f.copy().sub(pat, 'replacement').src)
+call()
+ 
+replacement
+# POST
+ 
+another_call()
+```
+
+The `PRE` and `LINE` comments were removed (replaced technically, but the `repl` template didn't have anything in their
+locations). This is because the default global `trivia` parameter specifies the preceding block comment and the trailing
+line comment. If you change this to "no trivia" then those comments are not overwritten.
+
+```py
+>>> pprint(f.copy().sub(pat, 'replacement', trivia=()).src)
+call()
+ 
+# PRE
+replacement
+# LINE
+# POST
+ 
+another_call()
+```
+
+Even if the replacement comes with its own comments.
+
+```py
+>>> pprint(f.copy().sub(pat, '''
+... # PRE-REPL
+... replacement  # LINE-REPL
+... '''.strip(), trivia=()).src)
+call()
+ 
+# PRE
+# PRE-REPL
+replacement  # LINE-REPL
+# LINE
+# POST
+ 
+another_call()
+```
+
+So if the replacement comes with its own comments (at least leading and line), and you want to replace the existing
+comments, then leave `trivia` at the default `True`.
+
+```py
+>>> pprint(f.copy().sub(pat, '''
+... # PRE-REPL
+... replacement  # LINE-REPL
+... '''.strip()).src)
+call()
+ 
+# PRE-REPL
+replacement  # LINE-REPL
+# POST
+ 
+another_call()
+```
+
+Or you can nuke them all, including leading and trailing space, as all possible trivia parameter values are honored.
+
+```py
+>>> pprint(f.copy().sub(pat, 'replacement', trivia=('all+', 'all+')).src)
+call()
+replacement
+another_call()
+```
+
+When we start to use tags in the `repl` template is where things start to get a bit complicated. First off, we switch
+from a string template to an `FST(..., 'exec')` template to make sure it is a `Module` of statements, because otherwise
+the trivia puts do not behave well since the original template may be a single `Expr` or even just a non-statement
+expression. So the rule for proper statement trivia is that your `repl` template should be a `Module`.
+
+>>> repl = FST('''
+... # PRE-REPL
+... __FST_  # LINE-REPL
+... # POST-REPL
+... '''.strip(), 'exec')
+
+```py
+>>> pprint(f.copy().sub(pat, repl).src)
+call()
+ 
+# PRE
+a = b  # LINE
+# POST-REPL
+# POST
+ 
+another_call()
+```
+
+In the case above, the assignment came over with its own leading and line comments and overwrote the `repl` leading and
+line comments, but not the trailing comment. And that result was put back to the original match, overwriting ITS leading
+and line comments (with the same ones that were copied over, so they look identical anyway). But it also copied the
+`repl` trailing comment and did not overwrite the trailing comment that was there.
+
+What would happen if we include trailing comments in the trivia?
+
+```py
+>>> pprint(f.copy().sub(pat, repl, trivia=('block', 'block')).src)
+call()
+ 
+# PRE
+a = b  # LINE
+# POST
+ 
+another_call()
+```
+
+It looks the same as the source, but all those comments took a round trip through the `repl` template. We can show this
+by disabling the trivia overwrite for the operation which puts the matched element to the `repl` template.
+
+```py
+>>> pprint(f.copy().sub(pat, repl,
+...     repl_options=dict(trivia=()),
+...     trivia=('block', 'block'),
+... ).src)
+call()
+ 
+# PRE-REPL
+# PRE
+a = b  # LINE
+# POST
+# LINE-REPL
+# POST-REPL
+ 
+another_call()
+```
+
+Since the overwriting was turned off, the original `repl` comments survived AND had the source matched object comments
+added. We can now also turn off the copy of trivia from the source matched node.
+
+```py
+>>> pprint(f.copy().sub(pat, repl,
+...     copy_options=dict(trivia=()),
+...     repl_options=dict(trivia=()),
+...     trivia=('block', 'block'),
+... ).src)
+call()
+ 
+# PRE-REPL
+a = b
+# LINE-REPL
+# POST-REPL
+ 
+another_call()
+```
+
+We will end this discussion here as going any furtheron this topic may constitute a violation of the Geneva Convention
+with respect to the reader. Suffice it to say that trivia handling in substitution is possible but quirky. If you want
+to truly figure it out then the best method would be to actually try it in practice in the cases where you want to use
+it and see what works.
+
+A last note to add before we run screaming from this topic. What we showed above is trivia for statements. The same
+trivia rules apply to slices of list fields of expressions, but actually applying them is more elusive as the `repl`
+template cannot specify "slices" of fields but rather whole nodes. So the only place where those trivia rules apply for
+expressions is when replacing PARTS of the `repl` template expression list fields with PARTS from source match list
+fields. And not at all when substituting the `repl` template back for the original match as that will be a whole node
+operation (and whole node expression operations don't do trivia).
+
+
+## Options
+
+As noted in the sections above, each individual substitution can have several phases and we feel the need to emphasize
+this point and how it interacts with options as it can make the difference between a substitution being possible and
+impossible.
+
+Each phase can have its own options or it can use the `options` passed as keyword arguments to the actual `sub()`
+function. If you provide actual dictionaries (even empty) for `copy_options` or `repl_options` then ONLY those options
+will be used for those phases of the substitution. If you do not provide these dictionaries then the keyword argument
+`options` are used for the phase.
+
+To clarify the phases and the options they use we will use a simple substitution as an example.
+
+>>> f = FST('i = a.b')
+
+>>> pat = MName(ctx=Load)
+
+>>> repl = 'log(__FST_)'
+
+>>> print(f.sub(pat, repl).src)
+i = log(a).b
+
+The phases and options applied are as follows:
+
+1. `copy_options`: Copy tagged nodes from matched element of `self`: The node `Name('a')` is `copy(**copy_options)`ied
+    from `f`.
+
+2. `repl_options`: Put tagged nodes to `repl` template tag slots `__FST_<tag>`: The copied `Name` node is
+    `put(**repl_options)` to the `repl` template.
+
+3. `options`: Put filled `repl` template back to `self` node which was matched by the pattern: After steps 1 and 2 are
+    repeated for each replacement tag in the `repl` template, the resulting `repl` is `put(**options)` to the original
+    matched `Name` node location in `f`.
+
+The put function used may be a single-element or a slice put, but the important thing is which options are used at each
+step.
+
+
+## Usage of coercion
+
+The substitution operations depend on coercion of node types in many cases in order to work properly. If you attempt
+substitution with `coerce=False` you may get failures where you might not expect them.
+
+>>> f = FST('call(a, *b, c=d, **e)')
+
+>>> pat = MCall(args=M(t=...))
+
+>>> repl = 'call2(x, __FST_t, **y)'
+
+>>> pprint(f.copy().sub(pat, repl).src)
+call2(x, a, *b, **y)
+
+>>> pprint(f.copy().sub(pat, repl, coerce=False).src)
+Traceback (most recent call last):
+...
+fst.NodeError: expecting _arglikes, got Tuple, coerce disabled
 
 """

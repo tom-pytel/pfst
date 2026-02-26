@@ -100,6 +100,10 @@ def func(arg: int=0) -> int:
     return arg
 ```
 
+Beyond basic editing, `pfst` provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
+substitution, and a mechanism for reconciling external `AST` mutations with the formatted tree, preserving comments and
+layout wherever the structure still permits it.
+
 ### TODO
 
 * Put one to:
@@ -123,7 +127,6 @@ different source encodings, code cleanups, API additions for real-world use, opt
 
 * Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
 preserve more formatting.
-
 
 ### Trivia
 
