@@ -3660,17 +3660,14 @@ Module - ROOT 0,0..0,12
 r'''a and b'''),
 r'''MBoolOp''', (None,
 r'''x and __FST_ and y'''),
-r'''x and (a and b) and y''', r'''
-BoolOp - ROOT 0,0..0,21
+r'''x and a and b and y''', r'''
+BoolOp - ROOT 0,0..0,19
   .op And
-  .values[3]
+  .values[4]
    0] Name 'x' Load - 0,0..0,1
-   1] BoolOp - 0,7..0,14
-     .op And
-     .values[2]
-      0] Name 'a' Load - 0,7..0,8
-      1] Name 'b' Load - 0,13..0,14
-   2] Name 'y' Load - 0,20..0,21
+   1] Name 'a' Load - 0,6..0,7
+   2] Name 'b' Load - 0,12..0,13
+   3] Name 'y' Load - 0,18..0,19
 '''),
 
 ('', None, None, None, {}, ('BoolOp',
@@ -4976,9 +4973,9 @@ Starred - ROOT 0,0..0,2
 ('', None, None, None, {}, (None,
 r'''a'''),
 r'''MName''',
-r'''__FST  # new''',
-r'''__FST  # new''',
-r'''Name '__FST' Load - ROOT 0,0..0,5'''),
+r'''__FST_  # new''',
+r'''a''',
+r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
 ('', None, None, None, {}, (None,
 r'''a'''),
@@ -8688,21 +8685,18 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (a and b) and c:
+if a and b and c:
     if d:
         if e:
             pass
 ''', r'''
 If - ROOT 0,0..3,16
-  .test BoolOp - 0,3..0,18
+  .test BoolOp - 0,3..0,16
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,11
-       .op And
-       .values[2]
-        0] Name 'a' Load - 0,4..0,5
-        1] Name 'b' Load - 0,10..0,11
-     1] Name 'c' Load - 0,17..0,18
+    .values[3]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
   .body[1]
    0] If - 1,4..3,16
      .test Name 'd' Load - 1,7..1,8
@@ -8725,20 +8719,17 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (a and b) and c:
+if a and b and c:
     if d and e:
         pass
 ''', r'''
 If - ROOT 0,0..2,12
-  .test BoolOp - 0,3..0,18
+  .test BoolOp - 0,3..0,16
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,11
-       .op And
-       .values[2]
-        0] Name 'a' Load - 0,4..0,5
-        1] Name 'b' Load - 0,10..0,11
-     1] Name 'c' Load - 0,17..0,18
+    .values[3]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
   .body[1]
    0] If - 1,4..2,12
      .test BoolOp - 1,7..1,14
@@ -8762,24 +8753,18 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if ((a and b) and c) and d:
+if a and b and c and d:
     if e:
         pass
 ''', r'''
 If - ROOT 0,0..2,12
-  .test BoolOp - 0,3..0,26
+  .test BoolOp - 0,3..0,22
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,19
-       .op And
-       .values[2]
-        0] BoolOp - 0,5..0,12
-          .op And
-          .values[2]
-           0] Name 'a' Load - 0,5..0,6
-           1] Name 'b' Load - 0,11..0,12
-        1] Name 'c' Load - 0,18..0,19
-     1] Name 'd' Load - 0,25..0,26
+    .values[4]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
+     3] Name 'd' Load - 0,21..0,22
   .body[1]
    0] If - 1,4..2,12
      .test Name 'e' Load - 1,7..1,8
@@ -8799,27 +8784,18 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (((a and b) and c) and d) and e:
+if a and b and c and d and e:
     pass
 ''', r'''
 If - ROOT 0,0..1,8
-  .test BoolOp - 0,3..0,34
+  .test BoolOp - 0,3..0,28
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,27
-       .op And
-       .values[2]
-        0] BoolOp - 0,5..0,20
-          .op And
-          .values[2]
-           0] BoolOp - 0,6..0,13
-             .op And
-             .values[2]
-              0] Name 'a' Load - 0,6..0,7
-              1] Name 'b' Load - 0,12..0,13
-           1] Name 'c' Load - 0,19..0,20
-        1] Name 'd' Load - 0,26..0,27
-     1] Name 'e' Load - 0,33..0,34
+    .values[5]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
+     3] Name 'd' Load - 0,21..0,22
+     4] Name 'e' Load - 0,27..0,28
   .body[1]
    0] Pass - 1,4..1,8
 '''),
@@ -8836,27 +8812,18 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (((a and b) and c) and d) and e:
+if a and b and c and d and e:
     pass
 ''', r'''
 If - ROOT 0,0..1,8
-  .test BoolOp - 0,3..0,34
+  .test BoolOp - 0,3..0,28
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,27
-       .op And
-       .values[2]
-        0] BoolOp - 0,5..0,20
-          .op And
-          .values[2]
-           0] BoolOp - 0,6..0,13
-             .op And
-             .values[2]
-              0] Name 'a' Load - 0,6..0,7
-              1] Name 'b' Load - 0,12..0,13
-           1] Name 'c' Load - 0,19..0,20
-        1] Name 'd' Load - 0,26..0,27
-     1] Name 'e' Load - 0,33..0,34
+    .values[5]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
+     3] Name 'd' Load - 0,21..0,22
+     4] Name 'e' Load - 0,27..0,28
   .body[1]
    0] Pass - 1,4..1,8
 '''),
@@ -8915,20 +8882,17 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (a and b) and c:
+if a and b and c:
     if d and e:
         pass
 ''', r'''
 If - ROOT 0,0..2,12
-  .test BoolOp - 0,3..0,18
+  .test BoolOp - 0,3..0,16
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,11
-       .op And
-       .values[2]
-        0] Name 'a' Load - 0,4..0,5
-        1] Name 'b' Load - 0,10..0,11
-     1] Name 'c' Load - 0,17..0,18
+    .values[3]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
   .body[1]
    0] If - 1,4..2,12
      .test BoolOp - 1,7..1,14
@@ -8954,32 +8918,26 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (a and b) and c:
-    if (d and e) and f:
+if a and b and c:
+    if d and e and f:
         if g:
             pass
 ''', r'''
 If - ROOT 0,0..3,16
-  .test BoolOp - 0,3..0,18
+  .test BoolOp - 0,3..0,16
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,11
-       .op And
-       .values[2]
-        0] Name 'a' Load - 0,4..0,5
-        1] Name 'b' Load - 0,10..0,11
-     1] Name 'c' Load - 0,17..0,18
+    .values[3]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
   .body[1]
    0] If - 1,4..3,16
-     .test BoolOp - 1,7..1,22
+     .test BoolOp - 1,7..1,20
        .op And
-       .values[2]
-        0] BoolOp - 1,8..1,15
-          .op And
-          .values[2]
-           0] Name 'd' Load - 1,8..1,9
-           1] Name 'e' Load - 1,14..1,15
-        1] Name 'f' Load - 1,21..1,22
+       .values[3]
+        0] Name 'd' Load - 1,7..1,8
+        1] Name 'e' Load - 1,13..1,14
+        2] Name 'f' Load - 1,19..1,20
      .body[1]
       0] If - 2,8..3,16
         .test Name 'g' Load - 2,11..2,12
@@ -9001,35 +8959,26 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if ((a and b) and c) and d:
-    if (e and f) and g:
+if a and b and c and d:
+    if e and f and g:
         pass
 ''', r'''
 If - ROOT 0,0..2,12
-  .test BoolOp - 0,3..0,26
+  .test BoolOp - 0,3..0,22
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,19
-       .op And
-       .values[2]
-        0] BoolOp - 0,5..0,12
-          .op And
-          .values[2]
-           0] Name 'a' Load - 0,5..0,6
-           1] Name 'b' Load - 0,11..0,12
-        1] Name 'c' Load - 0,18..0,19
-     1] Name 'd' Load - 0,25..0,26
+    .values[4]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
+     3] Name 'd' Load - 0,21..0,22
   .body[1]
    0] If - 1,4..2,12
-     .test BoolOp - 1,7..1,22
+     .test BoolOp - 1,7..1,20
        .op And
-       .values[2]
-        0] BoolOp - 1,8..1,15
-          .op And
-          .values[2]
-           0] Name 'e' Load - 1,8..1,9
-           1] Name 'f' Load - 1,14..1,15
-        1] Name 'g' Load - 1,21..1,22
+       .values[3]
+        0] Name 'e' Load - 1,7..1,8
+        1] Name 'f' Load - 1,13..1,14
+        2] Name 'g' Load - 1,19..1,20
      .body[1]
       0] Pass - 2,8..2,12
 '''),
@@ -9048,28 +8997,19 @@ r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
 if __FST_outt and __FST_int:
     __FST_inb
 ''', r'''
-if (((a and b) and c) and d) and e:
+if a and b and c and d and e:
     if f and g:
         pass
 ''', r'''
 If - ROOT 0,0..2,12
-  .test BoolOp - 0,3..0,34
+  .test BoolOp - 0,3..0,28
     .op And
-    .values[2]
-     0] BoolOp - 0,4..0,27
-       .op And
-       .values[2]
-        0] BoolOp - 0,5..0,20
-          .op And
-          .values[2]
-           0] BoolOp - 0,6..0,13
-             .op And
-             .values[2]
-              0] Name 'a' Load - 0,6..0,7
-              1] Name 'b' Load - 0,12..0,13
-           1] Name 'c' Load - 0,19..0,20
-        1] Name 'd' Load - 0,26..0,27
-     1] Name 'e' Load - 0,33..0,34
+    .values[5]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
+     3] Name 'd' Load - 0,21..0,22
+     4] Name 'e' Load - 0,27..0,28
   .body[1]
    0] If - 1,4..2,12
      .test BoolOp - 1,7..1,14

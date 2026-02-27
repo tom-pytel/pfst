@@ -1233,9 +1233,9 @@ Here we converted a `List` into a `Set` by capturing its entire `elts` field and
 
 >>> print(FST('[a, b, c, d, e]').sub(
 ...     MList(elts=[..., MQSTAR(tag=...), ...]),
-...     '{__FST_tag}',
+...     '{x, __FST_tag, y}',
 ... ).src)
-{b, c, d}
+{x, b, c, d, y}
 
 Here we stripped the first and last nodes from the `List.elts` field and just used everything in the middle. Quantifier
 matches can be used to insert parts of matches into the replacement template, including compound matches with
@@ -1243,9 +1243,9 @@ quantifier subsequences.
 
 >>> print(FST('[a, b, c, d, d, e, e, f, g]').sub(
 ...     MList(elts=[MQSTAR.NG, MQPLUS(tag=[M(t=...), MTAG('t')]), MQSTAR]),
-...     '{__FST_tag}',
+...     '{x, __FST_tag, y}',
 ... ).src)
-{d, d, e, e}
+{x, d, d, e, e, y}
 
 This sequence matching applies to all list fields, including statements, exception handlers, match cases, etc...
 
@@ -1314,6 +1314,39 @@ A note on the special templates for these sequences which contain the `'...'` st
 templates if the dotted string is one continuous single-quoted string. If it is triple-quoted like `'''...'''`, or an
 innate string like `'..' '.'` then it does not trigger the template behavior. This is done on purpose in order to allow
 these string values to be used specifically without triggering templates.
+
+
+## Slice cardinality overrides
+
+The meaning of tags in the `repl` pattern is not always clear. One of the common uncertainties that can exist is between
+"replace this single element" or "replace this slice of elements". The `sub()` function does its best to guess which to
+apply from the substitution context.
+
+For an example here are two puts of a list to another list with the same identical `repl` template which give different
+results due to the different ways their source tag is gotten.
+
+>>> repl = '[x, __FST_tag, y]'
+
+>>> pat_slice = MList(elts=M(tag=...))
+
+>>> pat_one = M(tag=MList)
+
+>>> print(FST('[a, b, c]').sub(pat_slice, repl).src)
+[x, a, b, c, y]
+
+>>> print(FST('[a, b, c]').sub(pat_one, repl).src)
+[x, [a, b, c], y]
+
+For this reason, tag override hints exist so that you can specify the behavior you want explicitly. Instead of the
+`__FST_<tag>` which is neutral and lets the `sub()` function decide what kind of put to do, you can use `__FSO_<tag>`
+"One" override to force a single element put or `__FSS_<tag>` "Slice" override for a slice put. Here are the same two
+examples but with explicit overrides.
+
+>>> print(FST('[a, b, c]').sub(pat_slice, '[x, __FSO_tag, y]').src)
+[x, [a, b, c], y]
+
+>>> print(FST('[a, b, c]').sub(pat_one, '[x, __FSS_tag, y]').src)
+[x, a, b, c, y]
 
 
 ## Virtual fields
@@ -1911,7 +1944,7 @@ with a, b:
 
 **WARNING!** Normally `sub()` can prevent infinite recursion by never substituting `repl` template nodes or a
 substituted whole match put to the `repl` template. But usage of `loop` with a poorly constructed template **CAN** lead
-to infinite looping. Here is a simple example of a substitution which will loop forever:
+to infinite looping. Here is a simple example of a substitution which will loop forever.
 
 ```py
 FST('a').sub(Name, '__FST_', loop=True)

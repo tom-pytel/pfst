@@ -397,7 +397,7 @@ class _NotSet:
 
     __slots__ = ()
 
-    def __new__(cls) -> FSTMatch._NotSet:
+    def __new__(cls) -> _NotSet:  # noqa: PYI034
         return NotSet
 
     def __bool__(self) -> bool:
@@ -5570,15 +5570,18 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
 _PathsList = list[tuple[str, list[astfield], tuple[str, int | None] | None]]
 _StrTagsList = list[tuple[str, int, int, int]]
 
-_re_FST_tag = re.compile(r'\b__FST_(\w*)\b')  # for tags inside strings
+_re_FST_tag = re.compile(r'\b__FS[TSO]_')  # just the start of the tag
+_re_FST_tag_full = re.compile(r'\b__FS[TSO]_\w*\b')  # for tags inside strings
+
+_TAG2ONE = {'T': None, 'S': False, 'O': True}
 
 
 def _sub_repl_path_name(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """These are all optionally-present identifiers."""
 
     if tag := fst_.a.name:
-        if tag.startswith('__FST_'):
-            paths.append((tag[6:], repl.child_path(fst_), ('name', None)))
+        if _re_FST_tag.match(tag):
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('name', None)))
 
     return True
 
@@ -5586,8 +5589,8 @@ def _sub_repl_path_ImportFrom(paths: _PathsList, str_tags: _StrTagsList, repl: f
     """Optionally-present identifier."""
 
     if tag := fst_.a.module:
-        if tag.startswith('__FST_'):
-            paths.append((tag[6:], repl.child_path(fst_), ('module', None)))
+        if _re_FST_tag.match(tag):
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('module', None)))
 
     return True
 
@@ -5597,11 +5600,11 @@ def _sub_repl_path_Global_Nonlocal(paths: _PathsList, str_tags: _StrTagsList, re
     path = None
 
     for idx, tag in enumerate(fst_.a.names):
-        if tag.startswith('__FST_'):
+        if _re_FST_tag.match(tag):
             if path is None:
                 path = repl.child_path(fst_)
 
-            paths.append((tag[6:], path, ('names', idx)))
+            paths.append((tag[6:], _TAG2ONE[tag[4]], path, ('names', idx)))
 
     return True
 
@@ -5622,10 +5625,10 @@ def _sub_repl_path_Constant(paths: _PathsList, str_tags: _StrTagsList, repl: fst
 
             l = lines[ln]
 
-            while m := _re_FST_tag.search(l, col, cur_end_col):
+            while m := _re_FST_tag_full.search(l, col, cur_end_col):
                 start, col = m.span()
 
-                str_tags.append((m.group()[6:], (ln, start, col), True))
+                str_tags.append((m.group()[6:], None, (ln, start, col), True))
 
             col = 0
             ln += 1
@@ -5635,15 +5638,16 @@ def _sub_repl_path_Constant(paths: _PathsList, str_tags: _StrTagsList, repl: fst
 def _sub_repl_path_Attribute(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present identifier."""
 
-    if (tag := fst_.a.attr).startswith('__FST_'):
-        paths.append((tag[6:], repl.child_path(fst_), ('attr', None)))
+    if _re_FST_tag.match(tag := fst_.a.attr):
+        paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('attr', None)))
 
     return True
 
 def _sub_repl_path_Name(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST, fst_: fst.FST) -> bool:
     """Definitely-present whole node."""
 
-    if (tag := fst_.a.id).startswith('__FST_'):
+    if _re_FST_tag.match(tag := fst_.a.id):
+        one = _TAG2ONE[tag[4]]
         path = repl.child_path(fst_)
 
         if parent := fst_.parent:  # if we are a "value" of Dict and the key is a single-quoted string '...' then the substitution is of the whole key:value pair
@@ -5657,11 +5661,11 @@ def _sub_repl_path_Name(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST
                 _, col, _, end_col = key.f.loc
 
                 if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
-                    paths.append((tag[6:], path[:-1], ('_all', idx)))
+                    paths.append((tag[6:], one, path[:-1], ('_all', idx)))
 
                     return True
 
-        paths.append((tag[6:], path, None))
+        paths.append((tag[6:], one, path, None))
 
     return True
 
@@ -5675,12 +5679,12 @@ def _sub_repl_path_comprehension(paths: _PathsList, str_tags: _StrTagsList, repl
         and (iter := ast.iter).__class__ is Constant
         and iter.value == '...'
         and (target := ast.target).__class__ is Name
-        and (tag := target.id).startswith('__FST_')
+        and _re_FST_tag.match(tag := target.id)
     ):  # for __FST_tag in '...'
         _, col, _, end_col = iter.f.loc
 
         if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
-            paths.append((tag[6:], repl.child_path(fst_), None))
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), None))
 
             return False  # tell caller not recurse into this node
 
@@ -5692,20 +5696,20 @@ def _sub_repl_path_ExceptHandler(paths: _PathsList, str_tags: _StrTagsList, repl
     ast = fst_.a
 
     if tag := ast.name:
-        if tag.startswith('__FST_'):
-            paths.append((tag[6:], repl.child_path(fst_), ('name', None)))
+        if _re_FST_tag.match(tag):
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('name', None)))
 
     elif ((type_ := ast.type).__class__ is Constant
         and type_.value == '...'
         and (body := ast.body)
         and (b0 := body[0]).__class__ is Expr
         and (name := b0.value).__class__ is Name
-        and (tag := name.id).startswith('__FST_')
+        and _re_FST_tag.match(tag := name.id)
     ):  # except '...': __FST_tag
         _, col, _, end_col = type_.f.loc
 
         if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
-            paths.append((tag[6:], repl.child_path(fst_), None))
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), None))
 
             return False  # tell caller not recurse into this node
 
@@ -5716,8 +5720,8 @@ def _sub_repl_path_arg(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FST,
 
     ast = fst_.a
 
-    if (tag := ast.arg).startswith('__FST_'):
-        paths.append((tag[6:], repl.child_path(fst_), ('arg', None) if ast.annotation else None))
+    if _re_FST_tag.match(tag := ast.arg):
+        paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('arg', None) if ast.annotation else None))
 
     return True
 
@@ -5725,8 +5729,8 @@ def _sub_repl_path_keyword(paths: _PathsList, str_tags: _StrTagsList, repl: fst.
     """Optionally-present identifier."""
 
     if tag := fst_.a.arg:
-        if tag.startswith('__FST_'):
-            paths.append((tag[6:], repl.child_path(fst_), ('arg', None)))
+        if _re_FST_tag.match(tag):
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('arg', None)))
 
     return True
 
@@ -5737,21 +5741,22 @@ def _sub_repl_path_alias(paths: _PathsList, str_tags: _StrTagsList, repl: fst.FS
     asname = ast.asname
     path = None
 
-    if (tag := ast.name).startswith('__FST_'):
+    if _re_FST_tag.match(tag := ast.name):
+        one = _TAG2ONE[tag[4]]
         path = repl.child_path(fst_)
 
         if not asname:  # if no asname then bump up to alias node level
-            paths.append((tag[6:], path, None))
+            paths.append((tag[6:], one, path, None))
 
             return True
 
-        paths.append((tag[6:], path, ('name', None)))
+        paths.append((tag[6:], one, path, ('name', None)))
 
-    if asname and asname.startswith('__FST_'):
+    if asname and _re_FST_tag.match(asname):
         if path is None:
             path = repl.child_path(fst_)
 
-        paths.append((asname[6:], path, ('asname', None)))
+        paths.append((asname[6:], _TAG2ONE[asname[4]], path, ('asname', None)))
 
     return True
 
@@ -5767,12 +5772,12 @@ def _sub_repl_path_match_case(paths: _PathsList, str_tags: _StrTagsList, repl: f
         and (body := ast.body)
         and (b0 := body[0]).__class__ is Expr
         and (name := b0.value).__class__ is Name
-        and (tag := name.id).startswith('__FST_')
+        and _re_FST_tag.match(tag := name.id)
     ):  # case '...': __FST_tag
         _, col, _, end_col = pat_value.f.loc
 
         if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
-            paths.append((tag[6:], repl.child_path(fst_), None))
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), None))
 
             return False  # tell caller not recurse into this node
 
@@ -5782,8 +5787,8 @@ def _sub_repl_path_MatchMapping(paths: _PathsList, str_tags: _StrTagsList, repl:
     """Optionally-present identifier."""
 
     if tag := fst_.a.rest:
-        if tag.startswith('__FST_'):
-            paths.append((tag[6:], repl.child_path(fst_), ('rest', None)))
+        if _re_FST_tag.match(tag):
+            paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), ('rest', None)))
 
     return True
 
@@ -5793,11 +5798,11 @@ def _sub_repl_path_MatchClass(paths: _PathsList, str_tags: _StrTagsList, repl: f
     path = None
 
     for idx, tag in enumerate(fst_.a.kwd_attrs):
-        if tag.startswith('__FST_'):
+        if _re_FST_tag.match(tag):
             if path is None:
                 path = repl.child_path(fst_)
 
-            paths.append((tag[6:], path, ('kwd_attrs', idx)))
+            paths.append((tag[6:], _TAG2ONE[tag[4]], path, ('kwd_attrs', idx)))
 
     return True
 
@@ -5807,11 +5812,12 @@ def _sub_repl_path_MatchAs(paths: _PathsList, str_tags: _StrTagsList, repl: fst.
     ast = fst_.a
 
     if tag := ast.name:
-        if tag.startswith('__FST_'):
+        if _re_FST_tag.match(tag):
+            one = _TAG2ONE[tag[4]]
             path = repl.child_path(fst_)
 
             if ast.pattern:
-                paths.append((tag[6:], path, ('name', None)))
+                paths.append((tag[6:], one, path, ('name', None)))
 
                 return True
 
@@ -5826,11 +5832,11 @@ def _sub_repl_path_MatchAs(paths: _PathsList, str_tags: _StrTagsList, repl: fst.
                     _, col, _, end_col = key.f.loc
 
                     if end_col - col == 5:  # make sure it is a single-quoted non-implicit string
-                        paths.append((tag[6:], path[:-1], ('_all', idx)))
+                        paths.append((tag[6:], one, path[:-1], ('_all', idx)))
 
                         return True
 
-            paths.append((tag[6:], path, None))
+            paths.append((tag[6:], one, path, None))
 
     return True
 
@@ -5839,10 +5845,10 @@ def _sub_repl_path_TypeVar(paths: _PathsList, str_tags: _StrTagsList, repl: fst.
 
     ast = fst_.a
 
-    if (tag := ast.name).startswith('__FST_'):
+    if _re_FST_tag.match(tag := ast.name):
         child = ('name', None) if ast.bound or getattr(ast, 'default_value', False) else None  # default_value does not exist on py < 3.13
 
-        paths.append((tag[6:], repl.child_path(fst_), child))
+        paths.append((tag[6:], _TAG2ONE[tag[4]], repl.child_path(fst_), child))
 
     return True
 
@@ -6172,6 +6178,9 @@ def sub(
     tag or is left empty to indicate the whole matched node. The replacement template can be passed as source or an
     `FST` or `AST` node.
 
+    `__FSS_<tag>` can be used to force slice substitution of tags the `repl` template and `__FSO_<tag>` can be used to
+    force single element substitution.
+
     THIS IS AN IN-PLACE MUTATION!
 
     Individual options can be passed for each of the three phases of each substitution. The phases and their options are
@@ -6377,7 +6386,7 @@ def sub(
     >>> print(f.copy().subn(pat, repl, nested=True, count=1))
     (<With ROOT 0,0..4,20>, 1, 1)
 
-    The `loop` parameter allows you to iteratively apply substitution to the same node as long as it still matches the
+    The `loop` parameter allows you to repeatedly apply substitution to the same node as long as it still matches the
     pattern.
 
     >>> print(f.copy().sub(pat, repl, loop=True).src)
@@ -6387,8 +6396,7 @@ def sub(
     >>> print(f.copy().subn(pat, repl, loop=True))
     (<With ROOT 0,0..1,8>, 1, 4)
 
-    And the `subn()` function does the same thing as `sub()` but returns the number of unique and total substitutions
-    made.
+    The `subn()` function does the same thing as `sub()` but returns the number of unique and total substitutions made.
 
     >>> print(f.copy().sub(pat, repl, nested=True, loop=2).src)
     with a, b, c:
@@ -6438,7 +6446,7 @@ def sub(
 
             dirty.update(walk(repl_.a))  # by default nothing from the repl template gets substituted
 
-            for tag, path, child in paths:
+            for tag, one_override, path, child in paths:
                 repl_slot_new_is_matched_root = False  # if the new node for the repl slot is the top level matched node (which should itself not be substituted again)
                 one = True
 
@@ -6574,7 +6582,14 @@ def sub(
                             elif repl_slot_new_cls is withitem:
                                 repl_slot = parent
 
+                    elif parenta_cls is BoolOp:  # if BoolOp as element of Boolop then it results simpler to put as slice if same op
+                        if field == 'values' and (a := repl_slot_new.a).__class__ is BoolOp:
+                            one = a.op.__class__ is not parenta.op.__class__
+
                     if new_idx is not None:  # replace is a special virtual field slice operation
+                        if one_override is not None:
+                            one = one_override
+
                         if not repl_slot_new_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
                             parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options_)
 
@@ -6589,6 +6604,9 @@ def sub(
                                     dirty.add(f.a)
 
                         continue
+
+                if one_override is not None:
+                    one = one_override
 
                 repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options_)
 

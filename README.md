@@ -122,13 +122,13 @@ layout wherever the structure still permits it.
   - `Interpolation.conversion`
   - `Interpolation.format_spec`
 
-- Maybe allow non-slice individual expressionlike nodes to own comments (as opposed to only individual statementlikes
-and expressionlike slices), allowing them to be copied and put with these nodes. More direct comment manipulation
-functions.
-
 - The aesthetics of multiline slice operation alignment are not concretized yet. The current alignment behavior
 basically just aligns, not necessarily always at the expected place. It should get more standard and controllable in the
 future.
+
+- Maybe allow non-slice individual expressionlike nodes to own comments (as opposed to only individual statementlikes
+and expressionlike slices), allowing them to be copied and put with these nodes. More direct comment manipulation
+functions.
 
 - Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
 preserve more formatting.

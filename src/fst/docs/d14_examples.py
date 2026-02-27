@@ -1874,7 +1874,7 @@ class cls:
 This is also easily doable and shows off the `loop` parameter which allows you to apply a substitution to the same
 location an arbitrary number of times in order to collapse structures. When `loop` is enabled, after a successful
 substitution the resulting node is checked again against the pattern and if it still matches then the substitution is
-applied again, and again until the result no longer matches the pattern (or it can be limited to a maximum number of
+applied again repeatedly until the result no longer matches the pattern (or it can be limited to a maximum number of
 iterations).
 
 ```py

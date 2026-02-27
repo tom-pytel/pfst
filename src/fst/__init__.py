@@ -128,7 +128,7 @@ specific version of Python).
 - `pfst` validates for parsability, not compilability. This means that `*a, *b = c` and `def f(a, a): pass` are both
 considered valid even though they are uncompilable.
 
-- If you will be playing with this module then the `FST.dump()` method will be your friend.
+- If you will be playing with `pfst` then the `FST.dump()` method will be your friend.
 '''
 
 import ast
