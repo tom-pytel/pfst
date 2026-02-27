@@ -214,7 +214,7 @@ __all__ = [
 ]
 
 
-Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
+Code = Union['fst.FST', AST, str, list[str]]  ; """Code types accepted for put to `FST`."""
 CodeAs = Callable[[Code, Mapping[str, Any], Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
 
 _ASTS_LEAF_EXPRISH_SEQ = frozenset([Tuple, List, Set, arguments, MatchSequence, _Assign_targets, _decorator_list,

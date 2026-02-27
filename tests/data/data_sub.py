@@ -8464,6 +8464,624 @@ Tuple - ROOT 0,0..0,7
 '''),
 ],
 
+'loop': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''[a, b, c, d, e]'''),
+r'''MList(elts=[M(a=...), M(b=...), MQSTAR(tail=...)])''',
+r'''[__FST_a + __FST_b, __FST_tail]''',
+r'''[a + b, c, d, e]''', r'''
+List - ROOT 0,0..0,16
+  .elts[4]
+   0] BinOp - 0,1..0,6
+     .left Name 'a' Load - 0,1..0,2
+     .op Add - 0,3..0,4
+     .right Name 'b' Load - 0,5..0,6
+   1] Name 'c' Load - 0,8..0,9
+   2] Name 'd' Load - 0,11..0,12
+   3] Name 'e' Load - 0,14..0,15
+  .ctx Load
+'''),
+
+('', None, None, None, {'loop': 1}, (None,
+r'''[a, b, c, d, e]'''),
+r'''MList(elts=[M(a=...), M(b=...), MQSTAR(tail=...)])''',
+r'''[__FST_a + __FST_b, __FST_tail]''',
+r'''[a + b, c, d, e]''', r'''
+List - ROOT 0,0..0,16
+  .elts[4]
+   0] BinOp - 0,1..0,6
+     .left Name 'a' Load - 0,1..0,2
+     .op Add - 0,3..0,4
+     .right Name 'b' Load - 0,5..0,6
+   1] Name 'c' Load - 0,8..0,9
+   2] Name 'd' Load - 0,11..0,12
+   3] Name 'e' Load - 0,14..0,15
+  .ctx Load
+'''),
+
+('', None, None, None, {'loop': 2}, (None,
+r'''[a, b, c, d, e]'''),
+r'''MList(elts=[M(a=...), M(b=...), MQSTAR(tail=...)])''',
+r'''[__FST_a + __FST_b, __FST_tail]''',
+r'''[a + b + c, d, e]''', r'''
+List - ROOT 0,0..0,17
+  .elts[3]
+   0] BinOp - 0,1..0,10
+     .left BinOp - 0,1..0,6
+       .left Name 'a' Load - 0,1..0,2
+       .op Add - 0,3..0,4
+       .right Name 'b' Load - 0,5..0,6
+     .op Add - 0,7..0,8
+     .right Name 'c' Load - 0,9..0,10
+   1] Name 'd' Load - 0,12..0,13
+   2] Name 'e' Load - 0,15..0,16
+  .ctx Load
+'''),
+
+('', None, None, None, {'loop': 0}, (None,
+r'''[a, b, c, d, e]'''),
+r'''MList(elts=[M(a=...), M(b=...), MQSTAR(tail=...)])''',
+r'''[__FST_a + __FST_b, __FST_tail]''',
+r'''[a + b + c + d + e]''', r'''
+List - ROOT 0,0..0,19
+  .elts[1]
+   0] BinOp - 0,1..0,18
+     .left BinOp - 0,1..0,14
+       .left BinOp - 0,1..0,10
+         .left BinOp - 0,1..0,6
+           .left Name 'a' Load - 0,1..0,2
+           .op Add - 0,3..0,4
+           .right Name 'b' Load - 0,5..0,6
+         .op Add - 0,7..0,8
+         .right Name 'c' Load - 0,9..0,10
+       .op Add - 0,11..0,12
+       .right Name 'd' Load - 0,13..0,14
+     .op Add - 0,15..0,16
+     .right Name 'e' Load - 0,17..0,18
+  .ctx Load
+'''),
+
+('', None, None, None, {'loop': True}, (None,
+r'''[a, b, c, d, e]'''),
+r'''MList(elts=[M(a=...), M(b=...), MQSTAR(tail=...)])''',
+r'''[__FST_a + __FST_b, __FST_tail]''',
+r'''[a + b + c + d + e]''', r'''
+List - ROOT 0,0..0,19
+  .elts[1]
+   0] BinOp - 0,1..0,18
+     .left BinOp - 0,1..0,14
+       .left BinOp - 0,1..0,10
+         .left BinOp - 0,1..0,6
+           .left Name 'a' Load - 0,1..0,2
+           .op Add - 0,3..0,4
+           .right Name 'b' Load - 0,5..0,6
+         .op Add - 0,7..0,8
+         .right Name 'c' Load - 0,9..0,10
+       .op Add - 0,11..0,12
+       .right Name 'd' Load - 0,13..0,14
+     .op Add - 0,15..0,16
+     .right Name 'e' Load - 0,17..0,18
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if a and b:
+    if c:
+        if d:
+            if e:
+                pass
+''', r'''
+If - ROOT 0,0..4,20
+  .test BoolOp - 0,3..0,10
+    .op And
+    .values[2]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+  .body[1]
+   0] If - 1,4..4,20
+     .test Name 'c' Load - 1,7..1,8
+     .body[1]
+      0] If - 2,8..4,20
+        .test Name 'd' Load - 2,11..2,12
+        .body[1]
+         0] If - 3,12..4,20
+           .test Name 'e' Load - 3,15..3,16
+           .body[1]
+            0] Pass - 4,16..4,20
+'''),
+
+('', None, None, None, {'loop': 1}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if a and b:
+    if c:
+        if d:
+            if e:
+                pass
+''', r'''
+If - ROOT 0,0..4,20
+  .test BoolOp - 0,3..0,10
+    .op And
+    .values[2]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+  .body[1]
+   0] If - 1,4..4,20
+     .test Name 'c' Load - 1,7..1,8
+     .body[1]
+      0] If - 2,8..4,20
+        .test Name 'd' Load - 2,11..2,12
+        .body[1]
+         0] If - 3,12..4,20
+           .test Name 'e' Load - 3,15..3,16
+           .body[1]
+            0] Pass - 4,16..4,20
+'''),
+
+('', None, None, None, {'loop': 1, 'nested': True}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if a and b:
+    if c and d:
+        if e:
+            pass
+''', r'''
+If - ROOT 0,0..3,16
+  .test BoolOp - 0,3..0,10
+    .op And
+    .values[2]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+  .body[1]
+   0] If - 1,4..3,16
+     .test BoolOp - 1,7..1,14
+       .op And
+       .values[2]
+        0] Name 'c' Load - 1,7..1,8
+        1] Name 'd' Load - 1,13..1,14
+     .body[1]
+      0] If - 2,8..3,16
+        .test Name 'e' Load - 2,11..2,12
+        .body[1]
+         0] Pass - 3,12..3,16
+'''),
+
+('', None, None, None, {'loop': 2}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (a and b) and c:
+    if d:
+        if e:
+            pass
+''', r'''
+If - ROOT 0,0..3,16
+  .test BoolOp - 0,3..0,18
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,11
+       .op And
+       .values[2]
+        0] Name 'a' Load - 0,4..0,5
+        1] Name 'b' Load - 0,10..0,11
+     1] Name 'c' Load - 0,17..0,18
+  .body[1]
+   0] If - 1,4..3,16
+     .test Name 'd' Load - 1,7..1,8
+     .body[1]
+      0] If - 2,8..3,16
+        .test Name 'e' Load - 2,11..2,12
+        .body[1]
+         0] Pass - 3,12..3,16
+'''),
+
+('', None, None, None, {'loop': 2, 'nested': True}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (a and b) and c:
+    if d and e:
+        pass
+''', r'''
+If - ROOT 0,0..2,12
+  .test BoolOp - 0,3..0,18
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,11
+       .op And
+       .values[2]
+        0] Name 'a' Load - 0,4..0,5
+        1] Name 'b' Load - 0,10..0,11
+     1] Name 'c' Load - 0,17..0,18
+  .body[1]
+   0] If - 1,4..2,12
+     .test BoolOp - 1,7..1,14
+       .op And
+       .values[2]
+        0] Name 'd' Load - 1,7..1,8
+        1] Name 'e' Load - 1,13..1,14
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+
+('', None, None, None, {'loop': 3}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if ((a and b) and c) and d:
+    if e:
+        pass
+''', r'''
+If - ROOT 0,0..2,12
+  .test BoolOp - 0,3..0,26
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,19
+       .op And
+       .values[2]
+        0] BoolOp - 0,5..0,12
+          .op And
+          .values[2]
+           0] Name 'a' Load - 0,5..0,6
+           1] Name 'b' Load - 0,11..0,12
+        1] Name 'c' Load - 0,18..0,19
+     1] Name 'd' Load - 0,25..0,26
+  .body[1]
+   0] If - 1,4..2,12
+     .test Name 'e' Load - 1,7..1,8
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+
+('', None, None, None, {'loop': 4}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (((a and b) and c) and d) and e:
+    pass
+''', r'''
+If - ROOT 0,0..1,8
+  .test BoolOp - 0,3..0,34
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,27
+       .op And
+       .values[2]
+        0] BoolOp - 0,5..0,20
+          .op And
+          .values[2]
+           0] BoolOp - 0,6..0,13
+             .op And
+             .values[2]
+              0] Name 'a' Load - 0,6..0,7
+              1] Name 'b' Load - 0,12..0,13
+           1] Name 'c' Load - 0,19..0,20
+        1] Name 'd' Load - 0,26..0,27
+     1] Name 'e' Load - 0,33..0,34
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', None, None, None, {'loop': 5}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (((a and b) and c) and d) and e:
+    pass
+''', r'''
+If - ROOT 0,0..1,8
+  .test BoolOp - 0,3..0,34
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,27
+       .op And
+       .values[2]
+        0] BoolOp - 0,5..0,20
+          .op And
+          .values[2]
+           0] BoolOp - 0,6..0,13
+             .op And
+             .values[2]
+              0] Name 'a' Load - 0,6..0,7
+              1] Name 'b' Load - 0,12..0,13
+           1] Name 'c' Load - 0,19..0,20
+        1] Name 'd' Load - 0,26..0,27
+     1] Name 'e' Load - 0,33..0,34
+  .body[1]
+   0] Pass - 1,4..1,8
+'''),
+
+('', None, None, None, {'nested': True, 'count': 2}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    if f:
+                        pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if a and b:
+    if c and d:
+        if e:
+            if f:
+                pass
+''', r'''
+If - ROOT 0,0..4,20
+  .test BoolOp - 0,3..0,10
+    .op And
+    .values[2]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+  .body[1]
+   0] If - 1,4..4,20
+     .test BoolOp - 1,7..1,14
+       .op And
+       .values[2]
+        0] Name 'c' Load - 1,7..1,8
+        1] Name 'd' Load - 1,13..1,14
+     .body[1]
+      0] If - 2,8..4,20
+        .test Name 'e' Load - 2,11..2,12
+        .body[1]
+         0] If - 3,12..4,20
+           .test Name 'f' Load - 3,15..3,16
+           .body[1]
+            0] Pass - 4,16..4,20
+'''),
+
+('', None, None, None, {'nested': True, 'count': 2, 'loop': 2}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (a and b) and c:
+    if d and e:
+        pass
+''', r'''
+If - ROOT 0,0..2,12
+  .test BoolOp - 0,3..0,18
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,11
+       .op And
+       .values[2]
+        0] Name 'a' Load - 0,4..0,5
+        1] Name 'b' Load - 0,10..0,11
+     1] Name 'c' Load - 0,17..0,18
+  .body[1]
+   0] If - 1,4..2,12
+     .test BoolOp - 1,7..1,14
+       .op And
+       .values[2]
+        0] Name 'd' Load - 1,7..1,8
+        1] Name 'e' Load - 1,13..1,14
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+
+('', None, None, None, {'nested': True, 'count': 2, 'loop': 2}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    if f:
+                        if g:
+                            pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (a and b) and c:
+    if (d and e) and f:
+        if g:
+            pass
+''', r'''
+If - ROOT 0,0..3,16
+  .test BoolOp - 0,3..0,18
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,11
+       .op And
+       .values[2]
+        0] Name 'a' Load - 0,4..0,5
+        1] Name 'b' Load - 0,10..0,11
+     1] Name 'c' Load - 0,17..0,18
+  .body[1]
+   0] If - 1,4..3,16
+     .test BoolOp - 1,7..1,22
+       .op And
+       .values[2]
+        0] BoolOp - 1,8..1,15
+          .op And
+          .values[2]
+           0] Name 'd' Load - 1,8..1,9
+           1] Name 'e' Load - 1,14..1,15
+        1] Name 'f' Load - 1,21..1,22
+     .body[1]
+      0] If - 2,8..3,16
+        .test Name 'g' Load - 2,11..2,12
+        .body[1]
+         0] Pass - 3,12..3,16
+'''),
+
+('', None, None, None, {'nested': True, 'count': 2, 'loop': 3}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    if f:
+                        if g:
+                            pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if ((a and b) and c) and d:
+    if (e and f) and g:
+        pass
+''', r'''
+If - ROOT 0,0..2,12
+  .test BoolOp - 0,3..0,26
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,19
+       .op And
+       .values[2]
+        0] BoolOp - 0,5..0,12
+          .op And
+          .values[2]
+           0] Name 'a' Load - 0,5..0,6
+           1] Name 'b' Load - 0,11..0,12
+        1] Name 'c' Load - 0,18..0,19
+     1] Name 'd' Load - 0,25..0,26
+  .body[1]
+   0] If - 1,4..2,12
+     .test BoolOp - 1,7..1,22
+       .op And
+       .values[2]
+        0] BoolOp - 1,8..1,15
+          .op And
+          .values[2]
+           0] Name 'e' Load - 1,8..1,9
+           1] Name 'f' Load - 1,14..1,15
+        1] Name 'g' Load - 1,21..1,22
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+
+('', None, None, None, {'nested': True, 'count': 2, 'loop': 4}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    if f:
+                        if g:
+                            pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if (((a and b) and c) and d) and e:
+    if f and g:
+        pass
+''', r'''
+If - ROOT 0,0..2,12
+  .test BoolOp - 0,3..0,34
+    .op And
+    .values[2]
+     0] BoolOp - 0,4..0,27
+       .op And
+       .values[2]
+        0] BoolOp - 0,5..0,20
+          .op And
+          .values[2]
+           0] BoolOp - 0,6..0,13
+             .op And
+             .values[2]
+              0] Name 'a' Load - 0,6..0,7
+              1] Name 'b' Load - 0,12..0,13
+           1] Name 'c' Load - 0,19..0,20
+        1] Name 'd' Load - 0,26..0,27
+     1] Name 'e' Load - 0,33..0,34
+  .body[1]
+   0] If - 1,4..2,12
+     .test BoolOp - 1,7..1,14
+       .op And
+       .values[2]
+        0] Name 'f' Load - 1,7..1,8
+        1] Name 'g' Load - 1,13..1,14
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+],
+
 'identifier': [  # ................................................................................
 
 ('', None, None, None, {}, (None,

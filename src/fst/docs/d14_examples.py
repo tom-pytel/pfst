@@ -1871,17 +1871,11 @@ class cls:
 
 ## Squash nested `with`
 
-This is also doable, though this one starts to show some more of the limitations of the of substitution. Unlike the
-hardcoded example, this one cannot handle an infinite number of nested `with` statement, the maximum that can possibly
-be squashed per match needs to be encoded in the pattern.
-
-This is because in order to apply the pattern recursively the `sub()` logic would need to apply the substitution
-multiple times to the same location in the tree until there was no more match. This is a big no-no as it would quickly
-lead to infinite recursion in many cases, so we just stick with the deterministic method and deal with the limitations.
-
-One thing to note is the use of the `MQOPT` quantifier in the second nested `MWith` in the pattern. This is necessary to
-make the second one optional as without this only three succeeding nested `with` statements would be matched, but not
-two.
+This is also easily doable and shows off the `loop` parameter which allows you to apply a substitution to the same
+location an arbitrary number of times in order to collapse structures. When `loop` is enabled, after a successful
+substitution the resulting node is checked again against the pattern and if it still matches then the substitution is
+applied again, and again until the result no longer matches the pattern (or it can be limited to a maximum number of
+iterations).
 
 ```py
 >>> src = r"""
@@ -1901,28 +1895,21 @@ two.
 ...     body=[
 ...         MWith(
 ...             items=M(inner_items=...),
-...             body=[
-...                 MQOPT(MWith(
-...                     items=M(inner_items2=...),
-...                     body=M(inner_body2=...),
-...                 )),
-...                 MQSTAR(inner_body=...),
-...             ],
+...             body=M(inner_body=...)
 ...         ),
 ...         MQSTAR(outer_body=...),
 ...     ],
 ... )
 
 >>> repl = """
-... with __FST_outer_items, __FST_inner_items, __FST_inner_items2:
-...     __FST_inner_body2
+... with __FST_outer_items, __FST_inner_items:
 ...     __FST_inner_body
 ...     __FST_outer_body
 ... """.strip()
 ```
 
 ```py
->>> print(FST(src).sub(pat, repl, trivia=('block',)).src)
+>>> print(FST(src).sub(pat, repl, loop=True, trivia=('block',)).src)
 with (open(a) as f,
      lock1,  # first lock
      func() as lock2,  # this gets preserved
@@ -1930,43 +1917,6 @@ with (open(a) as f,
     # body comment
     pass
     # end body comment
-```
-
-Despite the fact that the maximum number of levels to squash is encoded in the pattern, it does not mean that the
-pattern does not work for **FEWER** levels than this. In fact it works just fine on any number of levels **UP TO** the
-maximum, and after this it just restarts at the next nested level.
-
-```py
->>> print(FST(r"""
-... with a:
-...     with b:
-...         with c:
-...             with d:
-...                 with e:
-...                     pass
-... """.strip()).sub(pat, repl, nested=True).src)
-with a, b, c:
-    with d, e:
-        pass
-```
-
-```py
->>> print(FST(r"""
-... with a:
-...     with b:
-...         pass
-... """.strip()).sub(pat, repl).src)
-with a, b:
-    pass
-```
-
-```py
->>> print(FST(r"""
-... with a:
-...     pass
-... """.strip()).sub(pat, repl).src)
-with a:
-    pass
 ```
 
 
