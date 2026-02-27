@@ -29,11 +29,13 @@ current source will always parse to the current tree.
 
 See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples. Or go straight to the [Documentation](https://tom-pytel.github.io/pfst/fst.html).
 
+
 ## Links
 
 - [Repository](https://github.com/tom-pytel/pfst)
 - [Documentation](https://tom-pytel.github.io/pfst/)
 - [PyPI](https://pypi.org/project/pfst/)
+
 
 ## Install
 
@@ -48,6 +50,7 @@ From GitHub using pip:
 From GitHub, after cloning for development:
 
     pip install -e .[dev]
+
 
 ## Getting Started
 
@@ -104,29 +107,33 @@ Beyond basic editing, `pfst` provides syntax-ordered traversal, scope symbol ana
 substitution, and a mechanism for reconciling external `AST` mutations with the formatted tree, preserving comments and
 layout wherever the structure still permits it.
 
+
 ### TODO
 
-* Put one to:
-  * `FormattedValue.conversion`
-  * `FormattedValue.format_spec`
-  * `Interpolation.str`
-  * `Interpolation.conversion`
-  * `Interpolation.format_spec`
+- Prescribed get / put slice from / to:
+  - `MatchClass.patterns+kwd_attrs:kwd_patterns` with `_pattern_args` special slice container class
+  - `JoinedStr.values`
+  - `TemplateStr.values`
 
-* Prescribed get / put slice from / to:
-  * `MatchClass.patterns+kwd_attrs:kwd_patterns`
-  * `JoinedStr.values`
-  * `TemplateStr.values`
+- Put one to:
+  - `FormattedValue.conversion`
+  - `FormattedValue.format_spec`
+  - `Interpolation.str`
+  - `Interpolation.conversion`
+  - `Interpolation.format_spec`
 
-* Improve comment and whitespace handling, especially allow get / put comments in single element non-statement
-operations where it may apply (where comment may belong to expression instead of statement). Allow specify insert line.
-Direct comment manipulation functions.
+- Maybe allow non-slice expressionlike nodes to own comments (as opposed to only statementlike and expressionlike
+slices), allowing them to be copied and put with these nodes. More direct comment manipulation functions.
 
-* Indentation of multiline sequences should be better, decide between primitive or node ops on primitive fields,
-different source encodings, code cleanups, API additions for real-world use, optimization, testing, bughunting, etc...
+- The aesthetics of multiline slice operation alignment are not concretized yet. The current alignment behavior
+basically just aligns, not necessarily always at the expected place. It will get more standard and controllable in the
+future.
 
-* Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
+- Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
 preserve more formatting.
+
+- Code cleanups, API additions for real-world use, optimization, testing, bughunting, etc...
+
 
 ### Trivia
 

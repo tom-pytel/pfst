@@ -128,9 +128,6 @@ specific version of Python).
 - `pfst` validates for parsability, not compilability. This means that `*a, *b = c` and `def f(a, a): pass` are both
 considered valid even though they are uncompilable.
 
-- The aesthetics of multiline slice operation alignment are not concretized yet. The current alignment behavior basically
-just aligns, not necessarily always at the place you may want, it will get more standard and controllable in the future.
-
 - If you will be playing with this module then the `FST.dump()` method will be your friend.
 '''
 

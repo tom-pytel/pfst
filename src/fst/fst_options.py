@@ -55,28 +55,28 @@ _re_trivia_trailing = re.compile(r'(?:all|block|none|line|) (?:[+-] (?:\d+)? )? 
 
 # ......................................................................................................................
 
-def _check_opt_bool(option: str, value: object) -> tuple | None:
+def _check_opt_bool(option: str, value: object) -> str | None:
     return 'a bool' if not isinstance(value, bool) else None
 
-def _check_opt_bool_or_None(option: str, value: object) -> tuple | None:
+def _check_opt_bool_or_None(option: str, value: object) -> str | None:
     return 'a bool or None' if not isinstance(value, (bool, NoneType)) else None
 
-def _check_opt_bool_or_auto(option: str, value: object) -> tuple | None:
+def _check_opt_bool_or_auto(option: str, value: object) -> str | None:
     return "a bool or 'auto'" if value != 'auto' and not isinstance(value, bool) else None
 
-def _check_opt_norm(option: str, value: object) -> tuple | None:
+def _check_opt_norm(option: str, value: object) -> str | None:
     if isinstance(value, bool) or value in _ALL_OPT_OBJ_NORM_VALUES:
         return None
 
     return "a bool or any '?_norm' option value"
 
-def _check_opt_norm_specific(option: str, value: object) -> tuple | None:
+def _check_opt_norm_specific(option: str, value: object) -> str | None:
     if isinstance(value, (bool, NoneType)) or value in _ALL_OPT_OBJ_NORM_VALUES:
         return None
 
     return "a bool, None or any '?_norm' option value"
 
-def _check_opt_trivia(option: str, value: object) -> tuple | None:
+def _check_opt_trivia(option: str, value: object) -> str | None:
     if (isinstance(value, int)  # or bool
         or (isinstance(value, str) and _re_trivia_leading.match(value))
         or (isinstance(value, tuple)
@@ -105,26 +105,26 @@ def _check_opt_trivia(option: str, value: object) -> tuple | None:
 
     return "one of or 0/1/2-tuple of (bool, 'all', 'block', 'none', 'line', int)"
 
-def _check_opt_pep8space(option: str, value: object) -> tuple | None:
+def _check_opt_pep8space(option: str, value: object) -> str | None:
     return 'a bool or 1' if value != True and value is not False else None  # noqa: E712
 
-def _check_opt_docstr(option: str, value: object) -> tuple | None:
+def _check_opt_docstr(option: str, value: object) -> str | None:
     return "a bool or 'strict'" if value != 'strict' and not isinstance(value, bool) else None
 
-def _check_opt_set_norm(option: str, value: object) -> tuple | None:
+def _check_opt_set_norm(option: str, value: object) -> str | None:
     return "'star' or 'call'" if value not in ('star', 'call') else None
 
-def _check_opt_op_side(option: str, value: object) -> tuple | None:
+def _check_opt_op_side(option: str, value: object) -> str | None:
     return "'left' or 'right'" if value not in ('left', 'right') else None
 
-def _check_opt_args_as(option: str, value: object) -> tuple | None:
+def _check_opt_args_as(option: str, value: object) -> str | None:
     return (
         "'pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe' or None"
         if value not in ('pos', 'arg', 'kw', 'arg_only', 'kw_only', 'pos_maybe', 'arg_maybe', 'kw_maybe', None) else
         None
     )
 
-def _check_opt_op(option: str, value: object) -> tuple | None:
+def _check_opt_op(option: str, value: object) -> str | None:
     if (getattr(value, 'a', value).__class__ in ASTS_LEAF_CMPOP  # FST() or AST() cmpop
         or (value.__class__ is type and value in ASTS_LEAF_CMPOP)  # cmpop AST type
         or isinstance(value, (str, list))  # source
@@ -133,10 +133,10 @@ def _check_opt_op(option: str, value: object) -> tuple | None:
 
     return "cmpop source, AST, FST or AST type"
 
-def _check_opt_to(option: str, value: object) -> tuple | None:
+def _check_opt_to(option: str, value: object) -> str | None:
     return 'an FST' if not isinstance(value, fst.FST) else None
 
-def _check_opt_ins_ln(option: str, value: object) -> tuple | None:
+def _check_opt_ins_ln(option: str, value: object) -> str | None:
     return 'an int' if not isinstance(value, int) else None
 
 _ALL_OPTION_CHECK_FUNCS = {
