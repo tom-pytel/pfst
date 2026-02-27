@@ -4390,6 +4390,7 @@ class FST:
     match = fst_match.match
     search = fst_match.search
     sub = fst_match.sub
+    subn = fst_match.subn
 
     def find_def(
         self,
@@ -5132,14 +5133,15 @@ class FST:
 
     @property
     def is_def(self) -> bool:
-        """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
+        """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef` or `ClassDef`. Same
+        as `is_named_scope`."""
 
         return self.a.__class__ in ASTS_LEAF_DEF
 
     @property
     def is_def_or_mod(self) -> bool:
         """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
-        `mod`."""
+        `mod`. Same as `is_named_scope_or_mod`."""
 
         return self.a.__class__ in ASTS_LEAF_DEF_OR_MOD
 

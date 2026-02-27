@@ -6164,12 +6164,15 @@ def sub(
     scope: bool = False,
     back: bool = False,
     asts: list[AST] | None = None,
+    retn: list | None = None,
     **options,
 ) -> fst.FST:  # -> self
     r"""Substitute matching targets with a given `repl` template. The template substitutions can include tagged elements
     from a match. These are specified in the `repl` template as `__FST_<tag>` names, where the `<tag>` maps to a matched
     tag or is left empty to indicate the whole matched node. The replacement template can be passed as source or an
     `FST` or `AST` node.
+
+    THIS IS AN IN-PLACE MUTATION!
 
     Individual options can be passed for each of the three phases of each substitution. The phases and their options are
     as follows:
@@ -6193,8 +6196,8 @@ def sub(
         not considered for substitution again either (even though by definition it matches the pattern). Subparts of
         that matched template can be matched and substituted again as that cannot cause infinite recursion.
     - `count`: If this is above `0` then only this number of substitutions will be made. This only increments by 1 for
-        each new substituted location, regardless of how many times that node is substituted with `loop` if that is
-        being used.
+        each new substituted location in `self`, regardless of how many times that node is substituted with `loop` if
+        that is being used.
     - `loop`: **WARNING!** Improper usage of this parameter can easily lead to infinite looping so the onus is on the
         user to make sure the replacement template cannot cause this. If this is not `False` then after each match is
         substituted then check if it still matches the pattern, and if so substitute again, up to `loop` number of
@@ -6210,6 +6213,7 @@ def sub(
         consideration.
     - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
         function for their meanings.
+    - `retn`: This is used internally to return the number of substitutions made for `subn()` to return.
     - `options`: The options to use when replacing matched nodes in `self` with the `repl` template. See `options()`.
 
     **Returns:**
@@ -6321,12 +6325,89 @@ def sub(
     if a:
         used_to_be_while = "now is string: while a: \\\n    a = call(a, \'str\') <--"
     something_else()
+
+    `nested`, `loop`, `count` and `subn()`.
+
+    >>> f = FST(r'''
+    ... with a:
+    ...     with b:
+    ...         with c:
+    ...             with d:
+    ...                 with e:
+    ...                     pass
+    ... '''.strip())
+
+    >>> pat = MWith(
+    ...     items=M(outer_items=...),
+    ...     body=[
+    ...         MWith(
+    ...             items=M(inner_items=...),
+    ...             body=M(inner_body=...)
+    ...         ),
+    ...         MQSTAR(outer_body=...),
+    ...     ],
+    ... )
+
+    >>> repl = '''
+    ... with __FST_outer_items, __FST_inner_items:
+    ...     __FST_inner_body
+    ...     __FST_outer_body
+    ... '''.strip()
+
+    The `nested=True` parameter allows you to recurse into substituted nodes to continue substituting inside.
+
+    >>> print(f.copy().sub(pat, repl, nested=True).src)
+    with a, b:
+        with c, d:
+            with e:
+                pass
+
+    >>> print(f.copy().subn(pat, repl, nested=True))
+    (<With ROOT 0,0..3,16>, 2, 2)
+
+    The `count` parameter allows you to limit the number of unique substitutions made.
+
+    >>> print(f.copy().sub(pat, repl, nested=True, count=1).src)
+    with a, b:
+        with c:
+            with d:
+                with e:
+                    pass
+
+    >>> print(f.copy().subn(pat, repl, nested=True, count=1))
+    (<With ROOT 0,0..4,20>, 1, 1)
+
+    The `loop` parameter allows you to iteratively apply substitution to the same node as long as it still matches the
+    pattern.
+
+    >>> print(f.copy().sub(pat, repl, loop=True).src)
+    with a, b, c, d, e:
+        pass
+
+    >>> print(f.copy().subn(pat, repl, loop=True))
+    (<With ROOT 0,0..1,8>, 1, 4)
+
+    And the `subn()` function does the same thing as `sub()` but returns the number of unique and total substitutions
+    made.
+
+    >>> print(f.copy().sub(pat, repl, nested=True, loop=2).src)
+    with a, b, c:
+        with d, e:
+            pass
+
+    >>> print(f.copy().subn(pat, repl, nested=True, loop=2))
+    (<With ROOT 0,0..2,12>, 2, 3)
     """
+
+    if count < 0:
+        count = 0
 
     if loop is True:
         loop = 0
 
-    loop_reset = loop  # so it can reset between different matches if used
+    count_start = count  # so we can calculate unique location substitutions
+    loop_start = loop  # so it can reset between different matches if used
+
     options = check_options(options, mark_checked=True)
     copy_options = options if copy_options is None else check_options(copy_options, mark_checked=True)
     repl_options = options if repl_options is None else check_options(repl_options, mark_checked=True)
@@ -6342,6 +6423,7 @@ def sub(
     paths.extend(str_tags)  # these will wind up being processed first, from end to start
     paths.reverse()  # we do this because there might be deletions which will change indices which follow them, so we do higher indices first
 
+    total_count = 0
     dirty = set()  # {AST, ...}
     gen = self.search(pat, nested, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
@@ -6521,18 +6603,80 @@ def sub(
 
             matched = matched.replace(repl_, one=one, **options)
 
+            total_count += 1
+
             if loop is not False:
                 if loop := loop - 1:
-                    if m := pat.match(matched):  # if `matched` somehow winds up deleted as None, the match will just fail
+                    if m := matched.match(pat):  # if `matched` somehow winds up deleted as None, the match will just fail
                         matched = m.matched
 
                         continue
 
-                loop = loop_reset
+                loop = loop_start
 
             break
 
         if not (count := count - 1):
             break
 
+    if retn is not None:  # return substitution counts
+        retn[0] = (-count if count < 0 else count_start - count, total_count)
+
     return self
+
+
+def subn(
+    self: fst.FST,
+    pat: _Pattern,
+    repl: Code,
+    nested: bool = False,
+    count: int = 0,
+    *,
+    loop: bool | int = False,
+    copy_options: dict[str, Any] | None = None,
+    repl_options: dict[str, Any] | None = None,
+    ctx: bool = False,
+    self_: bool = True,
+    recurse: bool = True,
+    scope: bool = False,
+    back: bool = False,
+    asts: list[AST] | None = None,
+    **options,
+) -> fst.FST:  # -> self
+    """Perform the same operation as `sub()`, but return a tuple `(self, unique_number_of_subs_made,
+    total_number_of_subs_made)`.
+
+    **Parameters:**
+    - See `sub()`.
+
+    **Returns:**
+    - `(self, unique_number_of_subs_made, total_number_of_subs_made)`:
+        - `self`: Self-explanatory.
+        - `unique_number_of_subs_made`: This is the number of locations in `self` that were substituted, not taking into
+            account how many times each location may have been substituted due to `loop`, each location counts just
+            once.
+        - `total_number_of_subs_made`: This is the total number of times that substitution was done, which includes the
+            number of times that `loop` was applied in each location.
+    """
+
+    retn = [None]  # used to return substitution counts
+
+    self.sub(
+        pat,
+        repl,
+        nested,
+        count,
+        loop=loop,
+        copy_options=copy_options,
+        repl_options=repl_options,
+        ctx=ctx,
+        self_=self_,
+        recurse=recurse,
+        scope=scope,
+        back=back,
+        asts=asts,
+        retn=retn,
+        **options,
+    )
+
+    return (self, *retn[0])

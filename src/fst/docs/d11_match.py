@@ -1214,7 +1214,7 @@ del c, log(e)[log(f)]
 The substitution skipped any `Name` which was not a `Load` operation because did not match the `ctx=Load` pattern.
 
 
-## Sequences
+## Slices
 
 Arbitrary length list fields or parts of list fields can also be matched and substituted.
 
@@ -1622,9 +1622,9 @@ If you want to disable this behavior, you can pass `args_as=None`.
 def new(pre, a, /, b, *, c, post): pass
 
 This however is more prone to failures as the resulting arguments must still conform to the standard argument ordering
-of position-only, then normal, then keyword-only. If you try to do this type of replacement without the explicit posonly
-and kwonly markers in the template you will get an error as the source matched arguments have those and the ordering
-rules would be violated.
+of position-only, then normal, then keyword-only. If you try to do this replacement without the explicit posonly and
+kwonly markers in the template you will get an error as the source matched arguments have those and the ordering rules
+would be violated.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1801,6 +1801,197 @@ def new(a, /, b, *, c): pass
 
 You can go even deeper down the argument substitution rabbit hole but at that point you are probably better off just
 hardcoding the substitution.
+
+
+## `nested`, `count`, `loop` and `subn()`
+
+By default, substitution does not recurse into substituted nodes. This is more behavioral than to prevent infinite
+recursion as that prevention is handled automatically by the `sub()` function.
+
+>>> f = FST('''
+... if a:
+...     if b:
+...         if c:
+...             pass
+... '''.strip())
+
+>>> pat = MIf(test=M(test=...), body=M(body=...))
+
+>>> repl = '''
+... if not __FST_test:
+...     __FST_body
+... '''.strip()
+
+>>> print(f.copy().sub(pat, repl).src)
+if not a:
+    if b:
+        if c:
+            pass
+
+You can turn on recursion into substituted nodes with `nested=True`. Notice that the internal `If` nodes now get
+substituted.
+
+>>> print(f.copy().sub(pat, repl, nested=True).src)
+if not a:
+    if not b:
+        if not c:
+            pass
+
+The `count` parameter allows you to limit the number of substitutions that can happen.
+
+>>> print(FST('[a, b, c, d, e]').sub(Name, 'f(__FST_)').src)
+[f(a), f(b), f(c), f(d), f(e)]
+
+>>> print(FST('[a, b, c, d, e]').sub(Name, 'f(__FST_)', count=3).src)
+[f(a), f(b), f(c), d, e]
+
+The `loop` parameter allows you to apply substitution to the same node repeatedly until it no longer matches (or a given
+number of iterations is reached).
+
+>>> f = FST(r'''
+... with a:
+...     with b:
+...         with c:
+...             with d:
+...                 with e:
+...                     with f:
+...                         pass
+... '''.strip())
+
+>>> pat = MWith(
+...     items=M(outer_items=...),
+...     body=[
+...         MWith(
+...             items=M(inner_items=...),
+...             body=M(inner_body=...)
+...         ),
+...         MQSTAR(outer_body=...),
+...     ],
+... )
+
+>>> repl = '''
+... with __FST_outer_items, __FST_inner_items:
+...     __FST_inner_body
+...     __FST_outer_body
+... '''.strip()
+
+>>> print(f.copy().sub(pat, repl).src)
+with a, b:
+    with c:
+        with d:
+            with e:
+                with f:
+                    pass
+
+>>> print(f.copy().sub(pat, repl, loop=2).src)
+with a, b, c:
+    with d:
+        with e:
+            with f:
+                pass
+
+>>> print(f.copy().sub(pat, repl, loop=3).src)
+with a, b, c, d:
+    with e:
+        with f:
+            pass
+
+>>> print(f.copy().sub(pat, repl, loop=True).src)
+with a, b, c, d, e, f:
+    pass
+
+Note that this behavior is different from `nested=True` as `nested` does not reprocess the same node but rather
+recurses into it.
+
+>>> print(f.copy().sub(pat, repl, nested=True).src)
+with a, b:
+    with c, d:
+        with e, f:
+            pass
+
+**WARNING!** Normally `sub()` can prevent infinite recursion by never substituting `repl` template nodes or a
+substituted whole match put to the `repl` template. But usage of `loop` with a poorly constructed template **CAN** lead
+to infinite looping. Here is a simple example of a substitution which will loop forever:
+
+```py
+FST('a').sub(Name, '__FST_', loop=True)
+```
+
+The `subn()` function is just `sub()` except that it also returns the number of substitutions made, both total and
+unique (which disregard any extra `loop` substitutions and just count the number of unique locations substituted).
+
+>>> print(r := f.copy().subn(pat, repl)); print(r[0].src)
+(<With ROOT 0,0..5,24>, 1, 1)
+with a, b:
+    with c:
+        with d:
+            with e:
+                with f:
+                    pass
+
+>>> print(r := f.copy().subn(pat, repl, loop=2)); print(r[0].src)
+(<With ROOT 0,0..4,20>, 1, 2)
+with a, b, c:
+    with d:
+        with e:
+            with f:
+                pass
+
+>>> print(r := f.copy().subn(pat, repl, loop=3)); print(r[0].src)
+(<With ROOT 0,0..3,16>, 1, 3)
+with a, b, c, d:
+    with e:
+        with f:
+            pass
+
+>>> print(r := f.copy().subn(pat, repl, loop=True)); print(r[0].src)
+(<With ROOT 0,0..1,8>, 1, 5)
+with a, b, c, d, e, f:
+    pass
+
+>>> print(r := f.copy().subn(pat, repl, nested=True)); print(r[0].src)
+(<With ROOT 0,0..3,16>, 3, 3)
+with a, b:
+    with c, d:
+        with e, f:
+            pass
+
+
+## Options
+
+Each individual substitution can have several phases and we feel the need to emphasize this point and how it interacts
+with options as it can make the difference between a substitution being possible and impossible.
+
+Each phase can have its own options or it can use the `options` passed as keyword arguments to the actual `sub()`
+function. If you provide actual dictionaries (even empty) for `copy_options` or `repl_options` then ONLY those options
+will be used for those phases of the substitution. If you do not provide these dictionaries then the keyword argument
+`options` are used for the phase.
+
+To clarify the phases and the options they use we will use a simple substitution as an example.
+
+>>> f = FST('i = a.b')
+
+>>> pat = MName(ctx=Load)
+
+>>> repl = 'log(__FST_)'
+
+>>> print(f.sub(pat, repl).src)
+i = log(a).b
+
+The phases and options applied are as follows:
+
+1. `copy_options`: Copy tagged nodes from matched element of `self`: The node `Name('a')` is `copy(**copy_options)`ied
+    from `f`.
+
+2. `repl_options`: Put tagged nodes to `repl` template tag slots `__FST_<tag>`: The copied `Name` node is
+    `put(**repl_options)` to the `repl` template.
+
+3. `options`: Put filled `repl` template back to `self` node which was matched by the pattern: After steps 1 and 2 are
+    repeated for each replacement tag in the `repl` template, the resulting `repl` is `put(**options)` to the original
+    matched `Name` node location in `f`.
+
+The put function used may be a single-element or a slice put, but the important thing is which options are used at each
+step.
 
 
 ## Trivia
@@ -1995,44 +2186,6 @@ template cannot specify "slices" of fields but rather whole nodes. So the only p
 expressions is when replacing PARTS of the `repl` template expression list fields with PARTS from source match list
 fields. And not at all when substituting the `repl` template back for the original match as that will be a whole node
 operation (and whole node expression operations don't do trivia).
-
-
-## Options
-
-As noted in the sections above, each individual substitution can have several phases and we feel the need to emphasize
-this point and how it interacts with options as it can make the difference between a substitution being possible and
-impossible.
-
-Each phase can have its own options or it can use the `options` passed as keyword arguments to the actual `sub()`
-function. If you provide actual dictionaries (even empty) for `copy_options` or `repl_options` then ONLY those options
-will be used for those phases of the substitution. If you do not provide these dictionaries then the keyword argument
-`options` are used for the phase.
-
-To clarify the phases and the options they use we will use a simple substitution as an example.
-
->>> f = FST('i = a.b')
-
->>> pat = MName(ctx=Load)
-
->>> repl = 'log(__FST_)'
-
->>> print(f.sub(pat, repl).src)
-i = log(a).b
-
-The phases and options applied are as follows:
-
-1. `copy_options`: Copy tagged nodes from matched element of `self`: The node `Name('a')` is `copy(**copy_options)`ied
-    from `f`.
-
-2. `repl_options`: Put tagged nodes to `repl` template tag slots `__FST_<tag>`: The copied `Name` node is
-    `put(**repl_options)` to the `repl` template.
-
-3. `options`: Put filled `repl` template back to `self` node which was matched by the pattern: After steps 1 and 2 are
-    repeated for each replacement tag in the `repl` template, the resulting `repl` is `put(**options)` to the original
-    matched `Name` node location in `f`.
-
-The put function used may be a single-element or a slice put, but the important thing is which options are used at each
-step.
 
 
 ## Usage of coercion
