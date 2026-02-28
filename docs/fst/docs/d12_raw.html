@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 15.0.1"/>
-    <title>fst.docs.d12_reconcile API documentation</title>
+    <title>fst.docs.d12_raw API documentation</title>
 
     <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
     <style>/*! syntax-highlighting.css */pre{line-height:125%;}span.linenos{color:inherit; background-color:transparent; padding-left:5px; padding-right:20px;}.pdoc-code .hll{background-color:#ffffcc}.pdoc-code{background:#f8f8f8;}.pdoc-code .c{color:#3D7B7B; font-style:italic}.pdoc-code .err{border:1px solid #FF0000}.pdoc-code .k{color:#008000; font-weight:bold}.pdoc-code .o{color:#666666}.pdoc-code .ch{color:#3D7B7B; font-style:italic}.pdoc-code .cm{color:#3D7B7B; font-style:italic}.pdoc-code .cp{color:#9C6500}.pdoc-code .cpf{color:#3D7B7B; font-style:italic}.pdoc-code .c1{color:#3D7B7B; font-style:italic}.pdoc-code .cs{color:#3D7B7B; font-style:italic}.pdoc-code .gd{color:#A00000}.pdoc-code .ge{font-style:italic}.pdoc-code .gr{color:#E40000}.pdoc-code .gh{color:#000080; font-weight:bold}.pdoc-code .gi{color:#008400}.pdoc-code .go{color:#717171}.pdoc-code .gp{color:#000080; font-weight:bold}.pdoc-code .gs{font-weight:bold}.pdoc-code .gu{color:#800080; font-weight:bold}.pdoc-code .gt{color:#0044DD}.pdoc-code .kc{color:#008000; font-weight:bold}.pdoc-code .kd{color:#008000; font-weight:bold}.pdoc-code .kn{color:#008000; font-weight:bold}.pdoc-code .kp{color:#008000}.pdoc-code .kr{color:#008000; font-weight:bold}.pdoc-code .kt{color:#B00040}.pdoc-code .m{color:#666666}.pdoc-code .s{color:#BA2121}.pdoc-code .na{color:#687822}.pdoc-code .nb{color:#008000}.pdoc-code .nc{color:#0000FF; font-weight:bold}.pdoc-code .no{color:#880000}.pdoc-code .nd{color:#AA22FF}.pdoc-code .ni{color:#717171; font-weight:bold}.pdoc-code .ne{color:#CB3F38; font-weight:bold}.pdoc-code .nf{color:#0000FF}.pdoc-code .nl{color:#767600}.pdoc-code .nn{color:#0000FF; font-weight:bold}.pdoc-code .nt{color:#008000; font-weight:bold}.pdoc-code .nv{color:#19177C}.pdoc-code .ow{color:#AA22FF; font-weight:bold}.pdoc-code .w{color:#bbbbbb}.pdoc-code .mb{color:#666666}.pdoc-code .mf{color:#666666}.pdoc-code .mh{color:#666666}.pdoc-code .mi{color:#666666}.pdoc-code .mo{color:#666666}.pdoc-code .sa{color:#BA2121}.pdoc-code .sb{color:#BA2121}.pdoc-code .sc{color:#BA2121}.pdoc-code .dl{color:#BA2121}.pdoc-code .sd{color:#BA2121; font-style:italic}.pdoc-code .s2{color:#BA2121}.pdoc-code .se{color:#AA5D1F; font-weight:bold}.pdoc-code .sh{color:#BA2121}.pdoc-code .si{color:#A45A77; font-weight:bold}.pdoc-code .sx{color:#008000}.pdoc-code .sr{color:#A45A77}.pdoc-code .s1{color:#BA2121}.pdoc-code .ss{color:#19177C}.pdoc-code .bp{color:#008000}.pdoc-code .fm{color:#0000FF}.pdoc-code .vc{color:#19177C}.pdoc-code .vg{color:#19177C}.pdoc-code .vi{color:#19177C}.pdoc-code .vm{color:#19177C}.pdoc-code .il{color:#666666}</style>
@@ -26,10 +26,13 @@
 
             <h2>Contents</h2>
             <ul>
-  <li><a href="#edit-pure-ast-while-preserving-formatting">Edit pure AST while preserving formatting</a>
+  <li><a href="#raw-reparse-operations">Raw reparse operations</a>
   <ul>
-    <li><a href="#what-it-does">What it does</a></li>
-    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#basics">Basics</a></li>
+    <li><a href="#locations">Locations</a></li>
+    <li><a href="#source-and-automatic-modifications">Source and automatic modifications</a></li>
+    <li><a href="#to-parameter"><code>to</code> parameter</a></li>
+    <li><a href="#parentheses">Parentheses</a></li>
   </ul></li>
 </ul>
 
@@ -47,9 +50,9 @@
     <main class="pdoc">
             <section class="module-info">
                     <h1 class="modulename">
-<a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d12_reconcile    </h1>
+<a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d12_raw    </h1>
 
-                        <div class="docstring"><h1 id="edit-pure-ast-while-preserving-formatting">Edit pure AST while preserving formatting</h1>
+                        <div class="docstring"><h1 id="raw-reparse-operations">Raw reparse operations</h1>
 
 <p>To be able to execute the examples, import this.</p>
 
@@ -58,241 +61,382 @@
 </code></pre>
 </div>
 
-<p>This is just a print helper function for this documentation, you can ignore it.</p>
+<h2 id="basics">Basics</h2>
+
+<p>Raw put operations to nodes are different from the standard prescribed operations in that they do not take into account
+rules like precedence and indentation for the nodes being put and replaced and just try to put the source at the
+location and reparse. They exist because they allow things which are not covered or otherwise impossible with normal
+prescribed node operations.</p>
+
+<p>Raw mode puts can be executed on individual nodes or slices by specifying the option <code>raw=True</code>. <code>raw='auto'</code> can be
+used so that the prescribed operation with rules is tried first and if that fails a raw put is attempted as a fallback.
+Raw mode automatic fallback is turned off globally by default as the error messages can be confusing and it requires
+a preemptive node copy in case of putting an <code>FST</code> node due to coercion attempts being destructive. If you want
+this turned on for all operations without having to specify anything then do <code>FST.set_options(raw='auto')</code>.</p>
+
+<p>Raw node put operations can do things which are not normally possible with prescribed operations.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>  <span class="c1"># helper</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\xa0\n</span><span class="s1">&#39;</span><span class="p">))</span>  <span class="c1"># replace() to avoid &#39;&lt;BLANKLINE&gt;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, c: d, e: f}&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<h2 id="what-it-does">What it does</h2>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**g&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">SyntaxError</span>: <span class="n">invalid syntax</span>
+</code></pre>
+</div>
 
-<p><strong>Disclaimer:</strong> This functionality is still experimental and unfinished so not all comments which should be may be
-preserved and others may be duplicated. In fact the underlying problem of determining which comments belong where is not
-completely solvable as the function cannot guess perfectly at human intentions, but much more can be done than is being
-done currently.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**g&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Dict ROOT 0,0..0,17&gt;</span>
+</code></pre>
+</div>
 
-<p>The idea of the <code>reconcile()</code> functionality is not to be able to put <code>AST</code> nodes to an <code>FST</code> tree under your own
-control, you can do that with the <code>put()</code> functions directly. Rather it is to allow other code that may already exist to
-modify the <code>AST</code> tree directly without knowing anything about <code><a href="../../fst.html">fst</a></code> and then having <code><a href="../../fst.html">fst</a></code> reconcile these changes with
-what it knows about the tree to preserve formatting where it can.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{a: b, **g, e: f}</span>
+</code></pre>
+</div>
+
+<p>Unlike a prescibed single node replacement, a single node raw replacement many affect other nodes around it and
+completely change their meaning and structure (invalidating any <code>FST</code> references you had to the previous nodes).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i + 1&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">BinOp - ROOT 0,0..0,5</span>
+<span class="go">  .left Name &#39;i&#39; Load - 0,0..0,1</span>
+<span class="go">  .op Add - 0,2..0,3</span>
+<span class="go">  .right Constant 1 - 0,4..0,5</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">i = 1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Assign - ROOT 0,0..0,5</span>
+<span class="go">  .targets[1]</span>
+<span class="go">   0] Name &#39;i&#39; Store - 0,0..0,1</span>
+<span class="go">  .value Constant 1 - 0,4..0,5</span>
+</code></pre>
+</div>
+
+<p>Raw mode node operations are available for slices as well, in which case whatever source you pass is just put at the
+location spanned by the first and last elements.</p>
+
+<p>When using raw put operations on a slice put, whether explicit via <code>raw=True</code> or as a fallback via <code>raw='auto'</code> cannot
+insert or just delete nodes, they can only change existing nodes (maybe changing the number there is). Existing
+parentheses in the target may be removed depending on the <code>pars</code> option.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3, 4, 5]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">6, # blah</span>
+<span class="gp">... </span><span class="s1">   7,8</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..1,13&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 6, # blah</span>
+<span class="go">   7,8, 4, 5]</span>
+</code></pre>
+</div>
+
+<p>And just like for individual nodes, this can completely change the structure.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;], sub[0&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..1,20&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 6, # blah</span>
+<span class="go">   ], sub[0,8, 4, 5]</span>
+</code></pre>
+</div>
+
+<h2 id="locations">Locations</h2>
+
+<p>Raw node operations use the location of the node (including grouping parentheses if <code>pars</code> is not <code>False</code>). There are
+two special-case locations which are automatically provided which are not normally available for a node. For a <code>Dict</code> or
+<code>MatchMapping</code> the location of a nonexistent key replaced with <code>**</code> is provided if operating on the <code>keys</code> field.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, **c, d: e}&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;z: &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;keys&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># note the explicit trailing &#39;: &#39; after the &#39;z&#39;</span>
+<span class="go">&lt;Dict ROOT 0,0..0,18&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{a: b, z: c, d: e}</span>
+</code></pre>
+</div>
+
+<p>You cannot undo this with a raw put as the location of the key ends before the <code>:</code> and so that will not be overwritten
+if putting just to <code>keys</code>. If you wish to change a <code>a: b</code> key-value pair in a <code>Dict</code> or <code>MatchMapping</code> to a <code>**b</code> using
+raw operations then you must operate on the virtual <code>_all</code> field (which is selected by the default field value of
+<code>None</code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># note we don&#39;t specify &#39;keys&#39; field</span>
+<span class="go">&lt;Dict ROOT 0,0..0,17&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{a: b, **c, d: e}</span>
+</code></pre>
+</div>
+
+<p>Also the location of empty <code>arguments</code> for a <code>FunctionDef</code> or a <code>Lambda</code> are provided at the expected location of those
+<code>arguments</code> even though empty <code>arguments</code> don't normally have a <code>.loc</code>.</p>
+
+<h2 id="source-and-automatic-modifications">Source and automatic modifications</h2>
+
+<p>The only single-element put special case modification which may be applied is if putting to empty <code>arguments</code> of a
+<code>Lambda</code> function. The location of these in a standard empty <code>Lambda</code> is normally right after the <code>lambda</code> keyword since
+the <code>:</code> normally follows right after. In order to stay consistent with puts to empty <code>FunctionDef</code> arguments always
+working, in this case if the source being put does not start with a space (in any form, <code>AST</code>, <code>FST</code> or source string)
+then a single space will be prepended.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;lambda: None&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;args&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># no leading space before the &#39;a&#39;</span>
+<span class="go">&lt;Lambda ROOT 0,0..0,14&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># one was automatically inserted</span>
+<span class="go">lambda a: None</span>
+</code></pre>
+</div>
+
+<p>Other than this, if you pass <code>AST</code> or <code>FST</code> nodes to raw mode slice operations, the <code>AST</code> is unparsed and the <code>FST</code>
+just has its own source code used for the put. One of the only two modifications which may happen to this unparsed <code>AST</code>
+or existing <code>FST</code> source is that if a sequence with delimiters is passed to a slice put then the delimiters are stripped
+for <code>Tuple</code>, <code>List</code>, <code>Set</code>, <code>Dict</code>, <code>MatchSequence</code> and <code>MatchMapping</code>, otherwise the source is used as-is for the put.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{x, y}&#39;</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..0,12&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2, x, y]</span>
+</code></pre>
+</div>
+
+<p>The other modification that can happen is that locations are selected for the put in order that commas are not
+duplicated and that a resulting singleton <code>Tuple</code> or <code>MatchSequence</code> always has a trailing comma. If this is not
+possible by selecting copy locations then a comma is inserted where needed.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a, b)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x,)</span>
+</code></pre>
+</div>
+
+<p>These modifications do not apply if putting source as a string directly.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a, b)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,1..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">([x])</span>
+</code></pre>
+</div>
+
+<h2 id="to-parameter"><code>to</code> parameter</h2>
+
+<p>A single element raw node operation can take an optional <code>to</code> parameter to specify what node is the end of a source code
+replacement. This is different from a slice operation in that the <code>to</code> can be any node, not just a node in the same
+slice container, as long as it follows syntactically in the source.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">... </span><span class="s1">if i:  # 1</span>
-<span class="gp">... </span><span class="s1">  j = [f(), # 2</span>
-<span class="gp">... </span><span class="s1">       g() # 3</span>
-<span class="gp">... </span><span class="s1">      ]</span>
+<span class="gp">... </span><span class="s1">if f(a=1):</span>
+<span class="gp">... </span><span class="s1">    g(b)</span>
 <span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
-<span class="go">&lt;If ROOT 0,0..3,7&gt;</span>
-</code></pre>
-</div>
-
-<p>Notice all changes must happen in the <code>AST</code> tree, <code>f.a</code> is the <code>AST</code> tree.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;pure_ast&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;ast_assign&#39;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">3</span><span class="p">)))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">3, **z):</span>
+<span class="gp">... </span><span class="s1">    h(x, y</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Constant 0,7..0,8&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if f(a=3, **z):</span>
+<span class="go">    h(x, y)</span>
+</code></pre>
+</div>
+
+<p>This only works for single element <code>replace()</code> and <code>put()</code> operations. It does not apply to slice operations as that
+could get confusing with those operations also specifying an explicit end location.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">()</span> <span class="c1"># 3</span>
-      <span class="p">]</span>
-  <span class="n">ast_assign</span> <span class="o">=</span> <span class="mi">3</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;4, 5&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">cannot put slice with &#39;to&#39; option</span>
 </code></pre>
 </div>
 
-<p>You can reuse and mix nodes from the original tree.</p>
+<h2 id="parentheses">Parentheses</h2>
+
+<p>Raw mode node operations do not take into account precedence or parenthesization and do not add any parentheses, but
+they do remove them from targets.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
-<span class="go">&lt;If ROOT 0,0..4,16&gt;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s1">&#39;another_ast&#39;</span><span class="p">))</span>
-</code></pre>
-</div>
-
-<p>We put the same <code>AST</code> node in two different places, this is allowed for <code>reconcile()</code>.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="go">True</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[(a), (b), (c)]&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Name 0,1..0,2&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="c1"># 3</span>
-       <span class="s1">&#39;another_ast&#39;</span>
-      <span class="p">]</span>
-  <span class="n">ast_assign</span> <span class="o">=</span> <span class="mi">3</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="c1"># 3</span>
-       <span class="s1">&#39;another_ast&#39;</span>
-      <span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, (b), (c)]</span>
 </code></pre>
 </div>
 
-<p>That same <code>AST</code> used in two places was deduplicated.</p>
+<p>You can turn this behavior off for single element operations.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="go">False</span>
-</code></pre>
-</div>
-
-<p>You can add in <code>AST</code> nodes from other <code>FST</code> trees and they will retain their formatting, though not if you modify those
-<code>AST</code>s since the only tree that has reconcile information to be able to preserve formatting if this is done is the
-original tree that was marked.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
-<span class="go">&lt;If ROOT 0,0..9,7&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&lt;Name 0,5..0,6&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;l=&quot;formatting&quot;  # stays&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;m  =  &quot;formatting&quot;  # disappears&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;not formatted&quot;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, (y), (c)]</span>
+</code></pre>
+</div>
+
+<p>But it can cause problems.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">SyntaxError</span>: <span class="n">invalid syntax</span>
+</code></pre>
+</div>
+
+<p>This failed because the source code winds up being <code>[z, )]</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">&lt;Name 0,1..0,2&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[z]</span>
+</code></pre>
+</div>
+
+<p>Parentheses are always removed for raw slice operations because otherwise it gets too messy.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[(a), (b), (c)]&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="c1"># 3</span>
-       <span class="s1">&#39;another_ast&#39;</span>
-      <span class="p">]</span>
-  <span class="n">ast_assign</span> <span class="o">=</span> <span class="mi">3</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="c1"># 3</span>
-       <span class="s1">&#39;another_ast&#39;</span>
-      <span class="p">]</span>
-  <span class="n">l</span><span class="o">=</span><span class="s2">&quot;formatting&quot;</span>  <span class="c1"># stays</span>
-  <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;not formatted&#39;</span>
-</code></pre>
-</div>
-
-<p>AST transformer example.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..0,11&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">pure_AST_operation</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">AST</span><span class="p">):</span>
-<span class="gp">... </span>   <span class="k">class</span><span class="w"> </span><span class="nc">Transform</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
-<span class="gp">... </span>       <span class="k">def</span><span class="w"> </span><span class="nf">visit_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="gp">... </span>           <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">arg</span><span class="p">(</span><span class="s1">&#39;NEW_&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">arg</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
-<span class="gp">...</span>
-<span class="gp">... </span>       <span class="k">def</span><span class="w"> </span><span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="gp">... </span>           <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
-<span class="gp">... </span>               <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="s1">&#39;NEW_&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
-<span class="gp">...</span>
-<span class="gp">... </span>           <span class="k">return</span> <span class="n">node</span>
-<span class="gp">...</span>
-<span class="gp">... </span>       <span class="k">def</span><span class="w"> </span><span class="nf">visit_Constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="gp">... </span>           <span class="k">return</span> <span class="n">Name</span><span class="p">(</span><span class="s1">&#39;X_SCALE&#39;</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.5</span> <span class="k">else</span> <span class="s1">&#39;Y_SCALE&#39;</span><span class="p">)</span>
-<span class="gp">...</span>
-<span class="gp">... </span>   <span class="n">Transform</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[x, y, (c)]</span>
 </code></pre>
 </div>
 
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">... </span><span class="s1">def compute(x: float,  # x position</span>
-<span class="gp">... </span><span class="s1">            y: float,  # y position</span>
-<span class="gp">... </span><span class="s1">) -&gt; float:</span>
-<span class="gp">...</span>
-<span class="gp">... </span><span class="s1">    # Compute the weighted sum</span>
-<span class="gp">... </span><span class="s1">    return (</span>
-<span class="gp">... </span><span class="s1">        x * 0.6  # scale width</span>
-<span class="gp">... </span><span class="s1">        + y * 0.4  # scale height</span>
-<span class="gp">... </span><span class="s1">    )</span>
-<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
-<span class="go">&lt;FunctionDef ROOT 0,0..8,5&gt;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pure_AST_operation</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">()</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="n">NEW_X</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>  <span class="c1"># x position</span>
-            <span class="n">NEW_Y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>  <span class="c1"># y position</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
- 
-    <span class="c1"># Compute the weighted sum</span>
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">NEW_X</span> <span class="o">*</span> <span class="n">X_SCALE</span>  <span class="c1"># scale width</span>
-        <span class="o">+</span> <span class="n">NEW_Y</span> <span class="o">*</span> <span class="n">Y_SCALE</span>  <span class="c1"># scale height</span>
-    <span class="p">)</span>
-</code></pre>
-</div>
-
-<h2 id="how-it-works">How it works</h2>
-
-<p><code>mark()</code> makes a copy of the tree you will reconcile later, then later <code>reconcile()</code> walks the modified tree from top to
-bottom comparing to the stored tree. Anywhere there are differences it uses the <code>FST</code> editing mechanisms to put the
-changed nodes as if a human being was making the changes.</p>
-
-<p>Anytime an underlying operation fails or is unavailable (due to not being implemented yet), <code>reconcile()</code> simply retries
-the operation at a higher level node. This does lose formatting as the <code>put()</code> in that case winds up using the <code>AST</code>
-node, but at least it makes the operation possible.</p>
-
-<p>This method is not particularly fast when there are a lot of nested changes as it is possible that large chunks of the
-source wind up being put multiple times with minor changes. But it does a better job at preserving formatting than
-walking bottom-up.</p>
+<p>If you want to avoid all automatic behavior on raw puts, then use <code><a href="../fst.html#FST.put_src">fst.fst.FST.put_src()</a></code> directly.</p>
 </div>
 
                 

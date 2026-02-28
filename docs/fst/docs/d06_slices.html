@@ -663,7 +663,7 @@ location. Meaning position-only, normal and keyword arguments must all match up 
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b, c=1, d=2&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;x=0&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="gr">fst.NodeError</span>: <span class="n">args without defaults cannot followargs with defaults</span>
+<span class="gr">fst.NodeError</span>: <span class="n">args without defaults cannot follow args with defaults</span>
 </code></pre>
 </div>
 
@@ -671,7 +671,7 @@ location. Meaning position-only, normal and keyword arguments must all match up 
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b, c=1, d=2&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="gr">fst.NodeError</span>: <span class="n">args without defaults cannot followargs with defaults</span>
+<span class="gr">fst.NodeError</span>: <span class="n">args without defaults cannot follow args with defaults</span>
 </code></pre>
 </div>
 
@@ -1402,8 +1402,8 @@ target.</p>
 line as the element or last element of the slice, not any other comments of a following block.</p>
 
 <p>Trailing trivia can be specified by passing a full tuple for leading and trailing as the <code>trivia</code> option of the form
-<code>trivia=(leading, trailing)</code>. You can pass <code>None</code> for the leading element in order to use the currenly set default which
-is normally <code>'block'</code> for leading trivia.</p>
+<code>trivia=(leading, trailing)</code>. If you pass a singleton tuple of the form <code>(trailing,)</code> then it will be treated as a
+<code>(True, trailing)</code> full trivia with <code>True</code> for the leading trivia (which means <code>'block'</code> trivia).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>  <span class="c1"># helper</span>
@@ -1436,7 +1436,7 @@ is normally <code>'block'</code> for leading trivia.</p>
 <p>You can turn that off.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,)))</span>
 <span class="go">&#39;target_stmt&#39;</span>
 </code></pre>
 </div>
@@ -1444,7 +1444,7 @@ is normally <code>'block'</code> for leading trivia.</p>
 <p>Trailing block comment.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">)))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,)))</span>
 <span class="go">&#39;target_stmt  # line-comment&#39;</span>
 <span class="go">&#39;# post-comment 1a&#39;</span>
 <span class="go">&#39;# post-comment 1b&#39;</span>
@@ -1454,7 +1454,7 @@ is normally <code>'block'</code> for leading trivia.</p>
 <p>With space.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;block+1&#39;</span><span class="p">)))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block+1&#39;</span><span class="p">,)))</span>
 <span class="go">&#39;target_stmt  # line-comment&#39;</span>
 <span class="go">&#39;# post-comment 1a&#39;</span>
 <span class="go">&#39;# post-comment 1b&#39;</span>
@@ -1465,7 +1465,7 @@ is normally <code>'block'</code> for leading trivia.</p>
 <p>All.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;all+&#39;</span><span class="p">)))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;all+&#39;</span><span class="p">,)))</span>
 <span class="go">&#39;target_stmt  # line-comment&#39;</span>
 <span class="go">&#39;# post-comment 1a&#39;</span>
 <span class="go">&#39;# post-comment 1b&#39;</span>

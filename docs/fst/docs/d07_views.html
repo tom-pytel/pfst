@@ -30,6 +30,7 @@
   <ul>
     <li><a href="#how-to-get">How to get</a></li>
     <li><a href="#indexing">Indexing</a></li>
+    <li><a href="#name-indexing">Name indexing</a></li>
     <li><a href="#other-operations">Other operations</a></li>
     <li><a href="#_all-virtual-field"><code>_all</code> virtual field</a></li>
     <li><a href="#_body-virtual-field"><code>_body</code> virtual field</a></li>
@@ -66,9 +67,9 @@
 
 <h2 id="how-to-get">How to get</h2>
 
-<p>An <code>fstview</code> is a lightweight object meant to facilitate access to lists of child objects like a block statement <code>body</code>
+<p>An <code>FSTView</code> is a lightweight object meant to facilitate access to lists of child objects like a block statement <code>body</code>
 or <code>Tuple</code> / <code>List</code> / <code>Set</code> <code>elts</code> field. Any field which is a list of other objects (or even strings in the case of
-<code>Global</code> or <code>Nonlocal</code>) will make use of an <code>fstview</code> when accessed through the field name on the parent <code>FST</code> object.</p>
+<code>Global</code> or <code>Nonlocal</code>) will make use of an <code>FSTView</code> when accessed through the field name on the parent <code>FST</code> object.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
@@ -77,13 +78,13 @@ or <code>Tuple</code> / <code>List</code> / <code>Set</code> <code>elts</code> f
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">view</span><span class="p">)</span>
-<span class="go">&lt;class &#39;<a href="../view.html#fstview">fst.view.fstview</a>&#39;&gt;</span>
+<span class="go">&lt;class &#39;<a href="../view.html#FSTView">fst.view.FSTView</a>&#39;&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">view</span><span class="p">)[:</span><span class="mi">88</span><span class="p">])</span>
-<span class="go">&lt;&lt;List ROOT 0,0..0,9&gt;.elts [&lt;Constant 0,1..0,2&gt;, &lt;Constant 0,4..0,5&gt;, &lt;Constant 0,7..0,8</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">view</span><span class="p">))</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,9&gt;.elts&gt;</span>
 </code></pre>
 </div>
 
@@ -93,7 +94,7 @@ or <code>Tuple</code> / <code>List</code> / <code>Set</code> <code>elts</code> f
 </code></pre>
 </div>
 
-<p>An <code>fstview</code> is not normally intended to be accessed by assigning it to a name and using it through that. An <code>fstview</code>
+<p>An <code>FSTView</code> is not normally intended to be accessed by assigning it to a name and using it through that. An <code>FSTView</code>
 basically exists to facilitate direct access to slices of children for immediate operations.</p>
 
 <div class="pdoc-code codehilite">
@@ -282,7 +283,7 @@ used and truncates them to the actual size of the target field.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span>
-<span class="go">&lt;&lt;List ROOT 0,0..0,15&gt;.elts[1:3] [&lt;Name 0,4..0,5&gt;, &lt;Name 0,7..0,8&gt;]&gt;</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,15&gt;.elts[1:3]&gt;</span>
 </code></pre>
 </div>
 
@@ -293,7 +294,7 @@ used and truncates them to the actual size of the target field.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span>
-<span class="go">&lt;&lt;List ROOT 0,0..0,6&gt;.elts[1:2] [&lt;Name 0,4..0,5&gt;]&gt;</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,6&gt;.elts[1:2]&gt;</span>
 </code></pre>
 </div>
 
@@ -304,7 +305,98 @@ used and truncates them to the actual size of the target field.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">view</span>
-<span class="go">&lt;&lt;List ROOT 0,0..0,2&gt;.elts[:0] []&gt;</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,2&gt;.elts[:0]&gt;</span>
+</code></pre>
+</div>
+
+<h2 id="name-indexing">Name indexing</h2>
+
+<p>If you are accessing a statement or module <code>body</code>, <code>orelse</code> or <code>finalbody</code> field then you can index this using a name
+or path of names of function or class definitions. This allows easy access to functions or nodes you know exist in a
+given block.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">class first_cls:</span>
+<span class="gp">... </span><span class="s1">    def first_meth1(self): pass</span>
+<span class="gp">... </span><span class="s1">    def first_meth2(self): pass</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">class second_cls:</span>
+<span class="gp">... </span><span class="s1">    def second_meth1(self): pass</span>
+<span class="gp">... </span><span class="s1">    def second_meth2(self):</span>
+<span class="gp">... </span><span class="s1">        class subcls: pass</span>
+<span class="gp">... </span><span class="s1">    def second_meth3(self): pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;second_cls&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">class second_cls:</span>
+<span class="go">    def second_meth1(self): pass</span>
+<span class="go">    def second_meth2(self):</span>
+<span class="go">        class subcls: pass</span>
+<span class="go">    def second_meth3(self): pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;second_cls.second_meth1&#39;</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;second_cls&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">class second_cls:</span>
+<span class="go">    def second_meth2(self):</span>
+<span class="go">        class subcls: pass</span>
+<span class="go">    def second_meth3(self): pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;first_cls.first_meth2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">def first_meth2(self): pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;second_cls.second_meth2.subcls&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">class subcls: pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pep8space</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">f</span><span class="p">[</span><span class="s1">&#39;first_cls.first_meth2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;def new_meth2(): pass&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;first_cls&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">class first_cls:</span>
+<span class="go">    def first_meth1(self): pass</span>
+<span class="go">    def new_meth2(): pass</span>
+</code></pre>
+</div>
+
+<p>This only applies to single element indexing, not slices.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;first_cls&#39;</span> <span class="p">:</span> <span class="s1">&#39;second_cls&#39;</span><span class="p">]</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">&#39;&gt;&#39; not supported between instances of &#39;str&#39; and &#39;int&#39;</span>
+</code></pre>
+</div>
+
+<p>And it also only applies to statement or module fields which are themselves lists of statements.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">IndexError</span>: <span class="n">name indexing not supported on List.elts</span>
 </code></pre>
 </div>
 
@@ -588,26 +680,25 @@ of a <code>MatchMapping</code> (along with the <code>rest</code> if present). Th
 </code></pre>
 </div>
 
-<p>But not put individual elements, since there is not an <code>AST</code> which represents a <code>key:value</code> pair. If you want to replace
-a single element in this way you must use slice operations.</p>
+<p>You can also put individual multi-node items if you pass the container with a single one of those items.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;{-2: y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
-<span class="gt">Traceback (most recent call last):</span>
-<span class="c">...</span>
-<span class="gr">fst.NodeError</span>: <span class="n">cannot put as &#39;one&#39; item to a Dict slice</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;{-2: y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{1: a, -2: y}</span>
 </code></pre>
 </div>
 
+<p>You want to replace a single element in this way using slice operations.</p>
+
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{-2: y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{-3: z}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;_all&#39;</span><span class="p">)</span>
 <span class="go">&lt;Dict ROOT 0,0..0,13&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">{1: a, -2: y}</span>
+<span class="go">{1: a, -3: z}</span>
 </code></pre>
 </div>
 

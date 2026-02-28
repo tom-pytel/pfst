@@ -21,9 +21,11 @@
 
             <h2>Contents</h2>
             <ul>
-  <li><a href="#overview">Overview</a></li>
+  <li><a href="#introduction">Introduction</a></li>
   <li><a href="#index">Index</a></li>
   <li><a href="#links">Links</a></li>
+  <li><a href="#getting-started">Getting Started</a></li>
+  <li><a href="#comparison-with-libcst">Comparison with LibCST</a></li>
   <li><a href="#notes">Notes</a></li>
 </ul>
 
@@ -32,6 +34,7 @@
             <ul>
                     <li><a href="fst/docs.html">docs</a></li>
                     <li><a href="fst/fst.html">fst</a></li>
+                    <li><a href="fst/match.html">match</a></li>
                     <li><a href="fst/view.html">view</a></li>
                     <li><a href="fst/common.html">common</a></li>
                     <li><a href="fst/parsex.html">parsex</a></li>
@@ -51,13 +54,25 @@
                     <h1 class="modulename">
 fst    </h1>
 
-                        <div class="docstring"><p>Version 0.2.6</p>
+                        <div class="docstring"><p>Version 0.3.0</p>
 
-<h1 id="overview">Overview</h1>
+<h1 id="introduction">Introduction</h1>
 
-<p>This module exists in order to facilitate quick and easy high level editing of Python source in the form of an <code>AST</code>
-tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal
-with the details of:</p>
+<p><code>pfst</code> (Python Formatted Syntax Tree) exists in order to allow quick and easy modification of Python source without
+losing formatting or comments. The goal is simple, Pythonic, container-like access to the <code>AST</code>, with the ability to
+modify any node while preserving formatting in the rest of the tree.</p>
+
+<blockquote>
+  <p>Yes, we said "formatting" and "AST" in the same sentence.</p>
+</blockquote>
+
+<p>Normally <code>AST</code> nodes don't store any explicit formatting, much less, comments. But <code>pfst</code> works by adding <code>FST</code> nodes to
+existing Python <code>AST</code> nodes as an <code>.f</code> attribute (type-safe accessor <code>castf()</code> provided). This keeps extra structure
+information, the original source, and provides the interface to format-preserving operations. Each operation through
+<code>FST</code> nodes is a simultaneous edit of the <code>AST</code> tree and the source code, and those are kept synchronized so that the
+current source will always parse to the current tree.</p>
+
+<p><code>pfst</code> automatically handles:</p>
 
 <ul>
 <li>Operator precedence and parentheses</li>
@@ -68,41 +83,7 @@ with the details of:</p>
 <li>Lots more...</li>
 </ul>
 
-<p>See <a href="https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html">Example Recipes</a> for more in-depth examples.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">fst</span>  <span class="c1"># pip install pfst, import fst</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ext_ast</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... logger.info(  # just checking</span>
-<span class="s1">...     f&#39;not a </span><span class="si">{thing}</span><span class="s1">&#39;, extra=extra,  # blah</span>
-<span class="s1">... )&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ext_ast</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">id=CID  # comment&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>  <span class="c1"># just checking</span>
-    <span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-    <span class="nb">id</span><span class="o">=</span><span class="n">CID</span><span class="p">,</span>  <span class="c1"># comment</span>
-    <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>  <span class="c1"># blah</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-
-<p>The tree is just normal <code>AST</code> with metadata, so if you know <code>AST</code>, you know <code>FST</code>.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">CID</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p><code><a href="">fst</a></code> works by adding <code>FST</code> nodes to existing standard Python <code>AST</code> nodes as an <code>.f</code> attribute (type-safe accessor
-<code>castf()</code> provided) which keep extra structure information, the original source, and provide the interface to
-format-preserving operations. Each operation through <code><a href="">fst</a></code> is a simultaneous edit of the <code>AST</code> tree and the source code
-and those are kept synchronized so that the current source will always parse to the current tree.</p>
+<p>If you just want to dive into the examples then go to <code><a href="fst/docs/d14_examples.html">fst.docs.d14_examples</a></code>.</p>
 
 <h1 id="index">Index</h1>
 
@@ -119,33 +100,105 @@ and those are kept synchronized so that the current source will always parse to 
 <li><a href="https://pypi.org/project/pfst/">PyPI</a></li>
 </ul>
 
+<h1 id="getting-started">Getting Started</h1>
+
+<p>Since <code>pfst</code> is built directly on Python's standard <code>AST</code> nodes, if you are familiar with those then you already know
+the <code>FST</code> node structure. Our focus on simple Pythonic operations means you can get up to speed quickly.</p>
+
+<ol>
+<li>Parse source</li>
+</ol>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span><span class="o">,</span><span class="w"> </span><span class="nn">fst</span>  <span class="c1"># pip install pfst, import fst</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;def func(): pass  # comment&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<ol start="2">
+<li>Modify via <code>.f</code></li>
+</ol>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">returns</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>  <span class="c1"># use nodes or text</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;arg: int = 0&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;call()  # call comment</span><span class="se">\n\n</span><span class="s1">return arg&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_docstr</span><span class="p">(</span><span class="s2">&quot;I&#39;m a happy</span><span class="se">\n</span><span class="s2">little docstring&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+</code></pre>
+</div>
+
+<ol start="3">
+<li>View formatted source</li>
+</ol>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">arg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;I&#39;m a happy</span>
+<span class="sd">    little docstring&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span>  <span class="c1"># comment</span>
+    <span class="n">call</span><span class="p">()</span>  <span class="c1"># call comment</span>
+
+    <span class="k">return</span> <span class="n">arg</span>
+</code></pre>
+</div>
+
+<ol start="4">
+<li>Verify AST synchronization</li>
+</ol>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">arg</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;I&#39;m a happy</span>
+<span class="sd">    little docstring&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+    <span class="n">call</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">arg</span>
+</code></pre>
+</div>
+
+<p>Beyond basic editing, <code>pfst</code> provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
+substitution, and a mechanism for reconciling external <code>AST</code> mutations with the formatted tree, preserving comments and
+layout wherever the structure still permits it.</p>
+
+<h1 id="comparison-with-libcst">Comparison with LibCST</h1>
+
+<p><a href="https://github.com/Instagram/LibCST">LibCST</a> is a powerful, industrial-grade library built for precise, large-scale
+codemods. It models Python as a fully concrete syntax tree, preserving every token and piece of whitespace. That gives
+you complete control, but it also means you are responsible for managing formatting details when making non-trivial
+changes.</p>
+
+<p><code>pfst</code> takes a different approach. Instead of requiring you to explicitly manage formatting, it treats layout as
+something to preserve and reconcile automatically. You focus on structural and semantic transformations and <code>pfst</code>
+handles the "formatting math" needed to keep the result clean and stable.</p>
+
+<p>In short:</p>
+
+<ul>
+<li>LibCST: “Do exactly what I say.”</li>
+<li>pfst: “Do what I mean.”</li>
+</ul>
+
 <h1 id="notes">Notes</h1>
 
-<p>Disclaimer: You can reformat a large codebase with <code><a href="">fst</a></code> but it won't be quite as spritely as other libraries more apt
-to the task. The main focus of <code><a href="">fst</a></code> is not necessarily to be fast but rather easy and to handle all the weird cases
-of python syntax correctly so that functional code always results. Use a formatter as needed afterwards.</p>
-
-<p><code><a href="">fst</a></code> was written and tested on Python versions 3.10 through 3.14.</p>
-
-<p><code><a href="">fst</a></code> works by keeping a copy of the entire source at the root <code>FST</code> node of a tree and modifying this source alongside
-the node tree anytime an operation is performed natively. It is meant to be a drop-in replacement for the python <code>ast</code>
-module. It provices its own versions of the <code>parse</code> and <code>unparse</code> functions as well as passing through all symbols
-available from <code>ast</code>. The <code>parse</code> function returns the same <code>AST</code> tree that <code>ast.parse()</code> would return except augmented
-with <code><a href="">fst</a></code> metadata.</p>
-
-<p><code><a href="">fst</a></code> does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
+<ul>
+<li><p>Disclaimer: You can reformat a large codebase with <code>pfst</code> but it won't be quite as sprightly as other libraries more apt
+to the task. The main focus of <code>pfst</code> is not necessarily to be fast but rather easy and to handle all the weird cases
+of python syntax correctly so that functional code always results. Use a formatter as needed afterwards.</p></li>
+<li><p><code>pfst</code> was written and tested on Python versions 3.10 through 3.15a.</p></li>
+<li><p><code>pfst</code> does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
 parsing but also that it is limited to the syntax of the running Python version (many options exist for running any
-specific verison of Python).</p>
-
-<p><code><a href="">fst</a></code> validates for parsability, not compilability. This means that for <code><a href="">fst</a></code>, <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are
-both valid even though they are uncompilable.</p>
-
-<p>The aesthetics of multiline slice operation alignment are not concretized yet. The current alignment behavior basically
-just aligns, not necessarily always at the place you may want, it will get more standard and controllable in the future.</p>
-
-<p>If you will be playing with this module then the <code>FST.dump()</code> method will be your friend.</p>
-
-<p>If you will be looking through the code then apologies in advance.</p>
+specific version of Python).</p></li>
+<li><p><code>pfst</code> validates for parsability, not compilability. This means that <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are both
+considered valid even though they are uncompilable.</p></li>
+<li><p>If you will be playing with <code>pfst</code> then the <code>FST.dump()</code> method will be your friend.</p></li>
+</ul>
 </div>
 
                 

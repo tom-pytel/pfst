@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 15.0.1"/>
-    <title>fst.docs.d13_examples API documentation</title>
+    <title>fst.docs.d14_examples API documentation</title>
 
     <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
     <style>/*! syntax-highlighting.css */pre{line-height:125%;}span.linenos{color:inherit; background-color:transparent; padding-left:5px; padding-right:20px;}.pdoc-code .hll{background-color:#ffffcc}.pdoc-code{background:#f8f8f8;}.pdoc-code .c{color:#3D7B7B; font-style:italic}.pdoc-code .err{border:1px solid #FF0000}.pdoc-code .k{color:#008000; font-weight:bold}.pdoc-code .o{color:#666666}.pdoc-code .ch{color:#3D7B7B; font-style:italic}.pdoc-code .cm{color:#3D7B7B; font-style:italic}.pdoc-code .cp{color:#9C6500}.pdoc-code .cpf{color:#3D7B7B; font-style:italic}.pdoc-code .c1{color:#3D7B7B; font-style:italic}.pdoc-code .cs{color:#3D7B7B; font-style:italic}.pdoc-code .gd{color:#A00000}.pdoc-code .ge{font-style:italic}.pdoc-code .gr{color:#E40000}.pdoc-code .gh{color:#000080; font-weight:bold}.pdoc-code .gi{color:#008400}.pdoc-code .go{color:#717171}.pdoc-code .gp{color:#000080; font-weight:bold}.pdoc-code .gs{font-weight:bold}.pdoc-code .gu{color:#800080; font-weight:bold}.pdoc-code .gt{color:#0044DD}.pdoc-code .kc{color:#008000; font-weight:bold}.pdoc-code .kd{color:#008000; font-weight:bold}.pdoc-code .kn{color:#008000; font-weight:bold}.pdoc-code .kp{color:#008000}.pdoc-code .kr{color:#008000; font-weight:bold}.pdoc-code .kt{color:#B00040}.pdoc-code .m{color:#666666}.pdoc-code .s{color:#BA2121}.pdoc-code .na{color:#687822}.pdoc-code .nb{color:#008000}.pdoc-code .nc{color:#0000FF; font-weight:bold}.pdoc-code .no{color:#880000}.pdoc-code .nd{color:#AA22FF}.pdoc-code .ni{color:#717171; font-weight:bold}.pdoc-code .ne{color:#CB3F38; font-weight:bold}.pdoc-code .nf{color:#0000FF}.pdoc-code .nl{color:#767600}.pdoc-code .nn{color:#0000FF; font-weight:bold}.pdoc-code .nt{color:#008000; font-weight:bold}.pdoc-code .nv{color:#19177C}.pdoc-code .ow{color:#AA22FF; font-weight:bold}.pdoc-code .w{color:#bbbbbb}.pdoc-code .mb{color:#666666}.pdoc-code .mf{color:#666666}.pdoc-code .mh{color:#666666}.pdoc-code .mi{color:#666666}.pdoc-code .mo{color:#666666}.pdoc-code .sa{color:#BA2121}.pdoc-code .sb{color:#BA2121}.pdoc-code .sc{color:#BA2121}.pdoc-code .dl{color:#BA2121}.pdoc-code .sd{color:#BA2121; font-style:italic}.pdoc-code .s2{color:#BA2121}.pdoc-code .se{color:#AA5D1F; font-weight:bold}.pdoc-code .sh{color:#BA2121}.pdoc-code .si{color:#A45A77; font-weight:bold}.pdoc-code .sx{color:#008000}.pdoc-code .sr{color:#A45A77}.pdoc-code .s1{color:#BA2121}.pdoc-code .ss{color:#19177C}.pdoc-code .bp{color:#008000}.pdoc-code .fm{color:#0000FF}.pdoc-code .vc{color:#19177C}.pdoc-code .vg{color:#19177C}.pdoc-code .vi{color:#19177C}.pdoc-code .vm{color:#19177C}.pdoc-code .il{color:#666666}</style>
@@ -34,7 +34,7 @@
     <li><a href="#pull-out-nested-functions">Pull out nested functions</a></li>
     <li><a href="#lambda-to-def"><code>lambda</code> to <code>def</code></a></li>
     <li><a href="#isinstance-to-__class__-is-in"><code>isinstance()</code> to <code>__class__ is</code> / <code>in</code></a></li>
-    <li><a href="#squash-nested-withs">Squash nested <code>with</code>s</a></li>
+    <li><a href="#squash-nested-with">Squash nested <code>with</code></a></li>
     <li><a href="#add-decorator-to-class-methods">Add decorator to class methods</a></li>
     <li><a href="#comprehension-to-loop">Comprehension to loop</a></li>
     <li><a href="#align-equals">Align equals</a></li>
@@ -43,6 +43,16 @@
     <li><a href="#reparenthesize-expressions">Reparenthesize expressions</a></li>
     <li><a href="#instrument-expressions">Instrument expressions</a></li>
   </ul></li>
+  <li><a href="#structural-pattern-substitution">Structural pattern substitution</a>
+  <ul>
+    <li><a href="#inject-logging-metadata-2">Inject logging metadata</a></li>
+    <li><a href="#else-if-chain-to-elif-2"><code>else if</code> chain to <code>elif</code></a></li>
+    <li><a href="#pull-out-nested-functions-2">Pull out nested functions</a></li>
+    <li><a href="#lambda-to-def-2"><code>lambda</code> to <code>def</code></a></li>
+    <li><a href="#squash-nested-with-2">Squash nested <code>with</code></a></li>
+    <li><a href="#add-decorator-to-class-methods-2">Add decorator to class methods</a></li>
+  </ul></li>
+  <li><a href="#misc">Misc</a></li>
 </ul>
 
 
@@ -59,7 +69,7 @@
     <main class="pdoc">
             <section class="module-info">
                     <h1 class="modulename">
-<a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d13_examples    </h1>
+<a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d14_examples    </h1>
 
                         <div class="docstring"><h1 id="example-recipes">Example recipes</h1>
 
@@ -79,14 +89,14 @@ want to see an example of an intended use case then see <a href="#instrument-exp
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn"><a href="../match.html">fst.match</a></span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
-<p>This is just a print helper function for this documentation, you can ignore it.</p>
+<p>Now some helper functions just for this documentation, you can ignore their usage.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>  <span class="c1"># helper</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\xa0\n</span><span class="s1">&#39;</span><span class="p">))</span>  <span class="c1"># replace() to avoid &#39;&lt;BLANKLINE&gt;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn"><a href="../docs.html">fst.docs</a></span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">py_version_ok_then_exec_else_print</span>
 </code></pre>
 </div>
 
@@ -97,10 +107,10 @@ are set in a constructor, but should be enough to show how something more comple
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">type_annotations_to_type_comments</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">fst_</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>  <span class="c1"># same as &quot;fst.parse(src).f&quot;</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># same as &quot;fst.parse(src).f&quot;</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="c1"># walk the whole tree but only yield AnnAssign nodes</span>
-<span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst_</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">AnnAssign</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">AnnAssign</span><span class="p">):</span>
 <span class="o">...</span>         <span class="c1"># if just an annotation then skip it, alternatively could</span>
 <span class="o">...</span>         <span class="c1"># clean and store for later addition to __init__() assign in class</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
@@ -122,7 +132,7 @@ are set in a constructor, but should be enough to show how something more comple
 <span class="o">...</span>         <span class="c1"># replace the node, trivia=False preserves any leading comments</span>
 <span class="o">...</span>         <span class="n">f</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">new_src</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>     <span class="k">return</span> <span class="n">fst_</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># same as fst.unparse(fst_.a)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">fst</span><span class="o">.</span><span class="n">src</span>  <span class="c1"># same as fst.unparse(fst.a)</span>
 </code></pre>
 </div>
 
@@ -202,17 +212,16 @@ are set in a constructor, but should be enough to show how something more comple
 <p>You want to add a <code>correlation_id=CID</code> keyword argument to all <code>logger.info()</code> calls, but only if its not already there.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">inject_logging_metadata</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn"><a href="../match.html">fst.match</a></span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">inject_logging_metadata</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">Call</span><span class="p">):</span>
-<span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">is_Attribute</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;info&#39;</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">is_Name</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s1">&#39;logger&#39;</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">arg</span> <span class="o">==</span> <span class="s1">&#39;correlation_id&#39;</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
-<span class="o">...</span>         <span class="p">):</span>
-<span class="o">...</span>             <span class="n">f</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;correlation_id=CID&#39;</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">MCall</span><span class="p">(</span>
+<span class="o">...</span>         <span class="n">func</span><span class="o">=</span><span class="n">MAttribute</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">),</span>
+<span class="o">...</span>         <span class="n">keywords</span><span class="o">=</span><span class="n">MNOT</span><span class="p">([</span><span class="n">MQSTAR</span><span class="p">,</span> <span class="n">Mkeyword</span><span class="p">(</span><span class="s1">&#39;correlation_id&#39;</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">]),</span>
+<span class="o">...</span>     <span class="p">)):</span>
+<span class="o">...</span>         <span class="n">m</span><span class="o">.</span><span class="n">matched</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;correlation_id=CID&#39;</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">())</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 </code></pre>
@@ -284,7 +293,7 @@ and then inserting them above the <code>if</code> manually using <code>put_src()
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">else_if_chain_to_elifs</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">If</span><span class="p">):</span>  <span class="c1"># we will only get the `ast.If` nodes</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
@@ -417,7 +426,7 @@ and then inserting them above the <code>if</code> manually using <code>put_src()
 checking for those accesses and not pulling those functions out. Names are also changed to avoid collision at the global
 scope.</p>
 
-<p>The nonlocal variable check is not complete as a full check would check if the "free" symbols aren't actually global or
+<p>The nonlocal variable check is not complete as a full check would verify if the "free" symbols aren't actually global or
 builtins, in which case they can be ignored and the function can be moved. We also don't check possible <code>type_params</code>
 or function <code>returns</code> fields for possible nonlocal references but just assume they are all global for this example. We
 also don't check for name override in children when replacing function name, but that is another detail not needed for
@@ -425,7 +434,7 @@ demonstration purposes.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">pull_out_inner_funcs_safely</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">({</span><span class="n">FunctionDef</span><span class="p">,</span> <span class="n">AsyncFunctionDef</span><span class="p">}):</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="n">parent_scope</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">parent_named_scope</span><span class="p">())</span><span class="o">.</span><span class="n">is_funcdef</span><span class="p">:</span>  <span class="c1"># func in a func</span>
@@ -454,9 +463,7 @@ demonstration purposes.</p>
 <span class="o">...</span>
 <span class="o">...</span>             <span class="c1"># replace all occurrences of original inner name with new global one</span>
 <span class="o">...</span>             <span class="c1"># we do this first so that it includes the function being moved</span>
-<span class="o">...</span>             <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">parent_scope</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">Name</span><span class="p">):</span>
-<span class="o">...</span>                 <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">func_name</span><span class="p">:</span>
-<span class="o">...</span>                     <span class="n">g</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">global_name</span><span class="p">)</span>
+<span class="o">...</span>             <span class="n">parent_scope</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">Name</span><span class="p">(</span><span class="n">func_name</span><span class="p">),</span> <span class="n">global_name</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>             <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span>
 <span class="o">...</span>             <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">global_name</span>
@@ -567,7 +574,7 @@ left in the same scope in case of nonlocals.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">lambdas_to_defs</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>     <span class="n">indent</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">indent</span>  <span class="c1"># to show its there, inferred from src, single level str</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">Assign</span><span class="p">):</span>
@@ -699,12 +706,10 @@ classes (like most <code>AST</code> types are).</p>
 <span class="o">...</span> <span class="p">}</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">isinstance_to_class_check</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">Call</span><span class="p">):</span>
-<span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">is_Name</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s1">&#39;isinstance&#39;</span>  <span class="c1"># isinstance()</span>
-<span class="o">...</span>         <span class="p">):</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">is_Name</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s1">&#39;isinstance&#39;</span><span class="p">:</span>  <span class="c1"># isinstance()</span>
 <span class="o">...</span>             <span class="n">ftest</span><span class="p">,</span> <span class="n">ftype</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span>  <span class="c1"># assume there are two for isinstance()</span>
 <span class="o">...</span>             <span class="n">fparent</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">parent</span>
 <span class="o">...</span>
@@ -788,7 +793,8 @@ classes (like most <code>AST</code> types are).</p>
 <p>Processed:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_valid_target</span><span class="p">(</span><span class="n">asts</span><span class="p">:</span> <span class="n">AST</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">AST</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">isinstance_to_class_check</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_valid_target</span><span class="p">(</span><span class="n">asts</span><span class="p">:</span> <span class="n">AST</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">AST</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if `asts` is a valid target for `Assign` or `For`</span>
 <span class="sd">    operations. Must be `Name`, `Attribute`, `Subscript`</span>
 <span class="sd">    and / or possibly nested `Starred`, `Tuple` and `List`.&quot;&quot;&quot;</span>
@@ -807,7 +813,7 @@ classes (like most <code>AST</code> types are).</p>
 </code></pre>
 </div>
 
-<h2 id="squash-nested-withs">Squash nested <code>with</code>s</h2>
+<h2 id="squash-nested-with">Squash nested <code>with</code></h2>
 
 <p>Slice operations make this easy enough. We only do synchronous <code>with</code> here as you can't mix sync with async anyway. Yes
 the alignment is ugly, it will eventually be done properly, first priority was functional correctness. The comment on
@@ -815,16 +821,16 @@ the <code>with ctx():</code> could be preserved explicitly but not doing it here
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">squash_nested_withs</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">With</span><span class="p">):</span>  <span class="c1"># we only get With nodes</span>
 <span class="o">...</span>         <span class="k">while</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_With</span><span class="p">:</span>  <span class="c1"># first child is another With</span>
 <span class="o">...</span>             <span class="c1"># append child items to ours</span>
-<span class="o">...</span>             <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+<span class="o">...</span>             <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">trivia</span><span class="o">=</span><span class="p">())</span>
 <span class="o">...</span>
 <span class="o">...</span>             <span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span>  <span class="c1"># copy child body into our own</span>
 <span class="o">...</span>                 <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;all+&#39;</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">),</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-<span class="o">...</span>                 <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+<span class="o">...</span>                 <span class="n">trivia</span><span class="o">=</span><span class="p">(),</span>
 <span class="o">...</span>             <span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">fst</span><span class="o">.</span><span class="n">src</span>
@@ -893,7 +899,7 @@ constraint that it be as close to the function as possible but not after a <code
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">insert_decorator_to_class_methods</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">({</span><span class="n">FunctionDef</span><span class="p">,</span> <span class="n">AsyncFunctionDef</span><span class="p">}):</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_ClassDef</span><span class="p">:</span>
@@ -1014,51 +1020,45 @@ constraint that it be as close to the function as possible but not after a <code
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_comprehensions_to_loops</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
-<span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">is_Assign</span>  <span class="c1"># to show we can check here instead of passing to walk()</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">is_ListComp</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Name</span>
-<span class="o">...</span>             <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="o">...</span>         <span class="p">):</span>
-<span class="o">...</span>             <span class="n">var</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
-<span class="o">...</span>             <span class="n">fcomp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span>
-<span class="o">...</span>             <span class="n">fcur</span> <span class="o">=</span> <span class="n">ftop</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> = []</span><span class="se">\n</span><span class="s1">_&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
-<span class="o">...</span>             <span class="c1"># the `_` will become first `for`</span>
+<span class="o">...</span>     <span class="c1"># find single Name targets with a value which is a ListComp</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">Assign</span><span class="p">([</span><span class="n">Name</span><span class="p">],</span> <span class="n">ListComp</span><span class="p">)):</span>
+<span class="o">...</span>         <span class="n">f</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">matched</span>
+<span class="o">...</span>         <span class="n">var</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
+<span class="o">...</span>         <span class="n">fcomp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span>
+<span class="o">...</span>         <span class="n">fcur</span> <span class="o">=</span> <span class="n">ftop</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1"> = []</span><span class="se">\n</span><span class="s1">_&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>         <span class="c1"># the `_` will become first `for`</span>
 <span class="o">...</span>
-<span class="o">...</span>             <span class="k">for</span> <span class="n">fgen</span> <span class="ow">in</span> <span class="n">fcomp</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
-<span class="o">...</span>                 <span class="n">ffor</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;for _ in _:</span><span class="se">\n</span><span class="s1">    _&#39;</span><span class="p">)</span>  <span class="c1"># for loop, just copy the source</span>
-<span class="o">...</span>                 <span class="n">ffor</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">fgen</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="o">...</span>                 <span class="n">ffor</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="n">fgen</span><span class="o">.</span><span class="n">iter</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">fgen</span> <span class="ow">in</span> <span class="n">fcomp</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">ffor</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;for _ in _:</span><span class="se">\n</span><span class="s1">    _&#39;</span><span class="p">)</span>  <span class="c1"># for loop, just copy the source</span>
+<span class="o">...</span>             <span class="n">ffor</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">fgen</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="o">...</span>             <span class="n">ffor</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="n">fgen</span><span class="o">.</span><span class="n">iter</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="o">...</span>
-<span class="o">...</span>                 <span class="n">fcur</span> <span class="o">=</span> <span class="n">fcur</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ffor</span><span class="p">)</span>
-<span class="o">...</span>                 <span class="n">fifs</span> <span class="o">=</span> <span class="n">fgen</span><span class="o">.</span><span class="n">ifs</span>
-<span class="o">...</span>                 <span class="n">nifs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fifs</span><span class="p">)</span>
+<span class="o">...</span>             <span class="n">fcur</span> <span class="o">=</span> <span class="n">fcur</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ffor</span><span class="p">)</span>
+<span class="o">...</span>             <span class="n">fifs</span> <span class="o">=</span> <span class="n">fgen</span><span class="o">.</span><span class="n">ifs</span>
+<span class="o">...</span>             <span class="n">nifs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fifs</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>                 <span class="k">if</span> <span class="n">nifs</span><span class="p">:</span>  <span class="c1"># if no ifs then no test</span>
-<span class="o">...</span>                     <span class="k">if</span> <span class="n">nifs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># if single test then just use that</span>
-<span class="o">...</span>                         <span class="n">ftest</span> <span class="o">=</span> <span class="n">fifs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">nifs</span><span class="p">:</span>  <span class="c1"># if no ifs then no test</span>
+<span class="o">...</span>                 <span class="k">if</span> <span class="n">nifs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># if single test then just use that</span>
+<span class="o">...</span>                     <span class="n">ftest</span> <span class="o">=</span> <span class="n">fifs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="o">...</span>
-<span class="o">...</span>                     <span class="k">else</span><span class="p">:</span>  <span class="c1"># if multiple then join with `and`</span>
-<span class="o">...</span>                         <span class="n">ftest</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39; and &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="o">*</span> <span class="n">nifs</span><span class="p">))</span>
+<span class="o">...</span>                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># if multiple then join with `and`</span>
+<span class="o">...</span>                     <span class="n">ftest</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39; and &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="o">*</span> <span class="n">nifs</span><span class="p">))</span>
 <span class="o">...</span>
-<span class="o">...</span>                         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fif</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fifs</span><span class="p">):</span>
-<span class="o">...</span>                             <span class="n">ftest</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fif</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="o">...</span>                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fif</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fifs</span><span class="p">):</span>
+<span class="o">...</span>                         <span class="n">ftest</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fif</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="o">...</span>
-<span class="o">...</span>                     <span class="n">fifstmt</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if _:</span><span class="se">\n</span><span class="s1">    _&#39;</span><span class="p">)</span>
-<span class="o">...</span>                     <span class="n">fifstmt</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">ftest</span>
+<span class="o">...</span>                 <span class="n">fifstmt</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if _:</span><span class="se">\n</span><span class="s1">    _&#39;</span><span class="p">)</span>
+<span class="o">...</span>                 <span class="n">fifstmt</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">ftest</span>
 <span class="o">...</span>
-<span class="o">...</span>                     <span class="n">fcur</span> <span class="o">=</span> <span class="n">fcur</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">fifstmt</span><span class="p">)</span>
+<span class="o">...</span>                 <span class="n">fcur</span> <span class="o">=</span> <span class="n">fcur</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">fifstmt</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>             <span class="c1"># the ffor is the last one processed above (the innermost)</span>
-<span class="o">...</span>             <span class="n">fcur</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">.append(</span><span class="si">{</span><span class="n">fcomp</span><span class="o">.</span><span class="n">elt</span><span class="o">.</span><span class="n">own_src</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="o">...</span>         <span class="c1"># the ffor is the last one processed above (the innermost)</span>
+<span class="o">...</span>         <span class="n">fcur</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s1">.append(</span><span class="si">{</span><span class="n">fcomp</span><span class="o">.</span><span class="n">elt</span><span class="o">.</span><span class="n">own_src</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>             <span class="n">f</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-<span class="o">...</span>                 <span class="n">ftop</span><span class="p">,</span>
-<span class="o">...</span>                 <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># this allows to replace a single element with multiple</span>
-<span class="o">...</span>                 <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-<span class="o">...</span>             <span class="p">)</span>
+<span class="o">...</span>         <span class="c1"># &#39;one=False&#39; allows to replace a single element with multiple</span>
+<span class="o">...</span>         <span class="n">f</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ftop</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">())</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 </code></pre>
@@ -1219,7 +1219,7 @@ proxy for verifying same parent.</p>
 <p>Processed:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">align_equals</span><span class="p">(</span><span class="n">fst</span><span class="p">)</span>  <span class="c1"># we pass as an FST so we can `.dump()` below</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="n">a</span>             <span class="o">=</span> <span class="mi">1</span>
@@ -1288,7 +1288,7 @@ change, but that would be slower.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">self_document_fstring_expressions</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">FormattedValue</span><span class="p">):</span>  <span class="c1"># could add Interpolation to do both</span>
 <span class="o">...</span>         <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">end_ln</span><span class="p">,</span> <span class="n">end_col</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>  <span class="c1"># value end after parentheses</span>
@@ -1337,7 +1337,9 @@ change, but that would be slower.</p>
 <p>Processed:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="sa">f</span><span class="s1">&#39;added here </span><span class="si">{</span><span class="n">a</span><span class="si">=}</span><span class="s1">, and here </span><span class="si">{</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">)</span><span class="si">= }</span><span class="s1">&#39;</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">if</span> <span class="n">py_version_ok_then_exec_else_print</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">,</span> <span class="s1">&#39;PRINT_START&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINT_STOP&#39;</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">pprint</span><span class="p">(</span><span class="n">self_document_fstring_expressions</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>  <span class="c1"># PRINT_START</span>
+<span class="sa">f</span><span class="s1">&#39;added here </span><span class="si">{</span><span class="n">a</span><span class="si">=}</span><span class="s1">, and here </span><span class="si">{</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">)</span><span class="si">= }</span><span class="s1">&#39;</span>
  
 <span class="sa">f</span><span class="s1">&#39;not added here </span><span class="si">{</span><span class="n">c</span><span class="si">=}</span><span class="s1">&#39;</span>
  
@@ -1345,6 +1347,8 @@ change, but that would be slower.</p>
 <span class="w">    </span><span class="n">d</span><span class="p">,</span><span class="w">  </span><span class="err">#</span><span class="w"> </span><span class="n">commented</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="p">,</span><span class="w"> </span><span class="n">so</span><span class="w"> </span><span class="n">added</span>
 <span class="p">)</span><span class="si">=}</span><span class="s2">, </span><span class="si">{</span><span class="n">e</span>
 <span class="w">    </span><span class="si">=}</span><span class="s2"> &lt;- not commented out so not added&quot;&quot;&quot;</span>
+
+<span class="c1"># PRINT_STOP</span>
 </code></pre>
 </div>
 
@@ -1356,7 +1360,7 @@ that it precedes any comments. Otherwise it just replaces the docstring in the l
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">normalize_docstrings</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">has_docstr</span><span class="p">:</span>
@@ -1408,7 +1412,8 @@ that it precedes any comments. Otherwise it just replaces the docstring in the l
 <p>Processed:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">normalize_docstrings</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Some</span>
 <span class="sd">    unformatted</span>
 <span class="sd">    docstr.&quot;&quot;&quot;</span>
@@ -1436,7 +1441,7 @@ aesthetic paradigm of any given project. This is just to show proper functional 
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">reparenthesize_simple</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_parenthesizable</span><span class="p">():</span>
@@ -1541,7 +1546,7 @@ not have been in normal locations to begin with.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">reparenthesize_full</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
 <span class="o">...</span>         <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_parenthesizable</span><span class="p">():</span>
@@ -1745,6 +1750,572 @@ want the log function to do).</p>
 <span class="n">src</span><span class="p">:</span> <span class="s1">&#39;(z &gt;= 0) * +z&#39;</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">src</span><span class="p">:</span> <span class="s1">&#39;(z &lt; 0) * -z + (z &gt;= 0) * +z&#39;</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="mi">10</span>
+</code></pre>
+</div>
+
+<h1 id="structural-pattern-substitution">Structural pattern substitution</h1>
+
+<p>This section exists mostly to show what is possible with substitution, rather than suggest this is the way these things
+should be done.</p>
+
+<p><code><a href="../../fst.html">fst</a></code> provides fairly robust node pattern substitution through the <code><a href="../fst.html#FST.sub">fst.fst.FST.sub()</a></code> function. This is not really
+meant for final complete refactoring as it does not give nearly as much control as custom code does, especially over
+comments, but can be useful for smaller replacements or quick-and-dirty substitutions.</p>
+
+<h2 id="inject-logging-metadata-2">Inject logging metadata</h2>
+
+<p>This does the same thing as the hardcoded example with the same name but using the <code>sub()</code> function.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... logger.info(&#39;Hello world...&#39;)  # ok</span>
+<span class="s2">... logger.info(&#39;Already have id&#39;, correlation_id=other_cid)  # ok</span>
+<span class="s2">... logger.info()  # yes, no logger message, too bad</span>
+<span class="s2">...</span>
+<span class="s2">... class cls:</span>
+<span class="s2">...     def method(self, thing, extra):</span>
+<span class="s2">...         if not thing:</span>
+<span class="s2">...             (logger).info(  # just checking</span>
+<span class="s2">...                 f&#39;not a </span><span class="si">{thing}</span><span class="s2">&#39;,  # this is fine</span>
+<span class="s2">...                 extra=extra,       # also this</span>
+<span class="s2">...             )</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">MCall</span><span class="p">(</span>
+<span class="o">...</span>    <span class="n">func</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">MAttribute</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">)),</span>
+<span class="o">...</span>    <span class="n">keywords</span><span class="o">=</span><span class="n">MNOT</span><span class="p">([</span><span class="n">MQSTAR</span><span class="p">,</span> <span class="n">Mkeyword</span><span class="p">(</span><span class="s1">&#39;correlation_id&#39;</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">]),</span>
+<span class="o">...</span>    <span class="n">_args</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">all_args</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">repl</span> <span class="o">=</span> <span class="s1">&#39;__FST_func(__FST_all_args, correlation_id=CID)&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Hello world...&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span><span class="p">)</span>  <span class="c1"># ok</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Already have id&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">other_cid</span><span class="p">)</span>  <span class="c1"># ok</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span><span class="p">)</span>  <span class="c1"># yes, no logger message, too bad</span>
+ 
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thing</span><span class="p">,</span> <span class="n">extra</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">thing</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">logger</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                       <span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># this is fine</span>
+                       <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>       <span class="c1"># also this</span>
+                       <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h2 id="else-if-chain-to-elif-2"><code>else if</code> chain to <code>elif</code></h2>
+
+<p>Here, basic comments were left in place to show they are preserved, but attempting to preserve comments on or around the
+<code>if</code> and <code>else</code> statements gets messy and is only partially successful, so it is left out for the purposes of clarity of
+the intended demonstration.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... if a:</span>
+<span class="s2">...     i = 1  # i</span>
+<span class="s2">... else:</span>
+<span class="s2">...     if b:</span>
+<span class="s2">...         j = 2  # j</span>
+<span class="s2">...     else:</span>
+<span class="s2">...         if c:</span>
+<span class="s2">...             k = 3  # k</span>
+<span class="s2">...         else:</span>
+<span class="s2">...             if d:</span>
+<span class="s2">...                 l = 4  # l</span>
+<span class="s2">...             else:</span>
+<span class="s2">...                 if e:</span>
+<span class="s2">...                     m = 5  # m</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">MIf</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">test</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">main_test</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">body</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">main_body</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">orelse</span><span class="o">=</span><span class="p">[</span><span class="n">MIf</span><span class="p">(</span>
+<span class="o">...</span>         <span class="n">test</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">else_test</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>         <span class="n">body</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">else_body</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>         <span class="n">orelse</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">else_else</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="p">)],</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">repl</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... if __FST_main_test:</span>
+<span class="s2">...     __FST_main_body</span>
+<span class="s2">... elif __FST_else_test:</span>
+<span class="s2">...     __FST_else_body</span>
+<span class="s2">... else:</span>
+<span class="s2">...     __FST_else_else</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">nested</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># i</span>
+<span class="k">elif</span> <span class="n">b</span><span class="p">:</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># j</span>
+<span class="k">elif</span> <span class="n">c</span><span class="p">:</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># k</span>
+<span class="k">elif</span> <span class="n">d</span><span class="p">:</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># l</span>
+<span class="k">elif</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># m</span>
+</code></pre>
+</div>
+
+<h2 id="pull-out-nested-functions-2">Pull out nested functions</h2>
+
+<p>This can only pull out a single function and obviously doesn't check for dependent nonlocals from the parent.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... class cls:</span>
+<span class="s2">...     @classmethod</span>
+<span class="s2">...     def method(cls, a, b):</span>
+<span class="s2">...         @lru_cache</span>
+<span class="s2">...         def fib(n):</span>
+<span class="s2">...             if n &lt;= 1:</span>
+<span class="s2">...                 return n</span>
+<span class="s2">...</span>
+<span class="s2">...             return fib(n - 1) + fib(n - 2)</span>
+<span class="s2">...</span>
+<span class="s2">...         return fib(n)</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pat_out</span> <span class="o">=</span> <span class="n">MFunctionDef</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">name</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">name</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">args</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">args</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">decorator_list</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">decorator_list</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">returns</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">returns</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">body</span><span class="o">=</span><span class="p">[</span>
+<span class="o">...</span>         <span class="n">MQSTAR</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="n">MNOT</span><span class="p">(</span><span class="n">FunctionDef</span><span class="p">)),</span>
+<span class="o">...</span>         <span class="n">M</span><span class="p">(</span><span class="n">nested_func</span><span class="o">=</span><span class="n">FunctionDef</span><span class="p">),</span>
+<span class="o">...</span>         <span class="n">MQSTAR</span><span class="p">(</span><span class="n">post</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="p">],</span>
+<span class="o">...</span>     <span class="c1"># type_params=M(type_params=...),  # for py &lt; 3.12 compatibility</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">repl_out</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... __FST_nested_func</span>
+<span class="s2">...</span>
+<span class="s2">... @__FST_decorator_list</span>
+<span class="s2">... def __FST_name(__FST_args) -&gt; __FST_returns:</span>
+<span class="s2">...     __FST_pre</span>
+<span class="s2">...     __FST_post</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat_out</span><span class="p">,</span> <span class="n">repl_out</span><span class="p">,</span> <span class="n">pep8space</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fib</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span>
+ 
+        <span class="k">return</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+ 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h2 id="lambda-to-def-2"><code>lambda</code> to <code>def</code></h2>
+
+<p>This one is relatively straightforward.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... # lambda comment</span>
+<span class="s2">... mymin = lambda a, b: a if a &lt; b else b  # inline lambda comment</span>
+<span class="s2">...</span>
+<span class="s2">... # class comment</span>
+<span class="s2">... class cls:</span>
+<span class="s2">...     name = lambda self: str(self)</span>
+<span class="s2">...</span>
+<span class="s2">...     def method(self, a, b):</span>
+<span class="s2">...         add = lambda a, b: a + b</span>
+<span class="s2">...</span>
+<span class="s2">...         return add(a, b)</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">MAssign</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">name</span><span class="o">=...</span><span class="p">)],</span>
+<span class="o">...</span>     <span class="n">value</span><span class="o">=</span><span class="n">MLambda</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">args</span><span class="o">=...</span><span class="p">),</span> <span class="n">body</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">body</span><span class="o">=...</span><span class="p">)),</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">repl</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... def __FST_name(__FST_args):</span>
+<span class="s2">...     return __FST_body</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">pep8space</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="c1"># lambda comment</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mymin</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span> <span class="k">else</span> <span class="n">b</span>
+ 
+<span class="c1"># class comment</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+ 
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+ 
+        <span class="k">return</span> <span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Now lets chain it with the substitution from the previous example to pull out the newly created nested functions.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+<span class="o">...</span>     <span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">pep8space</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="o">...</span>     <span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat_out</span><span class="p">,</span> <span class="n">repl_out</span><span class="p">,</span> <span class="n">pep8space</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span> <span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="c1"># lambda comment</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mymin</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span> <span class="k">else</span> <span class="n">b</span>
+ 
+<span class="c1"># class comment</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+ 
+    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+ 
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h2 id="squash-nested-with-2">Squash nested <code>with</code></h2>
+
+<p>This is also easily doable and shows off the <code>loop</code> parameter which allows you to apply a substitution to the same
+location an arbitrary number of times in order to collapse structures. When <code>loop</code> is enabled, after a successful
+substitution the resulting node is checked again against the pattern and if it still matches then the substitution is
+applied again repeatedly until the result no longer matches the pattern (or it can be limited to a maximum number of
+iterations).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... with open(a) as f:</span>
+<span class="s2">...     with (</span>
+<span class="s2">...         lock1,  # first lock</span>
+<span class="s2">...         func() as lock2,  # this gets preserved</span>
+<span class="s2">...     ):</span>
+<span class="s2">...         with ctx():  # this does not belong to ctx()</span>
+<span class="s2">...             # body comment</span>
+<span class="s2">...             pass</span>
+<span class="s2">...             # end body comment</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">MWith</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">items</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">outer_items</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">body</span><span class="o">=</span><span class="p">[</span>
+<span class="o">...</span>         <span class="n">MWith</span><span class="p">(</span>
+<span class="o">...</span>             <span class="n">items</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">inner_items</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>             <span class="n">body</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">inner_body</span><span class="o">=...</span><span class="p">)</span>
+<span class="o">...</span>         <span class="p">),</span>
+<span class="o">...</span>         <span class="n">MQSTAR</span><span class="p">(</span><span class="n">outer_body</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="p">],</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">repl</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... with __FST_outer_items, __FST_inner_items:</span>
+<span class="s2">...     __FST_inner_body</span>
+<span class="s2">...     __FST_outer_body</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,))</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">with</span> <span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>
+     <span class="n">lock1</span><span class="p">,</span>  <span class="c1"># first lock</span>
+     <span class="n">func</span><span class="p">()</span> <span class="k">as</span> <span class="n">lock2</span><span class="p">,</span>  <span class="c1"># this gets preserved</span>
+     <span class="n">ctx</span><span class="p">()):</span>
+    <span class="c1"># body comment</span>
+    <span class="k">pass</span>
+    <span class="c1"># end body comment</span>
+</code></pre>
+</div>
+
+<h2 id="add-decorator-to-class-methods-2">Add decorator to class methods</h2>
+
+<p>We can even do this one with the same constraint as the hardcoded version, namely that it be as close to the function as
+possible, but not after a <code>@contextmanager</code>. What we cannot do is apply to both sync and <code>async</code> function definitions in
+the same substitution.</p>
+
+<p>This is because even though we can make a pattern that recognizes and differentiates between the two, storing the same
+tags for the same elements, there is no way to encode a conditional <code>def</code> vs. <code>async def</code> in the replacement template.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... class SomeClass:</span>
+<span class="s2">...     @staticmethod</span>
+<span class="s2">...     def get_options() -&gt; dict[str, Any]:</span>
+<span class="s2">...         ...</span>
+<span class="s2">...</span>
+<span class="s2">...     @classmethod</span>
+<span class="s2">...     def get_cls_option(option: str, options: Mapping[str, Any] = </span><span class="si">{}</span><span class="s2">) -&gt; object:</span>
+<span class="s2">...         ...</span>
+<span class="s2">...</span>
+<span class="s2">...     def set_inst_options(**options) -&gt; dict[str, Any]:</span>
+<span class="s2">...         ...</span>
+<span class="s2">...</span>
+<span class="s2">...     @ \</span>
+<span class="s2">... staticmethod</span>
+<span class="s2">...     @ (</span>
+<span class="s2">...         contextmanager</span>
+<span class="s2">...     )</span>
+<span class="s2">...     def options(**options) -&gt; Iterator[dict[str, Any]]:</span>
+<span class="s2">...         ...</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pat</span> <span class="o">=</span> <span class="n">MFunctionDef</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">name</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">name</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">args</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">args</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">decorator_list</span><span class="o">=</span><span class="p">[</span>
+<span class="o">...</span>         <span class="n">MQSTAR</span><span class="p">(</span><span class="n">pre_ctxmgr</span><span class="o">=</span><span class="n">MNOT</span><span class="p">(</span><span class="n">MName</span><span class="p">(</span><span class="s1">&#39;contextmanager&#39;</span><span class="p">))),</span>
+<span class="o">...</span>         <span class="n">MQSTAR</span><span class="p">(</span><span class="n">ctxmgr_and_post</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="p">],</span>
+<span class="o">...</span>     <span class="n">returns</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">returns</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span>     <span class="n">body</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">body</span><span class="o">=...</span><span class="p">),</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">repl</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... @__FST_pre_ctxmgr</span>
+<span class="s2">... @our_decorator</span>
+<span class="s2">... @__FST_ctxmgr_and_post</span>
+<span class="s2">... def __FST_name(__FST_args) -&gt; __FST_returns:</span>
+<span class="s2">...     __FST_body</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SomeClass</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@our_decorator</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_options</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="o">...</span>
+ 
+    <span class="nd">@classmethod</span>
+    <span class="nd">@our_decorator</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cls_option</span><span class="p">(</span><span class="n">option</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{})</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+        <span class="o">...</span>
+ 
+    <span class="nd">@our_decorator</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_inst_options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="o">...</span>
+ 
+    <span class="o">@</span> \
+    <span class="nb">staticmethod</span>
+    <span class="nd">@our_decorator</span>
+    <span class="o">@</span> <span class="p">(</span>
+        <span class="n">contextmanager</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="o">...</span>
+</code></pre>
+</div>
+
+<h1 id="misc">Misc</h1>
+
+<p>Robust. Crazy syntax is handled correctly, which is a main goal of this module.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... if True:</span>
+<span class="s2">...     @decorator1</span>
+<span class="s2">...</span>
+<span class="s2">...     # pre-comment</span>
+<span class="s2">...     \</span>
+<span class="s2">...  @ \</span>
+<span class="s2">...   ( decorator2 )(</span>
+<span class="s2">...         a,</span>
+<span class="s2">...     ) \</span>
+<span class="s2">...     # post-comment</span>
+<span class="s2">...</span>
+<span class="s2">...     @ \</span>
+<span class="s2">...     decorator3()</span>
+<span class="s2">...</span>
+<span class="s2">...     def func(): weird\</span>
+<span class="s2">...  ; \</span>
+<span class="s2">... \</span>
+<span class="s2">... stuff()</span>
+<span class="s2">...</span>
+<span class="s2">...     pass</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">deco</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span>
+<span class="o">...</span>     <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;decorator_list&#39;</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;all-&#39;</span><span class="p">,</span> <span class="s1">&#39;all-&#39;</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">deco</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt+&#39;</span><span class="p">)</span>
+<span class="mi">0</span><span class="p">:</span> <span class="c1"># pre-comment</span>
+<span class="mi">1</span><span class="p">:</span> \
+<span class="mi">2</span><span class="p">:</span> <span class="o">@</span> \
+<span class="mi">3</span><span class="p">:</span> <span class="p">(</span> <span class="n">decorator2</span> <span class="p">)(</span>
+<span class="mi">4</span><span class="p">:</span>     <span class="n">a</span><span class="p">,</span>
+<span class="mi">5</span><span class="p">:</span> <span class="p">)</span> \
+<span class="mi">6</span><span class="p">:</span> <span class="c1"># post-comment</span>
+<span class="n">_decorator_list</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..6</span><span class="p">,</span><span class="mi">14</span>
+  <span class="o">.</span><span class="n">decorator_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">0..5</span><span class="p">,</span><span class="mi">1</span>
+     <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;decorator2&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">2..3</span><span class="p">,</span><span class="mi">12</span>
+     <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">4..4</span><span class="p">,</span><span class="mi">5</span>
+<span class="o">&lt;</span><span class="n">_decorator_list</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..6</span><span class="p">,</span><span class="mi">14</span><span class="o">&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">if</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="nd">@decorator1</span>
+    <span class="o">@</span> \
+    <span class="n">decorator3</span><span class="p">()</span>
+ 
+    <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">():</span> <span class="n">weird</span>\
+ <span class="p">;</span> \
+\
+<span class="n">stuff</span><span class="p">()</span>
+ 
+    <span class="k">pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">deco</span><span class="p">,</span> <span class="s1">&#39;decorator_list&#39;</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;all-&#39;</span><span class="p">,</span> <span class="s1">&#39;all-&#39;</span><span class="p">))</span>
+<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">8</span><span class="p">,</span><span class="mf">4..11</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;good&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">if</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="c1"># pre-comment</span>
+    \
+    <span class="o">@</span> \
+    <span class="p">(</span> <span class="n">decorator2</span> <span class="p">)(</span>
+        <span class="n">a</span><span class="p">,</span>
+    <span class="p">)</span> \
+    <span class="c1"># post-comment</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">():</span>
+        <span class="n">good</span>
+        <span class="n">stuff</span><span class="p">()</span>
+ 
+    <span class="k">pass</span>
+</code></pre>
+</div>
+
+<p>Higher level slice abstraction.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &lt; c&#39;</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case {1: a, 2: b, **c}: pass&#39;</span><span class="p">)</span>  <span class="c1"># match_case</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">c</span><span class="p">}</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a, b=c, *d)&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="s1">&#39;*e, f=g, **h&#39;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">call</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">g</span><span class="p">,</span> <span class="o">**</span><span class="n">h</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a, /, b=2, *c, d=4, **e): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="o">*</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">e</span>
+</code></pre>
+</div>
+
+<p>One-liner fun.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">... class myclass:</span>
+<span class="s2">...     def first_method(self):</span>
+<span class="s2">...         something</span>
+<span class="s2">...</span>
+<span class="s2">...     @bad_decorator()</span>
+<span class="s2">...     def bad_method(self):</span>
+<span class="s2">...         something_bad</span>
+<span class="s2">...</span>
+<span class="s2">...     def last_method(self):</span>
+<span class="s2">...         something_else</span>
+<span class="s2">... &quot;&quot;&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="o">...</span>       <span class="o">.</span><span class="n">find_def</span><span class="p">(</span><span class="s1">&#39;myclass.bad_method&#39;</span><span class="p">)</span>
+<span class="o">...</span>       <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;def good_method(self):</span><span class="se">\n</span><span class="s1">    return &quot;YAY!&quot;&#39;</span><span class="p">)</span>
+<span class="o">...</span>       <span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">myclass</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">first_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">something</span>
+ 
+    <span class="k">def</span><span class="w"> </span><span class="nf">good_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;YAY!&quot;</span>
+ 
+    <span class="k">def</span><span class="w"> </span><span class="nf">last_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">something_else</span>
+</code></pre>
+</div>
+
+<p>Traversal is in syntactic order.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a, x=1, *b, y=2, **c)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">walk</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="p">[</span><span class="s1">&#39;call&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;x=1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;*b&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;y=2&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{key1: val1, **val2, key3: val3}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">walk</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="p">[</span><span class="s1">&#39;key1&#39;</span><span class="p">,</span> <span class="s1">&#39;val1&#39;</span><span class="p">,</span> <span class="s1">&#39;val2&#39;</span><span class="p">,</span> <span class="s1">&#39;key3&#39;</span><span class="p">,</span> <span class="s1">&#39;val3&#39;</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">if</span> <span class="n">py_version_ok_then_exec_else_print</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">,</span> <span class="s1">&#39;LIST_START&#39;</span><span class="p">,</span> <span class="s1">&#39;LIST_STOP&#39;</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def func[T](a=1, b=2) -&gt; int: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">walk</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="o">...</span>     <span class="n">pprint</span><span class="p">(</span><span class="n">self_document_fstring_expressions</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)))</span>  <span class="c1"># LIST_START</span>
+<span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;a=1, b=2&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">]</span>
+
+<span class="c1"># LIST_STOP</span>
+</code></pre>
+</div>
+
+<p>Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in <code>AST</code>
+nodes.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;蟒=Æ+д&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="n">Assign</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
+  <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;蟒&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
+  <span class="o">.</span><span class="n">value</span> <span class="n">BinOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">2..0</span><span class="p">,</span><span class="mi">5</span>
+    <span class="o">.</span><span class="n">left</span> <span class="n">Name</span> <span class="s1">&#39;Æ&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">2..0</span><span class="p">,</span><span class="mi">3</span>
+    <span class="o">.</span><span class="n">op</span> <span class="n">Add</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
+    <span class="o">.</span><span class="n">right</span> <span class="n">Name</span> <span class="s1">&#39;д&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+<span class="o">&lt;</span><span class="n">Assign</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
 </code></pre>
 </div>
 </div>

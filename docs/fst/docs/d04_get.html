@@ -127,7 +127,7 @@ the first line) or isolation.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="go">&lt;&lt;If ROOT 0,0..8,13&gt;.body [&lt;If 1,4..4,13&gt;, &lt;If 5,4..8,13&gt;]&gt;</span>
+<span class="go">&lt;&lt;If ROOT 0,0..8,13&gt;.body&gt;</span>
 </code></pre>
 </div>
 
@@ -188,7 +188,7 @@ because most operations will fail with a tree in this state.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="go">&lt;&lt;If 1,4..4,13&gt;.body [&lt;Assign 2,8..2,13&gt;]&gt;</span>
+<span class="go">&lt;&lt;If 1,4..4,13&gt;.body&gt;</span>
 </code></pre>
 </div>
 
@@ -558,7 +558,7 @@ for this purpose. This is not a valid <code>AST</code> object of course, but wor
 
 <p>The <code>FST</code> class provides properties that mirror the fields of all possible <code>AST</code> classes in order to allow direct access
 to those fields through the <code>FST</code> class. When accessing like this, fields which are <code>AST</code> nodes have their corresponding
-<code>FST</code> node returned and fields which are lists of <code>AST</code> nodes return an <code>fstview</code> which acts as a list of corresponding
+<code>FST</code> node returned and fields which are lists of <code>AST</code> nodes return an <code>FSTView</code> which acts as a list of corresponding
 <code>FST</code> nodes (see <code><a href="d07_views.html">fst.docs.d07_views</a></code>). Elements which are primitive values are returned as such.</p>
 
 <div class="pdoc-code codehilite">
@@ -567,8 +567,8 @@ to those fields through the <code>FST</code> class. When accessing like this, fi
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">targets</span>  <span class="c1"># this is an `fstview`</span>
-<span class="go">&lt;&lt;Assign ROOT 0,0..0,15&gt;.targets [&lt;Tuple 0,0..0,4&gt;]&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">targets</span>  <span class="c1"># this is an `FSTView`</span>
+<span class="go">&lt;&lt;Assign ROOT 0,0..0,15&gt;.targets&gt;</span>
 </code></pre>
 </div>
 
@@ -586,7 +586,7 @@ to those fields through the <code>FST</code> class. When accessing like this, fi
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span>
-<span class="go">&lt;&lt;List 0,7..0,15&gt;.elts [&lt;Name 0,8..0,9&gt;, &lt;Constant 0,11..0,14&gt;]&gt;</span>
+<span class="go">&lt;&lt;List 0,7..0,15&gt;.elts&gt;</span>
 </code></pre>
 </div>
 

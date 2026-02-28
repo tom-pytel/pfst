@@ -598,7 +598,7 @@ order to continue operating on the same element in the tree you need the new <co
 <h2 id="insert-append-extend-prepend-and-prextend"><code>insert()</code>, <code>append()</code>, <code>extend()</code>, <code>prepend()</code> and <code>prextend()</code></h2>
 
 <p>These do what they say and are essentially just convenience functions which call <code>put_slice()</code> underneath. They work in
-exactly the same way as their <code>fstview</code> counterparts but allow you to specify a field to operate on explicitly, and if
+exactly the same way as their <code>FSTView</code> counterparts but allow you to specify a field to operate on explicitly, and if
 not provided they operate on the default field of the node (assuming it is a list field).</p>
 
 <p>Below are examples of their usage along with the corresponding <code>put_slice()</code> call to demonstrate what is happening.</p>
@@ -702,7 +702,7 @@ operation will be carried out on that field.</p>
 </code></pre>
 </div>
 
-<p>And this is the same as the function on the <code>fstview</code> (<code><a href="d07_views.html">fst.docs.d07_views</a></code>).</p>
+<p>And this is the same as the function on the <code>FSTView</code> (<code><a href="d07_views.html">fst.docs.d07_views</a></code>).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>

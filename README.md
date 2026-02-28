@@ -2,7 +2,7 @@
 
 **High-level Python AST manipulation that preserves formatting**
 
-[![PyPI version](https://img.shields.io/badge/pypi-0.2.6-orange.svg)](https://pypi.org/project/pfst/)
+[![PyPI version](https://img.shields.io/badge/pypi-0.3.0-orange.svg)](https://pypi.org/project/pfst/)
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15a-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
@@ -27,7 +27,7 @@ current source will always parse to the current tree.
 - Various Python version-specific syntax quirks
 - Lots more...
 
-See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d13_examples.html) for more in-depth examples. Or go straight to the [Documentation](https://tom-pytel.github.io/pfst/fst.html).
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d14_examples.html) for more in-depth examples. Or go straight to the [Documentation](https://tom-pytel.github.io/pfst/fst.html).
 
 
 ## Links

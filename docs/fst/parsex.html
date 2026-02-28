@@ -98,9 +98,9 @@ failing it is slower to do so than other modes, though the most likely success i
 of the <code>Module</code>. If that statement is an <code>Expr</code> then return the expression instead of the statement. If nothing
 present then return empty <code>Module</code>. Doesn't attempt any of the other parse modes which would not normally be
 parsable by python, just anything that can be parsed natively by <code>ast.parse()</code>.</li>
-<li><code>'exec'</code>: Parse to a <code>Module</code>. Same as passing <code>Module</code> type or <code>'stmts'</code>. Same as <code>ast.parse()</code> mode 'exec'.</li>
-<li><code>'eval'</code>: Parse to an <code>Expression</code>. Same as passing <code>Expression</code> type. Same as <code>ast.parse()</code> mode 'eval'.</li>
-<li><code>'single'</code>: Parse to an <code>Interactive</code>. Same as passing <code>Interactive</code> type. Same as <code>ast.parse()</code> mode 'single'.</li>
+<li><code>'exec'</code>: Parse to a <code>Module</code>. Same as passing <code>Module</code> type or <code>'stmts'</code>. Same as <code>ast.parse()</code> mode <code>'exec'</code>.</li>
+<li><code>'eval'</code>: Parse to an <code>Expression</code>. Same as passing <code>Expression</code> type. Same as <code>ast.parse()</code> mode <code>'eval'</code>.</li>
+<li><code>'single'</code>: Parse to an <code>Interactive</code>. Same as passing <code>Interactive</code> type. Same as <code>ast.parse()</code> mode <code>'single'</code>.</li>
 <li><code>'stmts'</code>: Parse zero or more <code>stmt</code>s returned in a <code>Module</code>. Same as passing <code>'exec'</code> or <code>Module</code>.</li>
 <li><code>'stmt'</code>: Parse a single <code>stmt</code> returned as itself. Same as passing <code>stmt</code> type.</li>
 <li><code>'ExceptHandler'</code>: Parse as a single <code>ExceptHandler</code> returned as itself. Same as passing <code>ExceptHandler</code> type.</li>
@@ -108,8 +108,8 @@ parsable by python, just anything that can be parsed natively by <code>ast.parse
 <li><code>'match_case'</code>: Parse a single <code>match_case</code> returned as itself. Same as passing <code>match_case</code> type.</li>
 <li><code>'_match_cases'</code>: Parse zero or more <code>match_case</code>s returned in a <code>_match_cases</code> SPECIAL SLICE.</li>
 <li><code>'expr'</code>: "expression", parse a single <code>expr</code> returned as itself. This is differentiated from the following modes by
-the handling of slices and starred expressions. In this mode <code>a:b</code> and <code>*not v</code> are syntax errors. Same as passing
-<code>expr</code> type.</li>
+the handling of slices and starred expressions. In this mode <code>a:b</code> and <code>*not v</code> are syntax errors, but <code>*st</code> is not.
+Same as passing <code>expr</code> type.</li>
 <li><code>'expr_all'</code>: Parse to any kind of expression including <code>Slice</code>, <code>*not a</code> or <code>Tuple</code> of any of those combined (but
 unparenthesized in that case).</li>
 <li><code>'expr_arglike'</code>: Accept special syntax for <code>Starred</code> (call argument, class base definition, slice implicit tuple),
@@ -120,7 +120,7 @@ parses to a single element tuple containing a starred expression <code>(*(not v)
 <li><code>'Tuple_elt'</code>: "tuple element expression" as in a <code>Tuple</code> that can be anywhere including a <code>Subscript.slice</code>. Same
 as <code>'expr'</code> except that in this mode <code>a:b</code> parses to a <code>Slice</code> and <code>*not v</code> parses to a starred expression
 <code>*(not v)</code>. <code>Tuples</code> are parsed but cannot contain <code>Slice</code>s or arglike expressions.</li>
-<li><code>'Tuple'</code>: Parse to a <code>Tuple</code> which may contain anything that a tuple can contain like multiple <code>Slice</code>s and arglike
+<li><code>'Tuple'</code>: Parse to a <code>Tuple</code> which may contain anything that a tuple can contain like multiple <code>Slice</code> and arglike
 expressions. If it contains <code>Slice</code>s or arglikes then it must not be parenthesized (as per python syntax).</li>
 <li><code>'_Assign_targets'</code>: Parse zero or more <code>Assign</code> targets returned in a <code>_Assign_targets</code> SPECIAL SLICE, with <code>=</code> as
 separators and an optional trailing <code>=</code>.</li>
@@ -165,7 +165,7 @@ comma for a single element.</li>
 <li><code>type[AST]</code>: If an <code>AST</code> type is passed then will attempt to parse to this type. This can be used to narrow
 the scope of desired return, for example <code>Constant</code> will parse as an expression but fail if the expression
 is not a <code>Constant</code>. These overlap with the string specifiers to an extent but not all of them. For example
-<code>AST</code> type <code>expr</code> is the same as passing <code>'expr'</code>. Not all string specified modes are can be matched, for example
+<code>AST</code> type <code>expr</code> is the same as passing <code>'expr'</code>. Not all string specified modes can be matched, for example
 <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>'stmts'</code> specify the same parse mode. <code>Tuple</code> parse also allows parsing
 <code>Slice</code>s in the <code>Tuple</code> as well as otherwise invalid star notation <code>*not a</code>.</li>
 <li><code>str(type[AST])</code>: Same as <code>type[AST]</code>.</li>

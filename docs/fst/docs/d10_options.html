@@ -215,13 +215,13 @@ documentation is for that, here we just show their usage.</p>
 
 <p>This option specifies whether normal prescribed put operations are done (<code>raw=False</code>), raw source reparse operations are
 done instead (<code>raw=True</code>), or whether raw source reparse is used as a fallback if the prescribed operation fails
-(<code>raw='auto'</code>). For information on how raw operations work see <code><a href="d11_raw.html">fst.docs.d11_raw</a></code>.</p>
+(<code>raw='auto'</code>). For information on how raw operations work see <code><a href="d12_raw.html">fst.docs.d12_raw</a></code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># default</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
-<span class="gr">fst.NodeError</span>: <span class="n">cannot put as &#39;one&#39; item to a Dict slice</span>
+<span class="gr">SyntaxError</span>: <span class="n">invalid syntax</span>
 </code></pre>
 </div>
 
@@ -242,10 +242,8 @@ can handle most stuff anyway.</p>
 
 <h2 id="trivia-option"><code>trivia</code> option</h2>
 
-<p>This option specifies how comments and whitespace are handled on copies, deletions and replacements. There is a small
-difference on what can be set globally and what can be passed to a function in that a function can take <code>None</code> values
-for the leading or trailing trivia specifier to indicate that global default should be used for that particular trivia.
-For more information on trivia see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
+<p>This option specifies how comments and whitespace are handled on copies, deletions and replacements. For more
+information on trivia see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code> and <code><a href="../fst.html#FST.options">fst.fst.FST.options()</a></code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -277,7 +275,7 @@ For more information on trivia see <code><a href="d06_slices.html">fst.docs.d06_
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">plines</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">plines</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">,))</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
 <span class="go">&#39;# block comment&#39;</span>
 <span class="go">&#39;statement2  # line comment&#39;</span>
 <span class="go">&#39;# trailing block comment&#39;</span>
@@ -816,7 +814,7 @@ defaults, such as the <code>to</code> option when putting a single element in ra
 
 <p>Or the <code>op</code> option when doing <code>Compare</code> slice put operations and providing an operator for just that single put.</p>
 
-<p>For more information on <code>to</code> see <code><a href="d11_raw.html">fst.docs.d11_raw</a></code> and for <code>op</code> see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
+<p>For more information on <code>to</code> see <code><a href="d12_raw.html">fst.docs.d12_raw</a></code> and for <code>op</code> see <code><a href="d06_slices.html">fst.docs.d06_slices</a></code>.</p>
 </div>
 
                 
