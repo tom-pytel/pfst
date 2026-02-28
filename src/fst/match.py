@@ -6523,7 +6523,7 @@ def sub(
                     parenta = parent.a
                     parenta_cls = parenta.__class__
                     field, idx = repl_slot.pfield
-                    new_idx = None
+                    virt_field = None
 
                     if parenta_cls is Expr:  # Name with parent Expr, maybe replacing with single or body of statements, or maybe just an expression
                         if (not isinstance(repl_slot_new, fst.FST) or
@@ -6537,39 +6537,39 @@ def sub(
 
                     elif parenta_cls is Call:  # Call._args?
                         if field in ('args', 'keywords'):
-                            new_field = '_args'
-                            new_idx = parent._cached_arglikes().index(repl_slot.a)
+                            virt_field = '_args'
+                            virt_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     elif parenta_cls is arguments:
                         if (field in _NODE_ARGUMENTS_ARGS_ALL_FIELDS
                             and (not repl_slot_new or repl_slot_new.a.__class__ is arguments)
                         ):
-                            new_field = '_all'
+                            virt_field = '_all'
                             allargs = parent._cached_allargs()
-                            new_idx = allargs.index(repl_slot.a)
+                            virt_idx = allargs.index(repl_slot.a)
                             one = False
 
                             if repl_options_.get('args_as', _SENTINEL) is _SENTINEL:  # can pass args_as=None to disable the following behavior
                                 if len(allargs) == 1:
                                     if field in _NODE_ARGUMENTS_ARGS_LIST_ONLY_FIELDS:  # if replacement slot is a posonly or kwonly and user did not explicitly specify an args_as transformation for putting to repl template then do it ourselves here as the user clearly intended for these to be this type of args :)
                                         repl_options_ = dict(repl_options_, args_as=
-                                                            'kw_maybe' if field == 'kwonlyargs' else 'pos_maybe')
+                                                             'kw_maybe' if field == 'kwonlyargs' else 'pos_maybe')
                                 else:
                                     if field in _NODE_ARGUMENTS_ARGS_LIST_FIELDS:  # more than one args slot present so in this case if replacement slot is a posonly, kwonly OR normal arg and user did not explicitly specify an args_as transformation for putting to repl template then do it ourselves here as this solves a lot of other problems
                                         repl_options_ = dict(repl_options_, args_as=
-                                                            'arg_maybe' if field == 'args' else
-                                                            'kw_maybe' if field == 'kwonlyargs' else
-                                                            'pos_maybe')
+                                                             'arg_maybe' if field == 'args' else
+                                                             'kw_maybe' if field == 'kwonlyargs' else
+                                                             'pos_maybe')
 
                     elif parenta_cls is Compare:  # maybe need to replace single element in compare with Compare slice
                         if not one:  # only if came from existing Compare slice
-                            new_field = '_all'
-                            new_idx = 0 if idx is None else idx + 1
+                            virt_field = '_all'
+                            virt_idx = 0 if idx is None else idx + 1
 
                     elif parenta_cls is ClassDef:  # ClassDef._bases?
                         if field in ('bases', 'keywords'):
-                            new_field = '_bases'
-                            new_idx = parent._cached_arglikes().index(repl_slot.a)
+                            virt_field = '_bases'
+                            virt_idx = parent._cached_arglikes().index(repl_slot.a)
 
                     elif parenta_cls is withitem:  # can be whole withitem with optional_vars to put as withitem or multiple _withitems
                         if field == 'context_expr' and not parenta.optional_vars:
@@ -6586,27 +6586,29 @@ def sub(
                         if field == 'values' and (a := repl_slot_new.a).__class__ is BoolOp:
                             one = a.op.__class__ is not parenta.op.__class__
 
-                    if new_idx is not None:  # replace is a special virtual field slice operation
+                    if virt_field is not None:  # replace is a special virtual field slice operation
                         if one_override is not None:
                             one = one_override
 
                         if not repl_slot_new_is_matched_root:  # not replacing with whole matched node so don't need to mark anything dirty
-                            parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options_)
+                            parent._put_slice(repl_slot_new, virt_idx, virt_idx + 1, virt_field, one, repl_options_)
 
                         else:  # need to do extra stuff to mark possibly multiple replacements as dirty
-                            body = getattr(parent, new_field)
+                            body = getattr(parent, virt_field)
                             len_body = len(body)
 
-                            parent._put_slice(repl_slot_new, new_idx, new_idx + 1, new_field, one, repl_options_)
+                            parent._put_slice(repl_slot_new, virt_idx, virt_idx + 1, virt_field, one, repl_options_)
 
                             if len(body) == len_body:  # only mark dirty if replaced exactly one element because otherwise it was a deletion or subslice
-                                if f := body[new_idx]:
+                                if f := body[virt_idx]:
                                     dirty.add(f.a)
 
                         continue
 
-                if one_override is not None:
-                    one = one_override
+                    if one_override is not None:  # we don't need to do this or deal with `one` at all if there is no parent as in that case `one` does nothing
+                        one = one_override
+                    elif not one and (pfield := repl_slot.pfield) and pfield.idx is None:  # maybe need to turn off slice put if the field we are putting to is not a list field
+                        one = True
 
                 repl_slot_new = repl_slot.replace(repl_slot_new, one=one, **repl_options_)
 

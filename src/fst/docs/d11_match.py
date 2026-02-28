@@ -2,8 +2,8 @@ r"""
 # Match, search and substitute
 
 A quick note on this section. Throught you may see node types like `Name` and `MName` or `Assign` and `MAssign` used
-interchangeably. For the purposes the purposes of match patterns they are interchangeable. The only real differences
-being default arguments, and if you are using a type checker, how much it complains about your misuse of `AST` nodes.
+interchangeably. For the purposes of match patterns they are interchangeable. The only real differences being default
+arguments, and if you are using a type checker, how much it complains about your misuse of `AST` nodes.
 
 To be able to execute the examples, import this.
 
@@ -43,9 +43,9 @@ False
 >>> bool(pat.match(FST('not_logger.info(a, cid=1)')))
 False
 
-You can also match against pure `AST` trees. The `match()` function only matches against the node you give it and in the
-following examples the `ast.parse()` function returns `Module` so we do the `.body[0].value` to get the proper node to
-match against.
+You can also match against pure `AST` trees. The `match()` function only matches against the node you give it, and in
+the following examples the `ast.parse()` function returns `Module`, so we do the `.body[0].value` to get the proper node
+to match against.
 
 >>> bool(pat.match(ast.parse('( logger ).info(a, cid=1)').body[0].value))
 True
@@ -76,8 +76,8 @@ True
 False
 
 You will note the use of the `Ellipsis` in the examples above. The `...` serves as a wildcard match-any-single-element
-in `fst` pattern matching. It matches anything in place of an actual field value and is equivalent to the regex `.` dot
-pattern.
+in `fst` pattern matching. It matches anything in the location of an actual field value (including `None`) and is
+equivalent to the regex `.` dot pattern.
 
 
 ## String and regex patterns
@@ -103,7 +103,7 @@ True
 >>> bool(MAssign(..., re.compile(r'a\s*\+\s*b')).match(FST('v = (a   + \nb)')))
 True
 
-In the case of an `FST` node, the source matched against comes from the location of the node **WITHOUT** any enclosing
+In the case of an `FST` node, the source matched against comes from the location of the node WITHOUT any enclosing
 grouping parentheses. You can also match source against `AST` nodes, in which case they are internally unparsed for the
 check.
 
@@ -114,7 +114,7 @@ The `a + b` with the spaces matches the `a+b` in the `AST` because when unparsed
 standard `AST` spacing.
 
 Strings and regexes can also be used for fields which are normally strings themselves (instead of nodes), in which case
-it they are not matched against source but rather against the actual values of the field.
+they are not matched against source but rather against the actual values of the fields.
 
 >>> bool(MImportFrom(module='mod.submod').match(FST('from mod.submod import *')))
 True
@@ -206,7 +206,7 @@ True
 
 So far we have been showing the return of `match()` as a `bool`, but the actual return value is either `None` for no
 match or an `FSTMatch` object for a successful match. This match object may contain tagged values which we have not
-shown yet, so here they are
+shown yet, so here they are:
 
 >>> m = MConstant(M(tag=..., static_tag=True)).match(FST('"string"', Constant))
 
@@ -214,7 +214,7 @@ shown yet, so here they are
 <FSTMatch <Constant ROOT 0,0..0,8> {'tag': 'string', 'static_tag': True}>
 
 The `tag` tag in this case gets the value of the thing actually matched, and the `static_tag` is just a fixed-value
-tag which is added on a successful match, meant to be used for flags.
+tag which is added on a successful match, meant to be used for flags (but can be abused for other things).
 
 These tags can be accessed via the `.tags` attribute on the match object.
 
@@ -230,7 +230,11 @@ Or as a convenience accessing directly on the `FSTMatch` object.
 True
 
 Looking up tags directly on the `FSTMatch` object does not raise `IndexError` if the tag does not exist but rather
-returns a falsey object.
+returns a singleton falsey object `NotSet` (which can be imported for identity checking, `from fst.match import
+NotSet`).
+
+>>> m['nonexistent_tag']
+<NotSet>
 
 >>> bool(m['nonexistent_tag'])
 False
@@ -268,7 +272,7 @@ Regardless of tags, the top level match is always available on the match object 
 >>> M(Constant).match(FST('1')).matched
 <Constant ROOT 0,0..0,1>
 
-The reason the tags exist however is to be able to match arbitrary nodes below the top level `matched` match.
+The reason the tags exist however is to be able to match arbitrary nodes below the top level `matched` object.
 
 >>> m = MBinOp(..., ..., M(tag=...)).match(FST('a + b'))
 
@@ -295,10 +299,10 @@ is there.
 >>> MAST(names=M(l=[MQSTAR])).match(ast.parse('global a, b, c').body[0])
 <FSTMatch Global(names=['a', 'b', 'c']) {'l': ['a', 'b', 'c']}>
 
-It can NOT however wrap quantifier patterns inside list fields. Quantifier patterns can only live directly inside list
-fields.
+It can NOT however wrap quantifier patterns inside list fields. Quantifier patterns can only live as direct children of
+list field patterns.
 
->>> MList([M(MQSTAR)]).match(FST('[1, 2, 3]'))
+>>> MList(elts=[M(MQSTAR)]).match(FST('[1, 2, 3]'))
 Traceback (most recent call last):
 ...
 fst.MatchError: MQSTAR quantifier pattern in invalid location
@@ -428,8 +432,16 @@ Multiple fields to match.
 
 Note that the `returns` field which doesn't exist on the `ClassDef` node does not cause an error, just a match fail.
 
-Like `MOR` and `MAND`, this pattern doesn't allow static tags. It doesn't even allow match tags as all keywords are used
-to specify fields.
+Like `MOR` and `MAND`, this pattern doesn't allow static tags. It does allow a match tag on the types.
+
+>>> pat = MTYPES(
+...     tag=(FunctionDef, AsyncFunctionDef),
+...     body=[Expr(Constant(str)), ...],
+...     returns='int',
+... )
+
+>>> pat.match(FST('def f() -> int: "docstring"; pass'))
+<FSTMatch <FunctionDef ROOT 0,0..0,33> {'tag': <FunctionDef ROOT 0,0..0,33>}>
 
 
 ## `MRE()` pattern
@@ -511,7 +523,7 @@ The type of node passed to the callback depends on the type of tree that `match(
 A tag getter function can be passed to the callback so it can request tags that have been set so far.
 
 >>> m = M(prev=MCB(
-...     lambda t, g: (print(f"this: {t}, prev: {g('prev')}"),),
+...     lambda this, get: (print(f"this: {this}, prev: {get('prev')}"),),
 ...     pass_tags=True,
 ... ))
 
@@ -524,9 +536,9 @@ this: <Name 0,7..0,8>, prev: <Name 0,4..0,5>
 
 ## `MTAG()` pattern
 
-This pattern allows you to match against tags that exist at the point that this pattern is reached. Mostly meant for
-matching against already matched nodes, but can also be used to match against arbitrary tag values as well as long as
-they are valid patterns.
+This is the backreference pattern that allows you to match against tags that exist at the point that this pattern is
+reached. Mostly meant for matching against already matched nodes, but can also be used to match against arbitrary tag
+values as well as long as they are valid patterns.
 
 >>> MBinOp(M(left='a'), right=MTAG('left')).match(FST('a + a'))
 <FSTMatch <BinOp ROOT 0,0..0,5> {'left': <Name 0,0..0,1>}>
@@ -654,9 +666,6 @@ None
     <FSTMatch [<Name 0,7..0,8>, <Name 0,10..0,11>] {'u': <Name 0,7..0,8>}>,
   ],
 }>
-
-The following is truly an academic exercise, as this is done much more quickly an easily with code and a walk over the
-list, but just to show what can be done with matching...
 
 One of the uses for quantifiers in subsequences can be filtering and grouping. The example below will group all names
 from a list and return a match object with a list of matches where each one has a list that starts with a single `Name`
@@ -1002,7 +1011,7 @@ mechanism which is used by the `MTAG()` pattern to compare previously matched pa
 It is not any less efficient to use `AST` as a pattern vs. using the `MAST` pattern classes. The differences are:
 
 - `AST` nodes may need all required fields to be specified whereas for the pattern classes all fields are optional. The
-    way handle this if using `AST` is just to pass those fields as `...` wildcards.
+    way to handle this if using `AST` is just to pass those fields as `...` wildcards.
 
 >>> FST('a + b').match(MBinOp(op='+'))
 <FSTMatch <BinOp ROOT 0,0..0,5>>
@@ -1128,8 +1137,8 @@ replacement template.
 
 ## Basic
 
-A simple example is replacing all `Name` nodes with a call to a logging function (which is assumed to return the value
-of the expression).
+A simple example is replacing all `Name` nodes with a call to a logging function (which for our purposes is assumed to
+return the value of the expression).
 
 >>> f = FST('a + b.c')
 
@@ -1167,8 +1176,9 @@ This only substituted `Name` nodes, but what if you also want to substitute the 
 >>> print(FST('a + b.c').sub(pat, repl).src)
 log(a) + log(b.c)
 
-Here the `Attribute` was substituted but the `Name` inside of it was not. This is because by default the `sub()`
-function does not apply to nested matches. This can be controlled with the `nested` parameter.
+Here the `Attribute` was substituted but the `Name` inside of it was not. This is because by default, unlike the
+`search()` function, the `sub()` function does not recurse into nested matches. This can be controlled with the `nested`
+parameter.
 
 >>> print(FST('a + b.c').sub(pat, repl, nested=True).src)
 log(a) + log(log(b).c)
@@ -1188,8 +1198,8 @@ log(a, "a") + log(log(b, "b").c, "b.c")
 
 To finish this simple example, something to keep in mind. We used `Name` and `Attribute` types for a clearer
 demonstration, but in real usage where this pattern may be applied to statements you would want to further restrict
-these substitutions to only non-target nodes. This can be done with the pattern `ctx=Load` as the replacement template
-function call is not a valid target for an `Assign` or `Delete`.
+these substitutions to only non-target nodes. This can be done with the pattern `ctx=Load` as our replacement template
+function call `log()` is not a valid target for an `Assign` or `Delete`.
 
 >>> pat = Name
 
@@ -1211,7 +1221,7 @@ fst.NodeError: invalid value for Assign.targets, got Call
 i = log(a).b
 del c, log(e)[log(f)]
 
-The substitution skipped any `Name` which was not a `Load` operation because did not match the `ctx=Load` pattern.
+The substitution skipped any `Name` which was not a `Load` operation because it did not match the `ctx=Load` pattern.
 
 
 ## Slices
@@ -1228,7 +1238,7 @@ Set - ROOT 0,0..0,6
    0] Name 'a' Load - 0,1..0,2
    1] Name 'b' Load - 0,4..0,5
 
-Here we converted a `List` into a `Set` by capturing its entire `elts` field and putting it into the `Set`. The
+Here we converted a `List` into a `Set` by capturing its entire `elts` list field and putting it into the `Set`. The
 `elts=M(tag=...)` captured the entire `List` contents, but partial contents can be used as well.
 
 >>> print(FST('[a, b, c, d, e]').sub(
@@ -1312,18 +1322,18 @@ i = {a for c in d for b in c for a in b}
 
 A note on the special templates for these sequences which contain the `'...'` string. These are only recognized as a
 templates if the dotted string is one continuous single-quoted string. If it is triple-quoted like `'''...'''`, or an
-innate string like `'..' '.'` then it does not trigger the template behavior. This is done on purpose in order to allow
-these string values to be used specifically without triggering templates.
+innate concatenated string like `'..' '.'` then it does not trigger the template behavior. This is done on purpose in
+order to allow these string values to be used specifically without triggering templates.
 
 
-## Slice cardinality overrides
+## Slice put override
 
-The meaning of tags in the `repl` pattern is not always clear. One of the common uncertainties that can exist is between
-"replace this single element" or "replace this slice of elements". The `sub()` function does its best to guess which to
-apply from the substitution context.
+The full meaning of tags in the `repl` pattern is not always clear. One of the common uncertainties that can exist is
+between "replace this single __FST_tag element" or "replace this __FST_tag slice of elements". The `sub()` function does
+its best to guess which to apply from the substitution context.
 
-For an example here are two puts of a list to another list with the same identical `repl` template which give different
-results due to the different ways their source tag is gotten.
+Here are two puts of a list to another list with the same identical `repl` template which give different results due to
+different interpretation of the source tag.
 
 >>> repl = '[x, __FST_tag, y]'
 
@@ -1337,16 +1347,34 @@ results due to the different ways their source tag is gotten.
 >>> print(FST('[a, b, c]').sub(pat_one, repl).src)
 [x, [a, b, c], y]
 
-For this reason, tag override hints exist so that you can specify the behavior you want explicitly. Instead of the
-`__FST_<tag>` which is neutral and lets the `sub()` function decide what kind of put to do, you can use `__FSO_<tag>`
-"One" override to force a single element put or `__FSS_<tag>` "Slice" override for a slice put. Here are the same two
-examples but with explicit overrides.
+For this reason, tag slice overrides exist so that you can specify the behavior you want explicitly. Instead of the
+`__FST_<tag>`, which is neutral and allows the `sub()` function to determine the operation type, you can use an
+`__FSO_<tag>` ("One" override) to force a single-element put or an `__FSS_<tag>` ("Slice" override) for a slice put.
+Here are the same two examples but with explicit overrides. Note the difference between the `__FST`, `__FSO` and `__FSS`
+prefixes.
+
+Here we force a single-element put where `sub()` normally does a slice.
+
+>>> print(FST('[a, b, c]').sub(pat_slice, '[x, __FST_tag, y]').src)
+[x, a, b, c, y]
 
 >>> print(FST('[a, b, c]').sub(pat_slice, '[x, __FSO_tag, y]').src)
 [x, [a, b, c], y]
 
+And here the other way around.
+
+>>> print(FST('[a, b, c]').sub(pat_one, '[x, __FST_tag, y]').src)
+[x, [a, b, c], y]
+
 >>> print(FST('[a, b, c]').sub(pat_one, '[x, __FSS_tag, y]').src)
 [x, a, b, c, y]
+
+If you try to force a put type which is incompatible with the destination you will get an error.
+
+>>> print(FST('[a, b, c]').sub(pat_one, 'i = __FSS_tag').src)
+Traceback (most recent call last):
+...
+ValueError: cannot replace Assign.value with slice
 
 
 ## Virtual fields
@@ -1407,7 +1435,7 @@ single `AST` node. The most obvious examples of these are the `Dict` and `MatchM
 both a key and a value per sequence "element".
 
 These can have subsequences substituted using similar template constructions as above. For both these mapping types the
-template is `'...': __FST_tag`.
+`repl` tag template is `'...': __FST_tag`.
 
 >>> print(FST('{a: b, c: d, e: f}').sub(
 ...     MDict(_all=[..., MQSTAR(tag=...), ...]),
@@ -1450,15 +1478,15 @@ Some fields in `AST` nodes may be optional, represented by either an actual node
 the `returns` field of a `FunctionDef`. The `sub()` function deals with these by putting them if they were present in
 a match and a template, and otherwise removing them from a template if not in a match.
 
-In the following example we will not capture and replace the name or arguments or body, just the returns field to show
+In the following example we will not capture and replace the name or arguments or body, just the `returns` field to show
 how that works.
 
 >>> pat = MFunctionDef(returns=M(ret=...))
 
->>> repl = 'def new() -> __FST_ret: pass'
+>>> repl = 'def new() -> __FST_ret: pass  # new'
 
 >>> print(FST('def old() -> tuple[int]: pass').sub(pat, repl).src)
-def new() -> tuple[int]: pass
+def new() -> tuple[int]: pass  # new
 
 In the above example, the `returns` node was matched and captured in the `ret` tag and could subsequently be put into
 the `repl` template in that `returns` field. However, if the match still had the wildcard for the `returns` field but
@@ -1466,7 +1494,7 @@ there was no node for that field in the original tree, it will simply not be put
 succeeding the substitution.
 
 >>> print(FST('def old(): pass').sub(pat, repl).src)
-def new(): pass
+def new(): pass  # new
 
 Keep in mind this was because the match pattern for the `returns` field ultimately was a wildcard `...` which will
 accept a missing field. If we have a pattern there which expects an actual node (like an `expr` in the following case),
@@ -1478,16 +1506,16 @@ and that is not present, then the match will fail and no substitution will be ma
 def old(): pass  # OLD!
 
 >>> print(FST('def old() -> int: pass  # OLD!').sub(pat, repl).src)
-def new() -> int: pass
+def new() -> int: pass  # new
 
-And finally, if you reference a tag that doesn't exist in the template (because that tag was not matched or captured but
-the overall match succeeded, or even if you just had a typo), then if an overall match still occurs then that tag acts
-as if it was an optional missing tag and is removed from the replacement template.
+And finally, if you reference a tag that doesn't exist in the template (because that tag was not matched or captured,
+but the overall match succeeded, or even if you just had a typo), then if an overall match still occurs then that tag
+acts as if it was an optional missing tag and is removed from the replacement template.
 
->>> repl = 'def new() -> __FST_bad_tag: pass'
+>>> repl = 'def new() -> __FST_bad_tag: pass  # new'
 
 >>> print(FST('def old() -> int: pass  # OLD!').sub(pat, repl).src)
-def new(): pass
+def new(): pass  # new
 
 
 ## Optional statement list fields
@@ -1569,9 +1597,9 @@ try:
     a()
 except: b()
 
-Keep in mind that there are some rules that still apply, for example a `Try` needs at least one of an `except` or
-`finally`. So if you wind up with a match / substitute mismatch where you expect one of those and it is not present and
-you don't have the other in the template then you get invalid code.
+There are still rules that apply however. A `Try` needs at least one of an `except` or `finally`, so if you wind up with
+a match / substitute mismatch where you expect one of those and it is not present and you don't have the other in the
+template then you get invalid code.
 
 >>> pat = MTry(
 ...     body=M(body=...),
@@ -1591,9 +1619,9 @@ you don't have the other in the template then you get invalid code.
 try:
     a()
 
-The substitution still succeeded since temporary deletion of required structures is normally allowed for editing
-purposes by `fst`. But if you want to catch these potential errors then you should do substitution operations with
-`norm=True` to ensure that either only valid code results or an exception is raised.
+The substitution still succeeded since temporary deletion of normally-required fields is allowed for editing purposes by
+default. If you want to catch these potential errors then you should do substitution operations with `norm=True` to
+ensure that either only valid code results or an exception is raised.
 
 >>> print(FST('''
 ... try: a()
@@ -1607,8 +1635,8 @@ ValueError: cannot delete all elements from Try.finalbody without norm_self=Fals
 ## Function `arguments`
 
 Substituting `arguments` can range from the very simple substitution of the whole `FunctionDef.args` field into a new
-function, to the very painful one-by-one argument substitution in a complicated replacement template mixing
-position-only and keyword-only arguments. Not to mention `vararg` and `kwarg` and argument defaults.
+function, to the painful one-by-one argument substitution in a complicated replacement template mixing position-only and
+keyword-only arguments. Not to mention `vararg`, `kwarg` and argument defaults.
 
 Lets start with whole `arguments` node substitution. This substitution to a single target `repl` template argument will
 always copy the entire `arguments` node exactly from source to the template.
@@ -1622,8 +1650,11 @@ def new(a, /, b, *, c): pass
 Anything other than this and argument type (position-only, normal, keyword-only) starts having to be taken into account
 and argument type transformations start being possible, either explicitly specified or automatic.
 
-If there is more than one substitution slot (or even argument) in the `repl` template then the matched arguments will
-attempt to be coerced to the type of argument they are replacing.
+If there is more than one substitution tag (or even argument) in the `repl` template `arguments`, then the matched
+arguments will attempt to be coerced to the type of argument they are replacing.
+
+In the following, both the position-only and keyword-only arguments are converted to normal arguments since the
+`__FST_a` tag is a normal argument.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1655,9 +1686,9 @@ If you want to disable this behavior, you can pass `args_as=None`.
 def new(pre, a, /, b, *, c, post): pass
 
 This however is more prone to failures as the resulting arguments must still conform to the standard argument ordering
-of position-only, then normal, then keyword-only. If you try to do this replacement without the explicit posonly and
-kwonly markers in the template you will get an error as the source matched arguments have those and the ordering rules
-would be violated.
+of position-only, then normal, then keyword-only. If you try to do this replacement with `args_as=None` without the
+explicit posonly and kwonly markers in the template you will get an error as the source matched arguments have those and
+the ordering rules would be violated.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1710,7 +1741,7 @@ Traceback (most recent call last):
 ...
 fst.NodeError: cannot have vararg for args_as='kw'
 
-In which case you can tell it to convert whatever arguments possible towards keywords using `kw_maybe`, avoiding an
+In which case you can tell it to convert whatever arguments possible TOWARDS keywords using `kw_maybe`, avoiding an
 exception but possibly not getting all keyword-only arguments.
 
 >>> print(FST('def old(a, /, b, *va, c): pass').sub(
@@ -1746,7 +1777,7 @@ You may notice that none of the previous examples had argument defaults. Default
 constraints to the existing argument type rules. Namely, non-keyword arguments without defaults cannot follow
 non-keyword arguments with defaults.
 
-**Note:** In the following examples, the default argument value `...` is just a placeholder.
+In the following examples, the default argument value `...` is just a placeholder.
 
 >>> print(FST('def old(a, b): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
@@ -1799,25 +1830,25 @@ def new(*va): pass
 A quick note, the `MQOPT` is needed to ensure the pattern matches even if there is no vararg, in which case the
 substitution proceeds like any other missing tag substitution and deletes the argument from the `repl` template.
 
->>> print(FST('def old(a, /, b, c): pass').sub(
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     pat,
 ...     'def new(__FST_va): pass',
 ... ).src)
 def new(): pass
 
 Without the `MQOPT` the match would fail if no vararg was found and the substitution would not be made. Which may
-actually be a behavior you would want in this case so keep that in mind.
+actually be a behavior you would want in this case.
 
 >>> pat = MFunctionDef(args=Marguments(
 ...     _all=[MQSTAR(MNOT(pat_vararg)), M(va=pat_vararg), MQSTAR],
 ... ))
 
->>> print(FST('def old(a, /, b, c): pass').sub(
+>>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     pat,
 ...     'def new(__FST_va): pass',
 ...     args_as=None,
 ... ).src)
-def old(a, /, b, c): pass
+def old(a, /, b, *, c): pass
 
 Or you can do the inverse and remove the vararg from any arguments.
 
@@ -1833,7 +1864,7 @@ Or you can do the inverse and remove the vararg from any arguments.
 def new(a, /, b, *, c): pass
 
 You can go even deeper down the argument substitution rabbit hole but at that point you are probably better off just
-hardcoding the substitution.
+hardcoding it.
 
 
 ## `nested`, `count`, `loop` and `subn()`
