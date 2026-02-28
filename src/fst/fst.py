@@ -1389,7 +1389,7 @@ class FST:
 
     def dump(
         self,
-        src: Literal['stmt', 'all'] | str | None = None,  # noqa: PYI051
+        src: Literal['stmt', 'all'] | builtins.str | None = None,  # noqa: PYI051
         full: bool = False,
         *,
         expand: bool = False,
@@ -1397,7 +1397,7 @@ class FST:
         list_indent: int | bool = 1,
         loc: bool = True,
         color: bool | None = None,
-        out: Literal['print', 'str', 'lines'] | Callable[[str], None] | TextIO = 'print',
+        out: Literal['print', 'str', 'lines'] | Callable[[builtins.str], None] | TextIO = 'print',
         eol: builtins.str | None = None,
     ) -> FST | builtins.str | list[builtins.str]:  # -> self if not returning str or lines
         r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list[str]` of lines,
@@ -2063,8 +2063,8 @@ class FST:
 
         return '\n'.join(self.own_lines(whole, docstr=docstr))
 
-    def ast_src(self) -> str:
-        """Unparse the `AST` tree of self discarding all formatting. The unparse will correctly handle our own SPECIAL
+    def ast_src(self) -> builtins.str:
+        """Unparse the `AST` tree of `self` discarding all formatting. The unparse will correctly handle our own SPECIAL
         SLICE nodes and does a few other minor tweaks like removing parentheses from top-level `Tuple` which contains
         `Slice` nodes.
 
