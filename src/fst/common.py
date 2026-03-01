@@ -150,7 +150,7 @@ class fstlocn(fstloc):
         return (f'fstlocn({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
                 f'fstlocn({ln}, {col}, {end_ln}, {end_col})')
 
-    def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs) -> 'fstlocn':
+    def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs: object) -> 'fstlocn':
         self = fstloc.__new__(cls, ln, col, end_ln, end_col)
 
         self.__dict__.update(kwargs)
@@ -172,7 +172,7 @@ class nspace:
     @private
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: object) -> None:
         self.__dict__.update(kwargs)
 
 
@@ -262,7 +262,7 @@ def pyver(
 
         if ret is None:
             @wraps(func)
-            def ret(*args: object, **kwargs) -> None:
+            def ret(*args: object, **kwargs: object) -> None:
                 raise RuntimeError(f'missing version of {key} for this python version 3.{_pyver}')
 
         return ret

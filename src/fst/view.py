@@ -532,7 +532,7 @@ class FSTView:
         else:  # the actual node found for the str search
             idx_start.remove()
 
-    def copy(self, **options) -> fst.FST:
+    def copy(self, **options: object) -> fst.FST:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
@@ -555,7 +555,7 @@ class FSTView:
 
         return self.base.get_slice(start, stop, self.field, cut=False, **options)
 
-    def cut(self, **options) -> fst.FST:
+    def cut(self, **options: object) -> fst.FST:
         """Cut out this slice to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
         node.
 
@@ -586,7 +586,7 @@ class FSTView:
 
         return f
 
-    def replace(self, code: Code | None, one: bool | None = True, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def replace(self, code: Code | None, one: bool | None = True, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -626,7 +626,7 @@ class FSTView:
 
         return self
 
-    def remove(self, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def remove(self, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
@@ -654,7 +654,9 @@ class FSTView:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, *, one: bool | None = True, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def insert(
+        self, code: Code, idx: int | Literal['end'] = 0, *, one: bool | None = True, **options: object
+    ) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -711,7 +713,7 @@ class FSTView:
 
         return self
 
-    def append(self, code: Code, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def append(self, code: Code, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Append `code` as a single element to the end of this slice.
 
         **Returns:**
@@ -743,7 +745,7 @@ class FSTView:
 
         return self
 
-    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def extend(self, code: Code, one: Literal[False] | None = False, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -781,7 +783,7 @@ class FSTView:
 
         return self
 
-    def prepend(self, code: Code, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def prepend(self, code: Code, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**
@@ -813,7 +815,7 @@ class FSTView:
 
         return self
 
-    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:  # -> self, self.base could disappear due to raw reparse
+    def prextend(self, code: Code, one: Literal[False] | None = False, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -1595,46 +1597,46 @@ class FSTView_dummy(FSTView):
         if not isinstance(idx, slice):
             raise IndexError('index out of range on dummy view')
 
-    def copy(self, **options) -> fst.FST:
+    def copy(self, **options: object) -> fst.FST:
         raise RuntimeError('cannot copy a dummy view')
 
-    def cut(self, **options) -> fst.FST:
+    def cut(self, **options: object) -> fst.FST:
         raise RuntimeError('cannot cut a dummy view')
 
-    def replace(self, code: Code | None, one: bool | None = True, **options) -> FSTView:
+    def replace(self, code: Code | None, one: bool | None = True, **options: object) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot replace a dummy view')
 
         return self
 
-    def remove(self, **options) -> FSTView:
+    def remove(self, **options: object) -> FSTView:
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool | None = True, **options) -> FSTView:
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool | None = True, **options: object) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot insert to a dummy view')
 
         return self
 
-    def append(self, code: Code, **options) -> FSTView:
+    def append(self, code: Code, **options: object) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot append to a dummy view')
 
         return self
 
-    def extend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:
+    def extend(self, code: Code, one: Literal[False] | None = False, **options: object) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot extend a dummy view')
 
         return self
 
-    def prepend(self, code: Code, **options) -> FSTView:
+    def prepend(self, code: Code, **options: object) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot prepend to a dummy view')
 
         return self
 
-    def prextend(self, code: Code, one: Literal[False] | None = False, **options) -> FSTView:
+    def prextend(self, code: Code, one: Literal[False] | None = False, **options: object) -> FSTView:
         if code is not None:
             raise RuntimeError('cannot prextend a dummy view')
 

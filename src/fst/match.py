@@ -2787,7 +2787,7 @@ class M_Pattern_One(M_Pattern):
     pat_tag: str | None  ; """@private"""
     static_tags: Mapping[str, Any]  ; """@private"""
 
-    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags: object) -> None:  # tags: object | _Patterns
         # self._validate_tags(tags)
 
         if anon_pat is not NotSet:
@@ -3375,7 +3375,7 @@ class MRE(M_Pattern):
     search: bool  ; """@private"""
 
     def __init__(
-        self, anon_re_pat: str | re_Pattern | _NotSet = NotSet, /, flags: int = 0, search: bool = False, **tags
+        self, anon_re_pat: str | re_Pattern | _NotSet = NotSet, /, flags: int = 0, search: bool = False, **tags: object  # | str | re_Pattern
     ) -> None:
         # self._validate_tags(tags)
 
@@ -3547,7 +3547,7 @@ class MCB(M_Pattern_One):
         tag_ret: bool = False,
         fail_obj: object = NotSet,
         pass_tags: bool = False,
-        **tags,
+        **tags: object,  # | CallbackType
     ) -> None:
         M_Pattern_One.__init__(self, anon_callback, **tags)
 
@@ -3647,7 +3647,7 @@ class MTAG(M_Pattern_One):
 
     pat: str  ; """@private"""  # this is really a source tag name here
 
-    def __init__(self, anon_tag: str | _NotSet = NotSet, /, **tags) -> None:
+    def __init__(self, anon_tag: str | _NotSet = NotSet, /, **tags: object) -> None:  # tags: object | str
         M_Pattern_One.__init__(self, anon_tag, **tags)
 
         # self._validate_tags((self.pat,))
@@ -3786,7 +3786,7 @@ class MQ(M_Pattern_One):
         /,
         min: int | _NotSet = NotSet,
         max: int | None | _NotSet = NotSet,
-        **tags,
+        **tags: object,  # | _Patterns
     ) -> None:
         M_Pattern_One.__init__(self, anon_pat, **tags)
 
@@ -3907,7 +3907,7 @@ class MQSTAR(MQ):
     min = 0  # for direct type use
     max = None
 
-    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags: object) -> None:  # tags: object | _Patterns
         MQ.__init__(self, anon_pat, 0, None, **tags)
 
     def _repr_extra(self) -> list[str]:
@@ -3977,7 +3977,7 @@ class MQPLUS(MQ):
     min = 1  # for direct type use
     max = None
 
-    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags: object) -> None:  # tags: object | _Patterns
         MQ.__init__(self, anon_pat, 1, None, **tags)
 
     def _repr_extra(self) -> list[str]:
@@ -4033,7 +4033,7 @@ class MQOPT(MQ):
     min = 0  # for direct type use
     max = 1
 
-    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags) -> None:
+    def __init__(self, anon_pat: _Patterns | _NotSet = NotSet, /, **tags: object) -> None:  # tags: object | _Patterns
         MQ.__init__(self, anon_pat, 0, 1, **tags)
 
     def _repr_extra(self) -> list[str]:
@@ -4099,7 +4099,7 @@ class MQMIN(MQ):
     """
 
     def __init__(
-        self, anon_pat: _Patterns | _NotSet = NotSet, /, min: int | _NotSet = NotSet, **tags
+        self, anon_pat: _Patterns | _NotSet = NotSet, /, min: int | _NotSet = NotSet, **tags: object  # | _Patterns
     ) -> None:
         MQ.__init__(self, anon_pat, min, None, **tags)
 
@@ -4157,7 +4157,7 @@ class MQMAX(MQ):
     min = 0
 
     def __init__(
-        self, anon_pat: _Patterns | _NotSet = NotSet, /, max: int | None | _NotSet = NotSet, **tags
+        self, anon_pat: _Patterns | _NotSet = NotSet, /, max: int | None | _NotSet = NotSet, **tags: object  # | _Patterns
     ) -> None:
         MQ.__init__(self, anon_pat, 0, max, **tags)
 
@@ -4203,7 +4203,7 @@ class MQN(MQ):
     """
 
     def __init__(
-        self, anon_pat: _Patterns | _NotSet = NotSet, /, n: int | _NotSet = NotSet, **tags
+        self, anon_pat: _Patterns | _NotSet = NotSet, /, n: int | _NotSet = NotSet, **tags: object  # | _Patterns
     ) -> None:
         if n is NotSet:
             raise ValueError(f'{self.__class__.__qualname__} requires a count value')
@@ -6171,7 +6171,7 @@ def sub(
     back: bool = False,
     asts: list[AST] | None = None,
     retn: list | None = None,
-    **options,
+    **options: object,
 ) -> fst.FST:  # -> self
     r"""Substitute matching targets with a given `repl` template. The template substitutions can include tagged elements
     from a match. These are specified in the `repl` template as `__FST_<tag>` names, where the `<tag>` maps to a matched
@@ -6661,7 +6661,7 @@ def subn(
     scope: bool = False,
     back: bool = False,
     asts: list[AST] | None = None,
-    **options,
+    **options: object,
 ) -> fst.FST:  # -> self
     """Perform the same operation as `sub()`, but return a tuple `(self, unique_number_of_subs_made,
     total_number_of_subs_made)`.

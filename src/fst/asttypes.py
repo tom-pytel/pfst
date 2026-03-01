@@ -126,7 +126,7 @@ from ast import (
 # create standin dummy AST types if they don't exist, mostly for isinstance() checks
 
 class _ASTDummy(AST):
-    def __init__(self, *args: object, **kwargs) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         raise RuntimeError("this is a standin class for an AST type that doesn't exist in this version of python, "
                            "it should not be instantiated")  # pragma: no cover
 

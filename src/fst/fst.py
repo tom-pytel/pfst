@@ -251,7 +251,7 @@ def parse(
     *,
     type_comments: bool = False,
     feature_version: tuple[int, int] | None = None,
-    **kwargs,
+    **kwargs: object,
 ) -> AST:
     r"""Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
@@ -727,7 +727,7 @@ class FST:
         mode: FST | list[builtins.str] | Mode | Literal[False] | None = None,
         pfield: astfield | Literal[False] | None = False,
         /,
-        **kwargs,
+        **kwargs: object,
     ) -> 'FST':
         r"""Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
         `FST.fromsrc()`, `FST.fromast()` or `FST.as_()`, the usage is:
@@ -1158,7 +1158,7 @@ class FST:
     set_options = fst_options.set_options
     options = fst_options.options
 
-    def as_(self, mode: Mode | None = None, copy: bool = False, **options) -> FST:
+    def as_(self, mode: Mode | None = None, copy: bool = False, **options: object) -> FST:
         """Attempt to coerce `self` to the type of node given by `mode`. If `self` is already the requested type of node
         at root level then will do nothing and return `self`. If is not at root level then will copy the node first and
         then attempt to coerce.
@@ -1605,7 +1605,7 @@ class FST:
         trivia_fst_get: Trivia | None = None,
         *,
         cleanup: bool = True,
-        **options
+        **options: object
     ) -> FST:
         r"""Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for
         allowing non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as
@@ -2115,7 +2115,7 @@ class FST:
 
         return copy_ast(self.a)
 
-    def copy(self, whole: bool = True, **options) -> FST:
+    def copy(self, whole: bool = True, **options: object) -> FST:
         r"""Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
         identical copy is made and no fixes / modifications are applied unless `whole=False`.
 
@@ -2202,7 +2202,7 @@ class FST:
 
         return ret
 
-    def cut(self, **options) -> FST:
+    def cut(self, **options: object) -> FST:
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
         node.
 
@@ -2228,7 +2228,7 @@ class FST:
 
         raise ValueError('cannot cut root node')
 
-    def replace(self, code: Code | None, one: bool | None = True, **options) -> FST | None:  # -> replaced self or None if deleted
+    def replace(self, code: Code | None, one: bool | None = True, **options: object) -> FST | None:  # -> replaced self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
         **CAN** replace root node, in which case `self` remains the same but the top-level `AST` and source change.
@@ -2300,7 +2300,7 @@ class FST:
 
         return self
 
-    def remove(self, **options) -> None:
+    def remove(self, **options: object) -> None:
         """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
 
         **Parameters:**
@@ -2327,7 +2327,7 @@ class FST:
         field: builtins.str | None = None,
         *,
         one: bool | None = True,
-        **options
+        **options: object,
     ) -> FST:  # -> self or None if deleted due to raw reparse
         """Insert into `field` of `self` at a specific index. Default field if `field=None`. This is a convenience
         function for `self.put_slice()`.
@@ -2382,7 +2382,7 @@ class FST:
 
         return self._put_slice(code, idx, idx, field, one, options)
 
-    def append(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
+    def append(self, code: Code, field: builtins.str | None = None, **options: object) -> FST:  # -> self or None if deleted due to raw reparse
         """Append `code` as a single element to `field` of `self`. Default field if `field=None`. This is a convenience
         function for `self.put_slice()`.
 
@@ -2414,7 +2414,7 @@ class FST:
         return self._put_slice(code, 'end', 'end', field, True, options)
 
     def extend(
-        self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options
+        self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options: object
     ) -> FST:  # -> self or None if deleted due to raw reparse
         """Extend `field` of `self` with the slice in `code` (type must be compatible). Default field if `field=None`.
         This is a convenience function for `self.put_slice()`.
@@ -2452,7 +2452,7 @@ class FST:
 
         return self._put_slice(code, 'end', 'end', field, None if one is None else False, options)
 
-    def prepend(self, code: Code, field: builtins.str | None = None, **options) -> FST:  # -> self or None if deleted due to raw reparse
+    def prepend(self, code: Code, field: builtins.str | None = None, **options: object) -> FST:  # -> self or None if deleted due to raw reparse
         """prepend `code` as a single element to the beginning of `field` of `self`. Default field if `field=None`. This
         is a convenience function for `self.put_slice()`.
 
@@ -2483,7 +2483,7 @@ class FST:
         return self._put_slice(code, 0, 0, field, True, options)
 
     def prextend(
-        self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options
+        self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options: object
     ) -> FSTView:  # -> self or None if deleted due to raw reparse
         """Extend the beginning of the `field` of `self` with the slice in `code` (type must be compatible). Default
         field if `field=None`. This is a convenience function for `self.put_slice()`.
@@ -2527,7 +2527,7 @@ class FST:
         stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
         cut: bool = False,
-        **options,
+        **options: object,
     ) -> FST | None | builtins.str | constant:
         r"""Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can do.
@@ -2624,7 +2624,7 @@ class FST:
         stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
         one: bool | None = True,
-        **options,
+        **options: object,
     ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put an individual node or a slice of nodes to `self` if possible. The node is passed as an existing
         top-level `FST`, `AST`, string or list of string lines. If passed as an `FST` then it should be considered
@@ -2743,7 +2743,7 @@ class FST:
         stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
         cut: bool = False,
-        **options,
+        **options: object,
     ) -> FST:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
@@ -2808,7 +2808,7 @@ class FST:
         stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
         one: bool | None = False,
-        **options,
+        **options: object,
     ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
@@ -3142,7 +3142,7 @@ class FST:
 
         return '\n'.join(lines)
 
-    def put_docstr(self, text: builtins.str | None, reput: bool = False, **options) -> FST:  # -> self
+    def put_docstr(self, text: builtins.str | None, reput: bool = False, **options: object) -> FST:  # -> self
         r'''Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
         be formatted with triple quotes and indented as needed.

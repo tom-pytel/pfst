@@ -213,7 +213,7 @@ class SrcEdit:
         fpost: fst.FST | None,
         *,
         del_else_and_fin: bool = True,
-        **options,
+        **options: object,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
         'finalbody' then the corresponding 'else:' or 'finally:' will also be removed from the source (though not
@@ -518,7 +518,7 @@ class SrcEdit:
         fpost: fst.FST | None,
         del_lines: list[str] | None,
         is_ins: bool,
-        **options,
+        **options: object,
     ) -> None:
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
@@ -658,7 +658,7 @@ class SrcEdit:
         fpost: fst.FST | None,
         *,
         docstr_strict_exclude: AST | None = None,
-        **options,
+        **options: object,
     ) -> fstloc:  # put_loc
         """Put to block of statement(like)s. Calculates put location and modifies `put_fst` as necessary to create
         proper frag. The "like" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or

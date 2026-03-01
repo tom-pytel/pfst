@@ -390,7 +390,7 @@ def get_option(option: str, options: Mapping[str, Any] = {}) -> object:
 
 
 @staticmethod
-def set_options(**options) -> dict[str, Any]:
+def set_options(**options: object) -> dict[str, Any]:
     """Set global defaults for `options` parameters.
 
     **Parameters:**
@@ -437,7 +437,7 @@ def set_options(**options) -> dict[str, Any]:
 
 @staticmethod
 @contextmanager
-def options(**options) -> Generator[Mapping[str, Any], None, None]:
+def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
     """Context manager to temporarily set specified global options defaults for a group of operations.
 
     **WARNING!** Only the options specified in the call to this function will be returned to their original values
