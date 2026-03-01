@@ -3741,7 +3741,7 @@ def _put_slice(
             return self
 
         except (NodeError, SyntaxError, NotImplementedError) as exc:  # SyntaxError includes ParseError
-            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
+            if not raw:
                 raise
 
             nonraw_exc = exc

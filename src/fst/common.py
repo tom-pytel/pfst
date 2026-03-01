@@ -82,15 +82,6 @@ class NodeError(Exception):
 
     __module__ = 'fst'  # so the exception shows up as 'fst.NodeError'
 
-    rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode. @private"""
-
-    def __init__(self, *args: object, rawable: bool = True) -> None:
-        """@private"""
-
-        super().__init__(*args)
-
-        self.rawable = rawable
-
 
 class astfield(NamedTuple):
     """Name and optional index indicating a field location in an `AST` (or `FST`) node."""
