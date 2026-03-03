@@ -33,7 +33,7 @@ ParseMode = str | type[AST] | None
 _ALL_TEST_OPTIONS = {*_ALL_OPTIONS, 'one', 'cut'}  # we also allow these keywords as options because it is convenient for testing
 
 
-def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[ParseMode, str]:
+def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[str, str]:
     if isinstance(code, str):
         if code.startswith('\n') and code.endswith('\n'):
             return code[1 : -1]
@@ -94,7 +94,7 @@ def _clean_options(options: dict[str, Any]) -> dict[str, Any]:
 def _check_version(options: dict[str, Any] | int) -> bool:
     """Is the version supported or not."""
 
-    return not (v := options.get('_ver')) or (_PYVER >= v if v >= 0 else _PYVER < -v)
+    return not (v := options.get('_ver')) or (_PYVER >= v if v >= 0 else _PYVER < -v)  # type: ignore
 
 
 class BaseCase(NamedTuple):
@@ -121,14 +121,14 @@ class BaseCases(dict):
         with open(fnm) as f:
             src = f.read()
 
-        globs = {}
+        globs: dict[str, Any] = {}
 
         exec(src, globs)
 
         del globs['__builtins__']
 
         self.var  = list(globs.keys())[-1]
-        self.head = src[:re.search(rf'^{self.var}\s*=', src, re.MULTILINE).start()]
+        self.head = src[:re.search(rf'^{self.var}\s*=', src, re.MULTILINE).start()]  # type: ignore
         cases     = globs[self.var]
 
         assert isinstance(cases, dict) and self.var == self.var.upper(), 'last element of cases data file must be the dictionary of cases'
@@ -195,7 +195,7 @@ class BaseCases(dict):
                         yield (case, self.exec(case)) if gen else case
 
         except Exception:
-            print(f'{case.id()}, fnm = {self.fnm}')
+            print(f'{case.id()}, fnm = {self.fnm}')  # type: ignore
 
             raise
 
@@ -218,7 +218,7 @@ class ParseCases(BaseCases):
         except Exception as exc:
             rest = [f'**{_san_exc(exc)!r}**']
         else:
-            rest = [f.root.dump(out='str', loc=case.field != 'JoinedStr')]
+            rest = [f.root.dump(out='str', loc=case.field != 'JoinedStr')]  # type: ignore
 
         if (r0 := rest[0]).startswith('**'):
             s = f'**{case.field}'
@@ -227,7 +227,7 @@ class ParseCases(BaseCases):
 
         assert s == r0[:len(s)], f"expected node type or error doesn't match, {case.field}"
 
-        return rest
+        return rest  # type: ignore
 
 
 class CoerceCases(BaseCases):
@@ -264,8 +264,8 @@ class CoerceCases(BaseCases):
 
         same = True
 
-        if g and h and not (same := compare_asts(g.a, h.a)):
-            exc = RuntimeError(f'FST and AST node structure not equal!')
+        if g and h and not (same := compare_asts(g.a, h.a)):  # type: ignore
+            raise RuntimeError(f'FST and AST node structure not equal!')
 
         if g:
             rest.append(g.src)
@@ -274,12 +274,12 @@ class CoerceCases(BaseCases):
             rest.append(h.src)
 
         if g:
-            rest.append(g.root.dump(out='str'))
+            rest.append(g.root.dump(out='str'))  # type: ignore
 
         if h and (not g or not same):
-            rest.append(h.root.dump(out='str'))
+            rest.append(h.root.dump(out='str'))  # type: ignore
 
-        return rest
+        return rest  # type: ignore
 
 
 class SubCases(BaseCases):
@@ -330,7 +330,7 @@ class GetCases(BaseCases):
                 rest = [f'**{_san_exc(exc)!r}**']
 
         if rest is None:
-            rest = [f.root.src, f.root.dump(out='str')]
+            rest = [f.root.src, f.root.dump(out='str')]  # type: ignore
 
         if g is _SENTINEL:
             pass  # noop
@@ -345,24 +345,24 @@ class GetCases(BaseCases):
                     f.root.verify()  # _verify_self
 
                 if options.get('_verify_get', True) and g_is_FST:
-                    g.verify()  # _verify_get
+                    g.verify()  # type: ignore  # _verify_get
 
             if not g_is_FST:
                 rest.extend([repr(g), f'{type(g)}'])
 
             else:
-                g_dump = g.dump(out='str')
+                g_dump = g.dump(out='str')  # type: ignore
 
                 if h is not None:
-                    if h.src != g.src:
-                        raise RuntimeError(f'cut and copied FST src are not identical\n{h.src}\n...\n{g.src}')
+                    if h.src != g.src:  # type: ignore
+                        raise RuntimeError(f'cut and copied FST src are not identical\n{h.src}\n...\n{g.src}')  # type: ignore
 
-                    if (h_dump := h.dump(out='str')) != g_dump:
-                        raise RuntimeError(f'cut and copied FST dump are not identical\n{h_dump}\n...\n{g_dump}')
+                    if (h_dump := h.dump(out='str')) != g_dump:  # type: ignore
+                        raise RuntimeError(f'cut and copied FST dump are not identical\n{h_dump}\n...\n{g_dump}')  # type: ignore
 
-                rest.extend([g.src, g_dump])
+                rest.extend([g.src, g_dump])  # type: ignore
 
-        return rest
+        return rest  # type: ignore
 
 
 class GetSliceCases(GetCases):
@@ -389,8 +389,8 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
         if (to_attr := opts.get('to')) is None:
             f = _make_fst(code, attr)
         else:
-            f, to = _make_fst(code, attr, to_attr)
-            opts = {**opts, 'to': to}
+            f, to = _make_fst(code, attr, to_attr)  # type: ignore
+            opts = {**opts, 'to': to}  # type: ignore
 
         if not src or options.get('_src', True):  # HACK to allow not putting as source text and only FST and AST, useful for testing things that only apply to AST/FST puts like coerce
             src_code = src
@@ -442,20 +442,20 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                         _same = options.get('_same', True)
 
                         if k.root.src != f.root.src and _same:
-                            exc = RuntimeError(f'FST put and src put src are not identical\n{k.root.src}\n...\n{f.root.src}')
+                            exc = RuntimeError(f'FST put and src put src are not identical\n{k.root.src}\n...\n{f.root.src}')  # type: ignore
 
                             if is_raw:
-                                rest.append(f'**{_san_exc(exc)!r}**')
+                                rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
                             else:
-                                raise exc
+                                raise exc  # type: ignore
 
-                        if (k_dump := k.root.dump(out='str')) != f_dump and _same:
-                            exc = RuntimeError(f'FST put and src put dump are not identical\n{k_dump}\n...\n{f_dump}')
+                        if (k_dump := k.root.dump(out='str')) != f_dump and _same:  # type: ignore
+                            exc = RuntimeError(f'FST put and src put dump are not identical\n{k_dump}\n...\n{f_dump}')  # type: ignore
 
                             if is_raw:
-                                rest.append(f'**{_san_exc(exc)!r}**')
+                                rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
                             else:
-                                raise exc
+                                raise exc  # type: ignore
 
                         if options.get('_ast', True):  # and not is_special_slice:
                             l = _make_fst(code, attr)
@@ -471,13 +471,13 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                                 elif g is not l:
                                     raise RuntimeError('FST returned from func AST put not identical to passed in')
 
-                                if cmp_asts and not compare_asts(l.root.a, f.root.a) and _same:
-                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out="str")}\n...\n{f.root.dump(out="str")}')  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
+                                if cmp_asts and not compare_asts(l.root.a, f.root.a) and _same:  # type: ignore
+                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out="str")}\n...\n{f.root.dump(out="str")}')  # type: ignore  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
 
                                     if is_raw:
-                                        rest.append(f'**{_san_exc(exc)!r}**')
+                                        rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
                                     else:
-                                        raise exc
+                                        raise exc  # type: ignore
 
                                 if l.root.src != f.root.src:
                                     rest.append(l.root.src)

@@ -170,7 +170,7 @@ f(((i for i in j)))
 
 ]  # END OF PARS_DATA
 
-PUT_SRC_REPARSE_DATA = [
+PUT_SRC_REPARSE_DATA: list = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""
 Module - ROOT 0,0..0,10
   .body[1]

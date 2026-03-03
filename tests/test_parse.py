@@ -10,6 +10,76 @@ from keyword import kwlist as keyword_kwlist
 from fst import *
 
 from fst.asttypes import (
+    And,
+    AnnAssign,
+    Assign,
+    Attribute,
+    Await,
+    BinOp,
+    BoolOp,
+    Call,
+    Compare,
+    Constant,
+    Dict,
+    DictComp,
+    ExceptHandler,
+    Expr,
+    Expression,
+    GeneratorExp,
+    Gt,
+    GtE,
+    IfExp,
+    Interactive,
+    Invert,
+    IsNot,
+    JoinedStr,
+    LShift,
+    Lambda,
+    List,
+    ListComp,
+    MatchAs,
+    MatchClass,
+    MatchMapping,
+    MatchOr,
+    MatchSequence,
+    MatchSingleton,
+    MatchStar,
+    MatchValue,
+    Module,
+    Mult,
+    Name,
+    NamedExpr,
+    ParamSpec,
+    RShift,
+    Set,
+    SetComp,
+    Slice,
+    Starred,
+    Subscript,
+    Tuple,
+    TypeVar,
+    TypeVarTuple,
+    UAdd,
+    UnaryOp,
+    Yield,
+    YieldFrom,
+    alias,
+    arg,
+    arguments,
+    boolop,
+    cmpop,
+    comprehension,
+    expr,
+    keyword,
+    match_case,
+    mod,
+    operator,
+    pattern,
+    stmt,
+    type_param,
+    unaryop,
+    withitem,
+
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
@@ -1334,6 +1404,10 @@ class TestParse(unittest.TestCase):
 
         if PYGE11:
             self.assertRaises(ParseError, px.parse_arg, 'arg: *st, b')
+
+        self.assertRaises(SyntaxError, px.parse_expr, ')+(')
+        self.assertRaises(SyntaxError, px.parse_withitem, ')+(')
+        self.assertRaises(SyntaxError, px.parse__withitems, ')+(')
 
     def test_code_as_simple(self):
         # stmts
@@ -4097,11 +4171,6 @@ match a:
         self.assertEqual('if 1:\n    pass', parse(FST('if 1: pass').a).f.src)
         self.assertEqual('a:b:c', parse(FST('a:b:c').a).f.src)
         self.assertEqual('except:\n    pass', parse(FST('except: pass').a).f.src)
-
-    def test_parse_coverage(self):
-        self.assertRaises(SyntaxError, px.parse_expr, ')+(')
-        self.assertRaises(SyntaxError, px.parse_withitem, ')+(')
-        self.assertRaises(SyntaxError, px.parse__withitems, ')+(')
 
     def test_code_coverage(self):
         # misc stuff to fill out test coverage

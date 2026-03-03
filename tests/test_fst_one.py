@@ -15,7 +15,7 @@ DIR_NAME     = os.path.dirname(__file__)
 DATA_GET_ONE = GetCases(os.path.join(DIR_NAME, 'data/data_get_one.py'))
 DATA_PUT_ONE = PutCases(os.path.join(DIR_NAME, 'data/data_put_one.py'))
 
-REPLACE_EXISTING_ONE_DATA = [
+REPLACE_EXISTING_ONE_DATA: list = [
 # FunctionDef
 ("@d\ndef f(a) -> r: pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\ndef f(a) -> r: pass"),
 ("@d\ndef f(a) -> r: pass", 'body[0].args', {}, "z", "z", "@d\ndef f(z) -> r: pass"),

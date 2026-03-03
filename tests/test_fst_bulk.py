@@ -16,7 +16,7 @@ def _sanitize_filename(fnm: str) -> str:
 
 
 def _find_pys(path) -> list[str]:
-    fnms = []
+    fnms: list[str] = []
 
     if os.path.isdir(path):
         for dir, _, fnms_ in os.walk(path):

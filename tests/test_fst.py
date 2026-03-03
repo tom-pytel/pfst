@@ -13,6 +13,7 @@ from pprint import pformat
 from random import randint, seed
 
 from fst import *
+from fst import FST, parse
 import fst
 
 from fst.asttypes import (
@@ -33,7 +34,22 @@ from fst.astutil import (
     compare_asts,
 )
 
-from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, PYGE15, astfield, fstloc
+from fst.common import (
+    PYVER,
+    PYLT11,
+    PYLT12,
+    PYLT13,
+    PYLT14,
+    PYGE11,
+    PYGE12,
+    PYGE13,
+    PYGE14,
+    PYGE15,
+    astfield,
+    fstloc,
+    fstlocn,
+)
+
 from fst.code import *
 from fst.view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
 
@@ -308,7 +324,7 @@ def regen_put_src():
     with open(fnm) as f:
         lines = f.read().split('\n')
 
-    start = lines.index('PUT_SRC_REPARSE_DATA = [')
+    start = lines.index('PUT_SRC_REPARSE_DATA: list = [')
     stop  = lines.index(']  # END OF PUT_SRC_REPARSE_DATA')
 
     lines[start + 1 : stop] = newlines
@@ -8231,8 +8247,8 @@ def h(k): pass            # ln 16
 
     def test_FSTView_loc_and_src(self):
         def test(fv: FSTView):
-            loc = fv.loc
-            pars = fv.pars()
+            loc: fstloc = fv.loc  # type: ignore
+            pars: fstlocn = fv.pars()  # type: ignore
 
             self.assertEqual(fv.bloc, loc)
             self.assertEqual(pars, loc)
@@ -8245,14 +8261,14 @@ def h(k): pass            # ln 16
             self.assertEqual(fv.bcol, loc.col)
             self.assertEqual(fv.bend_ln, loc.end_ln)
             self.assertEqual(fv.bend_col, loc.end_col)
-            self.assertEqual(fv[:1].loc[:2], loc[:2])
-            self.assertEqual(fv[-1:].loc[2:], loc[2:])
+            self.assertEqual(fv[:1].loc[:2], loc[:2])  # type: ignore
+            self.assertEqual(fv[-1:].loc[2:], loc[2:])  # type: ignore
 
             if isinstance(fv, FSTView_Global_Nonlocal):
                 return
 
-            self.assertEqual(fv[0].pars()[:2], loc[:2])
-            self.assertEqual(fv[-1].pars()[2:], loc[2:])
+            self.assertEqual(fv[0].pars()[:2], loc[:2])  # type: ignore
+            self.assertEqual(fv[-1].pars()[2:], loc[2:])  # type: ignore
 
         test(FST('{(a):\n(b),\n(c):\n(d)}')._all)
         test(FST('{(a):\n(b),\n**\n(d)}')._all)

@@ -21,8 +21,13 @@ test:  ## Run basic unit tests
 	# pytest -vv tests
 
 
+.PHONY: typecheck
+typecheck:  ## Run type checker on tests verify FST typing
+	mypy tests/*.py
+
+
 .PHONY: coverage
-coverage:  ## Run basic unit tests
+coverage:  ## Get test coverage
 	pytest -v --cov=fst --cov-report=html tests
 
 
