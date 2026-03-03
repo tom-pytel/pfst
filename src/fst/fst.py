@@ -3655,6 +3655,41 @@ class FST:
 
         return self  # ret
 
+    def strip(self: FST) -> FST:  # -> self
+        """Remove any leading or trailing junk which is not part of the location or parenthesized location of `self`.
+
+        **Returns:**
+        - `self`
+
+        **Examples:**
+
+        TODO
+
+        """
+
+        if self.parent:  # not self.is_root:
+            raise ValueError('can only strip root nodes')
+
+        if not (loc := self.pars()) or loc == self.whole_loc:
+            return self
+
+        ln, col, end_ln, end_col = loc
+        lines = self._lines
+
+        lines[end_ln] = bistr(lines[end_ln][:end_col])
+
+        del lines[end_ln + 1:]
+
+        if ln or col:
+            self._offset(ln, 0, -ln, -lines[ln].c2b(col))  # can do at ln, 0 because it doesn't really matter, we are offsetting everything anyway
+
+            lines[ln] = bistr(lines[ln][col:])
+
+            del lines[:ln]
+
+        return self
+
+
     # ------------------------------------------------------------------------------------------------------------------
     # Traverse
 
@@ -5342,7 +5377,6 @@ class FST:
 
         _get_src,
         _put_src,
-        _sanitize,
         _make_fst_and_dedent,
     )
 

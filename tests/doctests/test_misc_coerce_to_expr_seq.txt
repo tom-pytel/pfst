@@ -2,7 +2,7 @@
 >>> from fst import *
 >>> from fst import code as cd, parsex as px
 
->>> cd.code_as_stmt(FST('#0\n if x\nif y\n#1'), sanitize=True, coerce=True).dump('N').verify()
+>>> cd.code_as_stmt(FST('#0\n if x\nif y\n#1'), strip=True, coerce=True).dump('N').verify()
 0: (#0
 1:  x,
 2: y
@@ -18,7 +18,7 @@ Expr - ROOT 0,0..4,1
     .ctx Load
 <Expr ROOT 0,0..4,1>
 
->>> cd.code_as_stmt(FST('#0\n ( \ni\n ) #1'), sanitize=True, coerce=True).dump('N').verify()
+>>> cd.code_as_stmt(FST('#0\n ( \ni\n ) #1'), strip=True, coerce=True).dump('N').verify()
 0: ( <*END*
 1: i
 2:  )
@@ -26,7 +26,7 @@ Expr - ROOT 0,0..2,2
   .value Name 'i' Load - 1,0..1,1
 <Expr ROOT 0,0..2,2>
 
->>> cd.code_as__ExceptHandlers(FST('#0\nexcept: pass\n#1'), sanitize=True, coerce=True).dump('N').verify()
+>>> cd.code_as__ExceptHandlers(FST('#0\nexcept: pass\n#1'), strip=True, coerce=True).dump('N').verify()
 _ExceptHandlers - ROOT 0,0..2,2
   .handlers[1]
 0: #0
@@ -38,7 +38,7 @@ _ExceptHandlers - ROOT 0,0..2,2
 2: #1
 <_ExceptHandlers ROOT 0,0..2,2>
 
->>> cd.code_as__match_cases(FST('#0\ncase _: pass\n#1', 'match_case'), sanitize=True, coerce=True).dump('N').verify()
+>>> cd.code_as__match_cases(FST('#0\ncase _: pass\n#1', 'match_case'), strip=True, coerce=True).dump('N').verify()
 _match_cases - ROOT 0,0..2,2
   .cases[1]
 0: #0

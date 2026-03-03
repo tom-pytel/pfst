@@ -1844,15 +1844,15 @@ match a:
             for op, kls in opstr2cls.items():
                 self.assertEqual(op, code_as(op).src)
                 self.assertEqual(f'# pre\n{op} # line\n# post', code_as(f'# pre\n{op} # line\n# post').src)
-                self.assertEqual(op, code_as(f'# pre\n{op} # line\n# post', sanitize=True).src)
+                self.assertEqual(op, code_as(f'# pre\n{op} # line\n# post', strip=True).src)
                 self.assertEqual(op, code_as([op]).src)
                 self.assertEqual(f'# pre\n{op} # line\n# post', code_as(['# pre', f'{op} # line', '# post']).src)
-                self.assertEqual(op, code_as(['# pre', f'{op} # line', '# post'], sanitize=True).src)
+                self.assertEqual(op, code_as(['# pre', f'{op} # line', '# post'], strip=True).src)
                 self.assertEqual(op, code_as(FST(op, kls)).src)
                 self.assertEqual(f'# pre\n{op} # line\n# post', code_as(FST(f'# pre\n{op} # line\n# post', kls)).src)
-                self.assertEqual(op, code_as(FST(f'# pre\n{op} # line\n# post', kls), sanitize=True).src)
+                self.assertEqual(op, code_as(FST(f'# pre\n{op} # line\n# post', kls), strip=True).src)
                 self.assertEqual(op, code_as(kls()).src)
-                self.assertEqual(op, code_as(kls(), sanitize=True).src)
+                self.assertEqual(op, code_as(kls(), strip=True).src)
 
     def test_code_as_identifier(self):
         self.assertEqual('name', code_as_identifier('name'))
@@ -1936,7 +1936,7 @@ match a:
             self.assertRaises(ParseError, code_as_identifier_star, keyword)
             self.assertRaises(ParseError, code_as_identifier_alias, keyword)
 
-    def test_code_as_sanitize_exprlike(self):
+    def test_code_as_strip_exprlike(self):
         CODE_ASES = [
             (code_as_expr, 'f(a)'),
             (code_as_expr_slice, 'b:c:d'),
@@ -1975,13 +1975,13 @@ match a:
 
         for code_as, src in CODE_ASES:
             self.assertEqual(src, code_as(src).src)
-            self.assertEqual(src, code_as(f'  {src}  ', sanitize=True).src)
+            self.assertEqual(src, code_as(f'  {src}  ', strip=True).src)
 
             if code_as in (code_as_expr, code_as_pattern):  # parenthesizable things so lets abuse
                 srcp = f'(\n# pre\n{src} # post\n# post2\n)'
 
                 self.assertEqual(srcp, code_as(srcp).src)
-                self.assertEqual(src, code_as(srcp[1:-1], sanitize=True).src)
+                self.assertEqual(src, code_as(srcp[1:-1], strip=True).src)
 
     def test_code_as_all_from_ast(self):
         for mode, func, res, src in PARSE_TESTS:
@@ -4250,8 +4250,8 @@ match a:
 
         self.assertRaises(NodeError, code.code_as__match_cases, FST('a').a, coerce=True)
 
-        self.assertEqual('x', code.code_as__arglikes(FST('[x]'), sanitize=True, coerce=True).src)
-        self.assertEqual('x', code.code_as__withitems(FST('[x]'), sanitize=True, coerce=True).src)
+        self.assertEqual('x', code.code_as__arglikes(FST('[x]'), strip=True, coerce=True).src)
+        self.assertEqual('x', code.code_as__withitems(FST('[x]'), strip=True, coerce=True).src)
 
         self.assertRaises(ValueError, code.code_as_Store, FST('a').ctx)
         self.assertRaises(NodeError, code.code_as_Store, FST('a'))

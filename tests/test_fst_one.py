@@ -1375,7 +1375,7 @@ if 1:
         self.assertEqual('[a for a in b if a if a]', f.src)
         f.verify()
 
-        # check that it sanitizes
+        # check that it strips
 
         f = FST('a = b', 'exec')
         g = FST('c', 'exec').body[0].value.copy()

@@ -1584,10 +1584,10 @@ def func():
 
         self.assertRaises(NodeError, cd.code_as_expr, FST('a | b', 'MatchOr').put_slice(None), coerce=True)  # empty MatchOr coerce
 
-        self.assertEqual('\\\nx = \\\n', cd.code_as__Assign_targets(FST('\nif\nx\n', '_comprehension_ifs'), sanitize=True, coerce=True).src)  # doesn't do much but force this sanitize path
+        self.assertEqual('\\\nx = \\\n', cd.code_as__Assign_targets(FST('\nif\nx\n', '_comprehension_ifs'), strip=True, coerce=True).src)  # doesn't do much but force this strip path
 
         f = FST('if (x, y)', '_comprehension_ifs').ifs[0].unpar(True).root  # force a normally impossible case
-        self.assertEqual('@(x, y)', cd.code_as__decorator_list(f, sanitize=True, coerce=True).src)  # do sanitize at the same time
+        self.assertEqual('@(x, y)', cd.code_as__decorator_list(f, strip=True, coerce=True).src)  # do strip at the same time
 
         f = FST('x, y')
         f.a = None

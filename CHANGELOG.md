@@ -5,6 +5,7 @@
 ### Changed
 
 - `get/put/get_slice/put_slice()` typing tweaked for easier to swizzle parameters with type checking enabled
+- added `FST.strip()` which removes trivia surrounding node at root, was previously private function `_sanitize()`
 
 ### Fixed
 

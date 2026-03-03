@@ -1356,7 +1356,7 @@ def _fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
 
     if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
         if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():
-            self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
+            self._parenthesize_grouping()  # we do this instead or strip() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
 
             did_par = True
 

@@ -428,32 +428,6 @@ class TestFST(unittest.TestCase):
         self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0]))
         self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
 
-    def test__sanitize_stmtlike(self):
-        f = FST('# pre\ni = j  # line\n# post', 'stmt')
-        self.assertEqual('# pre\ni = j  # line\n# post', f.src)
-        self.assertEqual('i = j', f._sanitize().src)
-
-        f = FST('# pre\nexcept:\n  pass  # line\n# post', 'ExceptHandler')
-        self.assertEqual('# pre\nexcept:\n  pass  # line\n# post', f.src)
-        self.assertEqual('except:\n  pass  # line', f._sanitize().src)
-
-        f = FST('# pre\nexcept: pass  # line\n# post', 'ExceptHandler')
-        self.assertEqual('# pre\nexcept: pass  # line\n# post', f.src)
-        self.assertEqual('except: pass  # line', f._sanitize().src)
-
-        f = FST('# pre\ncase None:\n  pass  # line\n# post', 'match_case')
-        self.assertEqual('# pre\ncase None:\n  pass  # line\n# post', f.src)
-        self.assertEqual('case None:\n  pass  # line', f._sanitize().src)
-
-        f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
-        self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
-        self.assertEqual('case None: pass  # line', f._sanitize().src)
-
-    def test__sanitize(self):
-        f = FST('#0\n ( a ) #1\n#2')._sanitize()
-        self.assertEqual('( a )', f.src)
-        f.verify()
-
     def test__is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
         self.assertEqual('unenclosable', parse('f()').body[0].value.f._is_atom())
@@ -3417,6 +3391,32 @@ def func():
         self.assertEqual('', FST('def f(): pass').args.own_src())  # arguments
         self.assertEqual('>>', FST('a >> b').op.own_src())  # operator
         self.assertEqual('', FST('a').ctx.own_src())  # expr_context
+
+    def test_strip(self):
+        f = FST('#0\n ( a ) #1\n#2').strip()
+        self.assertEqual('( a )', f.src)
+        f.verify()
+
+    def test_strip_stmtlike(self):
+        f = FST('# pre\ni = j  # line\n# post', 'stmt')
+        self.assertEqual('# pre\ni = j  # line\n# post', f.src)
+        self.assertEqual('i = j', f.strip().src)
+
+        f = FST('# pre\nexcept:\n  pass  # line\n# post', 'ExceptHandler')
+        self.assertEqual('# pre\nexcept:\n  pass  # line\n# post', f.src)
+        self.assertEqual('except:\n  pass  # line', f.strip().src)
+
+        f = FST('# pre\nexcept: pass  # line\n# post', 'ExceptHandler')
+        self.assertEqual('# pre\nexcept: pass  # line\n# post', f.src)
+        self.assertEqual('except: pass  # line', f.strip().src)
+
+        f = FST('# pre\ncase None:\n  pass  # line\n# post', 'match_case')
+        self.assertEqual('# pre\ncase None:\n  pass  # line\n# post', f.src)
+        self.assertEqual('case None:\n  pass  # line', f.strip().src)
+
+        f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
+        self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
+        self.assertEqual('case None: pass  # line', f.strip().src)
 
     def test_walk(self):
         a = parse("""

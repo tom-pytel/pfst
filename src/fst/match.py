@@ -6098,7 +6098,7 @@ def search(
     ...
     ... if code_cls is keyword or (
     ...         code_cls is zst.ZST and code.a.__class__ is keyword):
-    ...     return code_as_keyword(code, options, parse_params, sanitize=sanitize)
+    ...     return code_as_keyword(code, options, parse_params, strip=strip)
     ...
     ... if src_or_ast_or_fst.__class__ is ZST:
     ...     return src_or_ast_or_fst.as_(

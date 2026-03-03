@@ -1764,7 +1764,7 @@ def _offset(
 
                 stack = syntax_ordered_children(a)
 
-    self._touchall(True, False, False)
+    # self._touchall(True, False, False)
 
     return self
 
@@ -2163,31 +2163,6 @@ def _put_src(
             lines[ln + 1 : end_ln] = map(bistr, put_lines[1:-1])
 
     return params_offset
-
-
-def _sanitize(self: fst.FST) -> fst.FST:  # -> self
-    """Remove any leading or trailing junk which is not part of the location or parenthesized location of the node."""
-
-    assert not self.parent  # self.is_root
-
-    if not (loc := self.pars()) or loc == self.whole_loc:
-        return self
-
-    ln, col, end_ln, end_col = loc
-    lines = self._lines
-
-    lines[end_ln] = bistr(lines[end_ln][:end_col])
-
-    del lines[end_ln + 1:]
-
-    if ln or col:
-        self._offset(ln, 0, -ln, -lines[ln].c2b(col))  # can do at ln, 0 because it doesn't really matter, we are offsetting everything anyway
-
-        lines[ln] = bistr(lines[ln][col:])
-
-        del lines[:ln]
-
-    return self
 
 
 def _make_fst_and_dedent(
