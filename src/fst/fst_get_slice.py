@@ -2971,7 +2971,7 @@ _GET_SLICE_HANDLERS = {
     (_aliases, 'names'):                      _get_slice__slice,  # alias*
     (_withitems, 'items'):                    _get_slice__slice,  # withitem*
     (_type_params, 'type_params'):            _get_slice__slice,  # type_param*
-}
+}  # fmt: skip
 
 
 # ----------------------------------------------------------------------------------------------------------------------

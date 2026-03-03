@@ -350,7 +350,7 @@ def get_trivia_params(
     elif not lt:  # () is shorthand for (False, False)
         lead_comments = trail_comments = False
 
-    elif lt == 1:
+    elif lt == 1:  # (x,) is shorthand for (default, x)
         lead_comments = True
         trail_comments = trivia[0]
 

@@ -228,7 +228,7 @@ _re_parse_all_category = re.compile(r'''
     (?P<colon>                         (?: : ) ) |
     (?P<cmpop_o>                       (?: == | != | <= | < | >= | > ) ) |
     (?P<tilde>                         (?: ~ ) )
-''', re.MULTILINE | re.VERBOSE)
+''', re.MULTILINE | re.VERBOSE)  # fmt: skip
 
 
 class ParseError(SyntaxError):
@@ -480,7 +480,7 @@ _UNPARSE_FUNCS = {
     _aliases:           _unparse__aliases,
     _withitems:         _unparse__withitems,
     _type_params:       _unparse__type_params,
-}
+}  # fmt: skip
 
 
 def _ast_parse(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -2233,7 +2233,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _aliases:                 parse__aliases,
     _withitems:               parse__withitems,
     _type_params:             parse__type_params,
-}  # automatically filled out with all AST types and their names derived from these
+}  # fmt: skip  # automatically filled out with all AST types and their names derived from these
 
 _AST_TYPE_BY_NAME_OR_TYPE = {}  # {Module: Module, 'Module': Module, ...}  - filled out below
 

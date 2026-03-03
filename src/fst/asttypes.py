@@ -347,11 +347,12 @@ __all__ = [
     'ASTS_LEAF_MAYBE_DOCSTR',
     'ASTS_LEAF__SLICE',
     'ASTS_LEAF__ALL',
-]
+]  # fmt: skip
 
 
 # leaf node types, as set for quick checks, must be frozenset() as some code depends on this for checks
 
+# fmt: off
 ASTS_LEAF_MOD                = frozenset([Module, Interactive, Expression])
 ASTS_LEAF_STMTMOD            = frozenset([Module, Interactive])
 
@@ -436,6 +437,7 @@ ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_SCOPE_NAMED | {Module}  # these may hav
 
 # ASTS_LEAF_MAYBE_SINGLETON    = (ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
 #                                 | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree
+# fmt: on
 
 
 class _slice(AST):  # SPECIAL SLICE base type
@@ -672,6 +674,7 @@ class _type_params(_slice):
         self.end_col_offset = end_col_offset
 
 
+# fmt: off
 ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _arglikes,
                               _comprehensions, _comprehension_ifs, _aliases, _withitems, _type_params])
 ASTS_LEAF__ALL = ASTS_LEAF_ALL | ASTS_LEAF__SLICE
@@ -815,6 +818,7 @@ AST2ASTSLEAF = {  # convert a possibly non-leaf AST to a frozenset of all the le
     _slice:             ASTS_LEAF__SLICE,
     AST:                ASTS_LEAF__ALL,
 }
+# fmt: on
 
 # # remove nonexistent nodes in lower versions of python from ASTS_LEAF_* sets
 

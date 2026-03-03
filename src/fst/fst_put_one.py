@@ -2933,7 +2933,7 @@ _PUT_ONE_HANDLERS = {
     # (With, 'type_comment'):               (),  # string?
     # (AsyncWith, 'type_comment'):          (),  # string?
     # (arg, 'type_comment'):                (),  # string?
-}
+}  # fmt: skip
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -14,7 +14,7 @@ from fst.astutil import compare_asts
 from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 from fst.fst_misc import new_empty_set_curlies
 
-from support import GetSliceCases, PutSliceCases, _clean_options
+from support import GetSliceCases, PutSliceCases, assertRaises, _clean_options
 
 
 DIR_NAME       = os.path.dirname(__file__)
@@ -2772,6 +2772,16 @@ class cls:
         if PYGE12:
             self.assertEqual("f'{x,:}'", (f := FST("f'{a,b:}'")).values[0].value.put_slice('x,', 0, 2).root.src)
             f.verify()
+
+        # parenthesize arglike expression on put to normal Tuple
+
+        if PYGE11:
+            self.assertEqual('(a, *not a, *b or c)', FST('(a, b, c)').put_slice(FST('*not a, *b or c'), 1, 3, 'elts').src)
+            self.assertEqual('(a, *not a, *b or c)', FST('(a, b, c)').put_slice('*not a, *b or c', 1, 3, 'elts').src)
+
+        else:
+            self.assertEqual('(a, *(not a), *(b or c))', FST('(a, b, c)').put_slice(FST('*not a, *b or c'), 1, 3, 'elts').src)
+            assertRaises(SyntaxError('invalid expression (all types)'), FST('(a, b, c)').put_slice, '*not a, *b or c', 1, 3, 'elts')
 
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases

@@ -39,7 +39,7 @@ _GLOBAL_OPTIONS_W_DEFAULTS = {
     'set_norm':      'star',  # 'star' | 'call'
     'op_side':       'left',  # 'left' | 'right'
     'args_as':       None,    # 'pos' | 'arg' | 'kw' | 'arg_only' | 'kw_only' | 'pos_maybe' | 'arg_maybe' | 'kw_maybe' | None
-}
+}  # fmt: skip
 
 _DYN_OPTIONS = {'op', 'to', 'ins_ln'}
 _ALL_OPTIONS = {*_GLOBAL_OPTIONS_W_DEFAULTS, *_DYN_OPTIONS}  # including dynamic non-global options
@@ -158,7 +158,7 @@ _ALL_OPTION_CHECK_FUNCS = {
     'op':           _check_opt_op,
     'to':           _check_opt_to,
     'ins_ln':       _check_opt_ins_ln,
-}
+}  # fmt: skip
 
 _GLOBAL_OPTION_CHECK_FUNCS = {o: v for o, v in _ALL_OPTION_CHECK_FUNCS.items() if o in _GLOBAL_OPTIONS_W_DEFAULTS}
 

@@ -934,7 +934,7 @@ _AST_COERCE_TO_PATTERN_FUNCS = {
     TypeVar:            _coerce_to_pattern_ast_TypeVar,
     TypeVarTuple:       _coerce_to_pattern_ast_TypeVarTuple,
     _type_params:       _coerce_to_pattern_ast_seq,
-}
+}  # fmt: skip
 
 # ......................................................................................................................
 
@@ -4426,7 +4426,7 @@ _CODE_AS_MODE_FUNCS = {
     _withitems:               code_as__withitems,
     _type_params:             code_as__type_params,
     '_expr_arglikes':         code_as__expr_arglikes,
-}  # automatically filled out with all AST types and their names derived from these
+}  # fmt: skip  # automatically filled out with all AST types and their names derived from these
 
 
 for ast_cls in FIELDS:  # fill out _CODE_AS_MODE_FUNCS with all supported AST types and their class names as parse modes

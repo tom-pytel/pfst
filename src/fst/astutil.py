@@ -164,6 +164,7 @@ __all__ = [
 ]
 
 
+# fmt: off
 PYVER  = sys.version_info[:2]
 PYGE12 = PYVER >= (3, 12)
 PYGE13 = PYVER >= (3, 13)
@@ -332,6 +333,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
     (_type_params,             (('type_params', 'type_param*'),)),
 
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
+# fmt: on
 
 AST_FIELDS = {kls: tuple(f for f, t in fields  # only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
                          if (not t.startswith('int')
@@ -1308,6 +1310,7 @@ def _syntax_ordered_children_default(ast: AST) -> list[AST]:
     return children
 
 
+# fmt: off
 _syntax_ordered_children_nothing      = lambda ast: []
 
 _syntax_ordered_children_for          = lambda ast: [ast.target, ast.iter, *ast.body, *ast.orelse]
@@ -1469,6 +1472,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     _withitems:         lambda ast: ast.items.copy(),
     _type_params:       lambda ast: ast.type_params.copy(),
 }
+# fmt: on
 
 
 def syntax_ordered_children(ast: AST) -> list:
@@ -1482,6 +1486,7 @@ def syntax_ordered_children(ast: AST) -> list:
 # ......................................................................................................................
 # precedence stuff
 
+# fmt: off
 class _Precedence(IntEnum):
     """Precedence table that originated from python grammar."""
 
@@ -1684,6 +1689,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (_Assign_targets, 'targets'): _Precedence.TUPLE,
     (_comprehension_ifs, 'ifs'):  _Precedence.TEST.next(),
 }
+# fmt: on
 
 
 def precedence_require_parens_by_type(

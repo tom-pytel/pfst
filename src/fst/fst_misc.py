@@ -219,7 +219,7 @@ FST_VIRTUAL_FIELDS = {
     Call:             ('_args',),
     arguments:        ('_all',),
     MatchMapping:     ('_all',),
-}
+}  # fmt: skip
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     # list fields of multiple children
@@ -261,7 +261,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('name',                  (alias,)),
     ('context_expr',          (withitem,)),
     ('pattern',               (MatchAs,)),
-] for kls in classes}
+] for kls in classes}  # fmt: skip
 
 
 _re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)

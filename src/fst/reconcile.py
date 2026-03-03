@@ -122,7 +122,7 @@ _SLICE_COMAPTIBILITY = {
 
     # (JoinedStr, 'values'):                'expr*',
     # (TemplateStr, 'values'):              'expr*',
-}
+}  # fmt: skip
 
 
 def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)

@@ -5506,7 +5506,7 @@ _MATCH_FUNCS = {
     M_aliases:                _match_node,
     M_withitems:              _match_node,
     M_type_params:            _match_node,
-}
+}  # fmt: skip
 
 
 # ......................................................................................................................
@@ -5558,7 +5558,7 @@ _LEAF_ASTS_FUNCS = {  # don't need quantifiers here because they can't be at a t
     bool:         _leaf_asts_none,
     NoneType:     _leaf_asts_none,
     EllipsisType: _leaf_asts_all,  # literally matches everything
-}
+}  # fmt: skip
 
 
 # ......................................................................................................................
@@ -5878,7 +5878,7 @@ _SUB_REPL_PATH_FUNCS = {
     TypeVar:          _sub_repl_path_TypeVar,
     ParamSpec:        _sub_repl_path_name,
     TypeVarTuple:     _sub_repl_path_name,
-}
+}  # fmt: skip
 
 
 _SUB_WITHITEM_SLICES = {Set, List, Tuple, MatchSequence, _Assign_targets, _decorator_list, _arglikes,

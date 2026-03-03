@@ -3291,7 +3291,7 @@ _PUT_SLICE_HANDLERS = {
     (_aliases, 'names'):                      _put_slice__slice,  # alias*
     (_withitems, 'items'):                    _put_slice__slice,  # withitem*
     (_type_params, 'type_params'):            _put_slice__slice,  # type_param*
-}
+}  # fmt: skip
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -3478,7 +3478,7 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (TryStar, '_body'):                   _loc_slice_raw_put__body,
     (ExceptHandler, '_body'):             _loc_slice_raw_put__body,
     (match_case, '_body'):                _loc_slice_raw_put__body,
-}
+}  # fmt: skip
 
 
 def _singleton_needs_comma(fst_: fst.FST) -> bool:

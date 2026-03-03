@@ -205,7 +205,7 @@ _LOC_FUNCS = {  # quick lookup table for FST.loc
     IsNot:         _loc_op,
     In:            _loc_op,
     NotIn:         _loc_op,
-}
+}  # fmt: skip
 
 _ASTS_LEAF_CLASSDEF      = frozenset([ClassDef])
 _ASTS_LEAF_SCOPE_SYMBOLS = ASTS_LEAF_DEF | ASTS_LEAF_TYPE_PARAM | {Name, arg, AugAssign, Import, ImportFrom, Nonlocal,
