@@ -2484,7 +2484,7 @@ class FST:
 
     def prextend(
         self, code: Code, field: builtins.str | None = None, one: Literal[False] | None = False, **options: object
-    ) -> FSTView:  # -> self or None if deleted due to raw reparse
+    ) -> FST:  # -> self or None if deleted due to raw reparse
         """Extend the beginning of the `field` of `self` with the slice in `code` (type must be compatible). Default
         field if `field=None`. This is a convenience function for `self.put_slice()`.
 
@@ -2523,8 +2523,8 @@ class FST:
 
     def get(
         self,
-        idx: int | Literal['end'] | None = None,
-        stop: int | Literal['end'] | None = None,
+        idx: int | Literal['end'] | builtins.str | None = None,  # noqa: PYI051  # builtins.str because of swizzle
+        stop: int | Literal['end'] | builtins.str | None = None,  # noqa: PYI051  # builtins.str because of swizzle
         field: builtins.str | None = None,
         cut: bool = False,
         **options: object,
@@ -2620,8 +2620,8 @@ class FST:
     def put(
         self,
         code: Code | builtins.str | constant | None,
-        idx: int | Literal['end'] | None = None,
-        stop: int | Literal['end'] | None = None,
+        idx: int | Literal['end'] | builtins.str | None = None,  # noqa: PYI051  # builtins.str because of swizzle
+        stop: int | Literal['end'] | builtins.str | None = None,  # noqa: PYI051  # builtins.str because of swizzle
         field: builtins.str | None = None,
         one: bool | None = True,
         **options: object,
@@ -2739,8 +2739,8 @@ class FST:
 
     def get_slice(
         self,
-        start: int | Literal['end'] = 0,
-        stop: int | Literal['end'] = 'end',
+        start: int | Literal['end'] | builtins.str = 0,  # noqa: PYI051  # builtins.str because of swizzle
+        stop: int | Literal['end'] | builtins.str = 'end',  # noqa: PYI051  # builtins.str because of swizzle
         field: builtins.str | None = None,
         cut: bool = False,
         **options: object,
@@ -2804,8 +2804,8 @@ class FST:
     def put_slice(
         self,
         code: Code | None,
-        start: int | Literal['end'] = 0,
-        stop: int | Literal['end'] = 'end',
+        start: int | Literal['end'] | builtins.str = 0,  # noqa: PYI051  # builtins.str because of swizzle
+        stop: int | Literal['end'] | builtins.str = 'end',  # noqa: PYI051  # builtins.str because of swizzle
         field: builtins.str | None = None,
         one: bool | None = False,
         **options: object,

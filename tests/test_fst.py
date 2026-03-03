@@ -6,7 +6,7 @@ import os
 import threading
 import tokenize
 import unittest
-from ast import parse as ast_parse, unparse as ast_unparse
+from ast import AST, parse as ast_parse, unparse as ast_unparse
 from io import StringIO
 from itertools import combinations
 from pprint import pformat
@@ -10221,6 +10221,261 @@ match a:
         self.assertEqual('12312312312312312312312 .. [90 chars] .. 23123123123123123123123', shortstr('123' * 30))
 
         self.assertFalse(FST('f"a{b}"').values[0].is_parenthesizable())
+
+    def test_typing(self) -> None:  # to be used with "make typecheck"
+        import sys
+        if sys.version_info >= (3, 11):
+            from typing import assert_type
+        else:
+            from typing_extensions import assert_type
+        from contextlib import _GeneratorContextManager
+        from types import EllipsisType
+        from typing import Any, Generator, Literal, Mapping, cast
+        from fst.asttypes import Assign, Module
+        from fst.common import astfield
+        from fst import FSTMatch
+
+        f = FST('i = [j]')
+
+        # a
+        assert_type(f.a, AST | None)
+        # parent
+        assert_type(f.parent, FST | None)
+        # pfield
+        assert_type(f.pfield, astfield | None)
+        # parse_params
+        assert_type(f.parse_params, Mapping[str, Any])
+        # indent
+        assert_type(f.indent, str)
+        # is_FST
+        assert_type(f.is_FST, bool)
+        # is_alive
+        assert_type(f.is_alive, bool)
+        # is_root
+        assert_type(f.is_root, bool)
+        # root
+        assert_type(f.root, FST)
+        # base
+        assert_type(f.base, FST)
+        # lines
+        assert_type(f.lines, list[str])
+        # src
+        assert_type(f.src, str)
+        # loc
+        assert_type(f.loc, fstloc | None)
+        # bloc
+        assert_type(f.bloc, fstloc | None)
+        # ln
+        assert_type(f.ln, int | None)
+        # col
+        assert_type(f.col, int | None)
+        # end_ln
+        assert_type(f.end_ln, int | None)
+        # end_col
+        assert_type(f.end_col, int | None)
+        # bln
+        assert_type(f.bln, int | None)
+        # bcol
+        assert_type(f.bcol, int | None)
+        # bend_ln
+        assert_type(f.bend_ln, int | None)
+        # bend_col
+        assert_type(f.bend_col, int | None)
+        # lineno
+        assert_type(f.lineno, int | None)
+        # col_offset
+        assert_type(f.col_offset, int | None)
+        # end_lineno
+        assert_type(f.end_lineno, int | None)
+        # end_col_offset
+        assert_type(f.end_col_offset, int | None)
+        # whole_loc
+        assert_type(f.whole_loc, fstloc)
+        # has_own_loc
+        assert_type(f.has_own_loc, bool)
+        # has_docstr
+        assert_type(f.has_docstr, bool)
+
+        # # f
+        # assert_type(f.f, None)  # raises
+        # FST
+
+        # fromsrc
+        assert_type(FST.fromsrc('a', 'exec', filename='filename'), FST)
+        # fromast
+        assert_type(FST.fromast(ast_parse('a'), 'Module', coerce=False, filename='filename'), FST)
+        assert_type(FST.fromast(ast_parse('a'), Module, coerce=False, filename='filename'), FST)
+        # get_options
+        assert_type(FST.get_options(), dict[str, Any])
+        # get_option
+        assert_type(FST.get_option('pars', {}), object)
+        # set_options
+        assert_type(FST.set_options(pars=FST.get_option('pars')), dict[str, Any])
+        # options
+        assert_type(FST.options(), _GeneratorContextManager[Mapping[str, Any], None, None])
+        # as_
+        assert_type(f.as_('Assign', True, pars='auto'), FST)
+        assert_type(f.as_(Assign, True, pars='auto'), FST)
+        # reparse
+        assert_type(f.reparse(), FST)
+        # verify
+        assert_type(f.verify('all', True, locs=True, ctx=True, raise_=True), FST | None)
+        assert_type(f.verify(Module, False, locs=False, ctx=False, raise_=False), FST | None)
+        # dump
+        assert_type(f.dump('stmt', True, expand=True, indent=3, list_indent=2, loc=False, color=None, out='str', eol=None), FST | str | list[str])
+        # mark
+        assert_type(f.mark(), FST)
+        # reconcile
+        assert_type(f := f.reconcile(None, None, None, cleanup=True), FST)
+        # __getitem__
+        assert_type(FST('[a]').__getitem__(0), FSTView | FST | str | None)
+        # __setitem__
+        assert_type(FST('[a]').__setitem__(0, '1'), None)
+        # __delitem__
+        assert_type(FST('[a]').__delitem__(0), None)
+        # own_lines
+        assert_type(f.own_lines(True, docstr=None), list[str])
+        # own_src
+        assert_type(f.own_src(True, docstr=None), str)
+        # ast_src
+        assert_type(f.ast_src(), str)
+        # copy_ast
+        assert_type(f.copy_ast(), AST)
+        # copy
+        assert_type(f.copy(True, pars='auto'), FST)
+        # cut
+        assert_type(cast(FST, f.copy().value.elts[0]).cut(), FST)
+        # replace
+        assert_type(cast(FST, f.copy().value.elts[0]).replace('n', True, pars='auto'), FST | None)
+        # remove
+        assert_type(cast(FST, f.copy().value.elts[0]).remove(pars='auto'), None)
+        # insert
+        assert_type(cast(FST, f.copy().value).insert('b', 0, 'elts', one=True, pars='auto'), FST)
+        # append
+        assert_type(cast(FST, f.copy().value).append('b', pars='auto'), FST)
+        # extend
+        assert_type(cast(FST, f.copy().value).append('b, c', pars='auto'), FST)
+        # prepend
+        assert_type(cast(FST, f.copy().value).prepend('b', pars='auto'), FST)
+        # prextend
+        assert_type(cast(FST, f.copy().value).prextend('b, c', pars='auto'), FST)
+        # get
+        assert_type(cast(FST, f.copy().value).get(0, 1, 'elts', False, pars='auto'), FST | str | EllipsisType | int | float | complex | bytes | None)
+        assert_type(cast(FST, f.copy().value).get(0, 'elts', cut=False, pars='auto'), FST | str | EllipsisType | int | float | complex | bytes | None)
+        assert_type(cast(FST, f.copy().value).get('elts', cut=False, pars='auto'), FST | str | EllipsisType | int | float | complex | bytes | None)
+        # put
+        assert_type(cast(FST, f.copy().value).put('z', 0, 1, 'elts', True, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put('z', 0, 'elts', one=True, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put('z', 'elts', one=True, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put(['z'], 'elts', one=True, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put(f.value.copy_ast(), 'elts', one=True, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put(f.value.copy(), 'elts', one=True, pars='auto'), FST | None)
+        # get_slice
+        assert_type(cast(FST, f.copy().value).get_slice(0, 1, 'elts', False, pars='auto'), FST)
+        assert_type(cast(FST, f.copy().value).get_slice(0, 'elts', cut=False, pars='auto'), FST)
+        assert_type(cast(FST, f.copy().value).get_slice('elts', cut=False, pars='auto'), FST)
+        # put_slice
+        assert_type(cast(FST, f.copy().value).put_slice('x, y', 0, 1, 'elts', False, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put_slice('x, y', 0, 'elts', one=False, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put_slice('x, y', 'elts', one=False, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put_slice(['x, y'], 'elts', one=False, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put_slice(f.value.copy_ast(), 'elts', one=False, pars='auto'), FST | None)
+        assert_type(cast(FST, f.copy().value).put_slice(f.value.copy(), 'elts', one=False, pars='auto'), FST | None)
+        # get_src
+        assert_type(f.get_src(0, 0, 'end', 'end', True), str | list[str])
+        # put_src
+        assert_type(cast(FST, f.copy()).put_src('a', 0, 0, 'end', 'end', None), tuple[int, int])
+        assert_type(cast(FST, f.copy()).put_src(['a'], 0, 0, 'end', 'end', None), tuple[int, int])
+        assert_type(cast(FST, f.copy()).put_src(f.copy_ast(), 0, 0, 'end', 'end', None), tuple[int, int])
+        assert_type(cast(FST, f.copy()).put_src(f.copy(), 0, 0, 'end', 'end', None), tuple[int, int])
+        # get_docstr
+        assert_type(FST('"""docstr"""\na').get_docstr(), str | None)
+        # put_docstr
+        assert_type(FST('"""docstr"""\na').put_docstr('a', True, pars='auto'), FST)
+        # get_line_comment
+        assert_type(FST('i = j  # comment', 'stmt').get_line_comment(None, True), str | None)
+        # put_line_comment
+        assert_type(FST('i = j  # comment', 'stmt').put_line_comment('comment', None, False), str | None)
+        # pars
+        assert_type(f.pars(shared=True), fstlocn | None)
+        # par
+        assert_type(cast(FST, f.copy().value).par(True, whole=True), FST)
+        # unpar
+        assert_type(cast(FST, f.copy().value).unpar(True, shared=True), FST)
+        # scope_symbols
+        assert_type(f.scope_symbols(True, local=True, free=True, import_star=True), dict[str, list[FST]] | dict[str, dict[str, list[FST]]])
+        # walk
+        assert_type(f.walk(True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FST, bool, None])
+        # next
+        assert_type(cast(FST, f.targets[0]).next(True), FST | None)
+        # prev
+        assert_type(cast(FST, f.value).prev(True), FST | None)
+        # first_child
+        assert_type(f.first_child(True), FST | None)
+        # last_child
+        assert_type(f.last_child(True), FST | None)
+        # last_header_child
+        assert_type(f.last_header_child(True), FST | None)
+        # next_child
+        assert_type(f.next_child(None, True), FST | None)
+        # prev_child
+        assert_type(f.prev_child(None, True), FST | None)
+        # step_fwd
+        assert_type(f.step_fwd(True, True, top=None), FST | None)
+        # step_back
+        assert_type(f.step_back(True, True, top=None), FST | None)
+        # parents
+        assert_type(f.parents(True), Generator[FST, None, None])
+        # parent_stmt
+        assert_type(f.parent_stmt(True, True), FST | None)
+        # parent_stmtlike
+        assert_type(f.parent_stmtlike(True, True), FST | None)
+        # parent_block
+        assert_type(f.parent_block(True, True), FST | None)
+        # parent_scope
+        assert_type(f.parent_scope(True, True), FST | None)
+        # parent_named_scope
+        assert_type(f.parent_named_scope(True, True), FST | None)
+        # parent_non_expr
+        assert_type(f.parent_non_expr(True, True), FST | None)
+        # parent_pattern
+        assert_type(f.parent_pattern(True), FST | None)
+        # parent_ftstr
+        assert_type(f.parent_ftstr(True), FST | None)
+        # child_path
+        assert_type(f.child_path(f.value, True), list[astfield] | str)
+        # child_from_path
+        assert_type(f.child_from_path([], False), FST | Literal[False])
+        # repath
+        assert_type(f.repath(True), FST)
+        # match
+        assert_type(f.match(Assign, ctx=True), FSTMatch | None)
+        # search
+        assert_type(f.search(Assign, True, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FSTMatch, bool, None])
+        # sub
+        assert_type(f.sub(Assign, 'repl', True, 0, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None, retn=None), FST)
+        # subn
+        assert_type(f.subn(Assign, 'repl', True, 0, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), tuple[FST, int, int])
+        # find_def
+        assert_type(f.find_def('nonexistent', None, recurse=True, asts=None), FST | None)
+        # find_loc
+        assert_type(f.find_loc(0, 0, 0, 0, False), FST | None)
+        # find_contains_loc
+        assert_type(f.find_contains_loc(0, 0, 0, 0, False), FST | None)
+        # find_in_loc
+        assert_type(f.find_in_loc(0, 0, 0, 0), FST | None)
+        # is_parenthesizable
+        assert_type(f.is_parenthesizable(star=True), bool)
+        # is_parenthesized_tuple
+        assert_type(f.is_parenthesized_tuple(), bool | None)
+        # is_delimited_matchseq
+        assert_type(f.is_delimited_matchseq(), Literal['[]', '()', ''] | None)
+        # is_empty_arguments
+        assert_type(f.is_empty_arguments(), bool | None)
+        # is_except_star
+        assert_type(f.is_except_star(), bool | None)
+        # is_elif
+        assert_type(f.is_elif(), bool | None)
 
 
 if __name__ == '__main__':

@@ -107,6 +107,15 @@ Beyond basic editing, `pfst` provides syntax-ordered traversal, scope symbol ana
 substitution, and a mechanism for reconciling external `AST` mutations with the formatted tree, preserving comments and
 layout wherever the structure still permits it.
 
+Here is an example of more advanced substitution usage.
+
+```py
+>>> from fst.match import *
+
+>>> print(FST('i = j.k = a + b[c]').sub(Mexpr(ctx=Load), 'log(__FST_)', True).src)
+i = log(j).k = log(a) + log(log(b)[log(c)])
+```
+
 
 ### TODO
 

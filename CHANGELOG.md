@@ -4,6 +4,8 @@
 
 ### Changed
 
+- `get/put/get_slice/put_slice()` typing tweaked for easier to swizzle parameters with type checking enabled
+
 ### Fixed
 
 

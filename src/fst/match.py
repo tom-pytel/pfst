@@ -6242,8 +6242,8 @@ def sub(
 
     Allow nested substitutions and don't substitute target expressions.
 
-    >>> FST('i = j.k = a + b.c').sub(Mexpr(ctx=Load), 'log(__FST_)', nested=True).src
-    'i = log(j).k = log(a) + log(log(b).c)'
+    >>> FST('i = j.k = a + b[c]').sub(Mexpr(ctx=Load), 'log(__FST_)', nested=True).src
+    'i = log(j).k = log(a) + log(log(b)[log(c)])'
 
     Statements and optional parts of block statements are handled (like `else` or `finally`).
 
@@ -6662,7 +6662,7 @@ def subn(
     back: bool = False,
     asts: list[AST] | None = None,
     **options: object,
-) -> fst.FST:  # -> self
+) -> tuple[fst.FST, int, int]:  # -> (self, unique_number_of_subs_made, total_number_of_subs_made)
     """Perform the same operation as `sub()`, but return a tuple `(self, unique_number_of_subs_made,
     total_number_of_subs_made)`.
 
