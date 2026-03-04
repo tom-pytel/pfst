@@ -39,6 +39,7 @@ from .asttypes import (
     Compare,
     Constant,
     Del,
+    Dict,
     Div,
     Eq,
     ExceptHandler,
@@ -68,6 +69,7 @@ from .asttypes import (
     LtE,
     MatMult,
     Match,
+    MatchMapping,
     MatchStar,
     Mod,
     Module,
@@ -192,6 +194,8 @@ __all__ = [
     'parse_type_param',
     'parse__type_params',
     'parse__expr_arglikes',
+    'parse__Dict_maybe_undelimited',
+    'parse__MatchMapping_maybe_undelimited',
     'parse__BoolOp_dangling_left',
     'parse__BoolOp_dangling_right',
     'parse__Compare_dangling_left',
@@ -199,7 +203,7 @@ __all__ = [
 ]
 
 
-_re_non_lcont_newline  = re.compile(r'(?<!\\)\n')
+_re_non_lcont_newline  = re.compile(r'(?<!\\)\n')  # used to substitute line continuations for non-line-continued lines
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
 _re_first_src          = re.compile(r'^ ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for non-comment non-linecont coding source code starting on a new line
 _re_next_src_space     = re.compile(r'  ([^\S\n]+) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # match for non-comment non-linecont coding source code starting not necessarily on a new line but with at least one whitespace, meant for followup search for multiword code like 'is not'
@@ -375,10 +379,8 @@ def _fixing_unparse(ast: AST) -> str:
 
     try:
         return ast_unparse(ast)
-
-    except AttributeError as exc:
-        if not str(exc).endswith("has no attribute 'lineno'"):
-            raise  # pragma: no cover
+    except AttributeError:
+        pass  # we just assume its from missing location attributes to not hardcode a string check, if not then will error again the same way below  - if not str(exc).endswith("has no attribute 'lineno'"): raise
 
     fix_missing_locations(ast)
 
@@ -561,7 +563,7 @@ def _syntax_error_in_loc(
 
 def _astloc_from_src(src: str, lineno: int = 1) -> dict[str, int]:
     """Get whole `AST` location from whole source string, starting at `lineno`. Used to get location for SPECIAL SLICE
-    custom `AST` containers."""
+    custom `AST` containers mostly, but also other parses."""
 
     last_line = src if (i := src.rfind('\n')) == -1 else src[i + 1:]
 
@@ -655,13 +657,15 @@ def _fix_undelimited_seq_parsed_delimited(
     """Fix a parsed `Tuple` or `MatchSequence` locations which had original source undelimited but which was
     parenthesized or bracketed for the parse.
 
+    Expected to not be empty!
+
     **Parameters:**
     - `lineno`: The actual `AST.lineno` the expression is expected to start on, 1 + number of extra lines above it in
-        the parse.
+        the parse (but not in `src`).
     """
 
     lines = src.split('\n')
-    elts = getattr(ast, field)  # or patterns
+    elts = getattr(ast, field)  # elts or patterns
     e0 = elts[0]
     en = elts[-1]
     e0_ln = e0.lineno - lineno  # "- lineno" because of extra line introduced in parse, offset from start of lines
@@ -678,8 +682,7 @@ def _fix_undelimited_seq_parsed_delimited(
         e1 = elts[1]
         end_ln = e1.lineno - lineno
 
-    _verify_no_close_delimiters(lines, e0_ln, e0_col_offset, e0.end_lineno - lineno, e0.end_col_offset, end_ln,
-                                delims)
+    _verify_no_close_delimiters(lines, e0_ln, e0_col_offset, e0.end_lineno - lineno, e0.end_col_offset, end_ln, delims)
 
     e0_col = len(lines[e0_ln].encode()[:e0_col_offset].decode())
     en_end_col = len(lines[en_end_ln].encode()[:en.end_col_offset].decode())
@@ -997,7 +1000,7 @@ def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return body[0]
 
 
-def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module()
+def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module() today, but may be different in the future
     """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically). @private"""
 
     return _ast_parse(src, parse_params)
@@ -1894,7 +1897,7 @@ def parse__type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Tuple` of zero or more arglike expressions as would be seen as a sequence of `Call.args`. If there
     are parentheses then they belong to the elements as the `Tuple` itself cannot have any. If there is a single element
-    it does not need to have a trailing comma.
+    it does not need to have a trailing comma. The location is the whole source.
 
     **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
     source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Intended as a
@@ -1917,6 +1920,57 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = Tuple(elts=ast.args, ctx=Load(), **_astloc_from_src(src, 2))
 
     return _offset_linenos(ast, -1)
+
+
+def parse__Dict_maybe_undelimited(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `Dict`, possibly undelimited. If undelimited then the location is the whole source.
+
+    @private
+    """
+
+    ast = _ast_parse1(f'{{\n{src}\n}}', parse_params, Expr).value
+
+    ast_cls = ast.__class__
+
+    if ast_cls is Dict:  # means is undelimited Dict, either empty or with elements
+        ast = Dict(keys=ast.keys, values=ast.values, **_astloc_from_src(src, 2))
+
+    elif ast_cls is not Set or len(elts := ast.elts) != 1 or (ast := elts[0]).__class__ is not Dict:  # if top is Set (because of the curlies) then can only succeed if has a single element which is a Dict
+        raise SyntaxError('invalid syntax')
+
+    return _offset_linenos(ast, -1)
+
+
+def parse__MatchMapping_maybe_undelimited(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `MatchMapping`, possibly undelimited. If undelimited then the location is the whole source.
+
+    @private
+    """
+
+    try:  # first try undelimited as its just one parse try
+        ast = _ast_parse1_case(f'match _:\n case {{\n{src}\n}}: pass', parse_params).pattern
+
+    except SyntaxError:  # now try normal pattern delimited MatchMapping
+        try:
+            ast = _ast_parse1_case(f'match _:\n case \\\n{src}: pass', parse_params).pattern
+
+        except SyntaxError as bare_exc:  # maybe spread over multiple lines
+            try:
+                ast = _ast_parse1_case(f'match _:\n case (\n{src}\n): pass', parse_params).pattern
+
+            except SyntaxError as wrapped_exc:
+                if _syntax_error_in_loc(wrapped_exc, src, 3):  # check if error includes our wrapper code
+                    raise  # maybe there are multiple lines and the error is past the first one
+
+                raise bare_exc from None
+
+        if ast.__class__ is not MatchMapping:
+            raise SyntaxError('invalid syntax') from None
+
+    else:  # since we provided the curlies we know it has to be a MatchMapping
+        ast = MatchMapping(keys=ast.keys, patterns=ast.patterns, rest=ast.rest, **_astloc_from_src(src, 3))
+
+    return _offset_linenos(ast, -2)
 
 
 def parse__BoolOp_dangling_left(src: str, parse_params: Mapping[str, Any] = {}, *, loc_whole: bool = False) -> AST:
@@ -2216,7 +2270,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     withitem:                 parse_withitem,
     pattern:                  parse_pattern,
     type_param:               parse_type_param,
-    Load:                     lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
+    Load:                     lambda src, parse_params = {}: Load(),  # for verify() and other similar stuff, just accept any source
     Store:                    lambda src, parse_params = {}: Store(),
     Del:                      lambda src, parse_params = {}: Del(),
     FunctionType:             None,  # explicitly prohibit from parse

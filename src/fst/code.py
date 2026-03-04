@@ -162,6 +162,8 @@ from .parsex import (
     parse_type_param,
     parse__type_params,
     parse__expr_arglikes,
+    parse__Dict_maybe_undelimited,
+    parse__MatchMapping_maybe_undelimited,
 )
 
 __all__ = [
@@ -211,6 +213,8 @@ __all__ = [
     'code_as_identifier_alias',
     'code_as_constant',
     'code_as__expr_arglikes',
+    'code_as__Dict_maybe_undelimited',
+    'code_as__MatchMapping_maybe_undelimited',
 ]
 
 
@@ -2153,6 +2157,58 @@ def _coerce_to_List(
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
     return code.strip() if strip else code
+
+
+def _coerce_to_Dict(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, strip: bool = False
+) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    if is_FST := isinstance(code, fst.FST):
+        codea = code.a
+    else:
+        codea = code
+
+    if codea.__class__ is not MatchMapping:  # only this can coerce to a Dict
+        raise NodeError(f'expecting Dict, got {codea.__class__.__name__}, could not coerce')
+
+    ast, _ = _coerce_to_expr_ast(codea, is_FST, options, parse_params, 'Dict')
+
+    assert ast.__class__ is Dict  # MatchMapping should only be able to coerce to this
+
+    if is_FST:
+        code._unmake_fst_tree()
+
+        fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
+
+        if strip:
+            fst_.strip()
+
+    else:  # is AST
+        src = unparse(ast)
+        lines = src.split('\n')
+        ast = parse_expr(src, parse_params)
+
+        fst_ = fst.FST(ast, lines, None, parse_params=parse_params)
+
+    return fst_
+
+
+def _coerce_to_MatchMapping(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, strip: bool = False
+) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    codea = code.a if isinstance(code, fst.FST) else code
+
+    if codea.__class__ is not Dict:  # only this can coerce to a MatchMapping
+        raise NodeError(f'expecting MatchMapping, got {codea.__class__.__name__}, could not coerce')
+
+    fst_ = _coerce_to_pattern(code, options, parse_params, strip=strip)
+
+    assert fst_.a.__class__ is MatchMapping  # Dict should only be able to coerce to this
+
+    return fst_
 
 
 def _coerce_to__Assign_targets(
@@ -4310,7 +4366,7 @@ def code_as__expr_arglikes(
     *,
     strip: bool = False,
     coerce: bool = False,
-    one: bool = False,  # HACK, if used more then standardize
+    one: bool = False,  # HACK, if we use more often then standardize
 ) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
     `ClassDef.bases`. The `Tuple` will be unparenthesized and the location will be the entire source. We use a `Tuple`
@@ -4336,6 +4392,36 @@ def code_as__expr_arglikes(
             fst_._trim_delimiters()
 
     return fst_
+
+
+def code_as__Dict_maybe_undelimited(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    strip: bool = False,
+    coerce: bool = False,
+) -> fst.FST:
+    """Convert `code` to a `Dict`, possibly undelimited. If undelimited and empty then the location is the whole source.
+    """
+
+    return _code_as(code, options, parse_params, parse__Dict_maybe_undelimited, Dict, strip,
+                    _coerce_to_Dict if coerce else False)
+
+
+def code_as__MatchMapping_maybe_undelimited(
+    code: Code,
+    options: Mapping[str, Any] = {},
+    parse_params: Mapping[str, Any] = {},
+    *,
+    strip: bool = False,
+    coerce: bool = False,
+) -> fst.FST:
+    """Convert `code` to a `MatchMapping`, possibly undelimited. If undelimited and empty then the location is the whole
+    source."""
+
+    return _code_as(code, options, parse_params, parse__MatchMapping_maybe_undelimited, MatchMapping, strip,
+                    _coerce_to_MatchMapping if coerce else False)
 
 
 # ......................................................................................................................

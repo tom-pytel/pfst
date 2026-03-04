@@ -1005,7 +1005,7 @@ def parse_invalid_src_data():
             else:
                 res = f'{res.__class__.__name__}  - TODO: FIX THIS!!! TODO: FIX THIS!!! TODO: FIX THIS!!! TODO: FIX THIS!!!'
 
-            data.append(f'{src!r:<12} {name:<32} {res}')
+            data.append(f'{src!r:<18} {name:<38} {res}')
 
     return data
 
@@ -1309,6 +1309,72 @@ class TestParse(unittest.TestCase):
         self.assertEqual((0, 0, 9, 0), f.loc)
 
         self.assertRaises(ParseError, px.parse__Compare_dangling_right, '1 +')
+
+    def test_parse__Dict_maybe_undelimited(self):
+        src = ''
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 0, 0), f.loc)
+
+        src = '\n\n   '
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 2, 3), f.loc)
+
+        src = 'a: b'
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+
+        src = ' a: b , '
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+
+        src = ' **\n b'
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 1, 2), f.loc)
+
+        src = '# test\n  a\n:\n   b  # line\n# end'
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 4, 5), f.loc)
+
+        src = '# test\n  a\n:\n   b  # line\n ,# end'
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 4, 7), f.loc)
+
+        src = '# test\n  **\n\n   b  # line\n ,# end'
+        f = FST(px.parse__Dict_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 4, 7), f.loc)
+
+    def test_parse__MatchMapping_maybe_undelimited(self):
+        src = ''
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 0, 0), f.loc)
+
+        src = '\n\n   '
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 2, 3), f.loc)
+
+        src = '1: b'
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+
+        src = ' 1: b , '
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+
+        src = ' **\n b'
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 1, 2), f.loc)
+
+        src = '# test\n  1\n:\n   b  # line\n# end'
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 4, 5), f.loc)
+
+        src = '# test\n  1\n:\n   b  # line\n ,# end'
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 4, 7), f.loc)
+
+        src = '# test\n  **\n\n   b  # line\n ,# end'
+        f = FST(px.parse__MatchMapping_maybe_undelimited(src), src.split('\n'), None)
+        self.assertEqual((0, 0, 4, 7), f.loc)
 
     def test_parse_by_ast_name_from_get_one_data(self):
         # make sure parsing by name of `AST` class is same as parsing by `AST` class
@@ -1833,6 +1899,24 @@ match a:
         self.assertIsInstance(code_as__match_cases('case 1: pass', coerce=True).cases[0].a, match_case)
         self.assertRaises(SyntaxError, code_as__match_cases, 'case = 1')
         self.assertRaises(SyntaxError, code_as__match_cases, 'case.b = 1')
+
+    def test_code_as__Dict_maybe_undelimited(self):
+        self.assertEqual((0, 0, 0, 4), code.code_as__Dict_maybe_undelimited('a: b').loc)
+        self.assertEqual((0, 0, 3, 0), code.code_as__Dict_maybe_undelimited('\n a:\n  b,\n').loc)
+        self.assertEqual((0, 0, 3, 0), code.code_as__Dict_maybe_undelimited('\n **\n  b,\n').loc)
+
+        self.assertEqual((0, 0, 0, 6), code.code_as__Dict_maybe_undelimited('{a: b}').loc)
+        self.assertEqual((0, 0, 3, 1), code.code_as__Dict_maybe_undelimited('{\n a:\n  b,\n}').loc)
+        self.assertEqual((0, 0, 3, 1), code.code_as__Dict_maybe_undelimited('{\n **\n  b,\n}').loc)
+
+    def test_code_as__MatchMapping_maybe_undelimited(self):
+        self.assertEqual((0, 0, 0, 4), code.code_as__MatchMapping_maybe_undelimited('1: b').loc)
+        self.assertEqual((0, 0, 3, 0), code.code_as__MatchMapping_maybe_undelimited('\n 1:\n  b,\n').loc)
+        self.assertEqual((0, 0, 3, 0), code.code_as__MatchMapping_maybe_undelimited('\n **\n  b,\n').loc)
+
+        self.assertEqual((0, 0, 0, 6), code.code_as__MatchMapping_maybe_undelimited('{1: b}').loc)
+        self.assertEqual((0, 0, 3, 1), code.code_as__MatchMapping_maybe_undelimited('{\n 1:\n  b,\n}').loc)
+        self.assertEqual((0, 0, 3, 1), code.code_as__MatchMapping_maybe_undelimited('{\n **\n  b,\n}').loc)
 
     def test_code_as_op(self):
         for code_as, opstr2cls in [
