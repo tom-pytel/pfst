@@ -27,6 +27,7 @@ _GLOBAL_OPTIONS_W_DEFAULTS = {
     'raw':           False,   # bool | 'auto'
     'trivia':        True,    # bool | 'all?' | 'block?' | 'none?' | int | (True | False | 'all?' | 'block?' | 'none?' | int, True | False | 'all?' | 'block?' | 'none?' | 'line?' | int)  - 'all', 'block' and 'none' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
     'coerce':        True,    # bool
+    'promote':       True,    # bool
     'elif_':         True,    # bool
     'pep8space':     True,    # bool | 1
     'docstr':        True,    # bool | 'strict'
@@ -144,6 +145,7 @@ _ALL_OPTION_CHECK_FUNCS = {
     'raw':          _check_opt_bool_or_auto,
     'trivia':       _check_opt_trivia,
     'coerce':       _check_opt_bool,
+    'promote':      _check_opt_bool,
     'elif_':        _check_opt_bool,
     'pep8space':    _check_opt_pep8space,
     'docstr':       _check_opt_docstr,
@@ -348,6 +350,7 @@ def get_options() -> dict[str, Any]:
     {'raw': False,
      'trivia': True,
      'coerce': True,
+     'promote': True,
      'elif_': True,
      'pep8space': True,
      'docstr': True,
@@ -488,6 +491,11 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
         `arguments` is expected.
         - `False`: Do not allow node type coercion, meant for strict type control.
         - `True`: Allow coercion between similar types. **DEFAULT**
+    - `promote': Whether to promote certain primitive fields to nodes on get or not. This only affects gets as puts to
+        the same fields will always accept either nodes or primitives.
+        - `False`: All primitive fields will return their primitive values, incluing slices of lists of strings.
+        - `True`: The following fields will be promoted to nodes when gotten: `Global/Nonlocal.names`,
+            `MatchSingleton.value`.
     - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
         - `False`: Always put as a standalone `If` statement on put.
         - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then

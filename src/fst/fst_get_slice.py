@@ -1883,19 +1883,26 @@ def _get_slice_Global_Nonlocal_names(
     field: str,
     cut: bool,
     options: Mapping[str, Any],
-) -> fst.FST:
+) -> fst.FST | list[str]:
     ast = self.a
     len_body = len(ast.names)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+    promote = fst.FST.get_option('promote', options)
 
     if not len_slice:
-        return fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                       ['()'], None, from_=self)
+        if not promote:
+            return []
+        else:
+            return fst.FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                           ['()'], None, from_=self)
 
+    if cut:
+        if len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
+            raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without norm_self=False')
 
-    if cut and len_slice == len_body and fst.FST._get_opt_eff_norm_self(options):
-        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without norm_self=False')
+    elif not promote:  # if not cutting then we can just return the primitive list slice
+        return ast.names[start : stop]
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1936,11 +1943,14 @@ def _get_slice_Global_Nonlocal_names(
     if cut:
         del ast.names[start : stop]
 
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, ret_elts[-1],
+    ret = get_slice_sep(self, start, stop, len_body, cut, ret_ast, ret_elts[-1],
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                          options, 'names', '', '', ',', False, 1)
 
-    fst_._fix_Tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
+    if promote:
+        ret._fix_Tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
+    else:
+        ret = [a.id for a in ret.elts]
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
@@ -1948,7 +1958,7 @@ def _get_slice_Global_Nonlocal_names(
 
         self._maybe_add_line_continuations()
 
-    return fst_
+    return ret
 
 
 def _get_slice_Boolop_values(

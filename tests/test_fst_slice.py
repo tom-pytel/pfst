@@ -2416,6 +2416,32 @@ if 1:
         self.assertEqual('((i for i in j),)', f.get_slice('args').src)
         self.assertEqual('call(i for i in j)', f.src)
 
+        # get list of primitive identifiers to Global and Nonlocal
+
+        self.assertEqual([], (f := FST('global a, b, c')).get_slice(1, 1, cut=False, promote=False))
+        self.assertEqual('global a, b, c', f.src)
+        f.verify()
+
+        self.assertEqual([], (f := FST('global a, b, c')).get_slice(1, 1, cut=True, promote=False))
+        self.assertEqual('global a, b, c', f.src)
+        f.verify()
+
+        self.assertEqual(['b'], (f := FST('global a, b, c')).get_slice(1, 2, cut=False, promote=False))
+        self.assertEqual('global a, b, c', f.src)
+        f.verify()
+
+        self.assertEqual(['b'], (f := FST('global a, b, c')).get_slice(1, 2, cut=True, promote=False))
+        self.assertEqual('global a, c', f.src)
+        f.verify()
+
+        self.assertEqual(['a', 'b', 'c'], (f := FST('global a, b, c')).get_slice(0, 3, cut=False, promote=False))
+        self.assertEqual('global a, b, c', f.src)
+        f.verify()
+
+        self.assertEqual(['a', 'b', 'c'], (f := FST('global a, b, c')).get_slice(0, 3, cut=True, promote=False))
+        self.assertEqual('global ', f.src)
+        # f.verify()
+
     def test_put_slice_special(self):
         if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
@@ -2828,6 +2854,26 @@ class cls:
         else:
             self.assertEqual('(a, *(not a), *(b or c))', FST('(a, b, c)').put_slice(FST('*not a, *b or c'), 1, 3, 'elts').src)
             assertRaises(SyntaxError('invalid expression (all types)'), FST('(a, b, c)').put_slice, '*not a, *b or c', 1, 3, 'elts')
+
+        # put list of primitive identifiers to Global and Nonlocal
+
+        self.assertEqual('global a, c', (f := FST('global a, b, c')).put_slice([], 1, 2).src)
+        f.verify()
+
+        self.assertEqual('global a, x, c', (f := FST('global a, b, c')).put_slice(['x'], 1, 2).src)
+        f.verify()
+
+        self.assertEqual('global a, x, y, z, c', (f := FST('global a, b, c')).put_slice(['x', 'y', 'z'], 1, 2).src)
+        f.verify()
+
+        self.assertEqual('nonlocal a, c', (f := FST('nonlocal a, b, c')).put_slice([], 1, 2).src)
+        f.verify()
+
+        self.assertEqual('nonlocal a, x, c', (f := FST('nonlocal a, b, c')).put_slice(['x'], 1, 2).src)
+        f.verify()
+
+        self.assertEqual('nonlocal a, x, y, z, c', (f := FST('nonlocal a, b, c')).put_slice(['x', 'y', 'z'], 1, 2).src)
+        f.verify()
 
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases

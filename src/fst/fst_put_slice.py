@@ -92,6 +92,7 @@ from .asttypes import (
 
 from .astutil import (
     re_identifier,
+    re_identifier_only,
     OPCLS2STR,
     bistr,
     is_valid_target,
@@ -1917,13 +1918,24 @@ def _put_slice_Global_Nonlocal_names(
 ) -> None:
     """In order to do this put since `Global` and `Nonlocal` do not have child `AST` nodes but just identifiers, we
     create a temporary container which does have `Name` elements for each name and operate on that. Afterwards we get
-    rid of that but the modified source identifiers remain."""
+    rid of that but the modified source identifiers remain.
+
+    This slice function can accept a list of primitive identifiers and will treat it as such for the put. If that list
+    contains just one string then it is treated as source already which will get it to the same place if it is just a
+    single identifier.
+    """
 
     ast = self.a
     body = ast.names
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    if isinstance(code, list):  # if list of string identifiers then convert to string for parse as list of identifiers
+        if not code:
+            code = None  # empty list is delete
+        elif len(code) > 1 and all(re_identifier_only.match(s) for s in code):
+            code = ', '.join(code)
 
     fst_ = _code_to_slice_expr(self, code, one, options)
 

@@ -30,6 +30,7 @@ To get a list of all global options defaults do.
 {'raw': False,
  'trivia': True,
  'coerce': True,
+ 'promote': True,
  'elif_': True,
  'pep8space': True,
  'docstr': True,
