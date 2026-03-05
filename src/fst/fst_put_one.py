@@ -1850,13 +1850,16 @@ def _put_one_identifier_required(
 
     _, idx = _validate_put(self, code, idx, field, child)
 
-    code = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_() so strip not needed
+    ident = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_()
     info = static.getinfo(self, static, idx, field)
 
-    self._put_src(code, *info.loc_prim, True)
-    set_field(self.a, code, field, idx)
+    self._put_src(ident, *info.loc_prim, True)
+    set_field(self.a, ident, field, idx)
 
-    return code
+    if isinstance(code, fst.FST):  # don't need to, but lets be consistent
+        code._unmake_fst_tree()
+
+    return ident
 
 
 def _put_one_identifier_optional(
@@ -1867,7 +1870,7 @@ def _put_one_identifier_optional(
     child: str | None,
     static: onestatic,
     options: Mapping[str, Any],
-) -> _PutOneCode:
+) -> str | None:
     """Put new, replace or delete an optional identifier."""
 
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
@@ -1887,22 +1890,25 @@ def _put_one_identifier_optional(
 
         return None
 
-    code = static.code_as(code, options, self.root.parse_params)
+    ident = static.code_as(code, options, self.root.parse_params)  # this will be an identifier code_as_()
 
     if child is not None:  # replace existing identifier
-        self._put_src(code, *info.loc_prim, True)
-        set_field(self.a, code, field, idx)
+        self._put_src(ident, *info.loc_prim, True)
+        set_field(self.a, ident, field, idx)
 
     else: # put new identifier
         if not loc:
             raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-        params_offset = self._put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
+        params_offset = self._put_src(info.prefix + ident + info.suffix, *loc, True, exclude=self)
 
         self._offset(*params_offset, self_=False)
-        set_field(self.a, code, field, idx)
+        set_field(self.a, ident, field, idx)
 
-    return code
+    if isinstance(code, fst.FST):  # don't need to, but lets be consistent
+        code._unmake_fst_tree()
+
+    return ident
 
 
 def _put_one_ExceptHandler_name(
@@ -2036,17 +2042,20 @@ def _put_one_MatchAs_name(
     assigned to a pattern."""
 
     if code is None:
-        code = '_'
+        ident = '_'
     else:
-        code = code_as_identifier(code, options, self.root.parse_params)
+        ident = code_as_identifier(code, options, self.root.parse_params)
 
-    if self.a.pattern and code == '_':
+    if self.a.pattern and ident == '_':
         raise NodeError("cannot change MatchAs with pattern into wildcard '_'")
 
-    ret = _put_one_identifier_required(self, code, idx, field, child, static, options)
+    ret = _put_one_identifier_required(self, ident, idx, field, child, static, options)
 
     if self.a.name == '_':
         self.a.name = None
+
+    if isinstance(code, fst.FST):  # don't need to, but lets be consistent
+        code._unmake_fst_tree()
 
     return ret
 

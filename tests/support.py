@@ -392,17 +392,20 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
             f, to = _make_fst(code, attr, to_attr)  # type: ignore
             opts = {**opts, 'to': to}  # type: ignore
 
-        if not src or options.get('_src', True):  # HACK to allow not putting as source text and only FST and AST, useful for testing things that only apply to AST/FST puts like coerce
+        if not src or options.get('_src', True):  # to allow not putting as source text and only FST and AST, useful for testing things that only apply to AST/FST puts like coerce
             src_code = src
         else:
             src_code = _make_fst(rest0)
 
-        try:
-            g = func(f, src_code, start, stop, field, **opts)
-        except Exception as exc:
-            rest.append(f'**{_san_exc(exc)!r}**')
+        for _ in ('once',):  # for easy jump to end, otherwise things get very pyramidal
+            try:
+                g = func(f, src_code, start, stop, field, **opts)
 
-        else:
+            except Exception as exc:
+                rest.append(f'**{_san_exc(exc)!r}**')
+
+                break  # GOTO END
+
             if is_raw:
                 f = g
             elif g is not f:
@@ -416,71 +419,84 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
             f_dump = f.root.dump(out='str')
             tail   = [f_dump]
 
-            if src is not None and not is_raw:
-                try:
-                    h = _make_fst(rest0)
-                except Exception as exc:
-                    rest.append(f'**{_san_exc(exc)!r}**')
+            if src is None or is_raw:
+                break  # GOTO END
 
+            try:
+                h = _make_fst(rest0)
+
+            except Exception as exc:
+                rest.append(f'**{_san_exc(exc)!r}**')
+
+                break  # GOTO END
+
+            # is_special_slice = isinstance(h.a, _slice)
+
+            a = copy_ast(h.a)
+            k = _make_fst(code, attr)
+
+            try:
+                g = func(k, h, start, stop, field, **opts)
+
+            except Exception as exc:
+                rest.append(f'**{_san_exc(exc)!r}**')
+
+                break  # GOTO END
+
+            if is_raw:
+                k = g
+            elif g is not k:
+                raise RuntimeError('FST returned from func FST put not identical to passed in')
+
+            _same = options.get('_same', True)
+
+            if k.root.src != f.root.src and _same:
+                exc = RuntimeError(f'FST put and src put src are not identical\n{k.root.src}\n...\n{f.root.src}')  # type: ignore
+
+                if is_raw:
+                    rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
                 else:
-                    # is_special_slice = isinstance(h.a, _slice)
+                    raise exc  # type: ignore
 
-                    a = copy_ast(h.a)
-                    k = _make_fst(code, attr)
+            if (k_dump := k.root.dump(out='str')) != f_dump and _same:  # type: ignore
+                exc = RuntimeError(f'FST put and src put dump are not identical\n{k_dump}\n...\n{f_dump}')  # type: ignore
 
-                    try:
-                        g = func(k, h, start, stop, field, **opts)
-                    except Exception as exc:
-                        rest.append(f'**{_san_exc(exc)!r}**')
+                if is_raw:
+                    rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
+                else:
+                    raise exc  # type: ignore
 
-                    else:
-                        if is_raw:
-                            k = g
-                        elif g is not k:
-                            raise RuntimeError('FST returned from func FST put not identical to passed in')
+            if not options.get('_ast', True):  # and not is_special_slice:
 
-                        _same = options.get('_same', True)
+                break  # GOTO END
 
-                        if k.root.src != f.root.src and _same:
-                            exc = RuntimeError(f'FST put and src put src are not identical\n{k.root.src}\n...\n{f.root.src}')  # type: ignore
+            l = _make_fst(code, attr)
 
-                            if is_raw:
-                                rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
-                            else:
-                                raise exc  # type: ignore
+            try:
+                g = func(l, a, start, stop, field, **opts)
 
-                        if (k_dump := k.root.dump(out='str')) != f_dump and _same:  # type: ignore
-                            exc = RuntimeError(f'FST put and src put dump are not identical\n{k_dump}\n...\n{f_dump}')  # type: ignore
+            except Exception as exc:
+                rest.append(f'**{_san_exc(exc)!r}**')
 
-                            if is_raw:
-                                rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
-                            else:
-                                raise exc  # type: ignore
+                break  # GOTO END
 
-                        if options.get('_ast', True):  # and not is_special_slice:
-                            l = _make_fst(code, attr)
+            if is_raw:
+                l = g
+            elif g is not l:
+                raise RuntimeError('FST returned from func AST put not identical to passed in')
 
-                            try:
-                                g = func(l, a, start, stop, field, **opts)
-                            except Exception as exc:
-                                rest.append(f'**{_san_exc(exc)!r}**')
+            if cmp_asts and not compare_asts(l.root.a, f.root.a) and _same:  # type: ignore
+                exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out="str")}\n...\n{f.root.dump(out="str")}')  # type: ignore  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
 
-                            else:
-                                if is_raw:
-                                    l = g
-                                elif g is not l:
-                                    raise RuntimeError('FST returned from func AST put not identical to passed in')
+                if is_raw:
+                    rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
+                else:
+                    raise exc  # type: ignore
 
-                                if cmp_asts and not compare_asts(l.root.a, f.root.a) and _same:  # type: ignore
-                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out="str")}\n...\n{f.root.dump(out="str")}')  # type: ignore  # XXX this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
+            if l.root.src != f.root.src:
+                rest.append(l.root.src)
 
-                                    if is_raw:
-                                        rest.append(f'**{_san_exc(exc)!r}**')  # type: ignore
-                                    else:
-                                        raise exc  # type: ignore
-
-                                if l.root.src != f.root.src:
-                                    rest.append(l.root.src)
+        # END:
 
         return rest + tail if tail else rest
 
