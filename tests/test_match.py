@@ -2615,6 +2615,49 @@ MNOT(MTAG('no'))
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
+    def test_sub_args_as(self):
+        self.assertEqual('def new(pre, /, a, b, c, *, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+            MFunctionDef(args=M(a=...)),
+            'def new(pre, /, __FST_a, *, post): pass',
+        ).src)
+
+        self.assertEqual('def new(pre, a, /, b, *, c, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+            MFunctionDef(args=M(a=...)),
+            'def new(pre, /, __FST_a, *, post): pass',
+            args_as=None,
+        ).src)
+
+        with FST.options(args_as=None):  # doesn't work globally, must be explicit
+            self.assertEqual('def new(pre, /, a, b, c, *, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+                MFunctionDef(args=M(a=...)),
+                'def new(pre, /, __FST_a, *, post): pass',
+            ).src)
+
+        with FST.options(args_as='pos'):  # non-None conversions do work globally
+            self.assertEqual('def new(pre, a, b, c, /, *, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+                MFunctionDef(args=M(a=...)),
+                'def new(pre, /, __FST_a, *, post): pass',
+            ).src)
+
+        with FST.options(args_as='arg'):  # non-None conversions do work globally
+            self.assertEqual('def new(pre, /, a, b, c, *, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+                MFunctionDef(args=M(a=...)),
+                'def new(pre, /, __FST_a, *, post): pass',
+            ).src)
+
+        with FST.options(args_as='kw'):  # non-None conversions do work globally
+            self.assertEqual('def new(pre, /, *, a, b, c, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+                MFunctionDef(args=M(a=...)),
+                'def new(pre, /, __FST_a, *, post): pass',
+            ).src)
+
+        with FST.options(args_as='kw'):  # non-None conversions do work globally
+            self.assertEqual('def new(pre, a, /, b, *, c, post): pass', FST('def old(a, /, b, *, c): pass').sub(
+                MFunctionDef(args=M(a=...)),
+                'def new(pre, /, __FST_a, *, post): pass',
+                args_as=None,
+            ).src)
+
     def test_sub_coverage(self):
         assertRaises(MatchError('expected FST or FSTView, got NoneType'), FST('{**a}').sub, MDict(keys=[MQSTAR(t=[...])]), '__FST_t')
         assertRaises(MatchError('expected FSTMatch in list, got str'), FST('[a]').sub, MList(elts=[MQSTAR(..., t=['blah'])]), '__FST_t')

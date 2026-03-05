@@ -6420,6 +6420,10 @@ def sub(
     copy_options = options if copy_options is None else check_options(copy_options, mark_checked=True)
     repl_options = options if repl_options is None else check_options(repl_options, mark_checked=True)
 
+    if (repl_args_as := repl_options.get('args_as', _SENTINEL)) is _SENTINEL:  # so that args_as=None can override argument type coercion but also a non-None global can be used if args_as not passed
+        if (args_as := fst.FST.get_option('args_as')) is not None:
+            repl_args_as = args_as
+
     repl = code_as_all(repl, parse_params=self.root.parse_params)
     paths = []  # [(tag, path, (field, idx | None) | None), ...]  - paths to repl template substitution slots
     str_tags = []  # [(tag, (ln, col, end_col), True), ...]  - locations of substitution slots in strings (and bytes)
@@ -6549,7 +6553,7 @@ def sub(
                             virt_idx = allargs.index(repl_slot.a)
                             one = False
 
-                            if repl_options_.get('args_as', _SENTINEL) is _SENTINEL:  # can pass args_as=None to disable the following behavior
+                            if repl_args_as is _SENTINEL:  # can pass args_as=None to disable the following behavior
                                 if len(allargs) == 1:
                                     if field in _NODE_ARGUMENTS_ARGS_LIST_ONLY_FIELDS:  # if replacement slot is a posonly or kwonly and user did not explicitly specify an args_as transformation for putting to repl template then do it ourselves here as the user clearly intended for these to be this type of args :)
                                         repl_options_ = dict(repl_options_, args_as=

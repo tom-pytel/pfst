@@ -553,9 +553,10 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
         to insert.
         - `'left'`: Delete preceding operator on left side of slice or insert before preceding operator. **DEFAULT**
         - `'right'`: Delete trailing operator on right side of slice or insert after preceding operator.
-    - `args_as`: Conversion for argument types on `argument` node slice operations. This is mostly meant for per-call
-        use but is a global option in order to allow `with options(args_as=?): ...`. When used on a slice get it
-        converts the gotten slice. When used on a slice put, it converts the slice being put before the attempted put.
+    - `args_as`: Conversion for argument types on `argument` node slice and substitute operations. This is mostly meant
+        for per-call use but is a global option in order to allow `with options(args_as=?): ...`. When used on a slice
+        get it converts the gotten slice. When used on a slice put, it converts the slice being put before the attempted
+        put.
         - `'pos'`: Convert all arguments to `posonlyargs` if possible, if not then error. If `vararg` or `kwarg` present
             then will error.
         - `'arg'`: Convert all arguments to `args` if possible, if not then error. A `vararg` is allowed but if present
@@ -575,6 +576,7 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
         - `'kw_maybe'`: Attempt to convert all arguments to `kwonlyargs`. If `vararg` is present the `posonlyargs` and
             `args` are not converted, but `posonlyargs` will be converted in this case to `args`. `kwarg` is left in
             place.
+        - `None`: No conversion. Must be passed explicitly to `sub()` in order to disable automatic conversion.
 
     **Note:** `pars` behavior:
     ```
