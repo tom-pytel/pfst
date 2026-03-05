@@ -1906,7 +1906,8 @@ def _coerce_to__aliases_common(
 ) -> fst.FST | None:
     """Common to `_aliases`, `Import_names` and `ImportFrom_names`."""
 
-    codea = getattr(code, 'a', None)
+    codea = code.a if isinstance(code, fst.FST) else None
+
     fst_ = _coerce_to_seq(code, options, parse_params, parse, _aliases)
 
     if fst_ is None:  # sequence as sequence?
@@ -2043,7 +2044,7 @@ def _coerce_to_match_case(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    codea = getattr(code, 'a', code)
+    codea = code.a if isinstance(code, fst.FST) else code
 
     raise NodeError(f'expecting match_case, got {codea.__class__.__name__}, could not coerce')  # if got here then is not match_case and we do not coerce down from _match_cases, so automatically fail
 
@@ -2221,7 +2222,8 @@ def _coerce_to__Assign_targets(
     expect a prefix like `@` or `if` but we want to allow expressions without the prefixes as well.
     """
 
-    codea = getattr(code, 'a', None)
+    codea = code.a if isinstance(code, fst.FST) else None
+
     elts = _coerce_to_seq(code, options, parse_params, None, _Assign_targets, True, True)
 
     if elts is not None:  # sequence as sequence?
@@ -2725,7 +2727,7 @@ def _coerce_to_arguments(
 ) -> fst.FST | None:
     """See `_coerce_to__Assign_targets()`. Common to `arguments`, both normal and lambda."""
 
-    codea = getattr(code, 'a', code)
+    codea = code.a if isinstance(code, fst.FST) else code
     is_lambda = parse is parse_arguments_lambda
     expecting = 'lambda arguments' if is_lambda else 'arguments'
 
@@ -2984,7 +2986,8 @@ def _coerce_to__type_params(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    codea = getattr(code, 'a', None)
+    codea = code.a if isinstance(code, fst.FST) else None
+
     fst_ = _coerce_to_seq(code, options, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
 
     if fst_ is not None:  # sequence as sequence?
@@ -3615,7 +3618,9 @@ def code_as_expr_slice(
 ) -> fst.FST:
     """Convert `code` to a any `expr` `FST` that can go into a `Subscript.slice` if possible."""
 
-    if getattr(code, 'a', code).__class__ is Starred:  # Starred cannot be a direct slice
+    codea = code.a if isinstance(code, fst.FST) else code
+
+    if codea.__class__ is Starred:  # Starred cannot be a direct slice
         raise NodeError('expecting expression (slice), got Starred, must be in sequence')
 
     return _code_as_expr(code, options, parse_params, parse_expr_slice, True, True, strip, coerce)

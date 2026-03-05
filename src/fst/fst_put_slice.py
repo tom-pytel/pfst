@@ -886,7 +886,7 @@ def _code_to_slice__special1(
 
         return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
-    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea = code.a if isinstance(code, fst.FST) else code  # get the actual AST from code if is FST or AST
     codea_cls = codea.__class__
 
     if codea_cls is ast_cls:
@@ -923,7 +923,7 @@ def _code_to_slice__special2(
 
         return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
-    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea = code.a if isinstance(code, fst.FST) else code  # get the actual AST from code if is FST or AST
     codea_cls = codea.__class__
 
     if codea_cls is ast_cls:  # if is already the wanted class and has a single element then don't convert to singleton sequence, makes more sense to use it as-is for these very special slices
@@ -980,7 +980,7 @@ def _code_to_slice__arglikes(
 
         return fst_ if fst_.a.arglikes else None  # put empty sequence is same as delete
 
-    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea = code.a if isinstance(code, fst.FST) else code  # get the actual AST from code if is FST or AST
     codea_cls = codea.__class__
 
     if codea_cls in ASTS_LEAF_EXPR:  # if putting expr as one then should be passed through as such
@@ -1122,7 +1122,7 @@ def _code_to_slice__withitems(
 
         return fst_ if fst_.a.items else None  # put empty sequence is same as delete
 
-    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea = code.a if isinstance(code, fst.FST) else code  # get the actual AST from code if is FST or AST
     codea_cls = codea.__class__
 
     if codea_cls in ASTS_LEAF_EXPR:  # if putting expr as one then should be passed through as such
@@ -1228,7 +1228,7 @@ def _code_to_slice__expr_arglikes(
         return None
 
     coerce = fst.FST.get_option('coerce', options)
-    codea = getattr(code, 'a', code)  # get the actual AST from code if is FST or AST
+    codea = code.a if isinstance(code, fst.FST) else code  # get the actual AST from code if is FST or AST
     codea_cls = codea.__class__
 
     if not one:
