@@ -4,6 +4,7 @@
 
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
 - `op` can be set as a global option for convenience
+- single-item dereferenced views keep track of this status to display single index and `copy()` single node
 
 ### Changed
 

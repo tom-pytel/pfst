@@ -242,11 +242,36 @@ class FSTView:
 
         return self._deref_one(stop - 1).f.pars().end_col
 
-    bloc = loc
-    bln = ln
-    bcol = col
-    bend_ln = end_ln
-    bend_col = end_col
+    @property
+    def bloc(self) -> fstloc | None:
+        """Zero based character indexed location of view (including parentheses and / or decorators where present). This
+        is identical to `.loc` for views."""
+
+        return self.loc
+
+    @property
+    def bln(self) -> int | None:
+        """Line number of the first line of this view (0 based). This is identical to `.ln` for views."""
+
+        return self.ln
+
+    @property
+    def bcol(self) -> int | None:  # char index
+        """CHARACTER index of the start of this view (0 based). This is identical to `.col` for views."""
+
+        return self.col
+
+    @property
+    def bend_ln(self) -> int | None:  # 0 based
+        """Line number of the LAST LINE of this view (0 based). This is identical to `.end_ln` for views."""
+
+        return self.end_ln
+
+    @property
+    def bend_col(self) -> int | None:  # char index
+        """CHARACTER index one past the end of this view (0 based). This is identical to `.end_col` for views."""
+
+        return self.end_col
 
     def pars(self, *, shared: bool | None = True) -> fstlocn | None:
         """Convenience function just returns the `.loc` of this view, as it will already have parentheses included.
@@ -1013,17 +1038,8 @@ class FSTView_Dict(FSTView):
 
         return self.base.a.values[stop - 1].f.pars().end_col
 
-    bloc = loc
-    bln = ln
-    bcol = col
-    bend_ln = end_ln
-    bend_col = end_col
-
     def _len_field(self) -> int:
         return len(self.base.a.keys)
-
-    # def _deref_one(self, idx: int) -> AST | str:
-    #     return FSTView_Dict(self.base, '_all', idx, idx + 1)
 
 
 class FSTView_MatchMapping(FSTView):
@@ -1185,12 +1201,6 @@ class FSTView_MatchMapping(FSTView):
 
         return patterns[stop - 1].f.pars().end_col
 
-    bloc = loc
-    bln = ln
-    bcol = col
-    bend_ln = end_ln
-    bend_col = end_col
-
     @property
     def has_rest(self) -> bool:
         """Whether this slice contains the `rest` element or not."""
@@ -1201,9 +1211,6 @@ class FSTView_MatchMapping(FSTView):
 
     def _len_field(self) -> int:
         return len((a := self.base.a).keys) + bool(a.rest)
-
-    # def _deref_one(self, idx: int) -> AST | str:
-    #     return FSTView_MatchMapping(self.base, '_all', idx, idx + 1)
 
 
 class FSTView_Compare(FSTView):
@@ -1396,17 +1403,8 @@ class FSTView_arguments(FSTView):
 
         return self.base._cached_allargs()[stop - 1].f._loc_argument(True, False).end_col
 
-    bloc = loc
-    bln = ln
-    bcol = col
-    bend_ln = end_ln
-    bend_col = end_col
-
     def _len_field(self) -> int:
         return len(self.base._cached_allargs())
-
-    # def _deref_one(self, idx: int) -> AST | str:
-    #     return FSTView_arguments(self.base, '_all', idx, idx + 1)
 
 
 class FSTView__body(FSTView):
@@ -1568,15 +1566,6 @@ class FSTView_Global_Nonlocal(FSTView):
 
         return self.base._loc_Global_Nonlocal_names(stop - 1).end_col
 
-    bloc = loc
-    bln = ln
-    bcol = col
-    bend_ln = end_ln
-    bend_col = end_col
-
-    # def _deref_one(self, idx: int) -> AST | str:
-    #     return FSTView_Global_Nonlocal(self.base, 'names', idx, idx + 1)
-
 
 class FSTView_dummy(FSTView):
     """Dummy view for nonexistent fields (type_params on py < 3.12). @private"""
@@ -1608,12 +1597,6 @@ class FSTView_dummy(FSTView):
     @property
     def end_col(self) -> int | None:  # char index
         return None
-
-    bloc = loc
-    bln = ln
-    bcol = col
-    bend_ln = end_ln
-    bend_col = end_col
 
     def _len_field(self) -> int:
         return 0
