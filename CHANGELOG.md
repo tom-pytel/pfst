@@ -3,6 +3,7 @@
 ### Added
 
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
+- `op` can be set as a global option for convenience
 
 ### Changed
 

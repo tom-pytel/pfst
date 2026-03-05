@@ -1678,10 +1678,6 @@ def new(*, a, b, c): pass
 
 If you want to disable this behavior, you can pass `args_as=None`.
 
-**IMPORTANT!** To disable, the `args_as=None` **MUST** be passed as a keyword option to the `sub()` function.
-`args_as=None` just in the global options will not disable the behavior. All other possible values of `args_as` will
-have their normal effect if in global defaults.
-
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),
 ...     'def new(pre, /, __FST_a, *, post): pass',
@@ -1689,10 +1685,14 @@ have their normal effect if in global defaults.
 ... ).src)
 def new(pre, a, /, b, *, c, post): pass
 
-This however is more prone to failures as the resulting arguments must still conform to the standard argument ordering
-of position-only, then normal, then keyword-only. If you try to do this replacement with `args_as=None` without the
-explicit posonly and kwonly markers in the template you will get an error as the source matched arguments have those and
-the ordering rules would be violated.
+**IMPORTANT!** To disable, the `args_as=None` **MUST** be passed as a keyword option to the `sub()` function.
+`args_as=None` just in the global options will not disable the behavior. All other possible values of `args_as` will
+have their normal effect if in global defaults.
+
+Disabling automatic coversion however is more prone to failures as the resulting arguments must still conform to the
+standard argument ordering of position-only, then normal, then keyword-only. If you try to do this replacement with
+`args_as=None` without the explicit posonly and kwonly markers in the template you will get an error as the source
+matched arguments have those and the ordering rules would be violated.
 
 >>> print(FST('def old(a, /, b, *, c): pass').sub(
 ...     MFunctionDef(args=M(a=...)),

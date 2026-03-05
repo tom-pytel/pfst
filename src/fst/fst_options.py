@@ -38,10 +38,11 @@ _GLOBAL_OPTIONS_W_DEFAULTS = {
     'norm_get':      None,    # bool | None | any possible `?_norm` value like 'star' or 'call'
     'set_norm':      'star',  # 'star' | 'call'
     'op_side':       'left',  # 'left' | 'right'
+    'op':            None,    # FST | cmpop | type[cmpop] | str | list[str] | None
     'args_as':       None,    # 'pos' | 'arg' | 'kw' | 'arg_only' | 'kw_only' | 'pos_maybe' | 'arg_maybe' | 'kw_maybe' | None
 }  # fmt: skip
 
-_DYN_OPTIONS = {'op', 'to', 'ins_ln'}
+_DYN_OPTIONS = {'to', 'ins_ln'}
 _ALL_OPTIONS = {*_GLOBAL_OPTIONS_W_DEFAULTS, *_DYN_OPTIONS}  # including dynamic non-global options
 _ALL_OPT_OBJ_NORM_VALUES = frozenset(['star', 'call'])
 
@@ -125,7 +126,7 @@ def _check_opt_args_as(option: str, value: object) -> str | None:
     )
 
 def _check_opt_op(option: str, value: object) -> str | None:
-    if (isinstance(value, (str, list))  # source
+    if (isinstance(value, (NoneType, str, list))  # source
         or (value.__class__ is type and value in ASTS_LEAF_CMPOP)  # cmpop AST type
         or (value.a if isinstance(value, fst.FST) else value).__class__ in ASTS_LEAF_CMPOP  # FST() or AST() cmpop
     ):
@@ -358,6 +359,7 @@ def get_options() -> dict[str, Any]:
      'norm_get': None,
      'set_norm': 'star',
      'op_side': 'left',
+     'op': None,
      'args_as': None}
     """
 
@@ -542,7 +544,7 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
     - `set_norm`: The alternate representation for an empty `Set` normalization by `norm`.
         - `'star'`: Starred sequence `{*()}` returned or used for empty `self`. **DEFAULT**
         - `'call'`: `set()` call returned and used for empty `self`.
-    - `op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side
+    - `op_side`: When doing slice operations on a `BoolOp` or a `Compare`, it may be necessary to specify which side
         operator is to be deleted or inserted before or after. This can take the values of `'left'` or `'right'` and
         specifies which side operator to delete for delete operations. For insert operations this specifies whether
         to insert before an operator `'left'` or operand `'right'`, roughly translating to which side operator is
@@ -553,10 +555,14 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
         to insert.
         - `'left'`: Delete preceding operator on left side of slice or insert before preceding operator. **DEFAULT**
         - `'right'`: Delete trailing operator on right side of slice or insert after preceding operator.
-    - `args_as`: Conversion for argument types on `argument` node slice and substitute operations. This is mostly meant
-        for per-call use but is a global option in order to allow `with options(args_as=?): ...`. When used on a slice
+    - `op`: When doing slice operations on a `Compare`, it may be necessary to specify an extra operator to insert on
+        the `op_side` side of an operation. This can be a source string, a `cmpop` instance, a direct `cmpop` type or
+        an `FST` `cmpop` instance. If it is an `FST` it is never consumed. This option is mostly meant for per-call use
+        but is a global option for convenience in order to allow `with options(op=?): ...`.
+    - `args_as`: Conversion for argument types on `argument` node slice and substitute operations. When used on a slice
         get it converts the gotten slice. When used on a slice put, it converts the slice being put before the attempted
-        put.
+        put. This option is mostly meant for per-call use but is a global option for convenience in order to allow
+        `with options(args_as=?): ...`.
         - `'pos'`: Convert all arguments to `posonlyargs` if possible, if not then error. If `vararg` or `kwarg` present
             then will error.
         - `'arg'`: Convert all arguments to `args` if possible, if not then error. A `vararg` is allowed but if present
@@ -576,7 +582,7 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
         - `'kw_maybe'`: Attempt to convert all arguments to `kwonlyargs`. If `vararg` is present the `posonlyargs` and
             `args` are not converted, but `posonlyargs` will be converted in this case to `args`. `kwarg` is left in
             place.
-        - `None`: No conversion. Must be passed explicitly to `sub()` in order to disable automatic conversion.
+        - `None`: No conversion. Must be passed explicitly to `sub()` in order to disable automatic conversion there.
 
     **Note:** `pars` behavior:
     ```

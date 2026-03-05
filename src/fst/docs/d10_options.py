@@ -41,6 +41,7 @@ To get a list of all global options defaults do.
  'norm_get': None,
  'set_norm': 'star',
  'op_side': 'left',
+ 'op': None,
  'args_as': None}
 
 For example the option `pars` defaults to `'auto'` which will (among other things) strip parentheses when copying from a

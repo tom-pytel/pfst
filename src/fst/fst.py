@@ -3656,15 +3656,21 @@ class FST:
         return self  # ret
 
     def strip(self: FST) -> FST:  # -> self
-        """Remove any leading or trailing junk which is not part of the location or parenthesized location of `self`.
+        r"""Remove any leading or trailing junk which is not part of the location or parenthesized location of `self`.
 
         **Returns:**
         - `self`
 
         **Examples:**
 
-        TODO
+        >>> print(FST('# pre\nassign = value  # line\n# post', 'stmt').strip().src)
+        assign = value
 
+        >>> print(FST('# pre\nexpr  # line\n# post', 'expr').strip().src)
+        expr
+
+        >>> print(FST('# pre\nunpard, Tuple,  # line\n# post', 'Tuple').strip().src)
+        unpard, Tuple,
         """
 
         if self.parent:  # not self.is_root:
