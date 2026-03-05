@@ -571,10 +571,10 @@ Can match previously matched multinode items from `Dict`, `MatchMapping` or `arg
 
 >>> ppmatch(MDict(_all=[M(s=...), MQSTAR, MTAG(e='s')]).match(FST('{1: a, 1: a}')))
 <FSTMatch <Dict ROOT 0,0..0,12>
-  {'s': <<Dict ROOT 0,0..0,12>._all[:1]>, 'e': <<Dict ROOT 0,0..0,12>._all[1:2]>}>
+  {'s': <<Dict ROOT 0,0..0,12>._all[0]>, 'e': <<Dict ROOT 0,0..0,12>._all[1]>}>
 
 >>> MDict(_all=[M(start=...), ..., MTAG('start')]).match(FST('{**b, 1: a, **b}'))
-<FSTMatch <Dict ROOT 0,0..0,16> {'start': <<Dict ROOT 0,0..0,16>._all[:1]>}>
+<FSTMatch <Dict ROOT 0,0..0,16> {'start': <<Dict ROOT 0,0..0,16>._all[0]>}>
 
 
 ## `MQ()` quantifier pattern
@@ -778,7 +778,7 @@ The second case of virtual fields are those where the individual elements do not
 of nodes, and when dereferenced give another view instead of a node, a `Dict` for instance.
 
 >>> FST('{a: b, c: d, **b}')._all[1]
-<<Dict ROOT 0,0..0,17>._all[1:2]>
+<<Dict ROOT 0,0..0,17>._all[1]>
 
 You can match against these as a sequence as well by using the type of node that these resolve to when copied, with a
 single element in each of the list fields that need to be matched.
@@ -800,13 +800,13 @@ You can use a wildcard `...` in place of the list field to indicate match any si
 patterns like with any other list field match.
 
 >>> ppmatch(MDict(_all=[M(t=MDict(..., ['b']))]).match(FST('{a: b}')))
-<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <Dict ROOT 0,0..0,6> {'t': <<Dict ROOT 0,0..0,6>._all[0]>}>
 
 >>> ppmatch(MDict(_all=[MQSTAR(t=MDict(..., ['b']))]).match(FST('{a: b, **b}')))
 <FSTMatch <Dict ROOT 0,0..0,11>
   't': [
-    <FSTMatch <<Dict ROOT 0,0..0,11>._all[:1]>>,
-    <FSTMatch <<Dict ROOT 0,0..0,11>._all[1:2]>>,
+    <FSTMatch <<Dict ROOT 0,0..0,11>._all[0]>>,
+    <FSTMatch <<Dict ROOT 0,0..0,11>._all[1]>>,
   ],
 }>
 
@@ -828,10 +828,10 @@ The same pattern usage applies to multinode virtual field matching as to normal 
 
 >>> ppmatch(pat.match(FST('{a: b, a: b, a: b}')))
 <FSTMatch <Dict ROOT 0,0..0,18>
-  't': <<Dict ROOT 0,0..0,18>._all[:1]>,
+  't': <<Dict ROOT 0,0..0,18>._all[0]>,
   'u': [
-    <FSTMatch <<Dict ROOT 0,0..0,18>._all[1:2]>>,
-    <FSTMatch <<Dict ROOT 0,0..0,18>._all[2:3]>>,
+    <FSTMatch <<Dict ROOT 0,0..0,18>._all[1]>>,
+    <FSTMatch <<Dict ROOT 0,0..0,18>._all[2]>>,
   ],
 }>
 
@@ -849,9 +849,9 @@ And subsequences.
 >>> ppmatch(pat.match(FST('{1:2, 3:b, 4:5, a:b, **b, 8:9}')))
 <FSTMatch <Dict ROOT 0,0..0,30>
   't': [
-    <FSTMatch [<<Dict ROOT 0,0..0,30>._all[1:2]>, <<Dict ROOT 0,0..0,30>._all[2:3]>]>,
-    <FSTMatch [<<Dict ROOT 0,0..0,30>._all[3:4]>]>,
-    <FSTMatch [<<Dict ROOT 0,0..0,30>._all[4:5]>, <<Dict ROOT 0,0..0,30>._all[5:6]>]>,
+    <FSTMatch [<<Dict ROOT 0,0..0,30>._all[1]>, <<Dict ROOT 0,0..0,30>._all[2]>]>,
+    <FSTMatch [<<Dict ROOT 0,0..0,30>._all[3]>]>,
+    <FSTMatch [<<Dict ROOT 0,0..0,30>._all[4]>, <<Dict ROOT 0,0..0,30>._all[5]>]>,
   ],
 }>
 
@@ -877,7 +877,7 @@ they must match, no `kw_defaults` with a `posonlyarg`).
 >>> pat_pos = Marguments(_all=[M(t=Marguments(posonlyargs=['a'], defaults=['1']))])
 
 >>> ppmatch(pat_pos.match(FST('a=1, /', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[0]>}>
 
 >>> ppmatch(pat_pos.match(FST('a=1', 'arguments')))
 None
@@ -897,20 +897,20 @@ None
 None
 
 >>> ppmatch(pat_kw.match(FST('*, a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[0]>}>
 
 However, by default the normal `args` argument type matches all other types.
 
 >>> pat_arg = Marguments(_all=[M(t=Marguments(args=['a'], defaults=['1']))])
 
 >>> ppmatch(pat_arg.match(FST('a=1, /', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[0]>}>
 
 >>> ppmatch(pat_arg.match(FST('a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[0]>}>
 
 >>> ppmatch(pat_arg.match(FST('*, a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[0]>}>
 
 This is in order to allow ignoring argument type and just matching the argument contents. This can be turned off with
 the special `_strict` parameter to the `Marguments` pattern.
@@ -922,7 +922,7 @@ the special `_strict` parameter to the `Marguments` pattern.
 None
 
 >>> ppmatch(pat_arg_strict.match(FST('a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[0]>}>
 
 >>> ppmatch(pat_arg_strict.match(FST('*, a=1', 'arguments')))
 None
@@ -934,13 +934,13 @@ keyword-only.
 ...     _all=[M(t=Marguments(posonlyargs=['a'], defaults=['1'], _strict=None))])
 
 >>> ppmatch(pat_pos_nonstrict.match(FST('a=1, /', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[0]>}>
 
 >>> ppmatch(pat_pos_nonstrict.match(FST('a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[0]>}>
 
 >>> ppmatch(pat_pos_nonstrict.match(FST('*, a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,6> {'t': <<arguments ROOT 0,0..0,6>._all[0]>}>
 
 The `_strict` parameter only applies to argument type, not to the presence or absence of a default value. Which may be
 required.
@@ -948,7 +948,7 @@ required.
 >>> pat_def_required = Marguments(_all=[M(t=Marguments(args=['a'], defaults=['1']))])
 
 >>> ppmatch(pat_def_required.match(FST('a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[0]>}>
 
 >>> ppmatch(pat_def_required.match(FST('a', 'arguments')))
 None
@@ -961,17 +961,17 @@ Or a default may be specifically excluded by passing an empty list.
 None
 
 >>> ppmatch(pat_def_excluded.match(FST('a', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[0]>}>
 
 Or it may be optional by setting the appropriate defaults field to the `...` wildcard.
 
 >>> pat_def_optional = Marguments(_all=[M(t=Marguments(args=['a'], defaults=...))])
 
 >>> ppmatch(pat_def_optional.match(FST('a=1', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,3> {'t': <<arguments ROOT 0,0..0,3>._all[0]>}>
 
 >>> ppmatch(pat_def_optional.match(FST('a', 'arguments')))
-<FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[:1]>}>
+<FSTMatch <arguments ROOT 0,0..0,1> {'t': <<arguments ROOT 0,0..0,1>._all[0]>}>
 
 Arguments can also be backreferenced, in which case the presence or absence of the default must match and the matching
 is done as if `_strict=None`. Meaning a previously matched positional or keyword-only argument will match **ANY OTHER
@@ -985,10 +985,10 @@ used here for demonstration purposes in place of a more complicated comparison a
 
 >>> ppmatch(pat.match(FST('a=1, /, a=1, *, a=1')))
 <FSTMatch <arguments ROOT 0,0..0,19>
-  't': <<arguments ROOT 0,0..0,19>._all[:1]>,
+  't': <<arguments ROOT 0,0..0,19>._all[0]>,
   'u': [
-    <FSTMatch <<arguments ROOT 0,0..0,19>._all[1:2]>>,
-    <FSTMatch <<arguments ROOT 0,0..0,19>._all[2:3]>>,
+    <FSTMatch <<arguments ROOT 0,0..0,19>._all[1]>>,
+    <FSTMatch <<arguments ROOT 0,0..0,19>._all[2]>>,
   ],
 }>
 

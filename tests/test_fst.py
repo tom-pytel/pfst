@@ -8264,9 +8264,6 @@ def h(k): pass            # ln 16
             self.assertEqual(fv[:1].loc[:2], loc[:2])  # type: ignore
             self.assertEqual(fv[-1:].loc[2:], loc[2:])  # type: ignore
 
-            if isinstance(fv, FSTView_Global_Nonlocal):
-                return
-
             self.assertEqual(fv[0].pars()[:2], loc[:2])  # type: ignore
             self.assertEqual(fv[-1].pars()[2:], loc[2:])  # type: ignore
 
@@ -8284,6 +8281,8 @@ def h(k): pass            # ln 16
         test(FST('b=\n2,\n*c:\nint', arguments)._all)
         test(FST('*c:\nint,\nd=\n3', arguments)._all)
         test(FST('d=\n3,\n**e:\nint', arguments)._all)
+        test(FST('a=\n1,\nb=\n2,\n/', arguments)._all)
+        test(FST('*,\na,\nb2', arguments)._all)
 
         test(FST('@deco\nclass cls: pass\nif 1:\n  pass  # tail').body)
         test(FST('class cls:\n  """docstr"""\n  @deco\n  def f(): pass\n  if 1:\n    pass  # tail').body)
@@ -9700,7 +9699,8 @@ if 1:
         self.assertEqual('{a: b}', f._all[:1].copy().src)
         self.assertEqual('{e: f}', f._all[-1:].copy().src)
         self.assertEqual('{}', f._all[0:0].copy().src)
-        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1:2]>', str(f._all[1]))
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1]>', str(f._all[1]))
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1:2]>', str(f._all[1:2]))
 
         self.assertRaises(SyntaxError, f._all.__setitem__, 1, 'x')
 
@@ -9725,6 +9725,7 @@ if 1:
         self.assertEqual('{2: b, **c}', f._all[-2:].copy().src)
         self.assertEqual('{}', f._all[0:0].copy().src)
 
+        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[1]>', str(f._all[1]))
         self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[1:2]>', str(f._all[1:2]))
         # self.assertRaises(ValueError, lambda: f._all[0])
         self.assertRaises(SyntaxError, f._all.__setitem__, 1, 'x')

@@ -152,15 +152,15 @@ MAST(elts=[Call(func=Name(id='j'), args=[...], keywords=[])], ctx=MOR(Load, Stor
 <FSTMatch <Dict ROOT 0,0..0,6>>
 
 >>> MDict(_all=[MQSTAR(t=MRE('a: .'))]).match(FST('{a: b, a: z}'))
-<FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
+<FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[0]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1]>>]}>
 
 >>> l = _['t']
 
 >>> print(l[0].matched)
-<<Dict ROOT 0,0..0,12>._all[:1]>
+<<Dict ROOT 0,0..0,12>._all[0]>
 
 >>> print(l[1].matched)
-<<Dict ROOT 0,0..0,12>._all[1:2]>
+<<Dict ROOT 0,0..0,12>._all[1]>
 
 >>> FST('a:int=1, /, b:int=2, *, c:int=3')._all[0].copy().src
 'a:int=1, /'
@@ -178,7 +178,7 @@ fstlocn(0, 4, 0, 18, n=0)
 fstlocn(0, 4, 0, 18, n=0)
 
 >>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int')._all[0]
-<<arguments ROOT 0,0..0,45>._all[:1]>
+<<arguments ROOT 0,0..0,45>._all[0]>
 
 >>> FST('a:int=1, /, b:int=1, *c:int, d:int=1, **e:int').get(0, '_all')
 <arguments ROOT 0,0..0,10>
@@ -229,7 +229,7 @@ MTAG(tag='non_anon', st='atic')
 <FSTMatch <arguments ROOT 0,0..0,13>>
 
 >>> MDict(_all=[MQSTAR(t=MDict(['a'], ['b']))]).match(FST('{a: b, a: b}'))
-<FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>]}>
+<FSTMatch <Dict ROOT 0,0..0,12> {'t': [<FSTMatch <<Dict ROOT 0,0..0,12>._all[0]>>, <FSTMatch <<Dict ROOT 0,0..0,12>._all[1]>>]}>
 
 >>> Marguments(_all=[Marguments(args=['a']), Marguments(args=['b']), ...]).match(FST('a, b, c', arguments))
 <FSTMatch <arguments ROOT 0,0..0,7>>

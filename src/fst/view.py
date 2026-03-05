@@ -96,13 +96,38 @@ class FSTView:
     '[*star]'
     """
 
-    base:   fst.FST     ; """The target `FST` node this view references (the container)."""
-    field:  str         ; """The target field this view references. Can be virtual field like `_all`."""
-    _start: int         ; """Start position within the target field list this view references."""
-    _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
+    base:   fst.FST      ; """The target `FST` node this view references (the container)."""
+    field:  str          ; """The target field this view references. Can be virtual field like `_all`."""
+    _start: int          ; """Start position within the target field list this view references."""
+    _stop:  int | None   ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
-    is_FST = False  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
+    is_FST = False       ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `FST`
     is_deref_FST = True  ; """Whether single item indexing on this view yields an `FST` node or not. Where this is not the case are multi-node sequences like a `Dict`, `MatchMapping` and `arguments` or string sequences like `Global` and `Nonlocal`. Dereferencing these views will not give individual nodes or values but rather another `FSTView`."""
+
+    _is_one = False      ; """This indicates if this view is a dereferenced view single-item of a single field item."""
+
+    @property
+    def is_one(self) -> bool:
+        """Whether this view represents a single dereferenced view for fields which do not dereference to a single `FST`
+        or not. To be clear, this is only `True` when one of those views is dereferenced as a single item to produce a
+        single-item view of that field.
+
+        This is mostly informative and it is possible to manipulate an `is_one=True` view back into a slice view with
+        slice operations. This can affect a few individual node operations for `Global/Nonlocal.names` views, like when
+        a copy is made. For a `is_one=True` the copy will be a single node whereas for a slice view it will be a slice.
+        """
+
+        if not self._is_one:
+            return False
+
+        start, stop, _ = self._base_indices()
+
+        if stop - start != 1:  # if ceased to reference a single item then permanently mark as not one anymore
+            del self._is_one
+
+            return False
+
+        return True
 
     @property
     def start(self) -> int:
@@ -259,11 +284,17 @@ class FSTView:
         return len(getattr(self.base.a, self.field))
 
     def _deref_one(self, idx: int) -> AST | str:
-        """Return a single element from field (which may not be a contiguous list). `idx` is the real index already
-        absolute (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN NODE. Can
-        return `AST` or primitive or another `FSTView` if base field is multinode."""
+        """Return a single item from field (which may not be a contiguous list). `idx` is the real index already
+        validated and absolute (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN
+        NODE. Can return `AST` or primitive or another `FSTView` if base field not a single `FST`."""
 
-        return getattr(self.base.a, self.field)[idx]
+        if self.is_deref_FST:  # normal FST deref
+            return getattr(self.base.a, self.field)[idx]
+
+        view = self.__class__(self.base, self.field, idx, idx + 1)
+        view._is_one = True
+
+        return view
 
     def _base_indices(self) -> tuple[int, int, int]:
         """Refresh indices in case of field length change anywhere else and return adjusted REAL indices in REAL `base`
@@ -359,7 +390,11 @@ class FSTView:
 
     def __repr__(self) -> str:
         start, stop, _ = self._base_indices()
-        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
+
+        if self.is_one:
+            indices = f'[{start}]'
+        else:
+            indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
 
         return f'<{self.base!r}.{self.field}{indices}>'
 
@@ -409,7 +444,7 @@ class FSTView:
         If indexing a single element does not give an `FST` node then it will give another `FSTView`.
 
         >>> FST('global a, b, c').names[1]
-        <<Global ROOT 0,0..0,14>.names[1:2]>
+        <<Global ROOT 0,0..0,14>.names[1]>
 
         @public
         """
@@ -987,8 +1022,8 @@ class FSTView_Dict(FSTView):
     def _len_field(self) -> int:
         return len(self.base.a.keys)
 
-    def _deref_one(self, idx: int) -> AST | str:
-        return FSTView_Dict(self.base, '_all', idx, idx + 1)
+    # def _deref_one(self, idx: int) -> AST | str:
+    #     return FSTView_Dict(self.base, '_all', idx, idx + 1)
 
 
 class FSTView_MatchMapping(FSTView):
@@ -1167,8 +1202,8 @@ class FSTView_MatchMapping(FSTView):
     def _len_field(self) -> int:
         return len((a := self.base.a).keys) + bool(a.rest)
 
-    def _deref_one(self, idx: int) -> AST | str:
-        return FSTView_MatchMapping(self.base, '_all', idx, idx + 1)
+    # def _deref_one(self, idx: int) -> AST | str:
+    #     return FSTView_MatchMapping(self.base, '_all', idx, idx + 1)
 
 
 class FSTView_Compare(FSTView):
@@ -1189,7 +1224,9 @@ class FSTView_arguments(FSTView):
 
     @property
     def loc(self) -> fstloc | None:
-        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present). This
+        location is not guaranteed to the same as the location of the whole `arguments` node as it only includes actual
+        arguments and no leading or trailing `/`, `*` markers or commas.
 
         **Examples:**
 
@@ -1368,8 +1405,8 @@ class FSTView_arguments(FSTView):
     def _len_field(self) -> int:
         return len(self.base._cached_allargs())
 
-    def _deref_one(self, idx: int) -> AST | str:
-        return FSTView_arguments(self.base, '_all', idx, idx + 1)
+    # def _deref_one(self, idx: int) -> AST | str:
+    #     return FSTView_arguments(self.base, '_all', idx, idx + 1)
 
 
 class FSTView__body(FSTView):
@@ -1403,9 +1440,6 @@ class FSTView_Global_Nonlocal(FSTView):
     """For `Global` and `Nonlocal` to handle their non-`AST` fields correctly. @private"""
 
     is_deref_FST = False
-
-    def _deref_one(self, idx: int) -> AST | str:
-        return FSTView_Global_Nonlocal(self.base, 'names', idx, idx + 1)
 
     @property
     def loc(self) -> fstloc | None:
@@ -1539,6 +1573,9 @@ class FSTView_Global_Nonlocal(FSTView):
     bcol = col
     bend_ln = end_ln
     bend_col = end_col
+
+    # def _deref_one(self, idx: int) -> AST | str:
+    #     return FSTView_Global_Nonlocal(self.base, 'names', idx, idx + 1)
 
 
 class FSTView_dummy(FSTView):

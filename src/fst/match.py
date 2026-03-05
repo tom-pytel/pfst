@@ -3363,8 +3363,8 @@ class MRE(M_Pattern):
     >>> ppmatch(MDict(_all=[MQSTAR(t=MRE('a: .'))]) .match(FST('{a: b, a: z}')))
     <FSTMatch <Dict ROOT 0,0..0,12>
       't': [
-        <FSTMatch <<Dict ROOT 0,0..0,12>._all[:1]>>,
-        <FSTMatch <<Dict ROOT 0,0..0,12>._all[1:2]>>,
+        <FSTMatch <<Dict ROOT 0,0..0,12>._all[0]>>,
+        <FSTMatch <<Dict ROOT 0,0..0,12>._all[1]>>,
       ],
     }>
     """
@@ -3640,7 +3640,7 @@ class MTAG(M_Pattern_One):
     Can match previously matched multinode items from `Dict`, `MatchMapping` or `arguments`.
 
     >>> MDict(_all=[M(start=...), MQSTAR, MTAG('start')]) .match(FST('{1: a, 1: a}'))
-    <FSTMatch <Dict ROOT 0,0..0,12> {'start': <<Dict ROOT 0,0..0,12>._all[:1]>}>
+    <FSTMatch <Dict ROOT 0,0..0,12> {'start': <<Dict ROOT 0,0..0,12>._all[0]>}>
     """
 
     _requires = 'source tag'  # for printing error message
@@ -3736,8 +3736,8 @@ class MQ(M_Pattern_One):
     >>> ppmatch(FST('global a, b, c, c, d, e') .match(pat))
     <FSTMatch <Global ROOT 0,0..0,23>
       't': [
-        <FSTMatch <<Global ROOT 0,0..0,23>.names[2:3]>>,
-        <FSTMatch <<Global ROOT 0,0..0,23>.names[3:4]>>,
+        <FSTMatch <<Global ROOT 0,0..0,23>.names[2]>>,
+        <FSTMatch <<Global ROOT 0,0..0,23>.names[3]>>,
       ],
     }>
 
