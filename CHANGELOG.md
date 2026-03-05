@@ -2,6 +2,8 @@
 
 ### Added
 
+- put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
+
 ### Changed
 
 - `get/put/get_slice/put_slice()` typing tweaked for easier to swizzle parameters with type checking enabled

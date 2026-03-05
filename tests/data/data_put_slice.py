@@ -19283,6 +19283,87 @@ r'''**NodeError("cannot put slice individually to Dict.keys, use the '_all' fiel
 r'''{1: a}'''), (None,
 r'''**DEL**'''),
 r'''**NodeError("cannot put slice individually to Dict.values, use the '_all' field")**'''),
+
+('', 1, 2, '_all', {}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''), ('Dict',
+r'''{4: x, 5: y}'''),
+r'''{1: a, 4: x, 5: y, 3: c}''', r'''
+Dict - ROOT 0,0..0,24
+  .keys[4]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 4 - 0,7..0,8
+   2] Constant 5 - 0,13..0,14
+   3] Constant 3 - 0,19..0,20
+  .values[4]
+   0] Name 'a' Load - 0,4..0,5
+   1] Name 'x' Load - 0,10..0,11
+   2] Name 'y' Load - 0,16..0,17
+   3] Name 'c' Load - 0,22..0,23
+'''),
+
+('', 1, 2, '_all', {}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''), (None,
+r'''a'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('', 1, 2, '_all', {'_src': False}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''), (None,
+r'''a'''),
+r'''**NodeError('expecting Dict, got Name, could not coerce')**'''),
+
+('', 0, 1, '_all', {}, ('Dict',
+r'''{1: a}'''), (None,
+r'''**DEL**'''),
+r'''{}''',
+r'''Dict - ROOT 0,0..0,2'''),
+
+('', 0, 1, '_all', {}, ('Dict',
+r'''{1: a}'''), (None,
+r'''2: b'''),
+r'''{2: b}''',
+r'''**NodeError('expecting Dict, got Slice, could not coerce')**''', r'''
+Dict - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .values[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 1, '_all', {}, ('Dict',
+r'''{1: a}'''), (None,
+r'''**b'''),
+r'''{**b}''',
+r'''**NodeError('expecting Dict, got keyword, could not coerce')**''', r'''
+Dict - ROOT 0,0..0,5
+  .keys[1]
+   0] None
+  .values[1]
+   0] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 1, '_all', {}, ('Dict',
+r'''{**a}'''), (None,
+r'''2: b'''),
+r'''{2: b}''',
+r'''**NodeError('expecting Dict, got Slice, could not coerce')**''', r'''
+Dict - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .values[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 1, '_all', {}, ('Dict',
+r'''{**a}'''), (None,
+r'''**b'''),
+r'''{**b}''',
+r'''**NodeError('expecting Dict, got keyword, could not coerce')**''', r'''
+Dict - ROOT 0,0..0,5
+  .keys[1]
+   0] None
+  .values[1]
+   0] Name 'b' Load - 0,3..0,4
+'''),
 ],
 
 'Delete_targets': [  # ................................................................................
@@ -39761,6 +39842,183 @@ r'''**NodeError("cannot put slice individually to MatchMapping.keys, use the '_a
 r'''{1: a}'''), (None,
 r'''**DEL**'''),
 r'''**NodeError("cannot put slice individually to MatchMapping.patterns, use the '_all' field")**'''),
+
+('', 1, 2, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''), ('MatchMapping',
+r'''{4: x, 5: y}'''),
+r'''{1: a, 4: x, 5: y, 3: c}''', r'''
+MatchMapping - ROOT 0,0..0,24
+  .keys[4]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 4 - 0,7..0,8
+   2] Constant 5 - 0,13..0,14
+   3] Constant 3 - 0,19..0,20
+  .patterns[4]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+   2] MatchAs - 0,16..0,17
+     .name 'y'
+   3] MatchAs - 0,22..0,23
+     .name 'c'
+'''),
+
+('', 1, 2, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''), (None,
+r'''a'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('', 1, 2, '_all', {'_src': False}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''), (None,
+r'''a'''),
+r'''**NodeError('expecting MatchMapping, got Name, could not coerce')**'''),
+
+('', 1, 2, '_all', {}, ('Compare',
+r'''a < b > c'''), ('Compare',
+r'''x != y'''),
+r'''a < x != y > c''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,0..0,1
+  .ops[3]
+   0] Lt - 0,2..0,3
+   1] NotEq - 0,6..0,8
+   2] Gt - 0,11..0,12
+  .comparators[3]
+   0] Name 'x' Load - 0,4..0,5
+   1] Name 'y' Load - 0,9..0,10
+   2] Name 'c' Load - 0,13..0,14
+'''),
+
+('', 0, 1, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''**DEL**'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 0, 1, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''2: b'''),
+r'''{2: b}''',
+r'''**NodeError('expecting MatchMapping, got Slice, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 1, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''**b'''),
+r'''{**b}''',
+r'''**NodeError('expecting MatchMapping, got keyword, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'b'
+'''),
+
+('', 0, 1, '_all', {}, ('MatchMapping',
+r'''{**a}'''), (None,
+r'''2: b'''),
+r'''{2: b}''',
+r'''**NodeError('expecting MatchMapping, got Slice, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 1, '_all', {}, ('MatchMapping',
+r'''{**a}'''), (None,
+r'''**b'''),
+r'''{**b}''',
+r'''**NodeError('expecting MatchMapping, got keyword, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'b'
+'''),
+
+('', 0, 0, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''2: b'''),
+r'''{2: b, 1: a}''',
+r'''**NodeError('expecting MatchMapping, got Slice, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 2 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+'''),
+
+('', 0, 0, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''**b'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 0, '_all', {}, ('MatchMapping',
+r'''{**a}'''), (None,
+r'''2: b'''),
+r'''{2: b, **a}''',
+r'''**NodeError('expecting MatchMapping, got Slice, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+  .rest 'a'
+'''),
+
+('', 0, 0, '_all', {}, ('MatchMapping',
+r'''{**a}'''), (None,
+r'''**b'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
+
+('', 1, 1, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''2: b'''),
+r'''{1: a, 2: b}''',
+r'''**NodeError('expecting MatchMapping, got Slice, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'b'
+'''),
+
+('', 1, 1, '_all', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''**b'''),
+r'''{1: a, **b}''',
+r'''**NodeError('expecting MatchMapping, got keyword, could not coerce')**''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'b'
+'''),
+
+('', 1, 1, '_all', {}, ('MatchMapping',
+r'''{**a}'''), (None,
+r'''2: b'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
+
+('', 1, 1, '_all', {}, ('MatchMapping',
+r'''{**a}'''), (None,
+r'''**b'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 ],
 
 'MatchClass_patterns': [  # ................................................................................
@@ -45540,73 +45798,6 @@ Call - ROOT 0,0..2,7
      .elts[1]
       0] Name 'x' Load - 1,5..1,6
      .ctx Load
-'''),
-],
-
-'virtual_field__all': [  # ................................................................................
-
-('', 1, 2, '_all', {}, ('Dict',
-r'''{1: a, 2: b, 3: c}'''), ('Dict',
-r'''{4: x, 5: y}'''),
-r'''{1: a, 4: x, 5: y, 3: c}''', r'''
-Dict - ROOT 0,0..0,24
-  .keys[4]
-   0] Constant 1 - 0,1..0,2
-   1] Constant 4 - 0,7..0,8
-   2] Constant 5 - 0,13..0,14
-   3] Constant 3 - 0,19..0,20
-  .values[4]
-   0] Name 'a' Load - 0,4..0,5
-   1] Name 'x' Load - 0,10..0,11
-   2] Name 'y' Load - 0,16..0,17
-   3] Name 'c' Load - 0,22..0,23
-'''),
-
-('', 1, 2, '_all', {}, ('Dict',
-r'''{1: a, 2: b, 3: c}'''), ('Dict',
-r'''a'''),
-r'''**NodeError('slice being assigned to a Dict must be a Dict, not a Name')**'''),
-
-('', 1, 2, '_all', {}, ('MatchMapping',
-r'''{1: a, 2: b, 3: c}'''), ('MatchMapping',
-r'''{4: x, 5: y}'''),
-r'''{1: a, 4: x, 5: y, 3: c}''', r'''
-MatchMapping - ROOT 0,0..0,24
-  .keys[4]
-   0] Constant 1 - 0,1..0,2
-   1] Constant 4 - 0,7..0,8
-   2] Constant 5 - 0,13..0,14
-   3] Constant 3 - 0,19..0,20
-  .patterns[4]
-   0] MatchAs - 0,4..0,5
-     .name 'a'
-   1] MatchAs - 0,10..0,11
-     .name 'x'
-   2] MatchAs - 0,16..0,17
-     .name 'y'
-   3] MatchAs - 0,22..0,23
-     .name 'c'
-'''),
-
-('', 1, 2, '_all', {}, ('MatchMapping',
-r'''{1: a, 2: b, 3: c}'''), ('MatchMapping',
-r'''a'''),
-r'''**NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**'''),
-
-('', 1, 2, '_all', {}, ('Compare',
-r'''a < b > c'''), ('Compare',
-r'''x != y'''),
-r'''a < x != y > c''', r'''
-Compare - ROOT 0,0..0,14
-  .left Name 'a' Load - 0,0..0,1
-  .ops[3]
-   0] Lt - 0,2..0,3
-   1] NotEq - 0,6..0,8
-   2] Gt - 0,11..0,12
-  .comparators[3]
-   0] Name 'x' Load - 0,4..0,5
-   1] Name 'y' Load - 0,9..0,10
-   2] Name 'c' Load - 0,13..0,14
 '''),
 ],
 

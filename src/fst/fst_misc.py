@@ -717,6 +717,39 @@ def validate_put_arglike(body: list[AST], start: int, stop: int, ast_or_list: AS
     return ret
 
 
+def is_delimited_Dict(self: fst.FST) -> bool:
+    """This may be parsed undelimited. Only really needed for slice put."""
+
+    lines = self.root._lines
+    ln, col, end_ln, end_col = self.loc
+
+    if not end_col or not lines[ln].startswith('{', col) or not lines[end_ln].startswith('}', end_col - 1):
+        return False
+
+    keys = self.a.keys
+
+    if not keys:  # must be empty dict
+        return True
+
+    key0 = keys[0]
+
+    if not key0:  # must be delimited because item0 is `**value`
+        return True
+
+    key0_ln, key0_col, _, _ = key0.f.loc  # don't need pars() because in that case definitely delimited since pars don't start with `{`
+
+    return key0_col != col or key0_ln != ln
+
+
+def is_delimited_MatchSequence(self: fst.FST) -> bool:
+    """This may be parsed undelimited. Only really needed for slice put."""
+
+    lines = self.root._lines
+    ln, col, _, _ = self.loc
+
+    return lines[ln].startswith('{', col)  # we can check using `{` because we know a key cannot start with this
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # private FST class methods
 
@@ -964,7 +997,10 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
 
     self_ln, self_col, self_end_ln, self_end_col = self.loc
 
-    if not lines[self_end_ln].startswith(rdelim, self_end_col - 1):
+    if not self_end_col:  # so we don't do bad self_end_col - 1 checks
+        is_delim = False
+
+    elif not lines[self_end_ln].startswith(rdelim, self_end_col - 1):
         is_delim = False
 
     elif not (asts := getattr(self.a, field)):

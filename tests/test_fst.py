@@ -9702,7 +9702,7 @@ if 1:
         self.assertEqual('{}', f._all[0:0].copy().src)
         self.assertEqual('<<Dict ROOT 0,0..0,18>._all[1:2]>', str(f._all[1]))
 
-        self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
+        self.assertRaises(SyntaxError, f._all.__setitem__, 1, 'x')
 
         f._all[1] = None
 
@@ -9727,7 +9727,7 @@ if 1:
 
         self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[1:2]>', str(f._all[1:2]))
         # self.assertRaises(ValueError, lambda: f._all[0])
-        self.assertRaises(NodeError, f._all.__setitem__, 1, 'x')
+        self.assertRaises(SyntaxError, f._all.__setitem__, 1, 'x')
 
         f._all[1] = None
 

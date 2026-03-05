@@ -150,9 +150,11 @@ from .code import (
     code_as_type_param,
     code_as__type_params,
     code_as__expr_arglikes,
+    code_as__Dict_maybe_undelimited,
+    code_as__MatchMapping_maybe_undelimited,
 )
 
-from .fst_misc import fixup_slice_indices, validate_put_arglike
+from .fst_misc import fixup_slice_indices, validate_put_arglike, is_delimited_Dict, is_delimited_MatchSequence
 from .slice_stmtlike import put_slice_stmtlike
 
 from .slice_exprlike import (
@@ -359,16 +361,13 @@ def _code_to_slice_expr(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_key_and_other(
+def _code_to_slice_mapping(
     self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any], code_as: Callable
 ) -> fst.FST | None:
     """Handles `Dict` and `MatchMapping`."""
 
     if code is None:
         return None
-
-    # if one:
-    #     raise NodeError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
     fst_ = code_as(code, options, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
     ast_ = fst_.a
@@ -377,13 +376,13 @@ def _code_to_slice_key_and_other(
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
                         f", not a {ast_.__class__.__name__}")
 
-    len_body = len(ast_.keys) + bool(getattr(ast_, 'rest', None))  # add `rest` because in that case MatchMapping is not empty
-
-    if not len_body:
-        return None
+    len_body = len(ast_.keys) + bool(getattr(ast_, 'rest', False))  # add `rest` because in that case MatchMapping is not empty
 
     if one and len_body != 1:
         raise ValueError("expecting single item pair for put as 'one=True'")
+
+    if not len_body:
+        return None
 
     return fst_
 
@@ -1627,14 +1626,15 @@ def _put_slice_Dict__all(
     body2 = ast.values
     start, stop = fixup_slice_indices(len(body), start, stop)
 
-    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_expr)
+    fst_ = _code_to_slice_mapping(self, code, one, options, code_as__Dict_maybe_undelimited)  # code_as_expr)
 
     if not fst_:
         if start == stop:  # delete empty slice
             return
 
     else:
-        fst_._trim_delimiters()
+        if is_delimited_Dict(fst_):
+            fst_._trim_delimiters()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -2912,7 +2912,7 @@ def _put_slice_MatchMapping__all(
     len_body_w_rest = len_body + bool(rest)
     start, stop = fixup_slice_indices(len_body_w_rest, start, stop)
 
-    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_pattern)
+    fst_ = _code_to_slice_mapping(self, code, one, options, code_as__MatchMapping_maybe_undelimited)  # code_as_pattern)
 
     if not fst_:
         if start == stop:  # delete empty slice
@@ -2924,6 +2924,9 @@ def _put_slice_MatchMapping__all(
         if rest and start >= len_body_w_rest:
             raise ValueError("cannot put slice to MatchMapping after 'rest' element")
 
+        if is_delimited_MatchSequence(fst_):
+            fst_._trim_delimiters()
+
         ast_ = fst_.a
 
         if fst_rest := ast_.rest:
@@ -2931,8 +2934,6 @@ def _put_slice_MatchMapping__all(
                 raise ValueError("put slice with 'rest' element to MatchMapping must be at end")
 
             _add_MatchMapping_rest_as_real_node(fst_)  # this needs to be done before the _trim_delimiters()
-
-        fst_._trim_delimiters()  # didn't do it in _code_to_slice_key_and_other()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 

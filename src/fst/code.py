@@ -2169,12 +2169,10 @@ def _coerce_to_Dict(
     else:
         codea = code
 
-    if codea.__class__ is not MatchMapping:  # only this can coerce to a Dict
-        raise NodeError(f'expecting Dict, got {codea.__class__.__name__}, could not coerce')
-
     ast, _ = _coerce_to_expr_ast(codea, is_FST, options, parse_params, 'Dict')
 
-    assert ast.__class__ is Dict  # MatchMapping should only be able to coerce to this
+    if ast.__class__ is not Dict:
+        raise NodeError(f'expecting Dict, got {codea.__class__.__name__}, could not coerce')
 
     if is_FST:
         code._unmake_fst_tree()
@@ -2201,12 +2199,10 @@ def _coerce_to_MatchMapping(
 
     codea = code.a if isinstance(code, fst.FST) else code
 
-    if codea.__class__ is not Dict:  # only this can coerce to a MatchMapping
-        raise NodeError(f'expecting MatchMapping, got {codea.__class__.__name__}, could not coerce')
-
     fst_ = _coerce_to_pattern(code, options, parse_params, strip=strip)
 
-    assert fst_.a.__class__ is MatchMapping  # Dict should only be able to coerce to this
+    if fst_.a.__class__ is not MatchMapping:  # only this can coerce to a MatchMapping
+        raise NodeError(f'expecting MatchMapping, got {codea.__class__.__name__}, could not coerce')
 
     return fst_
 

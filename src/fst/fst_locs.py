@@ -47,6 +47,7 @@ from .asttypes import (
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re
+from .fst_misc import is_delimited_MatchSequence
 
 
 _ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
@@ -790,15 +791,16 @@ def _loc_MatchMapping_rest(self: fst.FST, stars: bool = False) -> fstloc | None:
     if (rest := ast.rest) is None:
         return None
 
+    is_delimited = is_delimited_MatchSequence(self)  # we need to account for this because we can parse and put undelimited MatchMapping
+
+    lines = self.root._lines
     ln, col, end_ln, end_col = self.loc
-    end_col -= 1
+    end_col -= is_delimited
 
     if patterns := ast.patterns:
         _, _, ln, col = patterns[-1].f.loc
     else:
-        col += 1
-
-    lines = self.root._lines
+        col += is_delimited
 
     if not stars:
         ln, col = next_find(lines, ln, col, end_ln, end_col, rest)

@@ -23,10 +23,8 @@ Raw node put operations can do things which are not normally possible with presc
 
 >>> f = FST('{a: b, c: d, e: f}')
 
->>> f.put('**g', 1, raw=False)
-Traceback (most recent call last):
-...
-SyntaxError: invalid syntax
+>>> print(f.put('**g', 1, raw=False).src)
+{a: b, **g, e: f}
 
 >>> f.put('**g', 1, raw=True)
 <Dict ROOT 0,0..0,17>
