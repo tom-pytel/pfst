@@ -2,7 +2,7 @@
 
 ### Added
 
-- `promote` option to control whether some primitive fields are gotten as primitives or nodes
+- `promote` option to control whether primitive fields are gotten as primitives or nodes
 - `FSTView` types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
 - `op` can be set as a global option for convenience for putting slices to `Compare`
@@ -12,6 +12,9 @@
 - `get/put/get_slice/put_slice()` typing tweaked for easier to swizzle parameters with type checking enabled
 - added `FST.strip()` which removes trivia surrounding node at root, was previously private function `_sanitize()`
 - identifier puts using `FST` nodes as source (which doesn't consume them), will now unmake those nodes to stay consistent with all other puts
+- loosened `Constant` rules
+  - `fromast()` and `as_()` will accept negative numerical `Constant.value` and normalize those to `UnaryOp(USub, abs(Constant))`
+  - put to primitive field will accept `UnaryOp(USub, Constant)` numerical values
 
 ### Fixed
 

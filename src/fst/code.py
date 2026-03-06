@@ -57,8 +57,9 @@ from .asttypes import (
     TypeVar,
     TypeVarTuple,
     Tuple,
-    UnaryOp,
+    UAdd,
     USub,
+    UnaryOp,
     alias,
     arg,
     arguments,
@@ -3233,16 +3234,20 @@ def _code_as_expr(
         ast = parse(src, parse_params)
 
         if is_ast:
-            if ast.__class__ is not code.__class__:  # sanity check, could have tried with a FormattedValue
-                if parse is parse_expr_slice and ast.__class__ is Tuple and code.__class__ is Starred:  # SPECIAL CASE specifically for lone '*starred' being parsed as a `Tuple`
+            ast_cls = ast.__class__
+            code_cls = code.__class__
+
+            if ast_cls is not code_cls:  # sanity check, could have tried with a FormattedValue
+                if parse is parse_expr_slice and ast_cls is Tuple and code_cls is Starred:  # SPECIAL CASE specifically for lone '*starred' being parsed as a `Tuple`
                     if code is old_code:
                         raise NodeError('expecting expression (slice), got Starred, must be in a sequence')  # pragma: no cover  # this currently gets rejected in code_as_expr_slice() so will not get here
                     else:
                         raise NodeError(f'expecting expression (slice), got {old_code.__class__.__name__}'
                                         f', coerced to Starred, must be in a sequence')
-                else:
+
+                elif ast_cls is not UnaryOp or ast.op.__class__ is not USub or ast.operand.__class__ is not code_cls:  # the only allowed structural change is Constant(-num) to UnaryOp(USub, Constant(num))
                     raise ParseError(f'could not reparse AST to {old_code.__class__.__name__}'
-                                     f', got {ast.__class__.__name__}')
+                                     f', got {ast_cls.__name__}')
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -4321,8 +4326,10 @@ def code_as_constant(
     coerce: bool = False,
 ) -> constant:
     """Convert `code` to valid constant if possible. If `code` is a `str` then it is treated as the constant value and
-    not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is
-    returned.
+    not as the Python representation of the constant. The only `FST` or `AST` accepted is a `Constant` or chain of
+    negating `UnaryOp` which leads to a `Constant`, whose `value` is returned (possibly negated due to any `UnaryOp`).
+
+    We normalize any -0.0 or -0.0j to positive. We do not accept imaginary constants with real parts.
 
     **Note:** `strip` does nothing.
     """
@@ -4334,25 +4341,37 @@ def code_as_constant(
         code = code.a
 
     if isinstance(code, AST):
+        neg = False
+
+        while code.__class__ is UnaryOp:
+            if (unary_op_cls := code.op.__class__) is USub:
+                neg = not neg
+
+            elif unary_op_cls is not UAdd:
+                raise NodeError("unary operators on Constant can only be '-' or '+',"
+                                f" got {unary_op_cls.__class__.__name__}")
+
+            code = code.operand
+
         if code.__class__ is not Constant:
-            raise NodeError('expecting constant')
+            raise NodeError('expecting Constant')
 
-        code = code.value
+        code = -code.value if neg else code.value
 
-        if isinstance(code, (int, float)):
-            if code < 0:
-                raise NodeError('constants cannot be negative')
+        if isinstance(code, float):
+            if not code:  # normalize -0.0
+                code = 0.0
 
         elif isinstance(code, complex):
             if code.real:
-                raise NodeError('imaginary constants cannot have real componenets')
-            if code.imag < 0:
-                raise NodeError('imaginary constants cannot be negative')
+                raise NodeError('imaginary Constants cannot have real componenets')
+
+            code = complex(0.0, code.imag or 0.0)  # normalize -0.0 in real or imag
 
     elif isinstance(code, list):
         code = '\n'.join(code)
     elif not isinstance(code, constant):
-        raise NodeError('expecting constant')
+        raise NodeError('expecting Constant')
 
     return code
 

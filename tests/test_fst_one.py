@@ -8,7 +8,7 @@ from fst import *
 from fst.asttypes import *
 from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE13, PYGE14
 
-from support import GetCases, PutCases
+from support import GetCases, PutCases, assertRaises
 
 
 DIR_NAME     = os.path.dirname(__file__)
@@ -683,13 +683,21 @@ if 1:
             self.assertRaises(NodeError, FST.fromsrc('x = 1  # type: int', type_comments=True).body[0].get, 'type_comment')
 
     def test_get_one_promote(self):
-        self.assertIs(None, FST('case None: pass', 'match_case').pattern.get(promote=False))
-        self.assertIs(False, FST('case False: pass', 'match_case').pattern.get(promote=False))
-        self.assertIs(True, FST('case True: pass', 'match_case').pattern.get(promote=False))
+        # Global/Nonlocal.names
 
-        self.assertEqual('0: None\nConstant None - ROOT 0,0..0,4', FST('case None: pass', 'match_case').pattern.get(promote=True).dump('N', out='str'))
-        self.assertEqual('0: False\nConstant False - ROOT 0,0..0,5', FST('case False: pass', 'match_case').pattern.get(promote=True).dump('N', out='str'))
-        self.assertEqual('0: True\nConstant True - ROOT 0,0..0,4', FST('case True: pass', 'match_case').pattern.get(promote=True).dump('N', out='str'))
+        self.assertEqual('b', (f := FST('global a, b, c')).get(1, promote=False))
+        self.assertEqual("0: b\nName 'b' Load - ROOT 0,0..0,1", f.get(1, promote=True).dump('N', out='str'))
+
+        # MatchSingleton.value
+
+        self.assertIs(None, (f := FST('case None: pass', 'match_case')).pattern.get(promote=False))
+        self.assertEqual('0: None\nConstant None - ROOT 0,0..0,4', f.pattern.get(promote=True).dump('N', out='str'))
+
+        self.assertIs(False, (f := FST('case False: pass', 'match_case')).pattern.get(promote=False))
+        self.assertEqual('0: False\nConstant False - ROOT 0,0..0,5', f.pattern.get(promote=True).dump('N', out='str'))
+
+        self.assertIs(True, (f := FST('case True: pass', 'match_case')).pattern.get(promote=False))
+        self.assertEqual('0: True\nConstant True - ROOT 0,0..0,4', f.pattern.get(promote=True).dump('N', out='str'))
 
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
     def test_get_format_spec(self):
@@ -1198,6 +1206,19 @@ if 1:
 
         #     self.assertEqual(f.values[0], f.values[0].put('blah', 'str'))
         #     self.assertEqual('blah', f.values[0].str)
+
+        # cannot put negative value
+
+        f = FST('1', 'Constant')
+        assertRaises(NodeError('Constant.value cannot be negative'), f.put, Constant(-1))
+        assertRaises(NodeError('Constant.value cannot be negative'), f.put, Constant(-1.0))
+        assertRaises(NodeError('Constant.value cannot be negative'), f.put, Constant(-1j))
+
+        # normalize -0.0
+
+        f = FST('1', 'Constant')
+        self.assertEqual('0.0', f.put(Constant(-0.0)).src)
+        self.assertEqual('0j', f.put(Constant(-0j)).src)
 
     def test_put_one_ctx(self):
         f = FST('a.b')

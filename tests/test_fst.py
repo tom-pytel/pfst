@@ -53,6 +53,8 @@ from fst.common import (
 from fst.code import *
 from fst.view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
 
+from support import assertRaises
+
 from test_parse import PARSE_TESTS
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
 
@@ -2364,6 +2366,50 @@ y"
         # self.assertEqual('i = 1', FST.fromast(a.body[0], 'exec', type_comments=True).src)
         # self.assertRaises(ValueError, FST.fromast, a.body[0], 'exec', type_comments=True)
 
+        # Starred
+
+        f = FST.fromast(ast_parse('*t').body[0].value)
+        self.assertEqual('*t', f.src)
+        self.assertIsInstance(f.a, Starred)
+
+        # normalize negative Constants (including pesky -0.0 values)
+
+        f = FST.fromast(Constant(-2))
+        self.assertTrue(f.is_UnaryOp)
+        self.assertTrue(f.operand.is_Constant)
+        self.assertIsInstance(f.operand.a.value, int)
+        self.assertEqual(f.operand.a.value, 2)
+
+        f = FST.fromast(Constant(-2.3))
+        self.assertTrue(f.is_UnaryOp)
+        self.assertTrue(f.operand.is_Constant)
+        self.assertIsInstance(f.operand.a.value, float)
+        self.assertEqual(f.operand.a.value, 2.3)
+
+        f = FST.fromast(Constant(-0.0))
+        self.assertTrue(f.is_Constant)
+        self.assertIsInstance(f.a.value, float)
+        self.assertEqual(f.a.value, 0.0)
+
+        f = FST.fromast(Constant(-2j))
+        self.assertTrue(f.is_UnaryOp)
+        self.assertTrue(f.operand.is_Constant)
+        self.assertIsInstance(f.operand.a.value, complex)
+        self.assertEqual(f.operand.a.value, 2j)
+
+        f = FST.fromast(Constant(-0j))
+        self.assertTrue(f.is_Constant)
+        self.assertIsInstance(f.a.value, complex)
+        self.assertEqual(f.a.value, 0j)
+
+        f = FST.fromast(Constant(-0-0j))
+        self.assertTrue(f.is_Constant)
+        self.assertIsInstance(f.a.value, complex)
+        self.assertEqual(f.a.value, 0j)
+
+        assertRaises(ParseError('could not reparse AST to Constant, got BinOp'), FST.fromast, Constant(1+1j))
+        assertRaises(ParseError('could not reparse AST to Constant, got BinOp'), FST.fromast, Constant(-1-1j))
+
         # TODO: more tests, explicit coerce with same source
 
     def test_infer_indent(self):
@@ -2661,11 +2707,6 @@ if 1:
         self.assertEqual('if 1:  # line', f.src)
         self.assertEqual((0, 0, 0, 5), f.loc)
         self.assertEqual((0, 0, 0, 13), f.bloc)
-
-    def test_fromast_special(self):
-        f = FST.fromast(ast_parse('*t').body[0].value)
-        self.assertEqual('*t', f.src)
-        self.assertIsInstance(f.a, Starred)
 
     def test_dump(self):
         f = FST('a = b ; ')

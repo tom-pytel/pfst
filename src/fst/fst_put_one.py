@@ -381,19 +381,25 @@ def _put_one_constant(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> fst.FST:  # child: constant
-    """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second one)."""
+    """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second, otherwise
+    would be in `_put_one_Constant_value()`)."""
 
-    _validate_put(self, code, idx, field, child, can_del=True)  # can_del so that None is accepted
+    _validate_put(self, code, idx, field, child, can_del=True)  # can_del=True so that None is accepted
 
     value = code_as_constant(code, options, self.root.parse_params)
     restrict = static.restrict
 
     if not isinstance(value, restrict):
-        raise NodeError((f'expecting a {"constant" if restrict is constant else restrict.__name__} '
-                         f'for {self.a.__class__.__name__}.{field}' if not isinstance(restrict, tuple) else
-                         f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
-                         f'{self.a.__class__.__name__}') +
+        raise NodeError(((f'expecting a {"constant" if restrict is constant else restrict.__name__} '
+                          f'for {self.a.__class__.__name__}.{field}'
+                         ) if not isinstance(restrict, tuple) else (
+                          f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
+                          f'{self.a.__class__.__name__}'
+                        )) +
                         f', got {value.__class__.__name__}')
+
+    if (value < 0 if isinstance(value, (int, float)) else value.imag < 0 if isinstance(value, complex) else False):
+        raise NodeError('Constant.value cannot be negative')
 
     self._put_src(repr(value), *self.loc, True)
 
@@ -506,8 +512,8 @@ def _put_one_AnnAssign_simple(
     child, idx = _validate_put(self, code, idx, field, child)
     value = code_as_constant(code, options, self.root.parse_params)
 
-    if value.__class__ is not int or not 0 <= value <= 1:
-        raise ValueError('expection 0 or 1')
+    if not isinstance(value, int) or not 0 <= value <= 1:
+        raise ValueError(f'expecting 0 or 1, got {value!r}')
 
     if value != self.a.simple:
         is_name = (target := ast.target).__class__ is Name
@@ -542,8 +548,8 @@ def _put_one_ImportFrom_level(
     child, idx = _validate_put(self, code, idx, field, child)
     value = code_as_constant(code, options, root.parse_params)
 
-    if value.__class__ is not int or value < 0:
-        raise ValueError(f'expection int >= 0, got {value!r}')
+    if not isinstance(value, int) or value < 0:
+        raise ValueError(f'expecting int >= 0, got {value!r}')
 
     if value != child:
         if not value and self.a.module is None:
@@ -666,8 +672,8 @@ def _put_one_comprehension_is_async(
     child, idx = _validate_put(self, code, idx, field, child)
     value = code_as_constant(code, options, root.parse_params)
 
-    if value.__class__ is not int or not 0 <= value <= 1:
-        raise ValueError(f'expection 0 or 1, got {value!r}')
+    if not isinstance(value, int) or not 0 <= value <= 1:
+        raise ValueError(f'expecting 0 or 1, got {value!r}')
 
     if value != child:
         ln, col, end_ln, end_col = self.loc

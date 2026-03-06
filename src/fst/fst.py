@@ -10,6 +10,7 @@ import sys
 from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse
 from io import TextIOBase
+from math import copysign
 from typing import Any, Callable, Generator, Literal, Mapping, TextIO
 
 from . import parsex
@@ -117,6 +118,7 @@ from .asttypes import (
     TypeIgnore,
     UAdd,
     USub,
+    UnaryOp,
     While,
     With,
     arg,
@@ -1149,9 +1151,35 @@ class FST:
                 .value Constant 5 - 1,8..1,9
         """
 
+        if not mode:
+            mode = ast.__class__
+
+            if mode is Constant:  # Constants with negative values get normalized in parse to UnaryOp (set to expect that), -0.0 primitive values need to be normalized here
+                value = ast.value
+
+                if isinstance(value, int):
+                    if value < 0:
+                        mode = UnaryOp
+
+                elif isinstance(value, float):
+                    if value < 0:
+                        mode = UnaryOp
+                    elif not value and copysign(1.0, value) == -1.0:  # normalize -0.0 because otherwise it reparses to UnaryOp(USub)
+                        ast = Constant(0.0, ast.kind)
+
+                elif isinstance(value, complex):
+                    if (imag := value.imag) < 0:
+                        mode = UnaryOp  # we only set this for negative imaginary since any real part for a complex Constant errors out
+
+                        if not (real := value.real) and copysign(1.0, real) == -1.0:  # need to normalize possible -0.0 real
+                            ast = Constant(complex(0.0, imag), ast.kind)
+
+                    elif not imag and copysign(1.0, imag) == -1.0:  # normalize -0.0j
+                        ast = Constant(complex(value.real or 0.0, 0.0), ast.kind)  # also normalize real -0.0 here
+
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
-        return code.code_as(ast, mode or ast.__class__, parse_params=parse_params, coerce=coerce)
+        return code.code_as(ast, mode, parse_params=parse_params, coerce=coerce)
 
     get_options = fst_options.get_options  # we do assign instead of import so that pdoc gets the right order
     get_option = fst_options.get_option
