@@ -2528,7 +2528,7 @@ class FST:
         field: builtins.str | None = None,
         cut: bool = False,
         **options: object,
-    ) -> FST | None | builtins.str | constant:
+    ) -> FST | list[builtins.str] | None | builtins.str | constant:
         r"""Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can do.
 
@@ -2744,7 +2744,7 @@ class FST:
         field: builtins.str | None = None,
         cut: bool = False,
         **options: object,
-    ) -> FST:
+    ) -> FST | list[builtins.str]:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**

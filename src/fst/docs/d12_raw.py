@@ -21,6 +21,8 @@ this turned on for all operations without having to specify anything then do `FS
 
 Raw node put operations can do things which are not normally possible with prescribed operations.
 
+TODO: dated example, find a new one
+
 >>> f = FST('{a: b, c: d, e: f}')
 
 >>> print(f.put('**g', 1, raw=False).src)

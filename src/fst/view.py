@@ -414,11 +414,11 @@ class FSTView:
         self._stop = stop
 
     def __repr__(self) -> str:
-        start, stop, _ = self._base_indices()
-
         if self.is_one:
-            indices = f'[{start}]'
+            indices = f'[{self._start}]'  # self._start was updated in the .is_one check
+
         else:
+            start, stop, _ = self._base_indices()
             indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
 
         return f'<{self.base!r}.{self.field}{indices}>'
@@ -592,7 +592,7 @@ class FSTView:
         else:  # the actual node found for the str search
             idx_start.remove()
 
-    def copy(self, **options: object) -> fst.FST:
+    def copy(self, **options: object) -> fst.FST | list[str] | str:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
@@ -607,15 +607,30 @@ class FSTView:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].copy().src
         '[1, 2]'
+
+        >>> FST('global a, b, c').names.copy().src
+        'a, b, c'
+
+        >>> FST('global a, b, c').names[1].copy().src
+        'b'
+
+        >>> FST('global a, b, c').names.copy(promote=False)
+        ['a', 'b', 'c']
+
+        >>> FST('global a, b, c').names[1].copy(promote=False)
+        'b'
         """
 
         check_options(options)
+
+        if self.is_one:
+            return self.base.get(self._start, self.field, cut=False, **options)  # self._start was updated in the .is_one check
 
         start, stop, _ = self._base_indices()
 
         return self.base.get_slice(start, stop, self.field, cut=False, **options)
 
-    def cut(self, **options: object) -> fst.FST:
+    def cut(self, **options: object) -> fst.FST | list[str] | str:
         """Cut out this slice to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
         node.
 
@@ -633,18 +648,44 @@ class FSTView:
         '[1, 2]'
         >>> f.src
         '[0, 3]'
+
+        >>> (f := FST('global a, b, c')).names[:-1].cut().src
+        'a, b'
+        >>> f.src
+        'global c'
+
+        >>> (f := FST('global a, b, c')).names[1].cut().src
+        'b'
+        >>> f.src
+        'global a, c'
+
+        >>> (f := FST('global a, b, c')).names[:-1].cut(promote=False)
+        ['a', 'b']
+        >>> f.src
+        'global c'
+
+        >>> (f := FST('global a, b, c')).names[1].cut(promote=False)
+        'b'
+        >>> f.src
+        'global a, c'
         """
 
         check_options(options)
 
-        start, stop, _ = self._base_indices()
+        if self.is_one:
+            start = self._start  # self._start was updated in the .is_one check
 
-        f = self.base._get_slice(start, stop, self.field, True, options)
+            ret = self.base._get_one(start, self.field, True, options)
+
+        else:
+            start, stop, _ = self._base_indices()
+
+            ret = self.base._get_slice(start, stop, self.field, True, options)
 
         if self._stop is not None:
             self._stop = start
 
-        return f
+        return ret
 
     def replace(self, code: Code | None, one: bool | None = True, **options: object) -> FSTView:  # -> self, self.base could disappear due to raw reparse
         """Replace or delete (if `code=None`) this slice.

@@ -2416,6 +2416,7 @@ if 1:
         self.assertEqual('((i for i in j),)', f.get_slice('args').src)
         self.assertEqual('call(i for i in j)', f.src)
 
+    def test_get_slice_primitive(self):
         # get list of primitive identifiers to Global and Nonlocal
 
         self.assertEqual([], (f := FST('global a, b, c')).get_slice(1, 1, cut=False, promote=False))
@@ -2855,6 +2856,7 @@ class cls:
             self.assertEqual('(a, *(not a), *(b or c))', FST('(a, b, c)').put_slice(FST('*not a, *b or c'), 1, 3, 'elts').src)
             assertRaises(SyntaxError('invalid expression (all types)'), FST('(a, b, c)').put_slice, '*not a, *b or c', 1, 3, 'elts')
 
+    def test_put_slice_primitive(self):
         # put list of primitive identifiers to Global and Nonlocal
 
         self.assertEqual('global a, c', (f := FST('global a, b, c')).put_slice([], 1, 2).src)

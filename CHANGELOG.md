@@ -2,9 +2,10 @@
 
 ### Added
 
+- `FSTView` types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice
+- `promote` option to control whether some primitive fields are gotten as primitives or nodes
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
-- `op` can be set as a global option for convenience
-- single-item dereferenced views keep track of this status to display single index and `copy()` single node
+- `op` can be set as a global option for convenience for putting slices to `Compare`
 
 ### Changed
 

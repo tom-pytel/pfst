@@ -2994,7 +2994,7 @@ def _get_slice(
     field: str,
     cut: bool,
     options: Mapping[str, Any],
-) -> fst.FST:
+) -> fst.FST | list[str]:
     """Get a slice of child nodes from `self`."""
 
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):

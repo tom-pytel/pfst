@@ -116,6 +116,8 @@ done instead (`raw=True`), or whether raw source reparse is used as a fallback i
 (`raw='auto'`). This can be used to make otherwise impossible changes. For information on how raw operations work see
 `fst.docs.d12_raw`.
 
+TODO: dated example, find a new one
+
 >>> print(FST('{a: b}').put('**c', 0, raw=False).src)
 {**c}
 
