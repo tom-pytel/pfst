@@ -27,7 +27,7 @@ _GLOBAL_OPTIONS_W_DEFAULTS = {
     'raw':           False,   # bool | 'auto'
     'trivia':        True,    # bool | 'all?' | 'block?' | 'none?' | int | (True | False | 'all?' | 'block?' | 'none?' | int, True | False | 'all?' | 'block?' | 'none?' | 'line?' | int)  - 'all', 'block' and 'none' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
     'coerce':        True,    # bool
-    'promote':       True,    # bool
+    'promote':       True,    # bool | 'identifier' | 'all'
     'elif_':         True,    # bool
     'pep8space':     True,    # bool | 1
     'docstr':        True,    # bool | 'strict'
@@ -65,6 +65,12 @@ def _check_opt_bool_or_None(option: str, value: object) -> str | None:
 
 def _check_opt_bool_or_auto(option: str, value: object) -> str | None:
     return "a bool or 'auto'" if value != 'auto' and not isinstance(value, bool) else None
+
+def _check_opt_promote(option: str, value: object) -> str | None:
+    if isinstance(value, bool) or value in ('identifier', 'all'):
+        return None
+
+    return "a bool, 'identifier' or 'all'"
 
 def _check_opt_norm(option: str, value: object) -> str | None:
     if isinstance(value, bool) or value in _ALL_OPT_OBJ_NORM_VALUES:
@@ -145,7 +151,7 @@ _ALL_OPTION_CHECK_FUNCS = {
     'raw':          _check_opt_bool_or_auto,
     'trivia':       _check_opt_trivia,
     'coerce':       _check_opt_bool,
-    'promote':      _check_opt_bool,
+    'promote':      _check_opt_promote,
     'elif_':        _check_opt_bool,
     'pep8space':    _check_opt_pep8space,
     'docstr':       _check_opt_docstr,
@@ -491,11 +497,20 @@ def options(**options: object) -> Generator[Mapping[str, Any], None, None]:
         `arguments` is expected.
         - `False`: Do not allow node type coercion, meant for strict type control.
         - `True`: Allow coercion between similar types. **DEFAULT**
-    - `promote': Whether to promote certain primitive fields to nodes on get or not. This only affects gets as puts to
-        the same fields will always accept either nodes or primitives.
+    - `'promote'`: Whether to promote primitive fields to nodes on get or not (via function copy like `copy()`, `get()`
+        or `get_slice()`, not by attribute). This only affects gets, as puts to the same fields will always accept
+        either nodes or primitives.
         - `False`: All primitive fields will return their primitive values, incluing slices of lists of strings.
         - `True`: The following fields will be promoted to nodes when gotten: `Global/Nonlocal.names`,
-            `MatchSingleton.value`.
+            `MatchSingleton.value` and `FormattedValue/Interpolation.conversion` (returned as a string `Constant`).
+            **DEFAULT**
+        - `'identifier'`: Same nodes as `True` as well as: `FunctionDef/AsyncFunctionDef/ClassDef.name`,
+            `ImportFrom.module`, `Attribute.attr`, `Name.id`, `ExceptHandler.name`, `arg/keyword.arg`,
+            `alias.name/asname`, `MatchMapping.rest`, `MatchClass.kwd_attrs`, `MatchStar/MatchAs.name` and
+            `TypeVar/ParamSpec/TypeVarTuple.name`.
+        - `'all'`: Same nodes as `'identifier'` as well as: `AnnAssign.simple`, `ImportFrom.level`,
+            `FormattedValue/Interpolation.conversion`, `Interpolation.str`, `Constant.value/kind` and
+            `comprehension.is_async`.
     - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
         - `False`: Always put as a standalone `If` statement on put.
         - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then

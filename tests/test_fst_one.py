@@ -496,13 +496,13 @@ class TestFSTPut(unittest.TestCase):
 
         # FormattedValue/Interpolation conversion and format_spec, JoinedStr/TemplateStr values
 
-        if PYGE12:
-            self.assertIsNone(None, FST('f"{a}"').values[0].get('conversion'))
-            self.assertEqual("'a'", FST('f"{a!a}"').values[0].get('conversion').src)
-            self.assertEqual("'r'", FST('f"{a!r}"').values[0].get('conversion').src)
-            self.assertEqual("'s'", FST('f"{a!s}"').values[0].get('conversion').src)
-            self.assertEqual("'r'", FST('f"{a=}"').values[1].get('conversion').src)
+        self.assertIsNone(None, FST('f"{a}"').values[0].get('conversion'))
+        self.assertEqual("'a'", FST('f"{a!a}"').values[0].get('conversion').src)
+        self.assertEqual("'r'", FST('f"{a!r}"').values[0].get('conversion').src)
+        self.assertEqual("'s'", FST('f"{a!s}"').values[0].get('conversion').src)
+        self.assertEqual("'r'", FST('f"{a=}"').values[1].get('conversion').src)
 
+        if PYGE12:
             f = FST('if 1:\n    f"{a!r\n : {\'0.5f<12\'} }"').body[0].value.values[0].get('format_spec')
             self.assertEqual('''f" {'0.5f<12'} "''', f.src)
             f.verify()
@@ -698,6 +698,84 @@ if 1:
 
         self.assertIs(True, (f := FST('case True: pass', 'match_case')).pattern.get(promote=False))
         self.assertEqual('0: True\nConstant True - ROOT 0,0..0,4', f.pattern.get(promote=True).dump('N', out='str'))
+
+        # identifier
+
+        self.assertEqual('i', (f := FST('def i(): pass')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('async def i(): pass')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('class i: pass')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('from i import *')).get('module', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('module', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('value.i')).get('attr', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('attr', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('i')).get('id', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('id', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('except e as i: pass')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('i: int', 'arg')).get('arg', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('arg', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('i=v', 'keyword')).get('arg', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('arg', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('i as a', 'alias')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('n as i', 'alias')).get('asname', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('asname', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('{**i}', 'MatchMapping')).get('rest', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('rest', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('cls(i=p)', 'MatchClass')).get(0, 'kwd_attrs', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get(0, 'kwd_attrs', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('*i', 'MatchStar')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        self.assertEqual('i', (f := FST('p as i', 'MatchAs')).get('name', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        if PYGE12:
+            self.assertEqual('i', (f := FST('i', 'TypeVar')).get('name', promote=False))
+            self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+            self.assertEqual('i', (f := FST('**i', 'ParamSpec')).get('name', promote=False))
+            self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+            self.assertEqual('i', (f := FST('*i', 'TypeVarTuple')).get('name', promote=False))
+            self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))
+
+        # all
+
+        self.assertEqual(1, (f := FST('a: int = 1')).get('simple', promote=False))
+        self.assertEqual("0: 1\nConstant 1 - ROOT 0,0..0,1", f.get('simple', promote='all').dump('N', out='str'))
+
+        self.assertEqual(1, (f := FST('from . import *')).get('level', promote=False))
+        self.assertEqual("0: 1\nConstant 1 - ROOT 0,0..0,1", f.get('level', promote='all').dump('N', out='str'))
+
+        self.assertEqual('s', (f := FST('u"s"')).get('value', promote=False))
+        self.assertEqual("0: 's'\nConstant 's' - ROOT 0,0..0,3", f.get('value', promote='all').dump('N', out='str'))
+
+        self.assertEqual('u', (f := FST('u"s"')).get('kind', promote=False))
+        self.assertEqual("0: 'u'\nConstant 'u' - ROOT 0,0..0,3", f.get('kind', promote='all').dump('N', out='str'))
+
+        self.assertEqual(1, (f := FST('async for _ in _', 'comprehension')).get('is_async', promote=False))
+        self.assertEqual("0: 1\nConstant 1 - ROOT 0,0..0,1", f.get('is_async', promote='all').dump('N', out='str'))
+
+        if PYGE14:
+            self.assertEqual('s', (f := FST('t"{s}"')).values[0].get('str', promote=False))
+            self.assertEqual("0: 's'\nConstant 's' - ROOT 0,0..0,3", f.values[0].get('str', promote='all').dump('N', out='str'))
 
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
     def test_get_format_spec(self):

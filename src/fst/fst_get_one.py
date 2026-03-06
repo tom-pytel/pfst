@@ -214,15 +214,21 @@ def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options:
 def _get_one_identifier(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
+    """Normal identifier get that may be promoted to a `Name` if `promote` is `'identifier'` or `'all'`."""
+
     child, _ = _validate_get(self, idx, field)
 
-    return child
+    if fst.FST.get_option('promote', options) not in ('identifier', 'all'):
+        return child
+
+    return fst.FST(Name(id=child, ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=len(child.encode())),
+                   [child], None, from_=self)
 
 
-def _get_one_identifier_promote(
+def _get_one_identifier_promote_true(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
-    """Normal identifier get that may be promoted to a `Name`."""
+    """Normal identifier get that may be promoted to a `Name` if `promote` is `True`, `'identifier'` or `'all'`."""
 
     child, _ = _validate_get(self, idx, field)
 
@@ -234,15 +240,23 @@ def _get_one_identifier_promote(
 
 
 def _get_one_constant(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+    """Normal constant get that may be promoted to a `Constant` if `promote` is `'all'`."""
+
     child, _ = _validate_get(self, idx, field)
 
-    return child
+    if fst.FST.get_option('promote', options) != 'all':
+        return child
+
+    src = repr(child)
+
+    return fst.FST(Constant(value=child, lineno=1, col_offset=0, end_lineno=1, end_col_offset=len(src.encode())),
+                   [src], None, from_=self)
 
 
-def _get_one_constant_promote(
+def _get_one_constant_promote_true(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
-    """Normal constant get that may be promoted to a `Constant`."""
+    """Normal constant get that may be promoted to a `Constant` if `promote` is `True`, `'identifier'` or `'all'`."""
 
     child, _ = _validate_get(self, idx, field)
 
@@ -338,6 +352,9 @@ def _get_one_conversion(
 
     if child == -1:
         return None
+
+    if not fst.FST.get_option('promote', options):
+        return child
 
     conv = chr(child)
 
@@ -553,8 +570,8 @@ _GET_ONE_HANDLERS = {
     (ImportFrom, 'module'):               _get_one_identifier,  # identifier? (dotted)
     (ImportFrom, 'names'):                _get_one_default,  # alias*
     (ImportFrom, 'level'):                _get_one_constant,  # int?
-    (Global, 'names'):                    _get_one_identifier_promote,  # identifier*
-    (Nonlocal, 'names'):                  _get_one_identifier_promote,  # identifier*
+    (Global, 'names'):                    _get_one_identifier_promote_true,  # identifier*
+    (Nonlocal, 'names'):                  _get_one_identifier_promote_true,  # identifier*
     (Expr, 'value'):                      _get_one_default,  # expr
     (BoolOp, 'op'):                       _get_one_BoolOp_op,  # boolop
     (BoolOp, 'values'):                   _get_one_default,  # expr*
@@ -649,7 +666,7 @@ _GET_ONE_HANDLERS = {
     (match_case, 'guard'):                _get_one_default,  # expr?
     (match_case, 'body'):                 _get_one_stmtlike,  # stmt*
     (MatchValue, 'value'):                _get_one_default,  # expr
-    (MatchSingleton, 'value'):            _get_one_constant_promote,  # constant
+    (MatchSingleton, 'value'):            _get_one_constant_promote_true,  # constant
     (MatchSequence, 'patterns'):          _get_one_default,  # pattern*
     (MatchMapping, 'keys'):               _get_one_default,  # expr*
     (MatchMapping, 'patterns'):           _get_one_default,  # pattern*
