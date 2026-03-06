@@ -5748,3 +5748,78 @@ _VIRTUAL_FIELD_VIEW__ALL = {
     Compare:      FSTView_Compare,
     arguments:    FSTView_arguments,
 }
+
+
+# def __setup_accessors_debug() -> None:
+#     """This function exists in order to verify that most of `fst` doesn't access `AST` node attributes via the slowere
+#     `FST` accessor path instead of accessing them directly on the `AST`.
+
+#     Some parts of `fst` do explicitly access via the accessors on purpose, and those locations are excluded in the
+#     WHITELIST. Chances are this WHITELIST will need to be updated any time this code is uncommented and run again.
+#     """
+
+#     import inspect
+#     from .fst_accessors import __all__ as accessors_all
+
+#     WHITELIST = {
+#         ('fst.fst', 1),           # doctests
+#         ('fst.fst', 2),           # doctests
+#         ('fst.fst', 3),           # doctests
+#         ('fst.fst', 5),           # doctests
+#         ('fst.fst_core', 1),      # doctests
+#         ('fst.fst_misc', 1),      # doctests
+#         ('fst.fst_misc', 2),      # doctests
+#         ('fst.fst_traverse', 1),  # doctests
+#         ('fst.fst_traverse', 2),  # doctests
+#         ('fst.fst_traverse', 3),  # doctests
+#         ('fst.fst_traverse', 4),  # doctests
+#         ('fst.fst_traverse', 5),  # doctests
+#         ('fst.fst_traverse', 6),  # doctests
+#         ('fst.fst_traverse', 7),  # doctests
+#         ('fst.fst_traverse', 8),  # doctests
+#         ('fst.fst_traverse', 9),  # doctests
+#         ('fst.view', 1),          # doctests
+#         ('fst.fst', 1820),        # return getattr(self, field)[idx]
+#         ('fst.fst', 1871),        # getattr(self, field)[idx] = code
+#         ('fst.fst', 1903),        # del getattr(self, field)[idx]
+#         ('fst.match', 4554),      # t = getattr(base, field)
+#         ('fst.match', 4770),      # or not isinstance(t := getattr(f, field, None), FSTView)
+#         ('fst.match', 4778),      # t = getattr(tgt.f, field)
+#     }
+
+#     def check_accessor_access() -> None:
+#         frame = inspect.currentframe().f_back.f_back
+
+#         try:
+#             if ((name := frame.f_globals.get('__name__', '')).startswith('fst')
+#                 and not name.startswith('fst.docs')
+#                 and not name.startswith('fst.fuzz')
+#                 and (name, frame.f_lineno) not in WHITELIST
+#             ):
+#                 raise Exception(f'{name}, {frame.f_lineno}')
+
+#         finally:
+#             del frame  # avoid reference cycles
+
+#     for name in accessors_all:
+#         def make(acc_getter: property) -> None:
+#             @property
+#             def dbg_getter(self: FST) -> object:
+#                 check_accessor_access()
+#                 return acc_getter.fget(self)
+
+#             @dbg_getter.setter
+#             def dbg_getter(self: FST, code: object) -> None:
+#                 check_accessor_access()
+#                 acc_getter.fset(self, code)
+
+#             @dbg_getter.deleter
+#             def dbg_getter(self: FST) -> None:
+#                 check_accessor_access()
+#                 acc_getter.fdel(self)
+
+#             return dbg_getter
+
+#         setattr(FST, name, make(getattr(FST, name)))
+
+# __setup_accessors_debug()

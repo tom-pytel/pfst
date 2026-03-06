@@ -1950,7 +1950,7 @@ def _get_slice_Global_Nonlocal_names(
     if promote:
         ret._fix_Tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
     else:
-        ret = [a.id for a in ret.elts]
+        ret = [a.id for a in ret.a.elts]
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
