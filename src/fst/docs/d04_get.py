@@ -286,14 +286,7 @@ _ExceptHandlers - ROOT 0,0..3,9
 ## Non-AST values
 
 Using `get()` and `get_slice()` you can get non-`AST` primitive values from nodes. This exists to accomondate stuff like
-`MatchSingleton`, as it just has a primitive value instead of an expression (it is also set this way, via primitive).
-
->>> f = FST('case True: pass')
-
->>> f.pattern.get('value')
-True
-
-But this also applies to any other `AST` field which is a primitive.
+`MatchSingleton`, `Constant` and any other node which has a primitive for any reason.
 
 >>> FST("b'bytes'", Constant).get('value')
 b'bytes'
@@ -304,7 +297,18 @@ b'bytes'
 >>> FST('a.b: int = 1').get('simple')
 0
 
-Getting slices from a primitive list does convert the primitives to their common-sense `AST` equivalents.
+Some primitive fields get promoted to node types by default, but you can turn all promotion off by specifying
+`promote=False`.
+
+>>> f = FST('case True: pass')
+
+>>> f.pattern.get('value')
+<Constant ROOT 0,0..0,4>
+
+>>> f.pattern.get('value', promote=False)
+True
+
+Getting slices from a primitive list does convert the primitives to their common-sense `AST` equivalents by default.
 
 >>> f = FST('global a, b, c')
 
@@ -325,13 +329,30 @@ Tuple - ROOT 0,0..0,7
    2] Name 'c' Load - 0,6..0,7
   .ctx Load
 
-Put likewise expects a valid `Tuple` when putting to a list of comma-separated primitives.
+Put likewise can take a valid `Tuple` when putting to a list of comma-separated primitives.
 
 >>> f.put_slice(g, 1, 2)
 <Global ROOT 0,0..0,20>
 
 >>> print(f.src)
 global a, a, b, c, c
+
+You can also put a list of primitives.
+
+>>> print(f.get_slice(promote=False))
+['a', 'a', 'b', 'c', 'c']
+
+>>> f.put_slice(['x', 'y'], 1, 4)
+<Global ROOT 0,0..0,17>
+
+>>> _ = f.get_slice().dump()
+Tuple - ROOT 0,0..0,10
+  .elts[4]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,3..0,4
+   2] Name 'y' Load - 0,6..0,7
+   3] Name 'c' Load - 0,9..0,10
+  .ctx Load
 
 
 ## By attribute

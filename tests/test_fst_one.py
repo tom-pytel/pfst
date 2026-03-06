@@ -330,7 +330,7 @@ class TestFSTPut(unittest.TestCase):
     def test_get_one_constant(self):
         for v in (True, False, None):
             f = FST(f'match a:\n case {v}: pass').cases[0].pattern
-            c = f.get('value')
+            c = f.get('value', promote=False)
             self.assertIs(c, v)
 
         for s in ('...', '2', '2.0', '2j', '"str"', 'b"bytes"', 'True', 'False', 'None'):
@@ -681,6 +681,15 @@ if 1:
             # type and field not in handlers list
 
             self.assertRaises(NodeError, FST.fromsrc('x = 1  # type: int', type_comments=True).body[0].get, 'type_comment')
+
+    def test_get_one_promote(self):
+        self.assertIs(None, FST('case None: pass', 'match_case').pattern.get(promote=False))
+        self.assertIs(False, FST('case False: pass', 'match_case').pattern.get(promote=False))
+        self.assertIs(True, FST('case True: pass', 'match_case').pattern.get(promote=False))
+
+        self.assertEqual('0: None\nConstant None - ROOT 0,0..0,4', FST('case None: pass', 'match_case').pattern.get(promote=True).dump('N', out='str'))
+        self.assertEqual('0: False\nConstant False - ROOT 0,0..0,5', FST('case False: pass', 'match_case').pattern.get(promote=True).dump('N', out='str'))
+        self.assertEqual('0: True\nConstant True - ROOT 0,0..0,4', FST('case True: pass', 'match_case').pattern.get(promote=True).dump('N', out='str'))
 
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
     def test_get_format_spec(self):

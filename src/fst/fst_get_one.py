@@ -219,10 +219,40 @@ def _get_one_identifier(
     return child
 
 
+def _get_one_identifier_promote(
+    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
+) -> _GetOneRet:
+    """Normal identifier get that may be promoted to a `Name`."""
+
+    child, _ = _validate_get(self, idx, field)
+
+    if not fst.FST.get_option('promote', options):
+        return child
+
+    return fst.FST(Name(id=child, ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=len(child.encode())),
+                   [child], None, from_=self)
+
+
 def _get_one_constant(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return child
+
+
+def _get_one_constant_promote(
+    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
+) -> _GetOneRet:
+    """Normal constant get that may be promoted to a `Constant`."""
+
+    child, _ = _validate_get(self, idx, field)
+
+    if not fst.FST.get_option('promote', options):
+        return child
+
+    src = repr(child)
+
+    return fst.FST(Constant(value=child, lineno=1, col_offset=0, end_lineno=1, end_col_offset=len(src.encode())),
+                   [src], None, from_=self)
 
 
 def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
@@ -233,20 +263,6 @@ def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, op
 
     return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
                    [''], None, from_=self)
-
-
-def _get_one_Global_Nonlocal_names(
-    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
-) -> _GetOneRet:
-    """This is just like a normal identifier get except that it may be promoted to a node."""
-
-    child, _ = _validate_get(self, idx, field)
-
-    if not fst.FST.get_option('promote', options):
-        return child
-
-    return fst.FST(Name(id=child, ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=len(child.encode())),
-                   [child], None, from_=self)
 
 
 def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
@@ -537,8 +553,8 @@ _GET_ONE_HANDLERS = {
     (ImportFrom, 'module'):               _get_one_identifier,  # identifier? (dotted)
     (ImportFrom, 'names'):                _get_one_default,  # alias*
     (ImportFrom, 'level'):                _get_one_constant,  # int?
-    (Global, 'names'):                    _get_one_Global_Nonlocal_names,  # identifier*
-    (Nonlocal, 'names'):                  _get_one_Global_Nonlocal_names,  # identifier*
+    (Global, 'names'):                    _get_one_identifier_promote,  # identifier*
+    (Nonlocal, 'names'):                  _get_one_identifier_promote,  # identifier*
     (Expr, 'value'):                      _get_one_default,  # expr
     (BoolOp, 'op'):                       _get_one_BoolOp_op,  # boolop
     (BoolOp, 'values'):                   _get_one_default,  # expr*
@@ -633,7 +649,7 @@ _GET_ONE_HANDLERS = {
     (match_case, 'guard'):                _get_one_default,  # expr?
     (match_case, 'body'):                 _get_one_stmtlike,  # stmt*
     (MatchValue, 'value'):                _get_one_default,  # expr
-    (MatchSingleton, 'value'):            _get_one_constant,  # constant
+    (MatchSingleton, 'value'):            _get_one_constant_promote,  # constant
     (MatchSequence, 'patterns'):          _get_one_default,  # pattern*
     (MatchMapping, 'keys'):               _get_one_default,  # expr*
     (MatchMapping, 'patterns'):           _get_one_default,  # pattern*
