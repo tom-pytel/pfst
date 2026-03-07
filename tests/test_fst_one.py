@@ -485,7 +485,7 @@ class TestFSTPut(unittest.TestCase):
         self.assertEqual('ident', FST('import ident as b').names[0].get('name'))
         self.assertEqual('ident', FST('import a as ident').names[0].get('asname'))
         self.assertEqual('ident', FST('match a:\n case {**ident}: pass').cases[0].pattern.get('rest'))
-        self.assertEqual('ident', FST('match a:\n case cls(ident=1): pass').cases[0].pattern.get(0, 'kwd_attrs'))
+        self.assertEqual('ident', FST('match a:\n case cls(ident=1): pass').cases[0].pattern.get(0, 'kwd_attrs', promote=False))
         self.assertEqual('ident', FST('match a:\n case (*ident,): pass').cases[0].pattern.patterns[0].get('name'))
         self.assertEqual('ident', FST('match a:\n case 1 as ident: pass').cases[0].pattern.get('name'))
 
@@ -699,6 +699,11 @@ if 1:
         self.assertIs(True, (f := FST('case True: pass', 'match_case')).pattern.get(promote=False))
         self.assertEqual('0: True\nConstant True - ROOT 0,0..0,4', f.pattern.get(promote=True).dump('N', out='str'))
 
+        # MatchClass.kwd_attrs
+
+        self.assertEqual('i', (f := FST('cls(i=p)', 'MatchClass')).get(0, 'kwd_attrs', promote=False))
+        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get(0, 'kwd_attrs', promote=True).dump('N', out='str'))
+
         # identifier
 
         self.assertEqual('i', (f := FST('def i(): pass')).get('name', promote=False))
@@ -736,9 +741,6 @@ if 1:
 
         self.assertEqual('i', (f := FST('{**i}', 'MatchMapping')).get('rest', promote=False))
         self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('rest', promote='identifier').dump('N', out='str'))
-
-        self.assertEqual('i', (f := FST('cls(i=p)', 'MatchClass')).get(0, 'kwd_attrs', promote=False))
-        self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get(0, 'kwd_attrs', promote='identifier').dump('N', out='str'))
 
         self.assertEqual('i', (f := FST('*i', 'MatchStar')).get('name', promote=False))
         self.assertEqual("0: i\nName 'i' Load - ROOT 0,0..0,1", f.get('name', promote='identifier').dump('N', out='str'))

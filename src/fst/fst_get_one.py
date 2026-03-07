@@ -674,7 +674,7 @@ _GET_ONE_HANDLERS = {
     (MatchMapping, '_all'):               _get_one_MatchMapping__all,  # expr*
     (MatchClass, 'cls'):                  _get_one_default,  # expr
     (MatchClass, 'patterns'):             _get_one_default,  # pattern*
-    (MatchClass, 'kwd_attrs'):            _get_one_identifier,  # identifier*
+    (MatchClass, 'kwd_attrs'):            _get_one_identifier_promote_true,  # identifier*
     (MatchClass, 'kwd_patterns'):         _get_one_default,  # pattern*
     (MatchStar, 'name'):                  _get_one_identifier,  # identifier?
     (MatchAs, 'pattern'):                 _get_one_default,  # pattern?

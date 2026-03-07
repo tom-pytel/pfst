@@ -2268,11 +2268,17 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', 0, None, 'kwd_attrs', {}, (MatchClass,
+('', 0, None, 'kwd_attrs', {'promote': False}, (MatchClass,
 r'''cls(a, b=c)'''),
 r'''**ValueError('cannot delete from MatchClass.kwd_attrs')**''',
 "\n'b'\n",
 r'''<class 'str'>'''),
+
+('', 0, None, 'kwd_attrs', {}, (MatchClass,
+r'''cls(a, b=c)'''),
+r'''**ValueError('cannot delete from MatchClass.kwd_attrs')**''',
+r'''b''',
+r'''Name 'b' Load - ROOT 0,0..0,1'''),
 
 ('', 0, None, 'kwd_patterns', {}, (MatchClass,
 r'''cls(a, b=c)'''),
