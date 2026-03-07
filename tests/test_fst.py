@@ -51,7 +51,7 @@ from fst.common import (
 )
 
 from fst.code import *
-from fst.view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
+from fst.view import FSTView, FSTView_dummy
 
 from support import assertRaises
 
@@ -8305,8 +8305,8 @@ def h(k): pass            # ln 16
             self.assertEqual(fv[:1].loc[:2], loc[:2])  # type: ignore
             self.assertEqual(fv[-1:].loc[2:], loc[2:])  # type: ignore
 
-            self.assertEqual(fv[0].pars()[:2], loc[:2])  # type: ignore
-            self.assertEqual(fv[-1].pars()[2:], loc[2:])  # type: ignore
+            self.assertEqual(fv.at(0).pars()[:2], loc[:2])  # type: ignore
+            self.assertEqual(fv.at(-1).pars()[2:], loc[2:])  # type: ignore
 
         test(FST('{(a):\n(b),\n(c):\n(d)}')._all)
         test(FST('{(a):\n(b),\n**\n(d)}')._all)
@@ -8333,6 +8333,31 @@ def h(k): pass            # ln 16
         test(FST('global\\\na,\\\n b').names)
         test(FST('nonlocal a, b').names)
         test(FST('nonlocal\\\na,\\\n b').names)
+
+    def test_FSTView_at(self):
+        f = FST('global a, b, c')
+        self.assertIsInstance(f.names.at(0), FSTView)
+        self.assertIsInstance(f.names.at(1), FSTView)
+        self.assertIsInstance(f.names.at(1)[0], str)
+        self.assertIsInstance(f.names.at(2), FSTView)
+
+        f = FST('{a: b, **d, e: f}')
+        self.assertIsInstance(f.keys.at(0), FST)
+        self.assertIsInstance(f.keys.at(1), FSTView)
+        self.assertIsNone(f.keys.at(1)[0])
+        self.assertIsInstance(f.keys.at(2), FST)
+
+        f = FST('*, a=1, b, c=3', 'arguments')
+        self.assertIsInstance(f.kw_defaults.at(0), FST)
+        self.assertIsInstance(f.kw_defaults.at(1), FSTView)
+        self.assertIsNone(f.kw_defaults.at(1)[0])
+        self.assertIsInstance(f.kw_defaults.at(2), FST)
+
+        # f = FST('cls(a=1, b=2, c=3)', 'MatchClass')
+        # self.assertIsInstance(f.kwd_attrs.at(0), FSTView)
+        # self.assertIsInstance(f.kwd_attrs.at(1), FSTView)
+        # self.assertIsInstance(f.kwd_attrs.at(1)[0], str)
+        # self.assertIsInstance(f.kwd_attrs.at(2), FSTView)
 
     def test_options(self):
         new = dict(

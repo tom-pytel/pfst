@@ -4738,8 +4738,8 @@ def _match_list(pat: type, tgt: _Targets, mstate: _MatchState) -> Mapping[str, A
 
         if not len(tgt):
             tgt = _EMPTY_LIST
-        elif not tgt.is_deref_FST or isinstance(tgt[0], str):  # could be multi-node items like Dict/MatchMapping/arguments or Global/Nonlocal.names or MatchClass.kwd_attrs
-            tgt = list(tgt)
+        elif not tgt.is_item_FST or isinstance(tgt[0], str):  # could be multi-node items like Dict/MatchMapping/arguments or Global/Nonlocal.names or MatchClass.kwd_attrs
+            tgt = [tgt.at(i) for i in range(len(tgt))]  # we want FSTView with information for `str` fields
         else:
             tgt = [f.a if f else f for f in tgt]  # convert to temporary list of AST nodes
 

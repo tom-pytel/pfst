@@ -1251,7 +1251,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertIs((f := FST('None')).a.value, pat.match(f)['t'])
 
         # self.assertIs((f := FST('global abc')).names[0], MGlobal([M(t='abc')]).match(f)['t'])
-        self.assertEqual(str((f := FST('global abc')).names[0]), str(MGlobal([M(t='abc')]).match(f)['t']))
+        self.assertEqual(str((f := FST('global abc')).names.at(0)), str(MGlobal([M(t='abc')]).match(f)['t']))
         self.assertEqual("<<Global ROOT 0,0..0,10>.names[0]>", str(MGlobal([M(t='abc')]).match(FST('global abc'))['t']))
 
         self.assertEqual(str((f := FST('global a, b')).names), str(MGlobal(M(t=['a', 'b'])).match(f)['t']))
