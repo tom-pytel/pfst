@@ -10427,9 +10427,9 @@ match a:
         # prextend
         assert_type(cast(FST, f.copy().value).prextend('b, c', pars='auto'), FST)
         # get
-        assert_type(cast(FST, f.copy().value).get(0, 1, 'elts', False, pars='auto'), FST | str | EllipsisType | int | float | complex | bytes | None)
-        assert_type(cast(FST, f.copy().value).get(0, 'elts', cut=False, pars='auto'), FST | str | EllipsisType | int | float | complex | bytes | None)
-        assert_type(cast(FST, f.copy().value).get('elts', cut=False, pars='auto'), FST | str | EllipsisType | int | float | complex | bytes | None)
+        assert_type(cast(FST, f.copy().value).get(0, 1, 'elts', False, pars='auto'), FST | list[str] | str | EllipsisType | int | float | complex | bytes | None)
+        assert_type(cast(FST, f.copy().value).get(0, 'elts', cut=False, pars='auto'), FST | list[str] | str | EllipsisType | int | float | complex | bytes | None)
+        assert_type(cast(FST, f.copy().value).get('elts', cut=False, pars='auto'), FST | list[str] | str | EllipsisType | int | float | complex | bytes | None)
         # put
         assert_type(cast(FST, f.copy().value).put('z', 0, 1, 'elts', True, pars='auto'), FST | None)
         assert_type(cast(FST, f.copy().value).put('z', 0, 'elts', one=True, pars='auto'), FST | None)
@@ -10438,9 +10438,9 @@ match a:
         assert_type(cast(FST, f.copy().value).put(f.value.copy_ast(), 'elts', one=True, pars='auto'), FST | None)
         assert_type(cast(FST, f.copy().value).put(f.value.copy(), 'elts', one=True, pars='auto'), FST | None)
         # get_slice
-        assert_type(cast(FST, f.copy().value).get_slice(0, 1, 'elts', False, pars='auto'), FST)
-        assert_type(cast(FST, f.copy().value).get_slice(0, 'elts', cut=False, pars='auto'), FST)
-        assert_type(cast(FST, f.copy().value).get_slice('elts', cut=False, pars='auto'), FST)
+        assert_type(cast(FST, f.copy().value).get_slice(0, 1, 'elts', False, pars='auto'), FST | list[str])
+        assert_type(cast(FST, f.copy().value).get_slice(0, 'elts', cut=False, pars='auto'), FST | list[str])
+        assert_type(cast(FST, f.copy().value).get_slice('elts', cut=False, pars='auto'), FST | list[str])
         # put_slice
         assert_type(cast(FST, f.copy().value).put_slice('x, y', 0, 1, 'elts', False, pars='auto'), FST | None)
         assert_type(cast(FST, f.copy().value).put_slice('x, y', 0, 'elts', one=False, pars='auto'), FST | None)

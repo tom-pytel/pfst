@@ -476,12 +476,6 @@ class FST:
         return self
 
     @property
-    def base(self) -> FST:
-        """This exists for more convenient interoperability with `FSTView`. Here it just always returns `self`."""
-
-        return self
-
-    @property
     def lines(self) -> list[builtins.str]:
         """Whole lines of this node from the **RAW SOURCE**, without any dedentation, may also contain parts of
         enclosing nodes. Will have indentation as it appears in the top level source if multiple lines. If gotten at
@@ -716,6 +710,12 @@ class FST:
 
         raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
                            f"you're accessing an FST {self}.f")
+
+    @property
+    def base(self) -> FST:
+        """This exists for more convenient interoperability with `FSTView`. Here it just always returns `self`."""
+
+        return self
 
     # ------------------------------------------------------------------------------------------------------------------
     # Create / manage
@@ -5481,6 +5481,7 @@ class FST:
         _loc_Subscript_brackets,
         _loc_MatchMapping_rest,
         _loc_MatchClass_pars,
+        _loc_MatchClass_kwd_attrs,
         _loc_FunctionDef_type_params_brackets,
         _loc_ClassDef_type_params_brackets,
         _loc_TypeAlias_type_params_brackets,

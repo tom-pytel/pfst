@@ -176,6 +176,25 @@ def {field}(self: 'fst.FST') -> None:
     self._put_slice(None, 0, 'end', {field!r})
 '''.strip())
 
+            elif field == 'kwd_attrs':  # SPECIAL CASE!!!
+                print(f'''
+@property
+def {field}(self: 'fst.FST') -> FSTView:
+    """`FST` accessor for `AST` field `{field}`."""
+
+    self.a.{field}  # noqa: B018
+
+    return FSTView_MatchClass_kwd_attrs(self, {field!r})
+
+@{field}.setter
+def {field}(self: 'fst.FST', code: Code | None) -> None:
+    self._put_slice(code, 0, 'end', {field!r})
+
+@{field}.deleter
+def {field}(self: 'fst.FST') -> None:
+    self._put_slice(None, 0, 'end', {field!r})
+'''.strip())
+
             else:
                 print(f'''
 @property
@@ -240,7 +259,7 @@ from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionD
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import FSTView, FSTView_Global_Nonlocal, FSTView_dummy
+from .view import FSTView, FSTView_Global_Nonlocal, FSTView_MatchClass_kwd_attrs, FSTView_dummy
 '''.strip())
 
     cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either) | 4 if is optional (for single), ...}

@@ -1394,6 +1394,8 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(MNonlocal(names=['a', 'b', 'd']).match(FST('nonlocal a, b, c')))
         self.assertTrue(MCompare(_all=['a', 'b', 'c']).match(FST('a < b < c')))
         self.assertFalse(MCompare(_all=['a', 'b', 'd']).match(FST('a < b < c')))
+        self.assertTrue(MMatchClass(kwd_attrs=['a', 'b', 'c']).match(FST('cls(a=x, b=y, c=z)', 'pattern')))
+        self.assertFalse(MMatchClass(kwd_attrs=['a', 'b', 'd']).match(FST('cls(a=x, b=y, c=z)', 'pattern')))
 
         self.assertTrue(MClassDef(_bases=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('e'))]).match(FST('class c(a, *b, c=d, **e): pass')))
         self.assertFalse(MClassDef(_bases=[MName('a'), MStarred(MName('b')), Mkeyword('c', MName('d')), Mkeyword(None, MName('f'))]).match(FST('class c(a, *b, c=d, **e): pass')))
@@ -1410,6 +1412,7 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertTrue(MClassDef(_body=[MQSTAR]).match(FST('class cls:\n """docstr"""\n a\n b\n c')))
         self.assertTrue(MGlobal(names=[MQSTAR]).match(FST('global a, b, c')))
         self.assertTrue(MNonlocal(names=[MQSTAR]).match(FST('nonlocal a, b, c')))
+        self.assertTrue(MMatchClass(kwd_attrs=[MQSTAR]).match(FST('cls(a=x, b=y, c=z)', 'pattern')))
         self.assertTrue(MCompare(_all=[MQSTAR]).match(FST('a < b < c')))
 
     def test_match_FSTView_to_FSTView(self):
@@ -1429,6 +1432,8 @@ all_tagss=[[], [], [{'es': [<FSTMatch <Name 0,1..0,2> {'cb': <Name 0,1..0,2>}>, 
         self.assertFalse(MGlobal(names=FST('global a, b, d').names).match(FST('global a, b, c')))
         self.assertTrue(MNonlocal(names=FST('nonlocal a, b, c').names).match(FST('nonlocal a, b, c')))
         self.assertFalse(MNonlocal(names=FST('nonlocal a, b, d').names).match(FST('nonlocal a, b, c')))
+        self.assertTrue(MMatchClass(kwd_attrs=FST('cls(a=x, b=y, c=z)', 'pattern').kwd_attrs).match(FST('cls(a=x, b=y, c=z)', 'pattern')))
+        self.assertFalse(MMatchClass(kwd_attrs=FST('cls(a=x, b=y, d=z)', 'pattern').kwd_attrs).match(FST('cls(a=x, b=y, c=z)', 'pattern')))
 
         self.assertTrue(MCompare(_all=FST('a < b < c')._all).match(FST('a < b < c')))
         self.assertFalse(MCompare(_all=FST('a < b < d')._all).match(FST('a < b < c')))

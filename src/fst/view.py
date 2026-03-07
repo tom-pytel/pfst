@@ -23,6 +23,7 @@ __all__ = [
     'FSTView__body',
     'FSTView_arglikes',
     'FSTView_Global_Nonlocal',
+    'FSTView_MatchClass_kwd_attrs',
     'FSTView_dummy',
 ]
 
@@ -1678,6 +1679,139 @@ class FSTView_Global_Nonlocal(FSTView):
             return None
 
         return self.base._loc_Global_Nonlocal_names(stop - 1).end_col
+
+
+class FSTView_MatchClass_kwd_attrs(FSTView):
+    """For `MatchClass.kwd_attrs`. @private"""
+
+    is_item_FST = False
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names.loc
+        fstlocn(1, 0, 2, 2, n=0)
+
+        >>> f.names[:1].loc
+        fstloc(1, 0, 1, 1)
+
+        >>> f.names[-1:].loc
+        fstloc(2, 1, 2, 2)
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if not (len_ := stop - start):
+            return None
+        if len_ == 1:
+            return self.base._loc_MatchClass_kwd_attrs(start)
+
+        (ln, col, _, _), (_, _, end_ln, end_col) = self.base._loc_MatchClass_kwd_attrs(start, stop - 1)
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].ln
+        1
+
+        >>> f.names[-1:].ln
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_MatchClass_kwd_attrs(start).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].col
+        0
+
+        >>> f.names[-1:].col
+        1
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_MatchClass_kwd_attrs(start).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].end_ln
+        1
+
+        >>> f.names[-1:].end_ln
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_MatchClass_kwd_attrs(stop - 1).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('global\\\na,\\\n b')
+
+        >>> f.names[:1].end_col
+        1
+
+        >>> f.names[-1:].end_col
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_MatchClass_kwd_attrs(stop - 1).end_col
 
 
 class FSTView_dummy(FSTView):

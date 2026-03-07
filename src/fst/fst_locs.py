@@ -827,6 +827,42 @@ def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
+def _loc_MatchClass_kwd_attrs(
+    self: fst.FST, idx_first: int, idx_last: int | None = None
+) -> fstloc | tuple[fstloc, fstloc]:
+    """We assume `idx_first` and optionally `idx_last` are in [0..len(kwd_attrs)), no negative or out-of-bounds."""
+
+    assert self.a.__class__ is MatchClass
+
+    ast = self.a
+    lines = self.root._lines
+    _, _, end_ln, end_col = self.loc
+
+    if idx_first:
+        _, _, ln, col = ast.kwd_patterns[idx_first - 1].f.loc
+    elif patterns := ast.patterns:
+        _, _, ln, col = patterns[-1].f.loc
+    else:
+        _, _, ln, col = ast.cls.f.loc
+
+    ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+    first_loc = fstloc(ln, col, ln, col + len(src))
+
+    if idx_last is None:
+        return first_loc
+
+    if idx_last:
+        _, _, ln, col = ast.kwd_patterns[idx_last - 1].f.loc
+    elif patterns := ast.patterns:
+        _, _, ln, col = patterns[-1].f.loc
+    else:
+        _, _, ln, col = ast.cls.f.loc
+
+    ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+
+    return first_loc, fstloc(ln, col, ln, col + len(src))
+
+
 def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
     """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
     a location for brackets if they are there even if there are no type_params (for editing purposes).
@@ -947,9 +983,11 @@ def _loc_TypeAlias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, t
     return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
 
 
-def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:
-    """We assume `first` and optionally `last` are in [0..len(names)), no negative or out-of-bounds and `last` follows
-    or equals `first` if present."""
+def _loc_Global_Nonlocal_names(
+    self: fst.FST, idx_first: int, idx_last: int | None = None
+) -> fstloc | tuple[fstloc, fstloc]:
+    """We assume `idx_first` and optionally `idx_last` are in [0..len(names)), no negative or out-of-bounds and
+    `idx_last` follows or equals `idx_first` if present."""
 
     assert self.a.__class__ in ASTS_LEAF_VAR_SCOPE_DECL
 
@@ -957,7 +995,7 @@ def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = Non
 
     col += 6 if self.a.__class__ is Global else 8
     lines = self.root._lines
-    idx = first
+    idx = idx_first
 
     while idx:  # skip the commas
         ln, col = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
@@ -967,10 +1005,10 @@ def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = Non
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
     first_loc = fstloc(ln, col, ln, col := col + len(src))
 
-    if last is None:
+    if idx_last is None:
         return first_loc
 
-    if not (idx := last - first):
+    if not (idx := idx_last - idx_first):
         return first_loc, first_loc
 
     while idx:
