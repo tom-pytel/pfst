@@ -705,8 +705,7 @@ class FST:
 
     @property
     def f(self) -> None:
-        """Runtime confusion protection.
-        @private"""
+        """Runtime confusion protection. @private"""
 
         raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
                            f"you're accessing an FST {self}.f")

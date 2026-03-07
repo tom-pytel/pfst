@@ -8235,6 +8235,17 @@ class cls:
         def delitem(): del v[::2]
         self.assertRaises(IndexError, delitem)
 
+        # root
+
+        f = FST('[[[1, 2, 3]]]')
+        self.assertIs(f.elts[0].elts[0].elts.root, f)
+
+        # confusion protection
+
+        v = FST('[1, 2, 3]').elts
+        assertRaises(RuntimeError("you probably think you're accessing an AST node '.f', but you're not, you're accessing an FSTView <<List ROOT 0,0..0,9>.elts>.f"), lambda: v.f)
+        assertRaises(RuntimeError("you probably think you're accessing an FST node '.a', but you're not, you're accessing an FSTView <<List ROOT 0,0..0,9>.elts>.a"), lambda: v.a)
+
     def test_FSTView_named_indexing(self):
         f = FST('''
 if 1:                     # ln 0
@@ -8334,30 +8345,102 @@ def h(k): pass            # ln 16
         test(FST('nonlocal a, b').names)
         test(FST('nonlocal\\\na,\\\n b').names)
 
-    def test_FSTView_at(self):
+    def test_FSTView_at_and_item(self):
+        # slice indexing not allowed
+
+        f = FST('[a, b, c]')
+        assertRaises(ValueError('slice indexing not allowed'), f.elts.at, builtins.slice(1, 2))
+
+        # strings
+
         f = FST('global a, b, c')
         self.assertIsInstance(f.names.at(0), FSTView)
         self.assertIsInstance(f.names.at(1), FSTView)
-        self.assertIsInstance(f.names.at(1)[0], str)
+        self.assertIsInstance(f.names.at(1).item, str)
         self.assertIsInstance(f.names.at(2), FSTView)
+
+        f = FST('cls(a=1, b=2, c=3)', 'MatchClass')
+        self.assertIsInstance(f.kwd_attrs.at(0), FSTView)
+        self.assertIsInstance(f.kwd_attrs.at(1), FSTView)
+        self.assertIsInstance(f.kwd_attrs.at(1).item, str)
+        self.assertIsInstance(f.kwd_attrs.at(2), FSTView)
+
+        # None
 
         f = FST('{a: b, **d, e: f}')
         self.assertIsInstance(f.keys.at(0), FST)
         self.assertIsInstance(f.keys.at(1), FSTView)
-        self.assertIsNone(f.keys.at(1)[0])
+        self.assertIsNone(f.keys.at(1).item)
         self.assertIsInstance(f.keys.at(2), FST)
 
         f = FST('*, a=1, b, c=3', 'arguments')
         self.assertIsInstance(f.kw_defaults.at(0), FST)
         self.assertIsInstance(f.kw_defaults.at(1), FSTView)
-        self.assertIsNone(f.kw_defaults.at(1)[0])
+        self.assertIsNone(f.kw_defaults.at(1).item)
         self.assertIsInstance(f.kw_defaults.at(2), FST)
 
-        # f = FST('cls(a=1, b=2, c=3)', 'MatchClass')
-        # self.assertIsInstance(f.kwd_attrs.at(0), FSTView)
-        # self.assertIsInstance(f.kwd_attrs.at(1), FSTView)
-        # self.assertIsInstance(f.kwd_attrs.at(1)[0], str)
-        # self.assertIsInstance(f.kwd_attrs.at(2), FSTView)
+        # multinode
+
+        f = FST('{a: b, c: d, e: f}')
+        self.assertIsInstance(f._all.at(1), FSTView)
+        self.assertIsInstance(f._all.at(1)[0], FSTView)
+
+        f = FST('{1: b, 2: d, 3: f}', 'pattern')
+        self.assertIsInstance(f._all.at(1), FSTView)
+        self.assertIsInstance(f._all.at(1)[0], FSTView)
+
+        f = FST('a=1, b=2, c=3', 'arguments')
+        self.assertIsInstance(f._all.at(1), FSTView)
+        self.assertIsInstance(f._all.at(1)[0], FSTView)
+
+        # FST
+
+        f = FST('[a, b, c]')
+        self.assertIsInstance(f.elts.at(1), FST)
+
+        # force view
+
+        f = FST('[a, b, c]')
+        v = f.elts.at(1, force_view=True)
+        self.assertIsInstance(v, FSTView)
+        self.assertIs(v.item, f.elts[1])
+
+        # string indexing
+
+        f = FST('''
+"""moddoc"""
+
+class cls:
+    """clsdoc"""
+
+    def meth(self):
+        """methdoc"""
+
+        pass
+        '''.strip(), 'exec')
+
+        self.assertIs(f.body.at('cls'), f.body[1])
+        self.assertIs(f.body.at('cls.meth'), f.body[1].body[1])
+
+        v = f.body.at('cls', force_view=True)
+        self.assertIs(v.base, f)
+        self.assertEqual(v.field, 'body')
+        self.assertEqual(v.start, 1)
+
+        v = f._body.at('cls', force_view=True)
+        self.assertIs(v.base, f)
+        self.assertEqual(v.field, '_body')
+        self.assertEqual(v.start, 0)
+
+        v = f.body.at('cls.meth', force_view=True)
+        self.assertIs(v.base, f.body[1])
+        self.assertEqual(v.field, 'body')
+        self.assertEqual(v.start, 1)
+
+        v = f._body.at('cls.meth', force_view=True)
+        self.assertIs(v.base, f.body[1])
+        self.assertEqual(v.field, 'body')
+        self.assertEqual(v.start, 1)
 
     def test_options(self):
         new = dict(

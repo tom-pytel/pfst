@@ -2,11 +2,12 @@
 
 ### Added
 
-- `FSTView`
+- allow use of `FSTView` as a singleton item reference
   - types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice
   - `at()` method to get an item as a singleton `FSTView` if getting that item alone would lose information like a `None` or `str`
-- `promote` option to control whether primitive fields are gotten as primitives or nodes, covers all primitive fields
+  - `.item` property for quick access to singleton `FSTView` item
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
+- `promote` option to control whether primitive fields are gotten as primitives or nodes, covers all primitive fields
 - `op` can be set as a global option for convenience for putting slices to `Compare`
 
 ### Changed

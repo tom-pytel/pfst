@@ -133,13 +133,15 @@ class FSTView:
 
     @property
     def start(self) -> int:
-        """Start position within the target field list this view references."""
+        """Start position within the target field list this view references. For a `_body` field with a docstring an
+        index of 0 here really means 1 in the actual `body` list."""
 
         return self._base_indices()[0]
 
     @property
     def stop(self) -> int:
-        """One past the last item within the target field list this view references."""
+        """Position one past the last item within the target field list this view references. For a `_body` field with a
+        docstring this index tops out at 1 less than the length of the actual `body` list."""
 
         return self._base_indices()[1]
 
@@ -148,6 +150,44 @@ class FSTView:
         """Start and stop positions within the target field list this view references."""
 
         return self._base_indices()[:2]
+
+    @property
+    def item(self) -> FSTView | fst.FST | str | None:
+        """Convenience function for singleton `FSTView` to get the item it is referencing. Multinode `FSTView` objects
+        do not have a single item they can dereference and so return themselves."""
+
+        if not self.is_one:
+            raise RuntimeError("'.item' only valid for singleton FSTViews")
+
+        if self.is_item_multinode:
+            return self
+
+        return a.f if isinstance(a := self._getitem(self._start), AST) else a  # self._start was updated in the .is_one check
+
+    @property
+    def f(self) -> None:
+        """Runtime confusion protection. @private"""
+
+        raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
+                           f"you're accessing an FSTView {self}.f")
+
+    @property
+    def a(self) -> None:
+        """Runtime confusion protection. @private"""
+
+        raise RuntimeError(f"you probably think you're accessing an FST node '.a', but you're not, "
+                           f"you're accessing an FSTView {self}.a")
+
+    @property
+    def root(self) -> fst.FST:
+        """Root node of the tree this view belongs to."""
+
+        base = self.base
+
+        while parent := base.parent:
+            base = parent
+
+        return base
 
     @property
     def lines(self) -> list[str]:
@@ -165,7 +205,7 @@ class FSTView:
         ['b', 'c']
         """
 
-        return self.base.root._lines[loc.ln : loc.end_ln + 1] if (loc := self.bloc) else ['']
+        return self.root._lines[loc.ln : loc.end_ln + 1] if (loc := self.bloc) else ['']
 
     @property
     def src(self) -> str:
@@ -310,10 +350,10 @@ class FSTView:
 
         return len(getattr(self.base.a, self.field))
 
-    def _getitem(self, idx: int) -> AST | str:
+    def _getitem(self, idx: int) -> FSTView | AST | str | None:
         """Return a single item from field (which may not be a contiguous list). `idx` is the real index already
-        validated and absolute (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN
-        NODE. Can return `AST` or primitive or another `FSTView` if base field not a single `FST`."""
+        validated (offset by any `start`) and is guaranteed to be positive and valid. NO COPY, JUST RETURN NODE. Can
+        return `AST` or primitive or another `FSTView` if base field not a single `FST`."""
 
         if not self.is_item_multinode:  # single node deref always returns value, which can be FST, None or a str
             return getattr(self.base.a, self.field)[idx]
@@ -594,25 +634,26 @@ class FSTView:
         else:  # the actual node found for the str search
             idx_start.remove()
 
-    def at(self, idx: int | slice | str) -> FSTView | fst.FST | str | None:
-        r"""Get a single item or a slice view from this view. All indices (including negative) are relative to the
-        bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
-        `.copy()` on the returned value.
+    def at(self, idx: int | str, force_view: bool = False) -> FSTView | fst.FST | str | None:
+        r"""Get a single item from this view. All indices (including negative) are relative to the bounds of this view.
+        This is just an access, not a cut or a copy, so if you want a copy you must explicitly do `.copy()` on the
+        returned value.
 
-        For getting slices, this function works exactly the same as indexing.
-
-        For getting single items, this function differs from indexing in that indexing will always return the actual
-        value at the index, including if it is a `None` or a `str` value (`Global/Nonlocal.names` or
-        `MatchClass.kwd_attrs`). This function will return an `FST` where that exists, but for primitive values like
-        `None` or a `str`, this function will return a singleton `FSTView` of the item. This is in order to make it
-        possible to retrieve the item's information getting it.
+        This function differs from `[]` indexing in that indexing will always return the actual value at the index,
+        including if it is a `None` or a `str` value (`Global/Nonlocal.names` or `MatchClass.kwd_attrs`). This function
+        will return an `FST` where that exists, but for primitive values like `None` or a `str`, this function will
+        return a singleton `FSTView` of the item. This is in order to make it possible to retrieve the item's
+        information getting it.
 
         **Parameters:**
-        - `idx`: The index or `slice` where to get the item(s) from, or a `str` for a single-item name search.
+        - `idx`: The index where to get the item from, or a `str` for a name search.
+        - `force_view`: If `True` then will return all items as singleton `FSTView` objects, regardless of if they
+            reference `FST` nodes or not. If an item was indexed with a string and it is not a direct child of this view
+            then a view with that node's `base` and index is returned.
 
         **Returns:**
         - `FSTView | FST | str | None`: Either a single `FST` node if accessing a single item if that is possible, or a
-            new `FSTView` view if not or a `slice` index passed.
+            new `FSTView` view if item is not an `FST`.
 
         **Examples:**
 
@@ -641,23 +682,36 @@ class FSTView:
 
         >>> FST('global a, b, c').names.at(1).copy(promote=False)
         'b'
+
+        >>> FST('[a, b, c]').elts.at(1, force_view=True)
+        <<List ROOT 0,0..0,9>.elts[1]>
+
+        >>> FST('[a, b, c]').elts.at(1, force_view=True).item
+        <Name 0,4..0,5>
         """
 
         start, _, _, idx_start, idx_stop = self._fixup_item_indices(idx)
 
         if idx_stop is not None:  # slice
-            return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
+            raise ValueError('slice indexing not allowed')
 
         if isinstance(idx_start, fst.FST):  # the actual node found for the str search
-            return idx_start
+            if not force_view:
+                return idx_start
 
-        idx_start += start
+            field, idx = idx_start.pfield  # we know is not direct child of this view
 
-        if self.is_item_FST:
-            if a := self._getitem(idx_start):  # if not FST then can only be None
-                return a.f
+            view = FSTView(idx_start.parent, field, idx, idx + 1)
 
-        view = self.__class__(self.base, self.field, idx_start, idx_start + 1)
+        else:
+            idx_start += start
+
+            if not force_view and self.is_item_FST:
+                if a := self._getitem(idx_start):  # if not FST then can only be None
+                    return a.f
+
+            view = self.__class__(self.base, self.field, idx_start, idx_start + 1)
+
         view._is_one = True
 
         return view
@@ -1332,7 +1386,7 @@ class FSTView_Compare(FSTView):
     def _len_field(self) -> int:
         return 1 + len(self.base.a.comparators)
 
-    def _getitem(self, idx: int) -> AST | str:
+    def _getitem(self, idx: int) -> FSTView | AST | str | None:
         return self.base.a.comparators[idx - 1] if idx else self.base.a.left
 
 
@@ -1529,7 +1583,7 @@ class FSTView__body(FSTView):
 
         return len(base.a.body) - base.has_docstr
 
-    def _getitem(self, idx: int) -> AST | str:
+    def _getitem(self, idx: int) -> FSTView | AST | str | None:
         base = self.base
 
         return base.a.body[idx + base.has_docstr]
@@ -1544,7 +1598,7 @@ class FSTView_arglikes(FSTView):
 
         return len(getattr(ast, self.field[1:])) + len(ast.keywords)
 
-    def _getitem(self, idx: int) -> AST | str:
+    def _getitem(self, idx: int) -> FSTView | AST | str | None:
         return self.base._cached_arglikes()[idx]
 
 
