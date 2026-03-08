@@ -5,6 +5,7 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+import io
 import os
 import re
 import sys
@@ -131,6 +132,7 @@ from .common import (
 )
 
 __all__ = [
+    'is_terminal_color_enabled',
     'new_empty_set_star',
     'new_empty_set_call',
     'new_empty_set_curlies',
@@ -530,6 +532,19 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+def is_terminal_color_enabled() -> bool:
+    if DEFAULT_COLOR is not None:
+        return DEFAULT_COLOR
+
+    if not hasattr(sys.stdout, 'fileno'):
+        return False  # pragma: no cover
+
+    try:
+        return os.isatty(sys.stdout.fileno()) or IPYTHON_COLOR
+    except io.UnsupportedOperation:
+        return hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or IPYTHON_COLOR)
+
 
 def new_empty_set_star(
     lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True

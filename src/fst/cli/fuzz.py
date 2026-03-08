@@ -1,4 +1,5 @@
-"""Ugly, super-hacky standalone runnable module of fuzzers, mostly meant for debugging `fst` itself."""
+"""STANDALONE CLI MODULE! Ugly, super-hacky standalone runnable module of fuzzers, mostly meant for debugging `fst`
+itself."""
 
 import argparse
 import gc
@@ -29,16 +30,16 @@ from unicodedata import normalize
 #     _ExceptHandlers
 # )
 
-from .asttypes import *
-from .asttypes import _ASTDummy
-from .astutil import *
-from .astutil import re_alnumdot_alnum, AST_BASES
-from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
-from .parsex import parse, parse_expr_arglike
-from .view import FSTView
-from .match import *
-from .fst import FST, ASTS_LEAF_FTSTR
-from . import NodeError
+from ..asttypes import *
+from ..asttypes import _ASTDummy
+from ..astutil import *
+from ..astutil import re_alnumdot_alnum, AST_BASES
+from ..common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
+from ..parsex import parse, parse_expr_arglike
+from ..view import FSTView
+from ..match import *
+from ..fst import FST, ASTS_LEAF_FTSTR
+from .. import NodeError
 
 try:
     from tokenize import FSTRING_MIDDLE
@@ -53,7 +54,7 @@ except ImportError:
 
 INCLUDE_PYTHON_STDLIB = True
 
-PROGRAM = 'python -m fst.fuzz'
+PROGRAM = 'python -m fst.cli.fuzz'
 
 UNICODE = ''.join([
     'ä',

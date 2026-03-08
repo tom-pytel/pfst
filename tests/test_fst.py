@@ -10603,9 +10603,9 @@ match a:
         # search
         assert_type(f.search(Assign, True, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FSTMatch, bool, None])
         # sub
-        assert_type(f.sub(Assign, 'repl', True, 0, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None, retn=None), FST)
+        assert_type(f.sub(Assign, 'repl', True, 0, loop=False, callback=None, callback_post=None, copy_options=None, repl_options=None, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), FST)
         # subn
-        assert_type(f.subn(Assign, 'repl', True, 0, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), tuple[FST, int, int])
+        assert_type(f.subn(Assign, 'repl', True, 0, loop=False, callback=None, callback_post=None, copy_options=None, repl_options=None, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), tuple[FST, int, int])
         # find_def
         assert_type(f.find_def('nonexistent', None, recurse=True, asts=None), FST | None)
         # find_loc

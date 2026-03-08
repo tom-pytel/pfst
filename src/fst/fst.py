@@ -4,9 +4,6 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
-import io
-import os
-import sys
 from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse
 from io import TextIOBase
@@ -144,7 +141,7 @@ from .astutil import (
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, _code_as_lines, code_as_all
-from .fst_misc import DEFAULT_COLOR, IPYTHON_COLOR, DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
+from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, is_terminal_color_enabled, clip_src_loc, fixup_field_body
 from .fst_options import check_options, filter_options
 
 from .view import (
@@ -1564,14 +1561,8 @@ class FST:
         if out == 'print':
             out = print
 
-            if color is None and (color := DEFAULT_COLOR) is None:
-                if not hasattr(sys.stdout, 'fileno'):
-                    color = False  # pragma: no cover
-                else:
-                    try:
-                        color = os.isatty(sys.stdout.fileno()) or IPYTHON_COLOR
-                    except io.UnsupportedOperation:
-                        color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or IPYTHON_COLOR)
+            if color is None:
+                color = is_terminal_color_enabled()  # we do it each time because sys.stdout may change
 
         if isinstance(out, TextIOBase):
             out = out.write

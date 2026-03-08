@@ -6,9 +6,12 @@
   - types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice
   - `at()` method to get an item as a singleton `FSTView` if getting that item alone would lose information like a `None` or `str`
   - `.item` property for quick access to singleton `FSTView` item
+- added `callback` and `post_callback` parameters to `sub()` and `subn()` to better observe and control individual substitutions
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
 - `promote` option to control whether primitive fields are gotten as primitives or nodes, covers all primitive fields
 - `op` can be set as a global option for convenience for putting slices to `Compare`
+- new CLI modules `fst.cli.search` and `fst.cli.sub`
+- added `--color/--no-color` force options to main `fst` CLI module
 
 ### Changed
 
@@ -17,7 +20,7 @@
 - identifier puts using `FST` nodes as source (which doesn't consume them), will now unmake those nodes to stay consistent with all other puts
 - loosened `Constant` rules
   - `fromast()` and `as_()` will accept negative numerical `Constant.value` and normalize those to `UnaryOp(USub, abs(Constant))`
-  - put to primitive field will accept `UnaryOp(USub, Constant)` numerical values
+  - put to primitive int field will accept `UnaryOp(USub, Constant)` numerical values
 
 ### Fixed
 

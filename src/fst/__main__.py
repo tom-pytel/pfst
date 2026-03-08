@@ -35,6 +35,8 @@ def main() -> None:
                         help="indent list elements")
     parser.add_argument('--no-verify', default=False, action='store_true',
                         help="don't verify parsed AST")
+    parser.add_argument('--color', default=None, action=argparse.BooleanOptionalAction,
+                        help='explicitly enable or disable color  (default: auto)')
 
     args = parser.parse_args()
 
@@ -63,7 +65,9 @@ def main() -> None:
         if args.src_plus:
             src += '+'
 
-    ast.f.dump(src=src, full=args.full, expand=args.expand, indent=args.indent, list_indent=args.list_indent)
+    ast.f.dump(
+        src=src, full=args.full, expand=args.expand, indent=args.indent, list_indent=args.list_indent, color=args.color
+    )
 
 
 if __name__ == '__main__':
