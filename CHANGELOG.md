@@ -10,6 +10,7 @@
 - put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
 - `promote` option to control whether primitive fields are gotten as primitives or nodes, covers all primitive fields
 - `op` can be set as a global option for convenience for putting slices to `Compare`
+- `FST.parse_ast()` to parse a pure `AST` without `FST` nodes using our extended parsing
 - new CLI modules `fst.cli.search` and `fst.cli.sub`
 - added `--color/--no-color` force options to main `fst` CLI module
 

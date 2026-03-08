@@ -1475,6 +1475,26 @@ class TestParse(unittest.TestCase):
         self.assertRaises(SyntaxError, px.parse_withitem, ')+(')
         self.assertRaises(SyntaxError, px.parse__withitems, ')+(')
 
+    def test_parse_ast(self):
+
+        # TODO rest of this
+
+        # normalize Constant
+
+        self.assertEqual(dump(FST.parse_ast(Constant(-1))), 'UnaryOp(op=USub(), operand=Constant(value=1))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-1.1))), 'UnaryOp(op=USub(), operand=Constant(value=1.1))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-0.0))), 'Constant(value=0.0)')
+        self.assertEqual(dump(FST.parse_ast(Constant(-1j))), 'UnaryOp(op=USub(), operand=Constant(value=1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-0j))), 'Constant(value=0j)')
+        self.assertEqual(dump(FST.parse_ast(Constant(1+1j))), 'BinOp(left=Constant(value=1), op=Add(), right=Constant(value=1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(1-1j))), 'BinOp(left=Constant(value=1), op=Sub(), right=Constant(value=1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-1+1j))), 'BinOp(left=UnaryOp(op=USub(), operand=Constant(value=1)), op=Add(), right=Constant(value=1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-1-1j))), 'BinOp(left=UnaryOp(op=USub(), operand=Constant(value=1)), op=Sub(), right=Constant(value=1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(1.1+1.1j))), 'BinOp(left=Constant(value=1.1), op=Add(), right=Constant(value=1.1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(1.1-1.1j))), 'BinOp(left=Constant(value=1.1), op=Sub(), right=Constant(value=1.1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-1.1+1.1j))), 'BinOp(left=UnaryOp(op=USub(), operand=Constant(value=1.1)), op=Add(), right=Constant(value=1.1j))')
+        self.assertEqual(dump(FST.parse_ast(Constant(-1.1-1.1j))), 'BinOp(left=UnaryOp(op=USub(), operand=Constant(value=1.1)), op=Sub(), right=Constant(value=1.1j))')
+
     def test_code_as_simple(self):
         # stmts
 
@@ -2192,6 +2212,92 @@ match a:
         self.assertRaises(NodeError, code_as__withitems, FST('*a'))
         self.assertRaises(ParseError, code_as__comprehension_ifs, '*a', coerce=True)
         self.assertRaises(NodeError, code_as__comprehension_ifs, FST('*a'), coerce=True)
+
+        # normalize Constant
+
+        self.assertEqual(FST.fromast(Constant(-1)).dump(out='str'), '''
+UnaryOp - ROOT 0,0..0,2
+  .op USub - 0,0..0,1
+  .operand Constant 1 - 0,1..0,2
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-0.0)).dump(out='str'), '''
+Constant 0.0 - ROOT 0,0..0,3
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-1j)).dump(out='str'), '''
+UnaryOp - ROOT 0,0..0,3
+  .op USub - 0,0..0,1
+  .operand Constant 1j - 0,1..0,3
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-0j)).dump(out='str'), '''
+Constant 0j - ROOT 0,0..0,2
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(1+1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,6
+  .left Constant 1 - 0,0..0,1
+  .op Add - 0,2..0,3
+  .right Constant 1j - 0,4..0,6
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(1-1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,6
+  .left Constant 1 - 0,0..0,1
+  .op Sub - 0,2..0,3
+  .right Constant 1j - 0,4..0,6
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-1+1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,7
+  .left UnaryOp - 0,0..0,2
+    .op USub - 0,0..0,1
+    .operand Constant 1 - 0,1..0,2
+  .op Add - 0,3..0,4
+  .right Constant 1j - 0,5..0,7
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-1-1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,7
+  .left UnaryOp - 0,0..0,2
+    .op USub - 0,0..0,1
+    .operand Constant 1 - 0,1..0,2
+  .op Sub - 0,3..0,4
+  .right Constant 1j - 0,5..0,7
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(1.1+1.1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,10
+  .left Constant 1.1 - 0,0..0,3
+  .op Add - 0,4..0,5
+  .right Constant 1.1j - 0,6..0,10
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(1.1-1.1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,10
+  .left Constant 1.1 - 0,0..0,3
+  .op Sub - 0,4..0,5
+  .right Constant 1.1j - 0,6..0,10
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-1.1+1.1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,11
+  .left UnaryOp - 0,0..0,4
+    .op USub - 0,0..0,1
+    .operand Constant 1.1 - 0,1..0,4
+  .op Add - 0,5..0,6
+  .right Constant 1.1j - 0,7..0,11
+        '''.strip())
+
+        self.assertEqual(FST.fromast(Constant(-1.1-1.1j)).dump(out='str'), '''
+BinOp - ROOT 0,0..0,11
+  .left UnaryOp - 0,0..0,4
+    .op USub - 0,0..0,1
+    .operand Constant 1.1 - 0,1..0,4
+  .op Sub - 0,5..0,6
+  .right Constant 1.1j - 0,7..0,11
+        '''.strip())
 
     def test_coerce_special(self):
         self.assertRaises(NodeError, code.code_as_stmt, FST('f"{a}"').values[0].a, coerce=True)

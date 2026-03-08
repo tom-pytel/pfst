@@ -2407,9 +2407,6 @@ y"
         self.assertIsInstance(f.a.value, complex)
         self.assertEqual(f.a.value, 0j)
 
-        assertRaises(ParseError('could not reparse AST to Constant, got BinOp'), FST.fromast, Constant(1+1j))
-        assertRaises(ParseError('could not reparse AST to Constant, got BinOp'), FST.fromast, Constant(-1-1j))
-
         # TODO: more tests, explicit coerce with same source
 
     def test_infer_indent(self):

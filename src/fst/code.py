@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from math import copysign
 from types import NoneType
 from typing import Any, Callable, Literal, Mapping, Union
 from unicodedata import normalize
@@ -233,6 +234,51 @@ _EXPR_PARSE_FUNC_TO_NAME = {
     parse_expr_all:     'expression (all types)',
     parse_expr:         'expression (standard)',
 }
+
+
+def _normalize_Constant_for_unparse(ast: Constant) -> tuple[AST, type[AST]]:
+    """Normalize a `Constant` node that may contain negative numerical values or negative floating point 0.0 FOR UNPARSE
+    AND REPARSE ONLY! Resulting `AST` node may not be valid for anything else!!!
+
+    **Returns:**
+    - `(AST, mode)`: `AST` node appropriate for unparse and the mode that it should reparse with.
+    """
+
+    mode = Constant
+    value = ast.value
+
+    if isinstance(value, int):
+        if value < 0:
+            mode = UnaryOp
+            ast = UnaryOp(USub(), Constant(-value))
+
+    elif isinstance(value, float):
+        if value < 0:
+            mode = UnaryOp
+            ast = UnaryOp(USub(), Constant(-value))
+
+        elif not value and copysign(1.0, value) == -1.0:  # normalize -0.0 because otherwise it reparses to UnaryOp(USub)
+            ast = Constant(0.0)
+
+    elif isinstance(value, complex):
+        imag = value.imag
+
+        if real := value.real:
+            mode = BinOp
+            op = Sub if imag < 0 else Add
+            ast = BinOp(Constant(int(real) if real.is_integer() else real), op(), Constant(complex(0, abs(imag))))
+
+        elif imag < 0:
+            mode = UnaryOp
+            ast = UnaryOp(USub(), Constant(complex(0.0, abs(imag))))
+
+        elif not imag and copysign(1.0, imag) == -1.0:  # normalize -0.0j
+            ast = Constant(0j)  # also normalize real -0.0 here
+
+        elif copysign(1.0, real) == -1.0:  # need to normalize possible -0.0 real
+            ast = Constant(complex(0.0, imag))
+
+    return ast, mode
 
 
 def _fix__slice_last_line(self: fst.FST, lines: list[bistr], end_ln: int, end_col: int, comment: bool = False) -> None:
@@ -3245,7 +3291,7 @@ def _code_as_expr(
                         raise NodeError(f'expecting expression (slice), got {old_code.__class__.__name__}'
                                         f', coerced to Starred, must be in a sequence')
 
-                elif ast_cls is not UnaryOp or ast.op.__class__ is not USub or ast.operand.__class__ is not code_cls:  # the only allowed structural change is Constant(-num) to UnaryOp(USub, Constant(num))
+                else:
                     raise ParseError(f'could not reparse AST to {old_code.__class__.__name__}'
                                      f', got {ast_cls.__name__}')
 
@@ -3312,7 +3358,7 @@ def _code_as_lines(code: Code | None) -> list[str]:  # This is meant for export 
 
 def code_as(
     code: Code,
-    mode: Mode = 'all',
+    mode: Mode | None = None,
     options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
     *,
@@ -3320,7 +3366,17 @@ def code_as(
     coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to any specified parsable `FST` if possible. If `FST` passed matches then it is returned as
-    itself, otherwise may be coerced if that is allowed."""
+    itself, otherwise may be coerced if that is allowed.
+
+    **Parameters:**
+    - `mode`: If this is `None` then it is set to `'all'` and this function is free to do some normalization.
+    """
+
+    if mode is None:
+        if not isinstance(code, AST):
+            mode = 'all'
+        elif (mode := code.__class__) is Constant:  # Constants with negative values get normalized in parse to UnaryOp (set to expect that), -0.0 primitive values at the top level need to be normalized here otherwise these may be reparsed to BinOp
+            code, mode = _normalize_Constant_for_unparse(code)
 
     if code_as := _CODE_AS_MODE_FUNCS.get(mode):
         fst_ = code_as(code, options, parse_params, strip=strip, coerce=coerce)

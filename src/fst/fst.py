@@ -7,7 +7,6 @@ import builtins  # because of the unfortunate choice for the name of an Interpol
 from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse
 from io import TextIOBase
-from math import copysign
 from typing import Any, Callable, Generator, Literal, Mapping, TextIO
 
 from . import parsex
@@ -115,7 +114,6 @@ from .asttypes import (
     TypeIgnore,
     UAdd,
     USub,
-    UnaryOp,
     While,
     With,
     arg,
@@ -140,7 +138,7 @@ from .astutil import (
 
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
-from .code import Code, _code_as_lines, code_as_all
+from .code import Code, _code_as_lines, _normalize_Constant_for_unparse, code_as_all
 from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, is_terminal_color_enabled, clip_src_loc, fixup_field_body
 from .fst_options import check_options, filter_options
 
@@ -246,11 +244,10 @@ def _validate_get_put_line_comment_field(self: FST, field: str) -> None:
 def parse(
     source: builtins.str | bytes | AST,
     filename: str = '<unknown>',
-    mode: str = 'exec',
+    mode: Mode = 'exec',
     *,
     type_comments: bool = False,
     feature_version: tuple[int, int] | None = None,
-    **kwargs: object,
 ) -> AST:
     r"""Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
@@ -305,13 +302,13 @@ def parse(
 
     if isinstance(source, AST):
         return FST.fromast(source, None, filename=filename, type_comments=type_comments,
-                           feature_version=feature_version, **kwargs).a
+                           feature_version=feature_version).a
 
     if not isinstance(source, str):
         source = bytes(source).decode()
 
     return FST.fromsrc(source, mode, filename=filename, type_comments=type_comments,
-                       feature_version=feature_version, **kwargs).a
+                       feature_version=feature_version).a
 
 
 def unparse(ast_obj: AST) -> str:
@@ -1147,35 +1144,80 @@ class FST:
                 .value Constant 5 - 1,8..1,9
         """
 
-        if not mode:
-            mode = ast.__class__
-
-            if mode is Constant:  # Constants with negative values get normalized in parse to UnaryOp (set to expect that), -0.0 primitive values need to be normalized here
-                value = ast.value
-
-                if isinstance(value, int):
-                    if value < 0:
-                        mode = UnaryOp
-
-                elif isinstance(value, float):
-                    if value < 0:
-                        mode = UnaryOp
-                    elif not value and copysign(1.0, value) == -1.0:  # normalize -0.0 because otherwise it reparses to UnaryOp(USub)
-                        ast = Constant(0.0, ast.kind)
-
-                elif isinstance(value, complex):
-                    if (imag := value.imag) < 0:
-                        mode = UnaryOp  # we only set this for negative imaginary since any real part for a complex Constant errors out
-
-                        if not (real := value.real) and copysign(1.0, real) == -1.0:  # need to normalize possible -0.0 real
-                            ast = Constant(complex(0.0, imag), ast.kind)
-
-                    elif not imag and copysign(1.0, imag) == -1.0:  # normalize -0.0j
-                        ast = Constant(complex(value.real or 0.0, 0.0), ast.kind)  # also normalize real -0.0 here
-
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
         return code.code_as(ast, mode, parse_params=parse_params, coerce=coerce)
+
+    @staticmethod
+    def parse_ast(
+        src: builtins.str | AST,
+        mode: Mode | None = None,
+        *,
+        filename: builtins.str = '<unknown>',
+        type_comments: bool = False,
+        feature_version: tuple[int, int] | None = None,
+    ) -> AST:
+        r"""Extended parse to just an `AST` tree, no `FST` nodes added unlike the normal `parse()`. This function also
+        defaults to minimal parse which will return a single statement instead of a module if that is what is present,
+        or just an expression (or `keyword`, or `arg`, etc...).
+
+        If `src` is an `AST` then it is unparsed and reparsed to fill in location information and if `mode=None` then
+        a top-level `Constant` node may be normalized. The `AST` passed in is not modified.
+
+        **Parameters:**
+        - `src`: The source to parse or an `AST` node.
+        - `mode`: Parse mode. If `None` then normal minimizing parse is used (same as `'all'`) and top level `Constant`
+            node may be normalized.
+        - `filename`: `ast.parse()` parameter.
+        - `type_comments`: `ast.parse()` parameter.
+        - `feature_version`: `ast.parse()` parameter.
+
+        **Returns:**
+        - `AST`: Properly reparsed and maybe normalized, `FST` nodes are not added.
+
+        **Examples:**
+
+        >>> hasattr(FST.parse_ast('123'), 'f')
+        False
+
+        >>> print(dump(FST.parse_ast('123', 'exec')))
+        Module(body=[Expr(value=Constant(value=123))], type_ignores=[])
+
+        >>> print(dump(FST.parse_ast('123', 'stmt')))
+        Expr(value=Constant(value=123))
+
+        >>> print(dump(FST.parse_ast('123')))
+        Constant(value=123)
+
+        >>> print(dump(FST.parse_ast('123'), include_attributes=True))
+        Constant(value=123, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)
+
+        >>> print(dump(FST.parse_ast(Constant(123)), include_attributes=True))
+        Constant(value=123, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)
+
+        >>> print(dump(FST.parse_ast(Constant(-1))))
+        UnaryOp(op=USub(), operand=Constant(value=1))
+
+        This will fail because by specifying a `mode` we do not allow normalization.
+
+        >>> print(dump(FST.parse_ast(Constant(-1), 'Constant')))
+        Traceback (most recent call last):
+        ...
+        fst.ParseError: could not parse to Constant, got UnaryOp
+        """
+
+        if isinstance(src, AST):
+            if mode is None and (mode := src.__class__) is Constant:
+                src, mode = _normalize_Constant_for_unparse(src)
+
+            src = parsex.unparse(src)
+
+        elif not isinstance(src, str):
+            raise ValueError('expecting source str or AST')
+
+        parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
+
+        return parsex.parse(src, mode or 'all', parse_params)
 
     get_options = fst_options.get_options  # we do assign instead of import so that pdoc gets the right order
     get_option = fst_options.get_option
@@ -1240,7 +1282,7 @@ class FST:
         if copy or self.parent:
             self = self.copy(**options)
 
-        return code.code_as(self, mode or 'all', options, self.parse_params, coerce=True)
+        return code.code_as(self, mode, options, self.parse_params, coerce=True)
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed
