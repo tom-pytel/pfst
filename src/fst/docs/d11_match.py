@@ -2275,4 +2275,27 @@ Traceback (most recent call last):
 ...
 fst.NodeError: expecting _arglikes, got Tuple, coerce disabled
 
+
+# Command Line Interface
+
+Both the `search()` and `sub()` functions have a command-line interface allowing easy application to files. The pattern
+and replacement template take the same form as they do for the functions.
+
+Search all python files in the `src/` directory for keyword arguments.
+
+```
+$ python -m fst.cli.search --pattern 'Mkeyword' src/*.py
+```
+
+Substitute all keyword arguments with the same argument and value but with extra spaces. Due to the use of the`--dry`
+argument this will not update the files substituted but just show the substitutions.
+
+```
+$ python -m fst.cli.sub \
+  --pattern 'Mkeyword(M(a=...), M(v=...))' \
+  --repl '__FST_a  =  __FST_v' \
+  --mode keyword \
+  --dry \
+  src/*.py
+```
 """

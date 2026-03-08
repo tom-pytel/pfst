@@ -7,6 +7,7 @@ import sys
 
 import fst
 from .. import match
+from ..parsex import _PARSE_MODE_FUNCS
 from .search import read_file, parse_args, resolve_pattern, iter_files, print_lines, print_match
 
 
@@ -35,7 +36,7 @@ def resolve_repl(args: argparse.Namespace) -> str:
 
     print(f'{args.clr_prompt}Replacement template:{args.clr_reset}\n{src}')
 
-    return repl
+    return fst.FST(repl, args.mode)
 
 
 def print_sub(args: argparse.Namespace, f: fst.FST) -> None:
@@ -50,6 +51,9 @@ def main() -> None:
                             help='replacement template, if not specified will prompt')
         parser.add_argument('-R', '--repl-file', default=None,
                             help='replacement template, if not specified will prompt')
+        parser.add_argument('-m', '--mode', default='all',
+                            choices=[m for m in _PARSE_MODE_FUNCS if isinstance(m, str)],
+                            help='replacement template parse mode  (default: all)')
         parser.add_argument('-d', '--dry', action='store_true',
                             help="dry run, don't write substitutions to files")
         parser.add_argument('--nested', action='store_true',

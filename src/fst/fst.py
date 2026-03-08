@@ -1235,7 +1235,7 @@ class FST:
           .ctx Load
         """
 
-        check_options(options)
+        options = check_options(options, mark_checked=True)
 
         if copy or self.parent:
             self = self.copy(**options)
