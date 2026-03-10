@@ -27,6 +27,8 @@ from fst.common import (
     PYGE15,
 )
 
+from support import assertRaises
+
 
 def walkscope(fst_or_list, back=False, all=False):
     if isinstance(fst_or_list, FST):
@@ -1528,6 +1530,116 @@ def f[T: ftb, *U, **V]():
         self.assertEqual('a + b\nc + 1\ny', f.src)
         f.verify()
 
+    def test_walk_on_leave(self):
+        assertRaises(ValueError("invalid walk 'on' value 'BAD'"), list, FST('a').walk(on='BAD'))
+        assertRaises(NotImplementedError("'scope=True' is only supported for 'on=\"enter\"'"), list, FST('a').walk(on='leave', scope=True))
+        assertRaises(NotImplementedError("'scope=True' is only supported for 'on=\"enter\"'"), list, FST('a').walk(on='both', scope=True))
+
+        # basic on leave
+
+        f = FST('[a, [b, c], d]')
+
+        self.assertEqual(['a', 'b', 'c', '[b, c]', 'd', '[a, [b, c], d]'], list(f.src for f in f.walk(on='leave')))
+        self.assertEqual(['d', 'c', 'b', '[b, c]', 'a', '[a, [b, c], d]'], list(f.src for f in f.walk(on='leave', back=True)))
+        self.assertEqual(['a', '[b, c]', 'd', '[a, [b, c], d]'], list(f.src for f in f.walk(on='leave', recurse=False)))
+        self.assertEqual(['d', '[b, c]', 'a', '[a, [b, c], d]'], list(f.src for f in f.walk(on='leave', recurse=False, back=True)))
+        self.assertEqual(['a', 'b', 'c', '[b, c]', 'd'], list(f.src for f in f.walk(on='leave', self_=False)))
+        self.assertEqual(['d', 'c', 'b', '[b, c]', 'a'], list(f.src for f in f.walk(on='leave', self_=False, back=True)))
+        self.assertEqual(['a', '[b, c]', 'd'], list(f.src for f in f.walk(on='leave', self_=False, recurse=False)))
+        self.assertEqual(['d', '[b, c]', 'a'], list(f.src for f in f.walk(on='leave', self_=False, recurse=False, back=True)))
+
+        # test send(True) on last node
+
+        def test(gen, repeat_node):
+            l = []
+
+            for f in gen:
+                l.append(f.src)
+
+                if f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+            return l
+
+        f = FST('[a, [b, c], d]')
+
+        self.assertEqual(['a', 'b', 'c', '[b, c]', 'd', '[a, [b, c], d]', 'a', 'b', 'c', '[b, c]', 'd', '[a, [b, c], d]'], test(f.walk(on='leave'), f))
+        self.assertEqual(['d', 'c', 'b', '[b, c]', 'a', '[a, [b, c], d]', 'd', 'c', 'b', '[b, c]', 'a', '[a, [b, c], d]'], test(f.walk(on='leave', back=True), f))
+        self.assertEqual(['a', '[b, c]', 'd', '[a, [b, c], d]', 'a', 'b', 'c', '[b, c]', 'd', '[a, [b, c], d]'], test(f.walk(on='leave', recurse=False), f))
+        self.assertEqual(['d', '[b, c]', 'a', '[a, [b, c], d]', 'd', 'c', 'b', '[b, c]', 'a', '[a, [b, c], d]'], test(f.walk(on='leave', recurse=False, back=True), f))
+        self.assertEqual(['a', 'b', 'c', '[b, c]', 'b', 'c', '[b, c]', 'd'], test(f.walk(on='leave', self_=False), f.elts[1]))
+        self.assertEqual(['d', 'c', 'b', '[b, c]', 'c', 'b', '[b, c]', 'a'], test(f.walk(on='leave', self_=False, back=True), f.elts[1]))
+        self.assertEqual(['a', '[b, c]', 'b', 'c', '[b, c]', 'd', ], test(f.walk(on='leave', self_=False, recurse=False), f.elts[1]))
+        self.assertEqual(['d', '[b, c]', 'c', 'b', '[b, c]', 'a', ], test(f.walk(on='leave', self_=False, recurse=False, back=True), f.elts[1]))
+
+        # send(True) overrides recurse=False
+
+        f = FST('[a, [b, [c, d]]]')
+
+        self.assertEqual(['a', '[b, [c, d]]', '[a, [b, [c, d]]]', 'a', 'b', 'c', 'd', '[c, d]', '[b, [c, d]]', '[a, [b, [c, d]]]'], test(f.walk(on='leave', recurse=False), f))
+        self.assertEqual(['[b, [c, d]]', 'a', '[a, [b, [c, d]]]', 'd', 'c', '[c, d]', 'b', '[b, [c, d]]', 'a', '[a, [b, [c, d]]]'], test(f.walk(on='leave', recurse=False, back=True), f))
+        self.assertEqual(['a', '[b, [c, d]]', 'b', 'c', 'd', '[c, d]', '[b, [c, d]]', '[a, [b, [c, d]]]'], test(f.walk(on='leave', recurse=False), f.elts[1]))
+        self.assertEqual(['[b, [c, d]]', 'd', 'c', '[c, d]', 'b', '[b, [c, d]]', 'a', '[a, [b, [c, d]]]'], test(f.walk(on='leave', recurse=False, back=True), f.elts[1]))
+        self.assertEqual(['a', '[b, [c, d]]', '[a, [b, [c, d]]]'], test(f.walk(on='leave', recurse=False), f.elts[1].elts[1]))
+        self.assertEqual(['[b, [c, d]]', 'a', '[a, [b, [c, d]]]'], test(f.walk(on='leave', recurse=False, back=True), f.elts[1].elts[1]))
+
+        # test delete with send(True) on last node
+
+        def testdel(gen, repeat_node):
+            l = []
+
+            for f in gen:
+                l.append(f.src)
+
+                if f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+                elif f.is_Name:
+                    f.remove()
+
+            return l
+
+        f = FST('[a, [b, [c, d], e], f]')
+
+        self.assertEqual(['a', 'b', 'c', 'd', '[]', 'e', '[[]]', 'f', '[[[]]]', '[]', '[[]]', '[[[]]]'], testdel((g := f.copy()).walk(on='leave'), g))
+        self.assertEqual(['f', 'e', 'd', 'c', '[]', 'b', '[[]]', 'a', '[[[]]]', '[]', '[[]]', '[[[]]]'], testdel((g := f.copy()).walk(on='leave', back=True), g))
+
+        # test replace with send(True) on outermost node
+
+        def testrepl(gen, repeat_node):
+            l = []
+
+            for f in gen:
+                l.append(f.src)
+
+                if f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+                elif f.is_Name:
+                    i = f.id
+                    f.replace(i.upper() if i.islower() else i.lower())  # swap uppercase and lowercase
+
+            return l
+
+        self.assertEqual(['a', 'b', 'c', 'd', '[C, D]', 'e', '[B, [C, D], E]', 'f', '[A, [B, [C, D], E], F]', 'A', 'B', 'C', 'D', '[c, d]', 'E', '[b, [c, d], e]', 'F', '[a, [b, [c, d], e], f]'], testrepl((g := f.copy()).walk(on='leave'), g))
+        self.assertEqual(['f', 'e', 'd', 'c', '[C, D]', 'b', '[B, [C, D], E]', 'a', '[A, [B, [C, D], E], F]', 'F', 'E', 'D', 'C', '[c, d]', 'B', '[b, [c, d], e]', 'A', '[a, [b, [c, d], e], f]'], testrepl((g := f.copy()).walk(on='leave', back=True), g))
+
+        # test replace with send(True) on intermediate node
+
+        self.assertEqual(['a', 'b', 'c', 'd', '[C, D]', 'e', '[B, [C, D], E]', 'B', 'C', 'D', '[c, d]', 'E', '[b, [c, d], e]', 'f', '[A, [b, [c, d], e], F]'], testrepl((g := f.copy()).walk(on='leave'), g.elts[1]))
+        self.assertEqual(['f', 'e', 'd', 'c', '[C, D]', 'b', '[B, [C, D], E]', 'E', 'D', 'C', '[c, d]', 'B', '[b, [c, d], e]', 'a', '[A, [b, [c, d], e], F]'], testrepl((g := f.copy()).walk(on='leave', back=True), g.elts[1]))
+
+        # test replace with send(True) on innermost node
+
+        self.assertEqual(['a', 'b', 'c', 'd', '[C, D]', 'C', 'D', '[c, d]', 'e', '[B, [c, d], E]', 'f', '[A, [B, [c, d], E], F]'], testrepl((g := f.copy()).walk(on='leave'), g.elts[1].elts[1]))
+        self.assertEqual(['f', 'e', 'd', 'c', '[C, D]', 'D', 'C', '[c, d]', 'b', '[B, [c, d], E]', 'a', '[A, [B, [c, d], E], F]'], testrepl((g := f.copy()).walk(on='leave', back=True), g.elts[1].elts[1]))
+
     def test_next_prev_child(self):
         fst = parse('a and b and c and d').body[0].value.f
         a = fst.a
@@ -2330,3 +2442,4 @@ with a as b, c as d:
 
 if __name__ == '__main__':
     unittest.main()
+

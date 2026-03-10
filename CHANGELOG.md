@@ -25,7 +25,7 @@
 
 ### Fixed
 
-- `walk(scope=True)` of Comprehension first generator iterator if it itself is a scope, e.g. `a = [i for i in [j for j in iter]]`
+- corrected `walk(scope=True)` of Comprehension first generator iterator if it itself is a scope, e.g. `a = [i for i in [j for j in iter]]`
 
 
 ## 0.3.0 - alpha - 2026-02-28
