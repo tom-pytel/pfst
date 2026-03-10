@@ -3,6 +3,8 @@
 This module contains functions which are imported as methods in the `FST` class (for now).
 """
 
+# TODO: this module really needs cleanup
+
 from __future__ import annotations
 
 from itertools import takewhile

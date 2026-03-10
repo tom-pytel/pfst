@@ -15,19 +15,25 @@ from .asttypes import (
     ASTS_LEAF_OPERATOR,
     ASTS_LEAF_UNARYOP,
     ASTS_LEAF_CMPOP,
-    ASTS_LEAF_TYPE_PARAM,
     ASTS_LEAF_FUNCDEF,
+    ASTS_LEAF_COMP,
     AST,
+    AsyncFunctionDef,
     ClassDef,
     DictComp,
+    FunctionDef,
     GeneratorExp,
     Lambda,
     ListComp,
     NamedExpr,
+    ParamSpec,
     SetComp,
+    TypeVar,
+    TypeVarTuple,
     arg,
     arguments,
     comprehension,
+    expr,
 )
 
 from .astutil import last_block_header_child, syntax_ordered_children
@@ -38,9 +44,6 @@ from .traverse_prev import PREV_FUNCS
 _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP          =  ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP
 _ASTS_LEAF_EXPR_CONTEXT_OR_OP_OR_ARGUMENTS = (_ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP | ASTS_LEAF_OPERATOR |
                                               ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP | {arguments})
-
-_ASTS_LEAF_WALK_SCOPE = ASTS_LEAF_FUNCDEF | ASTS_LEAF_TYPE_PARAM | {ClassDef, Lambda, ListComp, SetComp, DictComp,
-                                                                    GeneratorExp, comprehension, arguments, arg}  # used in walk(scope=True) for a little optimization
 
 
 def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[type[AST]]) -> bool:
@@ -96,7 +99,370 @@ def _all_param_func(
 
 # ......................................................................................................................
 
+class _ScopeContext:
+    walk_root: fst.FST
+    all: bool | Literal['loc'] | type[AST] | Container[type[AST]] | Callable[[fst.FST], object]
+    back: bool
+    check_all_param: Callable[[fst.FST], object]
 
+    is_def: bool  ; """Scope is a `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
+    scope_args: arguments | None  ; """Scope arguments node from a funcdef."""
+    scope_first_iter: expr | None  ; """Scope first generator iterator node from a Comp."""
+
+    stack: list[AST]
+
+    def __init__(
+        self,
+        walk_root: fst.FST,
+        all: bool | Literal['loc'] | type[AST] | Container[type[AST]] | Callable[[fst.FST], object],
+        back: bool,
+        check_all_param: Callable[[fst.FST], object],
+        is_def: bool = False,
+        scope_args: arguments | None = None,
+        scope_first_iter: expr | None = None,
+    ) -> None:
+        self.walk_root = walk_root
+        self.all = all
+        self.back = back
+        self.check_all_param = check_all_param
+        self.is_def = is_def
+        self.scope_args = scope_args
+        self.scope_first_iter = scope_first_iter
+
+    @staticmethod
+    def create(
+        walk_root: fst.FST,
+        all: bool | Literal['loc'] | type[AST] | Container[type[AST]] | Callable[[fst.FST], object],
+        back: bool,
+        check_all_param: Callable[[fst.FST], object],
+        ast: AST,
+    ) -> tuple[_ScopeContext, list[AST] | None]:
+        """Create top level scope context data from top level node. Will return initial list of `AST` nodes to walk or
+        `None` if should be created normally."""
+
+        ast_cls = ast.__class__
+        stack = None
+        scope_args = None
+        scope_first_iter = None
+
+        if (is_def := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
+            scope_args = ast.args  # will need these in the loop to exclude annotations and defaults
+
+            if back:
+                stack = []
+
+                if type_params := getattr(ast, 'type_params', None):
+                    stack.extend(type_params)
+
+                stack.append(scope_args)  # this is so that the arguments node is included in the scope walk, could skip it and just do the args themselves but arguments node might be useful for signaling args of scope
+
+                if is_def:
+                    stack.extend(ast.body)
+                else:
+                    stack.append(ast.body)
+
+            else:
+                stack = ast.body[::-1] if is_def else [ast.body]
+
+                stack.append(scope_args)
+
+                if type_params := getattr(ast, 'type_params', None):
+                    stack.extend(type_params[::-1])
+
+        elif ast_cls is ClassDef:
+            is_def = True  # for handling exclusion of type_params annotations and default_values from this walk
+
+            if back:
+                stack = []
+
+                if type_params := getattr(ast, 'type_params', None):  # getattr() because we may be pre py 3.12
+                    stack.extend(type_params)
+
+                stack.extend(ast.body)
+
+            else:
+                stack = ast.body[::-1]
+
+                if type_params := getattr(ast, 'type_params', None):
+                    stack.extend(type_params[::-1])
+
+        elif (is_elt := (ast_cls in (ListComp, SetComp, GeneratorExp))) or ast_cls is DictComp:
+            if back:
+                stack = ([ast.elt] if is_elt else [ast.key, ast.value]) + (generators := ast.generators)
+            else:
+                stack = (generators := ast.generators)[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
+
+            scope_first_iter = generators[0].iter if generators else None  # maybe the user deleted all generators
+
+        scope_ctx = _ScopeContext(walk_root, all, back, check_all_param, is_def, scope_args, scope_first_iter)
+
+        return scope_ctx, stack
+
+    def stack_funcdef(self, ast: AST, stack: list[AST]) -> bool:
+        """Individual scope walk function for nodes which need special treatement during scope walk. Returns list of
+        child nodes allowed to be walked or a generator which will walk them in the case of a Comp.
+
+        **Returns:**
+        - `bool`: Indicates whether the function updated the stack according to special scope rules. If this is the case
+            then the main loop should not add all children to the walk stack as it does noramlly.
+        """
+
+        args = ast.args
+
+        if self.back:
+            stack.extend(ast.decorator_list)
+
+            for tp in getattr(ast, 'type_params', ()):  # type parameters
+                if a := getattr(tp, 'bound', None):
+                    stack.append(a)
+                if a := getattr(tp, 'default_value', None):
+                    stack.append(a)
+
+            nonkwargs = args.posonlyargs + args.args  # posonly and normal args, interleave annotations with defaults
+            defaults = args.defaults[:]
+            defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
+
+            for arg_, dflt in zip(nonkwargs, defaults, strict=True):
+                if ann := arg_.annotation:
+                    stack.append(ann)
+                if dflt:
+                    stack.append(dflt)
+
+            if (vararg := args.vararg) and (ann := vararg.annotation):
+                stack.append(ann)
+
+            for arg_, dflt in zip(args.kwonlyargs, args.kw_defaults, strict=True):  # kwonly args and defaults
+                if ann := arg_.annotation:
+                    stack.append(ann)
+                if dflt:
+                    stack.append(dflt)
+
+            if (kwarg := args.kwarg) and (ann := kwarg.annotation):
+                stack.append(ann)
+
+            if returns := ast.returns:
+                stack.append(returns)
+
+        else:  # forward
+            if returns := ast.returns:
+                stack.append(returns)
+
+            if (kwarg := args.kwarg) and (ann := kwarg.annotation):
+                stack.append(ann)
+
+            for arg_, dflt in reversed(list(zip(args.kwonlyargs, args.kw_defaults, strict=True))):  # kwonly args and defaults
+                if dflt:
+                    stack.append(dflt)
+                if ann := arg_.annotation:
+                    stack.append(ann)
+
+            if (vararg := args.vararg) and (ann := vararg.annotation):
+                stack.append(ann)
+
+            nonkwargs = args.posonlyargs + args.args
+            defaults = args.defaults[:]
+            defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
+
+            for arg_, dflt in reversed(list(zip(nonkwargs, defaults, strict=True))):  # posonly and normal args
+                if dflt:
+                    stack.append(dflt)
+                if ann := arg_.annotation:
+                    stack.append(ann)
+
+            for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
+                if a := getattr(tp, 'default_value', None):
+                    stack.append(a)
+                if a := getattr(tp, 'bound', None):
+                    stack.append(a)
+
+            stack.extend(ast.decorator_list[::-1])
+
+        return True
+
+    def stack_ClassDef(self, ast: AST, stack: list[AST]) -> bool:
+        """See `walk_funcdef()`."""
+
+        if self.back:
+            stack.extend(ast.decorator_list)
+
+            for tp in getattr(ast, 'type_params', ()):  # type parameters
+                if a := getattr(tp, 'bound', None):
+                    stack.append(a)
+                if a := getattr(tp, 'default_value', None):
+                    stack.append(a)
+
+            stack.extend(ast.bases)
+            stack.extend(ast.keywords)
+
+        else:  # forward
+            stack.extend(ast.keywords[::-1])
+            stack.extend(ast.bases[::-1])
+
+            for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
+                if a := getattr(tp, 'default_value', None):
+                    stack.append(a)
+                if a := getattr(tp, 'bound', None):
+                    stack.append(a)
+
+            stack.extend(ast.decorator_list[::-1])
+
+        return True
+
+    def stack_Lambda(self, ast: AST, stack: list[AST], no_back: bool = False) -> bool:
+        """See `walk_funcdef()`."""
+
+        args = ast.args
+
+        if no_back or self.back:
+            stack.extend(args.defaults)
+            stack.extend(args.kw_defaults)
+        else:
+            stack.extend(args.kw_defaults[::-1])
+            stack.extend(args.defaults[::-1])
+
+        return True
+
+    def stack_arguments(self, ast: AST, stack: list[AST]) -> bool:
+        """See `walk_funcdef()`. Exclude defaults and kw_defaults from walk, ast is top-level scope arguments."""
+
+        if ast is not self.scope_args:
+            return False
+
+        if self.back:
+            stack.extend(ast.posonlyargs)
+            stack.extend(ast.args)
+
+            if vararg := ast.vararg:
+                stack.append(vararg)
+
+            stack.extend(ast.kwonlyargs)
+
+            if kwarg := ast.kwarg:
+                stack.append(kwarg)
+
+        else:
+            if kwarg := ast.kwarg:
+                stack.append(kwarg)
+
+            stack.extend(ast.kwonlyargs[::-1])
+
+            if vararg := ast.vararg:
+                stack.append(vararg)
+
+            stack.extend(ast.args[::-1])
+            stack.extend(ast.posonlyargs[::-1])
+
+        return True
+
+    def stack_arg(self, ast: AST, stack: list[AST]) -> bool:
+        """See `walk_funcdef()`."""
+
+        if ast.f.parent.a is self.scope_args:  # if arg part of top-level node args then don't recurse
+            return True
+
+        return False
+
+    def stack_type_param(self, ast: AST, stack: list[AST]) -> bool:
+        """See `walk_funcdef()`."""
+
+        if self.is_def and ast.f.parent is self.walk_root:  # don't recurse for type annotations and defaults in top-level node
+            return True
+
+        return False
+
+    def stack_comprehension(self, ast: AST, stack: list[AST]) -> bool:
+        """See `walk_funcdef()`. This only comes from `walk_root` Comp, not ones encountered in a Comp here."""
+
+        if self.back:
+            stack.append(ast.target)
+
+            if (a := ast.iter) is not self.scope_first_iter:
+                stack.append(a)
+
+            if a := ast.ifs:
+                stack.extend(a)
+
+        else:
+            if a := ast.ifs:
+                stack.extend(a)
+
+            if (a := ast.iter) is not self.scope_first_iter:
+                stack.append(a)
+
+            stack.append(ast.target)
+
+        return True
+
+    def walk_Comp(self, ast: AST) -> Generator[fst.FST, bool, None]:
+        """See `walk_funcdef()`. This gets messy if the first generator iterator is a scope itself."""
+
+        fst_ = ast.f
+        all = self.all
+        back = self.back
+        check_all_param = self.check_all_param
+        first_iter = ast.generators[0].iter
+
+        gen = fst_.walk(all, self_=False, back=back)  # no scope=True here because we do it manually
+
+        for f in gen:  # we want to return all NamedExpr.target and first top-level .iter, yeah, its ugly
+            a = f.a
+
+            if a is first_iter:  # first generator iterator is in parent scope
+                subrecurse = 1  # wouldn't be here if recurse is not True, 1 to differentiate from True
+
+                while (sent := (yield f)) is not None:
+                    subrecurse = sent
+
+                if subrecurse is True:  # user did send(True) so walk unconditionally
+                    yield from f.walk(all, self_=False, back=back)  # if the user did send(True) (subrecurse=True) then we want to recurse uncondintionally (scope=False), otherwise subrecurse=1 and continue walking with scope=True
+
+                elif subrecurse:  # user didn't send anything, still need to apply scope rules and this node could be a scope
+                    a_cls = a.__class__
+
+                    if a_cls in ASTS_LEAF_COMP:  # this is feasible to be there
+                        yield from self.walk_Comp(a)  # the Comprehension is one scope down but its first iterator is one scope up from that, so same level as this Comprehension, rules are the same
+
+                    else:
+                        if a_cls is Lambda:  # silly thing to be there, but we cover it
+                            self.stack_Lambda(a, asts := [], True)  # no_back=True because it will be reversed as needed in the walk over the asts
+                        else:
+                            asts = None
+
+                        yield from f.walk(all, self_=False, scope=True, back=back, asts=asts)
+
+                gen.send(False)  # we processed this node here so don't recurse into it
+
+            elif (  # all NamedExpr.targets are in parent scope
+                f.parent.a.__class__ is NamedExpr
+                and f.pfield.name == 'target'  # a.__class__ is Name
+            ):
+                subrecurse = True
+
+                while (sent := (yield f)) is not None:
+                    subrecurse = sent
+
+                if subrecurse and check_all_param(f := a.ctx.f):  # truly pedantic, but maybe the user really really really wants that .ctx?
+                    while (yield f) is not None:  # eat all the user's send()s
+                        pass
+
+                gen.send(False)  # we processed this node here so don't recurse into it
+
+_SCOPE_WALK_FUNCS = {  # the boolean indicates whether it is a normal function or a generator
+    FunctionDef:      (_ScopeContext.stack_funcdef, False),
+    AsyncFunctionDef: (_ScopeContext.stack_funcdef, False),
+    ClassDef:         (_ScopeContext.stack_ClassDef, False),
+    Lambda:           (_ScopeContext.stack_Lambda, False),
+    arguments:        (_ScopeContext.stack_arguments, False),
+    arg:              (_ScopeContext.stack_arg, False),
+    TypeVar:          (_ScopeContext.stack_type_param, False),
+    ParamSpec:        (_ScopeContext.stack_type_param, False),
+    TypeVarTuple:     (_ScopeContext.stack_type_param, False),
+    comprehension:    (_ScopeContext.stack_comprehension, False),
+    ListComp:         (_ScopeContext.walk_Comp, True),
+    SetComp:          (_ScopeContext.walk_Comp, True),
+    DictComp:         (_ScopeContext.walk_Comp, True),
+    GeneratorExp:     (_ScopeContext.walk_Comp, True),
+}  # fmt: skip
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -764,27 +1130,27 @@ def walk(
     r"""Walk `self` and descendants in syntactic order.
 
     When walking, you can `send(False)` to the generator to skip recursion into the current child. `send(True)` will
-    allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
-    multiple times, last value sent takes effect.
+    allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. A
+    `send(True)` walks the child node and **ALL** its children unconditionally, regardless of current `scope` or
+    `recurse` setting. Can send multiple times, last value sent takes effect.
 
     The walk is defined forwards or backwards in that it returns a parent, then recurses into the children and walks
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
-    Node **REPLACEMENT** and **DELETION** during the walk is supported with some caveats. The most important and useful
-    rule to remember is:
-    - The current node can always be deleted, replaced or inserted before or after (if list field). If replaced the new
-        children will be walked next unless you explicitly `send(False)` to the generator. Note that on replace the new
-        children can only be walked if the replacement was of the single current node as a single element operation. If
-        the replacement was with a slice operation then the children will not be walked.
+    Node **REPLACEMENT** and **DELETION** of the nodes yielded during the walk is always supported. If replaced, the new
+    children will be walked next unless you explicitly `send(False)` to the generator. Note that on replace the new
+    children can only be walked if the replacement was of the single current node as a single item operation. If the
+    replacement was with a slice operation then the children will not be walked.
 
-    The rest of the details are:
+    Other operations will also work and not break the walk but the new nodes may not be walked depending on the kind of
+    operation.
     - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
     - Sibling nodes of either this node or any parents which have not been walked yet can be deleted, replaced or
         inserted before but the new nodes will not be walked (and neither will any deleted nodes).
     - Previously walked nodes can likewise be deleted, replaced or inserted before.
-    - Replacing or deleting a node in the current parent chain is allowed and will cause the walk to continue at its
-        following siblings which were not modified.
+    - Replacing or deleting a node in the current parent chain is allowed and will cause the walk to continue at the
+        following sibling nodes of the node which was operated on.
     - The header said replacement and deletion, so `del`, `remove()`, `replace()`, `put()`, etc... Not `.cut()` or
         `get(..., cut=True)`, with or without inserting them somewhere else. If cut, those nodes may still wind up
         being walked as part of this walk, even if transferred to a different tree. If you wish to do this kind of
@@ -817,7 +1183,8 @@ def walk(
             `frozenset` or `dict` with the keys being the `AST` classes as those are the fastest checks. This will not
             constrain the walk, just filter which nodes are returned.
         - `Callable[[fst.FST], object]`: Call out to an external function for each node which should return a truthy or
-            falsey object for whether to yield the node or not.
+            falsey object for whether to yield the node or not. THIS FUNCTION CAN ONLY BE A QUERY! It must not modify
+            the tree or set any state expected for the iteration loop. NO SIDE EFFECTS ALLOWED!!!
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default, `send(True)` for a given node will
@@ -968,14 +1335,15 @@ def walk(
     check_all_param = _all_param_func(all)
 
     if asts is not None:
-        scope_args = is_def = False  # scope stuff
-        skip_iter = None
+        if scope:
+            scope_ctx = _ScopeContext(self, all, back, check_all_param)
+
         stack = asts[:] if back else asts[::-1]
 
     else:
         if self_:
             if check_all_param(self):
-                recurse_ = 1
+                recurse_ = 1  # 1 to differentiate from True
 
                 while (sent := (yield self)) is not None:
                     recurse_ = sent
@@ -990,68 +1358,21 @@ def walk(
                     recurse = True
                     scope = False
 
-        stack = None
-
-        # if we are walking scope then we may need to exclude some parts of the top-level node
+        # if we are walking scope then we may need to exclude some parts of the top-level node, we do after first step of walk in case top level node is replaced or scope turned off by send(True)
 
         if scope:  # some parts of functions or classes or the various comprehensions are outside their scope
-            scope_args = False  # can't use None because root node may have None as a parent
-            ast_cls = ast.__class__
-
-            if (is_def := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
-                scope_args = ast.args  # will need these in the loop to exclude annotations and defaults
-
-                if back:
-                    stack = []
-
-                    if type_params := getattr(ast, 'type_params', None):
-                        stack.extend(type_params)
-
-                    stack.append(scope_args)  # this is so that the arguments node is included in the scope walk, could skip it and just do the args themselves but arguments node might be useful for signaling args of scope
-
-                    if is_def:
-                        stack.extend(ast.body)
-                    else:
-                        stack.append(ast.body)
-
-                else:
-                    stack = ast.body[::-1] if is_def else [ast.body]
-
-                    stack.append(scope_args)
-
-                    if type_params := getattr(ast, 'type_params', None):
-                        stack.extend(type_params[::-1])
-
-            elif ast_cls is ClassDef:
-                is_def = True  # for handling exclusion of type_params annotations and default_values from this walk
-
-                if back:
-                    stack = []
-
-                    if type_params := getattr(ast, 'type_params', None):  # getattr() because we may be pre py 3.12
-                        stack.extend(type_params)
-
-                    stack.extend(ast.body)
-
-                else:
-                    stack = ast.body[::-1]
-
-                    if type_params := getattr(ast, 'type_params', None):
-                        stack.extend(type_params[::-1])
-
-            elif (is_elt := (ast_cls in (ListComp, SetComp, GeneratorExp))) or ast_cls is DictComp:
-                if back:
-                    stack = ([ast.elt] if is_elt else [ast.key, ast.value]) + (generators := ast.generators)
-                else:
-                    stack = (generators := ast.generators)[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
-
-                skip_iter = generators[0].iter if generators else None  # maybe the user deleted all generators
+            scope_ctx, stack = _ScopeContext.create(self, all, back, check_all_param, ast)
+        else:
+            stack = None  # scope_ctx not created because not needed in this case
 
         if stack is None:  # nothing excluded so just add all children
             stack = syntax_ordered_children(ast)
 
             if not back:
                 stack = stack[::-1]
+
+        if scope:
+            scope_ctx.stack = stack  # set this so it doesn't have to be passed on each call
 
     # loop
 
@@ -1066,12 +1387,12 @@ def walk(
             recurse_ = recurse
 
             while (sent := (yield fst_)) is not None:
-                recurse_ = 1 if sent else False
+                recurse_ = 1 if sent else False  # 1 to differentiate from True
 
             if not recurse_:  # either send(False) or wasn't going to recurse anyways
                 continue
 
-            if not (ast := fst_.a):  # has been deleted by the player (if modified then this FST node will still exist but the .a will have changed)
+            if not (ast := fst_.a):  # has been deleted by the player (if replaced then this FST node will still exist but the .a will have changed)
                 continue
 
             if recurse_ is not True:  # user did send(True), walk this child unconditionally
@@ -1082,215 +1403,16 @@ def walk(
         elif not recurse:
             continue
 
-        if scope:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
-            ast_cls = ast.__class__
+        if scope and (func_and_isgen := _SCOPE_WALK_FUNCS.get(ast.__class__)):  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
+            func, is_gen = func_and_isgen
 
-            if ast_cls not in _ASTS_LEAF_WALK_SCOPE:  # early out optimization
-                pass  # noop
-
-            if ast_cls in ASTS_LEAF_FUNCDEF:
-                args = ast.args
-
-                if back:
-                    stack.extend(ast.decorator_list)
-
-                    for tp in getattr(ast, 'type_params', ()):  # type parameters
-                        if a := getattr(tp, 'bound', None):
-                            stack.append(a)
-                        if a := getattr(tp, 'default_value', None):
-                            stack.append(a)
-
-                    nonkwargs = args.posonlyargs + args.args  # posonly and normal args, interleave annotations with defaults
-                    defaults = args.defaults[:]
-                    defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
-
-                    for arg_, dflt in zip(nonkwargs, defaults, strict=True):
-                        if ann := arg_.annotation:
-                            stack.append(ann)
-                        if dflt:
-                            stack.append(dflt)
-
-                    if (vararg := args.vararg) and (ann := vararg.annotation):
-                        stack.append(ann)
-
-                    for arg_, dflt in zip(args.kwonlyargs, args.kw_defaults, strict=True):  # kwonly args and defaults
-                        if ann := arg_.annotation:
-                            stack.append(ann)
-                        if dflt:
-                            stack.append(dflt)
-
-                    if (kwarg := args.kwarg) and (ann := kwarg.annotation):
-                        stack.append(ann)
-
-                    if returns := ast.returns:
-                        stack.append(returns)
-
-                else:  # forward
-                    if returns := ast.returns:
-                        stack.append(returns)
-
-                    if (kwarg := args.kwarg) and (ann := kwarg.annotation):
-                        stack.append(ann)
-
-                    for arg_, dflt in reversed(list(zip(args.kwonlyargs, args.kw_defaults, strict=True))):  # kwonly args and defaults
-                        if dflt:
-                            stack.append(dflt)
-                        if ann := arg_.annotation:
-                            stack.append(ann)
-
-                    if (vararg := args.vararg) and (ann := vararg.annotation):
-                        stack.append(ann)
-
-                    nonkwargs = args.posonlyargs + args.args
-                    defaults = args.defaults[:]
-                    defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
-
-                    for arg_, dflt in reversed(list(zip(nonkwargs, defaults, strict=True))):  # posonly and normal args
-                        if dflt:
-                            stack.append(dflt)
-                        if ann := arg_.annotation:
-                            stack.append(ann)
-
-                    for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
-                        if a := getattr(tp, 'default_value', None):
-                            stack.append(a)
-                        if a := getattr(tp, 'bound', None):
-                            stack.append(a)
-
-                    stack.extend(ast.decorator_list[::-1])
+            if is_gen:
+                yield from func(scope_ctx, ast)
 
                 continue
 
-            elif ast_cls is ClassDef:
-                if back:
-                    stack.extend(ast.decorator_list)
-
-                    for tp in getattr(ast, 'type_params', ()):  # type parameters
-                        if a := getattr(tp, 'bound', None):
-                            stack.append(a)
-                        if a := getattr(tp, 'default_value', None):
-                            stack.append(a)
-
-                    stack.extend(ast.bases)
-                    stack.extend(ast.keywords)
-
-                else:  # forward
-                    stack.extend(ast.keywords[::-1])
-                    stack.extend(ast.bases[::-1])
-
-                    for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
-                        if a := getattr(tp, 'default_value', None):
-                            stack.append(a)
-                        if a := getattr(tp, 'bound', None):
-                            stack.append(a)
-
-                    stack.extend(ast.decorator_list[::-1])
-
+            elif func(scope_ctx, ast, stack):
                 continue
-
-            elif ast_cls is Lambda:
-                args = ast.args
-
-                if back:
-                    stack.extend(args.defaults)
-                    stack.extend(args.kw_defaults)
-                else:
-                    stack.extend(args.kw_defaults[::-1])
-                    stack.extend(args.defaults[::-1])
-
-                continue
-
-            elif ast_cls in (ListComp, SetComp, DictComp, GeneratorExp):
-                comp_first_iter = ast.generators[0].iter
-
-                gen = fst_.walk(all, self_=False, back=back)
-
-                for f in gen:  # we want to return all NamedExpr.target and first top-level .iter, yeah, its ugly
-                    a = f.a
-
-                    if a is comp_first_iter:  # top-level iterator is in parent scope
-                        subrecurse = recurse
-
-                        while (sent := (yield f)) is not None:
-                            subrecurse = 1 if sent else False
-
-                        if subrecurse:
-                            yield from f.walk(all, self_=False, scope=subrecurse is True, back=back)  # if the user did send(True) (subrecurse=1) then we want to recurse uncondintionally (scope=False), otherwise subrecurse=True and continue walking with scope=True
-
-                        gen.send(False)  # we processed this node here so don't recurse into it
-
-                    elif (  # all NamedExpr.targets are in parent scope
-                        f.parent.a.__class__ is NamedExpr
-                        and f.pfield.name == 'target'  # a.__class__ is Name
-                    ):
-                        subrecurse = recurse
-
-                        while (sent := (yield f)) is not None:
-                            subrecurse = sent
-
-                        if subrecurse and check_all_param(f := a.ctx.f):  # truly pedantic, but maybe the user really really really wants that .ctx?
-                            while (yield f) is not None:  # eat all the user's send()s
-                                pass
-
-                        gen.send(False)  # we processed this node here so don't recurse into it
-
-                continue
-
-            elif ast_cls is comprehension:  # this only comes from top-level *Comp, not ones encountered in a *Comp or GeneratorExp here
-                if back:
-                    stack.append(ast.target)
-
-                    if (a := ast.iter) is not skip_iter:
-                        stack.append(a)
-
-                    if a := ast.ifs:
-                        stack.extend(a)
-
-                else:
-                    if a := ast.ifs:
-                        stack.extend(a)
-
-                    if (a := ast.iter) is not skip_iter:
-                        stack.append(a)
-
-                    stack.append(ast.target)
-
-                continue
-
-            elif ast is scope_args:  # exclude defaults and kw_defaults from walk, ast is top-level scope arguments
-                if back:
-                    stack.extend(ast.posonlyargs)
-                    stack.extend(ast.args)
-
-                    if vararg := ast.vararg:
-                        stack.append(vararg)
-
-                    stack.extend(ast.kwonlyargs)
-
-                    if kwarg := ast.kwarg:
-                        stack.append(ast.kwarg)
-
-                else:
-                    if kwarg := ast.kwarg:
-                        stack.append(ast.kwarg)
-
-                    stack.extend(ast.kwonlyargs[::-1])
-
-                    if vararg := ast.vararg:
-                        stack.append(vararg)
-
-                    stack.extend(ast.args[::-1])
-                    stack.extend(ast.posonlyargs[::-1])
-
-                continue
-
-            elif ast_cls is arg:
-                if fst_.parent.a is scope_args:  # if arg part of top-level node args then don't recurse
-                    continue
-
-            elif ast_cls in ASTS_LEAF_TYPE_PARAM:
-                if is_def and fst_.parent is self:  # don't recurse for type annotations and defaults in top-level node
-                    continue
 
         if children := syntax_ordered_children(ast):
             stack.extend(children if back else children[::-1])
