@@ -2596,7 +2596,7 @@ class _LocationAbstract_Compare__all_op_side_left(_LocationAbstract):
     def loc_head(self, idx: int) -> fstloc:
         f = self.body[idx].f
         _, _, end_ln, end_col = f.pars()
-        ln, col, _, _ = f.parent.a.ops[idx].f.loc  # comparator always has an operator on thje left
+        ln, col, _, _ = f.parent.a.ops[idx].f.loc  # comparator always has an operator on the left
 
         return fstloc(ln, col, end_ln, end_col)
 

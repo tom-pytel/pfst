@@ -319,7 +319,7 @@ class FSTView:
         """Convenience function just returns the `.loc` of this view, as it will already have parentheses included.
 
         **Parameters:**
-        - IGNORED!
+        - **IGNORED!**
 
         **Returns:**
         - `fstlocn`: Full location of view from first item to last, if items present.
@@ -334,6 +334,15 @@ class FSTView:
 
         >>> FST('[(a), (b), (c), (d)]').elts[1:3].pars()
         fstlocn(0, 6, 0, 14, n=0)
+
+        **WARNING!** Views always return their fully parenthesized locations so the `shared` parameter here is ignored
+        for those pesky single-argument `GeneratorExp` expressions which share their parentheses with the `Call`.
+
+        >>> FST('call(i for i in j)')._args.pars(shared=False)  # FSTView.pars()
+        fstlocn(0, 4, 0, 18, n=0)
+
+        >>> FST('call(i for i in j)')._args[0].pars(shared=False)  # FST.pars()
+        fstlocn(0, 5, 0, 17, n=-1)
         """
 
         loc = self.loc

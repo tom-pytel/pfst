@@ -12,7 +12,7 @@
 - `op` can be set as a global option for convenience for putting slices to `Compare`
 - `FST.parse_ast()` to parse a pure `AST` without `FST` nodes using our extended parsing
 - new CLI modules `fst.cli.search` and `fst.cli.sub`
-- added `--color/--no-color` force options to main `fst` CLI module
+- added `--color/--no-color` options to main `fst` CLI module
 
 ### Changed
 

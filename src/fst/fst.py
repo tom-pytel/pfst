@@ -714,7 +714,10 @@ class FST:
     # Create / manage
 
     def __repr__(self) -> builtins.str:
-        return f'<{self.a.__class__.__name__}{self._repr_tail()}>'
+        if not (a := self.a):
+            return '<*DEAD FST*>'
+
+        return f'<{a.__class__.__name__}{self._repr_tail()}>'
 
     def __new__(
         cls,
@@ -983,7 +986,7 @@ class FST:
     @staticmethod
     def fromsrc(
         src: builtins.str | list[builtins.str],
-        mode: Mode = 'exec',
+        mode: Mode | None = None,
         *,
         filename: builtins.str = _DEFAULT_FILENAME,
         type_comments: bool = False,
@@ -1000,7 +1003,7 @@ class FST:
         - `src`: The source to parse as a single `str` or list of individual line strings (without newlines).
         - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. If you know what kind of node you
             are expecting then it is always better to pass in this parameter because otherwise several different parse
-            attempts may be made to try to find the type.
+            attempts may be made to try to find the type. `None` here is the same as `'exec'`.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
         - `feature_version`: `ast.parse()` parameter. Don't use this either, here just in case.
@@ -1055,7 +1058,7 @@ class FST:
             src = '\n'.join(lines)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        ast = parsex.parse(src, mode, parse_params)
+        ast = parsex.parse(src, mode or 'exec', parse_params)
 
         return FST(ast, lines, None, parse_params=parse_params)
 
@@ -1064,7 +1067,6 @@ class FST:
         ast: AST,
         mode: Mode | None = None,
         *,
-        coerce: bool = True,
         filename: builtins.str = _DEFAULT_FILENAME,
         type_comments: bool = False,
         feature_version: tuple[int, int] | None = None,
@@ -1086,7 +1088,6 @@ class FST:
             `FST` tree.
         - `mode`: Parse mode to enable coercion, see `fst.parsex.Mode`. If `None` then will just use the given `ast`
             type and make an `FST` using that type.
-        - `coerce`: This exists to allow you to turn **OFF** coercion for some reason as by default coerce is attempted.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
         - `feature_version`: `ast.parse()` parameter. Don't use this either, here just in case.
@@ -1117,18 +1118,12 @@ class FST:
           .step Name 'step' Load - 0,3..0,7
 
         >>> _ = FST.fromast(List(elts=[Name(id='var')]),
-        ...                 'pattern', coerce=True).dump('stmt')
+        ...                 'pattern').dump('stmt')
         0: [var]
         MatchSequence - ROOT 0,0..0,5
           .patterns[1]
            0] MatchAs - 0,1..0,4
              .name 'var'
-
-        >>> _ = FST.fromast(List(elts=[Name(id='var')]),
-        ...                 'pattern', coerce=False).dump('stmt')
-        Traceback (most recent call last):
-        ...
-        fst.NodeError: expecting pattern, got List, coerce disabled
 
         >>> _ = FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
@@ -1142,11 +1137,24 @@ class FST:
                 .targets[1]
                  0] Name 'j' Store - 1,4..1,5
                 .value Constant 5 - 1,8..1,9
+
+        >>> _ = FST.fromast(Constant(-1)).dump('stmt')
+        0: -1
+        UnaryOp - ROOT 0,0..0,2
+          .op USub - 0,0..0,1
+          .operand Constant 1 - 0,1..0,2
+
+        This is technically an invalid `Constant` and if you try to force `Constant` type then it can't be normalized.
+
+        >>> print(dump(FST.fromast(Constant(-1), 'Constant')))
+        Traceback (most recent call last):
+        ...
+        fst.ParseError: could not reparse AST to Constant, got UnaryOp
         """
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
 
-        return code.code_as(ast, mode, parse_params=parse_params, coerce=coerce)
+        return code.code_as(ast, mode, parse_params=parse_params, coerce=True)
 
     @staticmethod
     def parse_ast(
@@ -1204,6 +1212,14 @@ class FST:
         Traceback (most recent call last):
         ...
         fst.ParseError: could not parse to Constant, got UnaryOp
+
+        All node types supported at top level.
+
+        >>> print(dump(FST.parse_ast('except: pass')))
+        ExceptHandler(body=[Pass()])
+
+        >>> print(dump(FST.parse_ast('kw=value', 'keyword')))
+        keyword(arg='kw', value=Name(id='value', ctx=Load()))
         """
 
         if isinstance(src, AST):

@@ -10450,8 +10450,8 @@ match a:
         # fromsrc
         assert_type(FST.fromsrc('a', 'exec', filename='filename'), FST)
         # fromast
-        assert_type(FST.fromast(ast_parse('a'), 'Module', coerce=False, filename='filename'), FST)
-        assert_type(FST.fromast(ast_parse('a'), Module, coerce=False, filename='filename'), FST)
+        assert_type(FST.fromast(ast_parse('a'), 'Module', filename='filename'), FST)
+        assert_type(FST.fromast(ast_parse('a'), Module, filename='filename'), FST)
         # get_options
         assert_type(FST.get_options(), dict[str, Any])
         # get_option
@@ -10623,6 +10623,9 @@ match a:
         assert_type(f.is_except_star(), bool | None)
         # is_elif
         assert_type(f.is_elif(), bool | None)
+
+        # TODO: view
+        # TODO: callbacks
 
 
 if __name__ == '__main__':

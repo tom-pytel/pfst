@@ -6084,8 +6084,10 @@ def search(
         conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
         you don't specify it so may inadvertantly break matches where you don't want to take that into
         consideration.
-    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
-        function for their meanings.
+    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see that
+        function for their meanings. These can further restrict what is returned. Just like in the `walk()` function,
+        this can be overridden by `send(True)` to the generator, but only if the relevant nodes are actually matched
+        by the search.
 
     **Returns:**
     - `Generator`: This is a `walk()` style generator which accepts `send(bool)` to decide whether to recurse into a
@@ -6229,8 +6231,9 @@ def sub(
         conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
         you don't specify it so may inadvertantly break matches where you don't want to take that into
         consideration.
-    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function. See that
-        function for their meanings.
+    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see that
+        function for their meanings. These can further restrict what is returned. Unlike `walk()` or `search()` though,
+        you don't get a chance to override individual node recursion as the search generator is not made available.
     - `options`: The options to use when replacing matched nodes in `self` with the `repl` template. See `options()`.
 
     **Returns:**

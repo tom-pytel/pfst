@@ -94,6 +94,11 @@ def _all_param_func(
     return all
 
 
+# ......................................................................................................................
+
+
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # private FST class methods
 
@@ -793,8 +798,9 @@ def walk(
     non-Comprehension enclosing scope. For this reason, when a walk recurses into a Comprehension scope the walrus
     `target` nodes are still returned even though everything else belongs to the Comprehension scope and is not returned
     (except for the first `comprehension.iter`, which also belongs to the enclosing scope). This remains true for
-    whatever level of nesting of Comprehensions is recursed into. One quirk, if starting a scope walk on a
-    Comprehension, any walrus `target`s **WILL** be returned, the first iterator though will not. This is on purpose.
+    walrus `target`s for whatever level of nesting of Comprehensions is recursed into. One quirk, if starting a scope
+    walk on a Comprehension, any walrus `target`s **WILL** be returned, the first iterator though will not. This is on
+    purpose.
 
     **Parameters:**
     - `all`: Whether to return all nodes or only specific types.
@@ -814,9 +820,9 @@ def walk(
             falsey object for whether to yield the node or not.
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
-    - `recurse`: Whether to recurse past the first level of children by default, `send(True)` for a given node will
+    - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default, `send(True)` for a given node will
         always override this. Meaning that if `False`, will only return `self` (if allowed to by `self_`) and the
-        the immediate children of `self` and no deeper.
+        the direct children of `self`, but no deeper.
     - `scope`: If `True` then will walk only within the scope of `self`. Meaning if called on a `FunctionDef` then
         will only walk children which are within the function scope. Will yield children which have their own
         scopes, and the parts of them which are visible in this scope (like default argument values), but will not
@@ -824,11 +830,13 @@ def walk(
         them unless `send(True)` is done for that child.
     - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
-    - `asts`: If this is provided as a list of `AST` nodes then this is used for the initial list of nodes to walk and
-        recurse into (if recurse allowed). In this case `self_` is ignored and no setup is done in case of `scope`,
-        though `scope` is honored for recursing into child scopes. `recurse` and `back` are also honored (`back` will
-        reverse the order of the walk for the given `asts` as expected). No syntax ordering is done on this list, it is
-        walked "as-is", so it may just be a collection of different nodes to walk individually. The `asts` list is not
+    - `asts`: If this is provided as a list of `AST` nodes (from an `FST` tree) then this is used for the initial list
+        of nodes to walk and recurse into (if recurse allowed). In this case `self_` is ignored and if `scope=True` then
+        no top-level function elements like argument defaults are excluded for each node in `asts`, though `scope` is
+        honored for not recursing into child scopes (except Comprehension `NamedExpr.target`). `recurse` and `back` are
+        also honored (`back` will reverse the order of the walk for the given `asts` as expected). No syntax ordering is
+        done on this list, it is walked "as-is", so it may just be a collection of different nodes to walk individually.
+        It wouldn't make sense for the nodes in this list to have descendant relationships. The `asts` list is not
         consumed.
 
     **Returns:**

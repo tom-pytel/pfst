@@ -2615,6 +2615,23 @@ MNOT(MTAG('no'))
                 gen.send(True)
         self.assertEqual('[a, [b, [c]]], [b, [c]], [d]', ', '.join(l))
 
+    def test_search_walk_params(self):
+        f = FST('[[a], [b], [c]]')
+        self.assertEqual('[[a], [b], [c]], [c], [b], [a]', ', '.join(m.matched.src for m in f.search(List, nested=True, back=True)))
+        self.assertEqual('[a], [c]', ', '.join(m.matched.src for m in f.search(List, nested=True, asts=[f.a.elts[0], f.a.elts[2]])))
+        self.assertEqual('[c], [a]', ', '.join(m.matched.src for m in f.search(List, nested=True, asts=[f.a.elts[0], f.a.elts[2]], back=True)))
+        self.assertEqual('[c], [a]', ', '.join(m.matched.src for m in f.search(List, nested=True, asts=[f.a.elts[2], f.a.elts[0]])))
+        self.assertEqual('[a], [c]', ', '.join(m.matched.src for m in f.search(List, nested=True, asts=[f.a.elts[2], f.a.elts[0]], back=True)))
+        self.assertEqual('[a], [b], [c]', ', '.join(m.matched.src for m in f.search(List, nested=True, self_=False)))
+
+        f = FST('[[[a]], [[b]], [[c]]]')
+        self.assertEqual('[[[a]], [[b]], [[c]]], [[a]], [a], [[b]], [b], [[c]], [c]', ', '.join(m.matched.src for m in f.search(List, nested=True)))
+        self.assertEqual('[[[a]], [[b]], [[c]]], [[a]], [[b]], [[c]]', ', '.join(m.matched.src for m in f.search(List, nested=True, recurse=False)))
+        self.assertEqual('[[a]], [[b]], [[c]]', ', '.join(m.matched.src for m in f.search(List, nested=True, self_=False, recurse=False)))
+
+        f = FST('def f(): [a], [b := [b] for b in [c]]')
+        self.assertEqual('[a], [c]', ', '.join(m.matched.src for m in f.search(List, scope=True)))
+
     def test_sub(self):
         for case, rest in DATA_SUB.iterate(True):
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
@@ -2662,6 +2679,80 @@ MNOT(MTAG('no'))
                 'def new(pre, /, __FST_a, *, post): pass',
                 args_as=None,
             ).src)
+
+    def test_sub_callback(self):
+        f = FST('[[[], []], []]')
+        l = []
+        f0 = f.elts[0]
+        f1 = f.elts[1]
+        f00 = f0.elts[0]
+        f01 = f0.elts[1]
+
+        # don't replace, not nested
+
+        f.sub(List, 'NEVER_USED',
+            callback=lambda f: (l.append(f), True),  # truthy so skip substitution
+        )
+        self.assertEqual(l, [f])
+
+        # don't replace, nested
+
+        l.clear()
+        f.sub(List, 'NEVER_USED', nested=True,
+            callback=lambda f: (l.append(f), True),  # truthy so skip substitution, but recurse
+        )
+        self.assertEqual(l, [f, f0, f00, f01, f1])
+
+        # don't replace, nested, append in callback_post
+
+        l.clear()
+        f.sub(List, 'NEVER_USED', nested=True,
+            callback=lambda f: True,  # truthy so skip substitution, but recurse
+            callback_post=lambda f: l.append(f),
+        )
+        self.assertEqual(l, [])  # skipped all substitutions so callback_post not called
+
+        l.clear()
+        f.sub(List, '__FST_', nested=True,  # now we need to substitute, same node
+            callback_post=lambda f: l.append(f),
+        )
+        f0 = f.elts[0]  # need to get these again becase all was substituted
+        f1 = f.elts[1]
+        f00 = f0.elts[0]
+        f01 = f0.elts[1]
+        self.assertEqual(l, [f, f0, f00, f01, f1])
+
+        m = []
+        l.clear()
+        f.sub(List, '__FST_', nested=True,  # now we need to substitute, same node
+            callback=lambda f: m.append(f),  # m.append() returns falsey None so substitution not skipped
+            callback_post=lambda f: l.append(f),
+        )
+        f0 = f.elts[0]  # need to get these again becase all was substituted
+        f1 = f.elts[1]
+        f00 = f0.elts[0]
+        f01 = f0.elts[1]
+        self.assertEqual(m, [f, f0, f00, f01, f1])  # they are all same because all child nodes were swapped out on the first top-level substitution and root FST is never changed
+        self.assertEqual(l, [f, f0, f00, f01, f1])
+
+    def test_sub_walk_params(self):
+        pat = MList(elts=M(e=...))
+        repl = '{__FST_e}'
+        g = FST('[[a], [b], [c]]')
+        self.assertEqual('{{a}, {b}, {c}}', (f := g.copy()).sub(pat, repl, nested=True, back=True).src)
+        self.assertEqual('[{a}, [b], {c}]', (f := g.copy()).sub(pat, repl, nested=True, asts=[f.a.elts[0], f.a.elts[2]]).src)
+        self.assertEqual('[{a}, [b], {c}]', f.copy().sub(pat, repl, nested=True, asts=[f.a.elts[0], f.a.elts[2]], back=True).src)
+        self.assertEqual('[{a}, [b], {c}]', f.copy().sub(pat, repl, nested=True, asts=[f.a.elts[2], f.a.elts[0]]).src)
+        self.assertEqual('[{a}, [b], {c}]', f.copy().sub(pat, repl, nested=True, asts=[f.a.elts[2], f.a.elts[0]], back=True).src)
+        self.assertEqual('[{a}, {b}, {c}]', f.copy().sub(pat, repl, nested=True, self_=False).src)
+
+        f = FST('[[[a]], [[b]], [[c]]]')
+        self.assertEqual('{{{a}}, {{b}}, {{c}}}', f.copy().sub(pat, repl, nested=True).src)
+        self.assertEqual('{{[a]}, {[b]}, {[c]}}', f.copy().sub(pat, repl, nested=True, recurse=False).src)
+        self.assertEqual('[{[a]}, {[b]}, {[c]}]', f.copy().sub(pat, repl, nested=True, self_=False, recurse=False).src)
+
+        f = FST('def f(): [a], [b := [b] for b in [c]]')
+        self.assertEqual('def f(): {a}, [b := [b] for b in {c}]', f.copy().sub(pat, repl, scope=True).src)
 
     def test_sub_coverage(self):
         assertRaises(MatchError('expected FST or FSTView, got NoneType'), FST('{**a}').sub, MDict(keys=[MQSTAR(t=[...])]), '__FST_t')
