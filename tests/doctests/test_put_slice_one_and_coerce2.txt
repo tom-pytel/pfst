@@ -1665,7 +1665,7 @@ AST: with x, y: pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: with (x,
-     y): pass
+    y): pass
 AST: with x, y: pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -1770,7 +1770,7 @@ AST: with ((x, y)): pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: with ((x,
-     y)): pass
+    y)): pass
 AST: with ((x, y)): pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -1884,7 +1884,7 @@ AST: global x, y
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: global x, \
-       y
+    y
 AST: global x, y
  
 src: **SyntaxError**  # src='if x if y'
@@ -2102,7 +2102,7 @@ AST: class cls(x, y): pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: class cls(x,
-          y): pass
+    y): pass
 AST: class cls(x, y): pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -2207,7 +2207,7 @@ AST: class cls((x, y)): pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: class cls((x,
-          y)): pass
+    y)): pass
 AST: class cls((x, y)): pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -2321,7 +2321,7 @@ AST: call(x, y)
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call(x,
-     y)
+    y)
 AST: call(x, y)
  
 src: **SyntaxError**  # src='if x if y'
@@ -2426,7 +2426,7 @@ AST: call((x, y))
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call((x,
-     y))
+    y))
 AST: call((x, y))
  
 src: **SyntaxError**  # src='if x if y'
@@ -2974,7 +2974,7 @@ AST: class cls(x, y): pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: class cls(x,
-          y): pass
+    y): pass
 AST: class cls(x, y): pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -3079,7 +3079,7 @@ AST: class cls((x, y)): pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: class cls((x,
-          y)): pass
+    y)): pass
 AST: class cls((x, y)): pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -3193,7 +3193,7 @@ AST: call(x, y)
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call(x,
-     y)
+    y)
 AST: call(x, y)
  
 src: **SyntaxError**  # src='if x if y'
@@ -3298,7 +3298,7 @@ AST: call((x, y))
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call((x,
-     y))
+    y))
 AST: call((x, y))
  
 src: **SyntaxError**  # src='if x if y'

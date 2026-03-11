@@ -781,10 +781,10 @@ Processed:
 >>> pprint(squash_nested_withs(src))
 # with comment
 with (open(a) as f,
-     lock1,  # first lock
-     func() as lock2,  # this gets preserved
-     ctx()
-     ):
+    lock1,  # first lock
+    func() as lock2,  # this gets preserved
+    ctx()
+    ):
     # body comment
     pass
     # end body comment
@@ -1674,9 +1674,9 @@ class cls:
     def method(self, thing, extra):
         if not thing:
             (logger).info(
-                       f'not a {thing}',  # this is fine
-                       extra=extra,       # also this
-                       correlation_id=CID)
+                f'not a {thing}',  # this is fine
+                extra=extra,       # also this
+                correlation_id=CID)
 ```
 
 
@@ -1911,9 +1911,9 @@ iterations).
 ```py
 >>> print(FST(src).sub(pat, repl, loop=True, trivia=('block',)).src)
 with (open(a) as f,
-     lock1,  # first lock
-     func() as lock2,  # this gets preserved
-     ctx()):
+    lock1,  # first lock
+    func() as lock2,  # this gets preserved
+    ctx()):
     # body comment
     pass
     # end body comment

@@ -791,7 +791,7 @@ AST: call(x, y)
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call(x,
-     y)
+    y)
 AST: call(x, y)
  
 src: **SyntaxError**  # src='if x if y'
@@ -896,7 +896,7 @@ AST: call((x, y))
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call((x,
-     y))
+    y))
 AST: call((x, y))
  
 src: **SyntaxError**  # src='if x if y'
@@ -1236,7 +1236,7 @@ AST: for _ in _ if x if y
  
 src: **ParseError('expecting _comprehension_ifs, could not parse or coerce')**  # src='@x\n@y'
 FST: for _ in _ if x
-           if y
+    if y
 AST: for _ in _ if x if y
  
 src: for _ in _ if x if y  # src='if x if y'
@@ -1341,7 +1341,7 @@ AST: for _ in _ if (x, y)
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: for _ in _ if (x,
-           y)
+    y)
 AST: for _ in _ if (x, y)
  
 src: **NodeError('expecting single _comprehension_ifs element for put as `one=True`')**  # src='if x if y'
@@ -2025,7 +2025,7 @@ AST: with x, y: pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: with (x,
-     y): pass
+    y): pass
 AST: with x, y: pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -2130,7 +2130,7 @@ AST: with ((x, y)): pass
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: with ((x,
-     y)): pass
+    y)): pass
 AST: with ((x, y)): pass
  
 src: **SyntaxError**  # src='if x if y'
@@ -2395,7 +2395,7 @@ AST: type t[x, y] = ...
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: type t[x,
-       y] = ...
+    y] = ...
 AST: type t[x, y] = ...
  
 src: **SyntaxError**  # src='if x if y'
@@ -2720,7 +2720,7 @@ AST: call(x, y)
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call(x,
-     y)
+    y)
 AST: call(x, y)
  
 src: **SyntaxError**  # src='if x if y'
@@ -2825,7 +2825,7 @@ AST: call((x, y))
  
 src: **SyntaxError**  # src='@x\n@y'
 FST: call((x,
-     y))
+    y))
 AST: call((x, y))
  
 src: **SyntaxError**  # src='if x if y'

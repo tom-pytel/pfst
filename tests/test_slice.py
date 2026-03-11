@@ -1910,7 +1910,7 @@ if (
 
         # had random error in _loc_With_items_pars() because of intermediate expression before fix
 
-        self.assertEqual('with (\n     (x) or (a) or b or (c)): pass'.strip(), (f := FST('with (a) or b or (c): pass')).items[0].context_expr.put_slice('\n(x)', 0, 0).root.src)
+        self.assertEqual('with (\n    (x) or (a) or b or (c)): pass'.strip(), (f := FST('with (a) or b or (c): pass')).items[0].context_expr.put_slice('\n(x)', 0, 0).root.src)
         f.verify()
 
         # put empty slice
@@ -2594,20 +2594,20 @@ if 1:
         self.assertEqual('z = (\n\n    c, \n    d, b)', (f := FST('z = a, b')).value.put_slice('\n\nc, \nd', 0, 1).root.src)
         f.verify()
 
-        self.assertEqual('case [\n\n     c, \n     d, b]: pass', (f := FST('case a, b: pass')).pattern.put_slice('\n\nc, \nd', 0, 1).root.src)
+        self.assertEqual('case [\n\n    c, \n    d, b]: pass', (f := FST('case a, b: pass')).pattern.put_slice('\n\nc, \nd', 0, 1).root.src)
         f.verify()
 
-        self.assertEqual('case (\n\n     c | \n     d | b): pass', (f := FST('case a | b: pass')).pattern.put_slice('\n\nc | \nd', 0, 1).root.src)
+        self.assertEqual('case (\n\n    c | \n    d | b): pass', (f := FST('case a | b: pass')).pattern.put_slice('\n\nc | \nd', 0, 1).root.src)
         f.verify()
 
         f = FST('case a | b: pass')
         self.assertEqual('\n\n# pre\ny # line\n# post\n', (g := FST('(x |\n\n# pre\ny | # line\n# post\n z)', pattern).get_slice(1, 2, trivia=('all+', 'all'))).src)
-        self.assertEqual('case (\n\n     # pre\n     y | # line\n     # post\n     b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
+        self.assertEqual('case (\n\n    # pre\n    y | # line\n    # post\n    b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
         f.verify()
 
         f = FST('case a | b: pass')
         self.assertEqual('\n\n# pre\n(y | # line\n# post\n z)', (g := FST('(x |\n\n# pre\ny | # line\n# post\n z)', pattern).get_slice(1, 3, trivia=('all+', 'all'))).src)
-        self.assertEqual('case (\n\n     # pre\n     y | # line\n     # post\n      z | b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
+        self.assertEqual('case (\n\n    # pre\n    y | # line\n    # post\n     z | b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
         f.verify()
 
         # unparenthesized tuple joined alnum by operation
@@ -2691,7 +2691,7 @@ if 1:
 
         # from import with import in modules
 
-        self.assertEqual('from importlib.support import (a,\n                              b)', (f := FST('from importlib.support import a')).put_slice('\nb', 1, 1).src)
+        self.assertEqual('from importlib.support import (a,\n    b)', (f := FST('from importlib.support import a')).put_slice('\nb', 1, 1).src)
 
         # With / AsyncWith put doesn't join alnums on del or put
 

@@ -8086,23 +8086,23 @@ With - ROOT 0,0..0,24
 r'''M_decorator_list''', ('With',
 r'''with x, __FST_, z: pass'''), r'''
 with (x, a,
-     b,
-     c, z): pass
+    b,
+    c, z): pass
 ''', r'''
-With - ROOT 0,0..2,16
+With - ROOT 0,0..2,15
   .items[5]
    0] withitem - 0,6..0,7
      .context_expr Name 'x' Load - 0,6..0,7
    1] withitem - 0,9..0,10
      .context_expr Name 'a' Load - 0,9..0,10
-   2] withitem - 1,5..1,6
-     .context_expr Name 'b' Load - 1,5..1,6
-   3] withitem - 2,5..2,6
-     .context_expr Name 'c' Load - 2,5..2,6
-   4] withitem - 2,8..2,9
-     .context_expr Name 'z' Load - 2,8..2,9
+   2] withitem - 1,4..1,5
+     .context_expr Name 'b' Load - 1,4..1,5
+   3] withitem - 2,4..2,5
+     .context_expr Name 'c' Load - 2,4..2,5
+   4] withitem - 2,7..2,8
+     .context_expr Name 'z' Load - 2,7..2,8
   .body[1]
-   0] Pass - 2,12..2,16
+   0] Pass - 2,11..2,15
 '''),
 
 ('', None, None, None, {}, ('_arglikes',

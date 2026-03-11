@@ -11627,7 +11627,7 @@ for a in a, b:
 c,)
 '''), r'''
 for a in (a,
-         c):
+    c):
     pass
 ''', r'''
 for a in a, c:
@@ -11637,10 +11637,10 @@ Module - ROOT 0,0..2,8
   .body[1]
    0] For - 0,0..2,8
      .target Name 'a' Store - 0,4..0,5
-     .iter Tuple - 0,9..1,11
+     .iter Tuple - 0,9..1,6
        .elts[2]
         0] Name 'a' Load - 0,10..0,11
-        1] Name 'c' Load - 1,9..1,10
+        1] Name 'c' Load - 1,4..1,5
        .ctx Load
      .body[1]
       0] Pass - 2,4..2,8
@@ -11652,19 +11652,19 @@ r'''result = filename, headers'''), (None, r'''
 c,)
 '''), r'''
 result = (
-         c, filename, headers)
+    c, filename, headers)
 ''',
 r'''result = c, filename, headers''', r'''
-Module - ROOT 0,0..1,30
+Module - ROOT 0,0..1,25
   .body[1]
-   0] Assign - 0,0..1,30
+   0] Assign - 0,0..1,25
      .targets[1]
       0] Name 'result' Store - 0,0..0,6
-     .value Tuple - 0,9..1,30
+     .value Tuple - 0,9..1,25
        .elts[3]
-        0] Name 'c' Load - 1,9..1,10
-        1] Name 'filename' Load - 1,12..1,20
-        2] Name 'headers' Load - 1,22..1,29
+        0] Name 'c' Load - 1,4..1,5
+        1] Name 'filename' Load - 1,7..1,15
+        2] Name 'headers' Load - 1,17..1,24
        .ctx Load
 '''),
 
@@ -13742,7 +13742,7 @@ if 1: [
 a]
 '''), r'''
 if 1: [
-        a
+    a
     # c0
 
     # c2
@@ -13762,7 +13762,7 @@ Module - ROOT 0,0..5,3
       0] Expr - 0,6..5,3
         .value List - 0,6..5,3
           .elts[1]
-           0] Name 'a' Load - 1,8..1,9
+           0] Name 'a' Load - 1,4..1,5
           .ctx Load
 '''),
 
@@ -13777,12 +13777,6 @@ if 1: [
 a]
 '''), r'''
 if 1: [
-        a # c0
-
-    # c2
-  ]
-''', r'''
-if 1: [
     a # c0
 
     # c2
@@ -13796,7 +13790,7 @@ Module - ROOT 0,0..4,3
       0] Expr - 0,6..4,3
         .value List - 0,6..4,3
           .elts[1]
-           0] Name 'a' Load - 1,8..1,9
+           0] Name 'a' Load - 1,4..1,5
           .ctx Load
 '''),
 
@@ -13812,12 +13806,6 @@ a]
 '''), r'''
 if 1: [
     # c0
-        a
-    # c2
-  ]
-''', r'''
-if 1: [
-    # c0
     a
     # c2
   ]
@@ -13830,7 +13818,7 @@ Module - ROOT 0,0..4,3
       0] Expr - 0,6..4,3
         .value List - 0,6..4,3
           .elts[1]
-           0] Name 'a' Load - 2,8..2,9
+           0] Name 'a' Load - 2,4..2,5
           .ctx Load
 '''),
 
@@ -13847,12 +13835,6 @@ a]
 if 1: [
     # c0
 
-        a # c2
-  ]
-''', r'''
-if 1: [
-    # c0
-
     a # c2
   ]
 ''', r'''
@@ -13864,7 +13846,7 @@ Module - ROOT 0,0..4,3
       0] Expr - 0,6..4,3
         .value List - 0,6..4,3
           .elts[1]
-           0] Name 'a' Load - 3,8..3,9
+           0] Name 'a' Load - 3,4..3,5
           .ctx Load
 '''),
 
@@ -13882,7 +13864,7 @@ if 1: [
     # c0
 
     # c2
-        a]
+    a]
 ''', r'''
 if 1: [
     # c0
@@ -13890,15 +13872,15 @@ if 1: [
     # c2
   a]
 ''', r'''
-Module - ROOT 0,0..4,10
+Module - ROOT 0,0..4,6
   .body[1]
-   0] If - 0,0..4,10
+   0] If - 0,0..4,6
      .test Constant 1 - 0,3..0,4
      .body[1]
-      0] Expr - 0,6..4,10
-        .value List - 0,6..4,10
+      0] Expr - 0,6..4,6
+        .value List - 0,6..4,6
           .elts[1]
-           0] Name 'a' Load - 4,8..4,9
+           0] Name 'a' Load - 4,4..4,5
           .ctx Load
 '''),
 
@@ -14075,7 +14057,7 @@ a
 ]
 '''), r'''
 if 1: [
-        a
+    a
     # c0
 
     # c2
@@ -14095,7 +14077,7 @@ Module - ROOT 0,0..5,3
       0] Expr - 0,6..5,3
         .value List - 0,6..5,3
           .elts[1]
-           0] Name 'a' Load - 1,8..1,9
+           0] Name 'a' Load - 1,4..1,5
           .ctx Load
 '''),
 
@@ -14111,7 +14093,7 @@ a
 ]
 '''), r'''
 if 1: [
-        a
+    a
     # c0
 
     # c2
@@ -14131,7 +14113,7 @@ Module - ROOT 0,0..5,3
       0] Expr - 0,6..5,3
         .value List - 0,6..5,3
           .elts[1]
-           0] Name 'a' Load - 1,8..1,9
+           0] Name 'a' Load - 1,4..1,5
           .ctx Load
 '''),
 
@@ -14148,12 +14130,6 @@ a
 '''), r'''
 if 1: [
     # c0
-        a
-    # c2
-  ]
-''', r'''
-if 1: [
-    # c0
     a
     # c2
   ]
@@ -14166,7 +14142,7 @@ Module - ROOT 0,0..4,3
       0] Expr - 0,6..4,3
         .value List - 0,6..4,3
           .elts[1]
-           0] Name 'a' Load - 2,8..2,9
+           0] Name 'a' Load - 2,4..2,5
           .ctx Load
 '''),
 
@@ -14184,7 +14160,7 @@ a
 if 1: [
     # c0
 
-        a
+    a
     # c2
   ]
 ''', r'''
@@ -14202,7 +14178,7 @@ Module - ROOT 0,0..5,3
       0] Expr - 0,6..5,3
         .value List - 0,6..5,3
           .elts[1]
-           0] Name 'a' Load - 3,8..3,9
+           0] Name 'a' Load - 3,4..3,5
           .ctx Load
 '''),
 
@@ -14221,7 +14197,7 @@ if 1: [
     # c0
 
     # c2
-        a
+    a
   ]
 ''', r'''
 if 1: [
@@ -14238,7 +14214,7 @@ Module - ROOT 0,0..5,3
       0] Expr - 0,6..5,3
         .value List - 0,6..5,3
           .elts[1]
-           0] Name 'a' Load - 4,8..4,9
+           0] Name 'a' Load - 4,4..4,5
           .ctx Load
 '''),
 
@@ -20440,9 +20416,9 @@ x \
 '''), r'''
 if 1:
   with (x \
-       , \
-       y,
-       a): pass
+    , \
+    y,
+  a): pass
   pass
 ''', r'''
 if 1:
@@ -20454,16 +20430,16 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] With - 1,2..4,15
+      0] With - 1,2..4,10
         .items[3]
          0] withitem - 1,8..1,9
            .context_expr Name 'x' Load - 1,8..1,9
-         1] withitem - 3,7..3,8
-           .context_expr Name 'y' Load - 3,7..3,8
-         2] withitem - 4,7..4,8
-           .context_expr Name 'a' Load - 4,7..4,8
+         1] withitem - 3,4..3,5
+           .context_expr Name 'y' Load - 3,4..3,5
+         2] withitem - 4,2..4,3
+           .context_expr Name 'a' Load - 4,2..4,3
         .body[1]
-         0] Pass - 4,11..4,15
+         0] Pass - 4,6..4,10
       1] Pass - 5,2..5,6
 '''),
 
@@ -20547,8 +20523,8 @@ c \
 
 '''), r'''
 with a, b \
-     , \
-     c \
+    , \
+    c \
 : pass
 ''',
 r'''with a, b, c: pass''', r'''
@@ -20560,8 +20536,8 @@ Module - ROOT 0,0..3,6
         .context_expr Name 'a' Load - 0,5..0,6
       1] withitem - 0,8..0,9
         .context_expr Name 'b' Load - 0,8..0,9
-      2] withitem - 2,5..2,6
-        .context_expr Name 'c' Load - 2,5..2,6
+      2] withitem - 2,4..2,5
+        .context_expr Name 'c' Load - 2,4..2,5
      .body[1]
       0] Pass - 3,2..3,6
 '''),
@@ -20575,9 +20551,9 @@ c \
 
 '''), r'''
 with a, \
-     b \
-     , \
-     c \
+    b \
+    , \
+    c \
 : pass
 ''',
 r'''with a, b, c: pass''', r'''
@@ -20587,10 +20563,10 @@ Module - ROOT 0,0..4,6
      .items[3]
       0] withitem - 0,5..0,6
         .context_expr Name 'a' Load - 0,5..0,6
-      1] withitem - 1,5..1,6
-        .context_expr Name 'b' Load - 1,5..1,6
-      2] withitem - 3,5..3,6
-        .context_expr Name 'c' Load - 3,5..3,6
+      1] withitem - 1,4..1,5
+        .context_expr Name 'b' Load - 1,4..1,5
+      2] withitem - 3,4..3,5
+        .context_expr Name 'c' Load - 3,4..3,5
      .body[1]
       0] Pass - 4,2..4,6
 '''),
@@ -21260,9 +21236,9 @@ x \
 '''), r'''
 if 1:
   with (x \
-       , \
-       y,
-       (a)): pass
+    , \
+    y,
+  (a)): pass
   pass
 ''', r'''
 if 1:
@@ -21274,16 +21250,16 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] With - 1,2..4,17
+      0] With - 1,2..4,12
         .items[3]
          0] withitem - 1,8..1,9
            .context_expr Name 'x' Load - 1,8..1,9
-         1] withitem - 3,7..3,8
-           .context_expr Name 'y' Load - 3,7..3,8
-         2] withitem - 4,7..4,10
-           .context_expr Name 'a' Load - 4,8..4,9
+         1] withitem - 3,4..3,5
+           .context_expr Name 'y' Load - 3,4..3,5
+         2] withitem - 4,2..4,5
+           .context_expr Name 'a' Load - 4,3..4,4
         .body[1]
-         0] Pass - 4,13..4,17
+         0] Pass - 4,8..4,12
       1] Pass - 5,2..5,6
 '''),
 
@@ -21367,8 +21343,8 @@ c \
 
 '''), r'''
 with (a), b \
-     , \
-     c \
+    , \
+    c \
 : pass
 ''',
 r'''with (a), b, c: pass''', r'''
@@ -21380,8 +21356,8 @@ Module - ROOT 0,0..3,6
         .context_expr Name 'a' Load - 0,6..0,7
       1] withitem - 0,10..0,11
         .context_expr Name 'b' Load - 0,10..0,11
-      2] withitem - 2,5..2,6
-        .context_expr Name 'c' Load - 2,5..2,6
+      2] withitem - 2,4..2,5
+        .context_expr Name 'c' Load - 2,4..2,5
      .body[1]
       0] Pass - 3,2..3,6
 '''),
@@ -21395,9 +21371,9 @@ c \
 
 '''), r'''
 with (a), \
-     b \
-     , \
-     c \
+    b \
+    , \
+    c \
 : pass
 ''',
 r'''with (a), b, c: pass''', r'''
@@ -21407,10 +21383,10 @@ Module - ROOT 0,0..4,6
      .items[3]
       0] withitem - 0,5..0,8
         .context_expr Name 'a' Load - 0,6..0,7
-      1] withitem - 1,5..1,6
-        .context_expr Name 'b' Load - 1,5..1,6
-      2] withitem - 3,5..3,6
-        .context_expr Name 'c' Load - 3,5..3,6
+      1] withitem - 1,4..1,5
+        .context_expr Name 'b' Load - 1,4..1,5
+      2] withitem - 3,4..3,5
+        .context_expr Name 'c' Load - 3,4..3,5
      .body[1]
       0] Pass - 4,2..4,6
 '''),
@@ -21619,9 +21595,9 @@ x \
 '''), r'''
 if 1:
   async with (x \
-             , \
-             y,
-             a): pass
+    , \
+    y,
+  a): pass
   pass
 ''', r'''
 if 1:
@@ -21633,16 +21609,16 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] AsyncWith - 1,2..4,21
+      0] AsyncWith - 1,2..4,10
         .items[3]
          0] withitem - 1,14..1,15
            .context_expr Name 'x' Load - 1,14..1,15
-         1] withitem - 3,13..3,14
-           .context_expr Name 'y' Load - 3,13..3,14
-         2] withitem - 4,13..4,14
-           .context_expr Name 'a' Load - 4,13..4,14
+         1] withitem - 3,4..3,5
+           .context_expr Name 'y' Load - 3,4..3,5
+         2] withitem - 4,2..4,3
+           .context_expr Name 'a' Load - 4,2..4,3
         .body[1]
-         0] Pass - 4,17..4,21
+         0] Pass - 4,6..4,10
       1] Pass - 5,2..5,6
 '''),
 
@@ -21726,8 +21702,8 @@ c \
 
 '''), r'''
 async with a, b \
-           , \
-           c \
+    , \
+    c \
 : pass
 ''',
 r'''async with a, b, c: pass''', r'''
@@ -21739,8 +21715,8 @@ Module - ROOT 0,0..3,6
         .context_expr Name 'a' Load - 0,11..0,12
       1] withitem - 0,14..0,15
         .context_expr Name 'b' Load - 0,14..0,15
-      2] withitem - 2,11..2,12
-        .context_expr Name 'c' Load - 2,11..2,12
+      2] withitem - 2,4..2,5
+        .context_expr Name 'c' Load - 2,4..2,5
      .body[1]
       0] Pass - 3,2..3,6
 '''),
@@ -21754,9 +21730,9 @@ c \
 
 '''), r'''
 async with a, \
-           b \
-           , \
-           c \
+    b \
+    , \
+    c \
 : pass
 ''',
 r'''async with a, b, c: pass''', r'''
@@ -21766,10 +21742,10 @@ Module - ROOT 0,0..4,6
      .items[3]
       0] withitem - 0,11..0,12
         .context_expr Name 'a' Load - 0,11..0,12
-      1] withitem - 1,11..1,12
-        .context_expr Name 'b' Load - 1,11..1,12
-      2] withitem - 3,11..3,12
-        .context_expr Name 'c' Load - 3,11..3,12
+      1] withitem - 1,4..1,5
+        .context_expr Name 'b' Load - 1,4..1,5
+      2] withitem - 3,4..3,5
+        .context_expr Name 'c' Load - 3,4..3,5
      .body[1]
       0] Pass - 4,2..4,6
 '''),
@@ -22339,9 +22315,9 @@ x \
 '''), r'''
 if 1:
   async with (x \
-             , \
-             y,
-             (a)): pass
+    , \
+    y,
+  (a)): pass
   pass
 ''', r'''
 if 1:
@@ -22353,16 +22329,16 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] AsyncWith - 1,2..4,23
+      0] AsyncWith - 1,2..4,12
         .items[3]
          0] withitem - 1,14..1,15
            .context_expr Name 'x' Load - 1,14..1,15
-         1] withitem - 3,13..3,14
-           .context_expr Name 'y' Load - 3,13..3,14
-         2] withitem - 4,13..4,16
-           .context_expr Name 'a' Load - 4,14..4,15
+         1] withitem - 3,4..3,5
+           .context_expr Name 'y' Load - 3,4..3,5
+         2] withitem - 4,2..4,5
+           .context_expr Name 'a' Load - 4,3..4,4
         .body[1]
-         0] Pass - 4,19..4,23
+         0] Pass - 4,8..4,12
       1] Pass - 5,2..5,6
 '''),
 
@@ -22446,8 +22422,8 @@ c \
 
 '''), r'''
 async with (a), b \
-           , \
-           c \
+    , \
+    c \
 : pass
 ''',
 r'''async with (a), b, c: pass''', r'''
@@ -22459,8 +22435,8 @@ Module - ROOT 0,0..3,6
         .context_expr Name 'a' Load - 0,12..0,13
       1] withitem - 0,16..0,17
         .context_expr Name 'b' Load - 0,16..0,17
-      2] withitem - 2,11..2,12
-        .context_expr Name 'c' Load - 2,11..2,12
+      2] withitem - 2,4..2,5
+        .context_expr Name 'c' Load - 2,4..2,5
      .body[1]
       0] Pass - 3,2..3,6
 '''),
@@ -22474,9 +22450,9 @@ c \
 
 '''), r'''
 async with (a), \
-           b \
-           , \
-           c \
+    b \
+    , \
+    c \
 : pass
 ''',
 r'''async with (a), b, c: pass''', r'''
@@ -22486,10 +22462,10 @@ Module - ROOT 0,0..4,6
      .items[3]
       0] withitem - 0,11..0,14
         .context_expr Name 'a' Load - 0,12..0,13
-      1] withitem - 1,11..1,12
-        .context_expr Name 'b' Load - 1,11..1,12
-      2] withitem - 3,11..3,12
-        .context_expr Name 'c' Load - 3,11..3,12
+      1] withitem - 1,4..1,5
+        .context_expr Name 'b' Load - 1,4..1,5
+      2] withitem - 3,4..3,5
+        .context_expr Name 'c' Load - 3,4..3,5
      .body[1]
       0] Pass - 4,2..4,6
 '''),
@@ -22682,9 +22658,9 @@ x \
 '''), r'''
 if 1:
   import x \
-         , \
-         y, \
-         a
+    , \
+    y, \
+  a
   pass
 ''', r'''
 if 1:
@@ -22696,13 +22672,13 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Import - 1,2..4,10
+      0] Import - 1,2..4,3
         .names[3]
          0] alias - 1,9..1,10
            .name 'x'
-         1] alias - 3,9..3,10
+         1] alias - 3,4..3,5
            .name 'y'
-         2] alias - 4,9..4,10
+         2] alias - 4,2..4,3
            .name 'a'
       1] Pass - 5,2..5,6
 '''),
@@ -22775,20 +22751,20 @@ c \
 
 '''), r'''
 import a, b \
-       , \
-       c \
+    , \
+    c \
 
 ''',
 r'''import a, b, c''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-   0] Import - 0,0..2,8
+   0] Import - 0,0..2,5
      .names[3]
       0] alias - 0,7..0,8
         .name 'a'
       1] alias - 0,10..0,11
         .name 'b'
-      2] alias - 2,7..2,8
+      2] alias - 2,4..2,5
         .name 'c'
 '''),
 
@@ -22801,21 +22777,21 @@ c \
 
 '''), r'''
 import a, \
-       b \
-       , \
-       c \
+    b \
+    , \
+    c \
 
 ''',
 r'''import a, b, c''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
-   0] Import - 0,0..3,8
+   0] Import - 0,0..3,5
      .names[3]
       0] alias - 0,7..0,8
         .name 'a'
-      1] alias - 1,7..1,8
+      1] alias - 1,4..1,5
         .name 'b'
-      2] alias - 3,7..3,8
+      2] alias - 3,4..3,5
         .name 'c'
 '''),
 
@@ -23270,12 +23246,12 @@ e
 
 '''), r'''
 import a, b, d, \
-       e ; import c
+    e ; import c
 ''',
 r'''import a, b, d, e ; import c''', r'''
-Module - ROOT 0,0..1,19
+Module - ROOT 0,0..1,16
   .body[2]
-   0] Import - 0,0..1,8
+   0] Import - 0,0..1,5
      .names[4]
       0] alias - 0,7..0,8
         .name 'a'
@@ -23283,11 +23259,11 @@ Module - ROOT 0,0..1,19
         .name 'b'
       2] alias - 0,13..0,14
         .name 'd'
-      3] alias - 1,7..1,8
+      3] alias - 1,4..1,5
         .name 'e'
-   1] Import - 1,11..1,19
+   1] Import - 1,8..1,16
      .names[1]
-      0] alias - 1,18..1,19
+      0] alias - 1,15..1,16
         .name 'c'
 '''),
 
@@ -23298,12 +23274,12 @@ e  # comment
 
 '''), r'''
 import a, b, d, \
-       e ; import c
+    e ; import c
 ''',
 r'''import a, b, d, e ; import c''', r'''
-Module - ROOT 0,0..1,19
+Module - ROOT 0,0..1,16
   .body[2]
-   0] Import - 0,0..1,8
+   0] Import - 0,0..1,5
      .names[4]
       0] alias - 0,7..0,8
         .name 'a'
@@ -23311,11 +23287,11 @@ Module - ROOT 0,0..1,19
         .name 'b'
       2] alias - 0,13..0,14
         .name 'd'
-      3] alias - 1,7..1,8
+      3] alias - 1,4..1,5
         .name 'e'
-   1] Import - 1,11..1,19
+   1] Import - 1,8..1,16
      .names[1]
-      0] alias - 1,18..1,19
+      0] alias - 1,15..1,16
         .name 'c'
 '''),
 
@@ -23342,12 +23318,12 @@ e
 
 '''), r'''
 import a, b, d, \
-       e ;
+    e ;
 ''',
 r'''import a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,10
+Module - ROOT 0,0..1,7
   .body[1]
-   0] Import - 0,0..1,8
+   0] Import - 0,0..1,5
      .names[4]
       0] alias - 0,7..0,8
         .name 'a'
@@ -23355,7 +23331,7 @@ Module - ROOT 0,0..1,10
         .name 'b'
       2] alias - 0,13..0,14
         .name 'd'
-      3] alias - 1,7..1,8
+      3] alias - 1,4..1,5
         .name 'e'
 '''),
 
@@ -23366,12 +23342,12 @@ e  # comment
 
 '''), r'''
 import a, b, d, \
-       e ;
+    e ;
 ''',
 r'''import a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,10
+Module - ROOT 0,0..1,7
   .body[1]
-   0] Import - 0,0..1,8
+   0] Import - 0,0..1,5
      .names[4]
       0] alias - 0,7..0,8
         .name 'a'
@@ -23379,7 +23355,7 @@ Module - ROOT 0,0..1,10
         .name 'b'
       2] alias - 0,13..0,14
         .name 'd'
-      3] alias - 1,7..1,8
+      3] alias - 1,4..1,5
         .name 'e'
 '''),
 
@@ -23404,10 +23380,10 @@ e
 
 '''), r'''
 import a, b, d, \
-       e ;
+    e ;
 ''',
 r'''import a, b, d, e ;''', r'''
-Import - ROOT 0,0..1,8
+Import - ROOT 0,0..1,5
   .names[4]
    0] alias - 0,7..0,8
      .name 'a'
@@ -23415,7 +23391,7 @@ Import - ROOT 0,0..1,8
      .name 'b'
    2] alias - 0,13..0,14
      .name 'd'
-   3] alias - 1,7..1,8
+   3] alias - 1,4..1,5
      .name 'e'
 '''),
 
@@ -23426,10 +23402,10 @@ e  # comment
 
 '''), r'''
 import a, b, d, \
-       e ;
+    e ;
 ''',
 r'''import a, b, d, e ;''', r'''
-Import - ROOT 0,0..1,8
+Import - ROOT 0,0..1,5
   .names[4]
    0] alias - 0,7..0,8
      .name 'a'
@@ -23437,7 +23413,7 @@ Import - ROOT 0,0..1,8
      .name 'b'
    2] alias - 0,13..0,14
      .name 'd'
-   3] alias - 1,7..1,8
+   3] alias - 1,4..1,5
      .name 'e'
 '''),
 ],
@@ -23622,9 +23598,9 @@ x \
 '''), r'''
 if 1:
   from mod import (x \
-                  , \
-                  y,
-                  a)
+    , \
+    y,
+  a)
   pass
 ''', r'''
 if 1:
@@ -23636,14 +23612,14 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] ImportFrom - 1,2..4,20
+      0] ImportFrom - 1,2..4,4
         .module 'mod'
         .names[3]
          0] alias - 1,19..1,20
            .name 'x'
-         1] alias - 3,18..3,19
+         1] alias - 3,4..3,5
            .name 'y'
-         2] alias - 4,18..4,19
+         2] alias - 4,2..4,3
            .name 'a'
         .level 0
       1] Pass - 5,2..5,6
@@ -23713,21 +23689,21 @@ c \
 
 '''), r'''
 from mod import a, b \
-                , \
-                c \
+    , \
+    c \
 
 ''',
 r'''from mod import a, b, c''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-   0] ImportFrom - 0,0..2,17
+   0] ImportFrom - 0,0..2,5
      .module 'mod'
      .names[3]
       0] alias - 0,16..0,17
         .name 'a'
       1] alias - 0,19..0,20
         .name 'b'
-      2] alias - 2,16..2,17
+      2] alias - 2,4..2,5
         .name 'c'
      .level 0
 '''),
@@ -23741,22 +23717,22 @@ c \
 
 '''), r'''
 from mod import a, \
-                b \
-                , \
-                c \
+    b \
+    , \
+    c \
 
 ''',
 r'''from mod import a, b, c''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
-   0] ImportFrom - 0,0..3,17
+   0] ImportFrom - 0,0..3,5
      .module 'mod'
      .names[3]
       0] alias - 0,16..0,17
         .name 'a'
-      1] alias - 1,16..1,17
+      1] alias - 1,4..1,5
         .name 'b'
-      2] alias - 3,16..3,17
+      2] alias - 3,4..3,5
         .name 'c'
      .level 0
 '''),
@@ -24257,9 +24233,9 @@ x \
 '''), r'''
 if 1:
   from mod import (x \
-                   , \
-                   y,
-                   a)
+    , \
+    y,
+  a)
   pass
 ''', r'''
 if 1:
@@ -24271,14 +24247,14 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] ImportFrom - 1,2..4,21
+      0] ImportFrom - 1,2..4,4
         .module 'mod'
         .names[3]
          0] alias - 1,19..1,20
            .name 'x'
-         1] alias - 3,19..3,20
+         1] alias - 3,4..3,5
            .name 'y'
-         2] alias - 4,19..4,20
+         2] alias - 4,2..4,3
            .name 'a'
         .level 0
       1] Pass - 5,2..5,6
@@ -24348,9 +24324,9 @@ c \
   # blah
 '''), r'''
 from mod import (a, b \
-                 , \
-                 c \
-                   # blah
+    , \
+    c \
+      # blah
 )
 ''',
 r'''from mod import (a, b, c)''', r'''
@@ -24363,7 +24339,7 @@ Module - ROOT 0,0..4,1
         .name 'a'
       1] alias - 0,20..0,21
         .name 'b'
-      2] alias - 2,17..2,18
+      2] alias - 2,4..2,5
         .name 'c'
      .level 0
 '''),
@@ -24377,10 +24353,10 @@ c \
   # blah
 '''), r'''
 from mod import (a, \
-                 b \
-                 , \
-                 c \
-                   # blah
+    b \
+    , \
+    c \
+      # blah
 )
 ''',
 r'''from mod import (a, b, c)''', r'''
@@ -24391,9 +24367,9 @@ Module - ROOT 0,0..5,1
      .names[3]
       0] alias - 0,17..0,18
         .name 'a'
-      1] alias - 1,17..1,18
+      1] alias - 1,4..1,5
         .name 'b'
-      2] alias - 3,17..3,18
+      2] alias - 3,4..3,5
         .name 'c'
      .level 0
 '''),
@@ -24490,7 +24466,7 @@ r'''from mod import a'''), ('_ImportFrom_names', r'''
 # blah
 '''), r'''
 from mod import * \
-                # blah
+    # blah
 
 ''',
 r'''from mod import *''', r'''
@@ -24554,12 +24530,12 @@ e
 
 '''), r'''
 from z import (a, b, d,
-              e) ; from z import c
+    e) ; from z import c
 ''',
 r'''from z import a, b, d, e ; from z import c''', r'''
-Module - ROOT 0,0..1,34
+Module - ROOT 0,0..1,24
   .body[2]
-   0] ImportFrom - 0,0..1,16
+   0] ImportFrom - 0,0..1,6
      .module 'z'
      .names[4]
       0] alias - 0,15..0,16
@@ -24568,13 +24544,13 @@ Module - ROOT 0,0..1,34
         .name 'b'
       2] alias - 0,21..0,22
         .name 'd'
-      3] alias - 1,14..1,15
+      3] alias - 1,4..1,5
         .name 'e'
      .level 0
-   1] ImportFrom - 1,19..1,34
+   1] ImportFrom - 1,9..1,24
      .module 'z'
      .names[1]
-      0] alias - 1,33..1,34
+      0] alias - 1,23..1,24
         .name 'c'
      .level 0
 '''),
@@ -24586,12 +24562,12 @@ e  # comment
 
 '''), r'''
 from z import (a, b, d,
-              e) ; from z import c
+    e) ; from z import c
 ''',
 r'''from z import a, b, d, e ; from z import c''', r'''
-Module - ROOT 0,0..1,34
+Module - ROOT 0,0..1,24
   .body[2]
-   0] ImportFrom - 0,0..1,16
+   0] ImportFrom - 0,0..1,6
      .module 'z'
      .names[4]
       0] alias - 0,15..0,16
@@ -24600,13 +24576,13 @@ Module - ROOT 0,0..1,34
         .name 'b'
       2] alias - 0,21..0,22
         .name 'd'
-      3] alias - 1,14..1,15
+      3] alias - 1,4..1,5
         .name 'e'
      .level 0
-   1] ImportFrom - 1,19..1,34
+   1] ImportFrom - 1,9..1,24
      .module 'z'
      .names[1]
-      0] alias - 1,33..1,34
+      0] alias - 1,23..1,24
         .name 'c'
      .level 0
 '''),
@@ -24636,12 +24612,12 @@ e
 
 '''), r'''
 from z import (a, b, d,
-              e) ;
+    e) ;
 ''',
 r'''from z import a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,18
+Module - ROOT 0,0..1,8
   .body[1]
-   0] ImportFrom - 0,0..1,16
+   0] ImportFrom - 0,0..1,6
      .module 'z'
      .names[4]
       0] alias - 0,15..0,16
@@ -24650,7 +24626,7 @@ Module - ROOT 0,0..1,18
         .name 'b'
       2] alias - 0,21..0,22
         .name 'd'
-      3] alias - 1,14..1,15
+      3] alias - 1,4..1,5
         .name 'e'
      .level 0
 '''),
@@ -24662,12 +24638,12 @@ e  # comment
 
 '''), r'''
 from z import (a, b, d,
-              e) ;
+    e) ;
 ''',
 r'''from z import a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,18
+Module - ROOT 0,0..1,8
   .body[1]
-   0] ImportFrom - 0,0..1,16
+   0] ImportFrom - 0,0..1,6
      .module 'z'
      .names[4]
       0] alias - 0,15..0,16
@@ -24676,7 +24652,7 @@ Module - ROOT 0,0..1,18
         .name 'b'
       2] alias - 0,21..0,22
         .name 'd'
-      3] alias - 1,14..1,15
+      3] alias - 1,4..1,5
         .name 'e'
      .level 0
 '''),
@@ -24704,10 +24680,10 @@ e
 
 '''), r'''
 from z import (a, b, d,
-              e) ;
+    e) ;
 ''',
 r'''from z import a, b, d, e ;''', r'''
-ImportFrom - ROOT 0,0..1,16
+ImportFrom - ROOT 0,0..1,6
   .module 'z'
   .names[4]
    0] alias - 0,15..0,16
@@ -24716,7 +24692,7 @@ ImportFrom - ROOT 0,0..1,16
      .name 'b'
    2] alias - 0,21..0,22
      .name 'd'
-   3] alias - 1,14..1,15
+   3] alias - 1,4..1,5
      .name 'e'
   .level 0
 '''),
@@ -24728,10 +24704,10 @@ e  # comment
 
 '''), r'''
 from z import (a, b, d,
-              e) ;
+    e) ;
 ''',
 r'''from z import a, b, d, e ;''', r'''
-ImportFrom - ROOT 0,0..1,16
+ImportFrom - ROOT 0,0..1,6
   .module 'z'
   .names[4]
    0] alias - 0,15..0,16
@@ -24740,7 +24716,7 @@ ImportFrom - ROOT 0,0..1,16
      .name 'b'
    2] alias - 0,21..0,22
      .name 'd'
-   3] alias - 1,14..1,15
+   3] alias - 1,4..1,5
      .name 'e'
   .level 0
 '''),
@@ -24934,8 +24910,14 @@ if 1:
     b \
     , \
   )
-'''),
-'if 1:\n  global a, \\\n         b \\\n          \\\n       \n  pass', r'''
+'''), r'''
+if 1:
+  global a, \
+  b \
+   \
+
+  pass
+''', r'''
 if 1:
   global a, b
   pass
@@ -24945,7 +24927,7 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Global - 1,2..2,10
+      0] Global - 1,2..2,3
         .names[2]
          0] 'a'
          1] 'b'
@@ -24963,7 +24945,7 @@ if 1:
 '''), r'''
 if 1:
   global a, \
-         b \
+  b \
 
   pass
 ''', r'''
@@ -24976,7 +24958,7 @@ Module - ROOT 0,0..4,6
    0] If - 0,0..4,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Global - 1,2..2,10
+      0] Global - 1,2..2,3
         .names[2]
          0] 'a'
          1] 'b'
@@ -24994,7 +24976,7 @@ if 1:
 '''), r'''
 if 1:
   global a, \
-         b
+  b
 
   pass
 ''', r'''
@@ -25007,7 +24989,7 @@ Module - ROOT 0,0..4,6
    0] If - 0,0..4,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Global - 1,2..2,10
+      0] Global - 1,2..2,3
         .names[2]
          0] 'a'
          1] 'b'
@@ -25026,9 +25008,9 @@ x \
 '''), r'''
 if 1:
   global x \
-         , \
-         y \
-         , a
+  , \
+  y \
+  , a
   pass
 ''', r'''
 if 1:
@@ -25040,7 +25022,7 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Global - 1,2..4,12
+      0] Global - 1,2..4,5
         .names[3]
          0] 'x'
          1] 'y'
@@ -25292,18 +25274,18 @@ e
 
 '''), r'''
 global a, b, d, \
-       e ; global c
+    e ; global c
 ''',
 r'''global a, b, d, e ; global c''', r'''
-Module - ROOT 0,0..1,19
+Module - ROOT 0,0..1,16
   .body[2]
-   0] Global - 0,0..1,8
+   0] Global - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
       2] 'd'
       3] 'e'
-   1] Global - 1,11..1,19
+   1] Global - 1,8..1,16
      .names[1]
       0] 'c'
 '''),
@@ -25315,18 +25297,18 @@ e  # comment
 
 '''), r'''
 global a, b, d, \
-       e ; global c
+    e ; global c
 ''',
 r'''global a, b, d, e ; global c''', r'''
-Module - ROOT 0,0..1,19
+Module - ROOT 0,0..1,16
   .body[2]
-   0] Global - 0,0..1,8
+   0] Global - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
       2] 'd'
       3] 'e'
-   1] Global - 1,11..1,19
+   1] Global - 1,8..1,16
      .names[1]
       0] 'c'
 '''),
@@ -25351,12 +25333,12 @@ e
 
 '''), r'''
 global a, b, d, \
-       e ;
+    e ;
 ''',
 r'''global a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,10
+Module - ROOT 0,0..1,7
   .body[1]
-   0] Global - 0,0..1,8
+   0] Global - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
@@ -25371,12 +25353,12 @@ e  # comment
 
 '''), r'''
 global a, b, d, \
-       e ;
+    e ;
 ''',
 r'''global a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,10
+Module - ROOT 0,0..1,7
   .body[1]
-   0] Global - 0,0..1,8
+   0] Global - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
@@ -25402,10 +25384,10 @@ e
 
 '''), r'''
 global a, b, d, \
-       e ;
+    e ;
 ''',
 r'''global a, b, d, e ;''', r'''
-Global - ROOT 0,0..1,8
+Global - ROOT 0,0..1,5
   .names[4]
    0] 'a'
    1] 'b'
@@ -25420,10 +25402,10 @@ e  # comment
 
 '''), r'''
 global a, b, d, \
-       e ;
+    e ;
 ''',
 r'''global a, b, d, e ;''', r'''
-Global - ROOT 0,0..1,8
+Global - ROOT 0,0..1,5
   .names[4]
    0] 'a'
    1] 'b'
@@ -25620,8 +25602,14 @@ if 1:
     b \
     , \
   )
-'''),
-'if 1:\n  nonlocal a, \\\n           b \\\n            \\\n         \n  pass', r'''
+'''), r'''
+if 1:
+  nonlocal a, \
+  b \
+   \
+
+  pass
+''', r'''
 if 1:
   nonlocal a, b
   pass
@@ -25631,7 +25619,7 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Nonlocal - 1,2..2,12
+      0] Nonlocal - 1,2..2,3
         .names[2]
          0] 'a'
          1] 'b'
@@ -25649,7 +25637,7 @@ if 1:
 '''), r'''
 if 1:
   nonlocal a, \
-           b \
+  b \
 
   pass
 ''', r'''
@@ -25662,7 +25650,7 @@ Module - ROOT 0,0..4,6
    0] If - 0,0..4,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Nonlocal - 1,2..2,12
+      0] Nonlocal - 1,2..2,3
         .names[2]
          0] 'a'
          1] 'b'
@@ -25680,7 +25668,7 @@ if 1:
 '''), r'''
 if 1:
   nonlocal a, \
-           b
+  b
 
   pass
 ''', r'''
@@ -25693,7 +25681,7 @@ Module - ROOT 0,0..4,6
    0] If - 0,0..4,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Nonlocal - 1,2..2,12
+      0] Nonlocal - 1,2..2,3
         .names[2]
          0] 'a'
          1] 'b'
@@ -25712,9 +25700,9 @@ x \
 '''), r'''
 if 1:
   nonlocal x \
-           , \
-           y \
-           , a
+  , \
+  y \
+  , a
   pass
 ''', r'''
 if 1:
@@ -25726,7 +25714,7 @@ Module - ROOT 0,0..5,6
    0] If - 0,0..5,6
      .test Constant 1 - 0,3..0,4
      .body[2]
-      0] Nonlocal - 1,2..4,14
+      0] Nonlocal - 1,2..4,5
         .names[3]
          0] 'x'
          1] 'y'
@@ -25978,18 +25966,18 @@ e
 
 '''), r'''
 nonlocal a, b, d, \
-         e ; nonlocal c
+    e ; nonlocal c
 ''',
 r'''nonlocal a, b, d, e ; nonlocal c''', r'''
-Module - ROOT 0,0..1,23
+Module - ROOT 0,0..1,18
   .body[2]
-   0] Nonlocal - 0,0..1,10
+   0] Nonlocal - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
       2] 'd'
       3] 'e'
-   1] Nonlocal - 1,13..1,23
+   1] Nonlocal - 1,8..1,18
      .names[1]
       0] 'c'
 '''),
@@ -26001,18 +25989,18 @@ e  # comment
 
 '''), r'''
 nonlocal a, b, d, \
-         e ; nonlocal c
+    e ; nonlocal c
 ''',
 r'''nonlocal a, b, d, e ; nonlocal c''', r'''
-Module - ROOT 0,0..1,23
+Module - ROOT 0,0..1,18
   .body[2]
-   0] Nonlocal - 0,0..1,10
+   0] Nonlocal - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
       2] 'd'
       3] 'e'
-   1] Nonlocal - 1,13..1,23
+   1] Nonlocal - 1,8..1,18
      .names[1]
       0] 'c'
 '''),
@@ -26037,12 +26025,12 @@ e
 
 '''), r'''
 nonlocal a, b, d, \
-         e ;
+    e ;
 ''',
 r'''nonlocal a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,12
+Module - ROOT 0,0..1,7
   .body[1]
-   0] Nonlocal - 0,0..1,10
+   0] Nonlocal - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
@@ -26057,12 +26045,12 @@ e  # comment
 
 '''), r'''
 nonlocal a, b, d, \
-         e ;
+    e ;
 ''',
 r'''nonlocal a, b, d, e ;''', r'''
-Module - ROOT 0,0..1,12
+Module - ROOT 0,0..1,7
   .body[1]
-   0] Nonlocal - 0,0..1,10
+   0] Nonlocal - 0,0..1,5
      .names[4]
       0] 'a'
       1] 'b'
@@ -26088,10 +26076,10 @@ e
 
 '''), r'''
 nonlocal a, b, d, \
-         e ;
+    e ;
 ''',
 r'''nonlocal a, b, d, e ;''', r'''
-Nonlocal - ROOT 0,0..1,10
+Nonlocal - ROOT 0,0..1,5
   .names[4]
    0] 'a'
    1] 'b'
@@ -26106,10 +26094,10 @@ e  # comment
 
 '''), r'''
 nonlocal a, b, d, \
-         e ;
+    e ;
 ''',
 r'''nonlocal a, b, d, e ;''', r'''
-Nonlocal - ROOT 0,0..1,10
+Nonlocal - ROOT 0,0..1,5
   .names[4]
    0] 'a'
    1] 'b'
@@ -30422,9 +30410,9 @@ e and
 if 1:
     a = (a
          and
-         d and
-         e and
-         c
+    d and
+    e and
+    c
     )
 ''',
 r'''**SyntaxError('invalid syntax')**''', r'''
@@ -30434,13 +30422,13 @@ If - ROOT 0,0..6,5
    0] Assign - 1,4..6,5
      .targets[1]
       0] Name 'a' Store - 1,4..1,5
-     .value BoolOp - 1,9..5,10
+     .value BoolOp - 1,9..5,5
        .op And
        .values[4]
         0] Name 'a' Load - 1,9..1,10
-        1] Name 'd' Load - 3,9..3,10
-        2] Name 'e' Load - 4,9..4,10
-        3] Name 'c' Load - 5,9..5,10
+        1] Name 'd' Load - 3,4..3,5
+        2] Name 'e' Load - 4,4..4,5
+        3] Name 'c' Load - 5,4..5,5
 '''),
 
 ('body[0].value', 1, 2, None, {}, (None, r'''
@@ -32146,9 +32134,9 @@ e !=
 if 1:
     a = (a
          <
-         d ==
-         e !=
-         c
+    d ==
+    e !=
+    c
     )
 ''',
 r'''**SyntaxError('invalid syntax')**''', r'''
@@ -32158,16 +32146,16 @@ If - ROOT 0,0..6,5
    0] Assign - 1,4..6,5
      .targets[1]
       0] Name 'a' Store - 1,4..1,5
-     .value Compare - 1,9..5,10
+     .value Compare - 1,9..5,5
        .left Name 'a' Load - 1,9..1,10
        .ops[3]
         0] Lt - 2,9..2,10
-        1] Eq - 3,11..3,13
-        2] NotEq - 4,11..4,13
+        1] Eq - 3,6..3,8
+        2] NotEq - 4,6..4,8
        .comparators[3]
-        0] Name 'd' Load - 3,9..3,10
-        1] Name 'e' Load - 4,9..4,10
-        2] Name 'c' Load - 5,9..5,10
+        0] Name 'd' Load - 3,4..3,5
+        1] Name 'e' Load - 4,4..4,5
+        2] Name 'c' Load - 5,4..5,5
 '''),
 
 ('body[0].value', 1, 2, None, {}, (None, r'''
@@ -32184,9 +32172,9 @@ if 1:
 '''), r'''
 if 1:
     a = (a
-         == d
-         != e
-         >
+    == d
+    != e
+    >
          c
     )
 ''',
@@ -32200,12 +32188,12 @@ If - ROOT 0,0..6,5
      .value Compare - 1,9..5,10
        .left Name 'a' Load - 1,9..1,10
        .ops[3]
-        0] Eq - 2,9..2,11
-        1] NotEq - 3,9..3,11
-        2] Gt - 4,9..4,10
+        0] Eq - 2,4..2,6
+        1] NotEq - 3,4..3,6
+        2] Gt - 4,4..4,5
        .comparators[3]
-        0] Name 'd' Load - 2,12..2,13
-        1] Name 'e' Load - 3,12..3,13
+        0] Name 'd' Load - 2,7..2,8
+        1] Name 'e' Load - 3,7..3,8
         2] Name 'c' Load - 5,9..5,10
 '''),
 
@@ -36167,19 +36155,19 @@ if \
 x
 '''), r'''
 [_ for _ in _ if a if \
-              x if c]
+    x if c]
 ''',
 r'''[_ for _ in _ if a if x if c]''', r'''
-ListComp - ROOT 0,0..1,21
+ListComp - ROOT 0,0..1,11
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
-   0] comprehension - 0,3..1,20
+   0] comprehension - 0,3..1,10
      .target Name '_' Store - 0,7..0,8
      .iter Name '_' Load - 0,12..0,13
      .ifs[3]
       0] Name 'a' Load - 0,17..0,18
-      1] Name 'x' Load - 1,14..1,15
-      2] Name 'c' Load - 1,19..1,20
+      1] Name 'x' Load - 1,4..1,5
+      2] Name 'c' Load - 1,9..1,10
      .is_async 0
 '''),
 
@@ -36190,18 +36178,18 @@ x \
 
 '''), r'''
 [_ for _ in _ if \
-              x \
+    x \
 ]
 ''',
 r'''[_ for _ in _ if x]''', r'''
 ListComp - ROOT 0,0..2,1
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
-   0] comprehension - 0,3..1,15
+   0] comprehension - 0,3..1,5
      .target Name '_' Store - 0,7..0,8
      .iter Name '_' Load - 0,12..0,13
      .ifs[1]
-      0] Name 'x' Load - 1,14..1,15
+      0] Name 'x' Load - 1,4..1,5
      .is_async 0
 '''),
 
@@ -36213,19 +36201,19 @@ x \
 
 '''), r'''
 [_ for _ in _
-              if \
-              x \
+    if \
+    x \
 ]
 ''',
 r'''[_ for _ in _ if x]''', r'''
 ListComp - ROOT 0,0..3,1
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
-   0] comprehension - 0,3..2,15
+   0] comprehension - 0,3..2,5
      .target Name '_' Store - 0,7..0,8
      .iter Name '_' Load - 0,12..0,13
      .ifs[1]
-      0] Name 'x' Load - 2,14..2,15
+      0] Name 'x' Load - 2,4..2,5
      .is_async 0
 '''),
 
@@ -36303,22 +36291,22 @@ if \
 x
 '''), r'''
 for _ in _ if a if \
-           x if c for _ in _
+    x if c for _ in _
 ''',
 r'''for _ in _ if a if x if c for _ in _''', r'''
-_comprehensions - ROOT 0,0..1,28
+_comprehensions - ROOT 0,0..1,21
   .generators[2]
-   0] comprehension - 0,0..1,17
+   0] comprehension - 0,0..1,10
      .target Name '_' Store - 0,4..0,5
      .iter Name '_' Load - 0,9..0,10
      .ifs[3]
       0] Name 'a' Load - 0,14..0,15
-      1] Name 'x' Load - 1,11..1,12
-      2] Name 'c' Load - 1,16..1,17
+      1] Name 'x' Load - 1,4..1,5
+      2] Name 'c' Load - 1,9..1,10
      .is_async 0
-   1] comprehension - 1,18..1,28
-     .target Name '_' Store - 1,22..1,23
-     .iter Name '_' Load - 1,27..1,28
+   1] comprehension - 1,11..1,21
+     .target Name '_' Store - 1,15..1,16
+     .iter Name '_' Load - 1,20..1,21
      .is_async 0
 '''),
 
@@ -36329,17 +36317,17 @@ x \
 
 '''), r'''
 for _ in _ if \
-           x \
+    x \
  for _ in _
 ''',
 r'''for _ in _ if x for _ in _''', r'''
 _comprehensions - ROOT 0,0..2,11
   .generators[2]
-   0] comprehension - 0,0..1,12
+   0] comprehension - 0,0..1,5
      .target Name '_' Store - 0,4..0,5
      .iter Name '_' Load - 0,9..0,10
      .ifs[1]
-      0] Name 'x' Load - 1,11..1,12
+      0] Name 'x' Load - 1,4..1,5
      .is_async 0
    1] comprehension - 2,1..2,11
      .target Name '_' Store - 2,5..2,6
@@ -36355,18 +36343,18 @@ x \
 
 '''), r'''
 for _ in _
-           if \
-           x \
+    if \
+    x \
  for _ in _
 ''',
 r'''for _ in _ if x for _ in _''', r'''
 _comprehensions - ROOT 0,0..3,11
   .generators[2]
-   0] comprehension - 0,0..2,12
+   0] comprehension - 0,0..2,5
      .target Name '_' Store - 0,4..0,5
      .iter Name '_' Load - 0,9..0,10
      .ifs[1]
-      0] Name 'x' Load - 2,11..2,12
+      0] Name 'x' Load - 2,4..2,5
      .is_async 0
    1] comprehension - 3,1..3,11
      .target Name '_' Store - 3,5..3,6
@@ -36417,16 +36405,16 @@ if \
 x
 '''), r'''
 for _ in _ if a if \
-           x if c
+    x if c
 ''',
 r'''for _ in _ if a if x if c''', r'''
-comprehension - ROOT 0,0..1,17
+comprehension - ROOT 0,0..1,10
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10
   .ifs[3]
    0] Name 'a' Load - 0,14..0,15
-   1] Name 'x' Load - 1,11..1,12
-   2] Name 'c' Load - 1,16..1,17
+   1] Name 'x' Load - 1,4..1,5
+   2] Name 'c' Load - 1,9..1,10
   .is_async 0
 '''),
 
@@ -36437,15 +36425,15 @@ x \
 
 '''), r'''
 for _ in _ if \
-           x \
+    x \
 
 ''',
 r'''for _ in _ if x''', r'''
-comprehension - ROOT 0,0..1,12
+comprehension - ROOT 0,0..1,5
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10
   .ifs[1]
-   0] Name 'x' Load - 1,11..1,12
+   0] Name 'x' Load - 1,4..1,5
   .is_async 0
 '''),
 
@@ -36457,16 +36445,16 @@ x \
 
 '''), r'''
 for _ in _
-           if \
-           x \
+    if \
+    x \
 
 ''',
 r'''for _ in _ if x''', r'''
-comprehension - ROOT 0,0..2,12
+comprehension - ROOT 0,0..2,5
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10
   .ifs[1]
-   0] Name 'x' Load - 2,11..2,12
+   0] Name 'x' Load - 2,4..2,5
   .is_async 0
 '''),
 ],
@@ -36807,26 +36795,26 @@ a,
   c
 '''), r'''
 def f(x, a,
-      b,
-      c, z): pass
+    b,
+    c, z): pass
 ''',
 r'''def f(x, a, b, c, z): pass''', r'''
-FunctionDef - ROOT 0,0..2,17
+FunctionDef - ROOT 0,0..2,15
   .name 'f'
-  .args arguments - 0,6..2,10
+  .args arguments - 0,6..2,8
     .args[5]
      0] arg - 0,6..0,7
        .arg 'x'
      1] arg - 0,9..0,10
        .arg 'a'
-     2] arg - 1,6..1,7
+     2] arg - 1,4..1,5
        .arg 'b'
-     3] arg - 2,6..2,7
+     3] arg - 2,4..2,5
        .arg 'c'
-     4] arg - 2,9..2,10
+     4] arg - 2,7..2,8
        .arg 'z'
   .body[1]
-   0] Pass - 2,13..2,17
+   0] Pass - 2,11..2,15
 '''),
 
 ('args', 1, 2, '_all', {}, (None,
@@ -36838,28 +36826,28 @@ r'''def f(x, y, z): pass'''), ('arguments', r'''
 
 '''), r'''
 def f(x,
-      a, # a
-      b, # b
-      c, # c
-      z): pass
+    a, # a
+    b, # b
+    c, # c
+    z): pass
 ''',
 r'''def f(x, a, b, c, z): pass''', r'''
-FunctionDef - ROOT 0,0..4,14
+FunctionDef - ROOT 0,0..4,12
   .name 'f'
-  .args arguments - 0,6..4,7
+  .args arguments - 0,6..4,5
     .args[5]
      0] arg - 0,6..0,7
        .arg 'x'
-     1] arg - 1,6..1,7
+     1] arg - 1,4..1,5
        .arg 'a'
-     2] arg - 2,6..2,7
+     2] arg - 2,4..2,5
        .arg 'b'
-     3] arg - 3,6..3,7
+     3] arg - 3,4..3,5
        .arg 'c'
-     4] arg - 4,6..4,7
+     4] arg - 4,4..4,5
        .arg 'z'
   .body[1]
-   0] Pass - 4,10..4,14
+   0] Pass - 4,8..4,12
 '''),
 
 ('args', 1, 2, '_all', {'raw': False}, (None,
@@ -36889,24 +36877,24 @@ a,
   c
 '''), r'''
 (lambda x, a,
-       b,
-       c, z: None)
+    b,
+    c, z: None)
 ''',
 r'''lambda x, a, b, c, z: None''', r'''
-Lambda - ROOT 0,1..2,17
-  .args arguments - 0,8..2,11
+Lambda - ROOT 0,1..2,14
+  .args arguments - 0,8..2,8
     .args[5]
      0] arg - 0,8..0,9
        .arg 'x'
      1] arg - 0,11..0,12
        .arg 'a'
-     2] arg - 1,7..1,8
+     2] arg - 1,4..1,5
        .arg 'b'
-     3] arg - 2,7..2,8
+     3] arg - 2,4..2,5
        .arg 'c'
-     4] arg - 2,10..2,11
+     4] arg - 2,7..2,8
        .arg 'z'
-  .body Constant None - 2,13..2,17
+  .body Constant None - 2,10..2,14
 '''),
 
 ('args', 1, 2, '_all', {'raw': False}, (None,
@@ -36918,26 +36906,26 @@ r'''lambda x, y, z: None'''), ('arguments', r'''
 
 '''), r'''
 (lambda x,
-       a, # a
-       b, # b
-       c, # c
-       z: None)
+    a, # a
+    b, # b
+    c, # c
+    z: None)
 ''',
 r'''lambda x, a, b, c, z: None''', r'''
-Lambda - ROOT 0,1..4,14
-  .args arguments - 0,8..4,8
+Lambda - ROOT 0,1..4,11
+  .args arguments - 0,8..4,5
     .args[5]
      0] arg - 0,8..0,9
        .arg 'x'
-     1] arg - 1,7..1,8
+     1] arg - 1,4..1,5
        .arg 'a'
-     2] arg - 2,7..2,8
+     2] arg - 2,4..2,5
        .arg 'b'
-     3] arg - 3,7..3,8
+     3] arg - 3,4..3,5
        .arg 'c'
-     4] arg - 4,7..4,8
+     4] arg - 4,4..4,5
        .arg 'z'
-  .body Constant None - 4,10..4,14
+  .body Constant None - 4,7..4,11
 '''),
 
 ('args', 0, 'end', '_all', {'raw': False}, (None,
@@ -38516,9 +38504,9 @@ async def greenlet_spawn(driver: greenlet) -> _T: pass
 
 
 async def greenlet_spawn(driver: greenlet,
-                         *,
-                         _require_await: bool = False,
-                         **kwargs: Any
+    *,
+    _require_await: bool = False,
+    **kwargs: Any
 ) -> _T: pass
 ''', r'''
 
@@ -38536,14 +38524,14 @@ AsyncFunctionDef - ROOT 5,0..9,13
        .arg 'driver'
        .annotation Name 'greenlet' Load - 5,33..5,41
     .kwonlyargs[1]
-     0] arg - 7,25..7,45
+     0] arg - 7,4..7,24
        .arg '_require_await'
-       .annotation Name 'bool' Load - 7,41..7,45
+       .annotation Name 'bool' Load - 7,20..7,24
     .kw_defaults[1]
-     0] Constant False - 7,48..7,53
-    .kwarg arg - 8,27..8,38
+     0] Constant False - 7,27..7,32
+    .kwarg arg - 8,6..8,17
       .arg 'kwargs'
-      .annotation Name 'Any' Load - 8,35..8,38
+      .annotation Name 'Any' Load - 8,14..8,17
   .body[1]
    0] Pass - 9,9..9,13
   .returns Name '_T' Load - 9,5..9,7
@@ -44011,16 +43999,16 @@ y,
 
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44031,16 +44019,16 @@ y,
 ]
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44051,16 +44039,16 @@ y,
 }
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44069,14 +44057,14 @@ x = \
 y =
 '''), r'''
 call(x, \
-     y)
+    y)
 ''',
 r'''call(x, y)''', r'''
-Call - ROOT 0,0..1,7
+Call - ROOT 0,0..1,6
   .func Name 'call' Load - 0,0..0,4
   .args[2]
    0] Name 'x' Load - 0,5..0,6
-   1] Name 'y' Load - 1,5..1,6
+   1] Name 'y' Load - 1,4..1,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44085,14 +44073,14 @@ r'''call(a)'''), ('_decorator_list', r'''
 @y
 '''), r'''
 call(x,
-     y)
+    y)
 ''',
 r'''call(x, y)''', r'''
-Call - ROOT 0,0..1,7
+Call - ROOT 0,0..1,6
   .func Name 'call' Load - 0,0..0,4
   .args[2]
    0] Name 'x' Load - 0,5..0,6
-   1] Name 'y' Load - 1,5..1,6
+   1] Name 'y' Load - 1,4..1,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44103,16 +44091,16 @@ y,
 
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44123,16 +44111,16 @@ if y
 
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44143,16 +44131,16 @@ y,
 
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44163,17 +44151,17 @@ x,
 
 '''), r'''
 call(
-     x,
-     *y
+    x,
+    *y
 )
 ''',
 r'''call(x, *y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Starred - 2,5..2,7
-     .value Name 'y' Load - 2,6..2,7
+   0] Name 'x' Load - 1,4..1,5
+   1] Starred - 2,4..2,6
+     .value Name 'y' Load - 2,5..2,6
      .ctx Load
 '''),
 
@@ -44183,14 +44171,14 @@ x,
 y
 '''), r'''
 call(x,
-     y)
+    y)
 ''',
 r'''call(x, y)''', r'''
-Call - ROOT 0,0..1,7
+Call - ROOT 0,0..1,6
   .func Name 'call' Load - 0,0..0,4
   .args[2]
    0] Name 'x' Load - 0,5..0,6
-   1] Name 'y' Load - 1,5..1,6
+   1] Name 'y' Load - 1,4..1,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44199,15 +44187,15 @@ x,
 y.z
 '''), r'''
 call(x,
-     y.z)
+    y.z)
 ''',
 r'''call(x, y.z)''', r'''
-Call - ROOT 0,0..1,9
+Call - ROOT 0,0..1,8
   .func Name 'call' Load - 0,0..0,4
   .args[2]
    0] Name 'x' Load - 0,5..0,6
-   1] Attribute - 1,5..1,8
-     .value Name 'y' Load - 1,5..1,6
+   1] Attribute - 1,4..1,7
+     .value Name 'y' Load - 1,4..1,5
      .attr 'z'
      .ctx Load
 '''),
@@ -44218,14 +44206,14 @@ x,
 y,
 '''), r'''
 call(x,
-     y)
+    y)
 ''',
 r'''call(x, y)''', r'''
-Call - ROOT 0,0..1,7
+Call - ROOT 0,0..1,6
   .func Name 'call' Load - 0,0..0,4
   .args[2]
    0] Name 'x' Load - 0,5..0,6
-   1] Name 'y' Load - 1,5..1,6
+   1] Name 'y' Load - 1,4..1,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44234,14 +44222,14 @@ x,
 y,
 '''), r'''
 call(x,
-     y)
+    y)
 ''',
 r'''call(x, y)''', r'''
-Call - ROOT 0,0..1,7
+Call - ROOT 0,0..1,6
   .func Name 'call' Load - 0,0..0,4
   .args[2]
    0] Name 'x' Load - 0,5..0,6
-   1] Name 'y' Load - 1,5..1,6
+   1] Name 'y' Load - 1,4..1,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44252,16 +44240,16 @@ y,
 )
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -44272,16 +44260,16 @@ y,
 ]
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False, '_ver': 12}, ('Call',
@@ -44292,16 +44280,16 @@ y,
 
 '''), r'''
 call(
-     x,
-     y
+    x,
+    y
 )
 ''',
 r'''call(x, y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Name 'y' Load - 2,5..2,6
+   0] Name 'x' Load - 1,4..1,5
+   1] Name 'y' Load - 2,4..2,5
 '''),
 
 ('', 0, 'end', 'args', {'_src': False, '_ver': 12}, ('Call',
@@ -44312,17 +44300,17 @@ x,
 
 '''), r'''
 call(
-     x,
-     *y
+    x,
+    *y
 )
 ''',
 r'''call(x, *y)''', r'''
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-   0] Name 'x' Load - 1,5..1,6
-   1] Starred - 2,5..2,7
-     .value Name 'y' Load - 2,6..2,7
+   0] Name 'x' Load - 1,4..1,5
+   1] Starred - 2,4..2,6
+     .value Name 'y' Load - 2,5..2,6
      .ctx Load
 '''),
 ],
@@ -45542,16 +45530,16 @@ x,
 
 '''), r'''
 call((
-     x,
-     ))
+    x,
+    ))
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Tuple - 0,5..2,6
+   0] Tuple - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45562,16 +45550,16 @@ x
 ]
 '''), r'''
 call([
-     x
-     ])
+    x
+    ])
 ''',
 r'''call([x])''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] List - 0,5..2,6
+   0] List - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45582,16 +45570,16 @@ x
 }
 '''), r'''
 call({
-     x
-     })
+    x
+    })
 ''',
 r'''call({x})''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Set - 0,5..2,6
+   0] Set - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
 '''),
 
 ('', 0, 'end', 'args', {'one': True}, ('Call',
@@ -45601,18 +45589,18 @@ x: y
 }
 '''), r'''
 call({
-     x: y
-     })
+    x: y
+    })
 ''',
 r'''call({x: y})''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Dict - 0,5..2,6
+   0] Dict - 0,5..2,5
      .keys[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .values[1]
-      0] Name 'y' Load - 1,8..1,9
+      0] Name 'y' Load - 1,7..1,8
 '''),
 
 ('', 0, 'end', 'args', {'_src': False, 'one': True}, ('Call',
@@ -45648,16 +45636,16 @@ x,
 
 '''), r'''
 call((
-     x,
-     ))
+    x,
+    ))
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Tuple - 0,5..2,6
+   0] Tuple - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45668,16 +45656,16 @@ if x
 
 '''), r'''
 call((
-     x,
-     ))
+    x,
+    ))
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Tuple - 0,5..2,6
+   0] Tuple - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45688,16 +45676,16 @@ x,
 
 '''), r'''
 call((
-     x,
-     ))
+    x,
+    ))
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Tuple - 0,5..2,6
+   0] Tuple - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45747,16 +45735,16 @@ x,
 )
 '''), r'''
 call((
-     x,
-     ))
+    x,
+    ))
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Tuple - 0,5..2,6
+   0] Tuple - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45767,16 +45755,16 @@ x
 ]
 '''), r'''
 call([
-     x
-     ])
+    x
+    ])
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] List - 0,5..2,6
+   0] List - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 
@@ -45787,16 +45775,16 @@ x,
 
 '''), r'''
 call((
-     x,
-     ))
+    x,
+    ))
 ''',
 r'''call((x,))''', r'''
-Call - ROOT 0,0..2,7
+Call - ROOT 0,0..2,6
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-   0] Tuple - 0,5..2,6
+   0] Tuple - 0,5..2,5
      .elts[1]
-      0] Name 'x' Load - 1,5..1,6
+      0] Name 'x' Load - 1,4..1,5
      .ctx Load
 '''),
 ],

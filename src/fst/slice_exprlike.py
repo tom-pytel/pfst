@@ -727,10 +727,18 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
         if (elts_indent_cached := _get_element_indent(self, locabst, start)) is not None:
             pass  # noop
-        elif len(locabst):  # match indentation of our own first element
-            elts_indent_cached = self_indent + ' ' * (locabst.loc_head(0).col - len(self_indent))  # (self._loc_maybe_key(0, True, body).col - len(self_indent))
+        # elif len_body:  # match indentation of our own first element
+        #     elts_indent_cached = self_indent + ' ' * (locabst.loc_head(0).col - len(self_indent))  # (self._loc_maybe_key(0, True, body).col - len(self_indent))
+        # else:
+        #     elts_indent_cached = self_indent + root.indent  # default
+
         else:
-            elts_indent_cached = self_indent + root.indent  # default
+            l = len(root.indent)
+
+            if len_body:  # use the lesser of two evils
+                l = min(l, locabst.loc_head(0).col)
+
+            elts_indent_cached = self_indent + ' ' * (l - len(self_indent))
 
         return elts_indent_cached
 
