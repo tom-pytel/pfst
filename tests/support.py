@@ -293,15 +293,28 @@ class SubCases(BaseCases):
         pat = eval(rest[0], SubCases.GLOBALS)
         repl = _make_fst(rest[1], '')
         rest = rest[:2]
+        opts = {k: v for k, v in case.options.items() if not k.startswith('_')}
         f = _make_fst(case.code, case.attr)
+        g = f.copy()
 
         try:
-            f.sub(pat, repl, **{k: v for k, v in case.options.items() if not k.startswith('_')})
+            f.sub(pat, repl, **opts)
         except Exception as exc:
             rest.append(f'**{_san_exc(exc)!r}**')
+
         else:
             rest.append(f.root.src)
             rest.append(f.root.dump(out='str'))
+
+            if 'on' not in opts and 'loop' not in opts:
+                g.sub(pat, repl, on='leave', **opts)
+
+                if f.src != g.src:
+                    print()
+                    print(f.src)
+                    print(g.src)
+
+                    raise RuntimeError("sub on='enter' differs from on='leave'")
 
         return rest
 

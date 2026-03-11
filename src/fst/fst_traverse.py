@@ -1189,15 +1189,15 @@ def walk(
             the tree or set any state expected for the iteration loop. NO SIDE EFFECTS ALLOWED!!!
     - `on`: When to yield nodes.
         - `'enter'`: Normal walk, will yield nodes upon entering them.
-        - `'leave'`: Inverted walk, will yield nodes upon leaving them. This removes your ability to control whether
+        - `'leave'`: Bottom-up walk, will yield nodes upon leaving them. This removes your ability to control whether
             nodes are recursed into initially or not via the `send(bool)` option. `send(True)` in this case will cause
             the node's children to be walked **AGAIN** with the current node being yielded again after that.
         - `'both'`: Nodes will be yielded twice, first upon entry and again upon leaving after the children have been
             walked (and yielded). In this case, instead of just the node, a tuple is yielded containing the node and a
             bool which is `False` upon entry and `True` upon leaving. `send(bool)` on entry works just like for
-            `on='enter'` and if the node is skipped then it will not be yielded again since it is never "left".
-            `send(True)` upon leaving will also cause the node's children to be walked again with the current node being
-            yielded after with a bool of `False` again.
+            `on='enter'` and if the node is skipped then it will not be yielded again upon "leaving" since it was never
+            "entered". `send(True)` upon leaving will also cause the node's children to be walked again with the current
+            node being yielded after with a bool of `False` again.
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default, `send(True)` for a given node will
@@ -1466,12 +1466,19 @@ def walk(
                     if not (fst_ := ast.f):  # if node was removed or replaced somewhere else then just continue walk
                         continue
 
+                    if children := syntax_ordered_children(ast):
+                        if not back:
+                            children.reverse()
+
                     if not check_all_param(fst_):
+                        if children:  # if this node fails type check we still walk the children
+                            stack.extend(children)
+
                         continue
 
-                    if children := syntax_ordered_children(ast):
+                    if children:
                         stack.append(fst_)  # this means its ready to yield when we get to it again
-                        stack.extend(children if back else children[::-1])
+                        stack.extend(children)
 
                         continue
 
@@ -1493,6 +1500,9 @@ def walk(
 
         # loop for `on='both'`
 
+        elif on == 'both':
+            raise NotImplementedError
+
 
         # TODO: this
 
@@ -1502,10 +1512,7 @@ def walk(
 
         # last yield on leaving walk root, which may restart the walk
 
-        if self_:
-            if not (ast := self.a):  # may have been deleted
-                return
-
+        if self_ and (ast := self.a):  # may have been deleted
             recurse_ = False
 
             while (sent := (yield self)) is not None:

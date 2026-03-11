@@ -1482,7 +1482,7 @@ For - ROOT 0,0..0,16
 
 ('', None, None, None, {}, (None,
 r'''call()'''),
-r'''Mexpr''',
+r'''MCall''',
 r'''for _ in __FST_: pass''',
 r'''for _ in call(): pass''', r'''
 For - ROOT 0,0..0,21
@@ -1594,7 +1594,7 @@ For - ROOT 0,0..5,13
 
 ('', None, None, None, {}, (None,
 r'''a, b'''),
-r'''Mexpr''',
+r'''MTuple''',
 r'''async for _ in __FST_: pass''',
 r'''async for _ in (a, b): pass''', r'''
 AsyncFor - ROOT 0,0..0,27
@@ -2470,7 +2470,7 @@ r'''Raise - ROOT 0,0..0,5'''),
 
 ('', None, None, None, {}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('Try', r'''
+r'''MCall''', ('Try', r'''
 try: __FST_
 finally: pass
 '''), r'''
@@ -2488,7 +2488,7 @@ Try - ROOT 0,0..1,13
 
 ('', None, None, None, {}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('Try', r'''
+r'''MCall''', ('Try', r'''
 try: pass
 except: __FST_
 '''), r'''
@@ -2508,7 +2508,7 @@ Try - ROOT 0,0..1,14
 
 ('', None, None, None, {}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('Try', r'''
+r'''MCall''', ('Try', r'''
 try: pass
 except: pass
 else: __FST_
@@ -2532,7 +2532,7 @@ Try - ROOT 0,0..2,12
 
 ('', None, None, None, {}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('Try', r'''
+r'''MCall''', ('Try', r'''
 try: pass
 except: pass
 else: __FST_DEL
@@ -2551,7 +2551,7 @@ Try - ROOT 0,0..1,12
 
 ('', None, None, None, {}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('Try', r'''
+r'''MCall''', ('Try', r'''
 try: pass
 finally: __FST_
 '''), r'''
@@ -2569,7 +2569,7 @@ Try - ROOT 0,0..1,15
 
 ('', None, None, None, {}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('Try', r'''
+r'''MCall''', ('Try', r'''
 try: pass
 except: pass
 finally: __FST_DEL
@@ -2809,7 +2809,7 @@ Try - ROOT 0,0..2,14
 
 ('', None, None, None, {'_ver': 11}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('TryStar', r'''
+r'''MCall''', ('TryStar', r'''
 try: __FST_
 except* Exception: pass
 finally: pass
@@ -2834,7 +2834,7 @@ TryStar - ROOT 0,0..2,13
 
 ('', None, None, None, {'_ver': 11}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('TryStar', r'''
+r'''MCall''', ('TryStar', r'''
 try: pass
 except* Exception: __FST_
 '''), r'''
@@ -2855,7 +2855,7 @@ TryStar - ROOT 0,0..1,25
 
 ('', None, None, None, {'_ver': 11}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('TryStar', r'''
+r'''MCall''', ('TryStar', r'''
 try: pass
 except* Exception: pass
 else: __FST_
@@ -2880,7 +2880,7 @@ TryStar - ROOT 0,0..2,12
 
 ('', None, None, None, {'_ver': 11}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('TryStar', r'''
+r'''MCall''', ('TryStar', r'''
 try: pass
 except* Exception: pass
 else: __FST_DEL
@@ -2900,7 +2900,7 @@ TryStar - ROOT 0,0..1,23
 
 ('', None, None, None, {'_ver': 11}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('TryStar', r'''
+r'''MCall''', ('TryStar', r'''
 try: pass
 except* Exception: pass
 finally: __FST_
@@ -2925,7 +2925,7 @@ TryStar - ROOT 0,0..2,15
 
 ('', None, None, None, {'_ver': 11}, ('expr',
 r'''call()'''),
-r'''Mexpr''', ('TryStar', r'''
+r'''MCall''', ('TryStar', r'''
 try: pass
 except* Exception: pass
 finally: __FST_DEL
@@ -6587,7 +6587,7 @@ MatchStar - ROOT 0,0..0,2
 
 ('', None, None, None, {}, ('pattern',
 r'''a as b'''),
-r'''MMatchAs(pattern=M(p=...), name=M(n=...))''', ('pattern',
+r'''MMatchAs(pattern=MNOT(p=None), name=M(n=...))''', ('pattern',
 r'''__FST_n as __FST_p'''),
 r'''b as a''', r'''
 MatchAs - ROOT 0,0..0,6
@@ -6598,7 +6598,7 @@ MatchAs - ROOT 0,0..0,6
 
 ('', None, None, None, {}, ('pattern',
 r'''a as b'''),
-r'''MMatchAs(pattern=M(p=...), name=M(n=...))''', ('pattern',
+r'''MMatchAs(pattern=MNOT(p=None), name=M(n=...))''', ('pattern',
 r'''__FST_DEL as __FST_p'''),
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
@@ -6618,7 +6618,7 @@ MatchAs - ROOT 0,0..0,6
 
 ('', None, None, None, {}, ('pattern',
 r'''a as b'''),
-r'''MMatchAs(pattern=M(p=...))''', ('pattern',
+r'''MMatchAs(pattern=MNOT(p=None))''', ('pattern',
 r'''__FST_p'''),
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
@@ -8280,7 +8280,7 @@ r'''**ValueError('cannot replace Assign.value with slice')**'''),
 
 'nested': [  # ................................................................................
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'on': 'enter'}, (None,
 r'''a + b.c + d[e]'''),
 r'''MOR(Name, Attribute, Subscript)''',
 r'''log(__FST_)''',
@@ -8309,7 +8309,7 @@ BinOp - ROOT 0,0..0,29
        .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'on': 'enter'}, (None,
 r'''a + b.c + d[e]'''),
 r'''M(top=MOR(Name, Attribute, Subscript))''',
 r'''log(__FST_top)''',
@@ -8414,7 +8414,7 @@ BinOp - ROOT 0,0..0,44
        .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'on': 'enter'}, (None,
 r'''a + (b + c)'''),
 r'''MBinOp(M(a=...), ..., M(b=...))''',
 r'''(BinOp(__FST_a, __FST_b), __FST_)[1]''',
@@ -8442,7 +8442,7 @@ Subscript - ROOT 0,0..0,33
   .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'on': 'enter'}, (None,
 r'''a + (b + c)'''),
 r'''M(top=MBinOp(M(a=...), ..., M(b=...)))''',
 r'''(BinOp(__FST_a, __FST_b), __FST_top)[1]''',
@@ -8727,7 +8727,7 @@ List - ROOT 0,0..0,19
   .ctx Load
 '''),
 
-('', None, None, None, {}, (None, r'''
+('', None, None, None, {'on': 'enter'}, (None, r'''
 if a:
     if b:
         if c:
@@ -8993,7 +8993,7 @@ If - ROOT 0,0..1,8
    0] Pass - 1,4..1,8
 '''),
 
-('', None, None, None, {'nested': True, 'count': 2}, (None, r'''
+('', None, None, None, {'nested': True, 'count': 2, 'on': 'enter'}, (None, r'''
 if a:
     if b:
         if c:
@@ -9231,6 +9231,37 @@ If - ROOT 0,0..2,12
         1] Name 'g' Load - 1,13..1,14
      .body[1]
       0] Pass - 2,8..2,12
+'''),
+],
+
+'on_leave': [  # ................................................................................
+
+('', None, None, None, {'on': 'leave'}, (None, r'''
+if a:
+    if b:
+        if c:
+            if d:
+                if e:
+                    pass
+'''),
+r'''MIf(test=M(outt=...), body=[MIf(test=M(int=...), body=M(inb=...))])''', r'''
+if __FST_outt and __FST_int:
+    __FST_inb
+''', r'''
+if a and b and c and d and e:
+    pass
+''', r'''
+If - ROOT 0,0..1,8
+  .test BoolOp - 0,3..0,28
+    .op And
+    .values[5]
+     0] Name 'a' Load - 0,3..0,4
+     1] Name 'b' Load - 0,9..0,10
+     2] Name 'c' Load - 0,15..0,16
+     3] Name 'd' Load - 0,21..0,22
+     4] Name 'e' Load - 0,27..0,28
+  .body[1]
+   0] Pass - 1,4..1,8
 '''),
 ],
 
@@ -10312,7 +10343,7 @@ Assign - ROOT 0,0..2,36
   .value Constant '__FST_t\n__FST_t\n__FST_t' - 0,9..2,36
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'on': 'enter'}, (None,
 r'''a + b.c + d[e]'''),
 r'''M(t=MOR(Name, Attribute, Subscript))''',
 r'''log(__FST_t, '__FST_t')''',
@@ -10344,7 +10375,7 @@ BinOp - ROOT 0,0..0,49
      1] Constant '__FST_t' - 0,42..0,48
 '''),
 
-('', None, None, None, {'nested': True}, (None,
+('', None, None, None, {'nested': True, 'on': 'enter'}, (None,
 r'''a + b.c + d[e]'''),
 r'''M(t=MOR(Name, Attribute, Subscript))''',
 r'''log(__FST_t, '__FST_t')''',
@@ -10388,7 +10419,7 @@ BinOp - ROOT 0,0..0,79
      1] Constant '__FST_t' - 0,72..0,78
 '''),
 
-('', None, None, None, {'nested': True, 'count': 2}, (None,
+('', None, None, None, {'nested': True, 'count': 2, 'on': 'enter'}, (None,
 r'''a + b.c + d[e]'''),
 r'''M(t=MOR(Name, Attribute, Subscript))''',
 r'''log(__FST_t, '__FST_t')''',

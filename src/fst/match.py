@@ -18,7 +18,7 @@ import re
 from ast import walk
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
-from typing import Any, Callable, Generator, Iterable, Mapping, Sequence, Set as tp_Set, Union
+from typing import Any, Callable, Generator, Iterable, Literal, Mapping, Sequence, Set as tp_Set, Union
 
 from . import fst
 
@@ -6054,6 +6054,7 @@ def search(
     nested: bool = True,
     *,
     ctx: bool = False,
+    on: Literal['enter', 'leave', 'both'] = 'enter',
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
@@ -6069,7 +6070,8 @@ def search(
     Replacement and deletion of nodes during the search is allowed according to the rules specified by `walk()`.
 
     If you do not delete or `send(False)` for any given node then the search will continue into that node with the
-    possibility of finding nested matches, unless you pass `nested=False` to the `search()` call.
+    possibility of finding nested matches, unless you pass `nested=False` to the `search()` call. `send()` to this
+    generator follows the behavior rules for `send()` to the `walk()` generator with the given `on` value.
 
     **Note:** The generator returned by this function does not yield the matched nodes themselves, but rather the
     `FSTMatch` objects. You can get the matched nodes from these objects using the `matched` attribute, e.g.
@@ -6084,10 +6086,10 @@ def search(
         conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
         you don't specify it so may inadvertantly break matches where you don't want to take that into
         consideration.
-    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see that
-        function for their meanings. These can further restrict what is returned. Just like in the `walk()` function,
-        this can be overridden by `send(True)` to the generator, but only if the relevant nodes are actually matched
-        by the search.
+    - `on`, `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see
+        that function for their meanings. These can further restrict what is returned. Just like in the `walk()`
+        function, this can be overridden by `send(True)` to the generator, but only if the relevant nodes are actually
+        matched by the search.
 
     **Returns:**
     - `Generator`: This is a `walk()` style generator which accepts `send(bool)` to decide whether to recurse into a
@@ -6131,6 +6133,9 @@ def search(
     ast_cls is not zst.ZST
     """
 
+    # if not nested and on == 'leave':
+    #     raise ValueError(f"'nested=False' is incompatible with 'on=\"leave\"'")
+
     pat_cls = pat.__class__
     match_func = _MATCH_FUNCS.get(pat_cls, _match_default)
     walk_all = _LEAF_ASTS_FUNCS.get(pat_cls, _leaf_asts_default)(pat)  # which AST leaf nodes we need to actually check for match
@@ -6139,7 +6144,7 @@ def search(
     if walk_all is None or len(walk_all) == _LEN_ASTS_LEAF__ALL:  # checking all node types so don't need class check, if None then indeterminate and we need to check all nodes
         walk_all = True
 
-    gen = self.walk(walk_all, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+    gen = self.walk(walk_all, on, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for f in gen:
         mstate.clear()
@@ -6172,6 +6177,7 @@ def sub(
     copy_options: dict[str, Any] | None = None,
     repl_options: dict[str, Any] | None = None,
     ctx: bool = False,
+    on: Literal['enter', 'leave'] = 'enter',
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
@@ -6201,15 +6207,20 @@ def sub(
     This function can handle individual node or slice substitutions, including compound patterns like `Dict` key:value
     pairs and whole `ExceptHandler` or `match_case` entries.
 
+    If the option `on='leave'` is used then the option `nested=False` is implicitly ignored as the tree is effectively
+    walked bottom-up so the nesting prevention does not have a chance to prevent entry to nested nodes. That also means
+    that infinite recursion cannot occur due to nesting.
+
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these).
     - `repl`: Replacement template as an `FST`, `AST` or source.
-    - `nested`: Whether to allow recursion into nested substitutions or not. In order to prevent infinite recursion,
-        regardless of this parameter, none of the original nodes of the `repl` template are ever substituted, even if
-        they match the pattern. If the full original match is put anywhere in the template then the top node of that is
-        not considered for substitution again either (even though by definition it matches the pattern). Subparts of
-        that matched template can be matched and substituted again as that cannot cause infinite recursion.
+    - `nested`: Whether to allow recursion into nested substitutions or not. In order to help prevent infinite
+        recursion, regardless of this parameter, none of the original nodes of the `repl` template are ever substituted
+        even if they match the pattern. If the full original match is put anywhere in the template then the top node of
+        that is not considered for substitution again either (even though by definition it matches the pattern).
+        Subparts of the match put to the replacement template **CAN** cause infinite recursion however, you have been
+        warned.
     - `count`: If this is above `0` then only this number of substitutions will be made. This only increments by 1 for
         each new substituted location in `self`, regardless of how many times that node is substituted with `loop` if
         that is being used.
@@ -6231,9 +6242,10 @@ def sub(
         conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
         you don't specify it so may inadvertantly break matches where you don't want to take that into
         consideration.
-    - `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see that
-        function for their meanings. These can further restrict what is returned. Unlike `walk()` or `search()` though,
-        you don't get a chance to override individual node recursion as the search generator is not made available.
+    - `on`, `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see
+        that function for their meanings. These can further restrict what is returned. Unlike `walk()` or `search()`
+        though, you don't get a chance to override individual node recursion as the search generator is not made
+        available. The `on` parameter can only take `'enter'` and `'leave'`, not `'both'`.
     - `options`: The options to use when replacing matched nodes in `self` with the `repl` template. See `options()`.
 
     **Returns:**
@@ -6434,6 +6446,7 @@ def sub(
         repl_options=repl_options,
         ctx=ctx,
         self_=self_,
+        on=on,
         recurse=recurse,
         scope=scope,
         back=back,
@@ -6456,6 +6469,7 @@ def subn(
     repl_options: dict[str, Any] | None = None,
     ctx: bool = False,
     self_: bool = True,
+    on: Literal['enter', 'leave'] = 'enter',
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
@@ -6552,6 +6566,9 @@ def subn(
             pass
     """
 
+    if on == 'both':
+        raise ValueError("substitution does not accept 'on=\"both\"'")
+
     if count < 0:
         count = 0
 
@@ -6583,7 +6600,7 @@ def subn(
     total_count = 0
     skip_sub = False
     dirty = set()  # {AST, ...}
-    gen = self.search(pat, nested, ctx=ctx, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
+    gen = self.search(pat, nested, ctx=ctx, on=on, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
     for m in gen:
         matched = m.matched  # will be FST node
