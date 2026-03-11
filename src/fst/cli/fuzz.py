@@ -33,12 +33,12 @@ from unicodedata import normalize
 from ..asttypes import *
 from ..asttypes import _ASTDummy
 from ..astutil import *
-from ..astutil import re_alnumdot_alnum, AST_BASES
-from ..common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
+from ..astutil import re_alnumdot_alnum, FIELDS, AST_BASES
+from ..common import PYLT11, PYLT12, PYLT14, PYGE11, PYGE12, PYGE13, astfield, next_frag
 from ..parsex import parse, parse_expr_arglike
 from ..view import FSTView
 from ..match import *
-from ..fst import FST, ASTS_LEAF_FTSTR
+from ..fst import FST
 from .. import NodeError
 
 try:
@@ -3158,6 +3158,161 @@ class SliceCoerce(Fuzzy):
 
             # if self.verbose:
             #     print(fst.src)
+
+
+class Substitute(Fuzzy):
+    """Test substitution."""
+
+    name = 'sub'
+    forever = True
+
+    PATS_N_REPLS = {
+        FunctionDef:      (MFunctionDef(decorator_list=M(decorator_list=...), name=M(name=...), args=M(args=...), returns=M(returns=...), body=M(body=...)), FST('@__FST_decorator_list\ndef __FST_name(__FST_args) -> __FST_returns: __FST_body', FunctionDef)),  # (('decorator_list', 'expr*'), ('name', 'identifier'), ('type_params', 'type_param*'), ('args', 'arguments'), ('returns', 'expr?'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+        AsyncFunctionDef: (MAsyncFunctionDef(decorator_list=M(decorator_list=...), name=M(name=...), args=M(args=...), returns=M(returns=...), body=M(body=...)), FST('@__FST_decorator_list\nasync def __FST_name(__FST_args) -> __FST_returns: __FST_body', AsyncFunctionDef)),  # (('decorator_list', 'expr*'), ('name', 'identifier'), ('type_params', 'type_param*'), ('args', 'arguments'), ('returns', 'expr?'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+        ClassDef:         (MClassDef(decorator_list=M(decorator_list=...), name=M(name=...), _bases=M(_bases=...), body=M(body=...)), FST('@__FST_decorator_list\nclass __FST_name(__FST__bases): __FST_body', ClassDef)),  # (('decorator_list', 'expr*'), ('name', 'identifier'), ('type_params', 'type_param*'), ('bases', 'expr*'), ('keywords', 'keyword*'), ('body', 'stmt*'))),
+        Return:           (MReturn(value=M(value=...)), FST('return __FST_value', Return)),  # (('value', 'expr?'),)),
+        Delete:           (MDelete(targets=M(targets=...)), FST('del __FST_targets', Delete)),                   # (('targets', 'expr*'),)),
+        Assign:           (MAssign(targets=M(targets=...), value=M(value=...)), FST('__FST_targets = __FST_value', Assign)),                   # (('targets', 'expr*'), ('value', 'expr'), ('type_comment', 'string?'))),
+        AugAssign:        (MAugAssign(target=M(target=...), value=M(value=...)), FST('__FST_target += __FST_value', AugAssign)),             # (('target', 'expr'), ('op', 'operator'), ('value', 'expr'))),
+        AnnAssign:        (MAnnAssign(target=M(target=...), annotation=M(annotation=...), value=M(value=...)), FST('__FST_target: __FST_annotation = __FST_value', AnnAssign)),             # (('target', 'expr'), ('annotation', 'expr'), ('value', 'expr?'), ('simple', 'int'))),
+        For:              (MFor(target=M(target=...), iter=M(iter=...), body=M(body=...), orelse=M(orelse=...)), FST('for __FST_target in __FST_iter: __FST_body\nelse: __FST_orelse', For)),                         # (('target', 'expr'), ('iter', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'), ('type_comment', 'string?'))),
+        AsyncFor:         (MAsyncFor(target=M(target=...), iter=M(iter=...), body=M(body=...), orelse=M(orelse=...)), FST('async for __FST_target in __FST_iter: __FST_body\nelse: __FST_orelse', AsyncFor)),               # (('target', 'expr'), ('iter', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'), ('type_comment', 'string?'))),
+        While:            (MWhile(test=M(test=...), body=M(body=...), orelse=M(orelse=...)), FST('while __FST_test: __FST_body\nelse: __FST_orelse', While)),                         # (('test', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'))),
+        If:               (MIf(test=M(test=...), body=M(body=...), orelse=M(orelse=...)), FST('if __FST_test: __FST_body\nelse: __FST_orelse', If)),                           # (('test', 'expr'), ('body', 'stmt*'), ('orelse', 'stmt*'))),
+        With:             (MWith(items=M(items=...), body=M(body=...)), FST('with __FST_items: __FST_body', With)),                       # (('items', 'withitem*'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+        AsyncWith:        (MAsyncWith(items=M(items=...), body=M(body=...)), FST('async with __FST_items: __FST_body', AsyncWith)),             # (('items', 'withitem*'), ('body', 'stmt*'), ('type_comment', 'string?'))),
+        Match:            (MMatch(subject=M(subject=...), cases=M(cases=...)), FST('match __FST_subject:\n    case "...": __FST_cases', Match)),                     # (('subject', 'expr'), ('cases', 'match_case*'))),
+        Raise:            (MRaise(exc=M(exc=...), cause=M(cause=...)), FST('raise __FST_exc from __FST_cause', Raise)),                     # (('exc', 'expr?'), ('cause', 'expr?'))),
+        Try:              (MTry(body=M(body=...), handlers=M(handlers=...), orelse=M(orelse=...), finalbody=M(finalbody=...)), FST('try: __FST_body\nexcept "...": __FST_handlers\nelse: __FST_orelse\nfinally: __FST_finalbody', Try)),                         # (('body', 'stmt*'), ('handlers', 'excepthandler*'), ('orelse', 'stmt*'), ('finalbody', 'stmt*'))),
+        Assert:           (MAssert(test=M(test=...), msg=M(msg=...)), FST('assert __FST_test, __FST_msg', Assert)),                   # (('test', 'expr'), ('msg', 'expr?'))),
+        Import:           (MImport(names=M(names=...)), FST('import __FST_names', Import)),                   # (('names', 'alias*'),)),
+        ImportFrom:       (MImportFrom(module=M(module=...), names=M(names=...)), FST('from .__FST_module import __FST_names', ImportFrom)),           # (('module', 'identifier?'), ('names', 'alias*'), ('level', 'int?'))),
+        Global:           (MGlobal(names=M(names=...)), FST('global __FST_names', Global)),                   # (('names', 'identifier*'),)),
+        Nonlocal:         (MNonlocal(names=M(names=...)), FST('nonlocal __FST_names', Nonlocal)),               # (('names', 'identifier*'),)),
+        Expr:             (MExpr(value=M(value=...)), FST('__FST_value', Expr)),                       # (('value', 'expr'),)),
+        Pass:             (MPass(), FST('__FST_', Name)),                       # ()),
+        Break:            (MBreak(), FST('__FST_', Name)),                     # ()),
+        Continue:         (MContinue(), FST('__FST_', Name)),               # ()),
+        BoolOp:           (MBoolOp(values=M(values=...)), FST('__FST_values', Name)),                   # (('op', 'boolop'), ('values', 'expr*'))),
+        NamedExpr:        (MNamedExpr(target=M(target=...), value=M(value=...)), FST('__FST_target := __FST_value', NamedExpr)),             # (('target', 'expr'), ('value', 'expr'))),
+        BinOp:            (MBinOp(left=M(left=...), right=M(right=...)), FST('__FST_left + __FST_right', BinOp)),                     # (('left', 'expr'), ('op', 'operator'), ('right', 'expr'))),
+        UnaryOp:          (MUnaryOp(operand=M(operand=...)), FST('-__FST_operand', UnaryOp)),                 # (('op', 'unaryop'), ('operand', 'expr'))),
+        Lambda:           (MLambda(args=M(args=...), body=M(body=...)), FST('lambda __FST_args: __FST_body', Lambda)),                   # (('args', 'arguments'), ('body', 'expr'))),
+        IfExp:            (MIfExp(body=M(body=...), test=M(test=...), orelse=M(orelse=...)), FST('__FST_body if __FST_test else __FST_orelse', IfExp)),                     # (('body', 'expr'), ('test', 'expr'), ('orelse', 'expr'))),
+        Dict:             (MDict(_all=M(_all=...)), FST('{"...": __FST__all}', Dict)),                       # (('keys', 'expr?*'), ('values', 'expr*'))),
+        Set:              (MSet(elts=M(elts=...)), FST('{__FST_elts}', Set)),                         # (('elts', 'expr*'),)),
+        ListComp:         (MListComp(elt=M(elt=...), generators=M(generators=...)), FST('[__FST_elt for __FST_generators in "..."]', ListComp)),               # (('elt', 'expr'), ('generators', 'comprehension*'))),
+        SetComp:          (MSetComp(elt=M(elt=...), generators=M(generators=...)), FST('{__FST_elt for __FST_generators in "..."}', SetComp)),                 # (('elt', 'expr'), ('generators', 'comprehension*'))),
+        DictComp:         (MDictComp(key=M(key=...), value=M(value=...), generators=M(generators=...)), FST('{__FST_key: __FST_value for __FST_generators in "..."}', DictComp)),               # (('key', 'expr'), ('value', 'expr?'), ('generators', 'comprehension*'))),  # value expr? starting with py 3.15, harmless for py < 3.15
+        GeneratorExp:     (MGeneratorExp(elt=M(elt=...), generators=M(generators=...)), FST('(__FST_elt for __FST_generators in "...")', GeneratorExp)),       # (('elt', 'expr'), ('generators', 'comprehension*'))),
+        Await:            (MAwait(value=M(value=...)), FST('await __FST_value', Await)),                     # (('value', 'expr'),)),
+        Yield:            (MYield(value=M(value=...)), FST('yield __FST_value', Yield)),                     # (('value', 'expr?'),)),
+        YieldFrom:        (MYieldFrom(value=M(value=...)), FST('yield from __FST_value', YieldFrom)),             # (('value', 'expr'),)),
+        Compare:          (MCompare(_all=M(_all=...)), FST('__FST__all', Name)),                 # (('left', 'expr'), ('ops', 'cmpop*'), ('comparators', 'expr*'))),
+        Call:             (MCall(func=M(func=...), _args=M(_args=...)), FST('__FST_func(__FST__args)', Call)),                       # (('func', 'expr'), ('args', 'expr*'), ('keywords', 'keyword*'))),
+        # FormattedValue:   (MFormattedValue(), FST('zzz', FormattedValue)),   # (('value', 'expr'), ('conversion', 'int'), ('format_spec', 'expr?'))),
+        # Interpolation:    (MInterpolation(), FST('zzz', Interpolation)),     # (('value', 'expr'), ('str', 'constant'), ('conversion', 'int'), ('format_spec', 'expr?'))),
+        # JoinedStr:        (MJoinedStr(), FST('zzz', JoinedStr)),             # (('values', 'expr*'),)),
+        # TemplateStr:      (MTemplateStr(), FST('zzz', TemplateStr)),         # (('values', 'expr*'),)),
+      # Constant:         (MConstant, FST('__FST_', Name)),               # (('value', 'constant'), ('kind', 'string?'))),
+        Attribute:        (MAttribute(value=M(value=...), attr=M(attr=...)), FST('__FST_value.__FST_attr', Attribute)),             # (('value', 'expr'), ('attr', 'identifier'), ('ctx', 'expr_context'))),
+        Subscript:        (MSubscript(value=M(value=...), slice=M(slice=...)), FST('__FST_value[__FST_slice]', Subscript)),             # (('value', 'expr'), ('slice', 'expr'), ('ctx', 'expr_context'))),
+        Starred:          (MStarred(value=M(value=...)), FST('*__FST_value', Starred)),                 # (('value', 'expr'), ('ctx', 'expr_context'))),
+        Name:             (MName(id=M(id=...)), FST('__FST_id', Name)),                       # (('id', 'identifier'), ('ctx', 'expr_context'))),
+        List:             (MList(elts=M(elts=...)), FST('[__FST_elts]', List)),                       # (('elts', 'expr*'), ('ctx', 'expr_context'))),
+        Tuple:            (MTuple(elts=M(elts=...)), FST('(__FST_elts,)', Tuple)),                     # (('elts', 'expr*'), ('ctx', 'expr_context'))),
+        Slice:            (MSlice(lower=M(lower=...), upper=M(upper=...), step=M(step=...)), FST('__FST_lower:__FST_upper:__FST_step', Slice)),                     # (('lower', 'expr?'), ('upper', 'expr?'), ('step', 'expr?'))),
+        comprehension:    (Mcomprehension(target=M(target=...), iter=M(iter=...), ifs=M(ifs=...)), FST('for __FST_target in __FST_iter if __FST_ifs', comprehension)),     # (('target', 'expr'), ('iter', 'expr'), ('ifs', 'expr*'), ('is_async', 'int'))),
+      # ExceptHandler:    (MExceptHandler(type=M(type=...), name=M(name=...), body=M(body=...)), FST('except __FST_type as __FST_name: __FST_body', ExceptHandler)),     # (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
+      # arguments:        (Marguments(), FST('zzz', arguments)),             # (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr?*'), ('kwarg', 'arg?'))),
+        arg:              (Marg(arg=M(arg=...), annotation=M(annotation=...)), FST('__FST_arg: __FST_annotation', arg)),                         # (('arg', 'identifier'), ('annotation', 'expr?'), ('type_comment', 'string?'))),
+        keyword:          (Mkeyword(arg=M(arg=...), value=M(value=...)), FST('__FST_arg=__FST_value', keyword)),                 # (('arg', 'identifier?'), ('value', 'expr'))),
+        alias:            (Malias(name=M(name=...), asname=M(asname=...)), FST('__FST_name as __FST_asname', alias)),                     # (('name', 'identifier'), ('asname', 'identifier?'))),
+        withitem:         (Mwithitem(context_expr=M(context_expr=...), optional_vars=M(optional_vars=...)), FST('__FST_context_expr as __FST_optional_vars', withitem)),               # (('context_expr', 'expr'), ('optional_vars', 'expr?'))),
+        match_case:       (Mmatch_case(pattern=M(pattern=...), guard=M(guard=...), body=M(body=...)), FST('case __FST_pattern if __FST_guard: __FST_body', match_case)),           # (('pattern', 'pattern'), ('guard', 'expr?'), ('body', 'stmt*'))),
+      # MatchValue:       (MMatchValue(value=M(value=...)), FST('__FST_value', MatchValue)),           # (('value', 'expr'),)),
+      # MatchSingleton:   (MMatchSingleton(), FST('zzz', MatchSingleton)),   # (('value', 'constant'),)),
+        MatchSequence:    (MMatchSequence(patterns=M(patterns=...)), FST('[__FST_patterns]', MatchSequence)),     # (('patterns', 'pattern*'),)),
+        MatchMapping:     (MMatchMapping(_all=M(_all=...)), FST('{"...": __FST__all}', MatchMapping)),       # (('keys', 'expr*'), ('patterns', 'pattern*'), ('rest', 'identifier?'))),
+      # MatchClass:       (MMatchClass(), FST('zzz', MatchClass)),           # (('cls', 'expr'), ('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
+        MatchStar:        (MMatchStar(name=M(name=...)), FST('*__FST_name', MatchStar)),             # (('name', 'identifier?'),)),
+        MatchAs:          (MMatchAs(pattern=M(pattern=...), name=M(name=...)), FST('__FST_pattern as __FST_name', MatchAs)),                 # (('pattern', 'pattern?'), ('name', 'identifier?'))),
+        MatchOr:          (MMatchOr(patterns=M(patterns=...)), FST('__FST_patterns', pattern)),                 # (('patterns', 'pattern*'),)),
+    }
+
+    if PYGE11:
+        PATS_N_REPLS.update({
+            TryStar:          (MTryStar(body=M(body=...), handlers=M(handlers=...), orelse=M(orelse=...), finalbody=M(finalbody=...)), FST('try: __FST_body\nexcept* "...": __FST_handlers\nelse: __FST_orelse\nfinally: __FST_finalbody', TryStar)),                         # (('body', 'stmt*'), ('handlers', 'excepthandler*'), ('orelse', 'stmt*'), ('finalbody', 'stmt*'))),
+        })
+
+    if PYGE12:
+        PATS_N_REPLS.update({
+            FunctionDef:      (MFunctionDef(decorator_list=M(decorator_list=...), name=M(name=...), type_params=M(type_params=...), args=M(args=...), returns=M(returns=...), body=M(body=...)), FST('def __FST_name[__FST_type_params](__FST_args) -> __FST_returns: __FST_body', FunctionDef)),
+            AsyncFunctionDef: (MAsyncFunctionDef(decorator_list=M(decorator_list=...), name=M(name=...), type_params=M(type_params=...), args=M(args=...), returns=M(returns=...), body=M(body=...)), FST('async def __FST_name[__FST_type_params](__FST_args) -> __FST_returns: __FST_body', AsyncFunctionDef)),
+            ClassDef:         (MClassDef(decorator_list=M(decorator_list=...), name=M(name=...), type_params=M(type_params=...), _bases=M(_bases=...), body=M(body=...)), FST('@__FST_decorator_list\nclass __FST_name[__FST_type_params](__FST__bases): __FST_body', ClassDef)),
+            TypeAlias:        (MTypeAlias(name=M(name=...), type_params=M(type_params=...), value=M(value=...)), FST('type __FST_name[__FST_type_params] = __FST_value', TypeAlias)),             # (('name', 'expr'), ('type_params', 'type_param*'), ('value', 'expr'))),
+            TypeVar:          (MTypeVar(name=M(name=...), bound=M(bound=...)), FST('__FST_name: __FST_bound', TypeVar)),                 # (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
+            ParamSpec:        (MParamSpec(name=M(name=...)), FST('**__FST_name', ParamSpec)),             # (('name', 'identifier'), ('default_value', 'expr?'))),
+            TypeVarTuple:     (MTypeVarTuple(name=M(name=...)), FST('*__FST_name', TypeVarTuple)),       # (('name', 'identifier'), ('default_value', 'expr?'))),
+        })
+
+    if PYGE13:
+        PATS_N_REPLS.update({
+            TypeVar:          (MTypeVar(name=M(name=...), bound=M(bound=...), default_value=M(default_value=...)), FST('__FST_name: __FST_bound = __FST_default_value', TypeVar)),                 # (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
+            ParamSpec:        (MParamSpec(name=M(name=...), default_value=M(default_value=...)), FST('**__FST_name = __FST_default_value', ParamSpec)),             # (('name', 'identifier'), ('default_value', 'expr?'))),
+            TypeVarTuple:     (MTypeVarTuple(name=M(name=...), default_value=M(default_value=...)), FST('*__FST_name = __FST_default_value', TypeVarTuple)),       # (('name', 'identifier'), ('default_value', 'expr?'))),
+        })
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        printed = False
+        count = 0
+        ast_clss = list(FIELDS)
+
+        shuffle(ast_clss)
+
+        def callback(f: FST) -> None:
+            nonlocal count
+
+            if not (count := count + 1) % 20:
+                sys.stdout.write('.')
+                sys.stdout.flush()
+
+        try:
+            for ast_cls in ast_clss:
+                if self.check_abort():
+                    break
+
+                if not (pat_n_repl := Substitute.PATS_N_REPLS.get(ast_cls)):
+                    continue
+
+                pat, repl = pat_n_repl
+                on = choice(('enter', 'leave'))
+
+                try:
+                    fst.sub(pat, repl, nested=True, callback=callback, self_=False, on=on)  #, promote='all')
+
+                except Exception:
+                    print()
+
+                    if self.verbose:
+                        print(fst.src)
+
+                        printed = True
+
+                    print(f'{pat=}')
+                    print(f'{repl=}')
+                    print(f'{on=}')
+
+                    raise
+
+            fst.verify()
+
+        finally:
+            if not printed:
+                print()
+
+                if self.verbose:
+                    print(fst.src)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -2,16 +2,19 @@
 
 ### Added
 
+- substitution and walking
+  - added `on` parameter to allow `walk()` and `search()` yield on `'enter'` or `'leave'` node or `'both'`
+  - added `on` parameter to `sub()` can do substitution on `'enter'` or `'leave'`, allowing bottom-up substitution for easier collapsing of nested structures
+  - added `callback` and `post_callback` parameters to `sub()` and `subn()` to better observe and control individual substitutions
+  - new CLI modules `fst.cli.search` and `fst.cli.sub`
 - allow use of `FSTView` as a singleton item reference
   - types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice
   - `at()` method to get an item as a singleton `FSTView` if getting that item alone would lose information like a `None` or `str`
   - `.item` property for quick access to singleton `FSTView` item
-- added `callback` and `post_callback` parameters to `sub()` and `subn()` to better observe and control individual substitutions
-- put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
 - `promote` option to control whether primitive fields are gotten as primitives or nodes, covers all primitive fields
-- `op` can be set as a global option for convenience for putting slices to `Compare`
 - `FST.parse_ast()` to parse a pure `AST` without `FST` nodes using our extended parsing
-- new CLI modules `fst.cli.search` and `fst.cli.sub`
+- put slice to `Dict` and `MatchMapping` can accept undelimited `Dict` and `MatchMapping` source
+- `op` can be set as a global option for convenience for putting slices to `Compare`
 - added `--color/--no-color` options to main `fst` CLI module
 
 ### Changed

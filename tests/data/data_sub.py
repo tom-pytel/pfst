@@ -2803,6 +2803,41 @@ Try - ROOT 0,0..2,14
      .body[1]
       0] Pass - 2,10..2,14
 '''),
+
+('', None, None, None, {}, ('Try', r'''
+try: a
+except b: c
+else: d
+finally: e
+'''),
+r'''MTryStar(body=M(body=...), handlers=M(handlers=...), orelse=M(orelse=...), finalbody=M(finalbody=...))''', ('Try', r'''
+try: __FST_body
+except "...": __FST_handlers
+else: __FST_orelse
+finally: __FST_finalbody
+'''), r'''
+try: a
+except b: c
+else: d
+finally: e
+''', r'''
+Try - ROOT 0,0..3,10
+  .body[1]
+   0] Expr - 0,5..0,6
+     .value Name 'a' Load - 0,5..0,6
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,11
+     .type Name 'b' Load - 1,7..1,8
+     .body[1]
+      0] Expr - 1,10..1,11
+        .value Name 'c' Load - 1,10..1,11
+  .orelse[1]
+   0] Expr - 2,6..2,7
+     .value Name 'd' Load - 2,6..2,7
+  .finalbody[1]
+   0] Expr - 3,9..3,10
+     .value Name 'e' Load - 3,9..3,10
+'''),
 ],
 
 'basic_TryStar': [  # ................................................................................
@@ -3160,6 +3195,44 @@ TryStar - ROOT 0,0..2,15
      .type Name 'y' Load - 2,8..2,9
      .body[1]
       0] Pass - 2,11..2,15
+'''),
+
+('', None, None, None, {'_ver': 11}, ('TryStar', r'''
+try: a
+except* b: c
+else: d
+finally: e
+'''),
+r'''MTryStar(body=M(body=...), handlers=M(handlers=...), orelse=M(orelse=...), finalbody=M(finalbody=...))''', ('TryStar', r'''
+try: __FST_body
+except* "...": __FST_handlers
+else: __FST_orelse
+finally: __FST_finalbody
+'''), r'''
+try:
+    a
+except* b: c
+else:
+    d
+finally:
+    e
+''', r'''
+TryStar - ROOT 0,0..6,5
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+  .handlers[1]
+   0] ExceptHandler - 2,0..2,12
+     .type Name 'b' Load - 2,8..2,9
+     .body[1]
+      0] Expr - 2,11..2,12
+        .value Name 'c' Load - 2,11..2,12
+  .orelse[1]
+   0] Expr - 4,4..4,5
+     .value Name 'd' Load - 4,4..4,5
+  .finalbody[1]
+   0] Expr - 6,4..6,5
+     .value Name 'e' Load - 6,4..6,5
 '''),
 ],
 
@@ -6157,6 +6230,35 @@ match_case - ROOT 0,0..3,5
      .value Name 'd' Load - 2,12..2,13
    4] Expr - 3,4..3,5
      .value Name 'y' Load - 3,4..3,5
+'''),
+
+('', None, None, None, {}, ('match_case',
+r'''case _: a'''),
+r'''Mmatch_case(pattern=M(pattern=...), guard=M(guard=...), body=M(body=...))''', ('match_case',
+r'''case __FST_pattern if __FST_guard: __FST_body'''), r'''
+case _:
+    a
+''', r'''
+match_case - ROOT 0,0..1,5
+  .pattern MatchAs - 0,5..0,6
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+'''),
+
+('', None, None, None, {}, ('match_case',
+r'''case _ if g: a'''),
+r'''Mmatch_case(pattern=M(pattern=...), guard=M(guard=...), body=M(body=...))''', ('match_case',
+r'''case __FST_pattern if __FST_guard: __FST_body'''), r'''
+case _ if g:
+    a
+''', r'''
+match_case - ROOT 0,0..1,5
+  .pattern MatchAs - 0,5..0,6
+  .guard Name 'g' Load - 0,10..0,11
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
 '''),
 ],
 
