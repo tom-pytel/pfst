@@ -172,7 +172,7 @@ from .asttypes import (
 )
 
 from .astutil import constant
-from .common import astfield
+from .common import PYLT12, astfield
 from .parsex import unparse
 from .code import Code, code_as_all
 
@@ -6211,6 +6211,10 @@ def sub(
     walked bottom-up so the nesting prevention does not have a chance to prevent entry to nested nodes. That also means
     that infinite recursion cannot occur due to nesting.
 
+    Be wary of expressions substitutions inside patterns, very few expression forms are actually valid there.
+
+    Will not substitute inside f-strings on Python < 3.12.
+
     **Parameters:**
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these).
@@ -6569,6 +6573,9 @@ def subn(
     if on == 'both':
         raise ValueError("substitution does not accept 'on=\"both\"'")
 
+    if PYLT12 and self.parent_ftstr():  # silently fail substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
+        return self, 0, 0
+
     if count < 0:
         count = 0
 
@@ -6604,6 +6611,11 @@ def subn(
 
     for m in gen:
         matched = m.matched  # will be FST node
+
+        if PYLT12 and matched.parent_ftstr():  # if Python < 3.12 and we went inside an f-string then skip it
+            gen.send(False)  # no point searching deeper
+
+            continue
 
         if matched.a in dirty:
             continue

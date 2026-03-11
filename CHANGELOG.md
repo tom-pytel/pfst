@@ -16,6 +16,7 @@
 
 ### Changed
 
+- silently fail substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
 - `get/put/get_slice/put_slice()` typing tweaked for easier to swizzle parameters with type checking enabled
 - added `FST.strip()` which removes trivia surrounding node at root, was previously private function `_sanitize()`
 - identifier puts using `FST` nodes as source (which doesn't consume them), will now unmake those nodes to stay consistent with all other puts
