@@ -2097,7 +2097,7 @@ c, # c
 
             f = FST('a: b[c, d]')
             g = FST('for a, *s in b: pass').target.copy()
-            self.assertRaises(NodeError, f.annotation.slice.replace, g, raw=False)
+            self.assertEqual('a: b[(a, *s)]', f.annotation.slice.replace(g, raw=False).root.src)
 
             f = FST('a[b,]')
             f.slice.put('*st', 0, raw=False)
@@ -2235,6 +2235,25 @@ c, # c
 
             (f := FST('f"{call(a=old)=}"')).values[1].value.keywords[0].value.replace('new')
             self.assertEqual('call(a=new)=', f.values[0].value)
+            f.verify()
+
+        # fix Tuple parenthesization being put to Subscript.slice
+
+        self.assertEqual('a[a:b:c, d:e:f]', (f := FST('a[b]')).put(FST('a:b:c, d:e:f', 'Tuple').par(), 'slice').root.src)
+        f.verify()
+
+        if PYLT11:
+            self.assertEqual('a[(*x,)]', (f := FST('a[b]')).put(FST('*x,'), 'slice').root.src)
+        else:
+            self.assertEqual('a[*x,]', (f := FST('a[b]')).put(FST('*x,'), 'slice').root.src)
+        f.verify()
+
+        if PYLT11:
+            s = FST('*x, y', Tuple)
+            s.elts[1].replace(FST('y:z', Slice))
+            assertRaises(NodeError('cannot have both Starred and Slice in tuple on Python < 3.11'), FST('a[b]').put, s, 'slice')
+        else:
+            self.assertEqual('a[*x, y:z]', (f := FST('a[b]')).put(FST('*x, y:z', Tuple), 'slice').root.src)
             f.verify()
 
     def test_put_one_pattern(self):

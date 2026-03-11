@@ -23,6 +23,9 @@
 - loosened `Constant` rules
   - `fromast()` and `as_()` will accept negative numerical `Constant.value` and normalize those to `UnaryOp(USub, abs(Constant))`
   - put to primitive int field will accept `UnaryOp(USub, Constant)` numerical values
+- put one to `Subscript.slice`
+  - automatically parenthesize `Tuple` containing `Starred` instead of raising on Python 3.10
+  - automatically unparenthesize `Tuple` containing `Slice`s instead of raising
 
 ### Fixed
 

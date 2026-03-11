@@ -1456,7 +1456,6 @@ def _put_one_Subscript_value(
     return ret
 
 
-@pyver(lt=11, else_=_put_one_exprlike_required)
 def _put_one_Subscript_slice(
     self: fst.FST,
     code: _PutOneCode,
@@ -1466,14 +1465,32 @@ def _put_one_Subscript_slice(
     static: onestatic,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Don't allow put unparenthesized tuple containing Starred."""
+    """Parenthesize or unparenthesize `Tuple` as required for `slice` by contents."""
 
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, options, self.root.parse_params, strip=True,
                           coerce=fst.FST.get_option('coerce', options))
 
-    if code.is_parenthesized_tuple() is False and any(a.__class__ is Starred for a in code.a.elts):
-        raise NodeError('cannot have unparenthesized tuple containing Starred in slice')
+    is_pard_tup = code.is_parenthesized_tuple()
+
+    if is_pard_tup:
+        if any(a.__class__ is Slice for a in code.a.elts):
+            code._undelimit_node()
+
+    elif PYLT11 and is_pard_tup is False:  # can not have Starred in unparenthesized tuple on py < 3.11
+        has_Starred = has_Slice = False
+
+        for a in code.a.elts:
+            if (a_cls := a.__class__) is Starred:
+                has_Starred = True
+            elif a_cls is Slice:
+                has_Slice = True
+
+        if has_Starred:
+            if has_Slice:  # cannot have both Starred and Slice in tuple because parenthesization requirement conflicts
+                raise NodeError('cannot have both Starred and Slice in tuple on Python < 3.11')
+
+            code._delimit_node()
 
     return _put_one_exprlike_required(self, code, idx, field, child, static, options, 2)
 
