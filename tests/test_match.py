@@ -2632,6 +2632,11 @@ MNOT(MTAG('no'))
         f = FST('def f(): [a], [b := [b] for b in [c]]')
         self.assertEqual('[a], [c]', ', '.join(m.matched.src for m in f.search(List, scope=True)))
 
+        f = FST('[[a], [[b], [c]], [d]]')
+        self.assertEqual('[[a], [[b], [c]], [d]], [a], [[b], [c]], [b], [c], [d]', ', '.join(m.matched.src for m in f.search(List, on='enter')))
+        self.assertEqual('[a], [b], [c], [[b], [c]], [d], [[a], [[b], [c]], [d]]', ', '.join(m.matched.src for m in f.search(List, on='leave')))
+        self.assertEqual('+[[a], [[b], [c]], [d]], +[a], -[a], +[[b], [c]], +[b], -[b], +[c], -[c], -[[b], [c]], +[d], -[d], -[[a], [[b], [c]], [d]]', ', '.join('+-'[m[1]] + m[0].matched.src for m in f.search(List, on='both')))
+
     def test_sub(self):
         for case, rest in DATA_SUB.iterate(True):
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):

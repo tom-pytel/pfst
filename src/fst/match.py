@@ -6060,7 +6060,7 @@ def search(
     scope: bool = False,
     back: bool = False,
     asts: list[AST] | None = None,
-) -> Generator[FSTMatch, bool, None]:
+) -> Generator[FSTMatch, bool, None] | Generator[tuple[FSTMatch, bool], bool, None]:
     r"""This will walk the subtree of `self` looking for `pat` using `match()`. The walk is carried out using the
     standard `walk()` and the various parameters to that function are accepted here and passed on (check self_,
     recursion, scope, walk backwards, etc...).
@@ -6093,7 +6093,8 @@ def search(
 
     **Returns:**
     - `Generator`: This is a `walk()` style generator which accepts `send(bool)` to decide whether to recurse into a
-        node or not.
+        node or not. The generator yields either just the `FSTMatch` object if `on` is `'enter'` or `'leave'`, or a
+        tuple of `(FSTMatch, bool leaving)` if `on` is `'both'`.
 
     **Examples:**
 
@@ -6146,22 +6147,41 @@ def search(
 
     gen = self.walk(walk_all, on, self_=self_, recurse=recurse, scope=scope, back=back, asts=asts)
 
-    for f in gen:
-        mstate.clear()
+    if on != 'both':
+        for f in gen:
+            mstate.clear()
 
-        if (m := match_func(pat, f.a, mstate)) is None:
-            continue
+            if (m := match_func(pat, f.a, mstate)) is None:
+                continue
 
-        match = FSTMatch(pat, f, m)
+            match = FSTMatch(pat, f, m)
 
-        if (sent := (yield match)) is not None:
-            gen.send(sent)
-
-            while (sent := (yield match)) is not None:
+            if (sent := (yield match)) is not None:
                 gen.send(sent)
 
-        elif not nested:  # if user didn't take control then we can decide not to recurse into match if user doesn't want nested matches
-            gen.send(False)
+                while (sent := (yield match)) is not None:
+                    gen.send(sent)
+
+            elif not nested:  # if user didn't take control then we can decide not to recurse into match if user doesn't want nested matches
+                gen.send(False)
+
+    else:
+        for f, leaving in gen:
+            mstate.clear()
+
+            if (m := match_func(pat, f.a, mstate)) is None:
+                continue
+
+            yield_ = (FSTMatch(pat, f, m), leaving)
+
+            if (sent := (yield yield_)) is not None:
+                gen.send(sent)
+
+                while (sent := (yield yield_)) is not None:
+                    gen.send(sent)
+
+            elif not nested:  # if user didn't take control then we can decide not to recurse into match if user doesn't want nested matches
+                gen.send(False)
 
 
 def sub(

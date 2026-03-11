@@ -1197,7 +1197,9 @@ def walk(
             bool which is `False` upon entry and `True` upon leaving. `send(bool)` on entry works just like for
             `on='enter'` and if the node is skipped then it will not be yielded again upon "leaving" since it was never
             "entered". `send(True)` upon leaving will also cause the node's children to be walked again with the current
-            node being yielded after with a bool of `False` again.
+            node being yielded after with a bool of `False` again. If a node is replaced then it is not returned upon
+            "leaving" the node that replaced it. If a node is replaced but still recursed into, the new node will be
+            yielded on leaving it (because it was entered).
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default, `send(True)` for a given node will
@@ -1222,7 +1224,9 @@ def walk(
     **Returns:**
     - `Generator`: This will yield the nodes which fit the parametes. Can also `send(True)` or `send(False)` to this
         generator to explicitly indicate whether to recurse or not into the yielded node. Sending to the generator does
-        not advance the iteration and can be done an arbitrary number of times before continuing with the iteration.
+        not advance the iteration and can be done an arbitrary number of times before continuing with the iteration. The
+        generator yields either just the node if `on` is `'enter'` or `'leave'`, or a tuple of `(FST, bool leaving)` if
+        `on` is `'both'`.
 
     **Examples:**
 
@@ -1344,6 +1348,8 @@ def walk(
 
     """
 
+    # TODO: this is a bit convoluted, maybe clean it up
+
     ast = self.a
     check_all_param = _all_param_func(all)
 
@@ -1358,11 +1364,12 @@ def walk(
         stack = asts[:] if back else asts[::-1]
 
     else:
-        if self_ and on != 'leave':
+        if self_ and on != 'leave':  # leave does its own setup
             if check_all_param(self):
+                item = self if on == 'enter' else (self, False)
                 recurse_ = 1  # 1 to differentiate from True
 
-                while (sent := (yield self)) is not None:
+                while (sent := (yield item)) is not None:
                     recurse_ = sent
 
                 if not recurse_:
@@ -1375,7 +1382,7 @@ def walk(
                     recurse = True
                     scope = False
 
-        # if we are walking scope then we may need to exclude some parts of the top-level node, we do after first step of walk in case top level node is replaced or scope turned off by send(True)
+        # if we are walking scope then we may need to exclude some parts of the top-level node, we do after first step of walk in case top level node is replaced or scope turned off by `send(True)`
 
         if scope:  # some parts of functions or classes or the various comprehensions are outside their scope
             scope_ctx, stack = _ScopeContext.create(self, all, back, check_all_param, ast)
@@ -1413,10 +1420,11 @@ def walk(
                 if not (ast := fst_.a):  # has been deleted by the player (if replaced then this FST node will still exist but the .a will have changed)
                     continue
 
-                if recurse_ is not True:  # user did send(True), walk this child unconditionally
-                    yield from fst_.walk(all, self_=False, back=back)
+                if recurse_ is not True:  # user did `send(True)`, walk this child unconditionally
+                    if scope or not recurse:  # only need to `yield from` if this loop is not unconditional, otherwise just add the children below onto the stack
+                        yield from fst_.walk(all, self_=False, back=back)
 
-                    continue
+                        continue
 
             elif not recurse:
                 continue
@@ -1437,16 +1445,20 @@ def walk(
 
         return  # DONE!
 
-    # on is 'enter' or 'both'
+    # on is 'leave' or 'both'
 
-    if not recurse and on == 'leave':  # if not recursing then we need to preprocess the first level of children in the first stack because we don't check `recurse` in the "leave" loop
-        stack = [a.f for a in stack if a]
+    if is_leave := (on == 'leave'):
+        if not recurse:  # if not recursing then we need to preprocess the first level of children in the first stack because we don't check `recurse` in the "leave" loop
+            stack = [a.f for a in stack if a]
+
+    elif on != 'both':
+        raise ValueError(f"invalid walk 'on' value {on!r}")
 
     while True:  # this is to handle the possibility of user `send(True)` on leaving
 
         # loop for `on='leave'`
 
-        if on == 'leave':
+        if is_leave:
             while stack:
                 ast = stack.pop()  # can be AST or FST
 
@@ -1489,7 +1501,7 @@ def walk(
                 while (sent := (yield fst_)) is not None:
                     recurse_ = sent
 
-                if recurse_:  # user did send(True) so walk node again
+                if recurse_:  # user did `send(True)` so walk node again
                     if not (ast := fst_.a):  # could have been replaced or deleted in yield, regardless of send()
                         continue
 
@@ -1498,30 +1510,101 @@ def walk(
                     if children := syntax_ordered_children(ast):
                         stack.extend(children if back else children[::-1])
 
+            # last yield on leaving walk root, which may restart the walk
+
+            if self_ and (ast := self.a):  # may have been deleted
+                recurse_ = False
+
+                while (sent := (yield self)) is not None:
+                    recurse_ = sent
+
+                if recurse_:
+                    if stack := syntax_ordered_children(ast):  # children may have changed
+                        if not back:
+                            stack.reverse()
+
+                        continue  # loop on walk root node because user did `send(True)`
+
         # loop for `on='both'`
 
-        elif on == 'both':
-            raise NotImplementedError
-
-
-        # TODO: this
-
-
         else:
-            raise ValueError(f"invalid walk 'on' value {on!r}")
+            while stack:
+                ast = stack.pop()  # can be AST or FST
 
-        # last yield on leaving walk root, which may restart the walk
+                if isinstance(ast, fst.FST):  # "leaving" node
+                    fst_ = ast
 
-        if self_ and (ast := self.a):  # may have been deleted
-            recurse_ = False
+                    if not (ast := fst_.a):  # could have been removed or replaced during child processing
+                        continue
 
-            while (sent := (yield self)) is not None:
-                recurse_ = sent
+                    if not check_all_param(fst_):  # need to check it again because could have been changed during child processing
+                        continue
 
-            if recurse_:
-                 if stack := syntax_ordered_children(ast):  # children may have changed
-                    if not back:
-                        stack.reverse()
+                    recurse_ = False
+                    yield_ = (fst_, True)
+
+                    while (sent := (yield yield_)) is not None:
+                        recurse_ = sent
+
+                    if not recurse_:
+                        continue
+
+                    if not (ast := fst_.a):  # could have been replaced or deleted in yield, regardless of send()
+                        continue
+
+                    if not recurse:  # only need to `yield from` if this loop is not currently unconditional, otherwise just add the children below onto the stack
+                        yield from fst_.walk(all, 'both', back=back)
+
+                        continue
+
+                else:
+                    if not ast:  # may be `None`s in there
+                        continue
+
+                    if not (fst_ := ast.f):  # if node was removed or replaced somewhere else then just continue walk
+                        continue
+
+                if check_all_param(fst_):
+                    recurse_ = recurse
+                    yield_ = (fst_, False)
+
+                    while (sent := (yield yield_)) is not None:
+                        recurse_ = 1 if sent else False  # 1 to differentiate from True
+
+                    if not (ast := fst_.a):  # has been deleted by the player (if replaced then this FST node will still exist but the .a will have changed)
+                        continue
+
+                    stack.append(fst_)  # this means its ready to yield when we get to it again
+
+                    if not recurse_:  # either send(False) or wasn't going to recurse anyways
+                        continue
+
+                    if recurse_ is not True:  # user did `send(True)`, walk this child unconditionally
+                        if not recurse:  # only need to `yield from` if this loop is not unconditional, otherwise just add the children below onto the stack
+                            yield from fst_.walk(all, 'both', self_=False, back=back)
+
+                            continue
+
+                elif not recurse:
+                    continue
+
+                if children := syntax_ordered_children(ast):
+                    stack.extend(children if back else children[::-1])
+
+            # last yield on leaving walk root, which may restart the walk
+
+            if self_ and (ast := self.a):  # may have been deleted
+                recurse_ = False
+                yield_ = (self, True)
+
+                while (sent := (yield yield_)) is not None:
+                    recurse_ = sent
+
+                if recurse_:
+                    stack.append(ast)
+
+                    self_ =  False  # enter and leave is now processed in the loop so we don't want to go through here again
+                    recurse = True  # because `send(True)` is always unconditional
 
                     continue  # loop on walk root node because user did `send(True)`
 

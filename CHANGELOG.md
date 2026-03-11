@@ -5,7 +5,7 @@
 - substitution and walking
   - added `on` parameter to allow `walk()` and `search()` yield on `'enter'` or `'leave'` node or `'both'`
   - added `on` parameter to `sub()` can do substitution on `'enter'` or `'leave'`, allowing bottom-up substitution for easier collapsing of nested structures
-  - added `callback` and `post_callback` parameters to `sub()` and `subn()` to better observe and control individual substitutions
+  - added `callback` and `callback_post` parameters to `sub()` and `subn()` to better observe and control individual substitutions
   - new CLI modules `fst.cli.search` and `fst.cli.sub`
 - allow use of `FSTView` as a singleton item reference
   - types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice

@@ -3273,46 +3273,52 @@ class Substitute(Fuzzy):
         def callback(f: FST) -> None:
             nonlocal count
 
-            if not (count := count + 1) % 20:
+            if not (count := count + 1) % 50:
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
+        fst1 = fst.copy()
+        fst2 = fst.copy()
+
         try:
-            for ast_cls in ast_clss:
-                if self.check_abort():
-                    break
+            for f in (fst1, fst2):
+                for ast_cls in ast_clss:
+                    if self.check_abort():
+                        break
 
-                if not (pat_n_repl := Substitute.PATS_N_REPLS.get(ast_cls)):
-                    continue
+                    if not (pat_n_repl := Substitute.PATS_N_REPLS.get(ast_cls)):
+                        continue
 
-                pat, repl = pat_n_repl
-                on = choice(('enter', 'leave'))
+                    pat, repl = pat_n_repl
+                    on = choice(('enter', 'leave'))
 
-                try:
-                    fst.sub(pat, repl, nested=True, callback=callback, self_=False, on=on)  #, promote='all')
+                    try:
+                        f.sub(pat, repl, nested=True, callback=callback, self_=False, on=on)  #, promote='all')
 
-                except Exception:
-                    print()
+                    except Exception:
+                        print()
 
-                    if self.verbose:
-                        print(fst.src)
+                        if self.verbose:
+                            print(f.src)
 
-                        printed = True
+                            printed = True
 
-                    print(f'{pat=}')
-                    print(f'{repl=}')
-                    print(f'{on=}')
+                        print(f'{pat=}')
+                        print(f'{repl=}')
+                        print(f'{on=}')
 
-                    raise
+                        raise
 
-            fst.verify()
+                f.verify()
+
+            compare_asts(fst1.a, fst2.a, raise_=True)
 
         finally:
             if not printed:
                 print()
 
                 if self.verbose:
-                    print(fst.src)
+                    print(f.src)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

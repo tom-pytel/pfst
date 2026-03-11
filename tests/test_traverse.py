@@ -1640,6 +1640,171 @@ def f[T: ftb, *U, **V]():
         self.assertEqual(['a', 'b', 'c', 'd', '[C, D]', 'C', 'D', '[c, d]', 'e', '[B, [c, d], E]', 'f', '[A, [B, [c, d], E], F]'], testrepl((g := f.copy()).walk(on='leave'), g.elts[1].elts[1]))
         self.assertEqual(['f', 'e', 'd', 'c', '[C, D]', 'D', 'C', '[c, d]', 'b', '[B, [c, d], E]', 'a', '[A, [B, [c, d], E], F]'], testrepl((g := f.copy()).walk(on='leave', back=True), g.elts[1].elts[1]))
 
+    def test_walk_on_both(self):
+        ON = '+-'  # enter / leave string, '+' = enter, '-' = leave
+
+        # basic on both
+
+        f = FST('[a, [b, c], d]')
+
+        self.assertEqual(['+[a, [b, c], d]', '+a', '-a', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d', '-[a, [b, c], d]'], list(ON[on] + f.src for f, on in f.walk(on='both')))
+        self.assertEqual(['+[a, [b, c], d]', '+d', '-d', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a', '-[a, [b, c], d]'], list(ON[on] + f.src for f, on in f.walk(on='both', back=True)))
+        self.assertEqual(['+[a, [b, c], d]', '+a', '-a', '+[b, c]', '-[b, c]', '+d', '-d', '-[a, [b, c], d]'], list(ON[on] + f.src for f, on in f.walk(on='both', recurse=False)))
+        self.assertEqual(['+[a, [b, c], d]', '+d', '-d', '+[b, c]', '-[b, c]', '+a', '-a', '-[a, [b, c], d]'], list(ON[on] + f.src for f, on in f.walk(on='both', recurse=False, back=True)))
+        self.assertEqual(['+a', '-a', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d'], list(ON[on] + f.src for f, on in f.walk(on='both', self_=False)))
+        self.assertEqual(['+d', '-d', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a'], list(ON[on] + f.src for f, on in f.walk(on='both', self_=False, back=True)))
+        self.assertEqual(['+a', '-a', '+[b, c]', '-[b, c]', '+d', '-d'], list(ON[on] + f.src for f, on in f.walk(on='both', self_=False, recurse=False)))
+        self.assertEqual(['+d', '-d', '+[b, c]', '-[b, c]', '+a', '-a'], list(ON[on] + f.src for f, on in f.walk(on='both', self_=False, recurse=False, back=True)))
+
+        # test send(True) on last node
+
+        def test(gen, repeat_node):
+            l = []
+
+            for f, on in gen:
+                l.append(ON[on] + f.src)
+
+                if on and f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+            return l
+
+        f = FST('[a, [b, c], d]')
+
+        self.assertEqual(['+[a, [b, c], d]', '+a', '-a', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d', '-[a, [b, c], d]', '+[a, [b, c], d]', '+a', '-a', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d', '-[a, [b, c], d]'], test(f.walk(on='both'), f))
+        self.assertEqual(['+[a, [b, c], d]', '+d', '-d', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a', '-[a, [b, c], d]', '+[a, [b, c], d]', '+d', '-d', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a', '-[a, [b, c], d]'], test(f.walk(on='both', back=True), f))
+        self.assertEqual(['+[a, [b, c], d]', '+a', '-a', '+[b, c]', '-[b, c]', '+d', '-d', '-[a, [b, c], d]', '+[a, [b, c], d]', '+a', '-a', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d', '-[a, [b, c], d]'], test(f.walk(on='both', recurse=False), f))
+        self.assertEqual(['+[a, [b, c], d]', '+d', '-d', '+[b, c]', '-[b, c]', '+a', '-a', '-[a, [b, c], d]', '+[a, [b, c], d]', '+d', '-d', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a', '-[a, [b, c], d]'], test(f.walk(on='both', recurse=False, back=True), f))
+        self.assertEqual(['+a', '-a', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d'], test(f.walk(on='both', self_=False), f.elts[1]))
+        self.assertEqual(['+d', '-d', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a'], test(f.walk(on='both', self_=False, back=True), f.elts[1]))
+        self.assertEqual(['+a', '-a', '+[b, c]', '-[b, c]', '+[b, c]', '+b', '-b', '+c', '-c', '-[b, c]', '+d', '-d'], test(f.walk(on='both', self_=False, recurse=False), f.elts[1]))
+        self.assertEqual(['+d', '-d', '+[b, c]', '-[b, c]', '+[b, c]', '+c', '-c', '+b', '-b', '-[b, c]', '+a', '-a'], test(f.walk(on='both', self_=False, recurse=False, back=True), f.elts[1]))
+
+        # send(True) overrides recurse=False
+
+        f = FST('[a, [b, [c, d]]]')
+
+        self.assertEqual(['+[a, [b, [c, d]]]', '+a', '-a', '+[b, [c, d]]', '-[b, [c, d]]', '-[a, [b, [c, d]]]', '+[a, [b, [c, d]]]', '+a', '-a', '+[b, [c, d]]', '+b', '-b', '+[c, d]', '+c', '-c', '+d', '-d', '-[c, d]', '-[b, [c, d]]', '-[a, [b, [c, d]]]'], test(f.walk(on='both', recurse=False), f))
+        self.assertEqual(['+[a, [b, [c, d]]]', '+[b, [c, d]]', '-[b, [c, d]]', '+a', '-a', '-[a, [b, [c, d]]]', '+[a, [b, [c, d]]]', '+[b, [c, d]]', '+[c, d]', '+d', '-d', '+c', '-c', '-[c, d]', '+b', '-b', '-[b, [c, d]]', '+a', '-a', '-[a, [b, [c, d]]]'], test(f.walk(on='both', recurse=False, back=True), f))
+        self.assertEqual(['+[a, [b, [c, d]]]', '+a', '-a', '+[b, [c, d]]', '-[b, [c, d]]', '+[b, [c, d]]', '+b', '-b', '+[c, d]', '+c', '-c', '+d', '-d', '-[c, d]', '-[b, [c, d]]', '-[a, [b, [c, d]]]'], test(f.walk(on='both', recurse=False), f.elts[1]))
+        self.assertEqual(['+[a, [b, [c, d]]]', '+[b, [c, d]]', '-[b, [c, d]]', '+[b, [c, d]]', '+[c, d]', '+d', '-d', '+c', '-c', '-[c, d]', '+b', '-b', '-[b, [c, d]]', '+a', '-a', '-[a, [b, [c, d]]]'], test(f.walk(on='both', recurse=False, back=True), f.elts[1]))
+        self.assertEqual(['+[a, [b, [c, d]]]', '+a', '-a', '+[b, [c, d]]', '-[b, [c, d]]', '-[a, [b, [c, d]]]'], test(f.walk(on='both', recurse=False), f.elts[1].elts[1]))
+        self.assertEqual(['+[a, [b, [c, d]]]', '+[b, [c, d]]', '-[b, [c, d]]', '+a', '-a', '-[a, [b, [c, d]]]'], test(f.walk(on='both', recurse=False, back=True), f.elts[1].elts[1]))
+
+        # test delete with send(True) on last node
+
+        def testdelin(gen, repeat_node):
+            l = []
+
+            for f, on in gen:
+                l.append(ON[on] + f.src)
+
+                if on and f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+                elif f.is_Name:
+                    f.remove()
+
+            return l
+
+        def testdelout(gen, repeat_node):
+            l = []
+
+            for f, on in gen:
+                l.append(ON[on] + f.src)
+
+                if on and f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+                elif on and f.is_Name:
+                    f.remove()
+
+            return l
+
+        f = FST('[a, [b, [c, d], e], f]')
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '+[b, [c, d], e]', '+b', '+[c, d]', '+c', '+d', '-[]', '+e', '-[[]]', '+f', '-[[[]]]', '+[[[]]]', '+[[]]', '+[]', '-[]', '-[[]]', '-[[[]]]'], testdelin((g := f.copy()).walk(on='both'), g))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '+[b, [c, d], e]', '+e', '+[c, d]', '+d', '+c', '-[]', '+b', '-[[]]', '+a', '-[[[]]]', '+[[[]]]', '+[[]]', '+[]', '-[]', '-[[]]', '-[[[]]]'], testdelin((g := f.copy()).walk(on='both', back=True), g))
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-a', '+[b, [c, d], e]', '+b', '-b', '+[c, d]', '+c', '-c', '+d', '-d', '-[]', '+e', '-e', '-[[]]', '+f', '-f', '-[[[]]]', '+[[[]]]', '+[[]]', '+[]', '-[]', '-[[]]', '-[[[]]]'], testdelout((g := f.copy()).walk(on='both'), g))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-f', '+[b, [c, d], e]', '+e', '-e', '+[c, d]', '+d', '-d', '+c', '-c', '-[]', '+b', '-b', '-[[]]', '+a', '-a', '-[[[]]]', '+[[[]]]', '+[[]]', '+[]', '-[]', '-[[]]', '-[[[]]]'], testdelout((g := f.copy()).walk(on='both', back=True), g))
+
+        # test replace with send(True) on outermost node
+
+        def testreplin(gen, repeat_node):
+            l = []
+
+            for f, on in gen:
+                l.append(ON[on] + f.src)
+
+                if on and f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+                elif not on and f.is_Name:
+                    i = f.id
+                    f.replace(i.upper() if i.islower() else i.lower())  # swap uppercase and lowercase
+
+            return l
+
+        def testreplout(gen, repeat_node):
+            l = []
+
+            for f, on in gen:
+                l.append(ON[on] + f.src)
+
+                if on and f is repeat_node:
+                    repeat_node = None
+
+                    gen.send(True)
+
+                elif on and f.is_Name:
+                    i = f.id
+                    f.replace(i.upper() if i.islower() else i.lower())  # swap uppercase and lowercase
+
+            return l
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-A', '+[b, [c, d], e]', '+b', '-B', '+[c, d]', '+c', '-C', '+d', '-D', '-[C, D]', '+e', '-E', '-[B, [C, D], E]', '+f', '-F', '-[A, [B, [C, D], E], F]',
+                          '+[A, [B, [C, D], E], F]', '+A', '-a', '+[B, [C, D], E]', '+B', '-b', '+[C, D]', '+C', '-c', '+D', '-d', '-[c, d]', '+E', '-e', '-[b, [c, d], e]', '+F', '-f', '-[a, [b, [c, d], e], f]'], testreplin((g := f.copy()).walk(on='both'), g))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-F', '+[b, [c, d], e]', '+e', '-E', '+[c, d]', '+d', '-D', '+c', '-C', '-[C, D]', '+b', '-B', '-[B, [C, D], E]', '+a', '-A', '-[A, [B, [C, D], E], F]',
+                          '+[A, [B, [C, D], E], F]', '+F', '-f', '+[B, [C, D], E]', '+E', '-e', '+[C, D]', '+D', '-d', '+C', '-c', '-[c, d]', '+B', '-b', '-[b, [c, d], e]', '+A', '-a', '-[a, [b, [c, d], e], f]'], testreplin((g := f.copy()).walk(on='both', back=True), g))
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-a', '+[b, [c, d], e]', '+b', '-b', '+[c, d]', '+c', '-c', '+d', '-d', '-[C, D]', '+e', '-e', '-[B, [C, D], E]', '+f', '-f', '-[A, [B, [C, D], E], F]',
+                          '+[A, [B, [C, D], E], F]', '+A', '-A', '+[B, [C, D], E]', '+B', '-B', '+[C, D]', '+C', '-C', '+D', '-D', '-[c, d]', '+E', '-E', '-[b, [c, d], e]', '+F', '-F', '-[a, [b, [c, d], e], f]'], testreplout((g := f.copy()).walk(on='both'), g))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-f', '+[b, [c, d], e]', '+e', '-e', '+[c, d]', '+d', '-d', '+c', '-c', '-[C, D]', '+b', '-b', '-[B, [C, D], E]', '+a', '-a', '-[A, [B, [C, D], E], F]',
+                          '+[A, [B, [C, D], E], F]', '+F', '-F', '+[B, [C, D], E]', '+E', '-E', '+[C, D]', '+D', '-D', '+C', '-C', '-[c, d]', '+B', '-B', '-[b, [c, d], e]', '+A', '-A', '-[a, [b, [c, d], e], f]'], testreplout((g := f.copy()).walk(on='both', back=True), g))
+
+        # test replace with send(True) on intermediate node
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-A', '+[b, [c, d], e]', '+b', '-B', '+[c, d]', '+c', '-C', '+d', '-D', '-[C, D]', '+e', '-E', '-[B, [C, D], E]',
+                                                                 '+[B, [C, D], E]', '+B', '-b', '+[C, D]', '+C', '-c', '+D', '-d', '-[c, d]', '+E', '-e', '-[b, [c, d], e]', '+f', '-F', '-[A, [b, [c, d], e], F]'], testreplin((g := f.copy()).walk(on='both'), g.elts[1]))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-F', '+[b, [c, d], e]', '+e', '-E', '+[c, d]', '+d', '-D', '+c', '-C', '-[C, D]', '+b', '-B', '-[B, [C, D], E]',
+                                                                 '+[B, [C, D], E]', '+E', '-e', '+[C, D]', '+D', '-d', '+C', '-c', '-[c, d]', '+B', '-b', '-[b, [c, d], e]', '+a', '-A', '-[A, [b, [c, d], e], F]'], testreplin((g := f.copy()).walk(on='both', back=True), g.elts[1]))
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-a', '+[b, [c, d], e]', '+b', '-b', '+[c, d]', '+c', '-c', '+d', '-d', '-[C, D]', '+e', '-e', '-[B, [C, D], E]',
+                                                                 '+[B, [C, D], E]', '+B', '-B', '+[C, D]', '+C', '-C', '+D', '-D', '-[c, d]', '+E', '-E', '-[b, [c, d], e]', '+f', '-f', '-[A, [b, [c, d], e], F]'], testreplout((g := f.copy()).walk(on='both'), g.elts[1]))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-f', '+[b, [c, d], e]', '+e', '-e', '+[c, d]', '+d', '-d', '+c', '-c', '-[C, D]', '+b', '-b', '-[B, [C, D], E]',
+                                                                 '+[B, [C, D], E]', '+E', '-E', '+[C, D]', '+D', '-D', '+C', '-C', '-[c, d]', '+B', '-B', '-[b, [c, d], e]', '+a', '-a', '-[A, [b, [c, d], e], F]'], testreplout((g := f.copy()).walk(on='both', back=True), g.elts[1]))
+
+        # test replace with send(True) on innermost node
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-A', '+[b, [c, d], e]', '+b', '-B', '+[c, d]', '+c', '-C', '+d', '-D', '-[C, D]',
+                                                                                                '+[C, D]', '+C', '-c', '+D', '-d', '-[c, d]', '+e', '-E', '-[B, [c, d], E]', '+f', '-F', '-[A, [B, [c, d], E], F]'], testreplin((g := f.copy()).walk(on='both'), g.elts[1].elts[1]))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-F', '+[b, [c, d], e]', '+e', '-E', '+[c, d]', '+d', '-D', '+c', '-C', '-[C, D]',
+                                                                                                '+[C, D]', '+D', '-d', '+C', '-c', '-[c, d]', '+b', '-B', '-[B, [c, d], E]', '+a', '-A', '-[A, [B, [c, d], E], F]'], testreplin((g := f.copy()).walk(on='both', back=True), g.elts[1].elts[1]))
+
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+a', '-a', '+[b, [c, d], e]', '+b', '-b', '+[c, d]', '+c', '-c', '+d', '-d', '-[C, D]',
+                                                                                                '+[C, D]', '+C', '-C', '+D', '-D', '-[c, d]', '+e', '-e', '-[B, [c, d], E]', '+f', '-f', '-[A, [B, [c, d], E], F]'], testreplout((g := f.copy()).walk(on='both'), g.elts[1].elts[1]))
+        self.assertEqual(['+[a, [b, [c, d], e], f]', '+f', '-f', '+[b, [c, d], e]', '+e', '-e', '+[c, d]', '+d', '-d', '+c', '-c', '-[C, D]',
+                                                                                                '+[C, D]', '+D', '-D', '+C', '-C', '-[c, d]', '+b', '-b', '-[B, [c, d], E]', '+a', '-a', '-[A, [B, [c, d], E], F]'], testreplout((g := f.copy()).walk(on='both', back=True), g.elts[1].elts[1]))
+
     def test_next_prev_child(self):
         fst = parse('a and b and c and d').body[0].value.f
         a = fst.a
