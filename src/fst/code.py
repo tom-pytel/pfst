@@ -3568,7 +3568,10 @@ def code_as__ExceptHandlers(
                 handlers = [code]
 
             elif code_cls is _ExceptHandlers:
-                handlers = code.handlers
+                if not (handlers := code.handlers):
+                    return fst.FST(_ExceptHandlers(handlers=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                                   [''], None, parse_params=parse_params)
+
             else:
                 raise NodeError(f'expecting _ExceptHandlers, got {code_cls.__name__}, could not coerce')
 

@@ -2856,6 +2856,17 @@ class cls:
             self.assertEqual('(a, *(not a), *(b or c))', FST('(a, b, c)').put_slice(FST('*not a, *b or c'), 1, 3, 'elts').src)
             assertRaises(SyntaxError('invalid expression (all types)'), FST('(a, b, c)').put_slice, '*not a, *b or c', 1, 3, 'elts')
 
+        # empty handlers Try <-> TryStar check on put empty handlers should work and AST reparse
+
+        f = FST('try: pass\nexcept: pass')
+        self.assertEqual('try: pass\n', f.put_slice('', 'handlers').src)
+
+        f = FST('try: pass\nexcept: pass')
+        self.assertEqual('try: pass\n', f.put_slice(FST('', '_ExceptHandlers'), 'handlers').src)
+
+        f = FST('try: pass\nexcept: pass')
+        self.assertEqual('try: pass\n', f.put_slice(FST.parse_ast('', '_ExceptHandlers'), 'handlers').src)
+
     def test_put_slice_primitive(self):
         # put list of primitive identifiers to Global and Nonlocal
 

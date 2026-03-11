@@ -715,7 +715,7 @@ class FST:
 
     def __repr__(self) -> builtins.str:
         if not (a := self.a):
-            return '<*DEAD FST*>'
+            return '<*DEADFST*>'
 
         return f'<{a.__class__.__name__}{self._repr_tail()}>'
 

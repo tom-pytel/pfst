@@ -1333,7 +1333,7 @@ def _put_slice_stmtlike_old(
         put_fst._unmake_fst_parents(True)
 
         if is_handlers and star is None and ast_cls is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
-            is_except_star = body[0].f.is_except_star()
+            is_except_star = body[0].f.is_except_star() if body else False  # if no handler then we must change it to a Try if is TryStar
 
             if is_except_star != (ast_cls is TryStar):  # need to swap?
                 new_type = TryStar if is_except_star else Try

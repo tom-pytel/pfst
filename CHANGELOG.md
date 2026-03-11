@@ -26,6 +26,8 @@
 ### Fixed
 
 - corrected `walk(scope=True)` of Comprehension first generator iterator if it itself is a scope, e.g. `a = [i for i in [j for j in iter]]`
+- fixed reparse empty `AST` `_ExceptHandlers` slice
+- fixed swap `Try` <-> `TryStar` on replace all `handlers` with an empty slice (not delete, replace with empty)
 
 
 ## 0.3.0 - alpha - 2026-02-28
