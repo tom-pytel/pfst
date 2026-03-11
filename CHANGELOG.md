@@ -26,6 +26,7 @@
 
 ### Fixed
 
+- fixed bug in `sub()` when putting certain slices when `repl_options` present which caused errors like `ValueError: expecting single item pair for put as 'one=True'`
 - corrected `walk(scope=True)` of Comprehension first generator iterator if it itself is a scope, e.g. `a = [i for i in [j for j in iter]]`
 - fixed reparse empty `AST` `_ExceptHandlers` slice
 - fixed swap `Try` <-> `TryStar` on replace all `handlers` with an empty slice (not delete, replace with empty)

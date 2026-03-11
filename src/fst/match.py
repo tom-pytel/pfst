@@ -6696,7 +6696,7 @@ def subn(
                     if one or idx is None:
                         repl_slot._put_one(repl_slot_new, idx, field, repl_options, False)
                     else:
-                        repl_slot._put_slice(repl_slot_new, idx, idx + 1, field, repl_options)  # Global / Nonlocal
+                        repl_slot._put_slice(repl_slot_new, idx, idx + 1, field, False, repl_options)  # Global / Nonlocal
 
                     continue
 
