@@ -8737,7 +8737,7 @@ match a:
         # scope_symbols
         assert_type(f.scope_symbols(True, local=True, free=True, import_star=True), dict[str, list[FST]] | dict[str, dict[str, list[FST]]])
         # walk
-        assert_type(f.walk(True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FST, bool, None])
+        assert_type(f.walk(True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FST, bool, None] | Generator[tuple[FST, bool], bool, None])
         # next
         assert_type(cast(FST, f.targets[0]).next(True), FST | None)
         # prev
@@ -8783,11 +8783,11 @@ match a:
         # match
         assert_type(f.match(Assign, ctx=True), FSTMatch | None)
         # search
-        assert_type(f.search(Assign, True, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FSTMatch, bool, None])
+        assert_type(f.search(Assign, True, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), Generator[FSTMatch, bool, None] | Generator[tuple[FSTMatch, bool], bool, None])
         # sub
-        assert_type(f.sub(Assign, 'repl', True, 0, loop=False, callback=None, callback_post=None, copy_options=None, repl_options=None, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), FST)
+        assert_type(f.sub(Assign, 'repl', True, count=0, loop=False, callback=None, callback_after=None, self_=True, recurse=True, scope=False, back=False, asts=None, ctx=True, copy_options=None, repl_options=None), FST)
         # subn
-        assert_type(f.subn(Assign, 'repl', True, 0, loop=False, callback=None, callback_post=None, copy_options=None, repl_options=None, ctx=True, self_=True, recurse=True, scope=False, back=False, asts=None), tuple[FST, int, int])
+        assert_type(f.subn(Assign, 'repl', True, count=0, loop=False, callback=None, callback_after=None, self_=True, recurse=True, scope=False, back=False, asts=None, ctx=True, copy_options=None, repl_options=None), tuple[FST, int, int])
         # find_def
         assert_type(f.find_def('nonexistent', None, recurse=True, asts=None), FST | None)
         # find_loc

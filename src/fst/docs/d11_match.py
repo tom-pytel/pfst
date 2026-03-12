@@ -1094,9 +1094,9 @@ And if you want just the first match then get the first element of the returned 
 >>> print(next(f.search(pat)).matched.src)
 src_or_ast_or_fst.__class__ is ZST
 
-The `search()` function accepts a few parameters to pass through on to the underlying walk function if you wish to
-refine the walk itself, they are: `self_`, `recurse`, `scope`, `back`, `asts`. If you want to know what they do then
-have a look at the `fst.fst.FST.walk()` function.
+The `search()` function accepts parameters to pass through on to the underlying walk function if you wish to refine the
+walk itself, they are: `on`, `self_`, `recurse`, `scope`, `back`, `asts`. If you want to know what they do then have a
+look at the `fst.fst.FST.walk()` function.
 
 >>> for m in f.search(pat, back=True):
 ...     print(m.matched.src)
@@ -1272,7 +1272,7 @@ b()
 c()
 
 Except handlers and match cases cannot be specified with a name tag only due to their syntactic location within a `Try`
-or `Match` statement, so there is a special format for specifying their replacement template substitution slots.
+or `Match` statement, so there is a special form for specifying their replacement template substitution slots.
 
 >>> print(FST('''
 ... try: pass
@@ -1871,10 +1871,12 @@ You can go even deeper down the argument substitution rabbit hole but at that po
 hardcoding it.
 
 
-## `nested`, `count`, `loop` and `subn()`
+## `nested`, `count`, `loop`, `on` and `subn()`
 
-By default, substitution does not recurse into substituted nodes. This is more behavioral than to prevent infinite
-recursion as that prevention is handled automatically by the `sub()` function.
+By default, substitution does not recurse into substituted nodes. This is in order to help prevent infinite recursion
+with incorrectly constructed replacement templates or usage of static tags as user-defined static replacemet nodes.
+In normal useage this shouldn't be a concern, just be aware that it can happen (if it does, the `count` paremeter can
+help mitigate, or diagnose where it is happening).
 
 >>> f = FST('''
 ... if a:
@@ -1905,7 +1907,39 @@ if not a:
         if not c:
             pass
 
-The `count` parameter allows you to limit the number of substitutions that can happen.
+Here are a two examples which can cause infinite looping with just `nested=True` so you are aware of the types of things
+which can trigger this. We include a `count` parameter to prevent the infinite loop and show what is happening, if that
+were not present `sub()` would never return.
+
+Usage of `__FSO_<tag>`.
+
+>>> print(FST('[a]').sub(
+...     MList(elts=M(t=...)),
+...     '[__FSO_t]',
+...     nested=True, count=10
+... ).src)
+[[[[[[[[[[[a]]]]]]]]]]]
+
+Here is a properly constructed replacement template that avoids this.
+
+>>> print(FST('[a]').sub(
+...     MList(elts=M(t=...)),
+...     '[[__FST_t]]',
+...     nested=True,
+... ).src)
+[[a]]
+
+If you use static tags to provide replacement nodes then the responsibility to prevent infinite looping rests entirely
+with you as there is no possible replacement template construction which can prevent this.
+
+>>> print(FST('[a]').sub(
+...     M(List, t='[b]'),
+...     '[__FST_t]',
+...     nested=True, count=10,
+... ).src)
+[[[[[[[[[[[b]]]]]]]]]]]
+
+As you saw, the `count` parameter allows you to limit the number of substitutions that can happen.
 
 >>> print(FST('[a, b, c, d, e]').sub(Name, 'f(__FST_)').src)
 [f(a), f(b), f(c), f(d), f(e)]
@@ -1977,13 +2011,36 @@ with a, b:
         with e, f:
             pass
 
-**WARNING!** Normally `sub()` can prevent infinite recursion by never substituting `repl` template nodes or a
-substituted whole match put to the `repl` template. But usage of `loop` with a poorly constructed template **CAN** lead
-to infinite looping. Here is a simple example of a substitution which will loop forever.
+**WARNING!** Normally `sub()` does a good job of preventing infinite loops by never substituting `repl` template nodes
+or a substituted whole match put to the `repl` template. But usage of `loop` with a poorly constructed template can
+easily to infinite looping. Here is a simple example of a substitution which will loop forever.
 
 ```py
 FST('a').sub(Name, '__FST_', loop=True)
 ```
+
+The `on` parameter allows you to change the walk to bottom-up so that child nodes are substituted before their parents.
+In many cases this can do the same thing as `loop` but without the risk of infinite loops.
+
+>>> print(f.copy().sub(pat, repl, on='leave').src)
+with a, b, c, d, e, f:
+    pass
+
+It cannot however do everything that `loop` can.
+
+>>> print(FST('[a, b, c, d, e]').sub(
+...     MList(elts=[M(first=...), M(second=...), MQSTAR(rest=...)]),
+...     '[__FST_first + __FST_second, __FST_rest]',
+...     loop=True,
+... ).src)
+[a + b + c + d + e]
+
+>>> print(FST('[a, b, c, d, e]').sub(
+...     MList(elts=[M(first=...), M(second=...), MQSTAR(rest=...)]),
+...     '[__FST_first + __FST_second, __FST_rest]',
+...     on='leave',
+... ).src)
+[a + b, c, d, e]
 
 The `subn()` function is just `sub()` except that it also returns the number of substitutions made, both total and
 unique (which disregard any extra `loop` substitutions and just count the number of unique locations substituted).
@@ -2275,6 +2332,8 @@ Traceback (most recent call last):
 ...
 fst.NodeError: expecting _arglikes, got Tuple, coerce disabled
 
+Other global options you may change will also affect substitutions as they affect all get and put operations.
+
 
 # Command Line Interface
 
@@ -2284,11 +2343,11 @@ and replacement template take the same form as they do for the functions.
 Search all python files in the `src/` directory for keyword arguments.
 
 ```
-$ python -m fst.cli.search --pattern 'Mkeyword' src/*.py
+$ python -m fst.cli.search --pattern keyword src/*.py
 ```
 
-Substitute all keyword arguments with the same argument and value but with extra spaces. Due to the use of the`--dry`
-argument this will not update the files substituted but just show the substitutions.
+Substitute all keyword arguments with the same argument and value but with extra spaces. Due to the use here of the
+`--dry` argument, this will not update the files substituted but just show the substitutions.
 
 ```
 $ python -m fst.cli.sub \

@@ -24,8 +24,10 @@ PATTERN_COMPILE_DICT = {
 _SENTINEL = object()
 
 
-def parse_args(prog: str | None, middle_args: Callable[[argparse.ArgumentParser], None]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog=prog)
+def parse_args(
+    prog: str | None, middle_args: Callable[[argparse.ArgumentParser], None], **kwargs: object
+) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog=prog, **kwargs)
 
     parser.add_argument('PATH', nargs='+',
                         help='file(s) to search')

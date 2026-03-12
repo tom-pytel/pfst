@@ -261,28 +261,28 @@ function or lambda or comprehension).
 >>> f = FST('''
 ... def f(): f_var = 123
 ... def g(): pass
-... x = y
+... x += y
 ... '''.strip())
 
 >>> for g in f.walk():
 ...     print(repr(g.src))
-'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
 'def f(): f_var = 123'
 'f_var = 123'
 'f_var'
 '123'
 'def g(): pass'
 'pass'
-'x = y'
+'x += y'
 'x'
 'y'
 
 >>> for g in f.walk(scope=True):
 ...     print(repr(g.src))
-'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
 'def f(): f_var = 123'
 'def g(): pass'
-'x = y'
+'x += y'
 'x'
 'y'
 
@@ -293,11 +293,11 @@ if the walk is restricted to a scope you can decide to recurse into a specific c
 ...     print(repr(g.src))
 ...     if g.is_FunctionDef and g.a.name == 'g':
 ...         _ = gen.send(True)  # ignore the '_', it shuts up printing the return value
-'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
 'def f(): f_var = 123'
 'def g(): pass'
 'pass'
-'x = y'
+'x += y'
 'x'
 'y'
 
@@ -307,10 +307,10 @@ within the scope, this does not.
 
 >>> for g in (gen := f.walk(recurse=False)):
 ...     print(repr(g.src))
-'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
 'def f(): f_var = 123'
 'def g(): pass'
-'x = y'
+'x += y'
 
 You can override the `recurse` option by sending to the generator.
 
@@ -318,13 +318,13 @@ You can override the `recurse` option by sending to the generator.
 ...     print(repr(g.src))
 ...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(True)
-'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
 'def f(): f_var = 123'
 'f_var = 123'
 'f_var'
 '123'
 'def g(): pass'
-'x = y'
+'x += y'
 
 For normal walks where things would normally be recursed into, you can decide **NOT** to recurse into children.
 
@@ -332,11 +332,24 @@ For normal walks where things would normally be recursed into, you can decide **
 ...     print(repr(g.src))
 ...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(False)
-'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
 'def f(): f_var = 123'
 'def g(): pass'
 'pass'
-'x = y'
+'x += y'
+'x'
+'y'
+
+You can pass a list of nodes specifically to walk as `AST` nodes, but they must be from the `FST` tree on which you
+are calling this function, though they do **NOT** need to be descendants of the node you call the walk on.
+
+>>> for g in f.body[1].body[0].walk(asts=[f.body[0].a, f.body[2].a]):
+...     print(repr(g.src))
+'def f(): f_var = 123'
+'f_var = 123'
+'f_var'
+'123'
+'x += y'
 'x'
 'y'
 
@@ -356,6 +369,51 @@ You can pass multiple types of nodes to return. But if you do this make sure to 
 'def f(): f_var = 123'
 '123'
 'def g(): pass'
+
+It is possible to walk the tree bottom-up by passing `on='leave'` to indicate that the nodes should be yielded upon
+leaving instead of on enter.
+
+>>> for g in f.walk(on='leave'):
+...     print(repr(g.src))
+'f_var'
+'123'
+'f_var = 123'
+'def f(): f_var = 123'
+'pass'
+'def g(): pass'
+'x'
+'y'
+'x += y'
+'def f(): f_var = 123\ndef g(): pass\nx += y'
+
+It is also possible to get nodes both upon entry and upon leaving by passing `on='both'`, though in this case the
+generator will yield a tuple of the node and a bool which indicates if the node is being exited. All nodes will be
+yielded twice in this case regardless of if they have children or not (unless the node is deleted upon entry, then you
+don't get it again). If a node is replaced on entry then the new node will be yielded upon leaving.
+
+>>> for g, leaving in f.walk(on='both'):
+...     print('LEAVE:' if leaving else 'ENTER:', repr(g.src))
+...     if g.is_Pass:
+...         g.remove()
+...     elif g.is_AugAssign:
+...         _ = g.replace('del g')
+ENTER: 'def f(): f_var = 123\ndef g(): pass\nx += y'
+ENTER: 'def f(): f_var = 123'
+ENTER: 'f_var = 123'
+ENTER: 'f_var'
+LEAVE: 'f_var'
+ENTER: '123'
+LEAVE: '123'
+LEAVE: 'f_var = 123'
+LEAVE: 'def f(): f_var = 123'
+ENTER: 'def g(): pass'
+ENTER: 'pass'
+LEAVE: 'def g():'
+ENTER: 'x += y'
+ENTER: 'g'
+LEAVE: 'g'
+LEAVE: 'del g'
+LEAVE: 'def f(): f_var = 123\ndef g():\n\n\ndel g'
 
 When you `walk()` nodes, you can modify (or remove) the node being walked. See `fst.fst.FST.walk()`.
 

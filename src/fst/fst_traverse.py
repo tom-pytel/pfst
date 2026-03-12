@@ -1200,8 +1200,8 @@ def walk(
             node being yielded after with a bool of `False` again. If a node is replaced then it is not returned upon
             "leaving" the node that replaced it. If a node is replaced but still recursed into, the new node will be
             yielded on leaving it (because it was entered).
-    - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
-        otherwise will start directly with children.
+    - `self_`: If `True` then self will be included in the walk (subject to `all` check), with the possibility to skip
+        children with `send(False)`, otherwise will start directly with children.
     - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default, `send(True)` for a given node will
         always override this. Meaning that if `False`, will only return `self` (if allowed to by `self_`) and the
         the direct children of `self`, but no deeper.

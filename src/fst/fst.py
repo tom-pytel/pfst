@@ -2305,28 +2305,28 @@ class FST:
         raise ValueError('cannot cut root node')
 
     def replace(self, code: Code | None, one: bool | None = True, **options: object) -> FST | None:  # -> replaced self or None if deleted
-        """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
-        replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
-        **CAN** replace root node, in which case `self` remains the same but the top-level `AST` and source change.
+        """Replace or delete (if `code=None`, if possible) this node. Returns `self` as the replaced node `FST` remains
+        the same while the incoming `FST` node (if is `FST`) is consumed. This is not the case if doing a `raw` replace
+        in which case the `FST` node at this path location can change and in this case you must take the return value
+        from this function to be the new node.
+
+        `None` can be returned if the node is deleted by replacing with `None` or if a `raw` reparse caused the node
+        structure to change too much resulting in no node at the old `self` path.
 
         **Note:** If replacing root node, the `trivia` option is not honored.
-
-        **WARNING!** If passing an `FST` then this is not guaranteed to become the new node (on purpose). If you wish to
-        continue using the `FST` node you just replaced then make sure to use the one returned from this function. The
-        `AST` node will also not be identical if coercion happened.
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
         - `one`: Default `True` means replace with a single element. If `False` and field allows it then can replace
             single element with a slice.
         - `options`: See `options()`.
-            - `to`: Special option which only applies replacing in `raw` mode (either through `True` or `'auto'`).
-                Instead of replacing just this node, will replace the entire span from this node to the node specified
-                in `to` with the `code` passed.
+            - `to`: Special option which only applies replacing in `raw` mode. Instead of replacing just this node, will
+                replace the entire span from this node to the node specified in `to` with the `code` passed.
 
         **Returns:**
         - `FST` or `None`: Returns the new node if successfully replaced or `None` if deleted or raw replace and
-            corresponding new node could not be found.
+            corresponding new node could not be found. If not doing delete or `raw` replace then this node is guaranteed
+            to be `self`.
 
         **Examples:**
 
@@ -2630,9 +2630,10 @@ class FST:
 
         **Returns:**
         - `FST`: When getting an actual node (most situations).
-        - `str`: When getting an identifier, like from `Name.id`.
-        - `constant`: When getting a constant (`fst.astutil.constant`), like from `Constant.value` or
-            `MatchSingleton.value`.
+        - `str`: When getting an identifier, like from `Name.id` and the `promote` option is below `'identifier'` (which
+            it is below by default).
+        - `constant`: When getting a constant like from `Constant.value` or `comprehension.is_async` and the `promote`
+            option is not `'all'`.
 
         **Examples:**
 
@@ -2708,10 +2709,9 @@ class FST:
         then it is copied and can be reused after this function returns. This is the most general form of node put
         function and can do everything that the other node put functions can.
 
-        **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
-        `raw=True` or if it happened as a fallback from `raw='auto'`). If there is a possibility of this happening then
-        make sure to use the new `self` returned from this function, otherwise if no raw happens then `self` remains
-        unchanged and usable.
+        **WARNING!** The original `self` node may be invalidated during the operation if doing a `raw` put. If there is a
+        possibility of this happening then make sure to use the new `self` returned from this function, otherwise if no
+        `raw` reparse happens then `self` remains unchanged and usable.
 
         **Parameters:**
         - `code`: The node to put as an `FST` (must be root node), `AST`, a string or list of line strings. If putting
@@ -2733,9 +2733,9 @@ class FST:
             a single element to the range specified even if it is a valid slice. `False` indicates that a slice value
             should be put as slice and not an individual element, which must in this case be a compatible slice type.
         - `options`: See `options()`.
-            - `to`: Special option which only applies when putting a single element in `raw` mode (either through `True`
-                or `'auto'`). Instead of replacing just the target node, will replace the entire span from the target
-                node to the node specified in `to` with the `code` passed.
+            - `to`: Special option which only applies when putting a single element in `raw` mode. Instead of replacing
+                just the target node, will replace the entire span from the target node to the node specified in `to`
+                with the `code` passed.
 
         **Note:** The `field` value can optionally be passed positionally in either the `idx` or `stop` parameter. If
         passed in `idx` a value of `None` is used for `idx`, which will select either just the element from a single
@@ -2843,6 +2843,7 @@ class FST:
 
         **Returns:**
         - `FST`: Slice node of nodes gotten.
+        - `list[str]`: From `Global.names` or `Nonlocal.name` if the `promote` option is `False`.
 
         **Examples:**
 
@@ -2890,10 +2891,12 @@ class FST:
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no longer valid, even on failure. `AST` is copied.
 
-        **WARNING!** The original `self` node may be invalidated during the operation if using raw mode (either
-        `raw=True` or if it happened as a fallback from `raw='auto'`). If there is a possibility of this happening then
-        make sure to use the new `self` returned from this function, otherwise if no raw happens then `self` remains
-        unchanged and usable.
+        If putting to `Global.names` or `Nonlocal.names`, a list of strings may be interpreted as a list of identifiers
+        directly as that is not valid source.
+
+        **WARNING!** The original `self` node may be invalidated during the operation if using `raw` mode. If there is a
+        possibility of this happening then make sure to use the new `self` returned from this function, otherwise if no
+        `raw` reparse happens then `self` remains unchanged and usable.
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.
@@ -2915,7 +2918,7 @@ class FST:
         is present and `stop` is assumed to be `'end'`.
 
         **Returns:**
-        - `self` or `None` if a raw put was done and corresponding new node could not be found.
+        - `self` or `None` if a `raw` put was done and corresponding new node could not be found.
 
         **Examples:**
 

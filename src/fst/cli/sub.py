@@ -61,9 +61,12 @@ def main() -> None:
         parser.add_argument('-c', '--count', type=int, default=0,
                             help='number of substitutions will be made  (default: unbounded)')
         parser.add_argument('-l', '--loop', nargs='?', type=int, default=False, const=True,
-                            help='repeat substitution until no longer match  (default: False)')
+                            help='loop each sub until no longer match  (default: False)')
 
-    args = parse_args(PROGRAM, middle_args)
+    args = parse_args(PROGRAM, middle_args, epilog='''
+WARNING! Improper usage of `--nested` or `--loop` can lead to infinite looping so the onus is on the user to make sure
+the combination of pattern and replacement template cannot cause this.
+    '''.strip())
 
     if args.pattern is None and args.pattern_file is None and args.repl is None and args.repl_file is None:
         if not os.isatty(sys.stdin.fileno()):
@@ -86,7 +89,7 @@ def main() -> None:
             repl,
             nested=args.nested,
             callback=lambda f: not print_match(args, f, fnm),  # noqa: B023
-            callback_post=lambda f: print_sub(args, f),
+            callback_after=lambda f: print_sub(args, f),
             ctx=args.ctx,
             back=args.back,
         )

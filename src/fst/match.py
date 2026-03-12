@@ -15,6 +15,7 @@ checker...
 from __future__ import annotations
 
 import re
+import warnings
 from ast import walk
 from re import Pattern as re_Pattern
 from types import EllipsisType, MappingProxyType, NoneType
@@ -6053,43 +6054,49 @@ def search(
     pat: _Pattern,
     nested: bool = True,
     *,
-    ctx: bool = False,
     on: Literal['enter', 'leave', 'both'] = 'enter',
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
     asts: list[AST] | None = None,
+    ctx: bool = False,
 ) -> Generator[FSTMatch, bool, None] | Generator[tuple[FSTMatch, bool], bool, None]:
     r"""This will walk the subtree of `self` looking for `pat` using `match()`. The walk is carried out using the
-    standard `walk()` and the various parameters to that function are accepted here and passed on (check self_,
-    recursion, scope, walk backwards, etc...).
+    standard `walk()` and the various parameters to that function are accepted here and passed on (`on`, `self_`,
+    `recurse`, `scope`, `back` and `asts`).
 
     This function returns a generator similar to the `walk()` generator which can be interacted with in the same way as
     that one. Meaning you can control the recursion into children by sending `True` or `False` to this generator.
     Replacement and deletion of nodes during the search is allowed according to the rules specified by `walk()`.
 
-    If you do not delete or `send(False)` for any given node then the search will continue into that node with the
-    possibility of finding nested matches, unless you pass `nested=False` to the `search()` call. `send()` to this
-    generator follows the behavior rules for `send()` to the `walk()` generator with the given `on` value.
+    If you do not delete or `send(False)` for any given node then the search will continue into that node (if allowed
+    by `recurse`) with the possibility of finding nested matches, unless you pass `nested=False` to the `search()` call.
+    `send()` to this generator follows the behavior rules for `send()` to the `walk()` generator with the given `on`
+    value.
 
     **Note:** The generator returned by this function does not yield the matched nodes themselves, but rather the
     `FSTMatch` objects. You can get the matched nodes from these objects using the `matched` attribute, e.g.
-    `match.matched`.
+    `match.matched`. It yields `(FSTMatch, bool leaving)` if `on='both'`.
 
     **Parameters:**
     - `pat`: The pattern to search for.
     - `nested`: Whether to recurse into nested matches or not.
-    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). Defaults to
-        `False` to allow matching backreferences with different `ctx` values with each other, such as a `Name` as a
-        target of an `Assign` with the same name later used in an expression (`Store` vs. `Load`). Also as a
-        conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
-        you don't specify it so may inadvertantly break matches where you don't want to take that into
-        consideration.
-    - `on`, `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see
-        that function for their meanings. These can further restrict what is returned. Just like in the `walk()`
-        function, this can be overridden by `send(True)` to the generator, but only if the relevant nodes are actually
-        matched by the search.
+    - `on`: When to yield nodes. See `walk()` for full explanation.
+        - `'enter'`: Normal walk, will yield nodes upon entering them.
+        - `'leave'`: Bottom-up walk, will yield nodes upon leaving them.
+        - `'both'`: Nodes will be yielded twice, first upon entry and again upon leaving after the children have been
+            walked (and yielded). In this case, instead of just the node, a tuple is yielded containing the `FSTMatch`
+            and a bool which is `False` upon entry and `True` upon leaving.
+    - `self_`: If `True` then self will be included in the search, with the possibility to skip children with
+        `send(False)`, otherwise will start directly with children. See `walk()` for full explanation.
+    - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default. See `walk()` for full explanation.
+    - `scope`: If `True` then will walk only within the scope of `self`. See `walk()` for full explanation.
+    - `back`: If `True` then walk every node in reverse syntactic order. See `walk()` for full explanation.
+    - `asts`: If this is provided as a list of `AST` nodes (from an `FST` tree) then this is used for the initial list
+        of nodes to walk and recurse into (if recurse allowed). See `walk()` for full explanation.
+    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). See `match()`
+        for full explanation.
 
     **Returns:**
     - `Generator`: This is a `walk()` style generator which accepts `send(bool)` to decide whether to recurse into a
@@ -6189,31 +6196,52 @@ def sub(
     pat: _Pattern,
     repl: Code,
     nested: bool = False,
-    count: int = 0,
     *,
+    count: int = 0,
     loop: bool | int = False,
     callback: Callable[[fst.FST], object] | None = None,
-    callback_post: Callable[[fst.FST], None] | None = None,
-    copy_options: dict[str, Any] | None = None,
-    repl_options: dict[str, Any] | None = None,
-    ctx: bool = False,
+    callback_after: Callable[[fst.FST], None] | None = None,
     on: Literal['enter', 'leave'] = 'enter',
     self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
     asts: list[AST] | None = None,
+    ctx: bool = False,
+    copy_options: dict[str, Any] | None = None,
+    repl_options: dict[str, Any] | None = None,
     **options: object,
 ) -> fst.FST:  # -> self
     r"""Substitute matching targets with a given `repl` template. The template substitutions can include tagged elements
-    from a match. These are specified in the `repl` template as `__FST_<tag>` names, where the `<tag>` maps to a matched
-    tag or is left empty to indicate the whole matched node. The replacement template can be passed as source or an
+    from a match. These are specified in the `repl` template as `__FST_<tag>` names, where the `<tag>` is a matched tag
+    name or is left empty to indicate the whole matched node. The replacement template can be passed as source or an
     `FST` or `AST` node.
+
+    THIS IS AN IN-PLACE MUTATION! It returns `self` for chaining operations.
+
+    This function can handle individual node or slice substitutions, including compound patterns like `Dict` key:value
+    pairs and whole `ExceptHandler`, `match_case` and `comprehension` nodes. Forms for substituting compound items are
+    as follows (they must appear as such, don't add `async` to the `comprehension` form for example):
+
+    - `Dict key:value`: `"...": __FST_<tag>`
+    - `MatchMapping key:pattern`: `"...": __FST_<tag>`
+    - `comprehension`: `for __FST_<tag> in "..."`
+    - `ExceptHandler`: `except "...": __FST_<tag>`
+    - `match_case`: `case "...": __FST_<tag>`
 
     `__FSS_<tag>` can be used to force slice substitution of tags the `repl` template and `__FSO_<tag>` can be used to
     force single element substitution.
 
-    THIS IS AN IN-PLACE MUTATION!
+    In order to help prevent infinite looping when using `nested=True`, none of the original nodes of the `repl`
+    template are ever substituted even if they match the pattern. If the full original match is put anywhere in the
+    template then the top node of that is not considered for substitution again either (even though by definition it
+    matches the pattern). Despite these measures infinite looping can still occur due to usage of `__FSO_<tag>` or
+    static tags as user-defined replacement nodes.
+
+    If the option `on='leave'` is used then the option `nested=False` is implicitly ignored as the tree is effectively
+    walked bottom-up so the nesting prevention does not have a chance to prevent entry to nested nodes. This also means
+    that infinite looping cannot occur due to nesting. No functionality is lost however as if you need `nested=False`
+    then there is no reason not to do `on='enter'`.
 
     Individual options can be passed for each of the three phases of each substitution. The phases and their options are
     as follows:
@@ -6224,13 +6252,6 @@ def sub(
 
     If either `copy_options` or `repl_options` are not provided then the normal top level `options` are used for those.
 
-    This function can handle individual node or slice substitutions, including compound patterns like `Dict` key:value
-    pairs and whole `ExceptHandler` or `match_case` entries.
-
-    If the option `on='leave'` is used then the option `nested=False` is implicitly ignored as the tree is effectively
-    walked bottom-up so the nesting prevention does not have a chance to prevent entry to nested nodes. That also means
-    that infinite recursion cannot occur due to nesting.
-
     Be wary of expressions substitutions inside patterns, very few expression forms are actually valid there.
 
     Will not substitute inside f-strings on Python < 3.12.
@@ -6239,37 +6260,39 @@ def sub(
     - `pat`: The pattern to search for. Must resolve to a node, not a primitive or list (node patterns, type, wildcard,
         functional patterns of these).
     - `repl`: Replacement template as an `FST`, `AST` or source.
-    - `nested`: Whether to allow recursion into nested substitutions or not. In order to help prevent infinite
-        recursion, regardless of this parameter, none of the original nodes of the `repl` template are ever substituted
-        even if they match the pattern. If the full original match is put anywhere in the template then the top node of
-        that is not considered for substitution again either (even though by definition it matches the pattern).
-        Subparts of the match put to the replacement template **CAN** cause infinite recursion however, you have been
-        warned.
+    - `nested`: Whether to allow recursion into nested substitutions or not. **WARNING!** Improper usage of this
+        parameter can lead to infinite looping so the onus is on the user to make sure the replacement template cannot
+        cause this.
     - `count`: If this is above `0` then only this number of substitutions will be made. This only increments by 1 for
         each new substituted location in `self`, regardless of how many times that node is substituted with `loop` if
         that is being used.
-    - `loop`: **WARNING!** Improper usage of this parameter can easily lead to infinite looping so the onus is on the
-        user to make sure the replacement template cannot cause this. If this is not `False` then after each match is
-        substituted then check if it still matches the pattern, and if so substitute again, up to `loop` number of
-        times. A value of `True` or `0` (or below) means keep looping until the node doesn't match anymore.
-    - `callback`: If present then this will be called for each match (including each `loop` match) and if it returns
-        a truthy value then the substitution is skipped. Skipping a substitution in this manner will not prevent
-        recursion into the match if `nested=True`.
-    - `callback_post`: If present then this is called with each newly-substituted node (including each `loop`
-        substitution).
+    - `loop`: If this is not `False` then after each match is substituted then check if it still matches the pattern,
+        and if so substitute again, up to `loop` number of times. A value of `True` or `0` (or below) means keep looping
+        until the node doesn't match anymore. Allows collapsing of arbitrary depth nested or arbitrary length sequence
+        structures. **WARNING!** Improper usage of this parameter can lead to infinite looping
+        so the onus is on the user to make sure the replacement template cannot cause this.
+    - `callback`: If present then this will be called for each match before substitution (including each `loop` match)
+        and if it returns a truthy value then the substitution is skipped. Skipping a substitution in this manner will
+        not prevent recursion into the match if `nested=True`.
+    - `callback_after`: If present then this is called after each substitution with each newly-substituted node
+        (including each `loop` iteration).
+    - `on`: When to substitute nodes. See `walk()` for full explanation.
+        - `'enter'`: Normal walk, will substitute nodes upon entering them.
+        - `'leave'`: Bottom-up walk, will substitute nodes upon leaving them. Allows collapse of arbitrary depth
+            nested structures.
+    - `self_`: If `True` then `self` is included for possible substitution, otherwise will start directly with children.
+        See `walk()` for full explanation.
+    - `recurse`: Whether to recurse past the **FIRST LEVEL OF CHILDREN** by default. See `walk()` for full explanation.
+    - `scope`: If `True` then will search for substitutions only within the scope of `self`. See `walk()` for full
+        explanation.
+    - `back`: If `True` then walk every node in reverse syntactic order. See `walk()` for full explanation.
+    - `asts`: If this is provided as a list of `AST` nodes (from an `FST` tree) then this is used for the initial list
+        of nodes to walk and recurse into (if recurse allowed). See `walk()` for full explanation.
+    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). See `match()`
+        for full explanation.
     - `copy_options`: Options to use when copying from matched nodes from `self` for putting into the `repl` template.
         If `None` then just uses `options`.
     - `repl_options`: Options to use when putting into the `repl` template. If `None` then just uses `options`.
-    - `ctx`: Whether to match `expr_context` INSTANCES or not (`expr_context` types are always matched). Defaults to
-        `False` to allow matching backreferences with different `ctx` values with each other, such as a `Name` as a
-        target of an `Assign` with the same name later used in an expression (`Store` vs. `Load`). Also as a
-        conveninence since when creating `AST` nodes for patterns the `ctx` field may be created automatically if
-        you don't specify it so may inadvertantly break matches where you don't want to take that into
-        consideration.
-    - `on`, `self_`, `recurse`, `scope`, `back`, `asts`: These are parameters for the underlying `walk()` function, see
-        that function for their meanings. These can further restrict what is returned. Unlike `walk()` or `search()`
-        though, you don't get a chance to override individual node recursion as the search generator is not made
-        available. The `on` parameter can only take `'enter'` and `'leave'`, not `'both'`.
     - `options`: The options to use when replacing matched nodes in `self` with the `repl` template. See `options()`.
 
     **Returns:**
@@ -6382,7 +6405,7 @@ def sub(
         used_to_be_while = "now is string: while a: \\\n    a = call(a, \'str\') <--"
     something_else()
 
-    `nested`, `loop` and `count`.
+    `nested`, `loop`, `count` and `on`.
 
     >>> f = FST(r'''
     ... with a:
@@ -6434,6 +6457,12 @@ def sub(
     with a, b, c, d, e:
         pass
 
+    Setting `on='leave'` allows a bottom-up walk which can do many of the same things as `loop=True`.
+
+    >>> print(f.copy().sub(pat, repl, on='leave').src)
+    with a, b, c, d, e:
+        pass
+
     The `subn()` function does the same thing as `sub()` but returns the number of unique and total substitutions made.
 
     >>> res = f.copy().subn(pat, repl, nested=True, loop=2)
@@ -6446,11 +6475,11 @@ def sub(
         with d, e:
             pass
 
-    `callback` and `callback_post` allow you to observe and control individual substitutions.
+    `callback` and `callback_after` allow you to observe and control individual substitutions.
 
     >>> FST('a + b.c').sub(Name, 'log(__FST_)',
     ...     callback=lambda f: print(f'Pre:  {f.src}') or f.src == 'a',
-    ...     callback_post=lambda f: print(f'Post: {f.src}'),
+    ...     callback_after=lambda f: print(f'Post: {f.src}'),
     ... ).src
     Pre:  a
     Pre:  b
@@ -6465,7 +6494,7 @@ def sub(
         count,
         loop=loop,
         callback=callback,
-        callback_post=callback_post,
+        callback_after=callback_after,
         copy_options=copy_options,
         repl_options=repl_options,
         ctx=ctx,
@@ -6475,6 +6504,7 @@ def sub(
         scope=scope,
         back=back,
         asts=asts,
+        __warn_stacklevel=3,  # for warning on no substitution in f-strings on Python < 3.12
         **options,
     )[0]
 
@@ -6488,7 +6518,7 @@ def subn(
     *,
     loop: bool | int = False,
     callback: Callable[[fst.FST], object] | None = None,
-    callback_post: Callable[[fst.FST], None] | None = None,
+    callback_after: Callable[[fst.FST], None] | None = None,
     copy_options: dict[str, Any] | None = None,
     repl_options: dict[str, Any] | None = None,
     ctx: bool = False,
@@ -6545,8 +6575,6 @@ def subn(
     ...     __FST_outer_body
     ... '''.strip()
 
-    The `nested=True` parameter allows you to recurse into substituted nodes to continue substituting inside.
-
     >>> res = f.copy().subn(pat, repl, nested=True)
 
     >>> print(res)
@@ -6593,9 +6621,6 @@ def subn(
     if on == 'both':
         raise ValueError("substitution does not accept 'on=\"both\"'")
 
-    if PYLT12 and self.parent_ftstr():  # silently fail substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
-        return self, 0, 0
-
     if count < 0:
         count = 0
 
@@ -6605,6 +6630,7 @@ def subn(
     count_start = count  # so we can calculate unique location substitutions
     loop_start = loop  # so it can reset between different matches if used
 
+    warn_stacklevel = 2 if '__warn_stacklevel' not in options else options.pop('__warn_stacklevel')
     options = check_options(options, mark_checked=True)
     copy_options = options if copy_options is None else check_options(copy_options, mark_checked=True)
     repl_options = options if repl_options is None else check_options(repl_options, mark_checked=True)
@@ -6632,7 +6658,9 @@ def subn(
     for m in gen:
         matched = m.matched  # will be FST node
 
-        if PYLT12 and matched.parent_ftstr():  # if Python < 3.12 and we went inside an f-string then skip it
+        if PYLT12 and matched.parent_ftstr():  # cannot do substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
+            warnings.warn('substitution inside f-strings not implemented on Python < 3.12',
+                          RuntimeWarning, warn_stacklevel)
             gen.send(False)  # no point searching deeper
 
             continue
@@ -6826,8 +6854,8 @@ def subn(
 
             replaced = matched.replace(repl_, one=one, **options)
 
-            if callback_post:
-                callback_post(replaced)
+            if callback_after:
+                callback_after(replaced)
 
             total_count += 1
 

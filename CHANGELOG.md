@@ -2,11 +2,11 @@
 
 ### Added
 
-- substitution and walking
+- substitution and traversal
   - added `on` parameter to allow `walk()` and `search()` yield on `'enter'` or `'leave'` node or `'both'`
   - added `on` parameter to `sub()` can do substitution on `'enter'` or `'leave'`, allowing bottom-up substitution for easier collapsing of nested structures
-  - added `callback` and `callback_post` parameters to `sub()` and `subn()` to better observe and control individual substitutions
-  - new CLI modules `fst.cli.search` and `fst.cli.sub`
+  - added `callback` and `callback_after` parameters to `sub()` and `subn()` to better observe and control individual substitutions
+  - new CLI modules `fst.cli.search` and `fst.cli.sub` for convenient application to source files
 - allow use of `FSTView` as a singleton item reference
   - types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice
   - `at()` method to get an item as a singleton `FSTView` if getting that item alone would lose information like a `None` or `str`
@@ -19,8 +19,8 @@
 
 ### Changed
 
-- tweaked multiline slice put indentation to be slightly less horrible, still needs a rework when functionality is no longer the priority
-- silently fail substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
+- tweaked certain cases of multiline slice put indentation to be slightly less horrible, aesthetics still need a rework when functionality is no longer the priority
+- non-raise fail substitution inside f-strings on Python < 3.12, warn instead, as those replacements are not implemented and probably will not be
 - `get/put/get_slice/put_slice()` typing tweaked for easier to swizzle parameters with type checking enabled
 - added `FST.strip()` which removes trivia surrounding node at root, was previously private function `_sanitize()`
 - identifier puts using `FST` nodes as source (which doesn't consume them), will now unmake those nodes to stay consistent with all other puts

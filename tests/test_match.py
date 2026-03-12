@@ -2708,18 +2708,18 @@ MNOT(MTAG('no'))
         )
         self.assertEqual(l, [f, f0, f00, f01, f1])
 
-        # don't replace, nested, append in callback_post
+        # don't replace, nested, append in callback_after
 
         l.clear()
         f.sub(List, 'NEVER_USED', nested=True,
             callback=lambda f: True,  # truthy so skip substitution, but recurse
-            callback_post=lambda f: l.append(f),
+            callback_after=lambda f: l.append(f),
         )
-        self.assertEqual(l, [])  # skipped all substitutions so callback_post not called
+        self.assertEqual(l, [])  # skipped all substitutions so callback_after not called
 
         l.clear()
         f.sub(List, '__FST_', nested=True,  # now we need to substitute, same node
-            callback_post=lambda f: l.append(f),
+            callback_after=lambda f: l.append(f),
         )
         f0 = f.elts[0]  # need to get these again becase all was substituted
         f1 = f.elts[1]
@@ -2731,7 +2731,7 @@ MNOT(MTAG('no'))
         l.clear()
         f.sub(List, '__FST_', nested=True,  # now we need to substitute, same node
             callback=lambda f: m.append(f),  # m.append() returns falsey None so substitution not skipped
-            callback_post=lambda f: l.append(f),
+            callback_after=lambda f: l.append(f),
         )
         f0 = f.elts[0]  # need to get these again becase all was substituted
         f1 = f.elts[1]

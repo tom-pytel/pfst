@@ -1871,11 +1871,12 @@ class cls:
 
 ## Squash nested `with`
 
-This is also easily doable and shows off the `loop` parameter which allows you to apply a substitution to the same
-location an arbitrary number of times in order to collapse structures. When `loop` is enabled, after a successful
-substitution the resulting node is checked again against the pattern and if it still matches then the substitution is
-applied again repeatedly until the result no longer matches the pattern (or it can be limited to a maximum number of
-iterations).
+This is also easily doable using either `loop=True` or `on='leave'`.
+
+First we show off the `loop` parameter which allows you to apply a substitution to the same location an arbitrary number
+of times in order to collapse structures. When `loop` is enabled, after a successful substitution the resulting node is
+checked again against the pattern and if it still matches then the substitution is applied again repeatedly until the
+result no longer matches the pattern (or it can be limited to a maximum number of iterations).
 
 ```py
 >>> src = r"""
@@ -1910,6 +1911,20 @@ iterations).
 
 ```py
 >>> print(FST(src).sub(pat, repl, loop=True, trivia=('block',)).src)
+with (open(a) as f,
+    lock1,  # first lock
+    func() as lock2,  # this gets preserved
+    ctx()):
+    # body comment
+    pass
+    # end body comment
+```
+
+Using `on='leave'` is objectively safer as it only walks the tree once and cannot cause infinite recursion (even from
+`nested=True`). The operating principle is different however so which option is used will depend on the case.
+
+```py
+>>> print(FST(src).sub(pat, repl, on='leave', trivia=('block',)).src)
 with (open(a) as f,
     lock1,  # first lock
     func() as lock2,  # this gets preserved

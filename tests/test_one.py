@@ -1131,6 +1131,381 @@ if 1:
 
                 raise
 
+    def test_replace_one_FST_node_stays_same(self):
+        f = FST('@deco\ndef f(a) -> int: pass', 'exec')
+        self.assertIs(g := f.body[0].decorator_list[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].args, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].returns, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('@deco\nasync def f(a) -> int: pass', 'exec')
+        self.assertIs(g := f.body[0].decorator_list[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].args, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].returns, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('@deco\nclass c(a): pass', 'exec')
+        self.assertIs(g := f.body[0].decorator_list[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].bases[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('return a', 'exec')
+        self.assertIs(g := f.body[0].value, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('del a', 'exec')
+        self.assertIs(g := f.body[0].targets[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('a = b', 'exec')
+        self.assertIs(g := f.body[0].targets[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].value, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('a += b', 'exec')
+        self.assertIs(g := f.body[0].target, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].op, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].value, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('a: int = b', 'exec')
+        self.assertIs(g := f.body[0].target, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].annotation, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].value, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('for a in b: pass\nelse: pass', 'exec')
+        self.assertIs(g := f.body[0].target, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].iter, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].orelse[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('async for a in b: pass\nelse: pass', 'exec')
+        self.assertIs(g := f.body[0].target, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].iter, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].orelse[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('while a: pass\nelse: pass', 'exec')
+        self.assertIs(g := f.body[0].test, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].orelse[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('if a: pass\nelse: pass', 'exec')
+        self.assertIs(g := f.body[0].test, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].orelse[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('with a: pass', 'exec')
+        self.assertIs(g := f.body[0].items[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('async with a: pass', 'exec')
+        self.assertIs(g := f.body[0].items[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('match a:\n  case _: pass', 'exec')
+        self.assertIs(g := f.body[0].subject, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].cases[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('raise a from b', 'exec')
+        self.assertIs(g := f.body[0].exc, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].cause, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('try: pass\nexcept: pass\nelse: pass\nfinally: pass', 'exec')
+        self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].handlers[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].orelse[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0].finalbody[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('assert a, b', 'exec')
+        self.assertIs(g := f.body[0].test, g.replace(g.copy()))
+        self.assertIs(g := f.body[0].msg, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('import a', 'exec')
+        self.assertIs(g := f.body[0].names[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('from a import b', 'exec')
+        self.assertIs(g := f.body[0].names[0], g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('global a', 'exec')
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('nonlocal a', 'exec')
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('a', 'exec')
+        self.assertIs(g := f.body[0].value, g.replace(g.copy()))
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('pass', 'exec')
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('break', 'exec')
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('continue', 'exec')
+        self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        f = FST('a and b', 'Expr')
+        self.assertIs(g := f.value.op, g.replace(g.copy()))
+        self.assertIs(g := f.value.values[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('(a := b)', 'Expr')
+        self.assertIs(g := f.value.target, g.replace(g.copy()))
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a + b', 'Expr')
+        self.assertIs(g := f.value.left, g.replace(g.copy()))
+        self.assertIs(g := f.value.op, g.replace(g.copy()))
+        self.assertIs(g := f.value.right, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('-a', 'Expr')
+        self.assertIs(g := f.value.op, g.replace(g.copy()))
+        self.assertIs(g := f.value.operand, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('lambda a: None', 'Expr')
+        self.assertIs(g := f.value.args, g.replace(g.copy()))
+        self.assertIs(g := f.value.body, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a if b else c', 'Expr')
+        self.assertIs(g := f.value.body, g.replace(g.copy()))
+        self.assertIs(g := f.value.test, g.replace(g.copy()))
+        self.assertIs(g := f.value.orelse, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('{a: b}', 'Expr')
+        self.assertIs(g := f.value.keys[0], g.replace(g.copy()))
+        self.assertIs(g := f.value.values[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('{a}', 'Expr')
+        self.assertIs(g := f.value.elts[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('[a for a in b]', 'Expr')
+        self.assertIs(g := f.value.elt, g.replace(g.copy()))
+        self.assertIs(g := f.value.generators[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('{a for a in b}', 'Expr')
+        self.assertIs(g := f.value.elt, g.replace(g.copy()))
+        self.assertIs(g := f.value.generators[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('{a: b for a, b in c}', 'Expr')
+        self.assertIs(g := f.value.key, g.replace(g.copy()))
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value.generators[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('(a for a in b)', 'Expr')
+        self.assertIs(g := f.value.elt, g.replace(g.copy()))
+        self.assertIs(g := f.value.generators[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('await a', 'Expr')
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('yield a', 'Expr')
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('yield from a', 'Expr')
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a < b', 'Expr')
+        self.assertIs(g := f.value.left, g.replace(g.copy()))
+        self.assertIs(g := f.value.ops[0], g.replace(g.copy()))
+        self.assertIs(g := f.value.comparators[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('call(a, b=c)', 'Expr')
+        self.assertIs(g := f.value.func, g.replace(g.copy()))
+        self.assertIs(g := f.value.args[0], g.replace(g.copy()))
+        self.assertIs(g := f.value.keywords[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('1', 'Expr')
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a.b', 'Expr')
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a[b]', 'Expr')
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value.slice, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('*a', 'Expr')
+        self.assertIs(g := f.value.value, g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a', 'Expr')
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('[a]', 'Expr')
+        self.assertIs(g := f.value.elts[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('(a,)', 'Expr')
+        self.assertIs(g := f.value.elts[0], g.replace(g.copy()))
+        self.assertIs(g := f.value, g.replace(g.copy()))
+
+        f = FST('a[b:c:d]', 'Expr')
+        self.assertIs(g := f.value.slice.lower, g.replace(g.copy()))
+        self.assertIs(g := f.value.slice.upper, g.replace(g.copy()))
+        self.assertIs(g := f.value.slice.step, g.replace(g.copy()))
+        self.assertIs(g := f.value.slice, g.replace(g.copy()))
+
+        f = FST('[a for a in b if c]')
+        self.assertIs(g := f.generators[0].target, g.replace(g.copy()))
+        self.assertIs(g := f.generators[0].iter, g.replace(g.copy()))
+        self.assertIs(g := f.generators[0].ifs[0], g.replace(g.copy()))
+        self.assertIs(g := f.generators[0], g.replace(g.copy()))
+
+        f = FST('try: pass\nexcept a as b: pass')
+        self.assertIs(g := f.handlers[0].type, g.replace(g.copy()))
+        self.assertIs(g := f.handlers[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.handlers[0], g.replace(g.copy()))
+
+        f = FST('def f(a, /, b=1, *c, d=2, **e): pass')
+        self.assertIs(g := f.args.posonlyargs[0], g.replace(g.copy()))
+        self.assertIs(g := f.args.args[0], g.replace(g.copy()))
+        self.assertIs(g := f.args.vararg, g.replace(g.copy()))
+        self.assertIs(g := f.args.kwonlyargs[0], g.replace(g.copy()))
+        self.assertIs(g := f.args.kw_defaults[0], g.replace(g.copy()))
+        self.assertIs(g := f.args.kwarg, g.replace(g.copy()))
+        self.assertIs(g := f.args.defaults[0], g.replace(g.copy()))
+        self.assertIs(g := f.args, g.replace(g.copy()))
+
+        f = FST('a: int', 'arguments')
+        self.assertIs(g := f.args[0].annotation, g.replace(g.copy()))
+        self.assertIs(g := f.args[0], g.replace(g.copy()))
+
+        f = FST('call(k=w)')
+        self.assertIs(g := f.keywords[0].value, g.replace(g.copy()))
+        self.assertIs(g := f.keywords[0], g.replace(g.copy()))
+
+        f = FST('import a')
+        self.assertIs(g := f.names[0], g.replace(g.copy()))
+
+        f = FST('with a as b: pass')
+        self.assertIs(g := f.items[0].context_expr, g.replace(g.copy()))
+        self.assertIs(g := f.items[0].optional_vars, g.replace(g.copy()))
+        self.assertIs(g := f.items[0], g.replace(g.copy()))
+
+        f = FST('match _:\n  case a if b: pass')
+        self.assertIs(g := f.cases[0].pattern, g.replace(g.copy()))
+        self.assertIs(g := f.cases[0].guard, g.replace(g.copy()))
+        self.assertIs(g := f.cases[0].body[0], g.replace(g.copy()))
+        self.assertIs(g := f.cases[0], g.replace(g.copy()))
+
+        f = FST('case 1: pass')
+        self.assertIs(g := f.pattern.value, g.replace(g.copy()))
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        f = FST('case True: pass')
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        f = FST('case [a]: pass')
+        self.assertIs(g := f.pattern.patterns[0], g.replace(g.copy()))
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        f = FST('case {1: a}: pass')
+        self.assertIs(g := f.pattern.keys[0], g.replace(g.copy()))
+        self.assertIs(g := f.pattern.patterns[0], g.replace(g.copy()))
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        f = FST('case cls(a, b=c): pass')
+        self.assertIs(g := f.pattern.cls, g.replace(g.copy()))
+        self.assertIs(g := f.pattern.patterns[0], g.replace(g.copy()))
+        self.assertIs(g := f.pattern.kwd_patterns[0], g.replace(g.copy()))
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        f = FST('case a as b: pass')
+        self.assertIs(g := f.pattern.pattern, g.replace(g.copy()))
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        f = FST('case a | b: pass')
+        self.assertIs(g := f.pattern.patterns[0], g.replace(g.copy()))
+        self.assertIs(g := f.pattern, g.replace(g.copy()))
+
+        if PYGE11:
+            f = FST('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass', 'exec')
+            self.assertIs(g := f.body[0].body[0], g.replace(g.copy()))
+            self.assertIs(g := f.body[0].handlers[0], g.replace(g.copy()))
+            self.assertIs(g := f.body[0].orelse[0], g.replace(g.copy()))
+            self.assertIs(g := f.body[0].finalbody[0], g.replace(g.copy()))
+            self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+        if PYGE12:
+            f = FST('def f[T](): pass')
+            self.assertIs(g := f.type_params[0], g.replace(g.copy()))
+
+            f = FST('async def f[T](): pass')
+            self.assertIs(g := f.type_params[0], g.replace(g.copy()))
+
+            f = FST('class c[T]: pass')
+            self.assertIs(g := f.type_params[0], g.replace(g.copy()))
+
+            f = FST('type t[T] = ...', 'exec')
+            self.assertIs(g := f.body[0].type_params[0], g.replace(g.copy()))
+            self.assertIs(g := f.body[0].value, g.replace(g.copy()))
+            self.assertIs(g := f.body[0], g.replace(g.copy()))
+
+            f = FST('f"{a}"', 'Expr')
+            self.assertIs(g := f.value.values[0].value, g.replace(g.copy()))
+            self.assertIs(g := f.value, g.replace(g.copy()))
+
+            f = FST('type t[T: int] = ...')
+            self.assertIs(g := f.type_params[0].bound, g.replace(g.copy()))
+            self.assertIs(g := f.type_params[0], g.replace(g.copy()))
+
+            f = FST('type t[*U] = ...')
+            self.assertIs(g := f.type_params[0], g.replace(g.copy()))
+
+            f = FST('type t[**V] = ...')
+            self.assertIs(g := f.type_params[0], g.replace(g.copy()))
+
+        if PYGE13:
+            f = FST('type t[T = a] = ...')
+            self.assertIs(g := f.type_params[0].default_value, g.replace(g.copy()))
+
+            f = FST('type t[*U = a] = ...')
+            self.assertIs(g := f.type_params[0].default_value, g.replace(g.copy()))
+
+            f = FST('type t[**V = a] = ...')
+            self.assertIs(g := f.type_params[0].default_value, g.replace(g.copy()))
+
+        if PYGE14:
+            f = FST('t"{a}"', 'Expr')
+            self.assertIs(g := f.value.values[0].value, g.replace(g.copy()))
+            self.assertIs(g := f.value, g.replace(g.copy()))
+
     def test_replace_root(self):
         f = FST('i = 1')
         g = f.value
