@@ -1103,15 +1103,15 @@ def _put_slice_stmtlike_old(
             else:  # isinstance(ast, _ExceptHandlers)
                 star = body[0].f.is_except_star() if body else None
 
-            put_fst = code_as__ExceptHandlers(code, options, root.parse_params, coerce=True, star=star)
+            put_fst = code_as__ExceptHandlers(code, options, root._parse_params, coerce=True, star=star)
             put_body = put_fst.a.handlers
 
         elif field == 'cases':
-            put_fst = code_as__match_cases(code, options, root.parse_params, coerce=True)
+            put_fst = code_as__match_cases(code, options, root._parse_params, coerce=True)
             put_body = put_fst.a.cases
 
         else:  # 'body', 'orelse', 'finalbody'
-            put_fst = code_as_stmts(code, options, root.parse_params, coerce=True)
+            put_fst = code_as_stmts(code, options, root._parse_params, coerce=True)
             put_body = put_fst.a.body
 
             if not put_body and field != 'body' and len_slice == len_body:  # if putting empty body to optional field that would delete all elememnt there then convert to a delete regardless of what trivia might be in the body to put because otherwise we would wind up with a hanging empty 'else:' or `finally:`

@@ -68,14 +68,14 @@ def _reparse_raw_base(
     root = self.root
 
     try:
-        copy_root = fst.FST.fromsrc(copy_root.src, mode or 'exec', **root.parse_params)
+        copy_root = fst.FST.fromsrc(copy_root.src, mode or 'exec', **root._parse_params)
 
     except (SyntaxError, NodeError):
         if mode is None or path:  # if there is a path then we expect the top level node to parse to the same thing successfully, if it does not then it is a genuine error
             raise
 
         try:
-            copy_root = fst.FST.fromsrc(copy_root.src, 'all', **root.parse_params)  # root, everything could have changed, try to full reparse
+            copy_root = fst.FST.fromsrc(copy_root.src, 'all', **root._parse_params)  # root, everything could have changed, try to full reparse
         except Exception as exc:
             raise exc from None
 
@@ -156,7 +156,7 @@ def _reparse_raw_stmtlike(self: fst.FST, new_lines: list[str], ln: int, col: int
         copy_root._put_src(new_lines, ln, col, end_ln, end_col)
         copy_root._unmake_fst_tree()  # be nice and clean up the a <-> f
 
-        copya = (parse_match_case if is_match_case else parse_ExceptHandler)('\n'.join(copy_lines), root.parse_params)  # copy_lines are copy_root._lines since lcopy was False
+        copya = (parse_match_case if is_match_case else parse_ExceptHandler)('\n'.join(copy_lines), root._parse_params)  # copy_lines are copy_root._lines since lcopy was False
 
         if not in_blkhead:  # if not just head then we just put the new source to offset everything maybe around us properly
             root._put_src(new_lines, ln, col, end_ln, end_col, True, True, stmtlike)  # will copy over entire AST so don't need to offset current children of stmtlike

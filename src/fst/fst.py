@@ -435,18 +435,18 @@ class FST:
     to each `AST` node in a tree. It provides format-preserving operations as well as ability to navigate the tree in
     any direction."""
 
-    a:            AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
-    parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
-    pfield:       astfield | None  ; """The `fst.common.astfield` location of this node in the parent, `None` in root node."""
-    _cache:       dict
+    a:      AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
+    parent: FST | None       ; """Parent `FST` node, `None` in root node."""
+    pfield: astfield | None  ; """The `fst.common.astfield` location of this node in the parent, `None` in root node."""
+    _cache: dict
 
     # ROOT ONLY
-    parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` (filename, type_comments, feature_version). Exists mostly for passing filename and future-proofing."""
-    indent:       builtins.str                ; """The default single level block indentation string for this tree when not available from context."""
-    _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
+    indent:        builtins.str                ; """The default single level block indentation string for this tree when not available from context."""
+    _parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` (filename, type_comments, feature_version). Exists mostly for passing filename and future-proofing."""
+    _lines:        list[bistr]                 ; """The actual full source lines as `bistr`."""
 
     # class attributes
-    is_FST:       bool = True  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `fstloc` or `FSTView`
+    is_FST: bool = True  ; """Allows to quickly differentiate between actual `FST` nodes vs. views or locations."""  # for quick checks vs. `fstloc` or `FSTView`
 
     @property
     def is_alive(self) -> bool:
@@ -885,7 +885,7 @@ class FST:
 
             if from_ := kwargs.get('from_'): # copy parse_params from source tree
                 from_root = from_.root
-                parse_params = {**from_root.parse_params, **parse_params}
+                parse_params = {**from_root._parse_params, **parse_params}
                 indent = from_root.indent
 
             if isinstance(src_or_ast_or_fst, (str, list)):
@@ -904,7 +904,7 @@ class FST:
             self = src_or_ast_or_fst.f = object.__new__(cls)
 
         elif not self.parent:  # if was previously root then clear out root attributes
-            del self.parse_params, self.indent, self._lines
+            del self._parse_params, self.indent, self._lines
 
         self.a = src_or_ast_or_fst  # we don't assume `self.a` is `src_or_ast_or_fst` if even if `.f` exists, it should always be but juuuuust in case
         self.pfield = pfield
@@ -922,11 +922,11 @@ class FST:
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root = from_.root
-            self.parse_params = kwargs.get('parse_params', from_root.parse_params)
+            self._parse_params = kwargs.get('parse_params', from_root._parse_params)
             self.indent = kwargs.get('indent', from_root.indent)
 
         else:
-            self.parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
+            self._parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
 
             if (indent := kwargs.get('indent')) is not None:
                 self.indent = indent
@@ -1298,7 +1298,7 @@ class FST:
         if copy or self.parent:
             self = self.copy(**options)
 
-        return code.code_as(self, mode, options, self.parse_params, coerce=True)
+        return code.code_as(self, mode, options, self._parse_params, coerce=True)
 
     def reparse(self) -> FST:  # -> self
         """Force a reparse of this node to synchronize the `AST` tree with the source in case the source was changed
@@ -1452,7 +1452,7 @@ class FST:
         if not self.is_root:
             raise ValueError('verify with reparse can only be called on root node')
 
-        parse_params = self.parse_params
+        parse_params = self._parse_params
 
         try:
             astp = parsex.parse(self.src, mode or self._get_parse_mode(), parse_params=parse_params)
@@ -2369,7 +2369,7 @@ class FST:
             raise ValueError("cannot replace root node with 'to' option")
 
         with self._modifying():
-            code = code_as_all(code, options, self.parse_params)
+            code = code_as_all(code, options, self._parse_params)
             self._lines = code._lines
 
             self._set_ast(code.a, True)

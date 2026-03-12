@@ -6639,7 +6639,7 @@ def subn(
         if (args_as := fst.FST.get_option('args_as')) is not None:
             repl_args_as = args_as
 
-    repl = code_as_all(repl, parse_params=self.root.parse_params)
+    repl = code_as_all(repl, parse_params=self.root._parse_params)
     paths = []  # [(tag, path, (field, idx | None) | None), ...]  - paths to repl template substitution slots
     str_tags = []  # [(tag, (ln, col, end_col), True), ...]  - locations of substitution slots in strings (and bytes)
 

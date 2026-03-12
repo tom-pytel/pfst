@@ -2277,14 +2277,14 @@ y"
         f = FST.fromsrc('i', 'exec', filename='fnm', type_comments=True, feature_version=v)
 
         g = FST('j', 'exec', from_=f)
-        self.assertEqual('fnm', g.parse_params['filename'])
-        self.assertIs(True, g.parse_params['type_comments'])
-        self.assertEqual(v, g.parse_params['feature_version'])
+        self.assertEqual('fnm', g._parse_params['filename'])
+        self.assertIs(True, g._parse_params['type_comments'])
+        self.assertEqual(v, g._parse_params['feature_version'])
 
         g = FST('j', 'exec', from_=f, filename='blah', type_comments=False, feature_version=None)
-        self.assertEqual('blah', g.parse_params['filename'])
-        self.assertIs(False, g.parse_params['type_comments'])
-        self.assertIs(None, g.parse_params['feature_version'])
+        self.assertEqual('blah', g._parse_params['filename'])
+        self.assertIs(False, g._parse_params['type_comments'])
+        self.assertIs(None, g._parse_params['feature_version'])
 
         # full parse tests
 
@@ -8575,8 +8575,6 @@ match a:
         assert_type(f.parent, FST | None)
         # pfield
         assert_type(f.pfield, astfield | None)
-        # parse_params
-        assert_type(f.parse_params, Mapping[str, Any])
         # indent
         assert_type(f.indent, str)
         # is_FST
