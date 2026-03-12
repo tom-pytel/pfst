@@ -6,7 +6,7 @@ import unittest
 
 from fst import *
 
-from fst.common import PYLT14, PYGE12, PYGE13
+from fst.common import PYLT14, PYGE11
 from fst.match import *
 
 from support import SubCases, assertRaises
@@ -319,6 +319,54 @@ class TestMatch(unittest.TestCase):
         # assertRaises(MatchError('str can never match a list field'), MAST(body=[MIf(body='a')]).match, FST('if 1:\n if 2: pass'))
         # assertRaises(MatchError('str can never match a list field'), MAST(body=MList(elts='a')).match, FST('[1] if b else c'))
         # self.assertTrue(MAST(body=MList(elts=[...])).match(FST('[1] if b else c')))
+
+    @unittest.skipUnless(PYGE11, 'only valid for py >= 3.11')
+    def test_match_ExceptHandler_star(self):
+        # direct pattern matching
+
+        fnorm = FST('except Exception: pass')
+        fstar = FST('except* Exception: pass')
+
+        pany = MExceptHandler()
+        self.assertTrue(fnorm.match(pany))
+        self.assertTrue(fstar.match(pany))
+
+        pnorm = MExceptHandler(_star=False)
+        self.assertTrue(fnorm.match(pnorm))
+        self.assertFalse(fstar.match(pnorm))
+
+        pstar = MExceptHandler(_star=True)
+        self.assertFalse(fnorm.match(pstar))
+        self.assertTrue(fstar.match(pstar))
+
+        aany = ExceptHandler(..., ..., ...)
+        self.assertTrue(fnorm.match(aany))
+        self.assertTrue(fstar.match(aany))
+
+        aany._star = False
+        self.assertTrue(fnorm.match(aany))
+        self.assertFalse(fstar.match(aany))
+
+        aany._star = True
+        self.assertFalse(fnorm.match(aany))
+        self.assertTrue(fstar.match(aany))
+
+        # backreference matching
+
+        fnormnorm = FST('try: pass\nexcept Exception: pass\ntry: pass\nexcept Exception: pass')
+        fnormstar = FST('try: pass\nexcept Exception: pass\ntry: pass\nexcept* Exception: pass')
+        fstarnorm = FST('try: pass\nexcept* Exception: pass\ntry: pass\nexcept Exception: pass')
+        fstarstar = FST('try: pass\nexcept* Exception: pass\ntry: pass\nexcept* Exception: pass')
+
+        pbackref = MModule(body=[
+            MTYPES((Try, TryStar), handlers=[M(h=...)]),
+            MTYPES((Try, TryStar), handlers=[MTAG('h')]),
+        ])
+
+        self.assertTrue(fnormnorm.match(pbackref))
+        self.assertFalse(fnormstar.match(pbackref))
+        self.assertFalse(fstarnorm.match(pbackref))
+        self.assertTrue(fstarstar.match(pbackref))
 
     def test_match_M_Pattern(self):
         # re.Pattern

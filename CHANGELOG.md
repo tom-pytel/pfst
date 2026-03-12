@@ -6,6 +6,7 @@
   - added `on` parameter to allow `walk()` and `search()` yield on `'enter'` or `'leave'` node or `'both'`
   - added `on` parameter to `sub()` can do substitution on `'enter'` or `'leave'`, allowing bottom-up substitution for easier collapsing of nested structures
   - added `callback` and `callback_after` parameters to `sub()` and `subn()` to better observe and control individual substitutions
+  - added `MExceptHandler._star` parameter to allow differentiating between `except` and` except*` on match
   - new CLI modules `fst.cli.search` and `fst.cli.sub` for convenient application to source files
 - allow use of `FSTView` as a singleton item reference
   - types which dereference to singleton `FSTView` get a flag `is_one` to indicate this and can return single node on `copy/cut()` instead of slice

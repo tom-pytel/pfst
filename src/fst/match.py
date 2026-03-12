@@ -2218,7 +2218,19 @@ class Mcomprehension(MAST):  # pragma: no cover
             fields.append('is_async')
 
 class MExceptHandler(Mexcepthandler):  # pragma: no cover
-    """"""
+    """This works like all the other match pattern classes except that it has an extra `_star` parameter which allows
+    differentiating between normal `except` and `except*` target `ExceptHandler` `FST` nodes. This parameter will only
+    work when matching against an `FST` tree, it will not work matching against a pure `AST` tree and will match both
+    types of handlers. This parameter can also be set on a normal `AST` `ExceptHandler` pattern class for the same
+    effect.
+
+    **Parameters:**
+    - `_star`: Set this to control matching, if not set defaults to `None`.
+        - `True`: Only match `except*`.
+        - `False`: Only match normal `except`.
+        - `None`: Match both `except` and `except*`.
+    """
+
     _types = ExceptHandler
 
     def __init__(
@@ -2226,8 +2238,10 @@ class MExceptHandler(Mexcepthandler):  # pragma: no cover
         type: _Patterns = ...,
         name: _Patterns = ...,
         body: _Patterns = ...,
+        _star: bool | None = None,
     ) -> None:
         self._fields = fields = []
+        self._star = _star
 
         if type is not ...:
             self.type = type
@@ -2251,10 +2265,11 @@ class Marguments(MAST):  # pragma: no cover
         - `True`: `posonlyargs` only match to `posonlyargs`, `kwonlyargs` to `kwonlyargs` and `args` only to `args`.
             Their associated defaults only match to the same type of default as well.
         - `False`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
-            the target and `defaults` likewise can also match to `kw_defaults`. This allows the use of the standard args
-            to search in all the args fields.
+            the target and `defaults` in the pattern can also match to `kw_defaults` in the target. This allows the use
+            of the standard args to search in all the args fields.
         - `None`: All types of args and defaults can match to each other.
     """
+
     _types = arguments
 
     def __init__(
@@ -5050,6 +5065,28 @@ def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mstate: _Matc
 
     return {**mv, **mk}
 
+def _match_node_ExceptHandler(
+    pat: MExceptHandler | ExceptHandler, tgt: _Targets, mstate: _MatchState
+) -> Mapping[str, Any] | None:
+    """We do a special handler for `ExceptHandler` so we can check specifically for a star except handler or not if that
+    is included in the pattern, or exacly match backreferenced `except` vs. `except*`."""
+
+    if mstate.is_FST:
+        if (pat_star := getattr(pat, '_star', _SENTINEL)) is _SENTINEL:  # _SENTINEL means is ExceptHandler, not MExceptHandler
+            pat_star = None
+
+            if f := getattr(pat, 'f', None):  # maybe it is a backreference being matched against
+                try:
+                    pat_star = f.is_except_star()  # if is part of FST tree then is previously matched node, in this case must match star type so get from this
+                except Exception:
+                    pass
+
+        if pat_star is not None:
+            if pat_star != tgt.f.is_except_star():  # this does double-duty as will fail if tgt is not an ExceptHandler
+                return None
+
+    return _match_node(pat, tgt, mstate)
+
 def _match_node_expr_context(pat: Load | Store | Del, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """This exists as a convenience so that an `AST` pattern `Load`, `Store` and `Del` always match each other unless
     the match option `ctx=True`. `MLoad`, `MStore` and `MDel` don't get here, they always do a match check. A pattern
@@ -5265,7 +5302,7 @@ _MATCH_FUNCS = {
     DictComp:                     _match_node,
     Div:                          _match_node,
     Eq:                           _match_node,
-    ExceptHandler:                _match_node,
+    ExceptHandler:                _match_node_ExceptHandler,
     Expr:                         _match_node,
     Expression:                   _match_node,
     FloorDiv:                     _match_node,
@@ -5402,7 +5439,7 @@ _MATCH_FUNCS = {
     MDictComp:                    _match_node,
     MDiv:                         _match_node,
     MEq:                          _match_node,
-    MExceptHandler:               _match_node,
+    MExceptHandler:               _match_node_ExceptHandler,
     MExpr:                        _match_node,
     MExpression:                  _match_node,
     MFloorDiv:                    _match_node,

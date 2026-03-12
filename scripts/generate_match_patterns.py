@@ -52,6 +52,49 @@ class MConstant(M{ast_base_name}):  # pragma: no cover
 
         continue
 
+    if ast_cls is ExceptHandler:
+        m_patterns.append(f'''
+class MExceptHandler(Mexcepthandler):  # pragma: no cover
+    """This works like all the other match pattern classes except that it has an extra `_star` parameter which allows
+    differentiating between normal `except` and `except*` target `ExceptHandler` `FST` nodes. This parameter will only
+    work when matching against an `FST` tree, it will not work matching against a pure `AST` tree and will match both
+    types of handlers. This parameter can also be set on a normal `AST` `ExceptHandler` pattern class for the same
+    effect.
+
+    **Parameters:**
+    - `_star`: Set this to control matching, if not set defaults to `None`.
+        - `True`: Only match `except*`.
+        - `False`: Only match normal `except`.
+        - `None`: Match both `except` and `except*`.
+    """
+
+    _types = ExceptHandler
+
+    def __init__(
+        self,
+        type: _Patterns = ...,
+        name: _Patterns = ...,
+        body: _Patterns = ...,
+        _star: bool | None = None,
+    ) -> None:
+        self._fields = fields = []
+        self._star = _star
+
+        if type is not ...:
+            self.type = type
+            fields.append('type')
+
+        if name is not ...:
+            self.name = name
+            fields.append('name')
+
+        if body is not ...:
+            self.body = body
+            fields.append('body')
+'''.strip())
+
+        continue
+
     if ast_cls is arguments:
         m_patterns.append(f'''
 class Marguments(M{ast_base_name}):  # pragma: no cover
@@ -64,10 +107,11 @@ class Marguments(M{ast_base_name}):  # pragma: no cover
         - `True`: `posonlyargs` only match to `posonlyargs`, `kwonlyargs` to `kwonlyargs` and `args` only to `args`.
             Their associated defaults only match to the same type of default as well.
         - `False`: Same as `True` except that `args` in the pattern matches to `args`, `posonlyargs` or `kwonlyargs` in
-            the target and `defaults` likewise can also match to `kw_defaults`. This allows the use of the standard args
-            to search in all the args fields.
+            the target and `defaults` in the pattern can also match to `kw_defaults` in the target. This allows the use
+            of the standard args to search in all the args fields.
         - `None`: All types of args and defaults can match to each other.
     """
+
     _types = arguments
 
     def __init__(

@@ -13,7 +13,7 @@ To be able to execute the examples, import this.
 
 Now some helper functions just for this documentation, you can ignore their usage.
 
->>> from fst.docs import pprint, ppmatch
+>>> from fst.docs import pprint, ppmatch, py_version_ok_then_exec_else_print
 
 
 # Match
@@ -1869,6 +1869,55 @@ def new(a, /, b, *, c): pass
 
 You can go even deeper down the argument substitution rabbit hole but at that point you are probably better off just
 hardcoding it.
+
+
+## `except` vs. `except*`
+
+`ExceptHandler` nodes don't have any fields which explicitly indicate whether it is a normal `except` or a star
+`except*` node. This information can be gotten from the source or from the parent node, but in both cases this implies
+that the node must be part of an `FST` tree in order to differentiate it. For this reason, matching on star status of
+the handler is limited to `FST` trees, in pure `AST` you cannot match on star status.
+
+The special `_star` parameter in the `MExceptHandler` pattern indicates whether the pattern should match all types of
+except handlers (`_star=None`), `except*` except handlers (`_star=True`) or standard except handlers (`_star=False`).
+If using an `AST` `ExceptHandler` as a pattern then this parameter can be set directly on the `ExceptHandler` node to
+specify matching. Any backreferences matched with `MTAG` will always match exactly, `except` <-> `except` and `except*`
+<-> `except*`.
+
+>>> pat_any = MExceptHandler()
+
+>>> pat_norm = MExceptHandler(_star=False)
+
+>>> pat_star = MExceptHandler(_star=True)
+
+```py
+>>> if py_version_ok_then_exec_else_print(11, __file__, 'PRINT_START', 'PRINT_STOP'):
+...     except_norm = FST('except Exception: pass')
+...     except_star = FST('except* Exception: pass')
+...
+...     pprint(f'''
+... {pat_any.match(except_norm) = }
+... {pat_any.match(except_star) = }
+...
+... {pat_norm.match(except_norm) = }
+... {pat_norm.match(except_star) = }
+...
+... {pat_star.match(except_norm) = }
+... {pat_star.match(except_star) = }
+...         '''.strip())
+...
+... # PRINT_START
+pat_any.match(except_norm) = <FSTMatch <ExceptHandler ROOT 0,0..0,22>>
+pat_any.match(except_star) = <FSTMatch <ExceptHandler ROOT 0,0..0,23>>
+ 
+pat_norm.match(except_norm) = <FSTMatch <ExceptHandler ROOT 0,0..0,22>>
+pat_norm.match(except_star) = None
+ 
+pat_star.match(except_norm) = None
+pat_star.match(except_star) = <FSTMatch <ExceptHandler ROOT 0,0..0,23>>
+
+# PRINT_STOP
+```
 
 
 ## `nested`, `count`, `loop`, `on` and `subn()`
