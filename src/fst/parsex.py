@@ -69,6 +69,7 @@ from .asttypes import (
     LtE,
     MatMult,
     Match,
+    MatchClass,
     MatchMapping,
     MatchStar,
     Mod,
@@ -124,6 +125,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_arglikes,
     _type_params,
 )
 
@@ -191,6 +193,7 @@ __all__ = [
     'parse_withitem',
     'parse__withitems',
     'parse_pattern',
+    'parse__pattern_arglikes',
     'parse_type_param',
     'parse__type_params',
     'parse__expr_arglikes',
@@ -283,6 +286,7 @@ Mode = Literal[
     'withitem',            # noqa: PYI051
     '_withitems',          # noqa: PYI051
     'pattern',             # noqa: PYI051
+    '_pattern_arglikes',   # noqa: PYI051
     'type_param',          # noqa: PYI051
     '_type_params',        # noqa: PYI051
 ] | str | type[AST]
@@ -360,6 +364,8 @@ most other locations which take expressions.
 - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
 - `'_withitems'`: Parse zero or more `withitem`s returned in a `_withitems` SPECIAL SLICE.
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
+- `'_pattern_arglikes'`: Parse zero or more `MatchClass` patterns and keyword patterns as a `_pattern_arglikes` SPECIAL
+    SLICE.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
 - `'_type_params'`: Parse zero or more `type_param`s returned in a `_type_params` SPECIAL SLICE. Does not need trailing
@@ -437,6 +443,11 @@ def _unparse__aliases(ast: AST) -> str:
 def _unparse__withitems(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.items, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
+def _unparse__pattern_arglikes(ast: AST) -> str:
+    return _fixing_unparse(MatchClass(cls=Name(id='c'),
+                                      patterns=ast.patterns, kwd_attrs=ast.kwd_attrs, kwd_patterns=ast.kwd_patterns,
+                                      lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[2:-1]
+
 def _unparse__type_params(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.type_params, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
@@ -481,6 +492,7 @@ _UNPARSE_FUNCS = {
     _comprehension_ifs: _unparse__comprehension_ifs,
     _aliases:           _unparse__aliases,
     _withitems:         _unparse__withitems,
+    _pattern_arglikes:  _unparse__pattern_arglikes,
     _type_params:       _unparse__type_params,
 }  # fmt: skip
 
@@ -867,20 +879,22 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['stmt_or_expr_or_pat_or_witem']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse__Assign_targets))  # parse_expr_all because could be Slice
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse__Assign_targets,
+                                    parse__pattern_arglikes))  # parse_expr_all because could be Slice
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arg,  # because of "vararg: *TypeVarTuple"
                                     parse_arguments, parse_arguments_lambda, _parse_all__withitems,
-                                    _parse_all__type_params, parse__arglikes, parse__Assign_targets))
+                                    _parse_all__type_params, parse__arglikes, parse__Assign_targets,
+                                    parse__pattern_arglikes))
 
     if groupdict['stmt']:
         return reduce_ast(parse_stmts(src, parse_params), True)
 
     if groupdict['True_False_None']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, _parse_all__withitems))
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse__pattern_arglikes))
 
     if groupdict['async_or_for']:
         return _parse_all_multiple(src, parse_params, not first.group(1), (_parse_all__comprehensions,))
@@ -903,7 +917,8 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arg,  # because of "vararg: *TypeVarTuple"
                                     parse_arguments, parse_arguments_lambda, _parse_all__withitems,
-                                    _parse_all__type_params, parse__arglikes, parse__Assign_targets))
+                                    _parse_all__type_params, parse__arglikes, parse__Assign_targets,
+                                    parse__pattern_arglikes))
 
     if groupdict['at']:
         return _parse_all_multiple(src, parse_params, True, (parse__decorator_list,))
@@ -921,7 +936,8 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['minus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse_operator))
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse_operator,
+                                    parse__pattern_arglikes))
 
     if groupdict['not']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
@@ -1858,6 +1874,29 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -2)
 
 
+def parse__pattern_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `_pattern_arglikes` SPECIAL SLICE from `MatchClass` attribute arguments. @private"""
+
+    try:
+        case_ = _ast_parse1_case(f'match _:\n case c(\n{src}\n): pass', parse_params)
+
+    except SyntaxError as exc:
+        if _syntax_error_in_loc(exc, src, 3):  # check if error includes our wrapper code
+            raise
+
+        raise SyntaxError('invalid syntax') from None
+
+    ast = case_.pattern
+
+    if ast.__class__ is not MatchClass or case_.guard:
+        raise SyntaxError('invalid syntax')
+
+    ast = _pattern_arglikes(patterns=ast.patterns, kwd_attrs=ast.kwd_attrs, kwd_patterns=ast.kwd_patterns,
+                            **_astloc_from_src(src, 3))
+
+    return _offset_linenos(ast, -2)
+
+
 def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `type_param`, e.g. "t: Base = Subclass". @private"""
 
@@ -2243,6 +2282,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'withitem':               parse_withitem,
     '_withitems':             parse__withitems,
     'pattern':                parse_pattern,
+    '_pattern_arglikes':      parse__pattern_arglikes,
     'type_param':             parse_type_param,
     '_type_params':           parse__type_params,
     '_expr_arglikes':         parse__expr_arglikes,
@@ -2286,6 +2326,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _comprehension_ifs:       parse__comprehension_ifs,
     _aliases:                 parse__aliases,
     _withitems:               parse__withitems,
+    _pattern_arglikes:        parse__pattern_arglikes,
     _type_params:             parse__type_params,
 }  # fmt: skip  # automatically filled out with all AST types and their names derived from these
 

@@ -856,6 +856,16 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: invalid syntax',
 ],
 
+('_pattern_arglikes', ')'): [
+    'SyntaxError: invalid syntax',
+],
+
+('_pattern_arglikes', ','): [
+    '    ,',
+    '    ^',
+    'SyntaxError: invalid syntax',
+],
+
 ('Tuple_elt', '*not a, *b or c'): [
     '    *not a, *b or c',
     '     ^^^',

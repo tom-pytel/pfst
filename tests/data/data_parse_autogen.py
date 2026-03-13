@@ -2957,6 +2957,80 @@ i: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r''''''),
+r'''_pattern_arglikes - ROOT 0,0..0,0'''),
+
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r'''a'''), r'''
+_pattern_arglikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r'''a,'''), r'''
+_pattern_arglikes - ROOT 0,0..0,2
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r'''b=c'''), r'''
+_pattern_arglikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+'''),
+
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r'''b=c,'''), r'''
+_pattern_arglikes - ROOT 0,0..0,4
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+'''),
+
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r'''a, b=c'''), r'''
+_pattern_arglikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'c'
+'''),
+
+('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+r'''a, b=c,'''), r'''
+_pattern_arglikes - ROOT 0,0..0,7
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'c'
+'''),
+
+('parse__pattern_arglikes', 0, 0, 'SyntaxError', {}, ('_pattern_arglikes',
+r''')'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__pattern_arglikes', 0, 0, 'SyntaxError', {}, ('_pattern_arglikes',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_expr', 0, 0, 'BoolOp', {}, ('expr', r'''
 a
 or

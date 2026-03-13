@@ -146,6 +146,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_arglikes,
     _type_params,
 )
 
@@ -330,6 +331,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
     (_comprehension_ifs,       (('ifs', 'expr*'),)),
     (_aliases,                 (('names', 'alias*'),)),
     (_withitems,               (('items', 'withitem*'),)),
+    (_pattern_arglikes,        (('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
     (_type_params,             (('type_params', 'type_param*'),)),
 
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
@@ -1328,7 +1330,7 @@ _syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
 _syntax_ordered_children_value_ctx    = lambda ast: [ast.value, ast.ctx]
 
 _syntax_ordered_children_patterns     = lambda ast: ast.patterns.copy()
-_syntax_ordered_children_defval       = (lambda ast: [ast.default_value]) if PYGE13 else (lambda ast: [])
+_syntax_ordered_children_dfltval      = (lambda ast: [ast.default_value]) if PYGE13 else (lambda ast: [])
 
 if PYGE12:
     _syntax_ordered_children_funcdef  = lambda ast: [*ast.decorator_list, *ast.type_params, ast.args, ast.returns,
@@ -1458,8 +1460,8 @@ _SYNTAX_ORDERED_CHILDREN = {
     TypeIgnore:         _syntax_ordered_children_nothing,
 
     TypeVar:            (lambda ast: [ast.bound, ast.default_value]) if PYGE13 else (lambda ast: [ast.bound]),
-    ParamSpec:          _syntax_ordered_children_defval,
-    TypeVarTuple:       _syntax_ordered_children_defval,
+    ParamSpec:          _syntax_ordered_children_dfltval,
+    TypeVarTuple:       _syntax_ordered_children_dfltval,
 
     _ExceptHandlers:    lambda ast: ast.handlers.copy(),
     _match_cases:       lambda ast: ast.cases.copy(),
@@ -1470,6 +1472,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     _comprehension_ifs: lambda ast: ast.ifs.copy(),
     _aliases:           lambda ast: ast.names.copy(),
     _withitems:         lambda ast: ast.items.copy(),
+    _pattern_arglikes:  lambda ast: [*ast.patterns, *ast.kwd_patterns],
     _type_params:       lambda ast: ast.type_params.copy(),
 }
 # fmt: on

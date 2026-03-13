@@ -291,6 +291,7 @@ __all__ = [
     '_comprehension_ifs',
     '_aliases',
     '_withitems',
+    '_pattern_arglikes',
     '_type_params',
 
     'ASTS_LEAF_MOD',
@@ -651,6 +652,33 @@ class _withitems(_slice):
         self.end_col_offset = end_col_offset
 
 
+class _pattern_arglikes(_slice):
+    """Slice of pattern standalone and keyword attributes. Used for `MatchClass.patterns+kwd_attrs=kwd_patterns`.
+
+    This is a special slice because elements are inhomogenous."""
+
+    _fields      = ('patterns', 'kwd_attrs', 'kwd_patterns')
+    _field_types = {'patterns': list[pattern], 'kwd_attrs': list[str], 'kwd_patterns': list[pattern]}
+
+    def __init__(
+        self,
+        patterns: list[pattern],
+        kwd_attrs: list[str],
+        kwd_patterns: list[pattern],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
+        self.patterns = patterns
+        self.kwd_attrs = kwd_attrs
+        self.kwd_patterns = kwd_patterns
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
+
+
 class _type_params(_slice):
     """Slice of `FunctionDef/AsyncFunctionDef/ClassDef/TypeAlias.type_params`.
 
@@ -676,7 +704,8 @@ class _type_params(_slice):
 
 # fmt: off
 ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _arglikes,
-                              _comprehensions, _comprehension_ifs, _aliases, _withitems, _type_params])
+                              _comprehensions, _comprehension_ifs, _aliases, _withitems, _pattern_arglikes,
+                              _type_params])
 ASTS_LEAF__ALL = ASTS_LEAF_ALL | ASTS_LEAF__SLICE
 
 AST2ASTSLEAF = {  # convert a possibly non-leaf AST to a frozenset of all the leaf AST nodes that it can be
