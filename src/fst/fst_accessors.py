@@ -1296,7 +1296,7 @@ def guard(self: 'fst.FST') -> None:
     self._put_one(None, None, 'guard')
 
 
-# MatchSequence, MatchMapping, MatchClass, MatchOr
+# MatchSequence, MatchMapping, MatchClass, MatchOr, _pattern_arglikes
 @property
 def patterns(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `patterns`."""
@@ -1346,7 +1346,7 @@ def cls(self: 'fst.FST') -> None:
     self._put_one(None, None, 'cls')
 
 
-# MatchClass
+# MatchClass, _pattern_arglikes
 @property
 def kwd_attrs(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `kwd_attrs`."""
@@ -1364,7 +1364,7 @@ def kwd_attrs(self: 'fst.FST') -> None:
     self._put_slice(None, 0, 'end', 'kwd_attrs')
 
 
-# MatchClass
+# MatchClass, _pattern_arglikes
 @property
 def kwd_patterns(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `kwd_patterns`."""

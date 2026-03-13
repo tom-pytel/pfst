@@ -5429,6 +5429,7 @@ class FST:
     is__comprehension_ifs = fst_type_predicates.is__comprehension_ifs
     is__aliases = fst_type_predicates.is__aliases
     is__withitems = fst_type_predicates.is__withitems
+    is__pattern_arglikes = fst_type_predicates.is__pattern_arglikes
     is__type_params = fst_type_predicates.is__type_params
 
     # ------------------------------------------------------------------------------------------------------------------
