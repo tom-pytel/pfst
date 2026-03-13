@@ -43,6 +43,7 @@ from .asttypes import (
     withitem,
     _comprehension_ifs,
     _decorator_list,
+    _pattern_attrlikes,
 )
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
@@ -52,6 +53,7 @@ from .fst_misc import is_delimited_MatchSequence
 
 _ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
 _ASTS_LEAF_COMPREHENSION_OR_IFS = frozenset([comprehension, _comprehension_ifs])
+_ASTS_KWD_ATTRS_CONTAINERS      = frozenset([MatchClass, _pattern_attrlikes])
 
 _re_deco_start         = re.compile(r'[ \t]*@')
 
@@ -827,12 +829,13 @@ def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_MatchClass_kwd_attrs(
+def _loc_kwd_attrs(
     self: fst.FST, idx_first: int, idx_last: int | None = None
 ) -> fstloc | tuple[fstloc, fstloc]:
-    """We assume `idx_first` and optionally `idx_last` are in [0..len(kwd_attrs)), no negative or out-of-bounds."""
+    """Operates on `MatchClass` and `_pattern_attrlikes`. We assume `idx_first` and optionally `idx_last` are in
+    [0..len(kwd_attrs)), no negative or out-of-bounds."""
 
-    assert self.a.__class__ is MatchClass
+    assert self.a.__class__ in _ASTS_KWD_ATTRS_CONTAINERS
 
     ast = self.a
     lines = self.root._lines

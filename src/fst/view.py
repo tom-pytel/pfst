@@ -23,7 +23,7 @@ __all__ = [
     'FSTView__body',
     'FSTView_arglikes',
     'FSTView_Global_Nonlocal',
-    'FSTView_MatchClass_kwd_attrs',
+    'FSTView_kwd_attrs',
     'FSTView_dummy',
 ]
 
@@ -1744,7 +1744,7 @@ class FSTView_Global_Nonlocal(FSTView):
         return self.base._loc_Global_Nonlocal_names(stop - 1).end_col
 
 
-class FSTView_MatchClass_kwd_attrs(FSTView):
+class FSTView_kwd_attrs(FSTView):
     """For `MatchClass.kwd_attrs`. @private"""
 
     is_item_FST = False
@@ -1757,16 +1757,16 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
 
         >>> from fst import *
 
-        >>> f = FST('global\\\na,\\\n b')
+        >>> f = FST('matchcls(a, b=c, d=e)', 'MatchClass')
 
-        >>> f.names.loc
-        fstlocn(1, 0, 2, 2, n=0)
+        >>> f.kwd_attrs.loc
+        fstlocn(0, 12, 0, 18, n=0)
 
-        >>> f.names[:1].loc
-        fstloc(1, 0, 1, 1)
+        >>> f.kwd_attrs[:1].loc
+        fstloc(0, 12, 0, 13)
 
-        >>> f.names[-1:].loc
-        fstloc(2, 1, 2, 2)
+        >>> f.kwd_attrs[-1:].loc
+        fstloc(0, 17, 0, 18)
         """
 
         start, stop, _ = self._base_indices()
@@ -1774,9 +1774,9 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
         if not (len_ := stop - start):
             return None
         if len_ == 1:
-            return self.base._loc_MatchClass_kwd_attrs(start)
+            return self.base._loc_kwd_attrs(start)
 
-        (ln, col, _, _), (_, _, end_ln, end_col) = self.base._loc_MatchClass_kwd_attrs(start, stop - 1)
+        (ln, col, _, _), (_, _, end_ln, end_col) = self.base._loc_kwd_attrs(start, stop - 1)
 
         return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
 
@@ -1788,13 +1788,13 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
 
         >>> from fst import *
 
-        >>> f = FST('global\\\na,\\\n b')
+        >>> f = FST('matchcls(\na,\nb=c,\nd=e\n)', 'MatchClass')
 
-        >>> f.names[:1].ln
-        1
-
-        >>> f.names[-1:].ln
+        >>> f.kwd_attrs[:1].ln
         2
+
+        >>> f.kwd_attrs[-1:].ln
+        3
         """
 
         start, stop, _ = self._base_indices()
@@ -1802,7 +1802,7 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_MatchClass_kwd_attrs(start).ln
+        return self.base._loc_kwd_attrs(start).ln
 
     @property
     def col(self) -> int | None:  # char index
@@ -1812,13 +1812,13 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
 
         >>> from fst import *
 
-        >>> f = FST('global\\\na,\\\n b')
+        >>> f = FST('matchcls(\na,\nb=c,\nd=e\n)', 'MatchClass')
 
-        >>> f.names[:1].col
+        >>> f.kwd_attrs[:1].col
         0
 
-        >>> f.names[-1:].col
-        1
+        >>> f.kwd_attrs[-1:].col
+        0
         """
 
         start, stop, _ = self._base_indices()
@@ -1826,7 +1826,7 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_MatchClass_kwd_attrs(start).col
+        return self.base._loc_kwd_attrs(start).col
 
     @property
     def end_ln(self) -> int | None:  # 0 based
@@ -1836,13 +1836,13 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
 
         >>> from fst import *
 
-        >>> f = FST('global\\\na,\\\n b')
+        >>> f = FST('matchcls(\na,\nb=c,\nd=e\n)', 'MatchClass')
 
-        >>> f.names[:1].end_ln
-        1
-
-        >>> f.names[-1:].end_ln
+        >>> f.kwd_attrs[:1].end_ln
         2
+
+        >>> f.kwd_attrs[-1:].end_ln
+        3
         """
 
         start, stop, _ = self._base_indices()
@@ -1850,7 +1850,7 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_MatchClass_kwd_attrs(stop - 1).end_ln
+        return self.base._loc_kwd_attrs(stop - 1).end_ln
 
     @property
     def end_col(self) -> int | None:  # char index
@@ -1860,13 +1860,13 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
 
         >>> from fst import *
 
-        >>> f = FST('global\\\na,\\\n b')
+        >>> f = FST('matchcls(\na,\nb=c,\nd=e\n)', 'MatchClass')
 
-        >>> f.names[:1].end_col
+        >>> f.kwd_attrs[:1].end_col
         1
 
-        >>> f.names[-1:].end_col
-        2
+        >>> f.kwd_attrs[-1:].end_col
+        1
         """
 
         start, stop, _ = self._base_indices()
@@ -1874,7 +1874,7 @@ class FSTView_MatchClass_kwd_attrs(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_MatchClass_kwd_attrs(stop - 1).end_col
+        return self.base._loc_kwd_attrs(stop - 1).end_col
 
 
 class FSTView_dummy(FSTView):

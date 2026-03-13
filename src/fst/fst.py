@@ -5533,7 +5533,7 @@ class FST:
         _loc_Subscript_brackets,
         _loc_MatchMapping_rest,
         _loc_MatchClass_pars,
-        _loc_MatchClass_kwd_attrs,
+        _loc_kwd_attrs,
         _loc_FunctionDef_type_params_brackets,
         _loc_ClassDef_type_params_brackets,
         _loc_TypeAlias_type_params_brackets,

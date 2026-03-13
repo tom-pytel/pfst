@@ -184,7 +184,7 @@ def {field}(self: 'fst.FST') -> FSTView:
 
     self.a.{field}  # noqa: B018
 
-    return FSTView_MatchClass_kwd_attrs(self, {field!r})
+    return FSTView_kwd_attrs(self, {field!r})
 
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:
@@ -259,7 +259,7 @@ from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionD
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import FSTView, FSTView_Global_Nonlocal, FSTView_MatchClass_kwd_attrs, FSTView_dummy
+from .view import FSTView, FSTView_Global_Nonlocal, FSTView_kwd_attrs, FSTView_dummy
 '''.strip())
 
     cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either) | 4 if is optional (for single), ...}

@@ -11,7 +11,7 @@ from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionD
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import FSTView, FSTView_Global_Nonlocal, FSTView_MatchClass_kwd_attrs, FSTView_dummy
+from .view import FSTView, FSTView_Global_Nonlocal, FSTView_kwd_attrs, FSTView_dummy
 
 __all__ = [
     'body',
@@ -1353,7 +1353,7 @@ def kwd_attrs(self: 'fst.FST') -> FSTView:
 
     self.a.kwd_attrs  # noqa: B018
 
-    return FSTView_MatchClass_kwd_attrs(self, 'kwd_attrs')
+    return FSTView_kwd_attrs(self, 'kwd_attrs')
 
 @kwd_attrs.setter
 def kwd_attrs(self: 'fst.FST', code: Code | None) -> None:

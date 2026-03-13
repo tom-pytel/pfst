@@ -187,7 +187,7 @@ from .view import (
     FSTView__body,
     FSTView_arglikes,
     FSTView_Global_Nonlocal,
-    FSTView_MatchClass_kwd_attrs,
+    FSTView_kwd_attrs,
     FSTView_dummy,
 )
 
@@ -4247,11 +4247,11 @@ _NODE_ARGUMENTS_ARGS_ALL_FIELDS = {'kwonlyargs', 'posonlyargs', 'args', 'vararg'
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
 _FSTVIEW_NON_DEREF_FST_SINGLE_TYPE = {
-    FSTView_Dict:                 Dict,
-    FSTView_MatchMapping:         MatchMapping,
-    FSTView_arguments:            arguments,
-    FSTView_Global_Nonlocal:      Name,
-    FSTView_MatchClass_kwd_attrs: Name,
+    FSTView_Dict:            Dict,
+    FSTView_MatchMapping:    MatchMapping,
+    FSTView_arguments:       arguments,
+    FSTView_Global_Nonlocal: Name,
+    FSTView_kwd_attrs:       Name,
 }  # fmt: skip
 
 
@@ -5255,7 +5255,7 @@ _MATCH_FUNCS = {
     MQN:                          _match_quantifier_invalid_location,
     FSTView:                      _match_FSTView,
     FSTView_Global_Nonlocal:      _match_FSTView,
-    FSTView_MatchClass_kwd_attrs: _match_FSTView,
+    FSTView_kwd_attrs:            _match_FSTView,
     FSTView__body:                _match_FSTView__body,
     FSTView_arglikes:             _match_FSTView_arglikes,
     FSTView_Compare:              _match_FSTView_Compare,
