@@ -102,6 +102,7 @@ values they have when you first import <code><a href="../../fst.html">fst</a></c
 <span class="go">{&#39;raw&#39;: False,</span>
 <span class="go"> &#39;trivia&#39;: True,</span>
 <span class="go"> &#39;coerce&#39;: True,</span>
+<span class="go"> &#39;promote&#39;: True,</span>
 <span class="go"> &#39;elif_&#39;: True,</span>
 <span class="go"> &#39;pep8space&#39;: True,</span>
 <span class="go"> &#39;docstr&#39;: True,</span>
@@ -113,6 +114,7 @@ values they have when you first import <code><a href="../../fst.html">fst</a></c
 <span class="go"> &#39;norm_get&#39;: None,</span>
 <span class="go"> &#39;set_norm&#39;: &#39;star&#39;,</span>
 <span class="go"> &#39;op_side&#39;: &#39;left&#39;,</span>
+<span class="go"> &#39;op&#39;: None,</span>
 <span class="go"> &#39;args_as&#39;: None}</span>
 </code></pre>
 </div>
@@ -215,13 +217,14 @@ documentation is for that, here we just show their usage.</p>
 
 <p>This option specifies whether normal prescribed put operations are done (<code>raw=False</code>), raw source reparse operations are
 done instead (<code>raw=True</code>), or whether raw source reparse is used as a fallback if the prescribed operation fails
-(<code>raw='auto'</code>). For information on how raw operations work see <code><a href="d12_raw.html">fst.docs.d12_raw</a></code>.</p>
+(<code>raw='auto'</code>). This can be used to make otherwise impossible changes. For information on how raw operations work see
+<code><a href="d12_raw.html">fst.docs.d12_raw</a></code>.</p>
+
+<p>TODO: dated example, find a new one</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># default</span>
-<span class="gt">Traceback (most recent call last):</span>
-<span class="c">...</span>
-<span class="gr">SyntaxError</span>: <span class="n">invalid syntax</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{**c}</span>
 </code></pre>
 </div>
 

@@ -26,7 +26,7 @@
 
             <h2>Contents</h2>
             <ul>
-  <li><a href="#parse-and-unparse-from-source-or-ast">Parse and unparse from source or <code>AST</code></a>
+  <li><a href="#parse-and-unparse-from-source-or-ast">Parse and unparse from source or AST</a>
   <ul>
     <li><a href="#parse">Parse</a></li>
     <li><a href="#basic-structure">Basic structure</a></li>
@@ -36,6 +36,7 @@
     <li><a href="#from-fst-nodes">From <code>FST</code> nodes</a></li>
     <li><a href="#underlying-functions">Underlying functions</a></li>
     <li><a href="#source">Source</a></li>
+    <li><a href="#parse_ast"><code>parse_ast()</code></a></li>
   </ul></li>
 </ul>
 
@@ -55,7 +56,7 @@
                     <h1 class="modulename">
 <a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d01_parse    </h1>
 
-                        <div class="docstring"><h1 id="parse-and-unparse-from-source-or-ast">Parse and unparse from source or <code>AST</code></h1>
+                        <div class="docstring"><h1 id="parse-and-unparse-from-source-or-ast">Parse and unparse from source or AST</h1>
 
 <p>To be able to execute the examples, import this.</p>
 
@@ -549,6 +550,33 @@ and the <code>copy().src</code> is that the former executes much faster (and you
 <span class="go">           0] UnaryOp - 4,14..4,16</span>
 <span class="go">             .op USub - 4,14..4,15</span>
 <span class="go">             .operand Name &#39;a&#39; Load - 4,15..4,16</span>
+</code></pre>
+</div>
+
+<h2 id="parse_ast"><code>parse_ast()</code></h2>
+
+<p>The <code>FST</code> class makes its internal extended <code>AST</code> parsing available via the <code>FST.parse_ast()</code> function. This allows
+parsing individual nodes as pure <code>AST</code> (without any <code>FST</code> nodes added) that are otherwise unparsable by themselves by
+the standard <code>ast</code> module.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dump</span><span class="p">(</span><span class="n">FST</span><span class="o">.</span><span class="n">parse_ast</span><span class="p">(</span><span class="s1">&#39;except Exception: pass&#39;</span><span class="p">)))</span>
+<span class="go">ExceptHandler(type=Name(id=&#39;Exception&#39;, ctx=Load()), body=[Pass()])</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dump</span><span class="p">(</span><span class="n">FST</span><span class="o">.</span><span class="n">parse_ast</span><span class="p">(</span><span class="s1">&#39;kw=value&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">)))</span>
+<span class="go">keyword(arg=&#39;kw&#39;, value=Name(id=&#39;value&#39;, ctx=Load()))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dump</span><span class="p">(</span><span class="n">FST</span><span class="o">.</span><span class="n">parse_ast</span><span class="p">(</span><span class="s1">&#39;upper:lower:step&#39;</span><span class="p">,</span> <span class="n">Slice</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">Slice(</span>
+<span class="go">  lower=Name(id=&#39;upper&#39;, ctx=Load()),</span>
+<span class="go">  upper=Name(id=&#39;lower&#39;, ctx=Load()),</span>
+<span class="go">  step=Name(id=&#39;step&#39;, ctx=Load()))</span>
 </code></pre>
 </div>
 </div>

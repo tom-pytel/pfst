@@ -30,8 +30,8 @@
   <ul>
     <li><a href="#copy-and-cut"><code>copy()</code> and <code>cut()</code></a></li>
     <li><a href="#get-and-get_slice"><code>get()</code> and <code>get_slice()</code></a></li>
-    <li><a href="#non-ast-values">Non-AST values</a></li>
     <li><a href="#by-attribute">By attribute</a></li>
+    <li><a href="#non-ast-values">Non-AST values</a></li>
     <li><a href="#get_src"><code>get_src()</code></a></li>
   </ul></li>
 </ul>
@@ -471,89 +471,6 @@ for this purpose. This is not a valid <code>AST</code> object of course, but wor
 </code></pre>
 </div>
 
-<h2 id="non-ast-values">Non-AST values</h2>
-
-<p>Using <code>get()</code> and <code>get_slice()</code> you can get non-<code>AST</code> primitive values from nodes. This exists to accomondate stuff like
-<code>MatchSingleton</code>, as it just has a primitive value instead of an expression (it is also set this way, via primitive).</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case True: pass&#39;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
-<span class="go">True</span>
-</code></pre>
-</div>
-
-<p>But this also applies to any other <code>AST</code> field which is a primitive.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s2">&quot;b&#39;bytes&#39;&quot;</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
-<span class="go">b&#39;bytes&#39;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i async for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;is_async&#39;</span><span class="p">)</span>
-<span class="go">1</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a.b: int = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;simple&#39;</span><span class="p">)</span>
-<span class="go">0</span>
-</code></pre>
-</div>
-
-<p>Getting slices from a primitive list does convert the primitives to their common-sense <code>AST</code> equivalents.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="go">Global - ROOT 0,0..0,14</span>
-<span class="go">  .names[3]</span>
-<span class="go">   0] &#39;a&#39;</span>
-<span class="go">   1] &#39;b&#39;</span>
-<span class="go">   2] &#39;c&#39;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="go">Tuple - ROOT 0,0..0,7</span>
-<span class="go">  .elts[3]</span>
-<span class="go">   0] Name &#39;a&#39; Load - 0,0..0,1</span>
-<span class="go">   1] Name &#39;b&#39; Load - 0,3..0,4</span>
-<span class="go">   2] Name &#39;c&#39; Load - 0,6..0,7</span>
-<span class="go">  .ctx Load</span>
-</code></pre>
-</div>
-
-<p>Put likewise expects a valid <code>Tuple</code> when putting to a list of comma-separated primitives.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">&lt;Global ROOT 0,0..0,20&gt;</span>
-</code></pre>
-</div>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="go">global a, a, b, c, c</span>
-</code></pre>
-</div>
-
 <h2 id="by-attribute">By attribute</h2>
 
 <p>The <code>FST</code> class provides properties that mirror the fields of all possible <code>AST</code> classes in order to allow direct access
@@ -615,7 +532,7 @@ to those fields through the <code>FST</code> class. When accessing like this, fi
 </div>
 
 <p>Accessing in this manner does not give a copy but rather the specific element which is in the tree. If you want a
-standalone element that you can put into another tree then you need to make a copy.</p>
+standalone element that you can put into another tree then you need to make a copy (if it is an <code>FST</code>).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span>
@@ -626,6 +543,171 @@ standalone element that you can put into another tree then you need to make a co
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="go">&lt;List ROOT 0,0..0,8&gt;</span>
+</code></pre>
+</div>
+
+<h2 id="non-ast-values">Non-AST values</h2>
+
+<p>Using <code>get()</code> and <code>get_slice()</code> you can get non-<code>AST</code> primitive values from nodes. Those values can be promoted to nodes
+depending on the <code>promote</code> option. This exists to accomodate things like <code>MatchSingleton</code>, <code>Constant</code> and any other
+node which has a primitive for any reason.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s2">&quot;b&#39;bytes&#39;&quot;</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<span class="go">b&#39;bytes&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i async for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;is_async&#39;</span><span class="p">)</span>
+<span class="go">1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a.b: int = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;simple&#39;</span><span class="p">)</span>
+<span class="go">0</span>
+</code></pre>
+</div>
+
+<p>The default global <code>promote=True</code> promotes only <code>Global/Nonlocal.names</code>, <code>MatchSingleton.value</code> and
+<code>MatchClass.kwd_attrs</code> fields.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;names&#39;</span><span class="p">)</span>
+<span class="go">&lt;Name ROOT 0,0..0,1&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case True: pass&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<span class="go">&lt;Constant ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<p>You can turn this behavior off for <code>get()</code> and similar functions with <code>promote=False</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">True</span>
+</code></pre>
+</div>
+
+<p>Getting slices from a primitive list does convert the primitives to their common-sense <code>AST</code> equivalents by default.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Global - ROOT 0,0..0,14</span>
+<span class="go">  .names[3]</span>
+<span class="go">   0] &#39;a&#39;</span>
+<span class="go">   1] &#39;b&#39;</span>
+<span class="go">   2] &#39;c&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Tuple - ROOT 0,0..0,7</span>
+<span class="go">  .elts[3]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,0..0,1</span>
+<span class="go">   1] Name &#39;b&#39; Load - 0,3..0,4</span>
+<span class="go">   2] Name &#39;c&#39; Load - 0,6..0,7</span>
+<span class="go">  .ctx Load</span>
+</code></pre>
+</div>
+
+<p>Put likewise can take a valid <code>Tuple</code> when putting to a list of comma-separated primitives.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">&lt;Global ROOT 0,0..0,20&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">global a, a, b, c, c</span>
+</code></pre>
+</div>
+
+<p>Any fields which are primitive also accept primitives being put to them with put functions.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="go">[&#39;a&#39;, &#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;c&#39;]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">&lt;Global ROOT 0,0..0,17&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Tuple - ROOT 0,0..0,10</span>
+<span class="go">  .elts[4]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,0..0,1</span>
+<span class="go">   1] Name &#39;x&#39; Load - 0,3..0,4</span>
+<span class="go">   2] Name &#39;y&#39; Load - 0,6..0,7</span>
+<span class="go">   3] Name &#39;c&#39; Load - 0,9..0,10</span>
+<span class="go">  .ctx Load</span>
+</code></pre>
+</div>
+
+<p>All primitive fields can be promoted but the appropriate <code>promote</code> option value must be set. Any field that is defined
+as an <code>identifier</code> in <code>AST</code> documentation can be promoted by setting <code>promote='identifier'</code>. This level of promotion
+covers identifiers and everything else that is covered with <code>promote=True</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def func(): pass&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+<span class="go">&#39;func&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">promote</span><span class="o">=</span><span class="s1">&#39;identifier&#39;</span><span class="p">)</span>
+<span class="go">&lt;Name ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<p>All other primitive fields are promoted with <code>promote='all'</code>. This will promote <strong>ALL</strong> primitive fields to nodes.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i async for i in j]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;is_async&#39;</span><span class="p">)</span>
+<span class="go">1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;is_async&#39;</span><span class="p">,</span> <span class="n">promote</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+<span class="go">&lt;Constant ROOT 0,0..0,1&gt;</span>
 </code></pre>
 </div>
 

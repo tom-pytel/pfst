@@ -54,11 +54,11 @@
                     <h1 class="modulename">
 fst    </h1>
 
-                        <div class="docstring"><p>Version 0.3.0</p>
+                        <div class="docstring"><p>Version 0.3.1</p>
 
 <h1 id="introduction">Introduction</h1>
 
-<p><code>pfst</code> (Python Formatted Syntax Tree) exists in order to allow quick and easy modification of Python source without
+<p>pfst (Python Formatted Syntax Tree) exists in order to allow quick and easy modification of Python source without
 losing formatting or comments. The goal is simple, Pythonic, container-like access to the <code>AST</code>, with the ability to
 modify any node while preserving formatting in the rest of the tree.</p>
 
@@ -66,13 +66,13 @@ modify any node while preserving formatting in the rest of the tree.</p>
   <p>Yes, we said "formatting" and "AST" in the same sentence.</p>
 </blockquote>
 
-<p>Normally <code>AST</code> nodes don't store any explicit formatting, much less, comments. But <code>pfst</code> works by adding <code>FST</code> nodes to
+<p>Normally <code>AST</code> nodes don't store any explicit formatting, much less, comments. But pfst works by adding <code>FST</code> nodes to
 existing Python <code>AST</code> nodes as an <code>.f</code> attribute (type-safe accessor <code>castf()</code> provided). This keeps extra structure
 information, the original source, and provides the interface to format-preserving operations. Each operation through
 <code>FST</code> nodes is a simultaneous edit of the <code>AST</code> tree and the source code, and those are kept synchronized so that the
 current source will always parse to the current tree.</p>
 
-<p><code>pfst</code> automatically handles:</p>
+<p>pfst automatically handles:</p>
 
 <ul>
 <li>Operator precedence and parentheses</li>
@@ -102,7 +102,7 @@ current source will always parse to the current tree.</p>
 
 <h1 id="getting-started">Getting Started</h1>
 
-<p>Since <code>pfst</code> is built directly on Python's standard <code>AST</code> nodes, if you are familiar with those then you already know
+<p>Since pfst is built directly on Python's standard <code>AST</code> nodes, if you are familiar with those then you already know
 the <code>FST</code> node structure. Our focus on simple Pythonic operations means you can get up to speed quickly.</p>
 
 <ol>
@@ -163,9 +163,19 @@ the <code>FST</code> node structure. Our focus on simple Pythonic operations mea
 </code></pre>
 </div>
 
-<p>Beyond basic editing, <code>pfst</code> provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
+<p>Beyond basic editing, pfst provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
 substitution, and a mechanism for reconciling external <code>AST</code> mutations with the formatted tree, preserving comments and
 layout wherever the structure still permits it.</p>
+
+<p>Here is an example of more advanced substitution usage.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn"><a href="fst/match.html">fst.match</a></span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = j.k = a + b[c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">Mexpr</span><span class="p">(</span><span class="n">ctx</span><span class="o">=</span><span class="n">Load</span><span class="p">),</span> <span class="s1">&#39;log(__FST_)&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">i</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">)[</span><span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">)])</span>
+</code></pre>
+</div>
 
 <h1 id="comparison-with-libcst">Comparison with LibCST</h1>
 
@@ -174,8 +184,8 @@ codemods. It models Python as a fully concrete syntax tree, preserving every tok
 you complete control, but it also means you are responsible for managing formatting details when making non-trivial
 changes.</p>
 
-<p><code>pfst</code> takes a different approach. Instead of requiring you to explicitly manage formatting, it treats layout as
-something to preserve and reconcile automatically. You focus on structural and semantic transformations and <code>pfst</code>
+<p>pfst takes a different approach. Instead of requiring you to explicitly manage formatting, it treats layout as
+something to preserve and reconcile automatically. You focus on structural and semantic transformations and pfst
 handles the "formatting math" needed to keep the result clean and stable.</p>
 
 <p>In short:</p>
@@ -185,19 +195,124 @@ handles the "formatting math" needed to keep the result clean and stable.</p>
 <li>pfst: “Do what I mean.”</li>
 </ul>
 
+<p>Here is a concrete example with minimal code for both LibCST and pfst to add a keyword argument with a comment to all
+<code>logger.info()</code> calls which don't already have the specific keyword argument <code>correlation_id</code>.</p>
+
+<p>LibCST function:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">libcst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">libcst.matchers</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">inject_logging_metadata</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">parse_module</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+
+    <span class="n">new_arg</span> <span class="o">=</span> <span class="p">(</span><span class="n">parse_module</span><span class="p">(</span><span class="s1">&#39;f(correlation_id=CID  # blah</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">AddArg</span><span class="p">(</span><span class="n">CSTTransformer</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">leave_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">matches</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">Attribute</span><span class="p">(</span><span class="n">Name</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">),</span> <span class="n">Name</span><span class="p">(</span><span class="s1">&#39;info&#39;</span><span class="p">))):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">keyword</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">keyword</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;correlation_id&#39;</span>
+                           <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">with_changes</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">new_arg</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">node</span>
+
+    <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">AddArg</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">code</span>
+</code></pre>
+</div>
+
+<p>pfst function:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn"><a href="fst/match.html">fst.match</a></span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">inject_logging_metadata</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">MCall</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">MAttribute</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">),</span>
+        <span class="n">keywords</span><span class="o">=</span><span class="n">MNOT</span><span class="p">([</span><span class="n">MQSTAR</span><span class="p">,</span> <span class="n">Mkeyword</span><span class="p">(</span><span class="s1">&#39;correlation_id&#39;</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">]),</span>
+    <span class="p">)):</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">matched</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;correlation_id=CID  # blah&#39;</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">src</span>
+</code></pre>
+</div>
+
+<p>Input source:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Hello world...&#39;</span><span class="p">)</span>  <span class="c1"># hey</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Already have id&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">other_cid</span><span class="p">)</span>  <span class="c1"># ho</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>  <span class="c1"># its off to work we go</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thing</span><span class="p">,</span> <span class="n">extra</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">logger</span><span class="p">)</span> <span class="o">.</span> <span class="n">info</span><span class="p">(</span>  <span class="c1"># start</span>
+            <span class="sa">f</span><span class="s1">&#39;a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># this is fine</span>
+            <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>  <span class="c1"># also this</span>
+        <span class="p">)</span>  <span class="c1"># end</span>
+</code></pre>
+</div>
+
+<p>LibCST output:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Hello world...&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span>  <span class="c1"># blah</span>
+<span class="p">)</span>  <span class="c1"># hey</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Already have id&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">other_cid</span><span class="p">)</span>  <span class="c1"># ho</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span>  <span class="c1"># blah</span>
+<span class="p">)</span>  <span class="c1"># its off to work we go</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thing</span><span class="p">,</span> <span class="n">extra</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">logger</span><span class="p">)</span> <span class="o">.</span> <span class="n">info</span><span class="p">(</span>  <span class="c1"># start</span>
+            <span class="sa">f</span><span class="s1">&#39;a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># this is fine</span>
+            <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>  <span class="c1"># also this</span>
+        <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span>  <span class="c1"># blah</span>
+        <span class="p">)</span>  <span class="c1"># end</span>
+</code></pre>
+</div>
+
+<p>pfst output:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Hello world...&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span>  <span class="c1"># blah</span>
+<span class="p">)</span>  <span class="c1"># hey</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Already have id&#39;</span><span class="p">,</span> <span class="n">correlation_id</span><span class="o">=</span><span class="n">other_cid</span><span class="p">)</span>  <span class="c1"># ho</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span>  <span class="c1"># blah</span>
+<span class="p">)</span>  <span class="c1"># its off to work we go</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thing</span><span class="p">,</span> <span class="n">extra</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">logger</span><span class="p">)</span> <span class="o">.</span> <span class="n">info</span><span class="p">(</span>  <span class="c1"># start</span>
+            <span class="sa">f</span><span class="s1">&#39;a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># this is fine</span>
+            <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>  <span class="c1"># also this</span>
+            <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span>  <span class="c1"># blah</span>
+        <span class="p">)</span>  <span class="c1"># end</span>
+</code></pre>
+</div>
+
+<p>If you want LibCST to align the argument its significantly more code, but that can be left for a formatter after the
+file processing.</p>
+
 <h1 id="notes">Notes</h1>
 
 <ul>
-<li><p>Disclaimer: You can reformat a large codebase with <code>pfst</code> but it won't be quite as sprightly as other libraries more apt
-to the task. The main focus of <code>pfst</code> is not necessarily to be fast but rather easy and to handle all the weird cases
+<li><p>Disclaimer: You can reformat a large codebase with pfst but it won't be quite as sprightly as other libraries more apt
+to the task. The main focus of pfst is not necessarily to be fast but rather easy and to handle all the weird cases
 of python syntax correctly so that functional code always results. Use a formatter as needed afterwards.</p></li>
-<li><p><code>pfst</code> was written and tested on Python versions 3.10 through 3.15a.</p></li>
-<li><p><code>pfst</code> does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
+<li><p>pfst was written and tested on Python versions 3.10 through 3.15a.</p></li>
+<li><p>pfst does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
 parsing but also that it is limited to the syntax of the running Python version (many options exist for running any
 specific version of Python).</p></li>
-<li><p><code>pfst</code> validates for parsability, not compilability. This means that <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are both
+<li><p>pfst validates for parsability, not compilability. This means that <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are both
 considered valid even though they are uncompilable.</p></li>
-<li><p>If you will be playing with <code>pfst</code> then the <code>FST.dump()</code> method will be your friend.</p></li>
+<li><p>If you will be playing with pfst then the <code>FST.dump()</code> method will be your friend.</p></li>
 </ul>
 </div>
 

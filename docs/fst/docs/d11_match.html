@@ -58,11 +58,13 @@
     <li><a href="#optional-fields-and-missing-tags">Optional fields and missing tags</a></li>
     <li><a href="#optional-statement-list-fields">Optional statement list fields</a></li>
     <li><a href="#function-arguments">Function <code>arguments</code></a></li>
-    <li><a href="#nested-count-loop-and-subn"><code>nested</code>, <code>count</code>, <code>loop</code> and <code>subn()</code></a></li>
+    <li><a href="#except-vs-except"><code>except</code> vs. <code>except*</code></a></li>
+    <li><a href="#nested-count-loop-on-and-subn"><code>nested</code>, <code>count</code>, <code>loop</code>, <code>on</code> and <code>subn()</code></a></li>
     <li><a href="#options">Options</a></li>
     <li><a href="#trivia">Trivia</a></li>
     <li><a href="#usage-of-coercion">Usage of coercion</a></li>
   </ul></li>
+  <li><a href="#command-line-interface">Command Line Interface</a></li>
 </ul>
 
 
@@ -99,7 +101,7 @@ arguments, and if you are using a type checker, how much it complains about your
 <p>Now some helper functions just for this documentation, you can ignore their usage.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn"><a href="../docs.html">fst.docs</a></span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">ppmatch</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn"><a href="../docs.html">fst.docs</a></span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">ppmatch</span><span class="p">,</span> <span class="n">py_version_ok_then_exec_else_print</span>
 </code></pre>
 </div>
 
@@ -992,13 +994,13 @@ different.</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">MDict</span><span class="p">(</span><span class="n">_all</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">s</span><span class="o">=...</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">,</span> <span class="n">MTAG</span><span class="p">(</span><span class="n">e</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">)])</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1: a, 1: a}&#39;</span><span class="p">)))</span>
 <span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,12&gt;</span>
-<span class="go">  {&#39;s&#39;: &lt;&lt;Dict ROOT 0,0..0,12&gt;._all[:1]&gt;, &#39;e&#39;: &lt;&lt;Dict ROOT 0,0..0,12&gt;._all[1:2]&gt;}&gt;</span>
+<span class="go">  {&#39;s&#39;: &lt;&lt;Dict ROOT 0,0..0,12&gt;._all[0]&gt;, &#39;e&#39;: &lt;&lt;Dict ROOT 0,0..0,12&gt;._all[1]&gt;}&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">MDict</span><span class="p">(</span><span class="n">_all</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">start</span><span class="o">=...</span><span class="p">),</span> <span class="o">...</span><span class="p">,</span> <span class="n">MTAG</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">)])</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{**b, 1: a, **b}&#39;</span><span class="p">))</span>
-<span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,16&gt; {&#39;start&#39;: &lt;&lt;Dict ROOT 0,0..0,16&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,16&gt; {&#39;start&#39;: &lt;&lt;Dict ROOT 0,0..0,16&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1250,7 +1252,7 @@ of nodes, and when dereferenced give another view instead of a node, a <code>Dic
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, c: d, **b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="go">&lt;&lt;Dict ROOT 0,0..0,17&gt;._all[1:2]&gt;</span>
+<span class="go">&lt;&lt;Dict ROOT 0,0..0,17&gt;._all[1]&gt;</span>
 </code></pre>
 </div>
 
@@ -1287,7 +1289,7 @@ patterns like with any other list field match.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">MDict</span><span class="p">(</span><span class="n">_all</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">MDict</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]))])</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;Dict ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;Dict ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1295,8 +1297,8 @@ patterns like with any other list field match.</p>
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">MDict</span><span class="p">(</span><span class="n">_all</span><span class="o">=</span><span class="p">[</span><span class="n">MQSTAR</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">MDict</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]))])</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, **b}&#39;</span><span class="p">)))</span>
 <span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,11&gt;</span>
 <span class="go">  &#39;t&#39;: [</span>
-<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,11&gt;._all[:1]&gt;&gt;,</span>
-<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,11&gt;._all[1:2]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,11&gt;._all[0]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,11&gt;._all[1]&gt;&gt;,</span>
 <span class="go">  ],</span>
 <span class="go">}&gt;</span>
 </code></pre>
@@ -1333,10 +1335,10 @@ match against pure <code>AST</code> trees.</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, a: b, a: b}&#39;</span><span class="p">)))</span>
 <span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,18&gt;</span>
-<span class="go">  &#39;t&#39;: &lt;&lt;Dict ROOT 0,0..0,18&gt;._all[:1]&gt;,</span>
+<span class="go">  &#39;t&#39;: &lt;&lt;Dict ROOT 0,0..0,18&gt;._all[0]&gt;,</span>
 <span class="go">  &#39;u&#39;: [</span>
-<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,18&gt;._all[1:2]&gt;&gt;,</span>
-<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,18&gt;._all[2:3]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,18&gt;._all[1]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;Dict ROOT 0,0..0,18&gt;._all[2]&gt;&gt;,</span>
 <span class="go">  ],</span>
 <span class="go">}&gt;</span>
 </code></pre>
@@ -1369,9 +1371,9 @@ match against pure <code>AST</code> trees.</p>
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1:2, 3:b, 4:5, a:b, **b, 8:9}&#39;</span><span class="p">)))</span>
 <span class="go">&lt;FSTMatch &lt;Dict ROOT 0,0..0,30&gt;</span>
 <span class="go">  &#39;t&#39;: [</span>
-<span class="go">    &lt;FSTMatch [&lt;&lt;Dict ROOT 0,0..0,30&gt;._all[1:2]&gt;, &lt;&lt;Dict ROOT 0,0..0,30&gt;._all[2:3]&gt;]&gt;,</span>
-<span class="go">    &lt;FSTMatch [&lt;&lt;Dict ROOT 0,0..0,30&gt;._all[3:4]&gt;]&gt;,</span>
-<span class="go">    &lt;FSTMatch [&lt;&lt;Dict ROOT 0,0..0,30&gt;._all[4:5]&gt;, &lt;&lt;Dict ROOT 0,0..0,30&gt;._all[5:6]&gt;]&gt;,</span>
+<span class="go">    &lt;FSTMatch [&lt;&lt;Dict ROOT 0,0..0,30&gt;._all[1]&gt;, &lt;&lt;Dict ROOT 0,0..0,30&gt;._all[2]&gt;]&gt;,</span>
+<span class="go">    &lt;FSTMatch [&lt;&lt;Dict ROOT 0,0..0,30&gt;._all[3]&gt;]&gt;,</span>
+<span class="go">    &lt;FSTMatch [&lt;&lt;Dict ROOT 0,0..0,30&gt;._all[4]&gt;, &lt;&lt;Dict ROOT 0,0..0,30&gt;._all[5]&gt;]&gt;,</span>
 <span class="go">  ],</span>
 <span class="go">}&gt;</span>
 </code></pre>
@@ -1402,7 +1404,7 @@ they must match, no <code>kw_defaults</code> with a <code>posonlyarg</code>).</p
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_pos</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1, /&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1440,7 +1442,7 @@ argument pattern only matches keyword target arguments.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_kw</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*, a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1453,19 +1455,19 @@ argument pattern only matches keyword target arguments.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_arg</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1, /&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_arg</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_arg</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*, a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1486,7 +1488,7 @@ the special <code>_strict</code> parameter to the <code>Marguments</code> patter
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_arg_strict</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1507,19 +1509,19 @@ keyword-only.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_pos_nonstrict</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1, /&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_pos_nonstrict</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_pos_nonstrict</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*, a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,6&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,6&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1533,7 +1535,7 @@ required.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_def_required</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1558,7 +1560,7 @@ required.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_def_excluded</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,1&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,1&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,1&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,1&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1571,13 +1573,13 @@ required.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_def_optional</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,3&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,3&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat_def_optional</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">)))</span>
-<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,1&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,1&gt;._all[:1]&gt;}&gt;</span>
+<span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,1&gt; {&#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,1&gt;._all[0]&gt;}&gt;</span>
 </code></pre>
 </div>
 
@@ -1597,10 +1599,10 @@ used here for demonstration purposes in place of a more complicated comparison a
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a=1, /, a=1, *, a=1&#39;</span><span class="p">)))</span>
 <span class="go">&lt;FSTMatch &lt;arguments ROOT 0,0..0,19&gt;</span>
-<span class="go">  &#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,19&gt;._all[:1]&gt;,</span>
+<span class="go">  &#39;t&#39;: &lt;&lt;arguments ROOT 0,0..0,19&gt;._all[0]&gt;,</span>
 <span class="go">  &#39;u&#39;: [</span>
-<span class="go">    &lt;FSTMatch &lt;&lt;arguments ROOT 0,0..0,19&gt;._all[1:2]&gt;&gt;,</span>
-<span class="go">    &lt;FSTMatch &lt;&lt;arguments ROOT 0,0..0,19&gt;._all[2:3]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;arguments ROOT 0,0..0,19&gt;._all[1]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;arguments ROOT 0,0..0,19&gt;._all[2]&gt;&gt;,</span>
 <span class="go">  ],</span>
 <span class="go">}&gt;</span>
 </code></pre>
@@ -1713,7 +1715,7 @@ then all nodes walked need to attempt a match anyway.</p>
 <span class="gp">...</span>
 <span class="gp">... </span><span class="s1">if code_cls is keyword or (</span>
 <span class="gp">... </span><span class="s1">        code_cls is zst.ZST and code.a.__class__ is keyword):</span>
-<span class="gp">... </span><span class="s1">    return code_as_keyword(code, options, parse_params, sanitize=sanitize)</span>
+<span class="gp">... </span><span class="s1">    return code_as_keyword(code, options, parse_params, strip=strip)</span>
 <span class="gp">...</span>
 <span class="gp">... </span><span class="s1">if src_or_ast_or_fst.__class__ is ZST:</span>
 <span class="gp">... </span><span class="s1">    return src_or_ast_or_fst.as_(</span>
@@ -1740,9 +1742,9 @@ then all nodes walked need to attempt a match anyway.</p>
 </code></pre>
 </div>
 
-<p>The <code>search()</code> function accepts a few parameters to pass through on to the underlying walk function if you wish to
-refine the walk itself, they are: <code>self_</code>, <code>recurse</code>, <code>scope</code>, <code>back</code>, <code>asts</code>. If you want to know what they do then
-have a look at the <code><a href="../fst.html#FST.walk">fst.fst.FST.walk()</a></code> function.</p>
+<p>The <code>search()</code> function accepts parameters to pass through on to the underlying walk function if you wish to refine the
+walk itself, they are: <code>on</code>, <code>self_</code>, <code>recurse</code>, <code>scope</code>, <code>back</code>, <code>asts</code>. If you want to know what they do then have a
+look at the <code><a href="../fst.html#FST.walk">fst.fst.FST.walk()</a></code> function.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">back</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1995,7 +1997,7 @@ quantifier subsequences.</p>
 </div>
 
 <p>Except handlers and match cases cannot be specified with a name tag only due to their syntactic location within a <code>Try</code>
-or <code>Match</code> statement, so there is a special format for specifying their replacement template substitution slots.</p>
+or <code>Match</code> statement, so there is a special form for specifying their replacement template substitution slots.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -2546,10 +2548,14 @@ arguments will attempt to be coerced to the type of argument they are replacing.
 </code></pre>
 </div>
 
-<p>This however is more prone to failures as the resulting arguments must still conform to the standard argument ordering
-of position-only, then normal, then keyword-only. If you try to do this replacement with <code>args_as=None</code> without the
-explicit posonly and kwonly markers in the template you will get an error as the source matched arguments have those and
-the ordering rules would be violated.</p>
+<p><strong>IMPORTANT!</strong> To disable, the <code>args_as=None</code> <strong>MUST</strong> be passed as a keyword option to the <code>sub()</code> function.
+<code>args_as=None</code> just in the global options will not disable the behavior. All other possible values of <code>args_as</code> will
+have their normal effect if in global defaults.</p>
+
+<p>Disabling automatic coversion however is more prone to failures as the resulting arguments must still conform to the
+standard argument ordering of position-only, then normal, then keyword-only. If you try to do this replacement with
+<code>args_as=None</code> without the explicit posonly and kwonly markers in the template you will get an error as the source
+matched arguments have those and the ordering rules would be violated.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def old(a, /, b, *, c): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
@@ -2786,10 +2792,70 @@ actually be a behavior you would want in this case.</p>
 <p>You can go even deeper down the argument substitution rabbit hole but at that point you are probably better off just
 hardcoding it.</p>
 
-<h2 id="nested-count-loop-and-subn"><code>nested</code>, <code>count</code>, <code>loop</code> and <code>subn()</code></h2>
+<h2 id="except-vs-except"><code>except</code> vs. <code>except*</code></h2>
 
-<p>By default, substitution does not recurse into substituted nodes. This is more behavioral than to prevent infinite
-recursion as that prevention is handled automatically by the <code>sub()</code> function.</p>
+<p><code>ExceptHandler</code> nodes don't have any fields which explicitly indicate whether it is a normal <code>except</code> or a star
+<code>except*</code> node. This information can be gotten from the source or from the parent node, but in both cases this implies
+that the node must be part of an <code>FST</code> tree in order to differentiate it. For this reason, matching on star status of
+the handler is limited to <code>FST</code> trees. When matching against pure <code>AST</code> you cannot match on star status.</p>
+
+<p>The special <code>_star</code> parameter in the <code>MExceptHandler</code> pattern indicates whether the pattern should match all types of
+except handlers (<code>_star=None</code>), <code>except*</code> except handlers (<code>_star=True</code>) or standard except handlers (<code>_star=False</code>).
+If using an <code>AST</code> <code>ExceptHandler</code> as a pattern then this parameter can be set directly on the <code>ExceptHandler</code> node to
+specify matching. Any backreferences matched with <code>MTAG</code> will always match exactly, <code>except</code> &lt;-> <code>except</code> and <code>except*</code>
+&lt;-> <code>except*</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat_any</span> <span class="o">=</span> <span class="n">MExceptHandler</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat_norm</span> <span class="o">=</span> <span class="n">MExceptHandler</span><span class="p">(</span><span class="n">_star</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat_star</span> <span class="o">=</span> <span class="n">MExceptHandler</span><span class="p">(</span><span class="n">_star</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">if</span> <span class="n">py_version_ok_then_exec_else_print</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">,</span> <span class="s1">&#39;PRINT_START&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINT_STOP&#39;</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">except_norm</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;except Exception: pass&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">except_star</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;except* Exception: pass&#39;</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">pprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">... </span><span class="si">{</span><span class="n">pat_any</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_norm</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="s1">... </span><span class="si">{</span><span class="n">pat_any</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_star</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="s1">...</span>
+<span class="s1">... </span><span class="si">{</span><span class="n">pat_norm</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_norm</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="s1">... </span><span class="si">{</span><span class="n">pat_norm</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_star</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="s1">...</span>
+<span class="s1">... </span><span class="si">{</span><span class="n">pat_star</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_norm</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="s1">... </span><span class="si">{</span><span class="n">pat_star</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_star</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span>
+<span class="s1">...         &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<span class="o">...</span>
+<span class="o">...</span> <span class="c1"># PRINT_START</span>
+<span class="n">pat_any</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_norm</span><span class="p">)</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">FSTMatch</span> <span class="o">&lt;</span><span class="n">ExceptHandler</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">22</span><span class="o">&gt;&gt;</span>
+<span class="n">pat_any</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_star</span><span class="p">)</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">FSTMatch</span> <span class="o">&lt;</span><span class="n">ExceptHandler</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">23</span><span class="o">&gt;&gt;</span>
+ 
+<span class="n">pat_norm</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_norm</span><span class="p">)</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">FSTMatch</span> <span class="o">&lt;</span><span class="n">ExceptHandler</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">22</span><span class="o">&gt;&gt;</span>
+<span class="n">pat_norm</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_star</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span>
+ 
+<span class="n">pat_star</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_norm</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">pat_star</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">except_star</span><span class="p">)</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">FSTMatch</span> <span class="o">&lt;</span><span class="n">ExceptHandler</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">23</span><span class="o">&gt;&gt;</span>
+
+<span class="c1"># PRINT_STOP</span>
+</code></pre>
+</div>
+
+<h2 id="nested-count-loop-on-and-subn"><code>nested</code>, <code>count</code>, <code>loop</code>, <code>on</code> and <code>subn()</code></h2>
+
+<p>By default, substitution does not recurse into substituted nodes. This is in order to help prevent infinite recursion
+with incorrectly constructed replacement templates or usage of static tags as user-defined static replacemet nodes.
+In normal useage this shouldn't be a concern, just be aware that it can happen (if it does, the <code>count</code> paremeter can
+help mitigate, or diagnose where it is happening).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -2835,7 +2901,48 @@ substituted.</p>
 </code></pre>
 </div>
 
-<p>The <code>count</code> parameter allows you to limit the number of substitutions that can happen.</p>
+<p>Here are a two examples which can cause infinite looping with just <code>nested=True</code> so you are aware of the types of things
+which can trigger this. We include a <code>count</code> parameter to prevent the infinite loop and show what is happening, if that
+were not present <code>sub()</code> would never return.</p>
+
+<p>Usage of <code>__FSO_&lt;tag&gt;</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">MList</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">t</span><span class="o">=...</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="s1">&#39;[__FSO_t]&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">10</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[[[[[[[[[[a]]]]]]]]]]]</span>
+</code></pre>
+</div>
+
+<p>Here is a properly constructed replacement template that avoids this.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">MList</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="n">M</span><span class="p">(</span><span class="n">t</span><span class="o">=...</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="s1">&#39;[[__FST_t]]&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[a]]</span>
+</code></pre>
+</div>
+
+<p>If you use static tags to provide replacement nodes then the responsibility to prevent infinite looping rests entirely
+with you as there is no possible replacement template construction which can prevent this.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">M</span><span class="p">(</span><span class="n">List</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="s1">&#39;[b]&#39;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s1">&#39;[__FST_t]&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[[[[[[[[[[b]]]]]]]]]]]</span>
+</code></pre>
+</div>
+
+<p>As you saw, the <code>count</code> parameter allows you to limit the number of substitutions that can happen.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span> <span class="s1">&#39;f(__FST_)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
@@ -2937,12 +3044,44 @@ recurses into it.</p>
 </code></pre>
 </div>
 
-<p><strong>WARNING!</strong> Normally <code>sub()</code> can prevent infinite recursion by never substituting <code>repl</code> template nodes or a
-substituted whole match put to the <code>repl</code> template. But usage of <code>loop</code> with a poorly constructed template <strong>CAN</strong> lead
-to infinite looping. Here is a simple example of a substitution which will loop forever.</p>
+<p><strong>WARNING!</strong> Normally <code>sub()</code> does a good job of preventing infinite loops by never substituting <code>repl</code> template nodes
+or a substituted whole match put to the <code>repl</code> template. But usage of <code>loop</code> with a poorly constructed template can
+easily to infinite looping. Here is a simple example of a substitution which will loop forever.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span> <span class="s1">&#39;__FST_&#39;</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>The <code>on</code> parameter allows you to change the walk to bottom-up so that child nodes are substituted before their parents.
+In many cases this can do the same thing as <code>loop</code> but without the risk of infinite loops.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;leave&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with a, b, c, d, e, f:</span>
+<span class="go">    pass</span>
+</code></pre>
+</div>
+
+<p>It cannot however do everything that <code>loop</code> can.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">MList</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">first</span><span class="o">=...</span><span class="p">),</span> <span class="n">M</span><span class="p">(</span><span class="n">second</span><span class="o">=...</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">(</span><span class="n">rest</span><span class="o">=...</span><span class="p">)]),</span>
+<span class="gp">... </span>    <span class="s1">&#39;[__FST_first + __FST_second, __FST_rest]&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">loop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a + b + c + d + e]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">MList</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">first</span><span class="o">=...</span><span class="p">),</span> <span class="n">M</span><span class="p">(</span><span class="n">second</span><span class="o">=...</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">(</span><span class="n">rest</span><span class="o">=...</span><span class="p">)]),</span>
+<span class="gp">... </span>    <span class="s1">&#39;[__FST_first + __FST_second, __FST_rest]&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">on</span><span class="o">=</span><span class="s1">&#39;leave&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a + b, c, d, e]</span>
 </code></pre>
 </div>
 
@@ -3292,6 +3431,29 @@ substitution with <code>coerce=False</code> you may get failures where you might
 <span class="gr">fst.NodeError</span>: <span class="n">expecting _arglikes, got Tuple, coerce disabled</span>
 </code></pre>
 </div>
+
+<p>Other global options you may change will also affect substitutions as they affect all get and put operations.</p>
+
+<h1 id="command-line-interface">Command Line Interface</h1>
+
+<p>Both the <code>search()</code> and <code>sub()</code> functions have a command-line interface allowing easy application to files. The pattern
+and replacement template take the same form as they do for the functions.</p>
+
+<p>Search all python files in the <code>src/</code> directory for keyword arguments.</p>
+
+<pre><code>$ python -m fst.cli.search --pattern keyword src/*.py
+</code></pre>
+
+<p>Substitute all keyword arguments with the same argument and value but with extra spaces. Due to the use here of the
+<code>--dry</code> argument, this will not update the files substituted but just show the substitutions.</p>
+
+<pre><code>$ python -m fst.cli.sub \
+  --pattern 'Mkeyword(M(a=...), M(v=...))' \
+  --repl '__FST_a  =  __FST_v' \
+  --mode keyword \
+  --dry \
+  src/*.py
+</code></pre>
 </div>
 
                 

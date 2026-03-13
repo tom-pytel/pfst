@@ -880,10 +880,10 @@ the <code>with ctx():</code> could be preserved explicitly but not doing it here
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">squash_nested_withs</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
 <span class="c1"># with comment</span>
 <span class="k">with</span> <span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>
-     <span class="n">lock1</span><span class="p">,</span>  <span class="c1"># first lock</span>
-     <span class="n">func</span><span class="p">()</span> <span class="k">as</span> <span class="n">lock2</span><span class="p">,</span>  <span class="c1"># this gets preserved</span>
-     <span class="n">ctx</span><span class="p">()</span>
-     <span class="p">):</span>
+    <span class="n">lock1</span><span class="p">,</span>  <span class="c1"># first lock</span>
+    <span class="n">func</span><span class="p">()</span> <span class="k">as</span> <span class="n">lock2</span><span class="p">,</span>  <span class="c1"># this gets preserved</span>
+    <span class="n">ctx</span><span class="p">()</span>
+    <span class="p">):</span>
     <span class="c1"># body comment</span>
     <span class="k">pass</span>
     <span class="c1"># end body comment</span>
@@ -1801,9 +1801,9 @@ comments, but can be useful for smaller replacements or quick-and-dirty substitu
     <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thing</span><span class="p">,</span> <span class="n">extra</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">thing</span><span class="p">:</span>
             <span class="p">(</span><span class="n">logger</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                       <span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># this is fine</span>
-                       <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>       <span class="c1"># also this</span>
-                       <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s1">&#39;not a </span><span class="si">{</span><span class="n">thing</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>  <span class="c1"># this is fine</span>
+                <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>       <span class="c1"># also this</span>
+                <span class="n">correlation_id</span><span class="o">=</span><span class="n">CID</span><span class="p">)</span>
 </code></pre>
 </div>
 
@@ -2002,11 +2002,12 @@ the intended demonstration.</p>
 
 <h2 id="squash-nested-with-2">Squash nested <code>with</code></h2>
 
-<p>This is also easily doable and shows off the <code>loop</code> parameter which allows you to apply a substitution to the same
-location an arbitrary number of times in order to collapse structures. When <code>loop</code> is enabled, after a successful
-substitution the resulting node is checked again against the pattern and if it still matches then the substitution is
-applied again repeatedly until the result no longer matches the pattern (or it can be limited to a maximum number of
-iterations).</p>
+<p>This is also easily doable using either <code>loop=True</code> or <code>on='leave'</code>.</p>
+
+<p>First we show off the <code>loop</code> parameter which allows you to apply a substitution to the same location an arbitrary number
+of times in order to collapse structures. When <code>loop</code> is enabled, after a successful substitution the resulting node is
+checked again against the pattern and if it still matches then the substitution is applied again repeatedly until the
+result no longer matches the pattern (or it can be limited to a maximum number of iterations).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
@@ -2043,9 +2044,25 @@ iterations).</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,))</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="k">with</span> <span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>
-     <span class="n">lock1</span><span class="p">,</span>  <span class="c1"># first lock</span>
-     <span class="n">func</span><span class="p">()</span> <span class="k">as</span> <span class="n">lock2</span><span class="p">,</span>  <span class="c1"># this gets preserved</span>
-     <span class="n">ctx</span><span class="p">()):</span>
+    <span class="n">lock1</span><span class="p">,</span>  <span class="c1"># first lock</span>
+    <span class="n">func</span><span class="p">()</span> <span class="k">as</span> <span class="n">lock2</span><span class="p">,</span>  <span class="c1"># this gets preserved</span>
+    <span class="n">ctx</span><span class="p">()):</span>
+    <span class="c1"># body comment</span>
+    <span class="k">pass</span>
+    <span class="c1"># end body comment</span>
+</code></pre>
+</div>
+
+<p>Using <code>on='leave'</code> is objectively safer as it only walks the tree once and cannot cause infinite recursion (even from
+<code>nested=True</code>). The operating principle is different however and <code>on='leave'</code> cannot do everything that <code>loop</code> can do,
+so which option is used will depend on the case.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">repl</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;leave&#39;</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,))</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">with</span> <span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>
+    <span class="n">lock1</span><span class="p">,</span>  <span class="c1"># first lock</span>
+    <span class="n">func</span><span class="p">()</span> <span class="k">as</span> <span class="n">lock2</span><span class="p">,</span>  <span class="c1"># this gets preserved</span>
+    <span class="n">ctx</span><span class="p">()):</span>
     <span class="c1"># body comment</span>
     <span class="k">pass</span>
     <span class="c1"># end body comment</span>

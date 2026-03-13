@@ -425,7 +425,7 @@ function or lambda or comprehension).</p>
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="gp">... </span><span class="s1">def f(): f_var = 123</span>
 <span class="gp">... </span><span class="s1">def g(): pass</span>
-<span class="gp">... </span><span class="s1">x = y</span>
+<span class="gp">... </span><span class="s1">x += y</span>
 <span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
@@ -433,14 +433,14 @@ function or lambda or comprehension).</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
-<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx = y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;f_var = 123&#39;</span>
 <span class="go">&#39;f_var&#39;</span>
 <span class="go">&#39;123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
 <span class="go">&#39;pass&#39;</span>
-<span class="go">&#39;x = y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
 <span class="go">&#39;x&#39;</span>
 <span class="go">&#39;y&#39;</span>
 </code></pre>
@@ -449,10 +449,10 @@ function or lambda or comprehension).</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
-<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx = y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
-<span class="go">&#39;x = y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
 <span class="go">&#39;x&#39;</span>
 <span class="go">&#39;y&#39;</span>
 </code></pre>
@@ -466,11 +466,11 @@ if the walk is restricted to a scope you can decide to recurse into a specific c
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_FunctionDef</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># ignore the &#39;_&#39;, it shuts up printing the return value</span>
-<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx = y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
 <span class="go">&#39;pass&#39;</span>
-<span class="go">&#39;x = y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
 <span class="go">&#39;x&#39;</span>
 <span class="go">&#39;y&#39;</span>
 </code></pre>
@@ -483,10 +483,10 @@ within the scope, this does not.</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
-<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx = y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
-<span class="go">&#39;x = y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
 </code></pre>
 </div>
 
@@ -497,13 +497,13 @@ within the scope, this does not.</p>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_FunctionDef</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx = y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;f_var = 123&#39;</span>
 <span class="go">&#39;f_var&#39;</span>
 <span class="go">&#39;123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
-<span class="go">&#39;x = y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
 </code></pre>
 </div>
 
@@ -514,11 +514,27 @@ within the scope, this does not.</p>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_FunctionDef</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx = y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
 <span class="go">&#39;pass&#39;</span>
-<span class="go">&#39;x = y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
+<span class="go">&#39;x&#39;</span>
+<span class="go">&#39;y&#39;</span>
+</code></pre>
+</div>
+
+<p>You can pass a list of nodes specifically to walk as <code>AST</code> nodes, but they must be from the <code>FST</code> tree on which you
+are calling this function, though they do <strong>NOT</strong> need to be descendants of the node you call the walk on.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">asts</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">]):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
+<span class="go">&#39;def f(): f_var = 123&#39;</span>
+<span class="go">&#39;f_var = 123&#39;</span>
+<span class="go">&#39;f_var&#39;</span>
+<span class="go">&#39;123&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
 <span class="go">&#39;x&#39;</span>
 <span class="go">&#39;y&#39;</span>
 </code></pre>
@@ -544,6 +560,57 @@ a <strong>LEAF</strong> type, so no <code>stmt</code> or <code>expr</code> or <c
 <span class="go">&#39;def f(): f_var = 123&#39;</span>
 <span class="go">&#39;123&#39;</span>
 <span class="go">&#39;def g(): pass&#39;</span>
+</code></pre>
+</div>
+
+<p>It is possible to walk the tree bottom-up by passing <code>on='leave'</code> to indicate that the nodes should be yielded upon
+leaving instead of on enter.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s1">&#39;leave&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
+<span class="go">&#39;f_var&#39;</span>
+<span class="go">&#39;123&#39;</span>
+<span class="go">&#39;f_var = 123&#39;</span>
+<span class="go">&#39;def f(): f_var = 123&#39;</span>
+<span class="go">&#39;pass&#39;</span>
+<span class="go">&#39;def g(): pass&#39;</span>
+<span class="go">&#39;x&#39;</span>
+<span class="go">&#39;y&#39;</span>
+<span class="go">&#39;x += y&#39;</span>
+<span class="go">&#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
+</code></pre>
+</div>
+
+<p>It is also possible to get nodes both upon entry and upon leaving by passing <code>on='both'</code>, though in this case the
+generator will yield a tuple of the node and a bool which indicates if the node is being exited. All nodes will be
+yielded twice in this case regardless of if they have children or not (unless the node is deleted upon entry, then you
+don't get it again). If a node is replaced on entry then the new node will be yielded upon leaving.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">leaving</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;LEAVE:&#39;</span> <span class="k">if</span> <span class="n">leaving</span> <span class="k">else</span> <span class="s1">&#39;ENTER:&#39;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_Pass</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">g</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">elif</span> <span class="n">g</span><span class="o">.</span><span class="n">is_AugAssign</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;del g&#39;</span><span class="p">)</span>
+<span class="go">ENTER: &#39;def f(): f_var = 123\ndef g(): pass\nx += y&#39;</span>
+<span class="go">ENTER: &#39;def f(): f_var = 123&#39;</span>
+<span class="go">ENTER: &#39;f_var = 123&#39;</span>
+<span class="go">ENTER: &#39;f_var&#39;</span>
+<span class="go">LEAVE: &#39;f_var&#39;</span>
+<span class="go">ENTER: &#39;123&#39;</span>
+<span class="go">LEAVE: &#39;123&#39;</span>
+<span class="go">LEAVE: &#39;f_var = 123&#39;</span>
+<span class="go">LEAVE: &#39;def f(): f_var = 123&#39;</span>
+<span class="go">ENTER: &#39;def g(): pass&#39;</span>
+<span class="go">ENTER: &#39;pass&#39;</span>
+<span class="go">LEAVE: &#39;def g():&#39;</span>
+<span class="go">ENTER: &#39;x += y&#39;</span>
+<span class="go">ENTER: &#39;g&#39;</span>
+<span class="go">LEAVE: &#39;g&#39;</span>
+<span class="go">LEAVE: &#39;del g&#39;</span>
+<span class="go">LEAVE: &#39;def f(): f_var = 123\ndef g():\n\n\ndel g&#39;</span>
 </code></pre>
 </div>
 

@@ -37,6 +37,7 @@
     <li><a href="#_args-virtual-field"><code>_args</code> virtual field</a></li>
     <li><a href="#_bases-virtual-field"><code>_bases</code> virtual field</a></li>
     <li><a href="#virtual-field-attribute-access">Virtual field attribute access</a></li>
+    <li><a href="#some-shared-interface-with-fst">Some shared interface with <code>FST</code></a></li>
   </ul></li>
 </ul>
 
@@ -1082,6 +1083,58 @@ results.</p>
 <span class="go">&#39;&#39;&#39;docstring&#39;&#39;&#39;</span>
 </code></pre>
 </div>
+
+<h2 id="some-shared-interface-with-fst">Some shared interface with <code>FST</code></h2>
+
+<p>For convenience, <code>FSTView</code> implements certain API elements of <code>FST</code> nodes. <code>src</code> and <code>lines</code> exist and will give the
+source slice or lines of the given view.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;b, c&#39;</span>
+</code></pre>
+</div>
+
+<p><code>loc</code>, <code>bloc</code> and their individual accessors like <code>ln</code>, <code>col</code>, <code>bln</code>, etc... These will always give the parenthesized
+location if parentheses are present as slice operations must always include parentheses.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstlocn(0, 4, 0, 8, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, (b), ( c ), d]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstlocn(0, 4, 0, 14, n=0)</span>
+</code></pre>
+</div>
+
+<p>The <code>pars()</code> function is also present for interoperability purposes but will give the same location as <code>bloc</code> and a
+count of 0.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, (b), ( c ), d]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 4, 0, 14, n=0)</span>
+</code></pre>
+</div>
+
+<p>These location functions also calculate locations for nodes which may not exist but have a syntactic element, like
+<code>None</code> <code>keys</code> values in a <code>Dict</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, **c, d: e}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstlocn(0, 7, 0, 10, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a: b, **c, d: e}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;**c&#39;</span>
+</code></pre>
+</div>
+
+<p><code>root</code> also exists and is basically a shortcut for <code>view.base.root</code>.</p>
 </div>
 
                 

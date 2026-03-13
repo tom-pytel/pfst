@@ -41,7 +41,13 @@
                                 <a class="variable" href="#FSTView.is_FST">is_FST</a>
                         </li>
                         <li>
-                                <a class="variable" href="#FSTView.is_deref_FST">is_deref_FST</a>
+                                <a class="variable" href="#FSTView.is_item_FST">is_item_FST</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FSTView.is_item_multinode">is_item_multinode</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FSTView.is_one">is_one</a>
                         </li>
                         <li>
                                 <a class="variable" href="#FSTView.start">start</a>
@@ -51,6 +57,12 @@
                         </li>
                         <li>
                                 <a class="variable" href="#FSTView.start_and_stop">start_and_stop</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FSTView.item">item</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FSTView.root">root</a>
                         </li>
                         <li>
                                 <a class="variable" href="#FSTView.lines">lines</a>
@@ -99,6 +111,9 @@
                         </li>
                         <li>
                                 <a class="function" href="#FSTView.__delitem__">__delitem__</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#FSTView.at">at</a>
                         </li>
                         <li>
                                 <a class="function" href="#FSTView.copy">copy</a>
@@ -314,7 +329,7 @@ use <code>fst.body[start:stop].replace(..., one=True)</code>.</p>
                             </div>
                             <div id="FSTView.is_FST" class="classattr">
                                 <div class="attr variable">
-            <span class="name">is_FST</span>        =
+            <span class="name">is_FST</span><span class="annotation">: bool</span>        =
 <span class="default_value">False</span>
 
         
@@ -326,16 +341,49 @@ use <code>fst.body[start:stop].replace(..., one=True)</code>.</p>
 
 
                             </div>
-                            <div id="FSTView.is_deref_FST" class="classattr">
+                            <div id="FSTView.is_item_FST" class="classattr">
                                 <div class="attr variable">
-            <span class="name">is_deref_FST</span>        =
+            <span class="name">is_item_FST</span><span class="annotation">: bool</span>        =
 <span class="default_value">True</span>
 
         
     </div>
-    <a class="headerlink" href="#FSTView.is_deref_FST"></a>
+    <a class="headerlink" href="#FSTView.is_item_FST"></a>
     
-            <div class="docstring"><p>Whether single item indexing on this view yields an <code>FST</code> node or not. Where this is not the case are multi-node sequences like a <code>Dict</code>, <code>MatchMapping</code> and <code>arguments</code> or string sequences like <code>Global</code> and <code>Nonlocal</code>. Dereferencing these views will not give individual nodes or values but rather another <code><a href="#FSTView">FSTView</a></code>.</p>
+            <div class="docstring"><p>Whether single item indexing on this view yields an <code>FST</code> node or not (could also be None). This is <code>False</code> for multi-node sequences like a <code>Dict</code>, <code>MatchMapping</code> and <code>arguments</code> and string sequences like <code>Global/Nonlocal.names</code> and <code>MatchClass.kwd_attrs</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FSTView.is_item_multinode" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_item_multinode</span><span class="annotation">: bool</span>        =
+<span class="default_value">False</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTView.is_item_multinode"></a>
+    
+            <div class="docstring"><p>Whether individual items of this view are composed of (possibly) multiple nodes. This is <code>True</code> for sequences like a <code>Dict</code>, <code>MatchMapping</code> and <code>arguments</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FSTView.is_one" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_one</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTView.is_one"></a>
+    
+            <div class="docstring"><p>Whether this view represents a single dereferenced view for fields which do not dereference to a single <code>FST</code>
+or not. To be clear, this is only <code>True</code> when one of those views is dereferenced as a single item to produce a
+single-item view of that field.</p>
+
+<p>This is mostly informative and it is possible to manipulate an <code>is_one=True</code> view back into a slice view with
+slice operations. This can affect a few individual node operations for <code>Global/Nonlocal.names</code> views, like when
+a copy is made. For a <code>is_one=True</code> the copy will be a single node whereas for a slice view it will be a slice.</p>
 </div>
 
 
@@ -348,7 +396,8 @@ use <code>fst.body[start:stop].replace(..., one=True)</code>.</p>
     </div>
     <a class="headerlink" href="#FSTView.start"></a>
     
-            <div class="docstring"><p>Start position within the target field list this view references.</p>
+            <div class="docstring"><p>Start position within the target field list this view references. For a <code>_body</code> field with a docstring an
+index of 0 here really means 1 in the actual <code>body</code> list.</p>
 </div>
 
 
@@ -361,7 +410,8 @@ use <code>fst.body[start:stop].replace(..., one=True)</code>.</p>
     </div>
     <a class="headerlink" href="#FSTView.stop"></a>
     
-            <div class="docstring"><p>One past the last element within the target field list this view references.</p>
+            <div class="docstring"><p>Position one past the last item within the target field list this view references. For a <code>_body</code> field with a
+docstring this index tops out at 1 less than the length of the actual <code>body</code> list.</p>
 </div>
 
 
@@ -375,6 +425,33 @@ use <code>fst.body[start:stop].replace(..., one=True)</code>.</p>
     <a class="headerlink" href="#FSTView.start_and_stop"></a>
     
             <div class="docstring"><p>Start and stop positions within the target field list this view references.</p>
+</div>
+
+
+                            </div>
+                            <div id="FSTView.item" class="classattr">
+                                <div class="attr variable">
+            <span class="name">item</span><span class="annotation">: <a href="#FSTView">FSTView</a> | <a href="fst.html#FST">fst.fst.FST</a> | str | None</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTView.item"></a>
+    
+            <div class="docstring"><p>Convenience function for singleton <code><a href="#FSTView">FSTView</a></code> to get the item it is referencing. Multinode <code><a href="#FSTView">FSTView</a></code> objects
+do not have a single item they can dereference and so return themselves.</p>
+</div>
+
+
+                            </div>
+                            <div id="FSTView.root" class="classattr">
+                                <div class="attr variable">
+            <span class="name">root</span><span class="annotation">: <a href="fst.html#FST">fst.fst.FST</a></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTView.root"></a>
+    
+            <div class="docstring"><p>Root node of the tree this view belongs to.</p>
 </div>
 
 
@@ -511,7 +588,8 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.bloc"></a>
     
-            <div class="docstring"><p>Zero based character indexed location of view (including parentheses and / or decorators where present).</p>
+            <div class="docstring"><p>Zero based character indexed location of view (including parentheses and / or decorators where present). This
+is identical to <code>.loc</code> for views.</p>
 </div>
 
 
@@ -524,7 +602,7 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.bln"></a>
     
-            <div class="docstring"><p>Line number of the first line of this view (0 based).</p>
+            <div class="docstring"><p>Line number of the first line of this view (0 based). This is identical to <code>.ln</code> for views.</p>
 </div>
 
 
@@ -537,7 +615,7 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.bcol"></a>
     
-            <div class="docstring"><p>CHARACTER index of the start of this view (0 based).</p>
+            <div class="docstring"><p>CHARACTER index of the start of this view (0 based). This is identical to <code>.col</code> for views.</p>
 </div>
 
 
@@ -550,7 +628,7 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.bend_ln"></a>
     
-            <div class="docstring"><p>Line number of the LAST LINE of this view (0 based).</p>
+            <div class="docstring"><p>Line number of the LAST LINE of this view (0 based). This is identical to <code>.end_ln</code> for views.</p>
 </div>
 
 
@@ -563,7 +641,7 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.bend_col"></a>
     
-            <div class="docstring"><p>CHARACTER index one past the end of this view (0 based).</p>
+            <div class="docstring"><p>CHARACTER index one past the end of this view (0 based). This is identical to <code>.end_col</code> for views.</p>
 </div>
 
 
@@ -583,13 +661,13 @@ Will have indentation as it appears in the top level source if multiple lines.</
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li>IGNORED!</li>
+<li><strong>IGNORED!</strong></li>
 </ul>
 
 <p><strong>Returns:</strong></p>
 
 <ul>
-<li><code>fstlocn</code>: Full location of view from first element to last, if elements present.</li>
+<li><code>fstlocn</code>: Full location of view from first item to last, if items present.</li>
 <li><code>None</code>: If view is empty.</li>
 </ul>
 
@@ -611,6 +689,21 @@ Will have indentation as it appears in the top level source if multiple lines.</
 <span class="go">fstlocn(0, 6, 0, 14, n=0)</span>
 </code></pre>
 </div>
+
+<p><strong>WARNING!</strong> Views always return their fully parenthesized locations so the <code>shared</code> parameter here is ignored
+for those pesky single-argument <code>GeneratorExp</code> expressions which share their parentheses with the <code>Call</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i for i in j)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># <a href="#FSTView.pars">FSTView.pars()</a></span>
+<span class="go">fstlocn(0, 4, 0, 18, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i for i in j)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># FST.pars()</span>
+<span class="go">fstlocn(0, 5, 0, 17, n=-1)</span>
+</code></pre>
+</div>
 </div>
 
 
@@ -625,7 +718,7 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.__getitem__"></a>
     
-            <div class="docstring"><p>Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
+            <div class="docstring"><p>Get a single item or a slice view from this view. All indices (including negative) are relative to the
 bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
 <code>.copy()</code> on the returned value.</p>
 
@@ -635,7 +728,7 @@ return values which may be <code>None</code> or may not be <code>FST</code> node
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>idx</code>: The index or <code>slice</code> where to get the element(s) from. Or a <code>str</code> for a single-element name search.</li>
+<li><code>idx</code>: The index or <code>slice</code> where to get the item(s) from, or a <code>str</code> for a single-item name search.</li>
 </ul>
 
 <p><strong>Returns:</strong></p>
@@ -689,11 +782,11 @@ according to the slice passed. <code>str</code> can also be returned from a view
 </code></pre>
 </div>
 
-<p>If indexing a single element does not give an <code>FST</code> node then it will give another <code><a href="#FSTView">FSTView</a></code>.</p>
+<p>If indexing a single item does not give an <code>FST</code> node then it will give another <code><a href="#FSTView">FSTView</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="go">&lt;&lt;Global ROOT 0,0..0,14&gt;.names[1:2]&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;&lt;Global ROOT 0,0..0,14&gt;.names[1]&gt;</span>
 </code></pre>
 </div>
 </div>
@@ -710,8 +803,8 @@ according to the slice passed. <code>str</code> can also be returned from a view
     </div>
     <a class="headerlink" href="#FSTView.__setitem__"></a>
     
-            <div class="docstring"><p>Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
-bounds of this view.</p>
+            <div class="docstring"><p>Set a single item or a slice view in this view. All indices (including negative) are relative to the bounds
+of this view.</p>
 
 <p>Note that <code><a href="#FSTView">FSTView</a></code> can also hold references to non-AST lists of items, so keep this in mind when assigning
 values.</p>
@@ -719,7 +812,7 @@ values.</p>
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>idx</code>: The index or <code>slice</code> where to put the element(s). Or a <code>str</code> for a single-element name search.</li>
+<li><code>idx</code>: The index or <code>slice</code> where to put the item(s). Or a <code>str</code> for a single-item name search.</li>
 </ul>
 
 <p><strong>Examples:</strong></p>
@@ -792,8 +885,8 @@ values.</p>
     </div>
     <a class="headerlink" href="#FSTView.__delitem__"></a>
     
-            <div class="docstring"><p>Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
-bounds of this view.</p>
+            <div class="docstring"><p>Delete a single item or a slice from this view. All indices (including negative) are relative to the bounds
+of this view.</p>
 
 <p>Note that <code><a href="#FSTView">FSTView</a></code> can also hold references to non-AST lists of items, so keep this in mind when assigning
 values.</p>
@@ -801,7 +894,7 @@ values.</p>
 <p><strong>Parameters:</strong></p>
 
 <ul>
-<li><code>idx</code>: The index or <code>slice</code> to delete. Or a <code>str</code> for a single-element name search.</li>
+<li><code>idx</code>: The index or <code>slice</code> to delete. Or a <code>str</code> for a single-item name search.</li>
 </ul>
 
 <p><strong>Examples:</strong></p>
@@ -838,11 +931,117 @@ values.</p>
 
 
                             </div>
+                            <div id="FSTView.at" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">at</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span>,</span><span class="param">	<span class="n">force_view</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span> <span class="o">|</span> <span class="n"><a href="fst.html#FST">fst.fst.FST</a></span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTView.at"></a>
+    
+            <div class="docstring"><p>Get a single item from this view. All indices (including negative) are relative to the bounds of this view.
+This is just an access, not a cut or a copy, so if you want a copy you must explicitly do <code>.copy()</code> on the
+returned value.</p>
+
+<p>This function differs from <code>[]</code> indexing in that indexing will always return the actual value at the index,
+including if it is a <code>None</code> or a <code>str</code> value (<code>Global/Nonlocal.names</code> or <code>MatchClass.kwd_attrs</code>). This function
+will return an <code>FST</code> where that exists, but for primitive values like <code>None</code> or a <code>str</code>, this function will
+return a singleton <code><a href="#FSTView">FSTView</a></code> of the item. This is in order to make it possible to retrieve the item's
+information getting it.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li><code>idx</code>: The index where to get the item from, or a <code>str</code> for a name search.</li>
+<li><code>force_view</code>: If <code>True</code> then will return all items as singleton <code><a href="#FSTView">FSTView</a></code> objects, regardless of if they
+reference <code>FST</code> nodes or not. If an item was indexed with a string and it is not a direct child of this view
+then a view with that node's <code><a href="#FSTView.base">base</a></code> and index is returned.</li>
+</ul>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>FSTView | FST | str | None</code>: Either a single <code>FST</code> node if accessing a single item if that is possible, or a
+new <code><a href="#FSTView">FSTView</a></code> view if item is not an <code>FST</code>.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{**a}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">None</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{**a}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">&lt;&lt;Dict ROOT 0,0..0,5&gt;.keys[0]&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{**a}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+<span class="go">None</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">&#39;b&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;&lt;Global ROOT 0,0..0,14&gt;.names[1]&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="go">&lt;Name ROOT 0,0..0,1&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;b&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&#39;b&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">force_view</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;&lt;List ROOT 0,0..0,9&gt;.elts[1]&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">force_view</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">item</span>
+<span class="go">&lt;Name 0,4..0,5&gt;</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
                             <div id="FSTView.copy" class="classattr">
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">copy</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="fst.html#FST">fst.fst.FST</a></span>:</span></span>
+        <span class="name">copy</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="fst.html#FST">fst.fst.FST</a></span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span>:</span></span>
 
         
     </div>
@@ -874,6 +1073,30 @@ values.</p>
 <span class="go">&#39;[1, 2]&#39;</span>
 </code></pre>
 </div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;a, b, c&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;b&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&#39;b&#39;</span>
+</code></pre>
+</div>
 </div>
 
 
@@ -882,7 +1105,7 @@ values.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">cut</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="fst.html#FST">fst.fst.FST</a></span>:</span></span>
+        <span class="name">cut</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="fst.html#FST">fst.fst.FST</a></span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span>:</span></span>
 
         
     </div>
@@ -917,6 +1140,38 @@ node.</p>
 <span class="go">&#39;[0, 3]&#39;</span>
 </code></pre>
 </div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">names</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;a, b&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;global c&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;b&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;global a, c&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">names</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">[&#39;a&#39;, &#39;b&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;global c&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">promote</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&#39;b&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;global a, c&#39;</span>
+</code></pre>
+</div>
 </div>
 
 
@@ -925,7 +1180,7 @@ node.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">replace</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">replace</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
@@ -986,7 +1241,7 @@ a slice replacement (type must be compatible).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">remove</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">remove</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
@@ -1026,7 +1281,7 @@ a slice replacement (type must be compatible).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">insert</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">insert</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
@@ -1107,13 +1362,13 @@ a slice replacement (type must be compatible).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">append</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">append</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
     <a class="headerlink" href="#FSTView.append"></a>
     
-            <div class="docstring"><p>Append <code>code</code> as a single element to the end of this slice.</p>
+            <div class="docstring"><p>Append <code>code</code> as a single item to the end of this slice.</p>
 
 <p><strong>Returns:</strong></p>
 
@@ -1154,7 +1409,7 @@ a slice replacement (type must be compatible).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">extend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">extend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
@@ -1213,13 +1468,13 @@ a slice replacement (type must be compatible).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">prepend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">prepend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
     <a class="headerlink" href="#FSTView.prepend"></a>
     
-            <div class="docstring"><p>prepend <code>code</code> as a single element to the beginning of this slice.</p>
+            <div class="docstring"><p>prepend <code>code</code> as a single item to the beginning of this slice.</p>
 
 <p><strong>Returns:</strong></p>
 
@@ -1260,7 +1515,7 @@ a slice replacement (type must be compatible).</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">prextend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
+        <span class="name">prextend</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>,</span><span class="param">	<span class="n">one</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="nb">object</span></span><span class="return-annotation">) -> <span class="n"><a href="#FSTView">FSTView</a></span>:</span></span>
 
         
     </div>
