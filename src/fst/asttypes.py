@@ -291,7 +291,7 @@ __all__ = [
     '_comprehension_ifs',
     '_aliases',
     '_withitems',
-    '_pattern_arglikes',
+    '_pattern_attrlikes',
     '_type_params',
 
     'ASTS_LEAF_MOD',
@@ -652,7 +652,7 @@ class _withitems(_slice):
         self.end_col_offset = end_col_offset
 
 
-class _pattern_arglikes(_slice):
+class _pattern_attrlikes(_slice):
     """Slice of pattern standalone and keyword attributes. Used for `MatchClass.patterns+kwd_attrs=kwd_patterns`.
 
     This is a special slice because elements are inhomogenous."""
@@ -704,7 +704,7 @@ class _type_params(_slice):
 
 # fmt: off
 ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _arglikes,
-                              _comprehensions, _comprehension_ifs, _aliases, _withitems, _pattern_arglikes,
+                              _comprehensions, _comprehension_ifs, _aliases, _withitems, _pattern_attrlikes,
                               _type_params])
 ASTS_LEAF__ALL = ASTS_LEAF_ALL | ASTS_LEAF__SLICE
 

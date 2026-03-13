@@ -142,7 +142,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
-    _pattern_arglikes,
+    _pattern_attrlikes,
     _type_params,
 )
 

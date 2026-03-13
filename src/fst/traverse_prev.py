@@ -126,7 +126,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
-    _pattern_arglikes,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -1798,7 +1798,7 @@ def _prev__withitems_items(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev__pattern_arglikes_END(ast: AST, idx: int | None) -> _NextPrevRet:
+def _prev__pattern_attrlikes_END(ast: AST, idx: int | None) -> _NextPrevRet:
     if a := ast.kwd_patterns:
         return a[-1].f
 
@@ -1808,7 +1808,7 @@ def _prev__pattern_arglikes_END(ast: AST, idx: int | None) -> _NextPrevRet:
     return None
 
 
-def _prev__pattern_arglikes_kwd_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
+def _prev__pattern_attrlikes_kwd_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
     if (idx := idx - 1) >= 0:
         return  ast.kwd_patterns[idx].f
 
@@ -1818,7 +1818,7 @@ def _prev__pattern_arglikes_kwd_patterns(ast: AST, idx: int | None) -> _NextPrev
     return None
 
 
-def _prev__pattern_arglikes_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
+def _prev__pattern_attrlikes_patterns(ast: AST, idx: int | None) -> _NextPrevRet:
     if (idx := idx - 1) >= 0:
         return  ast.patterns[idx].f
 
@@ -2127,9 +2127,9 @@ PREV_FUNCS = {
     (_aliases, 'names'): _prev__aliases_names,
     (_withitems, None): _prev__withitems_END,
     (_withitems, 'items'): _prev__withitems_items,
-    (_pattern_arglikes, None): _prev__pattern_arglikes_END,
-    (_pattern_arglikes, 'kwd_patterns'): _prev__pattern_arglikes_kwd_patterns,
-    (_pattern_arglikes, 'patterns'): _prev__pattern_arglikes_patterns,
+    (_pattern_attrlikes, None): _prev__pattern_attrlikes_END,
+    (_pattern_attrlikes, 'kwd_patterns'): _prev__pattern_attrlikes_kwd_patterns,
+    (_pattern_attrlikes, 'patterns'): _prev__pattern_attrlikes_patterns,
     (_type_params, None): _prev__type_params_END,
     (_type_params, 'type_params'): _prev__type_params_type_params,
 }

@@ -128,7 +128,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
-    _pattern_arglikes,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -255,7 +255,7 @@ __all__ = [
     'is__comprehension_ifs',
     'is__aliases',
     'is__withitems',
-    'is__pattern_arglikes',
+    'is__pattern_attrlikes',
     'is__type_params',
 ]
 
@@ -1115,10 +1115,10 @@ def is__withitems(self: 'fst.FST') -> bool:
 
 
 @property
-def is__pattern_arglikes(self: 'fst.FST') -> bool:
-    """Is a `_pattern_arglikes` node."""
+def is__pattern_attrlikes(self: 'fst.FST') -> bool:
+    """Is a `_pattern_attrlikes` node."""
 
-    return self.a.__class__ is _pattern_arglikes
+    return self.a.__class__ is _pattern_attrlikes
 
 
 @property

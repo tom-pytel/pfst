@@ -146,7 +146,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
-    _pattern_arglikes,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -331,7 +331,7 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
     (_comprehension_ifs,       (('ifs', 'expr*'),)),
     (_aliases,                 (('names', 'alias*'),)),
     (_withitems,               (('items', 'withitem*'),)),
-    (_pattern_arglikes,        (('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
+    (_pattern_attrlikes,       (('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
     (_type_params,             (('type_params', 'type_param*'),)),
 
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
@@ -1472,7 +1472,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     _comprehension_ifs: lambda ast: ast.ifs.copy(),
     _aliases:           lambda ast: ast.names.copy(),
     _withitems:         lambda ast: ast.items.copy(),
-    _pattern_arglikes:  lambda ast: [*ast.patterns, *ast.kwd_patterns],
+    _pattern_attrlikes: lambda ast: [*ast.patterns, *ast.kwd_patterns],
     _type_params:       lambda ast: ast.type_params.copy(),
 }
 # fmt: on

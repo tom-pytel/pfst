@@ -89,7 +89,7 @@ from fst.asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
-    _pattern_arglikes,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -608,15 +608,15 @@ PARSE_TESTS = [
     ('pattern',            px.parse_pattern,            SyntaxError,              ','),
     ('pattern',            px.parse_pattern,            SyntaxError,              'i: pass\n case 2'),
 
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        ''),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        'a'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        'a,'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        'b=c'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        'b=c,'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        'a, b=c'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  _pattern_arglikes,        'a, b=c,'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  SyntaxError,              ')'),
-    ('_pattern_arglikes',  px.parse__pattern_arglikes,  SyntaxError,              ','),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       ''),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       'a'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       'a,'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       'b=c'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       'b=c,'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       'a, b=c'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, _pattern_attrlikes,       'a, b=c,'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, SyntaxError,              ')'),
+    ('_pattern_attrlikes', px.parse__pattern_attrlikes, SyntaxError,              ','),
 
     ('expr',               px.parse_expr,               BoolOp,                   '\na\nor\nb\n'),
     ('expr',               px.parse_expr,               NamedExpr,                '\na\n:=\nb\n'),

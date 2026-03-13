@@ -86,7 +86,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
-    _pattern_arglikes,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -162,7 +162,7 @@ from .parsex import (
     parse_withitem,
     parse__withitems,
     parse_pattern,
-    parse__pattern_arglikes,
+    parse__pattern_attrlikes,
     parse_type_param,
     parse__type_params,
     parse__expr_arglikes,
@@ -209,7 +209,7 @@ __all__ = [
     'code_as_withitem',
     'code_as__withitems',
     'code_as_pattern',
-    'code_as__pattern_arglikes',
+    'code_as__pattern_attrlikes',
     'code_as_type_param',
     'code_as__type_params',
     'code_as_identifier',
@@ -2989,7 +2989,7 @@ def _coerce_to_pattern(
     return fst_
 
 
-def _coerce_to__pattern_arglikes(
+def _coerce_to__pattern_attrlikes(
     code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, strip: bool = False
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
@@ -4159,7 +4159,7 @@ def code_as_pattern(
     return fst_
 
 
-def code_as__pattern_arglikes(
+def code_as__pattern_attrlikes(
     code: Code,
     options: Mapping[str, Any] = {},
     parse_params: Mapping[str, Any] = {},
@@ -4169,9 +4169,9 @@ def code_as__pattern_arglikes(
 ) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
-    fst_ = _code_as(code, options, parse_params, parse__pattern_arglikes, _pattern_arglikes, strip,
+    fst_ = _code_as(code, options, parse_params, parse__pattern_attrlikes, _pattern_attrlikes, strip,
                     )
-                    # _coerce_to__pattern_arglikes if coerce else False)
+                    # _coerce_to__pattern_attrlikes if coerce else False)
 
     return fst_
 
@@ -4575,7 +4575,7 @@ _CODE_AS_MODE_FUNCS = {
     'withitem':               code_as_withitem,
     '_withitems':             code_as__withitems,
     'pattern':                code_as_pattern,
-    '_pattern_arglikes':      code_as__pattern_arglikes,
+    '_pattern_attrlikes':     code_as__pattern_attrlikes,
     'type_param':             code_as_type_param,
     '_type_params':           code_as__type_params,
     mod:                      code_as_stmts,
@@ -4618,7 +4618,7 @@ _CODE_AS_MODE_FUNCS = {
     _comprehension_ifs:       code_as__comprehension_ifs,
     _aliases:                 code_as__aliases,
     _withitems:               code_as__withitems,
-    _pattern_arglikes:        code_as__pattern_arglikes,
+    _pattern_attrlikes:       code_as__pattern_attrlikes,
     _type_params:             code_as__type_params,
     '_expr_arglikes':         code_as__expr_arglikes,
 }  # fmt: skip  # automatically filled out with all AST types and their names derived from these

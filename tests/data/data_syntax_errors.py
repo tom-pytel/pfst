@@ -856,11 +856,11 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: invalid syntax',
 ],
 
-('_pattern_arglikes', ')'): [
+('_pattern_attrlikes', ')'): [
     'SyntaxError: invalid syntax',
 ],
 
-('_pattern_arglikes', ','): [
+('_pattern_attrlikes', ','): [
     '    ,',
     '    ^',
     'SyntaxError: invalid syntax',

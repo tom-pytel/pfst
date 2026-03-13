@@ -2957,29 +2957,29 @@ i: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r''''''),
-r'''_pattern_arglikes - ROOT 0,0..0,0'''),
+r'''_pattern_attrlikes - ROOT 0,0..0,0'''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r'''a'''), r'''
-_pattern_arglikes - ROOT 0,0..0,1
+_pattern_attrlikes - ROOT 0,0..0,1
   .patterns[1]
    0] MatchAs - 0,0..0,1
      .name 'a'
 '''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r'''a,'''), r'''
-_pattern_arglikes - ROOT 0,0..0,2
+_pattern_attrlikes - ROOT 0,0..0,2
   .patterns[1]
    0] MatchAs - 0,0..0,1
      .name 'a'
 '''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r'''b=c'''), r'''
-_pattern_arglikes - ROOT 0,0..0,3
+_pattern_attrlikes - ROOT 0,0..0,3
   .kwd_attrs[1]
    0] 'b'
   .kwd_patterns[1]
@@ -2987,9 +2987,9 @@ _pattern_arglikes - ROOT 0,0..0,3
      .name 'c'
 '''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r'''b=c,'''), r'''
-_pattern_arglikes - ROOT 0,0..0,4
+_pattern_attrlikes - ROOT 0,0..0,4
   .kwd_attrs[1]
    0] 'b'
   .kwd_patterns[1]
@@ -2997,9 +2997,9 @@ _pattern_arglikes - ROOT 0,0..0,4
      .name 'c'
 '''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r'''a, b=c'''), r'''
-_pattern_arglikes - ROOT 0,0..0,6
+_pattern_attrlikes - ROOT 0,0..0,6
   .patterns[1]
    0] MatchAs - 0,0..0,1
      .name 'a'
@@ -3010,9 +3010,9 @@ _pattern_arglikes - ROOT 0,0..0,6
      .name 'c'
 '''),
 
-('parse__pattern_arglikes', 0, 0, '_pattern_arglikes', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
 r'''a, b=c,'''), r'''
-_pattern_arglikes - ROOT 0,0..0,7
+_pattern_attrlikes - ROOT 0,0..0,7
   .patterns[1]
    0] MatchAs - 0,0..0,1
      .name 'a'
@@ -3023,11 +3023,11 @@ _pattern_arglikes - ROOT 0,0..0,7
      .name 'c'
 '''),
 
-('parse__pattern_arglikes', 0, 0, 'SyntaxError', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, 'SyntaxError', {}, ('_pattern_attrlikes',
 r''')'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-('parse__pattern_arglikes', 0, 0, 'SyntaxError', {}, ('_pattern_arglikes',
+('parse__pattern_attrlikes', 0, 0, 'SyntaxError', {}, ('_pattern_attrlikes',
 r''','''),
 r'''**SyntaxError('invalid syntax')**'''),
 

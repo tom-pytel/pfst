@@ -26,7 +26,7 @@
 ')+('              parse__decorator_list                  **SyntaxError**
 ')+('              parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ')+('              parse__match_cases                     **SyntaxError**
-')+('              parse__pattern_arglikes                **SyntaxError**
+')+('              parse__pattern_attrlikes               **SyntaxError**
 ')+('              parse__type_params                     **SyntaxError**
 ')+('              parse__withitems                       **SyntaxError('invalid syntax')**
 ')+('              parse_alias                            **SyntaxError**
@@ -80,7 +80,7 @@
 '),('              parse__decorator_list                  **SyntaxError**
 '),('              parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 '),('              parse__match_cases                     **SyntaxError**
-'),('              parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+'),('              parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 '),('              parse__type_params                     **SyntaxError**
 '),('              parse__withitems                       **SyntaxError('invalid syntax')**
 '),('              parse_alias                            **SyntaxError**
@@ -134,7 +134,7 @@
 'a)('              parse__decorator_list                  **SyntaxError**
 'a)('              parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 'a)('              parse__match_cases                     **SyntaxError**
-'a)('              parse__pattern_arglikes                **SyntaxError**
+'a)('              parse__pattern_attrlikes               **SyntaxError**
 'a)('              parse__type_params                     **SyntaxError**
 'a)('              parse__withitems                       **SyntaxError('invalid syntax')**
 'a)('              parse_alias                            **SyntaxError**
@@ -188,7 +188,7 @@
 'a)(b'             parse__decorator_list                  **SyntaxError**
 'a)(b'             parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 'a)(b'             parse__match_cases                     **SyntaxError**
-'a)(b'             parse__pattern_arglikes                **SyntaxError**
+'a)(b'             parse__pattern_attrlikes               **SyntaxError**
 'a)(b'             parse__type_params                     **SyntaxError**
 'a)(b'             parse__withitems                       **SyntaxError('invalid syntax')**
 'a)(b'             parse_alias                            **SyntaxError**
@@ -242,7 +242,7 @@
 'a),(b'            parse__decorator_list                  **SyntaxError**
 'a),(b'            parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a),(b'            parse__match_cases                     **SyntaxError**
-'a),(b'            parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+'a),(b'            parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 'a),(b'            parse__type_params                     **SyntaxError**
 'a),(b'            parse__withitems                       **SyntaxError('invalid syntax')**
 'a),(b'            parse_alias                            **SyntaxError**
@@ -296,7 +296,7 @@
 'a),(*b'           parse__decorator_list                  **SyntaxError**
 'a),(*b'           parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a),(*b'           parse__match_cases                     **SyntaxError**
-'a),(*b'           parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+'a),(*b'           parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 'a),(*b'           parse__type_params                     **SyntaxError**
 'a),(*b'           parse__withitems                       **SyntaxError**
 'a),(*b'           parse_alias                            **SyntaxError**
@@ -350,7 +350,7 @@
 'a,)(b'            parse__decorator_list                  **SyntaxError**
 'a,)(b'            parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 'a,)(b'            parse__match_cases                     **SyntaxError**
-'a,)(b'            parse__pattern_arglikes                **SyntaxError**
+'a,)(b'            parse__pattern_attrlikes               **SyntaxError**
 'a,)(b'            parse__type_params                     **SyntaxError**
 'a,)(b'            parse__withitems                       **SyntaxError('invalid syntax')**
 'a,)(b'            parse_alias                            **SyntaxError**
@@ -404,7 +404,7 @@
 'a,),(b'           parse__decorator_list                  **SyntaxError**
 'a,),(b'           parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a,),(b'           parse__match_cases                     **SyntaxError**
-'a,),(b'           parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+'a,),(b'           parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 'a,),(b'           parse__type_params                     **SyntaxError**
 'a,),(b'           parse__withitems                       **SyntaxError('invalid syntax')**
 'a,),(b'           parse_alias                            **SyntaxError**
@@ -458,7 +458,7 @@
 'a,b)(b'           parse__decorator_list                  **SyntaxError**
 'a,b)(b'           parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 'a,b)(b'           parse__match_cases                     **SyntaxError**
-'a,b)(b'           parse__pattern_arglikes                **SyntaxError**
+'a,b)(b'           parse__pattern_attrlikes               **SyntaxError**
 'a,b)(b'           parse__type_params                     **SyntaxError**
 'a,b)(b'           parse__withitems                       **SyntaxError('invalid syntax')**
 'a,b)(b'           parse_alias                            **SyntaxError**
@@ -512,7 +512,7 @@
 'a)=('             parse__decorator_list                  **SyntaxError**
 'a)=('             parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a)=('             parse__match_cases                     **SyntaxError**
-'a)=('             parse__pattern_arglikes                **SyntaxError**
+'a)=('             parse__pattern_attrlikes               **SyntaxError**
 'a)=('             parse__type_params                     **SyntaxError**
 'a)=('             parse__withitems                       **SyntaxError**
 'a)=('             parse_alias                            **SyntaxError**
@@ -566,7 +566,7 @@
 'a,)if('           parse__decorator_list                  **SyntaxError**
 'a,)if('           parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a,)if('           parse__match_cases                     **SyntaxError**
-'a,)if('           parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+'a,)if('           parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 'a,)if('           parse__type_params                     **SyntaxError**
 'a,)if('           parse__withitems                       **SyntaxError**
 'a,)if('           parse_alias                            **SyntaxError**
@@ -620,7 +620,7 @@
 ')->('             parse__decorator_list                  **SyntaxError**
 ')->('             parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ')->('             parse__match_cases                     **SyntaxError**
-')->('             parse__pattern_arglikes                **SyntaxError**
+')->('             parse__pattern_attrlikes               **SyntaxError**
 ')->('             parse__type_params                     **SyntaxError**
 ')->('             parse__withitems                       **SyntaxError**
 ')->('             parse_alias                            **SyntaxError**
@@ -674,7 +674,7 @@
 ' #0 ) \\\n + \\\n (' parse__decorator_list                  **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0 ) \\\n + \\\n (' parse__match_cases                     **SyntaxError**
-' #0 ) \\\n + \\\n (' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0 ) \\\n + \\\n (' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0 ) \\\n + \\\n (' parse__type_params                     **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse__withitems                       **SyntaxError**
 ' #0 ) \\\n + \\\n (' parse_alias                            **SyntaxError**
@@ -728,7 +728,7 @@
 ' #0 ) \\\n, \\\n (' parse__decorator_list                  **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0 ) \\\n, \\\n (' parse__match_cases                     **SyntaxError**
-' #0 ) \\\n, \\\n (' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0 ) \\\n, \\\n (' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0 ) \\\n, \\\n (' parse__type_params                     **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse__withitems                       **SyntaxError**
 ' #0 ) \\\n, \\\n (' parse_alias                            **SyntaxError**
@@ -782,7 +782,7 @@
 ' #0\n a #1\n ) \\\n(' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ) \\\n(' parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n(' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ) \\\n(' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ) \\\n(' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ) \\\n(' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ) \\\n(' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n(' parse_alias                            **SyntaxError**
@@ -836,7 +836,7 @@
 ' #0\n a #1\n ) \\\n( #2\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ) \\\n( #2\n b' parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n( #2\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ) \\\n( #2\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ) \\\n( #2\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ) \\\n( #2\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ) \\\n( #2\n b' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n( #2\n b' parse_alias                            **SyntaxError**
@@ -890,7 +890,7 @@
 ' #0\n a #1\n ) \\\n ,( \n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ) \\\n ,( \n b' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( \n b' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n b' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n ,( \n b' parse_alias                            **SyntaxError**
@@ -944,7 +944,7 @@
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ) \\\n ,( \n * \n b' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n ,( \n * \n b' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ) \\\n ,( \n * \n b' parse_alias                            **SyntaxError**
@@ -998,7 +998,7 @@
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n ) \\\n , \\\n ( #2\n b' parse_alias                            **SyntaxError**
@@ -1052,7 +1052,7 @@
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n ( #3\n b' parse_alias                            **SyntaxError**
@@ -1106,7 +1106,7 @@
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n , \\\n ( #3\n b' parse_alias                            **SyntaxError**
@@ -1160,7 +1160,7 @@
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__expr_arglikes                   **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse__withitems                       **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n b #3\n ) \\\n ( #4\n b' parse_alias                            **SyntaxError**
@@ -1214,7 +1214,7 @@
 ' #0\n a #1\n ) \\\n = \\\n (' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ) \\\n = \\\n (' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ) \\\n = \\\n (' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ) \\\n = \\\n (' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ) \\\n = \\\n (' parse_alias                            **SyntaxError**
@@ -1268,7 +1268,7 @@
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n , #2\n ) \\\n if \\\n ( #3\n b' parse_alias                            **SyntaxError**
@@ -1322,7 +1322,7 @@
 ']+['              parse__decorator_list                  **SyntaxError**
 ']+['              parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ']+['              parse__match_cases                     **SyntaxError**
-']+['              parse__pattern_arglikes                **SyntaxError**
+']+['              parse__pattern_attrlikes               **SyntaxError**
 ']+['              parse__type_params                     **SyntaxError**
 ']+['              parse__withitems                       **SyntaxError**
 ']+['              parse_alias                            **SyntaxError**
@@ -1376,7 +1376,7 @@
 '],['              parse__decorator_list                  **SyntaxError**
 '],['              parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 '],['              parse__match_cases                     **SyntaxError**
-'],['              parse__pattern_arglikes                **SyntaxError**
+'],['              parse__pattern_attrlikes               **SyntaxError**
 '],['              parse__type_params                     **SyntaxError**
 '],['              parse__withitems                       **SyntaxError**
 '],['              parse_alias                            **SyntaxError**
@@ -1430,7 +1430,7 @@
 'a]['              parse__decorator_list                  **SyntaxError**
 'a]['              parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a]['              parse__match_cases                     **SyntaxError**
-'a]['              parse__pattern_arglikes                **SyntaxError**
+'a]['              parse__pattern_attrlikes               **SyntaxError**
 'a]['              parse__type_params                     **SyntaxError**
 'a]['              parse__withitems                       **SyntaxError**
 'a]['              parse_alias                            **SyntaxError**
@@ -1484,7 +1484,7 @@
 'a][b'             parse__decorator_list                  **SyntaxError**
 'a][b'             parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a][b'             parse__match_cases                     **SyntaxError**
-'a][b'             parse__pattern_arglikes                **SyntaxError**
+'a][b'             parse__pattern_attrlikes               **SyntaxError**
 'a][b'             parse__type_params                     **SyntaxError**
 'a][b'             parse__withitems                       **SyntaxError**
 'a][b'             parse_alias                            **SyntaxError**
@@ -1538,7 +1538,7 @@
 'a],[b'            parse__decorator_list                  **SyntaxError**
 'a],[b'            parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a],[b'            parse__match_cases                     **SyntaxError**
-'a],[b'            parse__pattern_arglikes                **SyntaxError**
+'a],[b'            parse__pattern_attrlikes               **SyntaxError**
 'a],[b'            parse__type_params                     **SyntaxError**
 'a],[b'            parse__withitems                       **SyntaxError**
 'a],[b'            parse_alias                            **SyntaxError**
@@ -1592,7 +1592,7 @@
 'a,][b'            parse__decorator_list                  **SyntaxError**
 'a,][b'            parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a,][b'            parse__match_cases                     **SyntaxError**
-'a,][b'            parse__pattern_arglikes                **SyntaxError**
+'a,][b'            parse__pattern_attrlikes               **SyntaxError**
 'a,][b'            parse__type_params                     **SyntaxError**
 'a,][b'            parse__withitems                       **SyntaxError**
 'a,][b'            parse_alias                            **SyntaxError**
@@ -1646,7 +1646,7 @@
 'a,],[b'           parse__decorator_list                  **SyntaxError**
 'a,],[b'           parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a,],[b'           parse__match_cases                     **SyntaxError**
-'a,],[b'           parse__pattern_arglikes                **SyntaxError**
+'a,],[b'           parse__pattern_attrlikes               **SyntaxError**
 'a,],[b'           parse__type_params                     **SyntaxError**
 'a,],[b'           parse__withitems                       **SyntaxError**
 'a,],[b'           parse_alias                            **SyntaxError**
@@ -1700,7 +1700,7 @@
 'a,b][b'           parse__decorator_list                  **SyntaxError**
 'a,b][b'           parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a,b][b'           parse__match_cases                     **SyntaxError**
-'a,b][b'           parse__pattern_arglikes                **SyntaxError**
+'a,b][b'           parse__pattern_attrlikes               **SyntaxError**
 'a,b][b'           parse__type_params                     **SyntaxError**
 'a,b][b'           parse__withitems                       **SyntaxError**
 'a,b][b'           parse_alias                            **SyntaxError**
@@ -1754,7 +1754,7 @@
 'a]=['             parse__decorator_list                  **SyntaxError**
 'a]=['             parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a]=['             parse__match_cases                     **SyntaxError**
-'a]=['             parse__pattern_arglikes                **SyntaxError**
+'a]=['             parse__pattern_attrlikes               **SyntaxError**
 'a]=['             parse__type_params                     **SyntaxError**
 'a]=['             parse__withitems                       **SyntaxError**
 'a]=['             parse_alias                            **SyntaxError**
@@ -1808,7 +1808,7 @@
 'a,]if[b'          parse__decorator_list                  **SyntaxError**
 'a,]if[b'          parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 'a,]if[b'          parse__match_cases                     **SyntaxError**
-'a,]if[b'          parse__pattern_arglikes                **SyntaxError**
+'a,]if[b'          parse__pattern_attrlikes               **SyntaxError**
 'a,]if[b'          parse__type_params                     **SyntaxError**
 'a,]if[b'          parse__withitems                       **SyntaxError**
 'a,]if[b'          parse_alias                            **SyntaxError**
@@ -1862,7 +1862,7 @@
 ' #0 ] \\\n + \\\n [' parse__decorator_list                  **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0 ] \\\n + \\\n [' parse__match_cases                     **SyntaxError**
-' #0 ] \\\n + \\\n [' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0 ] \\\n + \\\n [' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0 ] \\\n + \\\n [' parse__type_params                     **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse__withitems                       **SyntaxError**
 ' #0 ] \\\n + \\\n [' parse_alias                            **SyntaxError**
@@ -1916,7 +1916,7 @@
 ' #0 ] \\\n, \\\n [' parse__decorator_list                  **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0 ] \\\n, \\\n [' parse__match_cases                     **SyntaxError**
-' #0 ] \\\n, \\\n [' parse__pattern_arglikes                **SyntaxError('invalid syntax')**
+' #0 ] \\\n, \\\n [' parse__pattern_attrlikes               **SyntaxError('invalid syntax')**
 ' #0 ] \\\n, \\\n [' parse__type_params                     **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse__withitems                       **SyntaxError**
 ' #0 ] \\\n, \\\n [' parse_alias                            **SyntaxError**
@@ -1970,7 +1970,7 @@
 ' #0\n a #1\n ] \\\n[' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ] \\\n[' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ] \\\n[' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ] \\\n[' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ] \\\n[' parse_alias                            **SyntaxError**
@@ -2024,7 +2024,7 @@
 ' #0\n a #1\n ] \\\n[ #2\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ] \\\n[ #2\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ] \\\n[ #2\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ] \\\n[ #2\n b' parse_alias                            **SyntaxError**
@@ -2078,7 +2078,7 @@
 ' #0\n a #1\n ] \\\n ,[ \n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ] \\\n ,[ \n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ \n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n b' parse_alias                            **SyntaxError**
@@ -2132,7 +2132,7 @@
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ] \\\n ,[ \n * \n b' parse_alias                            **SyntaxError**
@@ -2186,7 +2186,7 @@
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ] \\\n , \\\n [ #2\n b' parse_alias                            **SyntaxError**
@@ -2240,7 +2240,7 @@
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n [ #3\n b' parse_alias                            **SyntaxError**
@@ -2294,7 +2294,7 @@
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n , \\\n [ #3\n b' parse_alias                            **SyntaxError**
@@ -2348,7 +2348,7 @@
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n , #2\n b #3\n ] \\\n [ #4\n b' parse_alias                            **SyntaxError**
@@ -2402,7 +2402,7 @@
 ' #0\n a #1\n ] \\\n = \\\n [' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n ] \\\n = \\\n [' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n ] \\\n = \\\n [' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n ] \\\n = \\\n [' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n ] \\\n = \\\n [' parse_alias                            **SyntaxError**
@@ -2456,7 +2456,7 @@
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__decorator_list                  **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__expr_arglikes                   **SyntaxError('invalid expression(s) (arglike)')**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__match_cases                     **SyntaxError**
-' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__pattern_arglikes                **SyntaxError**
+' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__pattern_attrlikes               **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__type_params                     **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse__withitems                       **SyntaxError**
 ' #0\n a #1\n , #2\n ] \\\n if \\\n [ #3\n b' parse_alias                            **SyntaxError**
