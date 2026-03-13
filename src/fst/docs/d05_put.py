@@ -303,11 +303,20 @@ Constant 2.5 - ROOT 0,0..0,3
 
 `put()` and `put_slice()` use virtual fields for special puts just like the get functions (`fst.docs.d07_views`):
 
+>>> print(FST('a < b == c > d').put(None, 1, field='_all').src)
+a == c > d
+
 >>> print(FST('{a: b, c: d}').put_slice('{x: y, u: v}', 1, 1, field='_all').src)
 {a: b, x: y, u: v, c: d}
 
->>> print(FST('a < b == c > d').put(None, 1, field='_all').src)
-a == c > d
+Putting source (instead of nodes) to containers does not require that source to be delimited with the container's usual
+delimiters (which can be a syntax error if you just try to parse it that way).
+
+>>> print(FST('{a: b, c: d}').put_slice('x: y, u: v', 1, 1).src)
+{a: b, x: y, u: v, c: d}
+
+>>> print(FST('[a, b]').put_slice('x, y', 1, 1).src)
+[a, x, y, b]
 
 
 ## `insert()`, `append()`, `extend()`, `prepend()` and `prextend()`

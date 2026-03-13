@@ -1921,7 +1921,8 @@ with (open(a) as f,
 ```
 
 Using `on='leave'` is objectively safer as it only walks the tree once and cannot cause infinite recursion (even from
-`nested=True`). The operating principle is different however so which option is used will depend on the case.
+`nested=True`). The operating principle is different however and `on='leave'` cannot do everything that `loop` can do,
+so which option is used will depend on the case.
 
 ```py
 >>> print(FST(src).sub(pat, repl, on='leave', trivia=('block',)).src)

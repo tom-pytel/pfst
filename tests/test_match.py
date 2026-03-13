@@ -6,7 +6,7 @@ import unittest
 
 from fst import *
 
-from fst.common import PYLT14, PYGE11
+from fst.common import PYLT14, PYGE11, PYGE12
 from fst.match import *
 
 from support import SubCases, assertRaises
@@ -2815,6 +2815,9 @@ MNOT(MTAG('no'))
         self.assertEqual('[]', FST('[a]').sub(MList(elts=[MQOPT(t=[MQSTAR('b')]), MQSTAR]), '[__FST_t]').src)
         self.assertEqual('""', FST('[a]').sub(M(MList, t=None), '"__FST_t"').src)
         self.assertEqual('"123"', FST('[a]').sub(M(MList, t='123'), '"__FST_t"').src)
+
+        if PYGE12:
+            self.assertEqual('f"a"', FST('f"a"').sub(MConstant, '"b"').src)
 
 
 if __name__ == '__main__':

@@ -34,7 +34,7 @@ from ..asttypes import *
 from ..asttypes import _ASTDummy
 from ..astutil import *
 from ..astutil import re_alnumdot_alnum, FIELDS, AST_BASES
-from ..common import PYLT11, PYLT12, PYLT14, PYGE11, PYGE12, PYGE13, astfield, next_frag
+from ..common import PYLT11, PYLT12, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, next_frag
 from ..parsex import parse, parse_expr_arglike
 from ..view import FSTView
 from ..match import *
@@ -1102,7 +1102,7 @@ class Fuzzy:
             with open("/proc/self/status") as f:
                 for line in f:
                     if line.startswith("VmRSS:"):
-                        if (l := len(s := line.split()[1])) > 6 or (l == 6 and s > '500000'):
+                        if (l := len(s := line.split()[1])) > 6 or (l == 6 and s > '1000000'):
                             print('\nMemory!')
                             print(' ', gc.get_stats())
                             print(' ', gc.collect())
@@ -3212,9 +3212,8 @@ class Substitute(Fuzzy):
         Call:             (MCall(func=M(func=...), _args=M(_args=...)), FST('__FST_func(__FST__args)', Call)),
         # FormattedValue:   (MFormattedValue(), FST('zzz', FormattedValue)),   # (('value', 'expr'), ('conversion', 'int'), ('format_spec', 'expr?'))),
         # Interpolation:    (MInterpolation(), FST('zzz', Interpolation)),     # (('value', 'expr'), ('str', 'constant'), ('conversion', 'int'), ('format_spec', 'expr?'))),
-        # JoinedStr:        (MJoinedStr(), FST('zzz', JoinedStr)),             # (('values', 'expr*'),)),
-        # TemplateStr:      (MTemplateStr(), FST('zzz', TemplateStr)),         # (('values', 'expr*'),)),
-      # Constant:         (MConstant, FST('__FST_', Name)),               # (('value', 'constant'), ('kind', 'string?'))),
+        # JoinedStr:        (MJoinedStr, FST('__FST_', Name)),             # (('values', 'expr*'),)),
+        Constant:         (MConstant, FST('__FST_', Name)),               # (('value', 'constant'), ('kind', 'string?'))),
         Attribute:        (MAttribute(value=M(value=...), attr=M(attr=...)), FST('__FST_value.__FST_attr', Attribute)),
         Subscript:        (MSubscript(value=M(value=...), slice=M(slice=...)), FST('__FST_value[__FST_slice]', Subscript)),
         Starred:          (MStarred(value=M(value=...)), FST('*__FST_value', Starred)),
@@ -3223,18 +3222,19 @@ class Substitute(Fuzzy):
         Tuple:            (MTuple(elts=M(elts=...)), FST('(__FST_elts,)', Tuple)),
         Slice:            (MSlice(lower=M(lower=...), upper=M(upper=...), step=M(step=...)), FST('__FST_lower:__FST_upper:__FST_step', Slice)),
         comprehension:    (Mcomprehension(target=M(target=...), iter=M(iter=...), ifs=M(ifs=...)), FST('for __FST_target in __FST_iter if __FST_ifs', comprehension)),
-      # ExceptHandler:    (MExceptHandler(type=M(type=...), name=M(name=...), body=M(body=...)), FST('except __FST_type as __FST_name: __FST_body', ExceptHandler)),     # (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
-      # arguments:        (Marguments(), FST('zzz', arguments)),             # (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr?*'), ('kwarg', 'arg?'))),
+        ExceptHandler:    [(MExceptHandler(type=M(type=...), name=M(name=...), body=M(body=...), _star=False), FST('except __FST_type as __FST_name: __FST_body', ExceptHandler)),],     # (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
+        arguments:        (Marguments(_all=M(_all=...)), FST('__FST__all', arguments)),             # (('posonlyargs', 'arg*'), ('args', 'arg*'), ('defaults', 'expr*'), ('vararg', 'arg?'), ('kwonlyargs', 'arg*'), ('kw_defaults', 'expr?*'), ('kwarg', 'arg?'))),
         arg:              (Marg(arg=M(arg=...), annotation=M(annotation=...)), FST('__FST_arg: __FST_annotation', arg)),
         keyword:          (Mkeyword(arg=M(arg=...), value=M(value=...)), FST('__FST_arg=__FST_value', keyword)),
         alias:            (Malias(name=M(name=...), asname=M(asname=...)), FST('__FST_name as __FST_asname', alias)),
         withitem:         (Mwithitem(context_expr=M(context_expr=...), optional_vars=M(optional_vars=...)), FST('__FST_context_expr as __FST_optional_vars', withitem)),
         match_case:       (Mmatch_case(pattern=M(pattern=...), guard=M(guard=...), body=M(body=...)), FST('case __FST_pattern if __FST_guard: __FST_body', match_case)),
-      # MatchValue:       (MMatchValue(value=M(value=...)), FST('__FST_value', MatchValue)),           # (('value', 'expr'),)),
-      # MatchSingleton:   (MMatchSingleton(), FST('zzz', MatchSingleton)),   # (('value', 'constant'),)),
+        MatchValue:       (MMatchValue(value=M(value=...)), FST('__FST_value', pattern)),           # (('value', 'expr'),)),
+        MatchSingleton:   (MMatchSingleton, FST('__FST_', MatchAs)),   # (('value', 'constant'),)),
         MatchSequence:    (MMatchSequence(patterns=M(patterns=...)), FST('[__FST_patterns]', MatchSequence)),
         MatchMapping:     (MMatchMapping(_all=M(_all=...)), FST('{"...": __FST__all}', MatchMapping)),
-      # MatchClass:       (MMatchClass(), FST('zzz', MatchClass)),           # (('cls', 'expr'), ('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
+        # TODO: MatchClass.kwd_attrs/kwd_patterns when the slice is done
+        MatchClass:       (MMatchClass(cls=M(cls=...), patterns=M(patterns=...)), FST('__FST_cls(__FST_patterns)', MatchClass)),           # (('cls', 'expr'), ('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
         MatchStar:        (MMatchStar(name=M(name=...)), FST('*__FST_name', MatchStar)),
         MatchAs:          (MMatchAs(pattern=M(pattern=...), name=M(name=...)), FST('__FST_pattern as __FST_name', MatchAs)),
         MatchOr:          (MMatchOr(patterns=M(patterns=...)), FST('__FST_patterns', pattern)),
@@ -3244,6 +3244,10 @@ class Substitute(Fuzzy):
         PATS_N_REPLS.update({
             TryStar:          (MTryStar(body=M(body=...), handlers=M(handlers=...), orelse=M(orelse=...), finalbody=M(finalbody=...)), FST('try: __FST_body\nexcept* "...": __FST_handlers\nelse: __FST_orelse\nfinally: __FST_finalbody', TryStar)),
         })
+
+        PATS_N_REPLS[ExceptHandler].append(
+            (MExceptHandler(type=M(type=...), name=M(name=...), body=M(body=...), _star=True), FST('except* __FST_type as __FST_name: __FST_body', ExceptHandler))     # (('type', 'expr?'), ('name', 'identifier?'), ('body', 'stmt*'))),
+        )
 
     if PYGE12:
         PATS_N_REPLS.update({
@@ -3263,12 +3267,15 @@ class Substitute(Fuzzy):
             TypeVarTuple:     (MTypeVarTuple(name=M(name=...), default_value=M(default_value=...)), FST('*__FST_name = __FST_default_value', TypeVarTuple)),
         })
 
-    def fuzz_one(self, fst, fnm) -> bool:
-        printed = False
-        count = 0
-        ast_clss = list(FIELDS)
+    # if PYGE14:
+    #     PATS_N_REPLS.update({
+    #         TemplateStr:      (MTemplateStr, FST('__FST_', Name)),         # (('values', 'expr*'),)),
+    #     })
 
-        shuffle(ast_clss)
+    def fuzz_one(self, fst, fnm) -> bool:
+        count = 0
+        abort = False
+        ast_clss = list(FIELDS)
 
         def callback(f: FST) -> None:
             nonlocal count
@@ -3279,51 +3286,69 @@ class Substitute(Fuzzy):
 
         fst1 = fst.copy()
         fst2 = fst.copy()
+        f = None
 
         try:
-            for f in (fst1, fst2):
-                for ast_cls in ast_clss:
-                    if self.check_abort():
-                        break
+            try:
+                for f in (fst1, fst2):
+                    shuffle(ast_clss)
 
-                    if not (pat_n_repl := Substitute.PATS_N_REPLS.get(ast_cls)):
+                    for ast_cls in ast_clss:
+                        if self.check_abort():
+                            abort = True
+
+                            break
+
+                        if not (pat_n_repls := Substitute.PATS_N_REPLS.get(ast_cls)):
+                            continue
+
+                        for pat_n_repl in (pat_n_repls if isinstance(pat_n_repls, list) else [pat_n_repls]):
+                            pat, repl = pat_n_repl
+                            on = choice(('enter', 'leave'))
+
+                            f.sub(pat, repl, nested=True, callback=callback, self_=False, on=on)
+                                #   repl_options=dict(args_as=None))  #, promote='all')
+
+                    else:
                         continue
 
-                    pat, repl = pat_n_repl
-                    on = choice(('enter', 'leave'))
-
-                    try:
-                        f.sub(pat, repl, nested=True, callback=callback, self_=False, on=on)  #, promote='all')
-
-                    except Exception:
-                        print()
-
-                        if self.verbose:
-                            print(f.src)
-
-                            printed = True
-
-                        print(f'{pat=}')
-                        print(f'{repl=}')
-                        print(f'{on=}')
-
-                        raise
+                    break
 
                 f.verify()
 
-            compare_asts(fst1.a, fst2.a, raise_=True)
-
-        finally:
-            if not printed:
+            except Exception:
                 print()
 
                 if self.verbose:
                     print(f.src)
 
+                print(f'{pat=}')
+                print(f'{repl=}')
+                print(f'{on=}')
+
+                raise
+
+            f = None
+
+            if not abort:
+                compare_asts(fst1.a, fst2.a, raise_=True)
+
+        finally:
+            if not f:
+                print()
+
+                if self.verbose:
+                    print('fst1', '-' * 80)
+                    print(fst1.src)
+                    print('fst2', '-' * 80)
+                    print(fst2.src)
+                    print('end', '-' * 80)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 
 FUZZIES = {o.name: o for o in globals().values() if isinstance(o, type) and o is not Fuzzy and issubclass(o, Fuzzy)}
+
 
 
 def main():

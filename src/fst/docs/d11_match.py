@@ -1876,7 +1876,7 @@ hardcoding it.
 `ExceptHandler` nodes don't have any fields which explicitly indicate whether it is a normal `except` or a star
 `except*` node. This information can be gotten from the source or from the parent node, but in both cases this implies
 that the node must be part of an `FST` tree in order to differentiate it. For this reason, matching on star status of
-the handler is limited to `FST` trees, in pure `AST` you cannot match on star status.
+the handler is limited to `FST` trees. When matching against pure `AST` you cannot match on star status.
 
 The special `_star` parameter in the `MExceptHandler` pattern indicates whether the pattern should match all types of
 except handlers (`_star=None`), `except*` except handlers (`_star=True`) or standard except handlers (`_star=False`).

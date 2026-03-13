@@ -1,7 +1,7 @@
 """
 This is rather crude documentation that hopefully can show usage through many small examples.
 
-`fst.docs.d01_parse`: Parse and unparse from source or `AST`
+`fst.docs.d01_parse`: Parse and unparse from source or AST
 
 `fst.docs.d02_locations`: Node locations in the source code
 

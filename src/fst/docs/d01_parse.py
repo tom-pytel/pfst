@@ -1,5 +1,5 @@
 r"""
-# Parse and unparse from source or `AST`
+# Parse and unparse from source or AST
 
 To be able to execute the examples, import this.
 
@@ -368,4 +368,23 @@ FunctionDef - ROOT 0,0..4,17
            0] UnaryOp - 4,14..4,16
              .op USub - 4,14..4,15
              .operand Name 'a' Load - 4,15..4,16
+
+
+## `parse_ast()`
+
+The `FST` class makes its internal extended `AST` parsing available via the `FST.parse_ast()` function. This allows
+parsing individual nodes as pure `AST` (without any `FST` nodes added) that are otherwise unparsable by themselves by
+the standard `ast` module.
+
+>>> print(dump(FST.parse_ast('except Exception: pass')))
+ExceptHandler(type=Name(id='Exception', ctx=Load()), body=[Pass()])
+
+>>> print(dump(FST.parse_ast('kw=value', 'keyword')))
+keyword(arg='kw', value=Name(id='value', ctx=Load()))
+
+>>> print(dump(FST.parse_ast('upper:lower:step', Slice), indent=2))
+Slice(
+  lower=Name(id='upper', ctx=Load()),
+  upper=Name(id='lower', ctx=Load()),
+  step=Name(id='step', ctx=Load()))
 """

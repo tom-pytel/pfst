@@ -283,78 +283,6 @@ _ExceptHandlers - ROOT 0,0..3,9
         .value Constant 2 - 3,8..3,9
 
 
-## Non-AST values
-
-Using `get()` and `get_slice()` you can get non-`AST` primitive values from nodes. This exists to accomondate stuff like
-`MatchSingleton`, `Constant` and any other node which has a primitive for any reason.
-
->>> FST("b'bytes'", Constant).get('value')
-b'bytes'
-
->>> FST('[i async for i in j]').generators[0].get('is_async')
-1
-
->>> FST('a.b: int = 1').get('simple')
-0
-
-Some primitive fields get promoted to node types by default, but you can turn all promotion off by specifying
-`promote=False`.
-
->>> f = FST('case True: pass')
-
->>> f.pattern.get('value')
-<Constant ROOT 0,0..0,4>
-
->>> f.pattern.get('value', promote=False)
-True
-
-Getting slices from a primitive list does convert the primitives to their common-sense `AST` equivalents by default.
-
->>> f = FST('global a, b, c')
-
->>> _ = f.dump()
-Global - ROOT 0,0..0,14
-  .names[3]
-   0] 'a'
-   1] 'b'
-   2] 'c'
-
->>> g = f.get_slice()
-
->>> _ = g.dump()
-Tuple - ROOT 0,0..0,7
-  .elts[3]
-   0] Name 'a' Load - 0,0..0,1
-   1] Name 'b' Load - 0,3..0,4
-   2] Name 'c' Load - 0,6..0,7
-  .ctx Load
-
-Put likewise can take a valid `Tuple` when putting to a list of comma-separated primitives.
-
->>> f.put_slice(g, 1, 2)
-<Global ROOT 0,0..0,20>
-
->>> print(f.src)
-global a, a, b, c, c
-
-You can also put a list of primitives.
-
->>> print(f.get_slice(promote=False))
-['a', 'a', 'b', 'c', 'c']
-
->>> f.put_slice(['x', 'y'], 1, 4)
-<Global ROOT 0,0..0,17>
-
->>> _ = f.get_slice().dump()
-Tuple - ROOT 0,0..0,10
-  .elts[4]
-   0] Name 'a' Load - 0,0..0,1
-   1] Name 'x' Load - 0,3..0,4
-   2] Name 'y' Load - 0,6..0,7
-   3] Name 'c' Load - 0,9..0,10
-  .ctx Load
-
-
 ## By attribute
 
 The `FST` class provides properties that mirror the fields of all possible `AST` classes in order to allow direct access
@@ -389,13 +317,113 @@ to those fields through the `FST` class. When accessing like this, fields which 
 2.5
 
 Accessing in this manner does not give a copy but rather the specific element which is in the tree. If you want a
-standalone element that you can put into another tree then you need to make a copy.
+standalone element that you can put into another tree then you need to make a copy (if it is an `FST`).
 
 >>> f.value
 <List 0,7..0,15>
 
 >>> f.value.copy()
 <List ROOT 0,0..0,8>
+
+
+## Non-AST values
+
+Using `get()` and `get_slice()` you can get non-`AST` primitive values from nodes. Those values can be promoted to nodes
+depending on the `promote` option. This exists to accomodate things like `MatchSingleton`, `Constant` and any other
+node which has a primitive for any reason.
+
+>>> FST("b'bytes'", Constant).get('value')
+b'bytes'
+
+>>> FST('[i async for i in j]').generators[0].get('is_async')
+1
+
+>>> FST('a.b: int = 1').get('simple')
+0
+
+The default global `promote=True` promotes only `Global/Nonlocal.names`, `MatchSingleton.value` and
+`MatchClass.kwd_attrs` fields.
+
+>>> FST('global a, b, c').get(1, 'names')
+<Name ROOT 0,0..0,1>
+
+>>> f = FST('case True: pass')
+
+>>> f.pattern.get('value')
+<Constant ROOT 0,0..0,4>
+
+You can turn this behavior off for `get()` and similar functions with `promote=False`.
+
+>>> f.pattern.get('value', promote=False)
+True
+
+Getting slices from a primitive list does convert the primitives to their common-sense `AST` equivalents by default.
+
+>>> f = FST('global a, b, c')
+
+>>> _ = f.dump()
+Global - ROOT 0,0..0,14
+  .names[3]
+   0] 'a'
+   1] 'b'
+   2] 'c'
+
+>>> g = f.get_slice()
+
+>>> _ = g.dump()
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+   2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+
+Put likewise can take a valid `Tuple` when putting to a list of comma-separated primitives.
+
+>>> f.put_slice(g, 1, 2)
+<Global ROOT 0,0..0,20>
+
+>>> print(f.src)
+global a, a, b, c, c
+
+Any fields which are primitive also accept primitives being put to them with put functions.
+
+>>> print(f.get_slice(promote=False))
+['a', 'a', 'b', 'c', 'c']
+
+>>> f.put_slice(['x', 'y'], 1, 4)
+<Global ROOT 0,0..0,17>
+
+>>> _ = f.get_slice().dump()
+Tuple - ROOT 0,0..0,10
+  .elts[4]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,3..0,4
+   2] Name 'y' Load - 0,6..0,7
+   3] Name 'c' Load - 0,9..0,10
+  .ctx Load
+
+All primitive fields can be promoted but the appropriate `promote` option value must be set. Any field that is defined
+as an `identifier` in `AST` documentation can be promoted by setting `promote='identifier'`. This level of promotion
+covers identifiers and everything else that is covered with `promote=True`.
+
+>>> f = FST('def func(): pass')
+
+>>> f.get('name')
+'func'
+
+>>> f.get('name', promote='identifier')
+<Name ROOT 0,0..0,4>
+
+All other primitive fields are promoted with `promote='all'`. This will promote **ALL** primitive fields to nodes.
+
+>>> f = FST('[i async for i in j]')
+
+>>> f.generators[0].get('is_async')
+1
+
+>>> f.generators[0].get('is_async', promote='all')
+<Constant ROOT 0,0..0,1>
 
 
 ## `get_src()`

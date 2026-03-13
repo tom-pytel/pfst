@@ -4,19 +4,19 @@ Version {{VERSION}}
 
 # Introduction
 
-`pfst` (Python Formatted Syntax Tree) exists in order to allow quick and easy modification of Python source without
+pfst (Python Formatted Syntax Tree) exists in order to allow quick and easy modification of Python source without
 losing formatting or comments. The goal is simple, Pythonic, container-like access to the `AST`, with the ability to
 modify any node while preserving formatting in the rest of the tree.
 
 > Yes, we said "formatting" and "AST" in the same sentence.
 
-Normally `AST` nodes don't store any explicit formatting, much less, comments. But `pfst` works by adding `FST` nodes to
+Normally `AST` nodes don't store any explicit formatting, much less, comments. But pfst works by adding `FST` nodes to
 existing Python `AST` nodes as an `.f` attribute (type-safe accessor `castf()` provided). This keeps extra structure
 information, the original source, and provides the interface to format-preserving operations. Each operation through
 `FST` nodes is a simultaneous edit of the `AST` tree and the source code, and those are kept synchronized so that the
 current source will always parse to the current tree.
 
-`pfst` automatically handles:
+pfst automatically handles:
 
 - Operator precedence and parentheses
 - Indentation and line continuations
@@ -43,7 +43,7 @@ If you just want to dive into the examples then go to `fst.docs.d14_examples`.
 
 # Getting Started
 
-Since `pfst` is built directly on Python's standard `AST` nodes, if you are familiar with those then you already know
+Since pfst is built directly on Python's standard `AST` nodes, if you are familiar with those then you already know
 the `FST` node structure. Our focus on simple Pythonic operations means you can get up to speed quickly.
 
 1. Parse source
@@ -92,7 +92,7 @@ def func(arg: int=0) -> int:
     return arg
 ```
 
-Beyond basic editing, `pfst` provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
+Beyond basic editing, pfst provides syntax-ordered traversal, scope symbol analysis, structural pattern matching and
 substitution, and a mechanism for reconciling external `AST` mutations with the formatted tree, preserving comments and
 layout wherever the structure still permits it.
 
@@ -113,31 +113,129 @@ codemods. It models Python as a fully concrete syntax tree, preserving every tok
 you complete control, but it also means you are responsible for managing formatting details when making non-trivial
 changes.
 
-`pfst` takes a different approach. Instead of requiring you to explicitly manage formatting, it treats layout as
-something to preserve and reconcile automatically. You focus on structural and semantic transformations and `pfst`
+pfst takes a different approach. Instead of requiring you to explicitly manage formatting, it treats layout as
+something to preserve and reconcile automatically. You focus on structural and semantic transformations and pfst
 handles the "formatting math" needed to keep the result clean and stable.
 
 In short:
 - LibCST: “Do exactly what I say.”
 - pfst: “Do what I mean.”
 
+Here is a concrete example with minimal code for both LibCST and pfst to add a keyword argument with a comment to all
+`logger.info()` calls which don't already have the specific keyword argument `correlation_id`.
+
+LibCST function:
+
+```py
+from libcst import *
+from libcst.matchers import *
+
+def inject_logging_metadata(src: str) -> str:
+    module = parse_module(src)
+
+    new_arg = (parse_module('f(correlation_id=CID  # blah\n)')
+        .body[0].body[0].value.args[0])
+
+    class AddArg(CSTTransformer):
+        def leave_Call(self, _, node):
+            if matches(node.func, Attribute(Name('logger'), Name('info'))):
+                if not any(a.keyword and a.keyword.value == 'correlation_id'
+                           for a in node.args):
+                    return node.with_changes(args=[*node.args, new_arg])
+            return node
+
+    module = module.visit(AddArg())
+
+    return module.code
+```
+
+pfst function:
+
+```py
+from fst import *
+from fst.match import *
+
+def inject_logging_metadata(src: str) -> str:
+    module = FST(src)
+
+    for m in module.search(MCall(
+        func=MAttribute('logger', 'info'),
+        keywords=MNOT([MQSTAR, Mkeyword('correlation_id'), MQSTAR]),
+    )):
+        m.matched.append('correlation_id=CID  # blah', trivia=())
+
+    return module.src
+```
+
+Input source:
+```py
+logger.info('Hello world...')  # hey
+logger.info('Already have id', correlation_id=other_cid)  # ho
+logger.info()  # its off to work we go
+
+class cls:
+    def method(self, thing, extra):
+        (logger) . info(  # start
+            f'a {thing}',  # this is fine
+            extra=extra,  # also this
+        )  # end
+```
+
+LibCST output:
+
+```py
+logger.info('Hello world...', correlation_id=CID  # blah
+)  # hey
+logger.info('Already have id', correlation_id=other_cid)  # ho
+logger.info(correlation_id=CID  # blah
+)  # its off to work we go
+
+class cls:
+    def method(self, thing, extra):
+        (logger) . info(  # start
+            f'a {thing}',  # this is fine
+            extra=extra,  # also this
+        correlation_id=CID  # blah
+        )  # end
+```
+
+pfst output:
+```py
+logger.info('Hello world...', correlation_id=CID  # blah
+)  # hey
+logger.info('Already have id', correlation_id=other_cid)  # ho
+logger.info(correlation_id=CID  # blah
+)  # its off to work we go
+
+class cls:
+    def method(self, thing, extra):
+        (logger) . info(  # start
+            f'a {thing}',  # this is fine
+            extra=extra,  # also this
+            correlation_id=CID  # blah
+        )  # end
+```
+
+If you want LibCST to align the argument its significantly more code, but that can be left for a formatter after the
+file processing.
+
 
 # Notes
 
-- Disclaimer: You can reformat a large codebase with `pfst` but it won't be quite as sprightly as other libraries more apt
-to the task. The main focus of `pfst` is not necessarily to be fast but rather easy and to handle all the weird cases
+- Disclaimer: You can reformat a large codebase with pfst but it won't be quite as sprightly as other libraries more apt
+to the task. The main focus of pfst is not necessarily to be fast but rather easy and to handle all the weird cases
 of python syntax correctly so that functional code always results. Use a formatter as needed afterwards.
 
-- `pfst` was written and tested on Python versions 3.10 through 3.15a.
+- pfst was written and tested on Python versions 3.10 through 3.15a.
 
-- `pfst` does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
+- pfst does not do any parsing of its own but rather relies on the builtin Python parser. This means you get perfect
 parsing but also that it is limited to the syntax of the running Python version (many options exist for running any
 specific version of Python).
 
-- `pfst` validates for parsability, not compilability. This means that `*a, *b = c` and `def f(a, a): pass` are both
+- pfst validates for parsability, not compilability. This means that `*a, *b = c` and `def f(a, a): pass` are both
 considered valid even though they are uncompilable.
 
-- If you will be playing with `pfst` then the `FST.dump()` method will be your friend.
+- If you will be playing with pfst then the `FST.dump()` method will be your friend.
 '''
 
 import ast

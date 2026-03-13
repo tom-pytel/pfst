@@ -26,6 +26,7 @@ from . import fst
 from .asttypes import (
     ASTS_LEAF_STMT,
     ASTS_LEAF_VAR_SCOPE_DECL,
+    ASTS_LEAF_FTSTR,
     ASTS_LEAF__ALL,
     AST2ASTSLEAF,
 
@@ -6114,7 +6115,8 @@ def search(
 
     **Note:** The generator returned by this function does not yield the matched nodes themselves, but rather the
     `FSTMatch` objects. You can get the matched nodes from these objects using the `matched` attribute, e.g.
-    `match.matched`. It yields `(FSTMatch, bool leaving)` if `on='both'`.
+    `match.matched`. If `on='both'` then this generator yields `(FSTMatch, bool leaving)` instead of just the `FSTMatch`
+    object.
 
     **Parameters:**
     - `pat`: The pattern to search for.
@@ -6258,13 +6260,13 @@ def sub(
 
     This function can handle individual node or slice substitutions, including compound patterns like `Dict` key:value
     pairs and whole `ExceptHandler`, `match_case` and `comprehension` nodes. Forms for substituting compound items are
-    as follows (they must appear as such, don't add `async` to the `comprehension` form for example):
+    as follows:
 
     - `Dict key:value`: `"...": __FST_<tag>`
     - `MatchMapping key:pattern`: `"...": __FST_<tag>`
-    - `comprehension`: `for __FST_<tag> in "..."`
-    - `ExceptHandler`: `except "...": __FST_<tag>`
-    - `match_case`: `case "...": __FST_<tag>`
+    - `comprehension`: `for __FST_<tag> in "..."`  - Only this form, don't use `async for`.
+    - `ExceptHandler`: `except "...": __FST_<tag>`  - Can be `except*` as needed in `repl`.
+    - `match_case`: `case "...": __FST_<tag>`  - Only this form, don't add a guard.
 
     `__FSS_<tag>` can be used to force slice substitution of tags the `repl` template and `__FSO_<tag>` can be used to
     force single element substitution.
@@ -6305,7 +6307,7 @@ def sub(
         that is being used.
     - `loop`: If this is not `False` then after each match is substituted then check if it still matches the pattern,
         and if so substitute again, up to `loop` number of times. A value of `True` or `0` (or below) means keep looping
-        until the node doesn't match anymore. Allows collapsing of arbitrary depth nested or arbitrary length sequence
+        until the node doesn't match anymore. Allows collapse of arbitrary depth nested or arbitrary length sequence
         structures. **WARNING!** Improper usage of this parameter can lead to infinite looping
         so the onus is on the user to make sure the replacement template cannot cause this.
     - `callback`: If present then this will be called for each match before substitution (including each `loop` match)
@@ -6528,19 +6530,19 @@ def sub(
         pat,
         repl,
         nested,
-        count,
+        count=count,
         loop=loop,
         callback=callback,
         callback_after=callback_after,
-        copy_options=copy_options,
-        repl_options=repl_options,
-        ctx=ctx,
-        self_=self_,
         on=on,
+        self_=self_,
         recurse=recurse,
         scope=scope,
         back=back,
         asts=asts,
+        ctx=ctx,
+        copy_options=copy_options,
+        repl_options=repl_options,
         __warn_stacklevel=3,  # for warning on no substitution in f-strings on Python < 3.12
         **options,
     )[0]
@@ -6551,20 +6553,20 @@ def subn(
     pat: _Pattern,
     repl: Code,
     nested: bool = False,
-    count: int = 0,
     *,
+    count: int = 0,
     loop: bool | int = False,
     callback: Callable[[fst.FST], object] | None = None,
     callback_after: Callable[[fst.FST], None] | None = None,
-    copy_options: dict[str, Any] | None = None,
-    repl_options: dict[str, Any] | None = None,
-    ctx: bool = False,
-    self_: bool = True,
     on: Literal['enter', 'leave'] = 'enter',
+    self_: bool = True,
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
     asts: list[AST] | None = None,
+    ctx: bool = False,
+    copy_options: dict[str, Any] | None = None,
+    repl_options: dict[str, Any] | None = None,
     **options: object,
 ) -> tuple[fst.FST, int, int]:  # -> (self, unique_number_of_subs_made, total_number_of_subs_made)
     """Perform the same operation as `sub()`, but return a tuple `(self, unique_number_of_subs_made,
@@ -6695,14 +6697,18 @@ def subn(
     for m in gen:
         matched = m.matched  # will be FST node
 
-        if PYLT12 and matched.parent_ftstr():  # cannot do substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
-            warnings.warn('substitution inside f-strings not implemented on Python < 3.12',
-                          RuntimeWarning, warn_stacklevel)
-            gen.send(False)  # no point searching deeper
-
+        if matched.a in dirty:
             continue
 
-        if matched.a in dirty:
+        if PYLT12:
+            if matched.parent_ftstr():  # cannot do substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
+                warnings.warn('substitution inside f-strings not implemented on Python < 3.12',
+                            RuntimeWarning, warn_stacklevel)
+                gen.send(False)  # no point searching deeper
+
+                continue
+
+        elif (parent := matched.parent) and parent.a.__class__ in ASTS_LEAF_FTSTR:  # NotImplementedError, can't currently replace direct Constant child of f/t-string, TODO: allow this when JoinedStr.put_one(field=values) is implemented
             continue
 
         while True:  # for `loop`

@@ -599,4 +599,39 @@ call()
 
 >>> print(f.src)
 '''docstring'''
+
+
+## Some shared interface with `FST`
+
+For convenience, `FSTView` implements certain API elements of `FST` nodes. `src` and `lines` exist and will give the
+source slice or lines of the given view.
+
+>>> FST('[a, b, c, d]').elts[1:3].src
+'b, c'
+
+`loc`, `bloc` and their individual accessors like `ln`, `col`, `bln`, etc... These will always give the parenthesized
+location if parentheses are present as slice operations must always include parentheses.
+
+>>> FST('[a, b, c, d]').elts[1:3].loc
+fstlocn(0, 4, 0, 8, n=0)
+
+>>> FST('[a, (b), ( c ), d]').elts[1:3].loc
+fstlocn(0, 4, 0, 14, n=0)
+
+The `pars()` function is also present for interoperability purposes but will give the same location as `bloc` and a
+count of 0.
+
+>>> FST('[a, (b), ( c ), d]').elts[1:3].pars()
+fstlocn(0, 4, 0, 14, n=0)
+
+These location functions also calculate locations for nodes which may not exist but have a syntactic element, like
+`None` `keys` values in a `Dict`.
+
+>>> FST('{a: b, **c, d: e}')._all[1:2].loc
+fstlocn(0, 7, 0, 10, n=0)
+
+>>> FST('{a: b, **c, d: e}')._all[1:2].src
+'**c'
+
+`root` also exists and is basically a shortcut for `view.base.root`.
 """
