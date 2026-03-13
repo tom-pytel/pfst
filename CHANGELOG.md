@@ -1,3 +1,12 @@
+## 0.3.2 - alpha - ????-??-??
+
+### Added
+
+### Changed
+
+### Fixed
+
+
 ## 0.3.1 - alpha - 2026-03-13
 
 ### Added
