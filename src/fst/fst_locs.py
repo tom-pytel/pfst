@@ -818,6 +818,8 @@ def _loc_MatchMapping_rest(self: fst.FST, stars: bool = False) -> fstloc | None:
 
 
 def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
+    """Location from just before opening par to just after closing par."""
+
     assert self.a.__class__ is MatchClass
 
     ast = self.a

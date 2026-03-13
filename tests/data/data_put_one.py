@@ -13364,10 +13364,126 @@ cls
 '''),
 r'''**NotImplementedError('cannot put multiline Attribute to MatchClass pattern expression')**'''),
 
+('', 0, None, 'patterns', {}, ('MatchClass',
+r'''cls(a)'''), (None,
+r'''b'''),
+r'''cls(b)''', r'''
+MatchClass - ROOT 0,0..0,6
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, None, 'patterns', {}, ('MatchClass',
+r'''cls(a)'''), (None,
+r'''**DEL**'''),
+r'''cls()''', r'''
+MatchClass - ROOT 0,0..0,5
+  .cls Name 'cls' Load - 0,0..0,3
+'''),
+
+('', 0, None, 'kwd_attrs', {}, ('MatchClass',
+r'''cls(a=b)'''), (None,
+r'''x'''),
+r'''cls(x=b)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+   0] 'x'
+  .kwd_patterns[1]
+   0] MatchAs - 0,6..0,7
+     .name 'b'
+'''),
+
 ('', 0, None, 'kwd_attrs', {}, ('MatchClass',
 r'''cls(a=b)'''), (None,
 r'''_'''),
 r'''**NodeError("pattern '_' wildcard identifier not allowed")**'''),
+
+('', 0, None, 'kwd_patterns', {}, ('MatchClass',
+r'''cls(a=b)'''), (None,
+r'''x'''),
+r'''cls(a=x)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,6..0,7
+     .name 'x'
+'''),
+
+('', 0, None, 'kwd_patterns', {}, ('MatchClass',
+r'''cls(a=b)'''), (None,
+r'''_'''),
+r'''cls(a=_)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,6..0,7
+'''),
+],
+
+'_pattern_attrlikes': [  # ................................................................................
+
+('', 0, None, 'patterns', {}, ('_pattern_attrlikes',
+r'''a'''), (None,
+r'''b'''),
+r'''b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+'''),
+
+('', 0, None, 'patterns', {}, ('_pattern_attrlikes',
+r'''a'''), (None,
+r'''**DEL**'''),
+r'''''',
+r'''_pattern_attrlikes - ROOT 0,0..0,0'''),
+
+('', 0, None, 'kwd_attrs', {}, ('_pattern_attrlikes',
+r'''a=b'''), (None,
+r'''x'''),
+r'''x=b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'x'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'b'
+'''),
+
+('', 0, None, 'kwd_attrs', {}, ('_pattern_attrlikes',
+r'''a=b'''), (None,
+r'''_'''),
+r'''**NodeError("pattern '_' wildcard identifier not allowed")**'''),
+
+('', 0, None, 'kwd_patterns', {}, ('_pattern_attrlikes',
+r'''a=b'''), (None,
+r'''x'''),
+r'''a=x''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'x'
+'''),
+
+('', 0, None, 'kwd_patterns', {}, ('_pattern_attrlikes',
+r'''a=b'''), (None,
+r'''_'''),
+r'''a=_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+'''),
 ],
 
 'MatchMapping': [  # ................................................................................

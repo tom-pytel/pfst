@@ -120,6 +120,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -2588,7 +2589,9 @@ def _one_info_MatchMapping_rest(self: fst.FST, static: onestatic, idx: int | Non
 
     return oneinfo(prefix, fstloc(ln, col, end_ln, end_col), loc_prim)
 
-def _one_info_MatchClass_kwd_attrs(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+def _one_info_kwd_attrs(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    """`MatchClass.kwd_attrs` and `_pattern_attrlikes.kwd_attrs`."""
+
     ast = self.a
     lines = self.root._lines
     kwd_patterns = ast.kwd_patterns
@@ -2597,8 +2600,10 @@ def _one_info_MatchClass_kwd_attrs(self: fst.FST, static: onestatic, idx: int | 
         _, _, ln, col = kwd_patterns[idx - 1].f.loc
     elif patterns := ast.patterns:
         _, _, ln, col = patterns[-1].f.loc
-    else:
+    elif ast.__class__ is MatchClass:
         _, _, ln, col = ast.cls.f.loc
+    else:
+        ln, col, _, _ = self.loc
 
     end_ln, end_col = prev_find(lines, ln, col, *kwd_patterns[idx].f.loc[:2], '=')  # must be there
     ln, col, src = prev_frag(lines, ln, col, end_ln, end_col)  # must be there
@@ -2907,7 +2912,7 @@ _PUT_ONE_HANDLERS = {
     (MatchMapping, '_all'):               (True,  None, None),  # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprlike_required, onestatic(_one_info_exprlike_required, _is_valid_MatchClass_cls)),  # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier*
+    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_kwd_attrs, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier*
     (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=code_as_pattern)),  # pattern?
@@ -2946,6 +2951,9 @@ _PUT_ONE_HANDLERS = {
     (_comprehension_ifs, 'ifs'):          (True, _put_one_exprlike_required, _onestatic_expr_required),  # expr*
     (_aliases, 'names'):                  (True, _put_one__aliases_names, _onestatic_alias_required),  # alias*
     (_withitems, 'items'):                (True, _put_one_exprlike_required, _onestatic_withitem_required),  # withitem*
+    (_pattern_attrlikes, 'patterns'):     (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (_pattern_attrlikes, 'kwd_attrs'):    (False, _put_one_identifier_required, onestatic(_one_info_kwd_attrs, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier*
+    (_pattern_attrlikes, 'kwd_patterns'): (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (_type_params, 'type_params'):        (True, _put_one_exprlike_required, _onestatic_type_param_required),  # type_param*
 
 

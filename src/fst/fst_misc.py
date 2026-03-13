@@ -104,6 +104,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -203,30 +204,32 @@ DUMP_NO_COLOR = nspace(
 )
 
 FST_VIRTUAL_FIELDS = {
-    Module:           ('_body',),
-    Interactive:      ('_body',),
-    FunctionDef:      ('_body',),
-    AsyncFunctionDef: ('_body',),
-    ClassDef:         ('_bases', '_body'),
-    For:              ('_body',),
-    AsyncFor:         ('_body',),
-    While:            ('_body',),
-    If:               ('_body',),
-    With:             ('_body',),
-    AsyncWith:        ('_body',),
-    Try:              ('_body',),
-    TryStar:          ('_body',),
-    Dict:             ('_all',),
-    Compare:          ('_all',),
-    Call:             ('_args',),
-    arguments:        ('_all',),
-    MatchMapping:     ('_all',),
+    Module:             ('_body',),
+    Interactive:        ('_body',),
+    FunctionDef:        ('_body',),
+    AsyncFunctionDef:   ('_body',),
+    ClassDef:           ('_bases', '_body'),
+    For:                ('_body',),
+    AsyncFor:           ('_body',),
+    While:              ('_body',),
+    If:                 ('_body',),
+    With:               ('_body',),
+    AsyncWith:          ('_body',),
+    Try:                ('_body',),
+    TryStar:            ('_body',),
+    Dict:               ('_all',),
+    Compare:            ('_all',),
+    Call:               ('_args',),
+    arguments:          ('_all',),
+    MatchMapping:       ('_all',),
+    # MatchClass:         ('_attrs',),
+    # _pattern_attrlikes: ('_attrs',),
 }  # fmt: skip
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     # list fields of multiple children
-    ('body',                  (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
-                               If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('body',                  (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor,
+                               While, If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
     ('handlers',              (_ExceptHandlers,)),
     ('cases',                 (Match, _match_cases)),
 
@@ -234,7 +237,7 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('targets',               (Delete, _Assign_targets)),
     ('decorator_list',        (_decorator_list,)),
     ('arglikes',              (_arglikes,)),
-    ('patterns',              (MatchSequence, MatchOr, MatchClass)),
+    ('patterns',              (MatchSequence, MatchOr)),
     ('type_params',           (TypeAlias, _type_params)),
     ('names',                 (Import, ImportFrom, Global, Nonlocal, _aliases)),
     ('items',                 (_withitems,)),
@@ -248,11 +251,12 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('_all',                  (Compare,)),       # left,op:comparator
     ('_args',                 (Call,)),          # args,keywords
     ('_all',                  (arguments,)),     # posonlyargs=defaults,args=defaults,vararg,kwolyargs=kw_defaults,kwarg
+    ('_attrs',                (MatchClass, _pattern_attrlikes)),  # patterns,kwd_attrs=kwd_patterns
 
     # single value fields
-    ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                               FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
-                               MatchSingleton)),
+    ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield,
+                               YieldFrom, FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred,
+                               keyword, MatchValue, MatchSingleton)),
     ('elt',                   (GeneratorExp, ListComp, SetComp)),
     ('target',                (comprehension,)),
     ('exc',                   (Raise,)),

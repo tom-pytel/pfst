@@ -74,6 +74,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -2689,7 +2690,7 @@ def _get_slice_MatchMapping__all(
     return fst_
 
 
-def _get_slice_MatchClass_patterns(
+def _get_slice_attrlikes_patterns(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -2697,7 +2698,7 @@ def _get_slice_MatchClass_patterns(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """A `MatchClass.patterns` slice is just a normal `MatchSequence`."""
+    """A `MatchClass.patterns` or `_pattern_attrlikes.patterns` slice is just a normal `MatchSequence`."""
 
     ast = self.a
     body = ast.patterns
@@ -2714,8 +2715,14 @@ def _get_slice_MatchClass_patterns(
     else:
         self_tail_sep = None
 
-    loc = self._loc_MatchClass_pars()
-    locs = _locs_and_bounds_get(self, start, stop, body, body, 1, loc)
+    if ast.__class__ is MatchClass:
+        loc = self._loc_MatchClass_pars()
+        off = 1
+    else:
+        loc = self.loc
+        off = 0
+
+    locs = _locs_and_bounds_get(self, start, stop, body, body, off, loc)
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
     ret_ast = MatchSequence(patterns=asts)
 
@@ -2957,7 +2964,7 @@ _GET_SLICE_HANDLERS = {
 
     (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
     (MatchMapping, '_all'):                   _get_slice_MatchMapping__all,  # key:pattern*
-    (MatchClass, 'patterns'):                 _get_slice_MatchClass_patterns,  # pattern*
+    (MatchClass, 'patterns'):                 _get_slice_attrlikes_patterns,  # pattern*
     (MatchOr, 'patterns'):                    _get_slice_MatchOr_patterns,  # pattern*
 
     (FunctionDef, 'type_params'):             _get_slice_type_params,  # type_param*
@@ -2980,6 +2987,7 @@ _GET_SLICE_HANDLERS = {
     (_comprehension_ifs, 'ifs'):              _get_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _get_slice__slice,  # alias*
     (_withitems, 'items'):                    _get_slice__slice,  # withitem*
+    (_pattern_attrlikes, 'patterns'):         _get_slice_attrlikes_patterns,  # pattern*
     (_type_params, 'type_params'):            _get_slice__slice,  # type_param*
 }  # fmt: skip
 

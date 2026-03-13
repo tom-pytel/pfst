@@ -3209,6 +3209,44 @@ arguments - ROOT 0,0..0,9
 '''),
 ],
 
+'_pattern_attrlikes': [  # ................................................................................
+
+('', 0, None, 'patterns', {}, (_pattern_attrlikes,
+r'''a, b=c'''),
+r'''b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+''',
+r'''a''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'''),
+
+('', 0, None, 'kwd_attrs', {'promote': False}, (_pattern_attrlikes,
+r'''a, b=c'''),
+r'''**ValueError('cannot delete from _pattern_attrlikes.kwd_attrs')**''',
+"\n'b'\n",
+r'''<class 'str'>'''),
+
+('', 0, None, 'kwd_attrs', {}, (_pattern_attrlikes,
+r'''a, b=c'''),
+r'''**ValueError('cannot delete from _pattern_attrlikes.kwd_attrs')**''',
+r'''b''',
+r'''Name 'b' Load - ROOT 0,0..0,1'''),
+
+('', 0, None, 'kwd_patterns', {}, (_pattern_attrlikes,
+r'''a, b=c'''),
+r'''**ValueError('cannot delete from _pattern_attrlikes.kwd_patterns')**''',
+r'''c''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'c'
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',

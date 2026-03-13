@@ -103,6 +103,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -713,6 +714,9 @@ _GET_ONE_HANDLERS = {
     (_comprehension_ifs, 'ifs'):          _get_one_default,  # expr*
     (_aliases, 'names'):                  _get_one_default,  # alias*
     (_withitems, 'items'):                _get_one_default,  # withitem*
+    (_pattern_attrlikes, 'patterns'):     _get_one_default,  # pattern*
+    (_pattern_attrlikes, 'kwd_attrs'):    _get_one_identifier_promote_true,  # identifier*
+    (_pattern_attrlikes, 'kwd_patterns'): _get_one_default,  # pattern*
     (_type_params, 'type_params'):        _get_one_default,  # type_param*
 
 

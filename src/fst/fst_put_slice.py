@@ -87,6 +87,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -266,7 +267,7 @@ from .fst_put_one import _fix_With_items
 #                                                                                  .
 # *                (arguments, '_all'):                    # arguments             -> arguments                  _parse_arguments / arguments_lambda
 #                                                                                  .
-#                  (MatchClass, '_patterns'):              # pattern*+???                                        - 'patterns+kwd_attrs=kwd_patterns'
+#                  (MatchClass, '_patterns_attrlikes'):    # pattern*+(kwd_attrs=kwd_patterns)*                  - 'patterns+kwd_attrs=kwd_patterns'
 #                                                                                  .
 #                                                                                  .
 #                  (JoinedStr, 'values'):                  # Constant|FormattedValue*   -> JoinedStr
@@ -2997,7 +2998,7 @@ def _put_slice_MatchMapping__all(
             self._maybe_ins_sep(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
-def _put_slice_MatchClass_patterns(
+def _put_slice_attrlikes_patterns(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'],
@@ -3006,6 +3007,8 @@ def _put_slice_MatchClass_patterns(
     one: bool | None,
     options: Mapping[str, Any],
 ) -> None:
+    """`MatchClass.patterns` or `_patterns_attrlikes.patterns`."""
+
     ast = self.a
     body = ast.patterns
     len_body = len(body)
@@ -3016,9 +3019,12 @@ def _put_slice_MatchClass_patterns(
     if not fst_ and start == stop:
         return
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_MatchClass_pars()
-    bound_col += 1
-    bound_end_col -= 1
+    if ast.__class__ is _pattern_attrlikes:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+    else:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_MatchClass_pars()
+        bound_col += 1
+        bound_end_col -= 1
 
     self_tail_sep = ((fst_ or start) and ast.kwd_patterns and stop == len_body) or None
 
@@ -3280,7 +3286,7 @@ _PUT_SLICE_HANDLERS = {
     (MatchMapping, 'keys'):                   _put_slice_NOT_HANDLED_try__all,  # expr*
     (MatchMapping, 'patterns'):               _put_slice_NOT_HANDLED_try__all,  # pattern*
     (MatchMapping, '_all'):                   _put_slice_MatchMapping__all,  # key:pattern*
-    (MatchClass, 'patterns'):                 _put_slice_MatchClass_patterns,  # pattern*
+    (MatchClass, 'patterns'):                 _put_slice_attrlikes_patterns,  # pattern*
     (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*
 
     (FunctionDef, 'type_params'):             _put_slice_type_params,  # type_param*
@@ -3303,6 +3309,7 @@ _PUT_SLICE_HANDLERS = {
     (_comprehension_ifs, 'ifs'):              _put_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _put_slice__slice,  # alias*
     (_withitems, 'items'):                    _put_slice__slice,  # withitem*
+    (_pattern_attrlikes, 'patterns'):         _put_slice_attrlikes_patterns,  # pattern*
     (_type_params, 'type_params'):            _put_slice__slice,  # type_param*
 }  # fmt: skip
 
