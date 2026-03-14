@@ -3469,7 +3469,7 @@ def _loc_slice_raw_put_Global_Nonlocal_names(
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     names = self.a.names
     start, stop = _fixup_slice_index_for_raw(len(names), start, stop)
-    (ln, col, _, _), (_, _, end_ln, end_col) = self._loc_Global_Nonlocal_names(start, stop - 1)
+    ln, col, end_ln, end_col = self._loc_Global_Nonlocal_names(start, stop - 1)
 
     return ln, col, end_ln, end_col, start, stop, names
 

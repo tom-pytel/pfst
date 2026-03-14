@@ -831,11 +831,14 @@ def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def _loc_kwd_attrs(
-    self: fst.FST, idx_first: int, idx_last: int | None = None
-) -> fstloc | tuple[fstloc, fstloc]:
-    """Operates on `MatchClass` and `_pattern_attrlikes`. We assume `idx_first` and optionally `idx_last` are in
-    [0..len(kwd_attrs)), no negative or out-of-bounds."""
+def _loc_kwd_attrs(self: fst.FST, idx: int, idx2: int | None = None) -> fstloc:
+    """Operates on `MatchClass` and `_pattern_attrlikes`. We assume `idx` and optionally `idx2` are in
+    [0..len(kwd_attrs)) and `idx2` follows `idx`, no negative or out-of-bounds.
+
+    **Returns:**
+    - `fstloc`: Location of `kwd_attrs[idx]` if `idx2=None` otherwise start of `kwd_attrs[idx]` and end of
+        `kwd_attrs[idx2]`.
+    """
 
     assert self.a.__class__ in _ASTS_LEAF_KWD_ATTRS_CONTAINERS
 
@@ -844,23 +847,8 @@ def _loc_kwd_attrs(
     patterns = ast.patterns
     _, _, end_ln, end_col = self.loc
 
-    if idx_first:
-        _, _, ln, col = ast.kwd_patterns[idx_first - 1].f.loc
-    elif patterns:
-        _, _, ln, col = patterns[-1].f.loc
-    elif ast.__class__ is MatchClass:
-        _, _, ln, col = ast.cls.f.loc
-    else:
-        ln, col, _, _ = self.loc
-
-    ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
-    first_loc = fstloc(ln, col, ln, col + len(src))
-
-    if idx_last is None:
-        return first_loc
-
-    if idx_last:
-        _, _, ln, col = ast.kwd_patterns[idx_last - 1].f.loc
+    if idx:
+        _, _, ln, col = ast.kwd_patterns[idx - 1].f.loc
     elif patterns:
         _, _, ln, col = patterns[-1].f.loc
     elif ast.__class__ is MatchClass:
@@ -870,12 +858,33 @@ def _loc_kwd_attrs(
 
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
 
-    return first_loc, fstloc(ln, col, ln, col + len(src))
+    if idx2 is None:
+        return fstloc(ln, col, ln, col + len(src))
+
+    if idx2:
+        _, _, ln2, col2 = ast.kwd_patterns[idx2 - 1].f.loc
+    elif patterns:
+        _, _, ln2, col2 = patterns[-1].f.loc
+    elif ast.__class__ is MatchClass:
+        _, _, ln2, col2 = ast.cls.f.loc
+    else:
+        ln2, col2, _, _ = self.loc
+
+    ln2, col2, src = next_find_re(lines, ln2, col2, end_ln, end_col, re_identifier)  # must be there
+
+    return fstloc(ln, col, ln2, col2 + len(src))
 
 
-def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int) -> fstloc:
+def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int, want: bool | None = True) -> fstloc:
     """Get location of `MatchClass._attrs` or `_pattern_attrlikes._attrs` item, either a `patterns` item or combined
-    of `kwd_attrs` and `kwd_patterns` item."""
+    of `kwd_attrs` and `kwd_patterns` item.
+
+    **Parameters:**
+    - `want`: Can tell this function to not to bother get either `ln, col` or `end_ln, end_col` for a little efficiency.
+        - `True`: Both start and end are important, get both.
+        - `False`: Only care about `ln` and `col`, `end_ln` and `end_col` will not necessarily be correct.
+        - `None`: Only care about `end_ln` and `end_col`, `ln` and `col` will not necessarily be correct.
+    """
 
     assert self.a.__class__ in _ASTS_LEAF_KWD_ATTRS_CONTAINERS
 
@@ -886,9 +895,12 @@ def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int) -> fstloc:
     if idx < len_patterns:
         return patterns[idx].f.pars()
 
-    lines = self.root._lines
-    kwd_patterns = ast.kwd_patterns
     idx_kwd = idx - len_patterns
+    kwd_patterns = ast.kwd_patterns
+    kwd_pattern = kwd_patterns[idx_kwd].f
+
+    if want is None:
+        return kwd_pattern.pars()
 
     if idx_kwd:
         _, _, ln, col = kwd_patterns[idx_kwd - 1].f.loc
@@ -899,8 +911,9 @@ def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int) -> fstloc:
     else:
         ln, col, _, _ = self.loc
 
-    _, _, end_ln, end_col = kwd_patterns[idx_kwd].f.pars()
+    lines = self.root._lines
 
+    _, _, end_ln, end_col = kwd_pattern.pars() if want else kwd_pattern.loc
     ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
 
     return fstloc(ln, col, end_ln, end_col)
@@ -1026,11 +1039,13 @@ def _loc_TypeAlias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, t
     return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
 
 
-def _loc_Global_Nonlocal_names(
-    self: fst.FST, idx_first: int, idx_last: int | None = None
-) -> fstloc | tuple[fstloc, fstloc]:
-    """We assume `idx_first` and optionally `idx_last` are in [0..len(names)), no negative or out-of-bounds and
-    `idx_last` follows or equals `idx_first` if present."""
+def _loc_Global_Nonlocal_names(self: fst.FST, idx: int, idx2: int | None = None) -> fstloc:
+    """We assume `idx` and optionally `idx2` are in [0..len(names)) and `idx2` follows `idx`, no negative or
+    out-of-bounds.
+
+    **Returns:**
+    - `fstloc`: Location of `names[idx]` if `idx2=None` otherwise start of `names[idx]` and end of `names[idx2]`.
+    """
 
     assert self.a.__class__ in ASTS_LEAF_VAR_SCOPE_DECL
 
@@ -1038,27 +1053,26 @@ def _loc_Global_Nonlocal_names(
 
     col += 6 if self.a.__class__ is Global else 8
     lines = self.root._lines
-    idx = idx_first
+    loop = idx
 
-    while idx:  # skip the commas
+    while loop:  # skip the commas
         ln, col = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
         col += 1
-        idx -= 1
+        loop -= 1
 
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
-    first_loc = fstloc(ln, col, ln, col := col + len(src))
+    col2 = col + len(src)
 
-    if idx_last is None:
-        return first_loc
+    if idx2 is None or not (loop := idx2 - idx):
+        return fstloc(ln, col, ln, col2)
 
-    if not (idx := idx_last - idx_first):
-        return first_loc, first_loc
+    ln2 = ln
 
-    while idx:
-        ln, col = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
-        col += 1
-        idx -= 1
+    while loop:
+        ln2, col2 = next_find(lines, ln2, col2, end_ln, end_col, ',')  # must be there
+        col2 += 1
+        loop -= 1
 
-    ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+    ln2, col2, src = next_find_re(lines, ln2, col2, end_ln, end_col, re_identifier)  # must be there
 
-    return first_loc, fstloc(ln, col, ln, col + len(src))
+    return fstloc(ln, col, ln2, col2 + len(src))

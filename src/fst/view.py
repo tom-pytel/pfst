@@ -227,7 +227,8 @@ class FSTView:
 
     @property
     def loc(self) -> fstloc | None:
-        """Zero based character indexed location of view (including parentheses and / or decorators where present)."""
+        """Zero based character indexed location of view (including parentheses and / or decorators where present). May
+        return an `fstloc` or an `fstlocn` with an `n` parameter."""
 
         start, stop, _ = self._base_indices()
 
@@ -288,7 +289,7 @@ class FSTView:
     @property
     def bloc(self) -> fstloc | None:
         """Zero based character indexed location of view (including parentheses and / or decorators where present). This
-        is identical to `.loc` for views."""
+        is identical to `.loc` for views. May return an `fstloc` or an `fstlocn` with an `n` parameter."""
 
         return self.loc
 
@@ -1628,7 +1629,7 @@ class FSTView_Global_Nonlocal(FSTView):
         >>> f = FST('global\\\na,\\\n b')
 
         >>> f.names.loc
-        fstlocn(1, 0, 2, 2, n=0)
+        fstloc(1, 0, 2, 2)
 
         >>> f.names[:1].loc
         fstloc(1, 0, 1, 1)
@@ -1644,9 +1645,7 @@ class FSTView_Global_Nonlocal(FSTView):
         if len_ == 1:
             return self.base._loc_Global_Nonlocal_names(start)
 
-        (ln, col, _, _), (_, _, end_ln, end_col) = self.base._loc_Global_Nonlocal_names(start, stop - 1)
-
-        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+        return self.base._loc_Global_Nonlocal_names(start, stop - 1)
 
     @property
     def ln(self) -> int | None:
@@ -1761,7 +1760,7 @@ class FSTView_kwd_attrs(FSTView):
         >>> f = FST('matchcls(a, b=c, d=e)', 'MatchClass')
 
         >>> f.kwd_attrs.loc
-        fstlocn(0, 12, 0, 18, n=0)
+        fstloc(0, 12, 0, 18)
 
         >>> f.kwd_attrs[:1].loc
         fstloc(0, 12, 0, 13)
@@ -1777,9 +1776,7 @@ class FSTView_kwd_attrs(FSTView):
         if len_ == 1:
             return self.base._loc_kwd_attrs(start)
 
-        (ln, col, _, _), (_, _, end_ln, end_col) = self.base._loc_kwd_attrs(start, stop - 1)
-
-        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+        return self.base._loc_kwd_attrs(start, stop - 1)
 
     @property
     def ln(self) -> int | None:
@@ -1928,8 +1925,8 @@ class FSTView_pattern_attrlikes(FSTView):
             ln, col, end_ln, end_col = base._loc_pattern_attrlikes__attr(start)
 
         else:
-            ln, col, _, _ = base._loc_pattern_attrlikes__attr(start)
-            _, _, end_ln, end_col = base._loc_pattern_attrlikes__attr(stop - 1)
+            ln, col, _, _ = base._loc_pattern_attrlikes__attr(start, False)
+            _, _, end_ln, end_col = base._loc_pattern_attrlikes__attr(stop - 1, None)
 
         return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
 
@@ -1959,7 +1956,7 @@ class FSTView_pattern_attrlikes(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_pattern_attrlikes__attr(start).ln
+        return self.base._loc_pattern_attrlikes__attr(start, False).ln
 
     @property
     def col(self) -> int | None:  # char index
@@ -1987,7 +1984,7 @@ class FSTView_pattern_attrlikes(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_pattern_attrlikes__attr(start).col
+        return self.base._loc_pattern_attrlikes__attr(start, False).col
 
     @property
     def end_ln(self) -> int | None:  # 0 based
@@ -2015,7 +2012,7 @@ class FSTView_pattern_attrlikes(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_pattern_attrlikes__attr(stop - 1).end_ln
+        return self.base._loc_pattern_attrlikes__attr(stop - 1, None).end_ln
 
     @property
     def end_col(self) -> int | None:  # char index
@@ -2043,7 +2040,7 @@ class FSTView_pattern_attrlikes(FSTView):
         if stop == start:
             return None
 
-        return self.base._loc_pattern_attrlikes__attr(stop - 1).end_col
+        return self.base._loc_pattern_attrlikes__attr(stop - 1, None).end_col
 
     def _len_field(self) -> int:
         ast = self.base.a
