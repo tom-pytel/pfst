@@ -2753,9 +2753,10 @@ def _get_slice_pattern_attrlikes__attrs(
     len_patterns = len(patterns)
     len_body = len_patterns + len(kwd_patterns)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice = stop - start
+    kw_start = start - len_patterns
+    kw_stop = stop - len_patterns
 
-    if not len_slice:
+    if start == stop:
         return fst.FST(_pattern_attrlikes(patterns=[], kwd_attrs=[], kwd_patterns=[],
                                           lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
@@ -2764,13 +2765,16 @@ def _get_slice_pattern_attrlikes__attrs(
         bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
     else:
         bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_MatchClass_pars()
-        bound_col += 1
         bound_end_col -= 1
+        bound_col += 1
+
+    if start:
+        _, _, bound_ln, bound_col = (patterns[start - 1] if kw_start <= 0 else kwd_patterns[kw_start - 1]).f.pars()
 
     loc_first = self._loc_pattern_attrlikes__attr(start)
     loc_last = self._loc_pattern_attrlikes__attr(i) if (i := stop - 1) != start else loc_first
 
-    if stop <= len_patterns:  # just normal patterns
+    if kw_stop <= 0:  # just normal patterns
         asts = _cut_or_copy_asts(start, stop, 'patterns', cut, patterns)
         asts2 = []
         attrs = []
@@ -2778,14 +2782,12 @@ def _get_slice_pattern_attrlikes__attrs(
 
     else:
         kwd_attrs = ast.kwd_attrs
-        kw_stop = stop - len_patterns
 
-        if start < len_patterns:  # both normal and keyword patterns
+        if kw_start < 0:  # both normal and keyword patterns
             kw_start = 0
             asts = _cut_or_copy_asts(start, len_patterns, 'patterns', cut, patterns)
 
         else:  # just keyword patterns
-            kw_start = start - len_patterns
             asts = []
 
         asts2 = _cut_or_copy_asts(kw_start, kw_stop, 'kwd_patterns', cut, kwd_patterns)

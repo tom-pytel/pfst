@@ -40722,6 +40722,414 @@ MatchClass - ROOT 0,0..0,7
 '''),
 ],
 
+'MatchClass__attrs': [  # ................................................................................
+
+('', 0, 0, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a, b, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 0, 1, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(b, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,16
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,9..0,10
+     .name 'd'
+   1] MatchAs - 0,14..0,15
+     .name 'f'
+'''),
+
+('', 0, 2, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,13
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,6..0,7
+     .name 'd'
+   1] MatchAs - 0,11..0,12
+     .name 'f'
+'''),
+
+('', 0, 3, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(e=f)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,6..0,7
+     .name 'f'
+'''),
+
+('', 0, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls()''', r'''
+MatchClass - ROOT 0,0..0,5
+  .cls Name 'cls' Load - 0,0..0,3
+'''),
+
+('', 1, 2, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,16
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,9..0,10
+     .name 'd'
+   1] MatchAs - 0,14..0,15
+     .name 'f'
+'''),
+
+('', 1, 3, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a, e=f)''', r'''
+MatchClass - ROOT 0,0..0,11
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,9..0,10
+     .name 'f'
+'''),
+
+('', 1, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a)''', r'''
+MatchClass - ROOT 0,0..0,6
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
+
+('', 2, 3, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a, b, e=f)''', r'''
+MatchClass - ROOT 0,0..0,14
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,12..0,13
+     .name 'f'
+'''),
+
+('', 2, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a, b)''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+'''),
+
+('', 3, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''**DEL**'''),
+r'''cls(a, b, c=d)''', r'''
+MatchClass - ROOT 0,0..0,14
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+'''),
+
+('', 0, 1, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''cls(x, b, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 1, 2, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''cls(a, x, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''cls(a, b, x, e=f)''', r'''
+MatchClass - ROOT 0,0..0,17
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,15..0,16
+     .name 'f'
+'''),
+
+('', 3, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 0, 'end', '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''cls(x)''', r'''
+MatchClass - ROOT 0,0..0,6
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 1, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 1, 2, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''cls(a, x=y, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,21
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[3]
+   0] 'x'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+   0] MatchAs - 0,9..0,10
+     .name 'y'
+   1] MatchAs - 0,14..0,15
+     .name 'd'
+   2] MatchAs - 0,19..0,20
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''cls(a, b, x=y, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'x'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'y'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 3, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''cls(a, b, c=d, x=y)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'x'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+   1] MatchAs - 0,17..0,18
+     .name 'y'
+'''),
+
+('', 0, 'end', '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''cls(x=y)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+   0] 'x'
+  .kwd_patterns[1]
+   0] MatchAs - 0,6..0,7
+     .name 'y'
+'''),
+
+('', 0, 1, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 1, 2, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''cls(a, x, y=z, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,24
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+  .kwd_attrs[3]
+   0] 'y'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+   0] MatchAs - 0,12..0,13
+     .name 'z'
+   1] MatchAs - 0,17..0,18
+     .name 'd'
+   2] MatchAs - 0,22..0,23
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''cls(a, b, x, y=z, e=f)''', r'''
+MatchClass - ROOT 0,0..0,22
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'y'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,15..0,16
+     .name 'z'
+   1] MatchAs - 0,20..0,21
+     .name 'f'
+'''),
+
+('', 3, 4, '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 0, 'end', '_attrs', {}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''cls(x, y=z)''', r'''
+MatchClass - ROOT 0,0..0,11
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'y'
+  .kwd_patterns[1]
+   0] MatchAs - 0,9..0,10
+     .name 'z'
+'''),
+],
+
 '_pattern_attrlikes_patterns': [  # ................................................................................
 
 ('', 0, 1, 'patterns', {}, ('_pattern_attrlikes', r'''
@@ -41358,6 +41766,391 @@ _pattern_attrlikes - ROOT 0,0..0,1
   .patterns[1]
    0] MatchAs - 0,0..0,1
      .name 'x'
+'''),
+],
+
+'_pattern_attrlikes__attrs': [  # ................................................................................
+
+('', 0, 0, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a, b, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 0, 1, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''b, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,11
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'd'
+   1] MatchAs - 0,10..0,11
+     .name 'f'
+'''),
+
+('', 0, 2, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,8
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,2..0,3
+     .name 'd'
+   1] MatchAs - 0,7..0,8
+     .name 'f'
+'''),
+
+('', 0, 3, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'f'
+'''),
+
+('', 0, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''''',
+r'''_pattern_attrlikes - ROOT 0,0..0,0'''),
+
+('', 1, 2, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,11
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,5..0,6
+     .name 'd'
+   1] MatchAs - 0,10..0,11
+     .name 'f'
+'''),
+
+('', 1, 3, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'f'
+'''),
+
+('', 1, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 2, 3, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a, b, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,9
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,8..0,9
+     .name 'f'
+'''),
+
+('', 2, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 3, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''**DEL**'''),
+r'''a, b, c=d''', r'''
+_pattern_attrlikes - ROOT 0,0..0,9
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+'''),
+
+('', 0, 1, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''x, b, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 1, 2, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''a, x, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''a, b, x, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,12
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+   2] MatchAs - 0,6..0,7
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,11..0,12
+     .name 'f'
+'''),
+
+('', 3, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 0, 'end', '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''x''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+'''),
+
+('', 0, 1, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 1, 2, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''a, x=y, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,16
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[3]
+   0] 'x'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+   0] MatchAs - 0,5..0,6
+     .name 'y'
+   1] MatchAs - 0,10..0,11
+     .name 'd'
+   2] MatchAs - 0,15..0,16
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''a, b, x=y, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'x'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'y'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 3, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''a, b, c=d, x=y''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'x'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+   1] MatchAs - 0,13..0,14
+     .name 'y'
+'''),
+
+('', 0, 'end', '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x=y'''),
+r'''x=y''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'x'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'y'
+'''),
+
+('', 0, 1, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 1, 2, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''a, x, y=z, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,19
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'x'
+  .kwd_attrs[3]
+   0] 'y'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+   0] MatchAs - 0,8..0,9
+     .name 'z'
+   1] MatchAs - 0,13..0,14
+     .name 'd'
+   2] MatchAs - 0,18..0,19
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''a, b, x, y=z, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,17
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+   2] MatchAs - 0,6..0,7
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'y'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,11..0,12
+     .name 'z'
+   1] MatchAs - 0,16..0,17
+     .name 'f'
+'''),
+
+('', 3, 4, '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''**NodeError('non-keyword pattern cannot follow keyword pattern')**'''),
+
+('', 0, 'end', '_attrs', {}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''x, y=z''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'y'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'z'
 '''),
 ],
 
@@ -44954,6 +45747,26 @@ Call - ROOT 0,0..3,1
 '''),
 ],
 
+'one_True_to_arguments': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('arguments',
+r'''a=1, /, b=2, *c, d=3, **e'''), ('arguments',
+r'''x=0'''),
+r'''x=0''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'x'
+  .defaults[1]
+   0] Constant 0 - 0,2..0,3
+'''),
+
+('', 0, 'end', None, {'one': True}, ('arguments',
+r'''a=1, /, b=2, *c, d=3, **e'''), ('arguments',
+r'''x=0, y=1'''),
+r'''**ValueError("expecting single argument for put as 'one=True'")**'''),
+],
+
 'one_True_to__Assign_targets': [  # ................................................................................
 
 ('', 0, 'end', None, {'one': True}, ('_Assign_targets',
@@ -46148,6 +46961,24 @@ _withitems - ROOT 0,0..2,1
         0] Name 'x' Load - 1,0..1,1
        .ctx Load
 '''),
+],
+
+'one_True_to__pattern_attrlikes': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''x''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''**ValueError("expecting single pattern attrlike for put as 'one=True'")**'''),
 ],
 
 'one_True_to__expr_arglikes': [  # ................................................................................

@@ -78,21 +78,22 @@ class _LocationAbstract:
     def tail_node(self, idx: int) -> AST:
         """Should return the last actual node of the location unit (the only node if there is only one). For a `Dict`
         this is the `values` node of the pair. For `arguments` it may be an `arg` node or its associated `defaults` or
-        `kw_defaults` node."""
+        `kw_defaults` node. NEGATIVE OFFSETS NOT SUPPORTED!"""
 
         return self.body[idx]
 
     def loc_head(self, idx: int) -> fstloc:
         """Should return the parenthesized location of the first node of any sequence of nodes that make up the location
         unit. For a `Dict` this is the `keys` node or the location of the `**` if that node value is `None`. For a
-        non-dictlike location abstraction should return the location of the whole location unit."""
+        non-dictlike location abstraction should return the location of the whole location unit. NEGATIVE OFFSETS NOT
+        SUPPORTED!"""
 
         return self.body[idx].f.pars()
 
     def loc_tail(self, idx: int) -> fstloc:
         """Should return the parenthesized location of the last node of any sequence of nodes that make up the location
         unit. For a `Dict` this is the `values` node. For a non-dictlike location abstraction should return the location
-        of the whole location unit just like `loc_head()`."""
+        of the whole location unit just like `loc_head()`. NEGATIVE OFFSETS NOT SUPPORTED!"""
 
         return self.loc_head(idx)
 
@@ -1007,7 +1008,7 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
         is_last, is_del, is_ins, params_offset) = params
 
     if self_tail_sep is not None:  # trailing separator
-        last = locabst.tail_node(-1).f
+        last = locabst.tail_node(len(locabst) - 1).f
 
         _, _, last_end_ln, last_end_col = last.loc
         bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
