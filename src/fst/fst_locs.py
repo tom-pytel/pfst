@@ -53,7 +53,7 @@ from .fst_misc import is_delimited_MatchSequence
 
 _ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
 _ASTS_LEAF_COMPREHENSION_OR_IFS = frozenset([comprehension, _comprehension_ifs])
-_ASTS_KWD_ATTRS_CONTAINERS      = frozenset([MatchClass, _pattern_attrlikes])
+_ASTS_LEAF_KWD_ATTRS_CONTAINERS = frozenset([MatchClass, _pattern_attrlikes])
 
 _re_deco_start         = re.compile(r'[ \t]*@')
 
@@ -837,18 +837,21 @@ def _loc_kwd_attrs(
     """Operates on `MatchClass` and `_pattern_attrlikes`. We assume `idx_first` and optionally `idx_last` are in
     [0..len(kwd_attrs)), no negative or out-of-bounds."""
 
-    assert self.a.__class__ in _ASTS_KWD_ATTRS_CONTAINERS
+    assert self.a.__class__ in _ASTS_LEAF_KWD_ATTRS_CONTAINERS
 
     ast = self.a
     lines = self.root._lines
+    patterns = ast.patterns
     _, _, end_ln, end_col = self.loc
 
     if idx_first:
         _, _, ln, col = ast.kwd_patterns[idx_first - 1].f.loc
-    elif patterns := ast.patterns:
+    elif patterns:
         _, _, ln, col = patterns[-1].f.loc
-    else:
+    elif ast.__class__ is MatchClass:
         _, _, ln, col = ast.cls.f.loc
+    else:
+        ln, col, _, _ = self.loc
 
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
     first_loc = fstloc(ln, col, ln, col + len(src))
@@ -858,14 +861,49 @@ def _loc_kwd_attrs(
 
     if idx_last:
         _, _, ln, col = ast.kwd_patterns[idx_last - 1].f.loc
-    elif patterns := ast.patterns:
+    elif patterns:
         _, _, ln, col = patterns[-1].f.loc
-    else:
+    elif ast.__class__ is MatchClass:
         _, _, ln, col = ast.cls.f.loc
+    else:
+        ln, col, _, _ = self.loc
 
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
 
     return first_loc, fstloc(ln, col, ln, col + len(src))
+
+
+def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int) -> fstloc:
+    """Get location of `MatchClass._attrs` or `_pattern_attrlikes._attrs` item, either a `patterns` item or combined
+    of `kwd_attrs` and `kwd_patterns` item."""
+
+    assert self.a.__class__ in _ASTS_LEAF_KWD_ATTRS_CONTAINERS
+
+    ast = self.a
+    patterns = ast.patterns
+    len_patterns = len(patterns)
+
+    if idx < len_patterns:
+        return patterns[idx].f.pars()
+
+    lines = self.root._lines
+    kwd_patterns = ast.kwd_patterns
+    idx_kwd = idx - len_patterns
+
+    if idx_kwd:
+        _, _, ln, col = kwd_patterns[idx_kwd - 1].f.loc
+    elif patterns:
+        _, _, ln, col = patterns[-1].f.loc
+    elif ast.__class__ is MatchClass:
+        _, _, ln, col = ast.cls.f.loc
+    else:
+        ln, col, _, _ = self.loc
+
+    _, _, end_ln, end_col = kwd_patterns[idx_kwd].f.pars()
+
+    ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:

@@ -98,6 +98,8 @@ class _LocationAbstract:
 
 
 class _LocationAbstract_dictlike(_LocationAbstract):
+    """Always two distinct nodes / locations at each item."""
+
     is_dictlike = True
 
     def __init__(self, body: list[AST | None], body2: list[AST], parent: fst.FST) -> None:

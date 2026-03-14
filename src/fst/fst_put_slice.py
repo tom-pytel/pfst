@@ -149,6 +149,7 @@ from .code import (
     code_as__ImportFrom_names,
     code_as__withitems,
     code_as_pattern,
+    code_as__pattern_attrlikes,
     code_as_type_param,
     code_as__type_params,
     code_as__expr_arglikes,
@@ -1079,10 +1080,7 @@ def _code_to_slice_arguments(
         return None
 
     if one:
-        ast_ = fst_.a
-        len_body = len(ast_.posonlyargs) + len(ast_.args) + bool(ast_.vararg) + len(ast_.kwonlyargs) + bool(ast_.kwarg)
-
-        if len_body != 1:
+        if len(ast_.posonlyargs) + len(ast_.args) + bool(ast_.vararg) + len(ast_.kwonlyargs) + bool(ast_.kwarg) != 1:
             raise ValueError("expecting single argument for put as 'one=True'")
 
     return fst_
@@ -1205,6 +1203,26 @@ def _code_to_slice__withitems(
     fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)
 
     item.f._set_field(ast_, 'context_expr', True, False)
+
+    return fst_
+
+
+def _code_to_slice__pattern_attrlikes(
+    self: fst.FST, code: Code | None, one: bool | None, options: Mapping[str, Any]
+) -> fst.FST | None:
+    if code is None:
+        return None
+
+    coerce = fst.FST.get_option('coerce', options)
+    fst_ = code_as__pattern_attrlikes(code, options, self.root._parse_params, coerce=coerce)
+    ast_ = fst_.a
+
+    if not ast_.patterns and not ast_.kwd_patterns:  # put empty sequence is same as delete
+        return None
+
+    if one:
+        if len(ast_.patterns) + len(ast_.kwd_patterns) != 1:
+            raise ValueError("expecting single pattern attrlike for put as 'one=True'")
 
     return fst_
 
@@ -2998,7 +3016,7 @@ def _put_slice_MatchMapping__all(
             self._maybe_ins_sep(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
-def _put_slice_attrlikes_patterns(
+def _put_slice_pattern_attrlikes_patterns(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'],
@@ -3033,6 +3051,114 @@ def _put_slice_attrlikes_patterns(
 
     if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
         self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+
+class _LocationAbstract_pattern_attrlikes__attrs(_LocationAbstract):
+    """Just pass through location query to `_loc_pattern_attrlikes__attr()`."""
+
+    def __init__(self, patterns: list[AST], kwd_patterns: list[AST], parent: fst.FST) -> None:
+        self.patterns = patterns
+        self.kwd_patterns = kwd_patterns
+        self.parent = parent
+
+    def __len__(self) -> int:
+        return len(self.patterns) + len(self.kwd_patterns)
+
+    def tail_node(self, idx: int) -> AST:
+        return patterns[idx] if (i := idx - len(patterns := self.patterns)) < 0 else self.kwd_patterns[i]
+
+    def loc_head(self, idx: int) -> fstloc:
+        return self.parent._loc_pattern_attrlikes__attr(idx)
+
+
+def _put_slice_pattern_attrlikes__attrs(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    one: bool | None,
+    options: Mapping[str, Any],
+) -> None:
+    """`MatchClass.patterns` or `_patterns_attrlikes.patterns`."""
+
+    ast = self.a
+    patterns = ast.patterns
+    kwd_patterns = ast.kwd_patterns
+    len_patterns = len(patterns)
+    len_body = len_patterns + len(kwd_patterns)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    kw_stop = stop - len_patterns
+
+    fst_ = _code_to_slice__pattern_attrlikes(self, code, one, options)
+
+    if not fst_:
+        if start == stop:
+            return
+
+    else:
+        ast_ = fst_.a
+        fst_patterns = ast_.patterns
+        fst_kwd_patterns = ast_.kwd_patterns
+
+        if (fst_patterns and start > len_patterns) or (fst_kwd_patterns and kw_stop < 0):
+            raise NodeError('non-keyword pattern cannot follow keyword pattern')
+
+    if ast.__class__ is _pattern_attrlikes:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+    else:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_MatchClass_pars()
+        bound_col += 1
+        bound_end_col -= 1
+
+    locabst = _LocationAbstract_pattern_attrlikes__attrs(patterns, kwd_patterns, self)
+
+    if not fst_:
+        end_params = put_slice_sep_begin(self, start, stop, locabst, None, None,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                         options, ',', 0)
+
+        if kw_stop <= 0:  # just normal patterns
+            _put_slice_asts(self, start, stop, 'patterns', patterns, None, None)
+
+        else:
+            kwd_attrs = ast.kwd_attrs
+            kw_start = start - len_patterns
+
+            if kw_start < 0:  # both normal and keyword patterns
+                kw_start = 0
+
+                _put_slice_asts(self, start, len_patterns, 'patterns', patterns, None, None)
+
+            _put_slice_asts(self, kw_start, kw_stop, 'kwd_patterns', kwd_patterns, None, None)
+
+            del kwd_attrs[kw_start : kw_stop]
+
+    else:
+        fst_locabst = _LocationAbstract_pattern_attrlikes__attrs(fst_patterns, fst_kwd_patterns, fst_)
+
+        end_params = put_slice_sep_begin(self, start, stop, locabst, fst_locabst, fst_,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                         options, ',', 0)
+
+        if kw_stop < 0:  # can only be putting normal patterns
+            _put_slice_asts(self, start, stop, 'patterns', patterns, fst_, fst_patterns)
+
+        else:
+            kwd_attrs = ast.kwd_attrs
+            kw_start = start - len_patterns
+
+            if kw_start < 0 or fst_patterns:  # there ARE normal and there MAY BE keyword patterns
+                kw_start = 0
+
+                _put_slice_asts(self, start, len_patterns, 'patterns', patterns, fst_, fst_patterns)
+
+            if kw_stop or fst_kwd_patterns:  # there ARE keyword patterns
+                _put_slice_asts(self, kw_start, kw_stop, 'kwd_patterns', kwd_patterns, fst_, fst_kwd_patterns)
+
+                kwd_attrs[kw_start : kw_stop] = ast_.kwd_attrs
+
+    put_slice_sep_end(self, end_params)
 
 
 def _put_slice_MatchOr_patterns(
@@ -3286,7 +3412,8 @@ _PUT_SLICE_HANDLERS = {
     (MatchMapping, 'keys'):                   _put_slice_NOT_HANDLED_try__all,  # expr*
     (MatchMapping, 'patterns'):               _put_slice_NOT_HANDLED_try__all,  # pattern*
     (MatchMapping, '_all'):                   _put_slice_MatchMapping__all,  # key:pattern*
-    (MatchClass, 'patterns'):                 _put_slice_attrlikes_patterns,  # pattern*
+    (MatchClass, 'patterns'):                 _put_slice_pattern_attrlikes_patterns,  # pattern*
+    (MatchClass, '_attrs'):                   _put_slice_pattern_attrlikes__attrs,  # patterns,kwd_attrs=kwd_patterns
     (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*
 
     (FunctionDef, 'type_params'):             _put_slice_type_params,  # type_param*
@@ -3309,7 +3436,8 @@ _PUT_SLICE_HANDLERS = {
     (_comprehension_ifs, 'ifs'):              _put_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _put_slice__slice,  # alias*
     (_withitems, 'items'):                    _put_slice__slice,  # withitem*
-    (_pattern_attrlikes, 'patterns'):         _put_slice_attrlikes_patterns,  # pattern*
+    (_pattern_attrlikes, 'patterns'):         _put_slice_pattern_attrlikes_patterns,  # pattern*
+    (_pattern_attrlikes, '_attrs'):           _put_slice_pattern_attrlikes__attrs,  # patterns,kwd_attrs=kwd_patterns
     (_type_params, 'type_params'):            _put_slice__slice,  # type_param*
 }  # fmt: skip
 

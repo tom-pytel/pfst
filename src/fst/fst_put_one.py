@@ -192,6 +192,8 @@ from .code import (
 from .fst_misc import fixup_one_index, validate_put_arglike
 from .fst_get_one import _params_Compare
 
+_ASTS_LEAF_KWD_ATTRS_CONTAINERS = frozenset([MatchClass, _pattern_attrlikes])
+
 
 _PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
 _Child      = AST | list[AST] | constant | None
@@ -2914,6 +2916,7 @@ _PUT_ONE_HANDLERS = {
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_kwd_attrs, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier*
     (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (MatchClass, '_attrs'):               (True, False, False),  # patterns,kwd_attrs=kwd_patterns
     (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=code_as_pattern)),  # pattern?
     (MatchAs, 'name'):                    (False, _put_one_MatchAs_name, onestatic(_one_info_MatchAs_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
@@ -2954,6 +2957,7 @@ _PUT_ONE_HANDLERS = {
     (_pattern_attrlikes, 'patterns'):     (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (_pattern_attrlikes, 'kwd_attrs'):    (False, _put_one_identifier_required, onestatic(_one_info_kwd_attrs, _restrict_default, code_as=_code_as_identifier_non_pat_wildcard)),  # identifier*
     (_pattern_attrlikes, 'kwd_patterns'): (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
+    (_pattern_attrlikes, '_attrs'):       (True, False, False),  # patterns,kwd_attrs=kwd_patterns
     (_type_params, 'type_params'):        (True, _put_one_exprlike_required, _onestatic_type_param_required),  # type_param*
 
 
@@ -3206,6 +3210,9 @@ def _put_one(
         elif ast_cls is arguments:  # `arguments._all`
             len_ = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
 
+        elif ast_cls in _ASTS_LEAF_KWD_ATTRS_CONTAINERS:  # `MatchClass/_pattern_attrlikes._attrs`
+            len_ = len(ast.patterns) + len(ast.kwd_patterns)
+
         else:
             raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 
@@ -3227,6 +3234,9 @@ def _put_one(
                 ast = new_self.a
 
                 return new_self._cached_allargs()[idx].f  # we return only the arg portion even though it might have a default, but it will never be called expecting a return with a default because that would be a .replace() on a single combined arg+defualt element which never exists on its own
+
+            elif ast_cls in _ASTS_LEAF_KWD_ATTRS_CONTAINERS:  # we may return from kwd_patterns because there is no better option
+                return (patterns[idx] if (i := idx - len(patterns := ast.patterns)) < 0 else ast.kwd_patterns[i]).f
 
             raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 

@@ -310,11 +310,13 @@ def _get_one_Dict__all(
 def _get_one_arguments__all(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
+    """A single argument is just an `arguments` with one argument (and maybe default)."""
+
     ast = self.a
     len_body = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
     idx = fixup_one_index(len_body, idx)
 
-    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handles in the slice function
+    raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handled in the slice function
 
 
 def _get_one_MatchMapping__all(
@@ -325,6 +327,18 @@ def _get_one_MatchMapping__all(
     idx = fixup_one_index(len_body, idx)
 
     raise _NoCut(self._get_slice(idx, idx + 1, '_all', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handles in the slice function
+
+
+def _get_one_pattern_attrlikes__attrs(
+    self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
+) -> _GetOneRet:
+    """A single pattern_attrlike is just an `_pattern_attrlikes` with one item, keyword or non-keyword pattern."""
+
+    ast = self.a
+    len_body = len(ast.patterns) + len(ast.kwd_patterns)
+    idx = fixup_one_index(len_body, idx)
+
+    raise _NoCut(self._get_slice(idx, idx + 1, '_attrs', cut, options))  # succeed but without doing an explicit cut delete _get_one() because it is handled in the slice function
 
 
 @pyver(lt=12, else_=_get_one_default)
@@ -677,6 +691,7 @@ _GET_ONE_HANDLERS = {
     (MatchClass, 'patterns'):             _get_one_default,  # pattern*
     (MatchClass, 'kwd_attrs'):            _get_one_identifier_promote_true,  # identifier*
     (MatchClass, 'kwd_patterns'):         _get_one_default,  # pattern*
+    (MatchClass, '_attrs'):               _get_one_pattern_attrlikes__attrs,  # patterns,kwd_attrs=kwd_patterns
     (MatchStar, 'name'):                  _get_one_identifier,  # identifier?
     (MatchAs, 'pattern'):                 _get_one_default,  # pattern?
     (MatchAs, 'name'):                    _get_one_identifier,  # identifier?
@@ -717,6 +732,7 @@ _GET_ONE_HANDLERS = {
     (_pattern_attrlikes, 'patterns'):     _get_one_default,  # pattern*
     (_pattern_attrlikes, 'kwd_attrs'):    _get_one_identifier_promote_true,  # identifier*
     (_pattern_attrlikes, 'kwd_patterns'): _get_one_default,  # pattern*
+    (_pattern_attrlikes, '_attrs'):       _get_one_pattern_attrlikes__attrs,  # patterns,kwd_attrs=kwd_patterns
     (_type_params, 'type_params'):        _get_one_default,  # type_param*
 
 

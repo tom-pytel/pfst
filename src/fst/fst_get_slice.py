@@ -130,7 +130,7 @@ class _LocationAbstract_arguments(_LocationAbstract):
         a = self.body[idx]
         f = a.f
 
-        return f.loc if a.__class__ is Pass else f._loc_argument(True)
+        return f.loc if a.__class__ is Pass else f._loc_argument(True)  # Pass is used as standin node for `/` and `*` argument type
 
 
 # ......................................................................................................................
@@ -2677,7 +2677,7 @@ def _get_slice_MatchMapping__all(
     ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=rest if with_rest else None)
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
-                        options, 'patterns', '{', '}', ',', 0, 0)
+                         options, 'patterns', '{', '}', ',', 0, 0)
 
     if with_rest:
         _remove_MatchMapping_rest_real_node(fst_)  # we know this contains the temporary .rest node
@@ -2690,7 +2690,7 @@ def _get_slice_MatchMapping__all(
     return fst_
 
 
-def _get_slice_attrlikes_patterns(
+def _get_slice_pattern_attrlikes_patterns(
     self: fst.FST,
     start: int | Literal['end'],
     stop: int | Literal['end'],
@@ -2733,6 +2733,74 @@ def _get_slice_attrlikes_patterns(
         if self_tail_sep:  # means there are keywords
             if start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
                 self._maybe_ins_sep(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    return fst_
+
+
+def _get_slice_pattern_attrlikes__attrs(
+    self: fst.FST,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """A `MatchClass._attrs` or `_pattern_attrlikes._attrs` slice is just a `_patterns_attrlikes`."""
+
+    ast = self.a
+    patterns = ast.patterns
+    kwd_patterns = ast.kwd_patterns
+    len_patterns = len(patterns)
+    len_body = len_patterns + len(kwd_patterns)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        return fst.FST(_pattern_attrlikes(patterns=[], kwd_attrs=[], kwd_patterns=[],
+                                          lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
+
+    if ast.__class__ is _pattern_attrlikes:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+    else:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_MatchClass_pars()
+        bound_col += 1
+        bound_end_col -= 1
+
+    loc_first = self._loc_pattern_attrlikes__attr(start)
+    loc_last = self._loc_pattern_attrlikes__attr(i) if (i := stop - 1) != start else loc_first
+
+    if stop <= len_patterns:  # just normal patterns
+        asts = _cut_or_copy_asts(start, stop, 'patterns', cut, patterns)
+        asts2 = []
+        attrs = []
+        ast_last = asts[-1]
+
+    else:
+        kwd_attrs = ast.kwd_attrs
+        kw_stop = stop - len_patterns
+
+        if start < len_patterns:  # both normal and keyword patterns
+            kw_start = 0
+            asts = _cut_or_copy_asts(start, len_patterns, 'patterns', cut, patterns)
+
+        else:  # just keyword patterns
+            kw_start = start - len_patterns
+            asts = []
+
+        asts2 = _cut_or_copy_asts(kw_start, kw_stop, 'kwd_patterns', cut, kwd_patterns)
+        attrs = kwd_attrs[kw_start : kw_stop]
+
+        if cut:
+            del kwd_attrs[kw_start : kw_stop]
+
+        ast_last = asts2[-1]
+
+    ret_ast = _pattern_attrlikes(patterns=asts, kwd_attrs=attrs, kwd_patterns=asts2)
+
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, ast_last,
+                         loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                         options, field, '', '', ',', False, False)
 
     return fst_
 
@@ -2964,7 +3032,8 @@ _GET_SLICE_HANDLERS = {
 
     (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
     (MatchMapping, '_all'):                   _get_slice_MatchMapping__all,  # key:pattern*
-    (MatchClass, 'patterns'):                 _get_slice_attrlikes_patterns,  # pattern*
+    (MatchClass, 'patterns'):                 _get_slice_pattern_attrlikes_patterns,  # pattern*
+    (MatchClass, '_attrs'):                   _get_slice_pattern_attrlikes__attrs,  # patterns,kwd_attrs=kwd_patterns
     (MatchOr, 'patterns'):                    _get_slice_MatchOr_patterns,  # pattern*
 
     (FunctionDef, 'type_params'):             _get_slice_type_params,  # type_param*
@@ -2987,7 +3056,8 @@ _GET_SLICE_HANDLERS = {
     (_comprehension_ifs, 'ifs'):              _get_slice_comprehension_ifs,  # exprs*
     (_aliases, 'names'):                      _get_slice__slice,  # alias*
     (_withitems, 'items'):                    _get_slice__slice,  # withitem*
-    (_pattern_attrlikes, 'patterns'):         _get_slice_attrlikes_patterns,  # pattern*
+    (_pattern_attrlikes, 'patterns'):         _get_slice_pattern_attrlikes_patterns,  # pattern*
+    (_pattern_attrlikes, '_attrs'):           _get_slice_pattern_attrlikes__attrs,  # patterns,kwd_attrs=kwd_patterns
     (_type_params, 'type_params'):            _get_slice__slice,  # type_param*
 }  # fmt: skip
 

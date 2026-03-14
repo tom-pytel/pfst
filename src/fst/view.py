@@ -1745,7 +1745,7 @@ class FSTView_Global_Nonlocal(FSTView):
 
 
 class FSTView_kwd_attrs(FSTView):
-    """For `MatchClass.kwd_attrs`. @private"""
+    """For `MatchClass.kwd_attrs` and `_pattern_attrlikes.kwd_attrs`. @private"""
 
     is_item_FST = False
 
