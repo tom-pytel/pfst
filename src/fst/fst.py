@@ -94,6 +94,7 @@ from .asttypes import (
     Match,
     MatchMapping,
     MatchSequence,
+    MatchClass,
     Mod,
     Module,
     Mult,
@@ -124,6 +125,7 @@ from .asttypes import (
     withitem,
     _ExceptHandlers,
     _match_cases,
+    _pattern_attrlikes,
 )
 
 from .astutil import (
@@ -150,6 +152,7 @@ from .view import (
     FSTView_arguments,
     FSTView__body,
     FSTView_arglikes,
+    FSTView_pattern_attrlikes,
 )
 
 from .reconcile import Reconcile
@@ -5795,6 +5798,31 @@ class FST:
     def _bases(self: FST) -> None:
         self._put_slice(None, 0, 'end', '_bases')
 
+    @property
+    def _attrs(self: FST) -> FSTView:
+        """Virtual `_attrs` field view for `MatchClass` and `_pattern_attrlikes`.
+
+        **Examples:**
+
+        >>> FST('cls(a, b, c=d, e=f)', 'MatchClass')._attrs[1:3].copy().src
+        'b, c=d'
+
+        @public
+        """
+
+        if self.a.__class__ in _ASTS_LEAF__ATTRS_CONTAINERS:
+            return FSTView_pattern_attrlikes(self, '_attrs')
+
+        raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_attrs'")
+
+    @_attrs.setter
+    def _attrs(self: FST, code: Code | None) -> None:
+        self._put_slice(code, 0, 'end', '_attrs')
+
+    @_attrs.deleter
+    def _attrs(self: FST) -> None:
+        self._put_slice(None, 0, 'end', '_attrs')
+
 
 _VIRTUAL_FIELD_VIEW__ALL = {
     Dict:         FSTView_Dict,
@@ -5802,6 +5830,8 @@ _VIRTUAL_FIELD_VIEW__ALL = {
     Compare:      FSTView_Compare,
     arguments:    FSTView_arguments,
 }
+
+_ASTS_LEAF__ATTRS_CONTAINERS = frozenset([MatchClass, _pattern_attrlikes])
 
 
 # def __setup_accessors_debug() -> None:

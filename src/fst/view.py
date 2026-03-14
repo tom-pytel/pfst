@@ -24,6 +24,7 @@ __all__ = [
     'FSTView_arglikes',
     'FSTView_Global_Nonlocal',
     'FSTView_kwd_attrs',
+    'FSTView_pattern_attrlikes',
     'FSTView_dummy',
 ]
 
@@ -1875,6 +1876,179 @@ class FSTView_kwd_attrs(FSTView):
             return None
 
         return self.base._loc_kwd_attrs(stop - 1).end_col
+
+
+class FSTView_pattern_attrlikes(FSTView):
+    """View for `MatchClass` and `_pattern_attrlikes` merged `patterns+kwd_attrs=kwd_patterns` virtual field `_attrs`.
+    @private"""
+
+    is_item_FST = False
+    is_item_multinode = True
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('cls(a, b, c=d, e=f)', 'MatchClass')
+
+        >>> f._attrs.loc
+        fstlocn(0, 4, 0, 18, n=0)
+
+        >>> f._attrs[0].loc
+        fstlocn(0, 4, 0, 5, n=0)
+
+        >>> f._attrs[:2].loc
+        fstlocn(0, 4, 0, 8, n=0)
+
+        >>> f._attrs[2].loc
+        fstlocn(0, 10, 0, 13, n=0)
+
+        >>> f._attrs[3].loc
+        fstlocn(0, 15, 0, 18, n=0)
+
+        >>> f._attrs[-1].loc
+        fstlocn(0, 15, 0, 18, n=0)
+
+        >>> f._attrs[1:-1].loc
+        fstlocn(0, 7, 0, 13, n=0)
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if not (len_ := stop - start):
+            return None
+
+        base = self.base
+
+        if len_ == 1:
+            ln, col, end_ln, end_col = base._loc_pattern_attrlikes__attr(start)
+
+        else:
+            ln, col, _, _ = base._loc_pattern_attrlikes__attr(start)
+            _, _, end_ln, end_col = base._loc_pattern_attrlikes__attr(stop - 1)
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('cls(a,\nb,\n c=d,\n  e=\nf)', 'MatchClass')
+
+        >>> f._attrs[0].ln
+        0
+
+        >>> f._attrs[1].ln
+        1
+
+        >>> f._attrs[2].ln
+        2
+
+        >>> f._attrs[3].ln
+        3
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_pattern_attrlikes__attr(start).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('cls(a,\nb,\n c=d,\n  e=\nf)', 'MatchClass')
+
+        >>> f._attrs[0].col
+        4
+
+        >>> f._attrs[1].col
+        0
+
+        >>> f._attrs[2].col
+        1
+
+        >>> f._attrs[3].col
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_pattern_attrlikes__attr(start).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('cls(a,\nb,\n c=d,\n  e=\nf)', 'MatchClass')
+
+        >>> f._attrs[0].end_ln
+        0
+
+        >>> f._attrs[1].end_ln
+        1
+
+        >>> f._attrs[2].end_ln
+        2
+
+        >>> f._attrs[3].end_ln
+        4
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_pattern_attrlikes__attr(stop - 1).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('cls(a,\nb,\n c=d,\n  e=\nf)', 'MatchClass')
+
+        >>> f._attrs[0].end_col
+        5
+
+        >>> f._attrs[1].end_col
+        1
+
+        >>> f._attrs[2].end_col
+        4
+
+        >>> f._attrs[3].end_col
+        1
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_pattern_attrlikes__attr(stop - 1).end_col
+
+    def _len_field(self) -> int:
+        ast = self.base.a
+
+        return len(ast.patterns) + len(ast.kwd_patterns)
 
 
 class FSTView_dummy(FSTView):
