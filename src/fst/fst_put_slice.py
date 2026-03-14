@@ -3088,7 +3088,7 @@ def _put_slice_pattern_attrlikes__attrs(
     len_patterns = len(patterns)
     len_body = len_patterns + len(kwd_patterns)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    kw_stop = stop - len_patterns
+    kwd_stop = stop - len_patterns
 
     fst_ = _code_to_slice__pattern_attrlikes(self, code, one, options)
 
@@ -3101,7 +3101,7 @@ def _put_slice_pattern_attrlikes__attrs(
         fst_patterns = ast_.patterns
         fst_kwd_patterns = ast_.kwd_patterns
 
-        if (fst_patterns and start > len_patterns) or (fst_kwd_patterns and kw_stop < 0):
+        if (fst_patterns and start > len_patterns) or (fst_kwd_patterns and kwd_stop < 0):
             raise NodeError('non-keyword pattern cannot follow keyword pattern')
 
     if ast.__class__ is _pattern_attrlikes:
@@ -3118,21 +3118,21 @@ def _put_slice_pattern_attrlikes__attrs(
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, ',', 0)
 
-        if kw_stop <= 0:  # just normal patterns
+        if kwd_stop <= 0:  # just normal patterns
             _put_slice_asts(self, start, stop, 'patterns', patterns, None, None)
 
         else:
             kwd_attrs = ast.kwd_attrs
-            kw_start = start - len_patterns
+            kwd_start = start - len_patterns
 
-            if kw_start < 0:  # both normal and keyword patterns
-                kw_start = 0
+            if kwd_start < 0:  # both normal and keyword patterns
+                kwd_start = 0
 
                 _put_slice_asts(self, start, len_patterns, 'patterns', patterns, None, None)
 
-            _put_slice_asts(self, kw_start, kw_stop, 'kwd_patterns', kwd_patterns, None, None)
+            _put_slice_asts(self, kwd_start, kwd_stop, 'kwd_patterns', kwd_patterns, None, None)
 
-            del kwd_attrs[kw_start : kw_stop]
+            del kwd_attrs[kwd_start : kwd_stop]
 
     else:
         fst_locabst = _LocationAbstract_pattern_attrlikes__attrs(fst_patterns, fst_kwd_patterns, fst_)
@@ -3141,22 +3141,22 @@ def _put_slice_pattern_attrlikes__attrs(
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, ',', 0)
 
-        if kw_stop < 0:  # can only be putting normal patterns
+        if kwd_stop < 0:  # can only be putting normal patterns
             _put_slice_asts(self, start, stop, 'patterns', patterns, fst_, fst_patterns)
 
         else:
             kwd_attrs = ast.kwd_attrs
-            kw_start = start - len_patterns
+            kwd_start = start - len_patterns
 
-            if kw_start < 0 or fst_patterns:  # there ARE normal and there MAY BE keyword patterns
-                kw_start = 0
+            if kwd_start < 0 or fst_patterns:  # there ARE normal and there MAY BE keyword patterns
+                kwd_start = 0
 
                 _put_slice_asts(self, start, len_patterns, 'patterns', patterns, fst_, fst_patterns)
 
-            if kw_stop or fst_kwd_patterns:  # there ARE keyword patterns
-                _put_slice_asts(self, kw_start, kw_stop, 'kwd_patterns', kwd_patterns, fst_, fst_kwd_patterns)
+            if kwd_stop or fst_kwd_patterns:  # there ARE keyword patterns
+                _put_slice_asts(self, kwd_start, kwd_stop, 'kwd_patterns', kwd_patterns, fst_, fst_kwd_patterns)
 
-                kwd_attrs[kw_start : kw_stop] = ast_.kwd_attrs
+                kwd_attrs[kwd_start : kwd_stop] = ast_.kwd_attrs
 
     put_slice_sep_end(self, end_params)
 

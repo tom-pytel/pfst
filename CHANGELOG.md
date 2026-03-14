@@ -2,6 +2,8 @@
 
 ### Added
 
+- `MatchClass.patterns,kwd_attrs=kwd_patterns` sequence via `_attrs` virtual field, slice container is `_pattern_attrlikes`
+
 ### Changed
 
 ### Fixed

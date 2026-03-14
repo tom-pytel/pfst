@@ -2753,10 +2753,11 @@ def _get_slice_pattern_attrlikes__attrs(
     len_patterns = len(patterns)
     len_body = len_patterns + len(kwd_patterns)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    kw_start = start - len_patterns
-    kw_stop = stop - len_patterns
+    len_slice = stop - start
+    kwd_start = start - len_patterns
+    kwd_stop = stop - len_patterns
 
-    if start == stop:
+    if not len_slice:
         return fst.FST(_pattern_attrlikes(patterns=[], kwd_attrs=[], kwd_patterns=[],
                                           lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
@@ -2769,12 +2770,12 @@ def _get_slice_pattern_attrlikes__attrs(
         bound_col += 1
 
     if start:
-        _, _, bound_ln, bound_col = (patterns[start - 1] if kw_start <= 0 else kwd_patterns[kw_start - 1]).f.pars()
+        _, _, bound_ln, bound_col = (patterns[start - 1] if kwd_start <= 0 else kwd_patterns[kwd_start - 1]).f.pars()
 
     loc_first = self._loc_pattern_attrlikes__attr(start)
     loc_last = self._loc_pattern_attrlikes__attr(i) if (i := stop - 1) != start else loc_first
 
-    if kw_stop <= 0:  # just normal patterns
+    if kwd_stop <= 0:  # just normal patterns
         asts = _cut_or_copy_asts(start, stop, 'patterns', cut, patterns)
         asts2 = []
         attrs = []
@@ -2783,26 +2784,33 @@ def _get_slice_pattern_attrlikes__attrs(
     else:
         kwd_attrs = ast.kwd_attrs
 
-        if kw_start < 0:  # both normal and keyword patterns
-            kw_start = 0
+        if kwd_start < 0:  # both normal and keyword patterns
+            kwd_start = 0
             asts = _cut_or_copy_asts(start, len_patterns, 'patterns', cut, patterns)
 
         else:  # just keyword patterns
             asts = []
 
-        asts2 = _cut_or_copy_asts(kw_start, kw_stop, 'kwd_patterns', cut, kwd_patterns)
-        attrs = kwd_attrs[kw_start : kw_stop]
+        asts2 = _cut_or_copy_asts(kwd_start, kwd_stop, 'kwd_patterns', cut, kwd_patterns)
+        attrs = kwd_attrs[kwd_start : kwd_stop]
 
         if cut:
-            del kwd_attrs[kw_start : kw_stop]
+            del kwd_attrs[kwd_start : kwd_stop]
 
         ast_last = asts2[-1]
+
+    if not cut or len_slice == len_body:
+        new_last = ''
+    elif stop == len_body:  # to end so new last is internal
+        new_last = (patterns[start - 1] if kwd_start <= 0 else kwd_patterns[kwd_start - 1]).f
+    else:  # not to end, so new last is original last
+        new_last = ast_last.f
 
     ret_ast = _pattern_attrlikes(patterns=asts, kwd_attrs=attrs, kwd_patterns=asts2)
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, ast_last,
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
-                         options, field, '', '', ',', False, False)
+                         options, new_last, '', '', ',', 0, 0)
 
     return fst_
 

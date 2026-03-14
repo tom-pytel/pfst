@@ -2711,6 +2711,71 @@ class SliceExprlike(Fuzzy):
 
         self.debug_post(src, dst)
 
+    def transfer_pattern_attrlikes(
+        self,
+        dir: str,
+        cat: str,
+        field: str | None,
+        slice_field: str | None,
+        src: FST,
+        dst: FST,
+        min_src: int,
+        min_dst: int,
+        one: bool,
+    ):
+        src_len = len(src.a.patterns) + len(src.a.kwd_patterns)
+        dst_len = len(dst.a.patterns) + len(dst.a.kwd_patterns)
+
+        src_start, src_stop, dst_start, dst_stop = self.rnd_indices(src_len, dst_len, min_dst)
+        src_trivia, dst_trivia = self.rnd_trivia(), self.rnd_trivia()
+
+        len_src_slice = src_stop - src_start
+        cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
+
+        if one:
+            one = bool(randint(0, 1)) if src_stop - src_start == 1 else False
+
+        self.debug_pre(dir, cat, cut, one, src, src_start, src_stop, src_len, min_src, src_trivia, dst, dst_start, dst_stop, dst_len, min_dst, dst_trivia)
+
+        # src_elts = src_body[src_start : src_stop]
+        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
+        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
+
+        slice = src.get_slice(src_start_, src_stop_, field='_attrs', cut=cut, trivia=src_trivia)
+
+        # slice_elts = slice._cached_allargs()
+
+        # assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
+
+        # slice_elts = slice._cached_allargs()
+
+        if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+            print('   SLICE:   ', slice, slice.src)
+
+        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
+        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
+
+        try:
+            slice_bck = slice.copy()
+
+            dst.put_slice(slice, dst_start_, dst_stop_, field='_attrs', one=one, trivia=dst_trivia)
+
+        except NodeError as exc:  # positional stuff, put thing back if we cut it
+            if cut:
+                src.put_slice(slice_bck, src_start, src_start, field='_attrs', trivia=(False, False))
+
+            if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
+                print('   FAILED:', str(exc))
+
+            return
+
+        # if not one:
+        #     dst_elts = dst._cached_allargs()[dst_start : dst_start + (src_stop - src_start)]
+
+        #     # assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
+
+        self.debug_post(src, dst)
+
     def transfer_arglikes(
         self,
         dir: str,
@@ -2867,7 +2932,8 @@ class SliceExprlike(Fuzzy):
             arguments:        self.Bucket(None, None, 0, 5, True, FST('a, b, c, d, e', arguments), self.transfer_arguments),
             MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
-            MatchClass:       self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
+            # MatchClass:       self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),  # this or the following, not both at he same time
+            MatchClass:       self.Bucket('_attrs', None, 0, 0, False, FST('', '_pattern_attrlikes'), self.transfer_pattern_attrlikes),
             MatchOr:          self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
         }
 

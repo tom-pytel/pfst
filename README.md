@@ -120,7 +120,6 @@ i = log(j).k = log(a) + log(log(b)[log(c)])
 ### TODO
 
 - Prescribed get / put slice from / to:
-  - `MatchClass.patterns+kwd_attrs:kwd_patterns` with `_pattern_args` special slice container class
   - `JoinedStr.values`
   - `TemplateStr.values`
 

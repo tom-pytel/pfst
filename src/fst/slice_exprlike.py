@@ -537,7 +537,7 @@ def get_slice_sep(
         `MatchMapping`).
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
     - `field_or_new_last`: Either a `str` indicating an existing field which is the body or an actual `FST` of the new
-        last element after the copy or cut.
+        last element after the copy or cut. Pass as '' if not cut or cut everything.
         - `str`: Which field of `self` is being gotten from. In the case of two-field sequences like `Dict` this should
             be the last field syntactically, `value` in the case of `Dict` and should always have valid entries and not
             `None`.
@@ -644,7 +644,7 @@ def get_slice_sep(
 
             fst_._maybe_ins_sep(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
 
-        if self_tail_sep is not None:
+        if self_tail_sep is not None:  # should be None if cut everything
             bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
                                                                 params_offset)
 
