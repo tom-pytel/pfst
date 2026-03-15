@@ -1759,6 +1759,7 @@ class MatchSearch(Fuzzy):
         M_comprehension_ifs,
         M_aliases,
         M_withitems,
+        M_pattern_attrlikes,
         M_type_params,
     )
     ALL_ASTS__ALL = ASTS__ALL + MASTS__ALL

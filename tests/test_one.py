@@ -4053,6 +4053,7 @@ f'd{t"e{f=!s:0.1f<1}"=}'
             (('if _', '_comprehension_ifs'), [('ifs', 'x', 'Name')]),
             (('_ as _', '_aliases'), [('names', '_ as _', 'alias')]),
             (('_ as _', '_withitems'), [('items', '_ as _', 'withitem')]),
+            (('a', '_pattern_attrlikes'), [('patterns', 'a', 'MatchAs')]),
         ]
 
         if PYGE11:

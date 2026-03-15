@@ -170,6 +170,7 @@ from .asttypes import (
     _comprehension_ifs,
     _aliases,
     _withitems,
+    _pattern_attrlikes,
     _type_params,
 )
 
@@ -183,11 +184,14 @@ from .view import (
     FSTView_Dict,
     FSTView_MatchMapping,
     FSTView_Compare,
+    FSTView_decorator_list,
+    FSTView_comprehension_ifs,
     FSTView_arguments,
     FSTView__body,
     FSTView_arglikes,
     FSTView_Global_Nonlocal,
     FSTView_kwd_attrs,
+    FSTView_pattern_attrlikes,
     FSTView_dummy,
 )
 
@@ -356,6 +360,7 @@ __all__ = [
     'M_comprehension_ifs',
     'M_aliases',
     'M_withitems',
+    'M_pattern_attrlikes',
     'M_type_params',
 ]
 
@@ -2506,6 +2511,7 @@ class MMatchClass(Mpattern):  # pragma: no cover
         patterns: _Patterns = ...,
         kwd_attrs: _Patterns = ...,
         kwd_patterns: _Patterns = ...,
+        _attrs: _Patterns = ...,
     ) -> None:
         self._fields = fields = []
 
@@ -2524,6 +2530,10 @@ class MMatchClass(Mpattern):  # pragma: no cover
         if kwd_patterns is not ...:
             self.kwd_patterns = kwd_patterns
             fields.append('kwd_patterns')
+
+        if _attrs is not ...:
+            self._attrs = _attrs
+            fields.append('_attrs')
 
 class MMatchStar(Mpattern):  # pragma: no cover
     """"""
@@ -2778,6 +2788,35 @@ class M_withitems(M_slice):  # pragma: no cover
         if items is not ...:
             self.items = items
             fields.append('items')
+
+class M_pattern_attrlikes(M_slice):  # pragma: no cover
+    """"""
+    _types = _pattern_attrlikes
+
+    def __init__(
+        self,
+        patterns: _Patterns = ...,
+        kwd_attrs: _Patterns = ...,
+        kwd_patterns: _Patterns = ...,
+        _attrs: _Patterns = ...,
+    ) -> None:
+        self._fields = fields = []
+
+        if patterns is not ...:
+            self.patterns = patterns
+            fields.append('patterns')
+
+        if kwd_attrs is not ...:
+            self.kwd_attrs = kwd_attrs
+            fields.append('kwd_attrs')
+
+        if kwd_patterns is not ...:
+            self.kwd_patterns = kwd_patterns
+            fields.append('kwd_patterns')
+
+        if _attrs is not ...:
+            self._attrs = _attrs
+            fields.append('_attrs')
 
 class M_type_params(M_slice):  # pragma: no cover
     """"""
@@ -4246,12 +4285,13 @@ _NODE_ARGUMENTS_ARGS_LIST_FIELDS = {'kwonlyargs', 'posonlyargs', 'args'}
 _NODE_ARGUMENTS_ARGS_ALL_FIELDS = {'kwonlyargs', 'posonlyargs', 'args', 'vararg', 'kwarg'}
 _NODE_ARGUMENTS_DEFAULTS_FIELDS = {'defaults', 'kw_defaults'}
 
-_FSTVIEW_NON_DEREF_FST_SINGLE_TYPE = {
-    FSTView_Dict:            Dict,
-    FSTView_MatchMapping:    MatchMapping,
-    FSTView_arguments:       arguments,
-    FSTView_Global_Nonlocal: Name,
-    FSTView_kwd_attrs:       Name,
+_FSTVIEW_NON_DEREF_FST_SINGLE_TYPE = {  # what the implicit type if individual items is for FSTViews which don't return an FST node on single-item index operation, all the `not FSTView.is_item_FST`
+    FSTView_Dict:              Dict,
+    FSTView_MatchMapping:      MatchMapping,
+    FSTView_arguments:         arguments,
+    FSTView_Global_Nonlocal:   Name,
+    FSTView_kwd_attrs:         Name,
+    FSTView_pattern_attrlikes: _pattern_attrlikes,
 }  # fmt: skip
 
 
@@ -4547,10 +4587,10 @@ def _match__inside_list(
     return mstate.discard_tagss()
 
 
-def _match__FSTView_w__all(
+def _match__to_FSTView(
     pat: MAST | AST, tgt: FSTView, mstate: _MatchState, start: int = -1, stop: int = -1
 ) -> Mapping[str, Any] | None:
-    """Match an `AST` or `MAST` pattern against an `FSTView` which may be a fragment and is accessed by the `_all`
+    """Match an `AST` or `MAST` pattern against an `FSTView` which may be a fragment and may be matched against a
     virtual field."""
 
     if start == -1:
@@ -4565,8 +4605,8 @@ def _match__FSTView_w__all(
         if (p := getattr(pat, field, ...)) is ...:
             continue
 
-        if (t := getattr(ast, field, _SENTINEL)) is _SENTINEL:  # _SENTINEL means _all field because target AST nodes will have all other fields which may be present in the pattern
-            t = base._all[start : stop]
+        if (t := getattr(ast, field, _SENTINEL)) is _SENTINEL:  # _SENTINEL means virtual field because target AST nodes will have all other fields which may be present in the pattern
+            t = getattr(base, field)[start : stop]
 
         elif isinstance(t, list):
             if not isinstance(p, list):
@@ -4739,6 +4779,35 @@ def _match_FSTView_arguments(pat: FSTView_arguments, tgt: _Targets, mstate: _Mat
 
     return _match_node_arguments(real_pat, tgt, mstate)
 
+def _match_FSTView_pattern_attrlikes(
+    pat: FSTView_pattern_attrlikes, tgt: _Targets, mstate: _MatchState
+) -> Mapping[str, Any] | None:
+    """Temporary concrete pattern for matching against the given `FSTView`. Created once and cached, then pass control
+    to appropriate node matcher."""
+
+    if not (real_pat := mstate.cache.get(pat)):
+        start, stop = pat.start_and_stop
+        ast = pat.base.a
+        patterns = ast.patterns
+        len_patterns = len(patterns)
+
+        if stop > len_patterns:
+            start = max(start, len_patterns)
+            kwd_attrs = ast.kwd_attrs[start : stop]
+            kwd_patterns = ast.kwd_patterns[start : stop]
+
+        else:
+            kwd_attrs = []
+            kwd_patterns = []
+
+        real_pat = mstate.cache[pat] = M_pattern_attrlikes(
+            patterns[start : min(stop, len_patterns)] if start < len_patterns else [],
+            kwd_attrs,
+            kwd_patterns,
+        )
+
+    return _match_node__pattern_attrlikes(real_pat, tgt, mstate)
+
 def _match_FSTView_dummy(pat: FSTView_dummy, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """Temporary concrete pattern for matching against the given `FSTView_dummy`. Created once and cached, then pass
     control to appropriate node matcher.
@@ -4822,7 +4891,7 @@ def _match_node_Compare(pat: MCompare | Compare, tgt: _Targets, mstate: _MatchSt
     if not tgt_len:  # we have at least one element but target is empty?
         return None
 
-    return _match__FSTView_w__all(pat, tgt, mstate, start, stop)
+    return _match__to_FSTView(pat, tgt, mstate, start, stop)
 
 def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`Dict` or `MDict` leaf node. Possibly match against a single-item `FSTView_Dict`."""
@@ -4830,7 +4899,7 @@ def _match_node_Dict(pat: MDict | Dict, tgt: _Targets, mstate: _MatchState) -> M
     if not isinstance(tgt, FSTView_Dict):
         return _match_node(pat, tgt, mstate)
 
-    return _match__FSTView_w__all(pat, tgt, mstate)
+    return _match__to_FSTView(pat, tgt, mstate)
 
 def _match_node_MatchMapping(
     pat: MatchMapping | MMatchMapping, tgt: _Targets, mstate: _MatchState
@@ -4840,7 +4909,7 @@ def _match_node_MatchMapping(
     if not isinstance(tgt, FSTView_MatchMapping):
         return _match_node(pat, tgt, mstate)
 
-    return _match__FSTView_w__all(pat, tgt, mstate)
+    return _match__to_FSTView(pat, tgt, mstate)
 
 def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """`arguments` or `Marguments` leaf node. Possibly match against a single-item `FSTView_arguments`. Will match a
@@ -4857,7 +4926,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
         return _match_node(pat, tgt, mstate)
 
     if len(tgt) != 1 or (cached := mstate.cache.get(pat)) is False:
-        return _match__FSTView_w__all(pat, tgt, mstate)
+        return _match__to_FSTView(pat, tgt, mstate)
 
     if cached:
         pat_arg, pat_dflt, arg_fields, dflt_fields = cached
@@ -4997,7 +5066,7 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
         except MatchError:
             mstate.cache[pat] = False  # mark for always normal compare
 
-            return _match__FSTView_w__all(pat, tgt, mstate)
+            return _match__to_FSTView(pat, tgt, mstate)
 
     # we know we are matching a target 1 arg and we have at most a single argument and at most a single keyword and if there are both then they are the correct matching kinds
 
@@ -5039,6 +5108,16 @@ def _match_node_arguments(pat: Marguments | arguments, tgt: _Targets, mstate: _M
         return md
 
     return {**ma, **md}
+
+def _match_node__pattern_attrlikes(
+    pat: M_pattern_attrlikes | _pattern_attrlikes, tgt: _Targets, mstate: _MatchState
+) -> Mapping[str, Any] | None:
+    """`Dict` or `MDict` leaf node. Possibly match against a single-item `FSTView_Dict`."""
+
+    if not isinstance(tgt, FSTView_pattern_attrlikes):
+        return _match_node(pat, tgt, mstate)
+
+    return _match__to_FSTView(pat, tgt, mstate)
 
 def _match_node_Constant(pat: MConstant | Constant, tgt: _Targets, mstate: _MatchState) -> Mapping[str, Any] | None:
     """We do a special handler for `Constant` so we can check for a real `Ellipsis` instead of having that work as a
@@ -5254,6 +5333,8 @@ _MATCH_FUNCS = {
     MQMAX.NG:                     _match_quantifier_invalid_location,
     MQN:                          _match_quantifier_invalid_location,
     FSTView:                      _match_FSTView,
+    FSTView_decorator_list:       _match_FSTView,
+    FSTView_comprehension_ifs:    _match_FSTView,
     FSTView_Global_Nonlocal:      _match_FSTView,
     FSTView_kwd_attrs:            _match_FSTView,
     FSTView__body:                _match_FSTView__body,
@@ -5262,6 +5343,7 @@ _MATCH_FUNCS = {
     FSTView_Dict:                 _match_FSTView_Dict,
     FSTView_MatchMapping:         _match_FSTView_MatchMapping,
     FSTView_arguments:            _match_FSTView_arguments,
+    FSTView_pattern_attrlikes:    _match_FSTView_pattern_attrlikes,
     FSTView_dummy:                _match_FSTView_dummy,
     list:                         _match_list,
     type:                         _match_type,
@@ -5410,6 +5492,7 @@ _MATCH_FUNCS = {
     _comprehension_ifs:           _match_node,
     _aliases:                     _match_node,
     _withitems:                   _match_node,
+    _pattern_attrlikes:           _match_node__pattern_attrlikes,
     _type_params:                 _match_node,
     MAST:                         _match_node,  # _match_node_arbitrary_fields,
     MAdd:                         _match_node,
@@ -5547,6 +5630,7 @@ _MATCH_FUNCS = {
     M_comprehension_ifs:          _match_node,
     M_aliases:                    _match_node,
     M_withitems:                  _match_node,
+    M_pattern_attrlikes:          _match_node__pattern_attrlikes,
     M_type_params:                _match_node,
 }  # fmt: skip
 

@@ -831,6 +831,7 @@ AST2ASTSLEAF = {  # convert a possibly non-leaf AST to a frozenset of all the le
     _comprehension_ifs: frozenset([_comprehension_ifs]),
     _aliases:           frozenset([_aliases]),
     _withitems:         frozenset([_withitems]),
+    _pattern_attrlikes: frozenset([_pattern_attrlikes]),
     _type_params:       frozenset([_type_params]),
     mod:                ASTS_LEAF_MOD,
     stmt:               ASTS_LEAF_STMT,

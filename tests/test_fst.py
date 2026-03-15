@@ -219,6 +219,7 @@ INDIVIDUAL_NODES = [
     ('', '_comprehension_ifs'),
     ('', '_aliases'),
     ('', '_withitems'),
+    ('', '_pattern_attrlikes'),
 ]
 
 if PYGE11:

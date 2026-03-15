@@ -2,13 +2,15 @@
 
 ### Added
 
-- `MatchClass.patterns,kwd_attrs=kwd_patterns` sequence via `_attrs` virtual field, special slice container is `_pattern_attrlikes`
+- `MatchClass.patterns+kwd_attrs=kwd_patterns` sequence via `_attrs` virtual field, special slice container is `_pattern_attrlikes`
 
 ### Changed
 
-- concretized behavior of locations of nonstandard slices like `comprehension.ifs` or `.decorator_list`, includes extra syntax in slice but not when accessed as single item
+- concretized behavior of locations of nonstandard slices like `comprehension.ifs` or `.decorator_list`, includes extra syntax in when accessed as slice but not when accessed as single item
 
 ### Fixed
+
+- special `FSTView` classes for decorator lists and comprehension ifs so that locations from views are correct
 
 
 ## 0.3.1 - alpha - 2026-03-13

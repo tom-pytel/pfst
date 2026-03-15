@@ -222,8 +222,8 @@ FST_VIRTUAL_FIELDS = {
     Call:               ('_args',),
     arguments:          ('_all',),
     MatchMapping:       ('_all',),
-    # MatchClass:         ('_attrs',),
-    # _pattern_attrlikes: ('_attrs',),
+    MatchClass:         ('_attrs',),
+    _pattern_attrlikes: ('_attrs',),
 }  # fmt: skip
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
