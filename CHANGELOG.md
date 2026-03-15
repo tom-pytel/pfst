@@ -10,7 +10,7 @@
 
 ### Fixed
 
-- special `FSTView` classes for decorator lists and comprehension ifs so that locations from views are correct
+- special `FSTView` classes for decorator lists and comprehension ifs so that slice locations from these fields views are correct
 
 
 ## 0.3.1 - alpha - 2026-03-13

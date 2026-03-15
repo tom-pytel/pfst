@@ -1,0 +1,769 @@
+>>> import os; os.environ['NO_COLOR'] = '1'
+>>> import ast
+>>> import re
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+>>> from fst.asttypes import *
+>>> from fst.astutil import copy_ast
+>>> from fst.match import *
+
+>>> src = 'b=c'
+>>> ast = px.parse(src, '_pattern_attrlikes')
+>>> astc = copy_ast(ast)
+>>> fst = cd.code_as_all(ast)
+
+>>> fst.dump('N')
+0: b=c
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+0:   c
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> print(dump(ast, indent=2, include_attributes=1))
+_pattern_attrlikes(
+  patterns=[],
+  kwd_attrs=[
+    'b'],
+  kwd_patterns=[
+    MatchAs(
+      name='c',
+      lineno=1,
+      col_offset=2,
+      end_lineno=1,
+      end_col_offset=3)],
+  lineno=1,
+  col_offset=0,
+  end_lineno=1,
+  end_col_offset=3)
+
+>>> FST('b=c', _pattern_attrlikes).dump('N')
+0: b=c
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+0:   c
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> FST(ast, _pattern_attrlikes).dump('N')
+0: b=c
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+0:   c
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> f = FST('a, b, c=d, e=f', _pattern_attrlikes)
+>>> print([g.src for g in f.walk()])
+['a, b, c=d, e=f', 'a', 'b', 'd', 'f']
+
+>>> print([g.src for g in f.walk(back=True)])
+['a, b, c=d, e=f', 'f', 'd', 'b', 'a']
+
+>>> print([g.src for g in f.walk(on='leave')])
+['a', 'b', 'd', 'f', 'a, b, c=d, e=f']
+
+>>> print([g.src for g in f.walk(on='leave', back=True)])
+['f', 'd', 'b', 'a', 'a, b, c=d, e=f']
+
+>>> print([(g[0].src, g[1]) for g in f.walk(on='both')])
+[('a, b, c=d, e=f', False), ('a', False), ('a', True), ('b', False), ('b', True), ('d', False), ('d', True), ('f', False), ('f', True), ('a, b, c=d, e=f', True)]
+
+>>> print([(g[0].src, g[1]) for g in f.walk(on='both', back=True)])
+[('a, b, c=d, e=f', False), ('f', False), ('f', True), ('d', False), ('d', True), ('b', False), ('b', True), ('a', False), ('a', True), ('a, b, c=d, e=f', True)]
+
+>>> print(f.get(0, 'patterns'))
+<MatchAs ROOT 0,0..0,1>
+
+>>> print(f.get(0, 'kwd_attrs'))
+<Name ROOT 0,0..0,1>
+
+>>> print(f.get(0, 'kwd_patterns'))
+<MatchAs ROOT 0,0..0,1>
+
+>>> print(f.get(0, 'kwd_attrs', promote=False))
+c
+
+>>> f.kwd_attrs.loc, f.kwd_attrs.src, f.kwd_attrs.lines
+(fstloc(0, 6, 0, 12), 'c=d, e', ['a, b, c=d, e=f'])
+
+>>> f.kwd_attrs.at(0).copy()
+<Name ROOT 0,0..0,1>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).kwd_attrs[1]
+'e'
+
+>>> FST('c=d, e=f', _pattern_attrlikes).kwd_attrs.at(0).loc
+fstloc(0, 0, 0, 1)
+
+>>> print(FST('c=d, e=f', _pattern_attrlikes)._loc_pattern_attrlikes__attr(0))
+fstloc(0, 0, 0, 3)
+
+>>> print(FST('c=d, e=f', _pattern_attrlikes)._loc_pattern_attrlikes__attr(1))
+fstloc(0, 5, 0, 8)
+
+>>> print(FST('cls(c=d, e=f)', MatchClass)._loc_pattern_attrlikes__attr(0))
+fstloc(0, 4, 0, 7)
+
+>>> print(FST('cls(c=d, e=f)', MatchClass)._loc_pattern_attrlikes__attr(1))
+fstloc(0, 9, 0, 12)
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(0, 1, '_attrs').dump('N').verify()
+0: a
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+<_pattern_attrlikes ROOT 0,0..0,1>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(0, 2, '_attrs').dump('N').verify()
+0: a, b
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:    b
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+<_pattern_attrlikes ROOT 0,0..0,4>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(0, 3, '_attrs').dump('N').verify()
+0: a, b, c=d
+_pattern_attrlikes - ROOT 0,0..0,9
+  .patterns[2]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:    b
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+0:         d
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+<_pattern_attrlikes ROOT 0,0..0,9>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(0, 4, '_attrs').dump('N').verify()
+0: a, b, c=d, e=f
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:    b
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:         d
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+0:              f
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+<_pattern_attrlikes ROOT 0,0..0,14>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(1, 4, '_attrs').dump('N').verify()
+0: b, c=d, e=f
+_pattern_attrlikes - ROOT 0,0..0,11
+  .patterns[1]
+0: b
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:      d
+   0] MatchAs - 0,5..0,6
+     .name 'd'
+0:           f
+   1] MatchAs - 0,10..0,11
+     .name 'f'
+<_pattern_attrlikes ROOT 0,0..0,11>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(2, 4, '_attrs').dump('N').verify()
+0: c=d, e=f
+_pattern_attrlikes - ROOT 0,0..0,8
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:   d
+   0] MatchAs - 0,2..0,3
+     .name 'd'
+0:        f
+   1] MatchAs - 0,7..0,8
+     .name 'f'
+<_pattern_attrlikes ROOT 0,0..0,8>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(3, 4, '_attrs').dump('N').verify()
+0: e=f
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+0:   f
+   0] MatchAs - 0,2..0,3
+     .name 'f'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get_slice(1, 3, '_attrs').dump('N').verify()
+0: b, c=d
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+0: b
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+0:      d
+   0] MatchAs - 0,5..0,6
+     .name 'd'
+<_pattern_attrlikes ROOT 0,0..0,6>
+
+>>> (f := FST('cls(a, b, c=d, e=f)', MatchClass)).get_slice(1, 3, '_attrs', cut=True).dump('N')
+0: b, c=d
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+0: b
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+0:      d
+   0] MatchAs - 0,5..0,6
+     .name 'd'
+<_pattern_attrlikes ROOT 0,0..0,6>
+
+>>> f.dump('N').verify()
+0: cls(a, e=f)
+MatchClass - ROOT 0,0..0,11
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+0:          f
+   0] MatchAs - 0,9..0,10
+     .name 'f'
+<MatchClass ROOT 0,0..0,11>
+
+>>> (g := (f := FST('cls(a, b, c=d, e=f)', MatchClass)).get_slice(0, 4, '_attrs', cut=True)).dump('N')
+0: a, b, c=d, e=f
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+0:    b
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:         d
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+0:              f
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+<_pattern_attrlikes ROOT 0,0..0,14>
+
+>>> f.dump('N').verify()
+0: cls()
+MatchClass - ROOT 0,0..0,5
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+<MatchClass ROOT 0,0..0,5>
+
+>>> g.get_slice(1, 3, cut=True).dump('N')
+0: b, c=d
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+0: b
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+0:      d
+   0] MatchAs - 0,5..0,6
+     .name 'd'
+<_pattern_attrlikes ROOT 0,0..0,6>
+
+>>> g.dump('N').verify()
+0: a, e=f
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+0: a
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+0:      f
+   0] MatchAs - 0,5..0,6
+     .name 'f'
+<_pattern_attrlikes ROOT 0,0..0,6>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).put_slice(None, 1, 3, '_attrs').dump('N').verify()
+0: cls(a, e=f)
+MatchClass - ROOT 0,0..0,11
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+0:          f
+   0] MatchAs - 0,9..0,10
+     .name 'f'
+<MatchClass ROOT 0,0..0,11>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).put_slice('x, y=z', 1, 3, '_attrs').dump('N').verify()
+0: cls(a, x, y=z, e=f)
+MatchClass - ROOT 0,0..0,19
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+0:        x
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'y'
+   1] 'e'
+  .kwd_patterns[2]
+0:             z
+   0] MatchAs - 0,12..0,13
+     .name 'z'
+0:                  f
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+<MatchClass ROOT 0,0..0,19>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).put_slice('x, y=z', 2, 2, '_attrs').dump('N').verify()
+0: cls(a, b, x, y=z, c=d, e=f)
+MatchClass - ROOT 0,0..0,27
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+0:        b
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+0:           x
+   2] MatchAs - 0,10..0,11
+     .name 'x'
+  .kwd_attrs[3]
+   0] 'y'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+0:                z
+   0] MatchAs - 0,15..0,16
+     .name 'z'
+0:                     d
+   1] MatchAs - 0,20..0,21
+     .name 'd'
+0:                          f
+   2] MatchAs - 0,25..0,26
+     .name 'f'
+<MatchClass ROOT 0,0..0,27>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get(1, '_attrs').dump('N').verify()
+0: b
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+0: b
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+<_pattern_attrlikes ROOT 0,0..0,1>
+
+>>> FST('cls(a, b, c=d, e=f)', MatchClass).get(2, '_attrs').dump('N').verify()
+0: c=d
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'c'
+  .kwd_patterns[1]
+0:   d
+   0] MatchAs - 0,2..0,3
+     .name 'd'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> (f := FST('cls(a, b, c=d, e=f)', MatchClass)).put(f.get(0, '_attrs'), 2, '_attrs').dump('N').verify()
+0: cls(a, b, a, e=f)
+MatchClass - ROOT 0,0..0,17
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+0:        b
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+0:           a
+   2] MatchAs - 0,10..0,11
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+0:                f
+   0] MatchAs - 0,15..0,16
+     .name 'f'
+<MatchClass ROOT 0,0..0,17>
+
+>>> (f := FST('cls(a, b, c=d, e=f)', MatchClass)).put(f.get(3), 1).dump('N').verify()
+0: cls(a, e=f, c=d, e=f)
+MatchClass - ROOT 0,0..0,21
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[3]
+   0] 'e'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+0:          f
+   0] MatchAs - 0,9..0,10
+     .name 'f'
+0:               d
+   1] MatchAs - 0,14..0,15
+     .name 'd'
+0:                    f
+   2] MatchAs - 0,19..0,20
+     .name 'f'
+<MatchClass ROOT 0,0..0,21>
+
+>>> try:
+...     FST('cls(a, b, c=d, e=f)', MatchClass).put_slice('y=z', 1, 1, '_attrs').dump('N')
+... except NodeError as exc:
+...     if str(exc) != 'non-keyword pattern cannot follow keyword pattern':
+...         raise
+
+>>> try:
+...     FST('cls(a, b, c=d, e=f)', MatchClass).put_slice('x', 3, 3, '_attrs').dump('N')
+... except NodeError as exc:
+...     if str(exc) != 'non-keyword pattern cannot follow keyword pattern':
+...         raise
+
+>>> (f := FST('cls(a, b, c=d, e=f)', MatchClass)).get_slice(1, 4, cut=True)
+<_pattern_attrlikes ROOT 0,0..0,11>
+
+>>> f.dump('N').verify()
+0: cls(a)
+MatchClass - ROOT 0,0..0,6
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+<MatchClass ROOT 0,0..0,6>
+
+>>> FST('cls(a, b, c=d, e=f)', pattern).put_slice('x, y, z', 0, 1, 'patterns', one=True).dump('N')
+0: cls([x, y, z], b, c=d, e=f)
+MatchClass - ROOT 0,0..0,27
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+0:     [x, y, z]
+   0] MatchSequence - 0,4..0,13
+     .patterns[3]
+0:      x
+      0] MatchAs - 0,5..0,6
+        .name 'x'
+0:         y
+      1] MatchAs - 0,8..0,9
+        .name 'y'
+0:            z
+      2] MatchAs - 0,11..0,12
+        .name 'z'
+0:                b
+   1] MatchAs - 0,15..0,16
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:                     d
+   0] MatchAs - 0,20..0,21
+     .name 'd'
+0:                          f
+   1] MatchAs - 0,25..0,26
+     .name 'f'
+<MatchClass ROOT 0,0..0,27>
+
+>>> FST('cls(a, b, c=d, e=f)', pattern).put_slice('x, y, z', 0, 1, 'patterns', one=False).dump('N')
+0: cls(x, y, z, b, c=d, e=f)
+MatchClass - ROOT 0,0..0,25
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[4]
+0:     x
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+0:        y
+   1] MatchAs - 0,7..0,8
+     .name 'y'
+0:           z
+   2] MatchAs - 0,10..0,11
+     .name 'z'
+0:              b
+   3] MatchAs - 0,13..0,14
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:                   d
+   0] MatchAs - 0,18..0,19
+     .name 'd'
+0:                        f
+   1] MatchAs - 0,23..0,24
+     .name 'f'
+<MatchClass ROOT 0,0..0,25>
+
+>>> FST('cls(a, b, c=d, e=f)', pattern).put_slice('x, y, z', 0, 1, one=False).dump('N')
+0: cls(x, y, z, b, c=d, e=f)
+MatchClass - ROOT 0,0..0,25
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[4]
+0:     x
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+0:        y
+   1] MatchAs - 0,7..0,8
+     .name 'y'
+0:           z
+   2] MatchAs - 0,10..0,11
+     .name 'z'
+0:              b
+   3] MatchAs - 0,13..0,14
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+0:                   d
+   0] MatchAs - 0,18..0,19
+     .name 'd'
+0:                        f
+   1] MatchAs - 0,23..0,24
+     .name 'f'
+<MatchClass ROOT 0,0..0,25>
+
+>>> FST('cls(a, b, c=d, e=f)', pattern).put_slice('x', 0, 3, one=True).dump('N')
+0: cls(x, e=f)
+MatchClass - ROOT 0,0..0,11
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+0:     x
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+0:          f
+   0] MatchAs - 0,9..0,10
+     .name 'f'
+<MatchClass ROOT 0,0..0,11>
+
+>>> FST('cls(a, b, c=d, e=f)', pattern).put('x', 0, 'kwd_attrs', raw=True).dump('N')
+0: cls(a, b, x=d, e=f)
+MatchClass - ROOT 0,0..0,19
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+0:        b
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'x'
+   1] 'e'
+  .kwd_patterns[2]
+0:             d
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+0:                  f
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+<MatchClass ROOT 0,0..0,19>
+
+>>> FST('cls(a, b, c=d, e=f)', pattern).put('x', 1, 'kwd_attrs', raw=True).dump('N')
+0: cls(a, b, c=d, x=f)
+MatchClass - ROOT 0,0..0,19
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+0:        b
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'x'
+  .kwd_patterns[2]
+0:             d
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+0:                  f
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+<MatchClass ROOT 0,0..0,19>
+
+>>> MMatchClass(_attrs=[MQSTAR, M_pattern_attrlikes(_attrs=M(t='x')), MQSTAR]).match(FST('cls(a, x, y=z, b=c)', pattern))
+<FSTMatch <MatchClass ROOT 0,0..0,19> {'t': <<MatchClass ROOT 0,0..0,19>._attrs[1:2]>}>
+
+>>> MMatchClass(_attrs=[MQSTAR, M_pattern_attrlikes(_attrs=M(t='y=z')), MQSTAR]).match(FST('cls(a, x, y=z, b=c)', pattern))
+<FSTMatch <MatchClass ROOT 0,0..0,19> {'t': <<MatchClass ROOT 0,0..0,19>._attrs[2:3]>}>
+
+>>> MMatchClass(_attrs=[M(t=_pattern_attrlikes), MTAG('t')]).match(FST('cls(a, a)', pattern))
+<FSTMatch <MatchClass ROOT 0,0..0,9> {'t': <<MatchClass ROOT 0,0..0,9>._attrs[0]>}>
+
+>>> MMatchClass(_attrs=[M(t=_pattern_attrlikes), MTAG('t')]).match(FST('cls(a, b)', pattern))
+
+>>> MMatchClass(_attrs=[M(t=_pattern_attrlikes), MTAG('t')]).match(FST('cls(a=b, a=b)', pattern))
+<FSTMatch <MatchClass ROOT 0,0..0,13> {'t': <<MatchClass ROOT 0,0..0,13>._attrs[0]>}>
+
+>>> MMatchClass(_attrs=[M_pattern_attrlikes]).match(FST('cls(a)', pattern))
+<FSTMatch <MatchClass ROOT 0,0..0,6>>
+
+>>> FST('cls(a=b)', pattern).sub(MMatchClass(kwd_attrs=[M(t=...)]), FST('newcls(__FST_t=z)', pattern)).dump('N').verify()
+0: newcls(a=z)
+MatchClass - ROOT 0,0..0,11
+0: newcls
+  .cls Name 'newcls' Load - 0,0..0,6
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+0:          z
+   0] MatchAs - 0,9..0,10
+     .name 'z'
+<MatchClass ROOT 0,0..0,11>
+
+>>> FST('cls(a)', pattern).sub(MMatchClass(_attrs=[M(t=...)]), FST('newcls(__FST_t, __FST_t)', pattern)).dump('N').verify()
+0: newcls(a, a)
+MatchClass - ROOT 0,0..0,12
+0: newcls
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[2]
+0:        a
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+0:           a
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+<MatchClass ROOT 0,0..0,12>
+
+>>> FST('cls(a=b)', pattern).sub(MMatchClass(_attrs=[M(t=...)]), FST('newcls(__FST_t, __FST_t)', pattern)).dump('N').verify()
+0: newcls(a=b, a=b)
+MatchClass - ROOT 0,0..0,16
+0: newcls
+  .cls Name 'newcls' Load - 0,0..0,6
+  .kwd_attrs[2]
+   0] 'a'
+   1] 'a'
+  .kwd_patterns[2]
+0:          b
+   0] MatchAs - 0,9..0,10
+     .name 'b'
+0:               b
+   1] MatchAs - 0,14..0,15
+     .name 'b'
+<MatchClass ROOT 0,0..0,16>
+
+>>> FST('cls(a, b=c)', pattern).sub(MMatchClass(_attrs=M(t=...)), FST('newcls(__FST_t)', pattern)).dump('N').verify()
+0: newcls(a, b=c)
+MatchClass - ROOT 0,0..0,14
+0: newcls
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[1]
+0:        a
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+0:             c
+   0] MatchAs - 0,12..0,13
+     .name 'c'
+<MatchClass ROOT 0,0..0,14>
+
+>>> FST('cls(a)', pattern).sub(MMatchClass(patterns=[M(t=...)]), FST('newcls(__FST_t, __FST_t)', pattern)).dump('N').verify()
+0: newcls(a, a)
+MatchClass - ROOT 0,0..0,12
+0: newcls
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[2]
+0:        a
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+0:           a
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+<MatchClass ROOT 0,0..0,12>
+
+>>> FST('cls(a, b)', pattern).sub(MMatchClass(patterns=M(t=...)), FST('newcls(__FST_t, __FST_t)', pattern)).dump('N').verify()
+0: newcls(a, b, a, b)
+MatchClass - ROOT 0,0..0,18
+0: newcls
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[4]
+0:        a
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+0:           b
+   1] MatchAs - 0,10..0,11
+     .name 'b'
+0:              a
+   2] MatchAs - 0,13..0,14
+     .name 'a'
+0:                 b
+   3] MatchAs - 0,16..0,17
+     .name 'b'
+<MatchClass ROOT 0,0..0,18>
+
+
