@@ -43242,6 +43242,23 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''x,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('expr',
+r'''a,'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('expr',
 r'''a,'''), ('_type_params', r'''
 
@@ -43549,6 +43566,22 @@ _decorator_list - ROOT 0,0..3,0
    1] Name 'y' Load - 2,1..2,2
 '''),
 
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''@x''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_decorator_list',
+r'''@a'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting _decorator_list, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_decorator_list',
 r'''@a'''), ('_type_params', r'''
 
@@ -43839,6 +43872,22 @@ _arglikes - ROOT 0,0..2,0
    1] Name 'y' Load - 1,0..1,1
 '''),
 
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''x''', r'''
+_arglikes - ROOT 0,0..0,1
+  .arglikes[1]
+   0] Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_arglikes',
+r'''a,'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting _arglikes, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_arglikes',
 r'''a,'''), ('_type_params', r'''
 
@@ -44125,6 +44174,22 @@ _comprehension_ifs - ROOT 0,0..2,0
    0] Name 'x' Load - 0,3..0,4
    1] Name 'y' Load - 1,3..1,4
 '''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''if x''', r'''
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+   0] Name 'x' Load - 0,3..0,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_comprehension_ifs',
+r'''if a'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting _comprehension_ifs, got _pattern_attrlikes, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_comprehension_ifs',
 r'''if a'''), ('_type_params', r'''
@@ -44426,6 +44491,23 @@ _aliases - ROOT 0,0..2,0
    1] alias - 1,0..1,1
      .name 'y'
 '''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''x''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'x'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_aliases',
+r'''a'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_aliases',
 r'''a'''), ('_type_params', r'''
@@ -44733,6 +44815,23 @@ _withitems - ROOT 0,0..2,0
      .context_expr Name 'y' Load - 1,0..1,1
 '''),
 
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''x''', r'''
+_withitems - ROOT 0,0..0,1
+  .items[1]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_withitems',
+r'''a,'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting _withitems, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_withitems',
 r'''a,'''), ('_type_params', r'''
 
@@ -45036,6 +45135,23 @@ _type_params - ROOT 0,0..2,0
    1] TypeVar - 1,0..1,1
      .name 'y'
 '''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''x''', r'''
+_type_params - ROOT 0,0..0,1
+  .type_params[1]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+r'''a,'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
 r'''a,'''), ('_type_params', r'''
@@ -45391,6 +45507,23 @@ MatchSequence - ROOT 0,0..3,1
      .name 'y'
 '''),
 
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''[x]''', r'''
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,1..0,2
+     .name 'x'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('MatchSequence',
+r'''[a]'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting pattern, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('MatchSequence',
 r'''[a]'''), ('_type_params', r'''
 
@@ -45716,6 +45849,23 @@ Call - ROOT 0,0..3,1
    0] Name 'x' Load - 1,4..1,5
    1] Name 'y' Load - 2,4..2,5
 '''),
+
+('', 0, 'end', 'args', {'_src': False}, ('Call',
+r'''call(a)'''), ('_pattern_attrlikes',
+r'''x'''),
+r'''call(x)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'x' Load - 0,5..0,6
+'''),
+
+('', 0, 'end', 'args', {'_src': False}, ('Call',
+r'''call(a)'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''),
+r'''**NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**'''),
 
 ('', 0, 'end', 'args', {'_src': False, '_ver': 12}, ('Call',
 r'''call(a)'''), ('_type_params', r'''

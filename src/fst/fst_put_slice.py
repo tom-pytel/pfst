@@ -3782,13 +3782,7 @@ def _put_slice_raw(
     if code is None:
         raise ValueError('cannot delete in raw slice put')
 
-    # put_ln, put_col, put_end_ln, put_end_col, start, stop, body2 = _loc_slice_raw_put(self, start, stop, field)
-
-    # len_body = len(body2)
-
-
     put_ln, put_col, put_end_ln, put_end_col, start, stop, len_body = _loc_slice_raw_put(self, start, stop, field)
-
 
     if isinstance(code, AST):
         code, put_ln, put_col, put_end_ln, put_end_col = (
