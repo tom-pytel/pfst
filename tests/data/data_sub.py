@@ -6614,6 +6614,20 @@ MatchMapping - ROOT 0,0..0,32
 'basic_MatchClass': [  # ................................................................................
 
 ('', None, None, None, {}, ('MatchClass',
+r'''cls(a)'''),
+r'''MMatchClass(patterns=[M(p=...)])''', ('pattern',
+r'''newcls(__FST_p, __FST_p)'''),
+r'''newcls(a, a)''', r'''
+MatchClass - ROOT 0,0..0,12
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+'''),
+
+('', None, None, None, {}, ('MatchClass',
 r'''cls(a, b)'''),
 r'''MMatchClass(cls=M(c=...), patterns=M(p=...))''', ('pattern',
 r'''newcls(__FST_c, __FST_p)'''),
@@ -6661,6 +6675,41 @@ MatchClass - ROOT 0,0..0,18
      .name 'd'
    4] MatchAs - 0,16..0,17
      .name 'y'
+'''),
+
+('', None, None, None, {}, ('MatchClass',
+r'''cls(a, b)'''),
+r'''MMatchClass(_attrs=M(a=...))''', ('MatchClass',
+r'''kls(__FST_a, __FST_a)'''),
+r'''kls(a, b, a, b)''', r'''
+MatchClass - ROOT 0,0..0,15
+  .cls Name 'kls' Load - 0,0..0,3
+  .patterns[4]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'a'
+   3] MatchAs - 0,13..0,14
+     .name 'b'
+'''),
+
+('', None, None, None, {}, ('MatchClass',
+r'''cls(a, b=c)'''),
+r'''MMatchClass(_attrs=M(a=...))''', ('MatchClass',
+r'''kls(__FST_a)'''),
+r'''kls(a, b=c)''', r'''
+MatchClass - ROOT 0,0..0,11
+  .cls Name 'kls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,9..0,10
+     .name 'c'
 '''),
 ],
 
@@ -7524,6 +7573,106 @@ _withitems - ROOT 0,0..0,13
      .context_expr Name 'd' Load - 0,9..0,10
    4] withitem - 0,12..0,13
      .context_expr Name 'y' Load - 0,12..0,13
+'''),
+],
+
+'basic__pattern_attrlikes': [  # ................................................................................
+
+('', None, None, None, {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''M_pattern_attrlikes(patterns=[M(p=...)])''', ('pattern',
+r'''newcls(__FST_p, __FST_p)'''),
+r'''newcls(a, a)''', r'''
+MatchClass - ROOT 0,0..0,12
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+'''),
+
+('', None, None, None, {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''M_pattern_attrlikes(patterns=M(p=...))''', ('pattern',
+r'''newcls(__FST_p)'''),
+r'''newcls(a, b)''', r'''
+MatchClass - ROOT 0,0..0,12
+  .cls Name 'newcls' Load - 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,7..0,8
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'b'
+'''),
+
+('', None, None, None, {}, ('_pattern_attrlikes',
+r'''a=b'''),
+r'''M_pattern_attrlikes(kwd_attrs=[M(a=...)], kwd_patterns=[M(p=...)])''', ('pattern',
+r'''__FST_a(__FST_p=__FST_a)'''),
+r'''a(b=a)''', r'''
+MatchClass - ROOT 0,0..0,6
+  .cls Name 'a' Load - 0,0..0,1
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
+
+('', None, None, None, {}, ('_pattern_attrlikes',
+r'''a, b, c, d, e'''),
+r'''M_pattern_attrlikes(patterns=[..., MQSTAR(a=...), ...])''', ('pattern',
+r'''kls(x, __FST_a, y)'''),
+r'''kls(x, b, c, d, y)''', r'''
+MatchClass - ROOT 0,0..0,18
+  .cls Name 'kls' Load - 0,0..0,3
+  .patterns[5]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'c'
+   3] MatchAs - 0,13..0,14
+     .name 'd'
+   4] MatchAs - 0,16..0,17
+     .name 'y'
+'''),
+
+('', None, None, None, {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''M_pattern_attrlikes(_attrs=M(a=...))''', ('pattern',
+r'''kls(__FST_a, __FST_a)'''),
+r'''kls(a, b, a, b)''', r'''
+MatchClass - ROOT 0,0..0,15
+  .cls Name 'kls' Load - 0,0..0,3
+  .patterns[4]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'a'
+   3] MatchAs - 0,13..0,14
+     .name 'b'
+'''),
+
+('', None, None, None, {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''M_pattern_attrlikes(_attrs=M(a=...))''', ('pattern',
+r'''kls(__FST_a)'''),
+r'''kls(a, b=c)''', r'''
+MatchClass - ROOT 0,0..0,11
+  .cls Name 'kls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,9..0,10
+     .name 'c'
 '''),
 ],
 

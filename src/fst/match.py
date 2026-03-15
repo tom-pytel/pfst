@@ -3068,7 +3068,7 @@ class MOR(M_Pattern_Many):
     <FSTMatch <Call ROOT 0,0..0,6> {'m': <Call ROOT 0,0..0,6>, 'static': 'tag'}>
 
     >>> pat.match(FST('bin + op'))
-"""
+    """
 
     __init__ = M_Pattern_Many.__init__  # for the documentation
 
@@ -6008,10 +6008,10 @@ _SUB_REPL_PATH_FUNCS = {
 
 
 _SUB_WITHITEM_SLICES = {Set, List, Tuple, MatchSequence, _Assign_targets, _decorator_list, _arglikes,
-                        _comprehension_ifs, _aliases, _withitems, _type_params}
+                        _comprehension_ifs, _aliases, _withitems, _type_params}  # slices which can be coerced to withitems
 
 
-def _sub_quantifier_list_end_item(qlist: list, last: bool) -> tuple[fst.FST, str, int] | None:
+def _sub_quantifier_list_edge_item(qlist: list, last: bool) -> tuple[fst.FST, str, int] | None:
     """Find the first (or last) element in a list of `FSTMatch` objects from a quantifier match, which can have a
     matched FST or FSTView or a sublist containing those.
 
@@ -6787,7 +6787,7 @@ def subn(
         if PYLT12:
             if matched.parent_ftstr():  # cannot do substitution inside f-strings on Python < 3.12 as those replacements are not implemented and probably will not be
                 warnings.warn('substitution inside f-strings not implemented on Python < 3.12',
-                            RuntimeWarning, warn_stacklevel)
+                              RuntimeWarning, warn_stacklevel)
                 gen.send(False)  # no point searching deeper
 
                 continue
@@ -6826,11 +6826,11 @@ def subn(
                 elif isinstance(repl_slot_new, list):  # this is from a quantifier, in which case convert it to a slice (all whole list fields come back as FSTView)
                     one = False
 
-                    if not repl_slot_new or not (first := _sub_quantifier_list_end_item(repl_slot_new, False)):  # empty list is delete
+                    if not repl_slot_new or not (first := _sub_quantifier_list_edge_item(repl_slot_new, False)):  # empty list is delete
                         repl_slot_new = None
 
                     else:
-                        last_base, last_field, last_idx = _sub_quantifier_list_end_item(repl_slot_new, True)
+                        last_base, last_field, last_idx = _sub_quantifier_list_edge_item(repl_slot_new, True)
                         first_base, first_field, first_idx = first
 
                         assert last_base is first_base
@@ -6841,7 +6841,7 @@ def subn(
 
                 elif not isinstance(repl_slot_new, str):  # str could have come from static tag
                     raise MatchError('match substitution must be FST, None or str'
-                                    f', got {repl_slot_new.__class__.__qualname__}')
+                                     f', got {repl_slot_new.__class__.__qualname__}')
 
                 if child is True:  # this is a slot inside a string so we just replace it with escaped source of matched element
                     ln, col, end_col = path  # path is really these three coordinates
@@ -6943,6 +6943,12 @@ def subn(
                     elif parenta_cls is BoolOp:  # if BoolOp as element of Boolop then it results simpler to put as slice if same op
                         if field == 'values' and (a := repl_slot_new.a).__class__ is BoolOp:
                             one = a.op.__class__ is not parenta.op.__class__
+
+                    elif parenta_cls is MatchClass:
+                        if field == 'patterns' and repl_slot_new.a.__class__ is _pattern_attrlikes:
+                            virt_field = '_attrs'
+                            virt_idx = idx
+                            one = False
 
                     if virt_field is not None:  # replace is a special virtual field slice operation
                         if one_override is not None:

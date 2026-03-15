@@ -1000,6 +1000,39 @@ Last few notes:
 If you will be matching a whole `.args` field of a `FunctionDef` to another one then normal exact matching rules apply.
 
 
+## `MatchClass` virtual field matching
+
+This works very similarly to `arguments` except the pattern class to specify individual items in the `_attrs` virtual
+field is `M_pattern_attrlikes` with a single item.
+
+>>> pat = MMatchClass(_attrs=[M_pattern_attrlikes('a')])
+
+>>> pat.match(FST('mcls(a)', 'MatchClass'))
+<FSTMatch <MatchClass ROOT 0,0..0,7>>
+
+>>> pat.match(FST('mcls(b)', 'MatchClass'))
+
+>>> pat.match(FST('mcls(a=b)', 'MatchClass'))
+
+>>> pat = MMatchClass(_attrs=[
+...     M_pattern_attrlikes(kwd_attrs=['a'], kwd_patterns=['b']),
+... ])
+
+>>> pat.match(FST('mcls(a=b)', 'MatchClass'))
+<FSTMatch <MatchClass ROOT 0,0..0,9>>
+
+>>> pat = MMatchClass(_attrs=[M(t=M_pattern_attrlikes), MQSTAR(u=MTAG('t'))])
+
+>>> ppmatch(pat.match(FST('mcls(a, a, a)', 'MatchClass')))
+<FSTMatch <MatchClass ROOT 0,0..0,13>
+  't': <<MatchClass ROOT 0,0..0,13>._attrs[0]>,
+  'u': [
+    <FSTMatch <<MatchClass ROOT 0,0..0,13>._attrs[1]>>,
+    <FSTMatch <<MatchClass ROOT 0,0..0,13>._attrs[2]>>,
+  ],
+}>
+
+
 ## `AST` nodes as pattern or target
 
 `AST` trees can be matched against patterns or they can be used as patterns themselves. In fact, this is the exact

@@ -3300,8 +3300,7 @@ class Substitute(Fuzzy):
         MatchSingleton:   (MMatchSingleton, FST('__FST_', MatchAs)),   # (('value', 'constant'),)),
         MatchSequence:    (MMatchSequence(patterns=M(patterns=...)), FST('[__FST_patterns]', MatchSequence)),
         MatchMapping:     (MMatchMapping(_all=M(_all=...)), FST('{"...": __FST__all}', MatchMapping)),
-        # TODO: MatchClass.kwd_attrs/kwd_patterns when the slice is done
-        MatchClass:       (MMatchClass(cls=M(cls=...), patterns=M(patterns=...)), FST('__FST_cls(__FST_patterns)', MatchClass)),           # (('cls', 'expr'), ('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
+        MatchClass:       (MMatchClass(cls=M(cls=...), _attrs=M(_attrs=...)), FST('__FST_cls(__FST__attrs)', MatchClass)),           # (('cls', 'expr'), ('patterns', 'pattern*'), ('kwd_attrs', 'identifier*'), ('kwd_patterns', 'pattern*'))),
         MatchStar:        (MMatchStar(name=M(name=...)), FST('*__FST_name', MatchStar)),
         MatchAs:          (MMatchAs(pattern=M(pattern=...), name=M(name=...)), FST('__FST_pattern as __FST_name', MatchAs)),
         MatchOr:          (MMatchOr(patterns=M(patterns=...)), FST('__FST_patterns', pattern)),
