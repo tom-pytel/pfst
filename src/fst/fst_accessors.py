@@ -11,7 +11,15 @@ from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionD
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import FSTView, FSTView_Global_Nonlocal, FSTView_kwd_attrs, FSTView_dummy
+
+from .view import (
+    FSTView,
+    FSTView_decorator_list,
+    FSTView_comprehension_ifs,
+    FSTView_Global_Nonlocal,
+    FSTView_kwd_attrs,
+    FSTView_dummy,
+)
 
 __all__ = [
     'body',
@@ -179,7 +187,7 @@ def decorator_list(self: 'fst.FST') -> FSTView:
 
     self.a.decorator_list  # noqa: B018
 
-    return FSTView(self, 'decorator_list')
+    return FSTView_decorator_list(self, 'decorator_list')
 
 @decorator_list.setter
 def decorator_list(self: 'fst.FST', code: Code | None) -> None:
@@ -1053,7 +1061,7 @@ def ifs(self: 'fst.FST') -> FSTView:
 
     self.a.ifs  # noqa: B018
 
-    return FSTView(self, 'ifs')
+    return FSTView_comprehension_ifs(self, 'ifs')
 
 @ifs.setter
 def ifs(self: 'fst.FST', code: Code | None) -> None:

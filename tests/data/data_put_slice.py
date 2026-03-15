@@ -13197,6 +13197,19 @@ Module - ROOT 0,0..0,4
         0] Name 'a' Load - 0,2..0,3
 '''),
 
+('body[0].value', 0, 1, '_args', {'raw': True}, ('exec',
+r'''f(i for i in range(5))'''), (None,
+r'''a'''),
+r'''f(a)''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+   0] Expr - 0,0..0,4
+     .value Call - 0,0..0,4
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] Name 'a' Load - 0,2..0,3
+'''),
+
 ('body[0].value', 0, 1, 'args', {'raw': True}, ('exec',
 r'''f((i for i in range(5)))'''), (None,
 r'''a'''),
@@ -48809,7 +48822,7 @@ _Assign_targets - ROOT 0,0..0,3
 @deco2(arg)
 @deco3
 '''), (None,
-r'''deco4(arg1, arg2)'''), r'''
+r'''@deco4(arg1, arg2)'''), r'''
 @deco1
 @deco4(arg1, arg2)
 @deco3
@@ -48830,7 +48843,7 @@ _decorator_list - ROOT 0,0..2,6
 @deco2(arg)
 @deco3
 '''), (None,
-r'''deco4(arg1, arg2)'''),
+r'''@deco4(arg1, arg2)'''),
 r'''@deco4(arg1, arg2)''', r'''
 _decorator_list - ROOT 0,0..0,18
   .decorator_list[1]
@@ -48875,7 +48888,7 @@ _comprehensions - ROOT 0,0..0,10
 
 ('', 1, 2, None, {'raw': True}, ('_comprehension_ifs',
 r'''if a if b if c'''), (None,
-r'''x'''),
+r'''if x'''),
 r'''if a if x if c''', r'''
 _comprehension_ifs - ROOT 0,0..0,14
   .ifs[3]
@@ -48886,7 +48899,7 @@ _comprehension_ifs - ROOT 0,0..0,14
 
 ('', 0, 'end', None, {'raw': True}, ('_comprehension_ifs',
 r'''if a if b if c'''), (None,
-r'''x'''),
+r'''if x'''),
 r'''if x''', r'''
 _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
@@ -48947,6 +48960,101 @@ _withitems - ROOT 0,0..0,6
    0] withitem - 0,0..0,6
      .context_expr Name 'x' Load - 0,0..0,1
      .optional_vars Name 'x' Store - 0,5..0,6
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''x'''),
+r'''a, x, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''y=z'''),
+r'''a, y=z, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,16
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[3]
+   0] 'y'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+   0] MatchAs - 0,5..0,6
+     .name 'z'
+   1] MatchAs - 0,10..0,11
+     .name 'd'
+   2] MatchAs - 0,15..0,16
+     .name 'f'
+'''),
+
+('', 2, 3, None, {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''x'''),
+r'''a, b, x, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,12
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+   2] MatchAs - 0,6..0,7
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,11..0,12
+     .name 'f'
+'''),
+
+('', 2, 3, None, {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''y=z'''),
+r'''a, b, y=z, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'y'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'z'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 0, 'end', None, {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), (None,
+r'''x, y=z'''),
+r'''x, y=z''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'y'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'z'
 '''),
 
 ('', 1, 2, None, {'_ver': 12, 'raw': True}, ('_type_params',
@@ -49030,6 +49138,30 @@ Compare - ROOT 0,0..0,14
    0] Name 'x' Load - 0,4..0,5
    1] Name 'y' Load - 0,9..0,10
    2] Name 'c' Load - 0,13..0,14
+'''),
+
+('', 1, 2, '_all', {'raw': True}, ('arguments',
+r'''a: int = 1, /, b: float = 2.0, *, c: complex = 3j'''), ('Compare',
+r'''x: str = "blah"'''),
+r'''a: int = 1, /, x: str = "blah", *, c: complex = 3j''', r'''
+arguments - ROOT 0,0..0,50
+  .posonlyargs[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .args[1]
+   0] arg - 0,15..0,21
+     .arg 'x'
+     .annotation Name 'str' Load - 0,18..0,21
+  .kwonlyargs[1]
+   0] arg - 0,35..0,45
+     .arg 'c'
+     .annotation Name 'complex' Load - 0,38..0,45
+  .kw_defaults[1]
+   0] Constant 3j - 0,48..0,50
+  .defaults[2]
+   0] Constant 1 - 0,9..0,10
+   1] Constant 'blah' - 0,24..0,30
 '''),
 
 ('', 0, 'end', '_body', {'raw': True}, ('Module', r'''
@@ -49167,6 +49299,106 @@ ClassDef - ROOT 0,0..0,26
      .value Name 'j' Load - 0,18..0,19
   .body[1]
    0] Pass - 0,22..0,26
+'''),
+
+('', 1, 2, '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''x'''),
+r'''cls(a, x, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 1, 2, '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''y=z'''),
+r'''cls(a, y=z, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,21
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .kwd_attrs[3]
+   0] 'y'
+   1] 'c'
+   2] 'e'
+  .kwd_patterns[3]
+   0] MatchAs - 0,9..0,10
+     .name 'z'
+   1] MatchAs - 0,14..0,15
+     .name 'd'
+   2] MatchAs - 0,19..0,20
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''x'''),
+r'''cls(a, b, x, e=f)''', r'''
+MatchClass - ROOT 0,0..0,17
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,15..0,16
+     .name 'f'
+'''),
+
+('', 2, 3, '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''y=z'''),
+r'''cls(a, b, y=z, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+  .kwd_attrs[2]
+   0] 'y'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'z'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 0, 'end', '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), (None,
+r'''x, y=z'''),
+r'''cls(x, y=z)''', r'''
+MatchClass - ROOT 0,0..0,11
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'y'
+  .kwd_patterns[1]
+   0] MatchAs - 0,9..0,10
+     .name 'z'
 '''),
 ],
 

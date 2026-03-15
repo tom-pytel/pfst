@@ -1133,7 +1133,7 @@ def _coerce_to_expr_ast__decorator_list(
         for i, a in enumerate(decorator_list):
             f = a.f
             ln, col, end_ln, end_col = f.pars()
-            deco_ln, deco_col, _, _ = fst_._loc_decorator(i)
+            deco_ln, deco_col, _, _ = fst_._loc_decorator(i, False)
 
             if a is not last_deco:  # add comma after expression, unless last
                 fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)
@@ -1187,7 +1187,7 @@ def _coerce_to_expr_ast__comprehension_ifs(
         for i, a in enumerate(ifs):
             f = a.f
             ln, col, end_ln, end_col = f.pars()
-            if_ln, if_col, _, _ = fst_._loc_comprehension_if(i)
+            if_ln, if_col, _, _ = fst_._loc_comprehension_if(i, False)
 
             if a is not last_if:  # add comma after expression, unless last
                 fst_._put_src(',', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)

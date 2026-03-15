@@ -19,6 +19,8 @@ __all__ = [
     'FSTView_Dict',
     'FSTView_MatchMapping',
     'FSTView_Compare',
+    'FSTView_decorator_list',
+    'FSTView_comprehension_ifs',
     'FSTView_arguments',
     'FSTView__body',
     'FSTView_arglikes',
@@ -1401,6 +1403,321 @@ class FSTView_Compare(FSTView):
         return self.base.a.comparators[idx - 1] if idx else self.base.a.left
 
 
+class FSTView_decorator_list(FSTView):
+    """View for `FunctionDef.decorator_list`, `AsyncFunctionDef.decorator_list`, `ClassDef.decorator_list`,
+    `_decorator_list.decorator_list`. @private"""
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('@\\\n a\n@\\\n  b\nclass cls: pass')
+
+        >>> f.decorator_list.loc
+        fstlocn(0, 0, 3, 3, n=0)
+
+        >>> f.decorator_list[0].loc
+        fstloc(1, 1, 1, 2)
+
+        >>> f.decorator_list[:1].loc
+        fstloc(0, 0, 1, 2)
+
+        >>> f.decorator_list[-1].loc
+        fstloc(3, 2, 3, 3)
+
+        >>> f.decorator_list[-1:].loc
+        fstloc(2, 0, 3, 3)
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if not (len_ := stop - start):
+            return None
+
+        base = self.base
+
+        if len_ == 1:
+            return base._loc_decorator(start)
+
+        ln, col, _, _ = base._loc_decorator(start, False)
+        _, _, end_ln, end_col = base._loc_decorator(stop - 1, None)
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('@\\\n a\n@\\\n  b\nclass cls: pass')
+
+        >>> f.decorator_list[0:1].ln
+        0
+
+        >>> f.decorator_list[0].ln
+        1
+
+        >>> f.decorator_list[1:2].ln
+        2
+
+        >>> f.decorator_list[1].ln
+        3
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_decorator(start, False).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('@\\\n a\n@\\\n  b\nclass cls: pass')
+
+        >>> f.decorator_list[0:1].col
+        0
+
+        >>> f.decorator_list[0].col
+        1
+
+        >>> f.decorator_list[1:2].col
+        0
+
+        >>> f.decorator_list[1].col
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_decorator(start, False).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('@\\\n a\n@\\\n  b\nclass cls: pass')
+
+        >>> f.decorator_list[0:1].end_ln
+        1
+
+        >>> f.decorator_list[0].end_ln
+        1
+
+        >>> f.decorator_list[1:2].end_ln
+        3
+
+        >>> f.decorator_list[1].end_ln
+        3
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_decorator(stop - 1, None).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('@\\\n a\n@\\\n  b\nclass cls: pass')
+
+        >>> f.decorator_list[0:1].end_col
+        2
+
+        >>> f.decorator_list[0].end_col
+        2
+
+        >>> f.decorator_list[1:2].end_col
+        3
+
+        >>> f.decorator_list[1].end_col
+        3
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_decorator(stop - 1, None).end_col
+
+
+class FSTView_comprehension_ifs(FSTView):
+    """View for `comprehension.ifs` and `_comprehension_ifs`. @private"""
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('[i for i in j if i if j]')
+
+        >>> f.generators[0].ifs.loc
+        fstlocn(0, 14, 0, 23, n=0)
+
+        >>> f.generators[0].ifs[0].loc
+        fstloc(0, 17, 0, 18)
+
+        >>> f.generators[0].ifs[:1].loc
+        fstloc(0, 14, 0, 18)
+
+        >>> f.generators[0].ifs[-1].loc
+        fstloc(0, 22, 0, 23)
+
+        >>> f.generators[0].ifs[-1:].loc
+        fstloc(0, 19, 0, 23)
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if not (len_ := stop - start):
+            return None
+
+        base = self.base
+
+        if len_ == 1:
+            return base._loc_comprehension_if(start)
+
+        ln, col, _, _ = base._loc_comprehension_if(start, False)
+        _, _, end_ln, end_col = base._loc_comprehension_if(stop - 1, None)
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('[i for i in j \nif\n i\n  if\n   j]')
+
+        >>> f.generators[0].ifs[0:1].ln
+        1
+
+        >>> f.generators[0].ifs[0].ln
+        2
+
+        >>> f.generators[0].ifs[1:2].ln
+        3
+
+        >>> f.generators[0].ifs[1].ln
+        4
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_comprehension_if(start, False).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('[i for i in j \nif\n i\n  if\n   j]')
+
+        >>> f.generators[0].ifs[0:1].col
+        0
+
+        >>> f.generators[0].ifs[0].col
+        1
+
+        >>> f.generators[0].ifs[1:2].col
+        2
+
+        >>> f.generators[0].ifs[1].col
+        3
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_comprehension_if(start, False).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('[i for i in j \nif\n i\n  if\n   j]')
+
+        >>> f.generators[0].ifs[0:1].end_ln
+        2
+
+        >>> f.generators[0].ifs[0].end_ln
+        2
+
+        >>> f.generators[0].ifs[1:2].end_ln
+        4
+
+        >>> f.generators[0].ifs[1].end_ln
+        4
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_comprehension_if(stop - 1, None).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('[i for i in j \nif\n i\n  if\n   j]')
+
+        >>> f.generators[0].ifs[0:1].end_col
+        2
+
+        >>> f.generators[0].ifs[0].end_col
+        2
+
+        >>> f.generators[0].ifs[1:2].end_col
+        4
+
+        >>> f.generators[0].ifs[1].end_col
+        4
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_comprehension_if(stop - 1, None).end_col
+
+
 class FSTView_arguments(FSTView):
     """View for `arguments` merged `posonlyargs+args+vararg+kwonlyargs+kwarg` virtual field `_all`. This indexes on the
     `arguments` node `_cached_allargs()`. @private"""
@@ -1902,13 +2219,13 @@ class FSTView_pattern_attrlikes(FSTView):
         fstlocn(0, 4, 0, 8, n=0)
 
         >>> f._attrs[2].loc
-        fstlocn(0, 10, 0, 13, n=0)
+        fstloc(0, 10, 0, 13)
 
         >>> f._attrs[3].loc
-        fstlocn(0, 15, 0, 18, n=0)
+        fstloc(0, 15, 0, 18)
 
         >>> f._attrs[-1].loc
-        fstlocn(0, 15, 0, 18, n=0)
+        fstloc(0, 15, 0, 18)
 
         >>> f._attrs[1:-1].loc
         fstlocn(0, 7, 0, 13, n=0)
@@ -1922,11 +2239,10 @@ class FSTView_pattern_attrlikes(FSTView):
         base = self.base
 
         if len_ == 1:
-            ln, col, end_ln, end_col = base._loc_pattern_attrlikes__attr(start)
+            return base._loc_pattern_attrlikes__attr(start)
 
-        else:
-            ln, col, _, _ = base._loc_pattern_attrlikes__attr(start, False)
-            _, _, end_ln, end_col = base._loc_pattern_attrlikes__attr(stop - 1, None)
+        ln, col, _, _ = base._loc_pattern_attrlikes__attr(start, False)
+        _, _, end_ln, end_col = base._loc_pattern_attrlikes__attr(stop - 1, None)
 
         return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
 

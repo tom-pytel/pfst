@@ -1680,8 +1680,8 @@ if 1:
             self.assertEqual((0, 21, 0, 23), FST('def f[T: int = bool](  ): pass').args._loc_arguments())
 
     def test__loc_decorator(self):
-        self.assertEqual((1, 2, 1, 10), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, pars=False))
-        self.assertEqual((1, 2, 1, 12), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, pars=True))
+        self.assertEqual((1, 2, 1, 10), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, want=False))
+        self.assertEqual((1, 2, 1, 12), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, want=True))
 
         self.assertEqual((3, 2, 4, 6), FST(r'''
 if 1:

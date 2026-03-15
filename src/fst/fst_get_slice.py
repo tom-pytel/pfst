@@ -311,7 +311,7 @@ def _bounds_comprehension_ifs(self: fst.FST, start: int = 0) -> tuple[int, int, 
                 bound_end_col = 0
 
     if start:
-        _, _, bound_ln, bound_col = self._loc_comprehension_if(start - 1)
+        _, _, bound_ln, bound_col = self._loc_comprehension_if(start - 1, None)
     elif is_comprehension:
         _, _, bound_ln, bound_col = ast.iter.f.pars()
 

@@ -2,9 +2,11 @@
 
 ### Added
 
-- `MatchClass.patterns,kwd_attrs=kwd_patterns` sequence via `_attrs` virtual field, slice container is `_pattern_attrlikes`
+- `MatchClass.patterns,kwd_attrs=kwd_patterns` sequence via `_attrs` virtual field, special slice container is `_pattern_attrlikes`
 
 ### Changed
+
+- concretized behavior of locations of nonstandard slices like `comprehension.ifs` or `.decorator_list`, includes extra syntax in slice but not when accessed as single item
 
 ### Fixed
 

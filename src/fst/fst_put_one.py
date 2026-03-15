@@ -192,7 +192,8 @@ from .code import (
 from .fst_misc import fixup_one_index, validate_put_arglike
 from .fst_get_one import _params_Compare
 
-_ASTS_LEAF_KWD_ATTRS_CONTAINERS = frozenset([MatchClass, _pattern_attrlikes])
+_ASTS_LEAF_MAPPING           = frozenset([Dict, MatchMapping])
+_ASTS_LEAF_PATTERN_ATTRLIKES = frozenset([MatchClass, _pattern_attrlikes])
 
 
 _PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
@@ -2994,6 +2995,9 @@ def _put_one_raw(
     static: onestatic | None,
     options: Mapping[str, Any],
 ) -> fst.FST | None:
+
+    # TODO: needs modernization
+
     if code is None:
         raise ValueError('cannot delete in raw put')
 
@@ -3007,13 +3011,13 @@ def _put_one_raw(
 
     assert isinstance(to, (NoneType, fst.FST))
 
-    if field.startswith('_'):  # special case field
+    if field.startswith('_'):  # virtual field
         if field == '_body':
             field = 'body'
             child = ast.body
             idx = fixup_one_index(len(child), idx, self.has_docstr)
 
-        elif ast_cls is Dict:
+        elif ast_cls is Dict:  # _all
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             field = 'keys'
             child = ast.keys
@@ -3024,17 +3028,17 @@ def _put_one_raw(
             # if not to:  # does not currently get here without a `to` in normal operation because in that case it is handled by slice operations in _put_one()
             #     to = body2[idx].f
 
-        elif ast_cls is Compare:
+        elif ast_cls is Compare:  # _all
             idx, field, child = _params_Compare(self, idx)
 
-            if not to:
-                to = (child if idx is None else child[idx]).f
+            # if not to:
+            #     to = (child if idx is None else child[idx]).f
 
-        elif ast_cls in (Call, ClassDef):
+        elif ast_cls in (Call, ClassDef):  # _args, _bases
             child = self._cached_arglikes()
             idx = fixup_one_index(len(child), idx)
 
-        elif ast_cls is arguments:
+        elif ast_cls is arguments:  # _all
             child = self._cached_allargs()
             idx = fixup_one_index(len(child), idx)
 
@@ -3042,7 +3046,7 @@ def _put_one_raw(
             #     if (f := child.f.next()) and f.pfield.name in ('defaults', 'kw_defaults'):
             #         to = f
 
-        elif ast_cls is MatchMapping:
+        elif ast_cls is MatchMapping:  # _all
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             child = ast.keys
             body2 = ast.patterns
@@ -3070,6 +3074,13 @@ def _put_one_raw(
                 field = 'rest'
                 child = ast.rest
                 idx = None
+
+        elif ast_cls in _ASTS_LEAF_PATTERN_ATTRLIKES:  # '_attrs'
+            attrs = self._attrs
+            len_attrs = len(attrs)
+            child = [None] * len(attrs)
+            idx = fixup_one_index(len_attrs, idx)
+            loc = attrs[idx].loc
 
         else:
             raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
@@ -3187,34 +3198,16 @@ def _put_one(
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementlikes and virtual fields (which have handler=None) and anything that is sliceable and does not have a handler
         start_at = 0
 
-        # TODO; convert this logic to own func
-
         if not (is_virtual_field := field.startswith('_')):
             len_ = len(child)
+        elif field != '_body':
+            len_ = len(getattr(self, field))
 
-        elif field == '_body':  # block stmtlike
+        else:  # stmtlike block
             is_virtual_field = False
             field = 'body'
             len_ = len(self.a.body)
             start_at = self.has_docstr
-
-        elif (keys := getattr(ast, 'keys', None)) is not None:  # Dict, MatchMapping
-            len_ = len(keys) + (1 if getattr(self.a, 'rest', None) else 0)
-
-        elif (ast_cls := ast.__class__) is Compare:
-            len_ = len(ast.comparators) + 1
-
-        elif ast_cls in (Call, ClassDef):  # '_args' or '_bases'
-            len_ = len(getattr(ast, field[1:])) + len(ast.keywords)
-
-        elif ast_cls is arguments:  # `arguments._all`
-            len_ = len(ast.posonlyargs) + len(ast.args) + bool(ast.vararg) + len(ast.kwonlyargs) + bool(ast.kwarg)
-
-        elif ast_cls in _ASTS_LEAF_KWD_ATTRS_CONTAINERS:  # `MatchClass/_pattern_attrlikes._attrs`
-            len_ = len(ast.patterns) + len(ast.kwd_patterns)
-
-        else:
-            raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover
 
         idx = fixup_one_index(len_, idx, start_at)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just clip to [0..len(body))
 
@@ -3227,7 +3220,9 @@ def _put_one(
             return None
 
         if is_virtual_field:
-            if keys is not None:  # Dict or MatchMapping
+            ast_cls = ast.__class__
+
+            if ast_cls in _ASTS_LEAF_MAPPING:  # Dict or MatchMapping
                 return None  # must return this because item at idx is a two-node key:value
 
             if ast_cls is arguments:  # Compare and others are only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare and others have handlers
@@ -3235,7 +3230,7 @@ def _put_one(
 
                 return new_self._cached_allargs()[idx].f  # we return only the arg portion even though it might have a default, but it will never be called expecting a return with a default because that would be a .replace() on a single combined arg+defualt element which never exists on its own
 
-            elif ast_cls in _ASTS_LEAF_KWD_ATTRS_CONTAINERS:  # we may return from kwd_patterns because there is no better option
+            elif ast_cls in _ASTS_LEAF_PATTERN_ATTRLIKES:  # _attrs, we may return from kwd_patterns because there is no better option
                 return (patterns[idx] if (i := idx - len(patterns := ast.patterns)) < 0 else ast.kwd_patterns[i]).f
 
             raise RuntimeError(f'should not get here, unknown virtual field {field!r}')  # pragma: no cover

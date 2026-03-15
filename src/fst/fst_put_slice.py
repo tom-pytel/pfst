@@ -111,7 +111,6 @@ from .common import (
     next_frag,
     prev_frag,
     next_find,
-    prev_find,
     next_find_re,
 )
 
@@ -3445,8 +3444,8 @@ _PUT_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put raw
 
-def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
-    start, stop = fixup_slice_indices(len_, start, stop)
+def _fixup_slice_index_for_raw(len_: int, start: int, stop: int, start_at: int = 0) -> tuple[int, int]:
+    start, stop = fixup_slice_indices(len_, start, stop, start_at)
 
     if start == stop:
         raise ValueError('cannot insert in raw slice put')
@@ -3454,162 +3453,108 @@ def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, i
     return start, stop
 
 
-def _loc_slice_raw_put_decorator_list(
+def _loc_slice_raw_put_from_FSTView(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    decorator_list = self.a.decorator_list
-    start, stop = _fixup_slice_index_for_raw(len(decorator_list), start, stop)
-    ln, col, _, _ = self._loc_decorator(start, False)
-    _, _, end_ln, end_col = decorator_list[stop - 1].f.pars()
+) -> tuple[int, int, int, int, int, int, int]:
+    """For these, `FSTView` provides the correct slice location."""
 
-    return ln, col, end_ln, end_col, start, stop, decorator_list
+    view = getattr(self, field)
+    len_body = len(view)
+    start, stop = _fixup_slice_index_for_raw(len_body, start, stop)
+    ln, col, end_ln, end_col = view[start : stop].loc
 
-def _loc_slice_raw_put_Global_Nonlocal_names(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    names = self.a.names
-    start, stop = _fixup_slice_index_for_raw(len(names), start, stop)
-    ln, col, end_ln, end_col = self._loc_Global_Nonlocal_names(start, stop - 1)
-
-    return ln, col, end_ln, end_col, start, stop, names
-
-def _loc_slice_raw_put_comprehension_ifs(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    ifs = self.a.ifs
-    start, stop = _fixup_slice_index_for_raw(len(ifs), start, stop)
-    start_eq_stop = start == stop
-
-    ln, col, end_ln, end_col = self._loc_comprehension_if(start, start_eq_stop)  # if start != stop then we don't need pars here because we will only use the start which will be the `if`
-
-    if not start_eq_stop:
-        _, _, end_ln, end_col = ifs[stop - 1].f.pars()
-
-    return ln, col, end_ln, end_col, start, stop, ifs
-
-def _loc_slice_raw_put_Dict__all(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    values = self.a.values
-    start, stop = _fixup_slice_index_for_raw(len(values), start, stop)
-    ln, col, _, _ = self._loc_maybe_key(start)
-    _, _, end_ln, end_col = values[stop - 1].f.pars()
-
-    return ln, col, end_ln, end_col, start, stop, values
-
-def _loc_slice_raw_put_Compare__all(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    ast = self.a
-    comparators = ast.comparators
-    start, stop = _fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
-    ln, col, end_ln, end_col = (comparators[start - 1] if start else ast.left).f.pars()
-
-    if stop != start + 1:
-        _, _, end_ln, end_col = comparators[stop - 2].f.pars()
-
-    return ln, col, end_ln, end_col, start, stop, [ast.left, *comparators]  # body2 isn't really used because doesn't need comma, but lets be consistent
-
-def _loc_slice_raw_put_MatchMapping__all(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    ast = self.a
-    keys = ast.keys
-    patterns = ast.patterns
-    rest = ast.rest
-    len_keys = len(keys)
-    len_keys_w_rest = len_keys + bool(rest)
-    start, stop = _fixup_slice_index_for_raw(len_keys_w_rest, start, stop)
-
-    if rest and stop == len_keys_w_rest:
-        ln, col, end_ln, end_col = self._loc_MatchMapping_rest()
-    else:
-        _, _, end_ln, end_col = patterns[stop - 1].f.pars()
-
-    if start < len_keys:
-        ln, col, _, _ = keys[start].f.loc  # these cannot have pars
-
-    else:  # in this case _loc_MatchMapping_rest() was gotten so (ln, col) is at the start of the `rest` identifier
-        if start:
-            _, _, prev_ln, prev_col = patterns[start - 1].f.loc
-        else:
-            prev_ln, prev_col, _, _ = self.loc
-
-        ln, col = prev_find(self.root._lines, prev_ln, prev_col, ln, col, '**')  # '**' must be there
-
-    return ln, col, end_ln, end_col, start, stop, patterns
-
-def _loc_slice_raw_put_Call_ClassDef_arglikes(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    arglikes = self._cached_arglikes()
-    start, stop = _fixup_slice_index_for_raw(len(arglikes), start, stop)
-    ln, col, end_ln, end_col = arglikes[start].f.pars()
-
-    if stop != start:
-        _, _, end_ln, end_col = arglikes[stop - 1].f.pars()
-
-    return ln, col, end_ln, end_col, start, stop, arglikes
-
-def _loc_slice_raw_put_arguments__all(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    body = self._cached_allargs()
-    start, stop = _fixup_slice_index_for_raw(len(body), start, stop)
-    ln, col, end_ln, end_col = body[start].f._loc_argument(True)
-
-    if stop - 1 != start:
-        _, _, end_ln, end_col = body[stop - 1].f._loc_argument(True)
-
-    return ln, col, end_ln, end_col, start, stop, body
+    return ln, col, end_ln, end_col, start, stop, len_body
 
 def _loc_slice_raw_put__body(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
+) -> tuple[int, int, int, int, int, int, int]:
+    """Account for possible docstring and adjust indices accordingly."""
+
     body = self.a.body
+    len_body = len(body)
+    start, stop = _fixup_slice_index_for_raw(len_body, start, stop, self.has_docstr)
+    ln, col, end_ln, end_col = body[start].f.bloc
 
-    start, stop = fixup_slice_indices(len(body), start, stop, self.has_docstr)
-    ln, col, _, _ = body[start].f.bloc
-    _, _, end_ln, end_col = body[stop - 1].f.bloc
+    if (i := stop - 1) != start:
+        _, _, end_ln, end_col = body[i].f.bloc
 
-    return ln, col, end_ln, end_col, start, stop, body
+    return ln, col, end_ln, end_col, start, stop, len_body
+
+def _loc_slice_raw_put_Call__args(
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
+) -> tuple[int, int, int, int, int, int, int]:
+    """Need to account for possibility of `call(i for i in j)` and exclude the shared pars. Not using `FSTView` location
+    because that does not exclude shared pars."""
+
+    body = self._cached_arglikes()
+    len_body = len(body)
+    start, stop = _fixup_slice_index_for_raw(len_body, start, stop)
+    ln, col, end_ln, end_col = body[start].f.pars(shared=False)
+
+    if (i := stop - 1) != start:
+        _, _, end_ln, end_col = body[i].f.pars(shared=False)
+
+    return ln, col, end_ln, end_col, start, stop, len_body
+
+def _loc_slice_raw_put_Call_args(
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
+) -> tuple[int, int, int, int, int, int, int]:
+    """Need to account for possibility of `call(i for i in j)` and exclude the shared pars. Not excluded for default
+    because never needed there and to better share caching with all other normal `pars()` calls."""
+
+    body = self.a.args
+    len_body = len(body)
+    start, stop = _fixup_slice_index_for_raw(len_body, start, stop)
+    ln, col, end_ln, end_col = body[start].f.pars(shared=False)
+
+    if (i := stop - 1) != start:
+        _, _, end_ln, end_col = body[i].f.pars(shared=False)
+
+    return ln, col, end_ln, end_col, start, stop, len_body
 
 def _loc_slice_raw_put_default(
     self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
+) -> tuple[int, int, int, int, int, int, int]:
+    """Default get normal location from non-virtual field. Also checks to make sure slice operation is being done on an
+    actual list field."""
+
     body = getattr(self.a, field, None)
 
-    if body is None or not isinstance(body, list):
-        raise ValueError(f'cannot put raw slice to {self.a.__class__.__name__}.{field}')  # pragma: no cover  - in practice never gets here because slice put to non-list field is errored before here, but juuust in case for inevitable future screwups
+    if body is None or not isinstance(body, list):  # may not have been checked in main slice put if raw=True
+        raise ValueError(f'cannot put slice to {self.a.__class__.__name__}.{field}')
 
-    start, stop = _fixup_slice_index_for_raw(len(body), start, stop)
-    ln, col, _, _ = body[start].f.pars(shared=False)
-    _, _, end_ln, end_col = body[stop - 1].f.pars(shared=False)
+    len_body = len(body)
+    start, stop = _fixup_slice_index_for_raw(len_body, start, stop)
+    ln, col, end_ln, end_col = body[start].f.pars()
 
-    return ln, col, end_ln, end_col, start, stop, body
+    if (i := stop - 1) != start:
+        _, _, end_ln, end_col = body[i].f.pars()
 
-def _loc_slice_raw_put(
-    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other nodes."""
-
-    return _LOC_SLICE_RAW_PUT_FUNCS.get((self.a.__class__, field), _loc_slice_raw_put_default)(self, start, stop, field)
+    return ln, col, end_ln, end_col, start, stop, len_body
 
 _LOC_SLICE_RAW_PUT_FUNCS = {
-    (FunctionDef, 'decorator_list'):      _loc_slice_raw_put_decorator_list,
-    (AsyncFunctionDef, 'decorator_list'): _loc_slice_raw_put_decorator_list,
-    (ClassDef, 'decorator_list'):         _loc_slice_raw_put_decorator_list,
-    (Global, 'names'):                    _loc_slice_raw_put_Global_Nonlocal_names,
-    (Nonlocal, 'names'):                  _loc_slice_raw_put_Global_Nonlocal_names,
-    (comprehension, 'ifs'):               _loc_slice_raw_put_comprehension_ifs,
+    (FunctionDef, 'decorator_list'):      _loc_slice_raw_put_from_FSTView,
+    (AsyncFunctionDef, 'decorator_list'): _loc_slice_raw_put_from_FSTView,
+    (ClassDef, 'decorator_list'):         _loc_slice_raw_put_from_FSTView,
+    (_decorator_list, 'decorator_list'):  _loc_slice_raw_put_from_FSTView,
+    (Assign, 'targets'):                  _loc_slice_raw_put_from_FSTView,
+    (_Assign_targets, 'targets'):         _loc_slice_raw_put_from_FSTView,
+    (Global, 'names'):                    _loc_slice_raw_put_from_FSTView,
+    (Nonlocal, 'names'):                  _loc_slice_raw_put_from_FSTView,
+    (comprehension, 'ifs'):               _loc_slice_raw_put_from_FSTView,
+    (_comprehension_ifs, 'ifs'):          _loc_slice_raw_put_from_FSTView,
 
-    (Dict, '_all'):                       _loc_slice_raw_put_Dict__all,
-    (Compare, '_all'):                    _loc_slice_raw_put_Compare__all,
-    (MatchMapping, '_all'):               _loc_slice_raw_put_MatchMapping__all,
-    (arguments, '_all'):                  _loc_slice_raw_put_arguments__all,
+    (Call, 'args'):                       _loc_slice_raw_put_Call_args,
+    (Call, '_args'):                      _loc_slice_raw_put_Call__args,
+    (ClassDef, '_bases'):                 _loc_slice_raw_put_from_FSTView,
 
-    (ClassDef, '_bases'):                 _loc_slice_raw_put_Call_ClassDef_arglikes,
-    (Call, '_args'):                      _loc_slice_raw_put_Call_ClassDef_arglikes,
+    (Dict, '_all'):                       _loc_slice_raw_put_from_FSTView,
+    (Compare, '_all'):                    _loc_slice_raw_put_from_FSTView,
+    (MatchMapping, '_all'):               _loc_slice_raw_put_from_FSTView,
+    (arguments, '_all'):                  _loc_slice_raw_put_from_FSTView,
+
+    (MatchClass, '_attrs'):               _loc_slice_raw_put_from_FSTView,
+    (_pattern_attrlikes, '_attrs'):       _loc_slice_raw_put_from_FSTView,
 
     (Module, '_body'):                    _loc_slice_raw_put__body,
     (Interactive, '_body'):               _loc_slice_raw_put__body,
@@ -3628,6 +3573,13 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (match_case, '_body'):                _loc_slice_raw_put__body,
 }  # fmt: skip
 
+def _loc_slice_raw_put(
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
+) -> tuple[int, int, int, int, int, int, int]:
+    """Get location of a raw slice. Special cases for decorators, comprehension ifs and other nodes."""
+
+    return _LOC_SLICE_RAW_PUT_FUNCS.get((self.a.__class__, field), _loc_slice_raw_put_default)(self, start, stop, field)
+
 
 def _singleton_needs_comma(fst_: fst.FST) -> bool:
     """Whether a singleton value in this container needs a trailing comma or not."""
@@ -3643,16 +3595,14 @@ def _singleton_needs_comma(fst_: fst.FST) -> bool:
 def _adjust_slice_raw_ast(
     self: fst.FST,
     code: AST,
-    field: str,
     one: bool | None,
-    options: Mapping[str, Any],
     put_ln: int,
     put_col: int,
     put_end_ln: int,
     put_end_col: int,
     start: int,
     stop: int,
-    body2: list[AST],
+    len_body: int,
 ) -> tuple[AST | list[str], int, int, int, int]:
     """Adjust `code` and put location when putting raw from an `AST`. Currently just trailing comma stuff."""
 
@@ -3689,7 +3639,7 @@ def _adjust_slice_raw_ast(
         else:
             len_code_body = 1
 
-        if stop == len(body2) and _singleton_needs_comma(self):
+        if stop == len_body and _singleton_needs_comma(self):
             comma = next_find(self.root._lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True)  # trailing comma
 
             if len_code_body != 1:
@@ -3707,16 +3657,14 @@ def _adjust_slice_raw_ast(
 def _adjust_slice_raw_fst(
     self: fst.FST,
     code: fst.FST,
-    field: str,
     one: bool | None,
-    options: Mapping[str, Any],
     put_ln: int,
     put_col: int,
     put_end_ln: int,
     put_end_col: int,
     start: int,
     stop: int,
-    body2: list[AST],
+    len_body: int,
 ) -> tuple[fst.FST | list[str], int, int, int, int]:
     """Adjust `code` and put location when putting raw from an `FST`."""
 
@@ -3792,7 +3740,7 @@ def _adjust_slice_raw_fst(
             if (code_comma_is_explicit
                 or (
                     len_code_body2 > 1  # code has no comma because otherwise it would be explicit
-                    and len(body2) == 1
+                    and len_body == 1
                     and _singleton_needs_comma(self)  # self is singleton and singleton needs comma
                     and comma[1] == put_end_col
                     and comma[0] == put_end_ln  # that comma follows right after element and so is not explicit and can be deleted
@@ -3808,7 +3756,7 @@ def _adjust_slice_raw_fst(
         elif code_comma_is_explicit:
             pass  # noop
 
-        elif not start and stop == len(body2) and len_code_body2 == 1 and _singleton_needs_comma(self):  # will result in singleton which needs trailing comma
+        elif not start and stop == len_body and len_code_body2 == 1 and _singleton_needs_comma(self):  # will result in singleton which needs trailing comma
             if not code_comma:
                 code_lines[-1] = bistr(code_lines[-1] + ',')
 
@@ -3834,17 +3782,21 @@ def _put_slice_raw(
     if code is None:
         raise ValueError('cannot delete in raw slice put')
 
-    put_ln, put_col, put_end_ln, put_end_col, start, stop, body2 = _loc_slice_raw_put(self, start, stop, field)
+    # put_ln, put_col, put_end_ln, put_end_col, start, stop, body2 = _loc_slice_raw_put(self, start, stop, field)
+
+    # len_body = len(body2)
+
+
+    put_ln, put_col, put_end_ln, put_end_col, start, stop, len_body = _loc_slice_raw_put(self, start, stop, field)
+
 
     if isinstance(code, AST):
         code, put_ln, put_col, put_end_ln, put_end_col = (
-            _adjust_slice_raw_ast(self, code, field, one, options,
-                                  put_ln, put_col, put_end_ln, put_end_col, start, stop, body2))
+            _adjust_slice_raw_ast(self, code, one, put_ln, put_col, put_end_ln, put_end_col, start, stop, len_body))
 
     elif isinstance(code, fst.FST):
         code, put_ln, put_col, put_end_ln, put_end_col = (
-            _adjust_slice_raw_fst(self, code, field, one, options,
-                                  put_ln, put_col, put_end_ln, put_end_col, start, stop, body2))
+            _adjust_slice_raw_fst(self, code, one, put_ln, put_col, put_end_ln, put_end_col, start, stop, len_body))
 
     self._reparse_raw(code, put_ln, put_col, put_end_ln, put_end_col)
 

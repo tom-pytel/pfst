@@ -21637,6 +21637,181 @@ Call - ROOT 0,0..0,15
    0] keyword - 0,11..0,14
      .value Name 'e' Load - 0,13..0,14
 '''),
+
+('', 1, None, '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''),
+r'''x''',
+r'''cls(a, x, c=d, e=f)''', r'''
+MatchClass - ROOT 0,0..0,19
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,12..0,13
+     .name 'd'
+   1] MatchAs - 0,17..0,18
+     .name 'f'
+'''),
+
+('', 2, None, '_attrs', {'raw': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''),
+r'''x''',
+r'''cls(a, b, x, e=f)''', r'''
+MatchClass - ROOT 0,0..0,17
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
+   2] MatchAs - 0,10..0,11
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,15..0,16
+     .name 'f'
+'''),
+
+('', 1, None, '_attrs', {'raw': True, 'to': 'kwd_patterns[1]'}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''),
+r'''x''',
+r'''cls(a, x)''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+'''),
+],
+
+'raw_SPECIAL_SLICE': [  # ................................................................................
+
+('', 1, None, None, {'raw': True}, ('_decorator_list', r'''
+@deco1
+@deco2(arg)
+@deco3
+'''), (None,
+r'''deco4(arg1, arg2)'''), r'''
+@deco1
+@deco4(arg1, arg2)
+@deco3
+''', r'''
+_decorator_list - ROOT 0,0..2,6
+  .decorator_list[3]
+   0] Name 'deco1' Load - 0,1..0,6
+   1] Call - 1,1..1,18
+     .func Name 'deco4' Load - 1,1..1,6
+     .args[2]
+      0] Name 'arg1' Load - 1,7..1,11
+      1] Name 'arg2' Load - 1,13..1,17
+   2] Name 'deco3' Load - 2,1..2,6
+'''),
+
+('', 0, None, None, {'raw': True}, ('_decorator_list', r'''
+@deco1
+@deco2(arg)
+@deco3
+'''), (None,
+r'''deco4(arg1, arg2)'''), r'''
+@deco4(arg1, arg2)
+@deco2(arg)
+@deco3
+''', r'''
+_decorator_list - ROOT 0,0..2,6
+  .decorator_list[3]
+   0] Call - 0,1..0,18
+     .func Name 'deco4' Load - 0,1..0,6
+     .args[2]
+      0] Name 'arg1' Load - 0,7..0,11
+      1] Name 'arg2' Load - 0,13..0,17
+   1] Call - 1,1..1,11
+     .func Name 'deco2' Load - 1,1..1,6
+     .args[1]
+      0] Name 'arg' Load - 1,7..1,10
+   2] Name 'deco3' Load - 2,1..2,6
+'''),
+
+('', 1, None, None, {'raw': True}, ('_comprehension_ifs',
+r'''if a if b if c'''), (None,
+r'''x'''),
+r'''if a if x if c''', r'''
+_comprehension_ifs - ROOT 0,0..0,14
+  .ifs[3]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'x' Load - 0,8..0,9
+   2] Name 'c' Load - 0,13..0,14
+'''),
+
+('', 0, None, None, {'raw': True}, ('_comprehension_ifs',
+r'''if a if b if c'''), (None,
+r'''x'''),
+r'''if x if b if c''', r'''
+_comprehension_ifs - ROOT 0,0..0,14
+  .ifs[3]
+   0] Name 'x' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+   2] Name 'c' Load - 0,13..0,14
+'''),
+
+('', 1, None, '_attrs', {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''),
+r'''x''',
+r'''a, x, c=d, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,14
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'x'
+  .kwd_attrs[2]
+   0] 'c'
+   1] 'e'
+  .kwd_patterns[2]
+   0] MatchAs - 0,8..0,9
+     .name 'd'
+   1] MatchAs - 0,13..0,14
+     .name 'f'
+'''),
+
+('', 2, None, '_attrs', {'raw': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''),
+r'''x''',
+r'''a, b, x, e=f''', r'''
+_pattern_attrlikes - ROOT 0,0..0,12
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+   2] MatchAs - 0,6..0,7
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'e'
+  .kwd_patterns[1]
+   0] MatchAs - 0,11..0,12
+     .name 'f'
+'''),
+
+('', 1, None, '_attrs', {'raw': True, 'to': 'kwd_patterns[1]'}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''),
+r'''x''',
+r'''a, x''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'x'
+'''),
 ],
 
 'misc': [  # ................................................................................

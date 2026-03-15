@@ -53,7 +53,7 @@ from .fst_misc import is_delimited_MatchSequence
 
 _ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
 _ASTS_LEAF_COMPREHENSION_OR_IFS = frozenset([comprehension, _comprehension_ifs])
-_ASTS_LEAF_KWD_ATTRS_CONTAINERS = frozenset([MatchClass, _pattern_attrlikes])
+_ASTS_LEAF_PATTERN_ATTRLIKES    = frozenset([MatchClass, _pattern_attrlikes])
 
 _re_deco_start         = re.compile(r'[ \t]*@')
 
@@ -442,19 +442,29 @@ def _loc_block_header_end(
     return ln, col, colon_ln, colon_col + 1  # block header start and end location just past the ':'
 
 
-def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+def _loc_comprehension_if(self: fst.FST, idx: int, want: bool | None = True) -> fstloc:
     """Location `comprehension` or `_comprehension_ifs` expression including the leading `if` (which is not included in
     the location of the expression itself).
 
     **WARNING:** `idx` must be non-negative.
+
+    **Parameters:**
+    - `want`: Can tell this function to not to bother get either `ln, col` or `end_ln, end_col` for a little efficiency.
+        - `True`: Both start and end are important, get both.
+        - `False`: Only care about `ln` and `col`, `end_ln` and `end_col` will not necessarily be correct.
+        - `None`: Only care about `end_ln` and `end_col`, `ln` and `col` will not necessarily be correct.
     """
 
     assert self.a.__class__ in _ASTS_LEAF_COMPREHENSION_OR_IFS
 
     ast = self.a
     ifs = ast.ifs
+    if_ = ifs[idx].f
 
-    ln, col, end_ln, end_col = ifs[idx].f.pars() if pars else ifs[idx].f.loc
+    if want is None:
+        return if_.pars()
+
+    ln, col, end_ln, end_col = if_.pars() if want else if_.loc
 
     if idx:
         _, _, prev_ln, prev_col = ifs[idx - 1].f.loc
@@ -526,14 +536,20 @@ def _loc_argument(self: fst.FST, default: bool = False, stars: bool = True) -> f
     return fstlocn(ln, col, end_ln, end_col, default=default)
 
 
-def _loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+def _loc_decorator(self: fst.FST, idx: int, want: bool | None = True) -> fstloc:
     r"""Location of `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `_decorator_list` specific decorator expression
     including the leading `@` (which is not included in the location of the expression itself). We have a whole function
     for this because the `@` may not be on the same line as the decorator expression.
 
-    **Note:** This function is explicitly safe to use from `FST.bloc` only with `pars=False`.
+    **Note:** This function is explicitly safe to use from `FST.bloc` only with `want=False`.
 
     **WARNING:** `idx` must be non-negative.
+
+    **Parameters:**
+    - `want`: Can tell this function to not to bother get either `ln, col` or `end_ln, end_col` for a little efficiency.
+        - `True`: Both start and end are important, get both.
+        - `False`: Only care about `ln` and `col`, `end_ln` and `end_col` will not necessarily be correct.
+        - `None`: Only care about `end_ln` and `end_col`, `ln` and `col` will not necessarily be correct.
 
     **Examples:**
     >>> FST(r'''
@@ -549,10 +565,14 @@ def _loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     assert self.a.__class__ in _ASTS_LEAF_DEF_OR_DECO_LIST
 
     ast = self.a
-    lines = self.root._lines
     decorator_list = ast.decorator_list
+    decorator = decorator_list[idx].f
 
-    ln, col, end_ln, end_col = decorator_list[idx].f.pars() if pars else decorator_list[idx].f.loc
+    if want is None:
+        return decorator.pars()
+
+    lines = self.root._lines
+    ln, col, end_ln, end_col = decorator.pars() if want else decorator.loc
 
     if m := _re_deco_start.match(lines[ln]):  # if '@' is on the line expected preceded by only space then we are done, use column of '@'
         return fstloc(ln, m.end() - 1, end_ln, end_col)  # m.end() instead of col because could come from a line continuation and '@' not be at same column as self
@@ -840,7 +860,7 @@ def _loc_kwd_attrs(self: fst.FST, idx: int, idx2: int | None = None) -> fstloc:
         `kwd_attrs[idx2]`.
     """
 
-    assert self.a.__class__ in _ASTS_LEAF_KWD_ATTRS_CONTAINERS
+    assert self.a.__class__ in _ASTS_LEAF_PATTERN_ATTRLIKES
 
     ast = self.a
     lines = self.root._lines
@@ -879,6 +899,8 @@ def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int, want: bool | None = Tr
     """Get location of `MatchClass._attrs` or `_pattern_attrlikes._attrs` item, either a `patterns` item or combined
     of `kwd_attrs` and `kwd_patterns` item.
 
+    **WARNING:** `idx` must be non-negative.
+
     **Parameters:**
     - `want`: Can tell this function to not to bother get either `ln, col` or `end_ln, end_col` for a little efficiency.
         - `True`: Both start and end are important, get both.
@@ -886,7 +908,7 @@ def _loc_pattern_attrlikes__attr(self: fst.FST, idx: int, want: bool | None = Tr
         - `None`: Only care about `end_ln` and `end_col`, `ln` and `col` will not necessarily be correct.
     """
 
-    assert self.a.__class__ in _ASTS_LEAF_KWD_ATTRS_CONTAINERS
+    assert self.a.__class__ in _ASTS_LEAF_PATTERN_ATTRLIKES
 
     ast = self.a
     patterns = ast.patterns
