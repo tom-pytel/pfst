@@ -40655,6 +40655,9 @@ MatchClass - ROOT 0,0..0,10
    0] MatchAs - 0,7..0,8
      .name 'd'
 '''),
+],
+
+'MatchClass_patterns_coerce': [  # ................................................................................
 
 ('', 0, 0, 'patterns', {'one': True}, ('pattern',
 r'''call()'''), (None,
@@ -40733,6 +40736,25 @@ MatchClass - ROOT 0,0..0,7
    0] MatchAs - 0,5..0,6
      .name 'x'
 '''),
+
+('', 0, 'end', 'patterns', {'one': True, '_src': False}, ('MatchClass',
+r'''cls(a)'''), ('MatchSequence',
+r'''x,'''),
+r'''cls([x,])''',
+r'''cls([x])''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchSequence - 0,4..0,8
+     .patterns[1]
+      0] MatchAs - 0,5..0,6
+        .name 'x'
+'''),
+
+('', 0, 'end', 'patterns', {'one': True}, ('MatchClass',
+r'''cls(a)'''), ('MatchStar',
+r'''*x'''),
+r'''**NodeError('cannot put a MatchStar to MatchClass.patterns')**'''),
 ],
 
 'MatchClass__attrs': [  # ................................................................................
@@ -41141,6 +41163,48 @@ MatchClass - ROOT 0,0..0,11
    0] MatchAs - 0,9..0,10
      .name 'z'
 '''),
+],
+
+'MatchClass__attrs_coerce': [  # ................................................................................
+
+('', 0, 'end', None, {'one': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y'''),
+r'''cls([x, y])''', r'''
+MatchClass - ROOT 0,0..0,11
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchSequence - 0,4..0,10
+     .patterns[2]
+      0] MatchAs - 0,5..0,6
+        .name 'x'
+      1] MatchAs - 0,8..0,9
+        .name 'y'
+'''),
+
+('', 0, 'end', None, {'one': True}, ('MatchClass',
+r'''cls(a, b, c=d, e=f)'''), ('_pattern_attrlikes',
+r'''x, y=z'''),
+r'''**NodeError('expecting single pattern attrlike for put to MatchClass._attrs as `one=True`')**'''),
+
+('', 0, 'end', None, {'one': True, '_src': False}, ('MatchClass',
+r'''cls(a)'''), ('MatchSequence',
+r'''x,'''),
+r'''cls([x,])''',
+r'''cls([x])''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+   0] MatchSequence - 0,4..0,8
+     .patterns[1]
+      0] MatchAs - 0,5..0,6
+        .name 'x'
+'''),
+
+('', 0, 'end', None, {'one': True}, ('MatchClass',
+r'''cls(a)'''), ('MatchStar',
+r'''*x'''),
+r'''**NodeError('cannot put a MatchStar to MatchClass.patterns')**'''),
 ],
 
 '_pattern_attrlikes_patterns': [  # ................................................................................
@@ -41708,6 +41772,9 @@ _pattern_attrlikes - ROOT 0,0..0,4
    0] MatchAs - 0,2..0,3
      .name 'd'
 '''),
+],
+
+'_pattern_attrlikes_patterns_coerce': [  # ................................................................................
 
 ('', 0, 0, 'patterns', {'one': True}, ('_pattern_attrlikes',
 r''''''), (None,
@@ -45567,6 +45634,340 @@ MatchSequence - ROOT 0,0..3,1
 '''),
 ],
 
+'coerce_to__pattern_attrlikes': [  # ................................................................................
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('Tuple', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('List', r'''
+[
+1,
+True,
+]
+'''), r'''
+1,
+True
+
+''',
+r'''1, True''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+   1] MatchSingleton True - 1,0..1,4
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('Set', r'''
+{
+'b',
+False,
+}
+'''), r'''
+'b',
+False
+
+''',
+r''''b', False''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchValue - 0,0..0,3
+     .value Constant 'b' - 0,0..0,3
+   1] MatchSingleton False - 1,0..1,5
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_Assign_targets', r'''
+(x, z) = \
+y.z =
+'''), r'''
+(x, z), \
+y.z
+''',
+r'''[x, z], y.z''', r'''
+_pattern_attrlikes - ROOT 0,0..1,3
+  .patterns[2]
+   0] MatchSequence - 0,0..0,6
+     .patterns[2]
+      0] MatchAs - 0,1..0,2
+        .name 'x'
+      1] MatchAs - 0,4..0,5
+        .name 'z'
+   1] MatchValue - 1,0..1,3
+     .value Attribute - 1,0..1,3
+       .value Name 'y' Load - 1,0..1,1
+       .attr 'z'
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_decorator_list', r'''
+@{1: b}
+@{**c}
+'''), r'''
+{1: b},
+{**c}
+''',
+r'''{1: b}, {**c}''', r'''
+_pattern_attrlikes - ROOT 0,0..1,5
+  .patterns[2]
+   0] MatchMapping - 0,0..0,6
+     .keys[1]
+      0] Constant 1 - 0,1..0,2
+     .patterns[1]
+      0] MatchAs - 0,4..0,5
+        .name 'b'
+   1] MatchMapping - 1,0..1,5
+     .rest 'c'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_arglikes', r'''
+
+*x,
+cls(a, b=c),
+
+'''),
+r'''**NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_comprehension_ifs', r'''
+
+if x
+if y
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('arguments', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('arguments', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_aliases', r'''
+x,
+y
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..1,1
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_aliases', r'''
+x,
+y.z
+'''), r'''
+x,
+y.z
+''',
+r'''x, y.z''', r'''
+_pattern_attrlikes - ROOT 0,0..1,3
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchValue - 1,0..1,3
+     .value Attribute - 1,0..1,3
+       .value Name 'y' Load - 1,0..1,1
+       .attr 'z'
+       .ctx Load
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_withitems', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..1,1
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('MatchSequence', r'''
+x,
+y,
+'''), r'''
+x,
+y
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..1,1
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('MatchSequence', r'''
+(
+x,
+y,
+)
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('MatchSequence', r'''
+[
+x,
+y,
+]
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_pattern_attrlikes',
+r'''x,'''),
+r'''x''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+'''),
+
+('', 0, 'end', None, {'_src': False}, ('_pattern_attrlikes',
+r'''a'''), ('_pattern_attrlikes', r'''
+x,
+y=z,
+'''), r'''
+x,
+y=z
+''',
+r'''x, y=z''', r'''
+_pattern_attrlikes - ROOT 0,0..1,3
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+  .kwd_attrs[1]
+   0] 'y'
+  .kwd_patterns[1]
+   0] MatchAs - 1,2..1,3
+     .name 'z'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_pattern_attrlikes',
+r'''a'''), ('_type_params', r'''
+
+x,
+y,
+
+'''), r'''
+x,
+y
+
+''',
+r'''x, y''', r'''
+_pattern_attrlikes - ROOT 0,0..2,0
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 1,0..1,1
+     .name 'y'
+'''),
+
+('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_pattern_attrlikes',
+r'''a'''), ('_type_params', r'''
+
+x,
+*y,
+
+'''),
+r'''**NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
+],
+
 'coerce_to__expr_arglikes': [  # ................................................................................
 
 ('', 0, 'end', 'args', {'_src': False}, ('Call',
@@ -47140,8 +47541,46 @@ _pattern_attrlikes - ROOT 0,0..0,1
 
 ('', 0, 'end', None, {'one': True}, ('_pattern_attrlikes',
 r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
+r'''x, y'''),
+r'''[x, y]''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchSequence - 0,0..0,6
+     .patterns[2]
+      0] MatchAs - 0,1..0,2
+        .name 'x'
+      1] MatchAs - 0,4..0,5
+        .name 'y'
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes', r'''
+# pre
+x,
+y,
+# post
+'''), r'''
+[# pre
+x,
+y,
+# post
+]
+''',
+r'''[x, y]''', r'''
+_pattern_attrlikes - ROOT 0,0..4,1
+  .patterns[1]
+   0] MatchSequence - 0,0..4,1
+     .patterns[2]
+      0] MatchAs - 1,0..1,1
+        .name 'x'
+      1] MatchAs - 2,0..2,1
+        .name 'y'
+'''),
+
+('', 0, 'end', None, {'one': True}, ('_pattern_attrlikes',
+r'''a, b, c=d, e=f'''), ('_pattern_attrlikes',
 r'''x, y=z'''),
-r'''**ValueError("expecting single pattern attrlike for put as 'one=True'")**'''),
+r'''**NodeError('expecting single pattern attrlike for put to _pattern_attrlikes._attrs as `one=True`')**'''),
 ],
 
 'one_True_to__expr_arglikes': [  # ................................................................................

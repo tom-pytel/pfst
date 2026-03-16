@@ -1213,17 +1213,64 @@ def _code_to_slice__pattern_attrlikes(
         return None
 
     coerce = fst.FST.get_option('coerce', options)
-    fst_ = code_as__pattern_attrlikes(code, options, self.root._parse_params, coerce=coerce)
-    ast_ = fst_.a
+    parse_params = self.root._parse_params
 
-    if not ast_.patterns and not ast_.kwd_patterns:  # put empty sequence is same as delete
-        return None
+    if not one:
+        fst_ = code_as__pattern_attrlikes(code, options, parse_params, coerce=coerce)
+        ast_ = fst_.a
 
-    if one:
-        if len(ast_.patterns) + len(ast_.kwd_patterns) != 1:
-            raise ValueError("expecting single pattern attrlike for put as 'one=True'")
+        return fst_ if ast_.patterns or ast_.kwd_patterns else None  # put empty sequence is same as delete
 
-    return fst_
+    codea = code.a if isinstance(code, fst.FST) else code  # get the actual AST from code if is FST or AST
+
+    if codea.__class__ is _pattern_attrlikes:  # if is already the wanted class and has a single element then don't convert to singleton
+        if codea is code:  # is AST, make FST
+            code = code_as__pattern_attrlikes(code, options, parse_params)
+            codea = code.a
+
+        check_trailing_comma = False
+
+    elif isinstance(code, (str, list)):  # maybe a single element in format of this slice, need to try here because will be SyntaxError in code_as_one()
+        try:
+            code = code_as__pattern_attrlikes(code, options, parse_params, coerce=False)
+        except (SyntaxError, NodeError):
+            pass  # fall through to try to parse as other pattern, or coerce to one
+        else:
+            codea = code.a
+            check_trailing_comma = True
+
+    if codea.__class__ is _pattern_attrlikes:  # non-singletion _pattern_attrlikes in fst_, convert to singleton containing a MatchSequence of these patterns
+        patterns = codea.patterns
+        kwd_patterns = codea.kwd_patterns
+
+        if len(patterns) + len(kwd_patterns) == 1:
+            if not check_trailing_comma or not (patterns or kwd_patterns)[-1].f._trail_sep():  # if this was parsed from source then if trailing comma then treat it as sequence, because we want to accept 'a=b' as a keyword attribute but 'a,' as a sequence
+                return code
+
+        if kwd_patterns:
+            raise NodeError('expecting single pattern attrlike for put to'
+                            f' {self.a.__class__.__name__}._attrs as `one=True`')
+
+        ast_ = MatchSequence([], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                             end_col_offset=ls[-1].lenbytes)
+        code._unmake_fst_parents(True)
+
+        fst_ = fst.FST(ast_, ls, None, from_=code, lcopy=False)._set_field(patterns, 'patterns', True, False)
+
+    else:
+        fst_ = code_as_pattern(code, options, parse_params, coerce=coerce)
+        ast_ = fst_.a
+
+        if ast_.__class__ is MatchStar:
+            raise NodeError('cannot put a MatchStar to MatchClass.patterns')
+
+    if fst_.is_delimited_matchseq() == '':  # undelimited MatchSequence
+        fst_._delimit_node(delims='[]')
+
+    ast = _pattern_attrlikes([], [], [], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                             end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'patterns', True, False)
 
 
 def _code_to_slice__type_params(
@@ -3033,8 +3080,13 @@ def _put_slice_pattern_attrlikes_patterns(
 
     fst_ = _code_to_slice_MatchSequence(self, code, one, options)
 
-    if not fst_ and start == stop:
-        return
+    if not fst_:
+        if start == stop:
+            return
+
+    else:
+        if any(a.__class__ is MatchStar for a in fst_.a.patterns):
+            raise NodeError('cannot put a MatchStar to MatchClass.patterns')
 
     if ast.__class__ is _pattern_attrlikes:
         bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc

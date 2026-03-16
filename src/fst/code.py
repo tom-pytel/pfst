@@ -13,6 +13,7 @@ from .asttypes import (
     ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR,
     ASTS_LEAF_EXPR_CONTEXT,
+    ASTS_LEAF_PATTERN,
     ASTS_LEAF_STMT_OR_STMTMOD,
     ASTS_LEAF_TUPLE_LIST_OR_SET,
     ASTS_LEAF_TUPLE_OR_LIST,
@@ -2259,10 +2260,7 @@ def _coerce_to_Dict(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    if is_FST := isinstance(code, fst.FST):
-        codea = code.a
-    else:
-        codea = code
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
 
     ast, _ = _coerce_to_expr_ast(codea, is_FST, options, parse_params, 'Dict')
 
@@ -2310,10 +2308,10 @@ def _coerce_to__Assign_targets(
     work as a side-effect of how they coerce.
 
     If a coerce function can handle source (because we want to be able to parse a different source representation of the
-    node than the one the default parse function for the type handles), then the attribute `coerce_src=True` should be
-    set on the function. Most should have this False (or not present) as the parse attempt should already have given a
-    definitive answer. Exists for stuff like `_decorator_names` and `_comprehension_ifs` where those parse functions
-    expect a prefix like `@` or `if` but we want to allow expressions without the prefixes as well.
+    node than the one the default parse function for the type handles), then the attribute `allow_coerce_src=True`
+    should be set on the function. Most should have this False (or not present) as the parse attempt should already have
+    given a definitive answer. Exists for stuff like `_decorator_names` and `_comprehension_ifs` where those parse
+    functions expect a prefix like `@` or `if` but we want to allow expressions without the prefixes as well.
     """
 
     codea = code.a if isinstance(code, fst.FST) else None
@@ -2327,7 +2325,7 @@ def _coerce_to__Assign_targets(
             src = unparse(_Assign_targets(targets=elts))
             ast = parse__Assign_targets(src, parse_params)
 
-            return fst.FST(ast, src.split('\n'), None)  # this is already stripped
+            return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
         # reformat expression(s) source as targets
 
@@ -2422,7 +2420,7 @@ def _coerce_to__decorator_list(
                 src = unparse(_decorator_list(decorator_list=elts))
                 ast = parse__decorator_list(src, parse_params)
 
-                return fst.FST(ast, src.split('\n'), None)  # this is already stripped
+                return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
             # reformat expression(s) source as decorator_list
 
@@ -2481,7 +2479,7 @@ def _coerce_to__decorator_list(
 
     return _code_as_one__decorator_list(code, options, parse_params, strip=strip, coerce=True)
 
-_coerce_to__decorator_list.coerce_src = True
+_coerce_to__decorator_list.allow_coerce_src = True
 
 
 def _code_as_one__decorator_list(
@@ -2595,7 +2593,7 @@ def _coerce_to__comprehension_ifs(
                 src = unparse(_comprehension_ifs(ifs=elts))
                 ast = parse__comprehension_ifs(src, parse_params)
 
-                return fst.FST(ast, src.split('\n'), None)  # this is already stripped
+                return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
             ast = _comprehension_ifs(ifs=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                      end_col_offset=ls[-1].lenbytes)
@@ -2640,7 +2638,7 @@ def _coerce_to__comprehension_ifs(
 
     return _code_as_one__comprehension_ifs(code, options, parse_params, strip=strip, coerce=True)
 
-_coerce_to__comprehension_ifs.coerce_src = True
+_coerce_to__comprehension_ifs.allow_coerce_src = True
 
 
 def _code_as_one__comprehension_ifs(
@@ -2834,7 +2832,7 @@ def _coerce_to_arguments(
             src = unparse(Tuple(elts=elts))[1:-1]
             ast = parse(src, parse_params)
 
-            return fst.FST(ast, src.split('\n'), None)  # this is already stripped
+            return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
         ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                     end_col_offset=ls[-1].lenbytes)
@@ -2888,7 +2886,7 @@ def _coerce_to_arguments(
             src = unparse(codea)
             ast = parse(src, parse_params)  # should never fail
 
-            return fst.FST(ast, src.split('\n'), None)  # this is already stripped
+            return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
         if is_kwarg:  # **kwarg
             lineno = value.lineno
@@ -2987,7 +2985,7 @@ def _coerce_to__withitems(
         fst_ = code_as_withitem(code, options, parse_params, strip=strip, coerce=True)
 
         ast = _withitems(items=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                        end_col_offset=ls[-1].lenbytes)
+                         end_col_offset=ls[-1].lenbytes)
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'items', True, False)
 
     for wi in fst_.a.items:
@@ -3001,10 +2999,7 @@ def _coerce_to_pattern(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`. This is essentially the pattern version of `_coerce_to_expr_ast()`."""
 
-    if is_FST := isinstance(code, fst.FST):
-        codea = code.a
-    else:
-        codea = code
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
 
     ast = _AST_COERCE_TO_PATTERN_FUNCS.get(
         codea.__class__, _coerce_to_pattern_ast_ret_empty_str)(codea, is_FST, options, parse_params)
@@ -3038,20 +3033,59 @@ def _coerce_to__pattern_attrlikes(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    raise NodeError('not implemented yet')  # TODO: THIS!
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+    codea_cls = original_codea_cls = codea.__class__
 
+    if codea_cls not in ASTS_LEAF_PATTERN:  # first lets get a pattern
+        code = _coerce_to_pattern(code, options, parse_params, strip=strip)
+        codea = code.a
+        codea_cls = code.a.__class__
+        strip = False
 
+    if codea_cls is MatchSequence:
+        if any(a.__class__ is MatchStar for a in codea.patterns):
+            raise NodeError('expecting pattern attrlikes, got MatchSequence, could not coerce, contains MatchStar')
 
+        if not is_FST:
+            src = unparse(codea)[1:-1]  # strip '[]' delimiters at ends
 
+        else:
+            if code.is_delimited_matchseq():
+                code._trim_delimiters()
 
+            code._unmake_fst_parents(True)
 
+            patterns = codea.patterns
 
+    elif codea_cls in ASTS_LEAF_PATTERN:  # this is essentially one=True
+        if codea_cls is MatchStar:
+            raise NodeError('expecting pattern attrlikes, got MatchStar, could not coerce, not allowed')
 
+        if not is_FST:
+            src = unparse(codea)
 
+        else:
+            if code.is_delimited_matchseq() == '':  # undelimited MatchSequence
+                code._delimit_node(delims='[]')
 
+            patterns = [codea]
 
+    else:
+        raise NodeError(f'expecting pattern attrlikes, got {original_codea_cls.__name__}, could not coerce')
 
+    if not is_FST:
+        ast = parse__pattern_attrlikes(src, parse_params)  # should never fail
+        fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
+    else:
+        ast = _pattern_attrlikes([], [], [], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                 end_col_offset=ls[-1].lenbytes)
+        fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)._set_field(patterns, 'patterns', True, False)
+
+        if strip:
+            fst_.strip()
+
+    return fst_
 
 
 @pyver(lt=12)
@@ -3247,7 +3281,7 @@ def _code_as(
                 ast = parse(src, parse_params)
 
             except (NodeError, SyntaxError, NotImplementedError):
-                if not (coerce_to and getattr(coerce_to, 'coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense)
+                if not (coerce_to and getattr(coerce_to, 'allow_coerce_src', False)):  # if there is a coerce function and it supports coerce source (by "supports" we also mean if it makes sense)
                     raise
 
                 try:
@@ -4227,8 +4261,7 @@ def code_as__pattern_attrlikes(
     """Convert `code` to a pattern `FST` if possible."""
 
     fst_ = _code_as(code, options, parse_params, parse__pattern_attrlikes, _pattern_attrlikes, strip,
-                    )
-                    # _coerce_to__pattern_attrlikes if coerce else False)
+                    _coerce_to__pattern_attrlikes if coerce else False)
 
     return fst_
 

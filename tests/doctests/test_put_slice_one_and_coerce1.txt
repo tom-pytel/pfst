@@ -2343,6 +2343,324 @@ AST: with x as x: pass
 
 
 ========================================================================================================================
+_pattern_attrlikes
+========================================================================================================================
+
+........................................................................................................................
+>>> test_target_srcs('cls(a)', '_attrs', ['x', '*x', 'x,', '*x,', '(x,)', '[x]', '{x}', '{x: y}', 'x, y', 'x = y =', '@x\n@y', 'if x if y'], target_mode='MatchClass')
+ 
+one=False, coerce=True  (mode=None)
+-----------------------------------
+ 
+src: cls(x)  # src='x'
+FST: cls(x)
+AST: cls(x)
+ 
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _pattern_attrlikes, got Starred, could not coerce')**
+AST: **NodeError('expecting _pattern_attrlikes, got Starred, could not coerce')**
+ 
+src: cls(x)  # src='x,'
+FST: cls(x)
+AST: cls(x)
+ 
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _pattern_attrlikes, got Tuple, could not coerce')**
+AST: **NodeError('expecting _pattern_attrlikes, got Tuple, could not coerce')**
+ 
+src: cls((x,))  # src='(x,)'
+FST: cls(x)
+AST: cls(x)
+ 
+src: cls([x])  # src='[x]'
+FST: cls(x)
+AST: cls(x)
+ 
+src: **SyntaxError**  # src='{x}'
+FST: cls(x)
+AST: cls(x)
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _pattern_attrlikes, got Dict, could not coerce')**
+AST: **NodeError('expecting _pattern_attrlikes, got Dict, could not coerce')**
+ 
+src: cls(x, y)  # src='x, y'
+FST: cls(x, y)
+AST: cls(x, y)
+ 
+src: **SyntaxError**  # src='x = y ='
+FST: cls(x, y)
+AST: cls(x, y)
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: cls(x,
+    y)
+AST: cls(x, y)
+ 
+src: **SyntaxError**  # src='if x if y'
+FST: cls(x, y)
+AST: cls(x, y)
+ 
+ 
+one=False, coerce=False  (mode=None)
+------------------------------------
+ 
+src: cls(x)  # src='x'
+FST: **NodeError('expecting _pattern_attrlikes, got Name, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Name, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x'
+FST: **NodeError('expecting _pattern_attrlikes, got Starred, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Starred, coerce disabled')**
+ 
+src: cls(x)  # src='x,'
+FST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='*x,'
+FST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+ 
+src: cls((x,))  # src='(x,)'
+FST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+ 
+src: cls([x])  # src='[x]'
+FST: **NodeError('expecting _pattern_attrlikes, got List, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got List, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting _pattern_attrlikes, got Set, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Set, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting _pattern_attrlikes, got Dict, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Dict, coerce disabled')**
+ 
+src: cls(x, y)  # src='x, y'
+FST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x = y ='
+FST: **NodeError('expecting _pattern_attrlikes, got _Assign_targets, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got _Assign_targets, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting _pattern_attrlikes, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got _decorator_list, coerce disabled')**
+ 
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('expecting _pattern_attrlikes, got _comprehension_ifs, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got _comprehension_ifs, coerce disabled')**
+ 
+ 
+one=True, coerce=True  (mode=None)
+----------------------------------
+ 
+src: cls(x)  # src='x'
+FST: cls(x)
+AST: cls(x)
+ 
+src: **NodeError('cannot put a MatchStar to MatchClass.patterns')**  # src='*x'
+FST: **NodeError('cannot put a MatchStar to MatchClass.patterns')**
+AST: **NodeError('cannot put a MatchStar to MatchClass.patterns')**
+ 
+src: cls([x,])  # src='x,'
+FST: cls([x,])
+AST: cls([x])
+ 
+src: cls([*x,])  # src='*x,'
+FST: cls([*x,])
+AST: cls([*x])
+ 
+src: cls((x,))  # src='(x,)'
+FST: cls((x,))
+AST: cls([x])
+ 
+src: cls([x])  # src='[x]'
+FST: cls([x])
+AST: cls([x])
+ 
+src: **SyntaxError**  # src='{x}'
+FST: cls([x])
+AST: cls([x])
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting pattern, got Dict, could not coerce')**
+AST: **NodeError('expecting pattern, got Dict, could not coerce')**
+ 
+src: cls([x, y])  # src='x, y'
+FST: cls([x, y])
+AST: cls([x, y])
+ 
+src: **SyntaxError**  # src='x = y ='
+FST: cls([x, y])
+AST: cls([x, y])
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: cls([x,
+    y])
+AST: cls([x, y])
+ 
+src: **SyntaxError**  # src='if x if y'
+FST: cls([x, y])
+AST: cls([x, y])
+ 
+ 
+one=True, coerce=False  (mode=None)
+-----------------------------------
+ 
+src: cls(x)  # src='x'
+FST: **NodeError('expecting pattern, got Name, coerce disabled')**
+AST: **NodeError('expecting pattern, got Name, coerce disabled')**
+ 
+src: **NodeError('cannot put a MatchStar to MatchClass.patterns')**  # src='*x'
+FST: **NodeError('expecting pattern, got Starred, coerce disabled')**
+AST: **NodeError('expecting pattern, got Starred, coerce disabled')**
+ 
+src: cls([x,])  # src='x,'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+ 
+src: cls([*x,])  # src='*x,'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+ 
+src: cls((x,))  # src='(x,)'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+ 
+src: cls([x])  # src='[x]'
+FST: **NodeError('expecting pattern, got List, coerce disabled')**
+AST: **NodeError('expecting pattern, got List, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x}'
+FST: **NodeError('expecting pattern, got Set, coerce disabled')**
+AST: **NodeError('expecting pattern, got Set, coerce disabled')**
+ 
+src: **SyntaxError**  # src='{x: y}'
+FST: **NodeError('expecting pattern, got Dict, coerce disabled')**
+AST: **NodeError('expecting pattern, got Dict, coerce disabled')**
+ 
+src: cls([x, y])  # src='x, y'
+FST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+AST: **NodeError('expecting pattern, got Tuple, coerce disabled')**
+ 
+src: **SyntaxError**  # src='x = y ='
+FST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
+AST: **NodeError('expecting pattern, got _Assign_targets, coerce disabled')**
+ 
+src: **SyntaxError**  # src='@x\n@y'
+FST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
+AST: **NodeError('expecting pattern, got _decorator_list, coerce disabled')**
+ 
+src: **SyntaxError**  # src='if x if y'
+FST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
+AST: **NodeError('expecting pattern, got _comprehension_ifs, coerce disabled')**
+
+
+........................................................................................................................
+>>> test_target_srcs('cls(a)', '_attrs', ['x', 'x,', 'x as x', 'x as x,', 'x as x, y as y'], 'pattern', target_mode='MatchClass')
+ 
+one=False, coerce=True  (mode='pattern')
+----------------------------------------
+ 
+src: cls(x)  # src='x'
+FST: cls(x)
+AST: cls(x)
+ 
+src: cls(x)  # src='x,'
+FST: cls(x)
+AST: cls(x)
+ 
+src: cls(x as x)  # src='x as x'
+FST: cls(x as x)
+AST: cls(x as x)
+ 
+src: cls(x as x)  # src='x as x,'
+FST: cls(x as x)
+AST: cls(x as x)
+ 
+src: cls(x as x, y as y)  # src='x as x, y as y'
+FST: cls(x as x, y as y)
+AST: cls(x as x, y as y)
+ 
+ 
+one=False, coerce=False  (mode='pattern')
+-----------------------------------------
+ 
+src: cls(x)  # src='x'
+FST: **NodeError('expecting _pattern_attrlikes, got MatchAs, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got MatchAs, coerce disabled')**
+ 
+src: cls(x)  # src='x,'
+FST: **NodeError('expecting _pattern_attrlikes, got MatchSequence, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got MatchSequence, coerce disabled')**
+ 
+src: cls(x as x)  # src='x as x'
+FST: **NodeError('expecting _pattern_attrlikes, got MatchAs, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got MatchAs, coerce disabled')**
+ 
+src: cls(x as x)  # src='x as x,'
+FST: **NodeError('expecting _pattern_attrlikes, got MatchSequence, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got MatchSequence, coerce disabled')**
+ 
+src: cls(x as x, y as y)  # src='x as x, y as y'
+FST: **NodeError('expecting _pattern_attrlikes, got MatchSequence, coerce disabled')**
+AST: **NodeError('expecting _pattern_attrlikes, got MatchSequence, coerce disabled')**
+ 
+ 
+one=True, coerce=True  (mode='pattern')
+---------------------------------------
+ 
+src: cls(x)  # src='x'
+FST: cls(x)
+AST: cls(x)
+ 
+src: cls([x,])  # src='x,'
+FST: cls([x,])
+AST: cls([x])
+ 
+src: cls(x as x)  # src='x as x'
+FST: cls(x as x)
+AST: cls(x as x)
+ 
+src: cls([x as x,])  # src='x as x,'
+FST: cls([x as x,])
+AST: cls([x as x])
+ 
+src: cls([x as x, y as y])  # src='x as x, y as y'
+FST: cls([x as x, y as y])
+AST: cls([x as x, y as y])
+ 
+ 
+one=True, coerce=False  (mode='pattern')
+----------------------------------------
+ 
+src: cls(x)  # src='x'
+FST: cls(x)
+AST: cls(x)
+ 
+src: cls([x,])  # src='x,'
+FST: cls([x,])
+AST: cls([x])
+ 
+src: cls(x as x)  # src='x as x'
+FST: cls(x as x)
+AST: cls(x as x)
+ 
+src: cls([x as x,])  # src='x as x,'
+FST: cls([x as x,])
+AST: cls([x as x])
+ 
+src: cls([x as x, y as y])  # src='x as x, y as y'
+FST: cls([x as x, y as y])
+AST: cls([x as x, y as y])
+
+
+
+
+========================================================================================================================
 _type_params
 ========================================================================================================================
 
