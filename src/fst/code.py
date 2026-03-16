@@ -672,7 +672,7 @@ def _coerce_to_pattern_ast_Dict(
             key = _AST_COERCE_TO_PATTERN_FUNCS.get(
                 key_cls, _coerce_to_pattern_ast_ret_empty_str)(key, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
-            if key.__class__ is str:
+            if isinstance(key, str):
                 return key
 
             keys.append(key.value)  # we don't want the MatchValue pattern but its actual value expression (or Attribute)
@@ -680,7 +680,7 @@ def _coerce_to_pattern_ast_Dict(
         value = _AST_COERCE_TO_PATTERN_FUNCS.get(
             value.__class__, _coerce_to_pattern_ast_ret_empty_str)(value, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
-        if value.__class__ is str:
+        if isinstance(value, str):
             return value
 
         patterns.append(value)  # here we do want the actual pattern
@@ -705,7 +705,7 @@ def _coerce_to_pattern_ast_Call(
 
         res = _coerce_to_pattern_ast_Attribute(func, is_FST, options, parse_params)  # we call this just to validate and remove parentheses if present
 
-        if res.__class__ is str:
+        if isinstance(res, str):
             return res
 
     elif func_cls is not Name:
@@ -724,7 +724,7 @@ def _coerce_to_pattern_ast_Call(
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
             arg.__class__, _coerce_to_pattern_ast_ret_empty_str)(arg, is_FST, options, parse_params)
 
-        if pat.__class__ is str:
+        if isinstance(pat, str):
             return pat
 
         patterns.append(pat)
@@ -739,7 +739,7 @@ def _coerce_to_pattern_ast_Call(
         pat = _AST_COERCE_TO_PATTERN_FUNCS.get(
             value.__class__, _coerce_to_pattern_ast_ret_empty_str)(value, is_FST, options, parse_params)
 
-        if pat.__class__ is str:
+        if isinstance(pat, str):
             return pat
 
         kwd_attrs.append(arg)
@@ -821,7 +821,7 @@ def _coerce_to_pattern_ast_BinOp(
     pat_right = _AST_COERCE_TO_PATTERN_FUNCS.get(
         right.__class__, _coerce_to_pattern_ast_ret_empty_str)(right, is_FST, options, parse_params)
 
-    if pat_right.__class__ is str:
+    if isinstance(pat_right, str):
         return pat_right
 
     left = ast.left
@@ -921,7 +921,7 @@ def _coerce_to_pattern_ast_seq(
             res = _AST_COERCE_TO_EXPR_FUNCS.get(
                 ast_cls, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # just need to convert their special syntax to comma-delimited sequence
 
-            if res.__class__ is str:
+            if isinstance(res, str):
                 return res  # pragma: no cover  # not currently returned for these types
 
             fst_._fix_undelimited_seq(elts, '[]', True)
@@ -930,7 +930,7 @@ def _coerce_to_pattern_ast_seq(
         res = _AST_COERCE_TO_EXPR_FUNCS.get(
             ast_cls, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)  # need to convert their elements to expressions, container will be Tuple
 
-        if res.__class__ is str:
+        if isinstance(res, str):
             return res
 
         ast = res[0]
@@ -950,7 +950,7 @@ def _coerce_to_pattern_ast_seq(
         e = _AST_COERCE_TO_PATTERN_FUNCS.get(
             e.__class__, _coerce_to_pattern_ast_ret_empty_str)(e, is_FST, options, parse_params)
 
-        if e.__class__ is str:
+        if isinstance(e, str):
             return e
 
         patterns.append(e)
@@ -1413,7 +1413,7 @@ def _coerce_to_expr_ast__aliases(
             for a in ast.names:
                 res = _coerce_to_expr_ast_alias(a, is_FST, options, parse_params)
 
-                if res.__class__ is str:
+                if isinstance(res, str):
                     return res  # pragma: no cover  # this cannot currently happen
 
                 elts.append(res[0])
@@ -1543,7 +1543,7 @@ def _coerce_to_expr_ast_MatchSequence(
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(
             pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
-        if pat.__class__ is str:
+        if isinstance(pat, str):
             return pat
 
         elts.append(pat[0])
@@ -1566,7 +1566,7 @@ def _coerce_to_expr_ast_MatchMapping(
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(
             pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
-        if pat.__class__ is str:
+        if isinstance(pat, str):
             return pat
 
         keys.append(key)
@@ -1604,7 +1604,7 @@ def _coerce_to_expr_ast_MatchClass(
         arg = _AST_COERCE_TO_EXPR_FUNCS.get(
             pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
-        if arg.__class__ is str:
+        if isinstance(arg, str):
             return arg
 
         args.append(arg[0])
@@ -1617,7 +1617,7 @@ def _coerce_to_expr_ast_MatchClass(
         value = _AST_COERCE_TO_EXPR_FUNCS.get(
             pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
-        if value.__class__ is str:
+        if isinstance(value, str):
             return value
 
         value = value[0]
@@ -1652,7 +1652,7 @@ def _coerce_to_expr_ast_MatchOr(
     if len(patterns) == 1:  # this is also only doable by us editing
         return ret
 
-    if ret.__class__ is str:
+    if isinstance(ret, str):
         return ret
 
     ret = ret[0]
@@ -1666,7 +1666,7 @@ def _coerce_to_expr_ast_MatchOr(
         right = _AST_COERCE_TO_EXPR_FUNCS.get(
             pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
-        if right.__class__ is str:
+        if isinstance(right, str):
             return right
 
         right = right[0]
@@ -1705,7 +1705,7 @@ def _coerce_to_expr_ast__pattern_attrlikes(
         pat = _AST_COERCE_TO_EXPR_FUNCS.get(
             pat.__class__, _coerce_to_expr_ast_ret_empty_str)(pat, is_FST, options, parse_params)
 
-        if pat.__class__ is str:
+        if isinstance(pat, str):
             return pat
 
         elts.append(pat[0])
@@ -1880,7 +1880,7 @@ def _coerce_to_expr_ast(
     ret = _AST_COERCE_TO_EXPR_FUNCS.get(
         ast.__class__, _coerce_to_expr_ast_maybe_expr)(ast, is_FST, options, parse_params)
 
-    if ret.__class__ is str:
+    if isinstance(ret, str):
         raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
                         f', could not coerce{", " + ret if ret else ""}')  # ret here is reason str
 
@@ -1892,7 +1892,7 @@ def _coerce_to_expr_ast(
 
         ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, options, parse_params)
 
-        if ret.__class__ is str:
+        if isinstance(ret, str):
             raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
                             f', could not coerce{", " + ret if ret else ""}')  # pragma: no cover  # can't currently happen as List and Set can always coerce to each other
 
@@ -2008,7 +2008,7 @@ def _coerce_to__aliases_common(
     if fst_ is None:  # sequence as sequence?
         return None
 
-    if fst_.__class__ is list:  # this means code is an FST
+    if isinstance(fst_, list):  # this means code is an FST
         elts = fst_
         ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                     end_col_offset=ls[-1].lenbytes)
@@ -2543,7 +2543,7 @@ def _coerce_to__arglikes(
     fst_ = _coerce_to_seq(code, options, parse_params, parse__arglikes, _arglikes, None, True)
 
     if fst_ is not None:  # sequence as sequence?
-        if fst_.__class__ is list:  # this means code is an FST
+        if isinstance(fst_, list):  # this means code is an FST
             ast = _arglikes(arglikes=fst_, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                             end_col_offset=ls[-1].lenbytes)
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
@@ -2969,7 +2969,7 @@ def _coerce_to__withitems(
     fst_ = _coerce_to_seq(code, options, parse_params, parse__withitems, _withitems)
 
     if fst_ is not None:  # sequence as sequence?
-        if fst_.__class__ is list:  # this means code is an FST
+        if isinstance(fst_, list):  # this means code is an FST
             items = [withitem(a) for a in fst_]
             ast = _withitems(items=items, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                              end_col_offset=ls[-1].lenbytes)
@@ -3004,7 +3004,7 @@ def _coerce_to_pattern(
     ast = _AST_COERCE_TO_PATTERN_FUNCS.get(
         codea.__class__, _coerce_to_pattern_ast_ret_empty_str)(codea, is_FST, options, parse_params)
 
-    if ast.__class__ is str:
+    if isinstance(ast, str):
         raise NodeError(f'expecting pattern, got {codea.__class__.__name__}'
                         f', could not coerce{", " + ast if ast else ""}')  # ast here is reason str
 
@@ -3140,7 +3140,7 @@ def _coerce_to__type_params(
     fst_ = _coerce_to_seq(code, options, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
 
     if fst_ is not None:  # sequence as sequence?
-        if fst_.__class__ is list:  # this means code is an FST
+        if isinstance(fst_, list):  # this means code is an FST
             elts = fst_
             ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                         end_col_offset=ls[-1].lenbytes)
@@ -3198,7 +3198,7 @@ def _coerce_to__expr_arglikes(
                           parse_params, parse__expr_arglikes, Tuple, None, True)
 
     if fst_ is not None:  # sequence as sequence?
-        if fst_.__class__ is list:  # this means code is an FST
+        if isinstance(fst_, list):  # this means code is an FST
             ast = Tuple(elts=fst_, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                         end_col_offset=ls[-1].lenbytes)
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)

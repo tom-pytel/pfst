@@ -134,7 +134,7 @@ def _check_opt_args_as(option: str, value: object) -> str | None:
 
 def _check_opt_op(option: str, value: object) -> str | None:
     if (isinstance(value, (NoneType, str, list))  # source
-        or (value.__class__ is type and value in ASTS_LEAF_CMPOP)  # cmpop AST type
+        or (isinstance(value, type) and value in ASTS_LEAF_CMPOP)  # cmpop AST type
         or (value.a if isinstance(value, fst.FST) else value).__class__ in ASTS_LEAF_CMPOP  # FST() or AST() cmpop
     ):
         return None

@@ -62,7 +62,7 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
     if all == 'loc':
         return fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP
 
-    if all.__class__ is type and issubclass(all, AST):
+    if isinstance(all, type) and issubclass(all, AST):
         return fst_.a.__class__ is all
 
     return fst_.a.__class__ in all
@@ -88,7 +88,7 @@ def _all_param_func(
     if all == 'loc':
         return lambda fst_: fst_.a.__class__ not in _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP
 
-    if all.__class__ is type and issubclass(all, AST):
+    if isinstance(all, type) and issubclass(all, AST):
         return lambda fst_: fst_.a.__class__ is all
 
     if not callable(all):
