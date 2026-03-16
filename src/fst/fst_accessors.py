@@ -7,19 +7,32 @@ from typing import Union
 
 from . import fst
 
-from .asttypes import ASTS_LEAF_VAR_SCOPE_DECL, AST, FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias
+from .asttypes import (
+    ASTS_LEAF_VAR_SCOPE_DECL,
+    AST,
+    Assign,
+    FunctionDef,
+    AsyncFunctionDef,
+    ClassDef,
+    TypeAlias,
+    _Assign_targets,
+)
+
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
 
 from .view import (
     FSTView,
+    FSTView_Assign_targets,
     FSTView_decorator_list,
     FSTView_comprehension_ifs,
     FSTView_Global_Nonlocal,
     FSTView_kwd_attrs,
     FSTView_dummy,
 )
+
+_ASTS_LEAF_ASSIGN_OR_TARGETS = frozenset([Assign, _Assign_targets])
 
 __all__ = [
     'body',
@@ -350,7 +363,11 @@ def value(self: 'fst.FST') -> None:
 def targets(self: 'fst.FST') -> FSTView:
     """`FST` accessor for `AST` field `targets`."""
 
-    self.a.targets  # noqa: B018
+    ast = self.a
+    ast.targets  # noqa: B018
+
+    if ast.__class__ in _ASTS_LEAF_ASSIGN_OR_TARGETS:
+        return FSTView_Assign_targets(self, 'targets')
 
     return FSTView(self, 'targets')
 

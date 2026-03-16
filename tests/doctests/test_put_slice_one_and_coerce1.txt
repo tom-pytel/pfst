@@ -103,11 +103,11 @@ src: [x] = b  # src='[x]'
 FST: x = b
 AST: x = b
  
-src: **SyntaxError**  # src='{x}'
+src: **ParseError('expecting _Assign_targets, could not parse or coerce')**  # src='{x}'
 FST: x = b
 AST: x = b
  
-src: **SyntaxError**  # src='{x: y}'
+src: **ParseError('expecting _Assign_targets, could not parse or coerce')**  # src='{x: y}'
 FST: **NodeError('expecting _Assign_targets, got Dict, could not coerce')**
 AST: **NodeError('expecting _Assign_targets, got Dict, could not coerce')**
  
@@ -119,12 +119,12 @@ src: x = y = b  # src='x = y ='
 FST: x = y = b
 AST: x = y = b
  
-src: **SyntaxError**  # src='@x\n@y'
+src: **ParseError('expecting _Assign_targets, could not parse or coerce')**  # src='@x\n@y'
 FST: x = \
 y = b
 AST: x = y = b
  
-src: **SyntaxError**  # src='if x if y'
+src: **ParseError('expecting _Assign_targets, could not parse or coerce')**  # src='if x if y'
 FST: x = y = b
 AST: x = y = b
  
@@ -132,27 +132,27 @@ AST: x = y = b
 one=False, coerce=False  (mode=None)
 ------------------------------------
  
-src: x = b  # src='x'
+src: **SyntaxError**  # src='x'
 FST: **NodeError('expecting _Assign_targets, got Name, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Name, coerce disabled')**
  
-src: *x = b  # src='*x'
+src: **SyntaxError**  # src='*x'
 FST: **NodeError('expecting _Assign_targets, got Starred, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Starred, coerce disabled')**
  
-src: x, = b  # src='x,'
+src: **ParseError('unexpected value type parsing Assign targets, Tuple')**  # src='x,'
 FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: *x, = b  # src='*x,'
+src: **ParseError('unexpected value type parsing Assign targets, Tuple')**  # src='*x,'
 FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: (x,) = b  # src='(x,)'
+src: **SyntaxError**  # src='(x,)'
 FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  
-src: [x] = b  # src='[x]'
+src: **SyntaxError**  # src='[x]'
 FST: **NodeError('expecting _Assign_targets, got List, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got List, coerce disabled')**
  
@@ -164,7 +164,7 @@ src: **SyntaxError**  # src='{x: y}'
 FST: **NodeError('expecting _Assign_targets, got Dict, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Dict, coerce disabled')**
  
-src: x, y = b  # src='x, y'
+src: **SyntaxError**  # src='x, y'
 FST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
 AST: **NodeError('expecting _Assign_targets, got Tuple, coerce disabled')**
  

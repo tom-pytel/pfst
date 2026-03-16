@@ -1387,26 +1387,20 @@ def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continued newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
 
     try:
-        ast = _ast_parse1(f'_=\\\n{src_}\\\n=_', parse_params, Assign)  # check assuming src does not have trailing equals, do this first to catch naked tuple with trailing comma
+        ast = _ast_parse1(f'_=\\\n{src_}\\\n_', parse_params, Assign)  # now try assuming src has trailing equals
 
-    except SyntaxError as posteq_exc:
-        try:
-            ast = _ast_parse1(f'_=\\\n{src_}\\\n_', parse_params, Assign)  # now try assuming src has trailing equals
+    except SyntaxError as exc:
+        if _syntax_error_in_loc(exc, src):
+            raise
 
-        except SyntaxError as bare_exc:
-            if _syntax_error_in_loc(bare_exc, src):
-                raise bare_exc from None
-
-            if _syntax_error_in_loc(posteq_exc, src):
-                raise posteq_exc from None
-
-            raise SyntaxError('invalid Assign targets slice') from None
+        raise SyntaxError('invalid Assign targets slice') from None
 
     name = ast.value
 
     if name.__class__ is not Name:
         raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
-    elif name.id != '_':
+
+    if name.id != '_':
         raise RuntimeError(f'unexpected value id parsing Assign targets, {name.value!r}, should not get here')  # pragma: no cover
 
     targets = ast.targets

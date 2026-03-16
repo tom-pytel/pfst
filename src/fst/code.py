@@ -2314,65 +2314,68 @@ def _coerce_to__Assign_targets(
     functions expect a prefix like `@` or `if` but we want to allow expressions without the prefixes as well.
     """
 
-    codea = code.a if isinstance(code, fst.FST) else None
+    if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
+        codea = code.a if isinstance(code, fst.FST) else None
 
-    elts = _coerce_to_seq(code, options, parse_params, None, _Assign_targets, True, True)
+        elts = _coerce_to_seq(code, options, parse_params, None, _Assign_targets, True, True)
 
-    if elts is not None:  # sequence as sequence?
-        elts, is_FST = elts
+        if elts is not None:  # sequence as sequence?
+            elts, is_FST = elts
 
-        if not is_FST:
-            src = unparse(_Assign_targets(targets=elts))
-            ast = parse__Assign_targets(src, parse_params)
+            if not is_FST:
+                src = unparse(_Assign_targets(targets=elts))
+                ast = parse__Assign_targets(src, parse_params)
 
-            return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+                return fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
-        # reformat expression(s) source as targets
+            # reformat expression(s) source as targets
 
-        ast = _Assign_targets(targets=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
-                            end_col_offset=ls[-1].lenbytes)
-        fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
-        lines = fst_._lines
-        last_ln = len(lines) - 1  # this never changes because the _put_src() calls are never multiline
-        end_ln = end_col = 0
+            ast = _Assign_targets(targets=elts, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                end_col_offset=ls[-1].lenbytes)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+            lines = fst_._lines
+            last_ln = len(lines) - 1  # this never changes because the _put_src() calls are never multiline
+            end_ln = end_col = 0
 
-        for e in elts:
-            if not is_valid_target(e):
-                raise NodeError(f'expecting _Assign_targets, got {codea.__class__.__name__}, could not coerce'
-                                f', found {e.__class__.__name__}')
+            for e in elts:
+                if not is_valid_target(e):
+                    raise NodeError(f'expecting _Assign_targets, got {codea.__class__.__name__}, could not coerce'
+                                    f', found {e.__class__.__name__}')
 
-            f = e.f
-            _, _, end_ln, end_col = f.pars()
+                f = e.f
+                _, _, end_ln, end_col = f.pars()
 
-            f._set_ctx(Store)
+                f._set_ctx(Store)
 
-            if frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff):
-                comma_ln, comma_col, src = frag
+                if frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff):
+                    comma_ln, comma_col, src = frag
 
-                assert src.startswith(',')
+                    assert src.startswith(',')
 
-                if comma_ln == end_ln:
-                    fst_._put_src(' =', end_ln, end_col, end_ln, comma_col + 1, True)  # replace from end of expression to just past comma with ' ='
-                else:
-                    fst_._put_src(None, comma_ln, comma_col, comma_ln, comma_col + 1, True)  # remove just the comma
+                    if comma_ln == end_ln:
+                        fst_._put_src(' =', end_ln, end_col, end_ln, comma_col + 1, True)  # replace from end of expression to just past comma with ' ='
+                    else:
+                        fst_._put_src(None, comma_ln, comma_col, comma_ln, comma_col + 1, True)  # remove just the comma
 
-                    frag = None
+                        frag = None
 
-            if not frag:  # need to add equals just to end of expr because no comma or comma on different line
-                fst_._put_src(' =', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)  # replace from end of expression to just past comma with ' ='
+                if not frag:  # need to add equals just to end of expr because no comma or comma on different line
+                    fst_._put_src(' =', end_ln, end_col, end_ln, end_col, True, exclude=f, offset_excluded=False)  # replace from end of expression to just past comma with ' ='
 
-        _fix__Assign_targets(fst_)
+            _fix__Assign_targets(fst_)
 
-        if strip:  # won't really do much after adding line continuations but we must do that first to make sure locations are good
-            fst_.strip()
+            if strip:  # won't really do much after adding line continuations but we must do that first to make sure locations are good
+                fst_.strip()
 
-        _fix__slice_last_line(fst_, lines, end_ln, end_col, True)
+            _fix__slice_last_line(fst_, lines, end_ln, end_col, True)
 
-        return fst_
+            return fst_
 
     # single element as sequence
 
     return _code_as_one__Assign_targets(code, options, parse_params, coerce=True)
+
+_coerce_to__Assign_targets.allow_coerce_src = True
 
 
 def _code_as_one__Assign_targets(
@@ -2392,8 +2395,10 @@ def _code_as_one__Assign_targets(
 
     fst_._set_ctx(Store)
 
-    ast = _Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                          end_col_offset=ls[-1].lenbytes)
+    ls = fst_.lines
+    ls[-1] = last_line = bistr(ls[-1] + ' =')  # add trailing '=', we know we can just add to last line because it was stripped
+
+    ast = _Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=last_line.lenbytes)
     fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([ast_], 'targets', True, False)  # _set_field() is alternative to putting ast_ in the ast.targets to begin with (only if it is known to be valid FST tree), this won't walk existing valid FST tree unnecessarily
 
     _fix__Assign_targets(fst_)

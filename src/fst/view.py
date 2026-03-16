@@ -19,6 +19,7 @@ __all__ = [
     'FSTView_Dict',
     'FSTView_MatchMapping',
     'FSTView_Compare',
+    'FSTView_Assign_targets',
     'FSTView_decorator_list',
     'FSTView_comprehension_ifs',
     'FSTView_arguments',
@@ -1401,6 +1402,163 @@ class FSTView_Compare(FSTView):
 
     def _getitem(self, idx: int) -> FSTView | AST | str | None:
         return self.base.a.comparators[idx - 1] if idx else self.base.a.left
+
+
+class FSTView_Assign_targets(FSTView):
+    """View for `comprehension.ifs` and `_Assign_targets`. @private"""
+
+    @property
+    def loc(self) -> fstloc | None:
+        r"""Zero based character indexed location of view (including parentheses and or decorators where present).
+
+        **Examples:**
+
+        >>> from fst import *
+
+        >>> f = FST('a = b = v')
+
+        >>> f.targets.loc
+        fstlocn(0, 0, 0, 7, n=0)
+
+        >>> f.targets[0].loc
+        fstloc(0, 0, 0, 1)
+
+        >>> f.targets[:1].loc
+        fstloc(0, 0, 0, 3)
+
+        >>> f.targets[-1].loc
+        fstloc(0, 4, 0, 5)
+
+        >>> f.targets[-1:].loc
+        fstloc(0, 4, 0, 7)
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if not (len_ := stop - start):
+            return None
+
+        base = self.base
+
+        if len_ == 1:
+            return base._loc_Assign_target(start)
+
+        ln, col, _, _ = base._loc_Assign_target(start, False)
+        _, _, end_ln, end_col = base._loc_Assign_target(stop - 1, None)
+
+        return fstlocn(ln, col, end_ln, end_col, n=0)  # we return fstlocn for convenient sharing with pars()
+
+    @property
+    def ln(self) -> int | None:
+        r"""Line number of the first line of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('a\\\n =\\\n  b\\\n   = v')
+
+        >>> f.targets[0:1].ln
+        0
+
+        >>> f.targets[0].ln
+        0
+
+        >>> f.targets[1:2].ln
+        2
+
+        >>> f.targets[1].ln
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Assign_target(start, False).ln
+
+    @property
+    def col(self) -> int | None:  # char index
+        r"""CHARACTER index of the start of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('a\\\n =\\\n  b\\\n   = v')
+
+        >>> f.targets[0:1].col
+        0
+
+        >>> f.targets[0].col
+        0
+
+        >>> f.targets[1:2].col
+        2
+
+        >>> f.targets[1].col
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Assign_target(start, False).col
+
+    @property
+    def end_ln(self) -> int | None:  # 0 based
+        r"""Line number of the LAST LINE of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('a\\\n =\\\n  b\\\n   = v')
+
+        >>> f.targets[0:1].end_ln
+        1
+
+        >>> f.targets[0].end_ln
+        0
+
+        >>> f.targets[1:2].end_ln
+        3
+
+        >>> f.targets[1].end_ln
+        2
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Assign_target(stop - 1, None).end_ln
+
+    @property
+    def end_col(self) -> int | None:  # char index
+        r"""CHARACTER index one past the end of this view (0 based).
+
+        >>> from fst import *
+
+        >>> f = FST('a\\\n =\\\n  b\\\n   = v')
+
+        >>> f.targets[0:1].end_col
+        2
+
+        >>> f.targets[0].end_col
+        1
+
+        >>> f.targets[1:2].end_col
+        4
+
+        >>> f.targets[1].end_col
+        3
+        """
+
+        start, stop, _ = self._base_indices()
+
+        if stop == start:
+            return None
+
+        return self.base._loc_Assign_target(stop - 1, None).end_col
 
 
 class FSTView_decorator_list(FSTView):

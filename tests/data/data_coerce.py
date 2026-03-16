@@ -2828,32 +2828,36 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, '_Assign_targets', {}, ('Module',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
 ('', 0, 0, '_Assign_targets', {}, ('Interactive',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
 ('', 0, 0, '_Assign_targets', {}, ('Expression',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
 ('', 0, 0, '_Assign_targets', {}, ('Expr',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
@@ -2950,8 +2954,9 @@ r'''AST: **NodeError('expecting _Assign_targets, got Constant, could not coerce'
 
 ('', 0, 0, '_Assign_targets', {}, ('Attribute',
 r'''a.b'''),
-r'''a.b''', r'''
-_Assign_targets - ROOT 0,0..0,3
+r'''a.b =''',
+r'''a.b =''', r'''
+_Assign_targets - ROOT 0,0..0,5
   .targets[1]
    0] Attribute - 0,0..0,3
      .value Name 'a' Load - 0,0..0,1
@@ -2961,8 +2966,9 @@ _Assign_targets - ROOT 0,0..0,3
 
 ('', 0, 0, '_Assign_targets', {}, ('Starred',
 r'''*a'''),
-r'''*a''', r'''
-_Assign_targets - ROOT 0,0..0,2
+r'''*a =''',
+r'''*a =''', r'''
+_Assign_targets - ROOT 0,0..0,4
   .targets[1]
    0] Starred - 0,0..0,2
      .value Name 'a' Store - 0,1..0,2
@@ -2971,8 +2977,9 @@ _Assign_targets - ROOT 0,0..0,2
 
 ('', 0, 0, '_Assign_targets', {}, ('Name',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
@@ -3020,16 +3027,18 @@ _Assign_targets - ROOT 0,0..0,3
 
 ('', 0, 0, '_Assign_targets', {}, ('arg',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
 ('', 0, 0, '_Assign_targets', {}, ('alias',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
@@ -3045,8 +3054,9 @@ _Assign_targets - ROOT 0,0..0,3
 
 ('', 0, 0, '_Assign_targets', {}, ('withitem',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
@@ -3091,8 +3101,9 @@ r'''AST: **NodeError('expecting _Assign_targets, got MatchClass, could not coerc
 
 ('', 0, 0, '_Assign_targets', {}, ('MatchStar',
 r'''*a'''),
-r'''*a''', r'''
-_Assign_targets - ROOT 0,0..0,2
+r'''*a =''',
+r'''*a =''', r'''
+_Assign_targets - ROOT 0,0..0,4
   .targets[1]
    0] Starred - 0,0..0,2
      .value Name 'a' Store - 0,1..0,2
@@ -3101,8 +3112,9 @@ _Assign_targets - ROOT 0,0..0,2
 
 ('', 0, 0, '_Assign_targets', {}, ('MatchAs',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
@@ -3114,16 +3126,18 @@ r'''AST: **NodeError('expecting _Assign_targets, got MatchOr, could not coerce')
 
 ('', 0, 0, '_Assign_targets', {'_ver': 12}, ('TypeVar',
 r'''a'''),
-r'''a''', r'''
-_Assign_targets - ROOT 0,0..0,1
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
 ('', 0, 0, '_Assign_targets', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
-r'''*a''', r'''
-_Assign_targets - ROOT 0,0..0,2
+r'''*a =''',
+r'''*a =''', r'''
+_Assign_targets - ROOT 0,0..0,4
   .targets[1]
    0] Starred - 0,0..0,2
      .value Name 'a' Store - 0,1..0,2
@@ -9501,10 +9515,10 @@ a.
  b
 '''), r'''
 a. \
- b
+ b =
 ''',
-r'''a.b''', r'''
-_Assign_targets - ROOT 0,0..1,2
+r'''a.b =''', r'''
+_Assign_targets - ROOT 0,0..1,4
   .targets[1]
    0] Attribute - 0,0..1,2
      .value Name 'a' Load - 0,0..0,1

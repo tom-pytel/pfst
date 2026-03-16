@@ -5526,6 +5526,7 @@ class FST:
         _loc_block_header_end,
         _loc_comprehension_if,
         _loc_argument,
+        _loc_Assign_target,
         _loc_decorator,
         _loc_Lambda_args_entire,
         _loc_ClassDef_bases_pars,

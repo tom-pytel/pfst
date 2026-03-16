@@ -1437,7 +1437,7 @@ def func():
             f = FST('a = b = c = q')
             self.assertEqual('a = b = c =', f.get_slice('targets', cut=True, norm_self=False).src)
             self.assertEqual(' q', f.src)
-            f.put_slice('x = y = z', 'targets')
+            f.put_slice('x = y = z =', 'targets')
             self.assertEqual('x = y = z = q', f.src)
 
             f = FST('a = b = c = q')
@@ -3134,9 +3134,9 @@ i ; \\
     def test_put_slice_one_vs_None(self):
         # delimited
 
-        self.assertEqual('[x] =', FST('zzz', '_Assign_targets').put_slice('[x]', one=True).src)
-        self.assertEqual('[x] =', FST('zzz', '_Assign_targets').put_slice('[x]', one=False).src)
-        self.assertEqual('[x] =', FST('zzz', '_Assign_targets').put_slice('[x]', one=None).src)
+        self.assertEqual('[x] =', FST('zzz =', '_Assign_targets').put_slice('[x]', one=True).src)
+        self.assertEqual('[x] =', FST('zzz =', '_Assign_targets').put_slice('[x]', one=False).src)
+        self.assertEqual('[x] =', FST('zzz =', '_Assign_targets').put_slice('[x]', one=None).src)
 
         self.assertEqual('@[x]', FST('@zzz', '_decorator_list').put_slice('[x]', one=True).src)
         self.assertEqual('@[x]', FST('@zzz', '_decorator_list').put_slice('[x]', one=False).src)
@@ -3200,9 +3200,9 @@ i ; \\
 
         # single
 
-        self.assertEqual('x =', FST('zzz', '_Assign_targets').put_slice('x', one=True).src)
-        self.assertEqual('x =', FST('zzz', '_Assign_targets').put_slice('x', one=False).src)
-        self.assertEqual('x =', FST('zzz', '_Assign_targets').put_slice('x', one=None).src)
+        self.assertEqual('x =', FST('zzz =', '_Assign_targets').put_slice('x', one=True).src)
+        self.assertEqual('x =', FST('zzz =', '_Assign_targets').put_slice('x', one=False).src)
+        self.assertEqual('x =', FST('zzz =', '_Assign_targets').put_slice('x', one=None).src)
 
         self.assertEqual('@x', FST('@zzz', '_decorator_list').put_slice('x', one=True).src)
         self.assertEqual('@x', FST('@zzz', '_decorator_list').put_slice('x', one=False).src)
@@ -3266,9 +3266,9 @@ i ; \\
 
         # undelimited
 
-        self.assertEqual('x, =', FST('zzz', '_Assign_targets').put_slice('x,', one=True).src)
-        self.assertEqual('x, =', FST('zzz', '_Assign_targets').put_slice('x,', one=False).src)
-        self.assertEqual('x, =', FST('zzz', '_Assign_targets').put_slice('x,', one=None).src)
+        self.assertEqual('x, =', FST('zzz =', '_Assign_targets').put_slice('x,', one=True).src)
+        self.assertEqual('x, =', FST('zzz =', '_Assign_targets').put_slice('x,', one=False).src)
+        self.assertEqual('x, =', FST('zzz =', '_Assign_targets').put_slice('x,', one=None).src)
 
         self.assertEqual('@(x,)', FST('@zzz', '_decorator_list').put_slice('x,', one=True).src)
         self.assertEqual('@(x,)', FST('@zzz', '_decorator_list').put_slice('x,', one=False).src)
@@ -4393,9 +4393,9 @@ z''')
         self.assertEqual('a = b = \\\nz', f.src)
         f.verify()
 
-        s = FST('x =\\\ny', '_Assign_targets')
+        s = FST('x =\\\ny =', '_Assign_targets')
         s._put_src(' ', 0, 3, 0, 4)
-        self.assertEqual('x = \ny', s.src)
+        self.assertEqual('x = \ny =', s.src)
         self.assertEqual('a = x = \\\ny = c', (f := FST('a = b = c')).put_slice(s, 1, 2, 'targets').src)
         f.verify()
 

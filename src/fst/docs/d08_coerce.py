@@ -460,17 +460,30 @@ fst.NodeError: expecting _Assign_targets, got Name, coerce disabled
 ...     .put_slice(FST('x'), 1, 3, 'targets', coerce=False, one=True).src
 'a = x = d = e'
 
-If you pass a single element as text source instead of a node for most slice targets other than `Tuple`, `List` or
-`Set`, it will work without `one=True` or `coerce=True` as the parsing for those slice target types accept single
-elements as singleton sequences, since those target sequences normally don't require trailing separators to indicate a
-sequence.
+If you pass a single item as text source instead of a node for most slice targets other than `Tuple`, `List` or `Set`,
+it will work without `one=True` or `coerce=True` as the parsing for those slice target types accept single items as
+singleton sequences, since those target sequences normally don't require trailing separators to indicate a sequence.
 
 >>> FST('call(a, b, c, d)') \
 ...     .put_slice('x', 1, 3, 'args', coerce=False, one=False).src
 'call(a, x, d)'
 
+However, for slice types that normally require extra syntax, like `@` for decorator lists, `if ` for `comprehension.ifs`
+or `=` for `Assign.targets`, either `one=True` or `coerce=True` is required if you want to pass single items without
+those syntactic elements.
+
 >>> FST('a = b = c = d = e') \
 ...     .put_slice('x', 1, 3, 'targets', coerce=False, one=False).src
+Traceback (most recent call last):
+...
+SyntaxError: invalid Assign targets slice
+
+>>> FST('a = b = c = d = e') \
+...     .put_slice('x', 1, 3, 'targets', coerce=False, one=True).src
+'a = x = d = e'
+
+>>> FST('a = b = c = d = e') \
+...     .put_slice('x', 1, 3, 'targets', coerce=True, one=False).src
 'a = x = d = e'
 
 

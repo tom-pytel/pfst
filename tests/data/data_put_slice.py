@@ -12746,6 +12746,11 @@ Module - ROOT 0,0..0,8
 ('body[0]', 1, 3, 'targets', {'raw': True}, ('exec',
 r'''a = b = c = d'''), (None,
 r'''z'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('body[0]', 1, 3, 'targets', {'raw': True}, ('exec',
+r'''a = b = c = d'''), (None,
+r'''z ='''),
 r'''a = z = d''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
@@ -19947,7 +19952,8 @@ Delete - ROOT 0,0..1,5
 ('body[0]', 0, 'end', 'targets', {}, ('exec',
 r'''a = b = c = d'''), ('_Assign_targets',
 r'''x'''),
-r'''x = d''', r'''
+r'''x = d''',
+r'''**SyntaxError('invalid Assign targets slice')**''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
    0] Assign - 0,0..0,5
@@ -19987,17 +19993,29 @@ x \
 y \
 = \
 z
+'''),
+r'''**ParseError('expecting _Assign_targets, could not parse or coerce')**'''),
+
+('body[0]', 1, 2, 'targets', {}, ('exec',
+r'''a = b = c = d'''), ('_Assign_targets', r'''
+x \
+. \
+y \
+= \
+z \
+=
 '''), r'''
 a = x \
 . \
 y \
 = \
-z = c = d
+z \
+= c = d
 ''',
 r'''a = x.y = z = c = d''', r'''
-Module - ROOT 0,0..4,9
+Module - ROOT 0,0..5,7
   .body[1]
-   0] Assign - 0,0..4,9
+   0] Assign - 0,0..5,7
      .targets[4]
       0] Name 'a' Store - 0,0..0,1
       1] Attribute - 0,4..2,1
@@ -20005,25 +20023,42 @@ Module - ROOT 0,0..4,9
         .attr 'y'
         .ctx Store
       2] Name 'z' Store - 4,0..4,1
-      3] Name 'c' Store - 4,4..4,5
-     .value Name 'd' Load - 4,8..4,9
+      3] Name 'c' Store - 5,2..5,3
+     .value Name 'd' Load - 5,6..5,7
 '''),
 
 ('body[0]', 0, 'end', 'targets', {}, ('exec',
 r'''a = b = c = d'''), ('_Assign_targets', r'''
 x \
 
+'''),
+r'''x = d''',
+r'''**SyntaxError('invalid Assign targets slice')**''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 0,4..0,5
+'''),
+
+('body[0]', 0, 'end', 'targets', {}, ('exec',
+r'''a = b = c = d'''), ('_Assign_targets', r'''
+x \
+= \
+
 '''), r'''
-x = \
+x \
+= \
  d
 ''',
 r'''x = d''', r'''
-Module - ROOT 0,0..1,2
+Module - ROOT 0,0..2,2
   .body[1]
-   0] Assign - 0,0..1,2
+   0] Assign - 0,0..2,2
      .targets[1]
       0] Name 'x' Store - 0,0..0,1
-     .value Name 'd' Load - 1,1..1,2
+     .value Name 'd' Load - 2,1..2,2
 '''),
 
 ('body[0]', 0, 'end', 'targets', {}, ('exec',
@@ -20031,17 +20066,35 @@ r'''a = b = c = d'''), ('_Assign_targets', r'''
 
 x \
 
+'''),
+r'''x = d''',
+r'''**SyntaxError('invalid Assign targets slice')**''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 0,4..0,5
+'''),
+
+('body[0]', 0, 'end', 'targets', {}, ('exec',
+r'''a = b = c = d'''), ('_Assign_targets', r'''
+
+x \
+= \
+
 '''), r'''
-x = \
+x \
+= \
  d
 ''',
 r'''x = d''', r'''
-Module - ROOT 0,0..1,2
+Module - ROOT 0,0..2,2
   .body[1]
-   0] Assign - 0,0..1,2
+   0] Assign - 0,0..2,2
      .targets[1]
       0] Name 'x' Store - 0,0..0,1
-     .value Name 'd' Load - 1,1..1,2
+     .value Name 'd' Load - 2,1..2,2
 '''),
 
 ('', 0, 'end', 'targets', {'norm': True}, (None,
@@ -20060,6 +20113,16 @@ Assign - ROOT 0,0..0,2
 ('', 0, 'end', 'targets', {}, ('_Assign_targets',
 r'''a = b = c ='''), ('_Assign_targets',
 r'''x'''),
+r'''x =''',
+r'''**SyntaxError('invalid Assign targets slice')**''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'x' Store - 0,0..0,1
+'''),
+
+('', 0, 'end', 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets',
+r'''x ='''),
 r'''x =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
@@ -20091,6 +20154,16 @@ x \
 y \
 = \
 z
+'''),
+r'''**ParseError('expecting _Assign_targets, could not parse or coerce')**'''),
+
+('', 1, 2, 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets', r'''
+x \
+. \
+y \
+= \
+z =
 '''), r'''
 a = x \
 . \
@@ -20114,12 +20187,26 @@ _Assign_targets - ROOT 0,0..4,7
 r'''a = b = c ='''), ('_Assign_targets', r'''
 x \
 
+'''),
+r'''x =''',
+r'''**SyntaxError('invalid Assign targets slice')**''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'x' Store - 0,0..0,1
+'''),
+
+('', 0, 'end', 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets', r'''
+x \
+= \
+
 '''), r'''
-x = \
+x \
+= \
 
 ''',
 r'''x =''', r'''
-_Assign_targets - ROOT 0,0..1,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[1]
    0] Name 'x' Store - 0,0..0,1
 '''),
@@ -20129,12 +20216,27 @@ r'''a = b = c ='''), ('_Assign_targets', r'''
 
 x \
 
+'''),
+r'''x =''',
+r'''**SyntaxError('invalid Assign targets slice')**''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'x' Store - 0,0..0,1
+'''),
+
+('', 0, 'end', 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets', r'''
+
+x \
+= \
+
 '''), r'''
-x = \
+x \
+= \
 
 ''',
 r'''x =''', r'''
-_Assign_targets - ROOT 0,0..1,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[1]
    0] Name 'x' Store - 0,0..0,1
 '''),
@@ -20166,14 +20268,7 @@ Assign - ROOT 0,0..0,9
 ('', 1, 3, 'targets', {'coerce': False}, (None,
 r'''a = b = c = d'''), ('Name',
 r'''x'''),
-r'''a = x = d''',
-r'''**NodeError('expecting _Assign_targets, got Name, coerce disabled')**''', r'''
-Assign - ROOT 0,0..0,9
-  .targets[2]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-  .value Name 'd' Load - 0,8..0,9
-'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('', 1, 3, 'targets', {'one': True}, (None,
 r'''a = b = c = d'''), ('Name',
@@ -20220,13 +20315,7 @@ _Assign_targets - ROOT 0,0..0,7
 ('', 1, 3, 'targets', {'coerce': False}, ('_Assign_targets',
 r'''a = b = c ='''), ('Name',
 r'''x'''),
-r'''a = x =''',
-r'''**NodeError('expecting _Assign_targets, got Name, coerce disabled')**''', r'''
-_Assign_targets - ROOT 0,0..0,7
-  .targets[2]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('', 1, 3, 'targets', {'one': True}, ('_Assign_targets',
 r'''a = b = c ='''), ('Name',
@@ -49107,26 +49196,12 @@ Delete - ROOT 0,0..0,9
 ('', 1, 2, 'targets', {'raw': True}, (None,
 r'''a = b = c = d'''), (None,
 r'''x = y'''),
-r'''a = x = y = c = d''', r'''
-Assign - ROOT 0,0..0,17
-  .targets[4]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'x' Store - 0,4..0,5
-   2] Name 'y' Store - 0,8..0,9
-   3] Name 'c' Store - 0,12..0,13
-  .value Name 'd' Load - 0,16..0,17
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', 'targets', {'raw': True}, (None,
 r'''a = b = c = d'''), (None,
 r'''x = y'''),
-r'''x = y = d''', r'''
-Assign - ROOT 0,0..0,9
-  .targets[2]
-   0] Name 'x' Store - 0,0..0,1
-   1] Name 'y' Store - 0,4..0,5
-  .value Name 'd' Load - 0,8..0,9
-'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, 'decorator_list', {'raw': True}, (None, r'''
 @a
@@ -49389,6 +49464,11 @@ _match_cases - ROOT 0,0..0,15
 ('', 1, 2, None, {'raw': True}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
 r'''x'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('', 1, 2, None, {'raw': True}, ('_Assign_targets',
+r'''a = b = c ='''), (None,
+r'''x ='''),
 r'''a = x = c =''', r'''
 _Assign_targets - ROOT 0,0..0,11
   .targets[3]
@@ -49400,6 +49480,12 @@ _Assign_targets - ROOT 0,0..0,11
 ('', 0, 'end', None, {'raw': True}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
 r'''x'''),
+r'''x''',
+r'''Name 'x' Load - ROOT 0,0..0,1'''),
+
+('', 0, 'end', None, {'raw': True}, ('_Assign_targets',
+r'''a = b = c ='''), (None,
+r'''x ='''),
 r'''x =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]

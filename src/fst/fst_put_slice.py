@@ -267,7 +267,7 @@ from .fst_put_one import _fix_With_items
 #                                                                                  .
 # *                (arguments, '_all'):                    # arguments             -> arguments                  _parse_arguments / arguments_lambda
 #                                                                                  .
-#                  (MatchClass, '_patterns_attrlikes'):    # pattern*+(kwd_attrs=kwd_patterns)*                  - 'patterns+kwd_attrs=kwd_patterns'
+# *                (MatchClass, '_patterns_attrlikes'):    # pattern*+(kwd_attrs=kwd_patterns)*                  - 'patterns+kwd_attrs=kwd_patterns'
 #                                                                                  .
 #                                                                                  .
 #                  (JoinedStr, 'values'):                  # Constant|FormattedValue*   -> JoinedStr

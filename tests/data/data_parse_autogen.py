@@ -887,12 +887,9 @@ r'''**SyntaxError('invalid syntax')**'''),
 r''''''),
 r'''_Assign_targets - ROOT 0,0..0,0'''),
 
-('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
-r'''a'''), r'''
-_Assign_targets - ROOT 0,0..0,1
-  .targets[1]
-   0] Name 'a' Store - 0,0..0,1
-'''),
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r'''a'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a ='''), r'''
@@ -901,13 +898,9 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
-('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
-r'''a = b'''), r'''
-_Assign_targets - ROOT 0,0..0,5
-  .targets[2]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'b' Store - 0,4..0,5
-'''),
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r'''a = b'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b ='''), r'''
@@ -928,21 +921,15 @@ _Assign_targets - ROOT 0,0..3,0
    0] Name 'a' Store - 1,0..1,1
 '''),
 
-('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
-r''' a'''), r'''
-_Assign_targets - ROOT 0,0..0,2
-  .targets[1]
-   0] Name 'a' Store - 0,1..0,2
-'''),
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r''' a'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 
 a
-'''), r'''
-_Assign_targets - ROOT 0,0..1,1
-  .targets[1]
-   0] Name 'a' Store - 1,0..1,1
 '''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 
@@ -967,15 +954,9 @@ a =
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
-r'''a,'''), r'''
-_Assign_targets - ROOT 0,0..0,2
-  .targets[1]
-   0] Tuple - 0,0..0,2
-     .elts[1]
-      0] Name 'a' Store - 0,0..0,1
-     .ctx Store
-'''),
+('parse__Assign_targets', 0, 0, 'ParseError', {}, ('_Assign_targets',
+r'''a,'''),
+r'''**ParseError('unexpected value type parsing Assign targets, Tuple')**'''),
 
 ('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a, ='''), r'''
@@ -989,7 +970,7 @@ _Assign_targets - ROOT 0,0..0,4
 
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
 r'''f()'''),
-r'''**SyntaxError('cannot assign to function call')**'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
 r'''pass'''),

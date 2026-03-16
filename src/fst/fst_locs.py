@@ -22,6 +22,7 @@ from .asttypes import (
     ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
     And,
+    Assign,
     AsyncFunctionDef,
     AsyncWith,
     BoolOp,
@@ -41,6 +42,7 @@ from .asttypes import (
     comprehension,
     match_case,
     withitem,
+    _Assign_targets,
     _comprehension_ifs,
     _decorator_list,
     _pattern_attrlikes,
@@ -53,6 +55,7 @@ from .fst_misc import is_delimited_MatchSequence
 
 _ASTS_LEAF_DEF_OR_DECO_LIST     = ASTS_LEAF_DEF | {_decorator_list}
 _ASTS_LEAF_COMPREHENSION_OR_IFS = frozenset([comprehension, _comprehension_ifs])
+_ASTS_LEAF_ASSIGN_OR_TARGETS    = frozenset([Assign, _Assign_targets])
 _ASTS_LEAF_PATTERN_ATTRLIKES    = frozenset([MatchClass, _pattern_attrlikes])
 
 _re_deco_start         = re.compile(r'[ \t]*@')
@@ -443,8 +446,8 @@ def _loc_block_header_end(
 
 
 def _loc_comprehension_if(self: fst.FST, idx: int, want: bool | None = True) -> fstloc:
-    """Location `comprehension` or `_comprehension_ifs` expression including the leading `if` (which is not included in
-    the location of the expression itself).
+    """Location of single `comprehension.ifs` or `_comprehension_ifs.ifs` expression including the leading `if` (which
+    is not included in the location of the expression itself).
 
     **WARNING:** `idx` must be non-negative.
 
@@ -534,6 +537,36 @@ def _loc_argument(self: fst.FST, default: bool = False, stars: bool = True) -> f
         default = next
 
     return fstlocn(ln, col, end_ln, end_col, default=default)
+
+
+def _loc_Assign_target(self: fst.FST, idx: int, want: bool | None = True) -> fstloc:
+    """Location of single `Assign.targets` or `_Assign_targets.targets` expression including the trailing `=` (which is
+    not included in the location of the expression itself).
+
+    **WARNING:** `idx` must be non-negative.
+
+    **Parameters:**
+    - `want`: Can tell this function to not to bother get either `ln, col` or `end_ln, end_col` for a little efficiency.
+        - `True`: Both start and end are important, get both.
+        - `False`: Only care about `ln` and `col`, `end_ln` and `end_col` will not necessarily be correct.
+        - `None`: Only care about `end_ln` and `end_col`, `ln` and `col` will not necessarily be correct.
+    """
+
+    assert self.a.__class__ in _ASTS_LEAF_ASSIGN_OR_TARGETS
+
+    ast = self.a
+    targets = ast.targets
+    target = targets[idx].f
+
+    if want is False:
+        return target.pars()
+
+    ln, col, end_ln, end_col = target.pars() if want else target.loc
+    _, _, self_end_ln, self_end_col = self.loc
+
+    end_ln, end_col = next_find(self.root._lines, end_ln, end_col, self_end_ln, self_end_col, '=')  # must be there
+
+    return fstloc(ln, col, end_ln, end_col + 1)
 
 
 def _loc_decorator(self: fst.FST, idx: int, want: bool | None = True) -> fstloc:

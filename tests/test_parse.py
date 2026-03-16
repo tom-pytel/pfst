@@ -249,18 +249,18 @@ PARSE_TESTS = [
 
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '#'),  # cannot be this because newlines not allowed
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          ''),
-    ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a'),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a'),
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a ='),
-    ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a = b'),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a = b'),
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a = b ='),
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          '\\\na\\\n = \\\n'),
-    ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          ' a'),
-    ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          '\na'),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              ' a'),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '\na'),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '\n\na'),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a\n='),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a =  # tail'),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '# head\na ='),
-    ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a,'),
+    ('_Assign_targets',    px.parse__Assign_targets,    ParseError,               'a,'),
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a, ='),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'f()'),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'pass'),
@@ -2518,76 +2518,78 @@ BinOp - ROOT 0,0..0,11
                 (Tuple, 'a, b'),  # FST
                 (Tuple, '(a, b)')),  # AST
 
-            (code_as__Assign_targets, (Name, 'a'), (_Assign_targets, 'a')),
-            (code_as__Assign_targets, (Attribute, 'a.b'), (_Assign_targets, 'a.b')),
-            (code_as__Assign_targets, (Subscript, 'a[b]'), (_Assign_targets, 'a[b]')),
+            (code_as__Assign_targets, (Name, 'a'), (_Assign_targets, 'a =')),
+            (code_as__Assign_targets, (Attribute, 'a.b'), (_Assign_targets, 'a.b =')),
+            (code_as__Assign_targets, (Subscript, 'a[b]'), (_Assign_targets, 'a[b] =')),
             (code_as__Assign_targets, (Tuple, 'a, b'),
-                (_Assign_targets, 'a, b'),  # src
+                (_Assign_targets, 'a, b ='),  # src
                 (_Assign_targets, 'a = b ='),  # FST
                 (_Assign_targets, 'a = b =')),  # AST
             (code_as__Assign_targets, (Tuple, '(a, b)'),
-                (_Assign_targets, '(a, b)'),  # src
+                (_Assign_targets, '(a, b) ='),  # src
                 (_Assign_targets, 'a = b ='),  # FST
                 (_Assign_targets, 'a = b =')),  # AST
             (code_as__Assign_targets, (List, '[a, b]'),
-                (_Assign_targets, '[a, b]'),  # src
+                (_Assign_targets, '[a, b] ='),  # src
                 (_Assign_targets, 'a = b ='),  # FST
                 (_Assign_targets, 'a = b =')),  # AST
-            (code_as__Assign_targets, (Starred, '*a'), (_Assign_targets, '*a')),
+            (code_as__Assign_targets, (Starred, '*a'), (_Assign_targets, '*a =')),
             (code_as__Assign_targets, (Call, 'f()'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got Call, could not coerce')**",  # FST
                 "**NodeError('expecting _Assign_targets, got Call, could not coerce')**"),  # AST
             (code_as__Assign_targets, (Name, '#0\n ( a ) #1\n#2'),
-                "**SyntaxError**",
-                (_Assign_targets, '( a )'),
-                (_Assign_targets, 'a')),
+                (_Assign_targets, '( a ) ='),
+                (_Assign_targets, '( a ) ='),
+                (_Assign_targets, 'a =')),
             (code_as__Assign_targets, (Tuple, 'a,b,c'),
-                (_Assign_targets, 'a,b,c'),
+                (_Assign_targets, 'a,b,c ='),
                 (_Assign_targets, 'a =b =c ='),
                 (_Assign_targets, 'a = b = c =')),
             (code_as__Assign_targets, (Tuple, '(a) , \\\n # 0\n(b) # 1\n,\n(c) \\'),
-                "**SyntaxError**",  # src
+                # "**SyntaxError**",  # src
+                (_Assign_targets, '(a) , \\\n(b) \\\n, \\\n(c) ='),
                 (_Assign_targets, '(a) = \\\n(b) = \\\n\\\n(c) ='),
                 (_Assign_targets, 'a = b = c =')),
             (code_as__Assign_targets, (Tuple, 'a,'),
-                (_Assign_targets, 'a,'),
+                (_Assign_targets, 'a, ='),
                 (_Assign_targets, 'a ='),
                 (_Assign_targets, 'a =')),
             (code_as__Assign_targets, (Tuple, '(a,)'),
-                (_Assign_targets, '(a,)'),
+                (_Assign_targets, '(a,) ='),
                 (_Assign_targets, 'a ='),
                 (_Assign_targets, 'a =')),
             (code_as__Assign_targets, (arguments, '\nb\n,\nc\n,\n'),
-                '**SyntaxError**',
+                (_Assign_targets, 'b \\\n, \\\nc \\\n, ='),
                 (_Assign_targets, '\\\nb = \\\n\\\nc = \\\n\\\n'),
                 (_Assign_targets, 'b = c =')),
             (code_as__Assign_targets, (Tuple, 'a:b, c:d:e'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got Tuple, could not coerce')**",
                 "**NodeError('expecting _Assign_targets, got Tuple, could not coerce')**"),
             (code_as__Assign_targets, (Tuple, 'a\n,\nb'),
-                "**SyntaxError**",  # src
+                (_Assign_targets, 'a \\\n, \\\nb ='),
                 (_Assign_targets, 'a = \\\n\\\nb ='),
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (Tuple, '(a)\n,\n(b)'),
-                "**SyntaxError**",  # src
+                # "**SyntaxError**",  # src
+                (_Assign_targets, '(a) \\\n, \\\n(b) ='),
                 (_Assign_targets, '(a) = \\\n\\\n(b) ='),
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (List, '[a]'),
-                (_Assign_targets, '[a]'),
+                (_Assign_targets, '[a] ='),
                 (_Assign_targets, 'a ='),
                 (_Assign_targets, 'a =')),
             (code_as__Assign_targets, (List, '[\na\n,\nb\n]'),
-                (_Assign_targets, '[\na\n,\nb\n]'),
+                (_Assign_targets, '[\na\n,\nb\n] ='),
                 (_Assign_targets, '\\\na = \\\n\\\nb = \\\n'),
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (Set, '{a}'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 (_Assign_targets, 'a ='),
                 (_Assign_targets, 'a =')),
             (code_as__Assign_targets, (Set, '{\na\n,\nb\n}'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 (_Assign_targets, '\\\na = \\\n\\\nb = \\\n'),
                 (_Assign_targets, 'a = b =')),
             # (code_as__Assign_targets, (_Assign_targets, 'a = \\\nb ='),
@@ -2599,23 +2601,23 @@ BinOp - ROOT 0,0..0,11
             #     (_Assign_targets, '\n@a\n@b\n'),
             #     (_Assign_targets, '@a\n@b')),
             (code_as__Assign_targets, (_arglikes, '\na\n,\nb\n'),
-                "**SyntaxError**",  # src
+                (_Assign_targets, 'a \\\n, \\\nb ='),
                 (_Assign_targets, '\\\na = \\\n\\\nb = \\\n'),
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (_arglikes, '\na\n,\n*b\n'),
-                "**SyntaxError**",  # src
+                (_Assign_targets, 'a \\\n, \\\n*b ='),
                 (_Assign_targets, '\\\na = \\\n\\\n*b = \\\n'),
                 (_Assign_targets, 'a = *b =')),
             (code_as__Assign_targets, (_arglikes, '\na\n,\n*not b\n'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**",
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**"),
             (code_as__Assign_targets, (_arglikes, '\na\n,\nb=c\n'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**",
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**"),
             (code_as__Assign_targets, (_arglikes, '\na\n,\nb=c\n'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**",
                 "**NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**"),
             # (code_as__Assign_targets, (_Assign_targets, '\nif\na\nif\nb\n'),
@@ -2623,11 +2625,12 @@ BinOp - ROOT 0,0..0,11
             #     (_Assign_targets, '\na,\nb\n'),
             #     (_Assign_targets, 'a, b')),
             (code_as__Assign_targets, (_aliases, '\na\n,\nb\n'),
-                "**SyntaxError**",  # src
+                # "**SyntaxError**",  # src
+                (_Assign_targets, 'a \\\n, \\\nb ='),
                 (_Assign_targets, '\\\na = \\\n\\\nb = \\\n'),
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (_aliases, 'a as b, c as d'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got _aliases, could not coerce')**",
                 "**NodeError('expecting _Assign_targets, got _aliases, could not coerce')**"),
             # (code_as__Assign_targets, (_Assign_targets, '\na\n,\nb\n'),
@@ -2639,11 +2642,11 @@ BinOp - ROOT 0,0..0,11
             #     "**NodeError('expecting _Assign_targets, got _Assign_targets, could not coerce')**",
             #     "**NodeError('expecting _Assign_targets, got _Assign_targets, could not coerce')**"),
             (code_as__Assign_targets, (MatchSequence, '\na\n,\nb\n'),
-                "**SyntaxError**",  # src
+                (_Assign_targets, 'a \\\n, \\\nb ='),
                 (_Assign_targets, '\\\na = \\\n\\\nb = \\\n'),
                 (_Assign_targets, 'a = b =')),
             (code_as__Assign_targets, (MatchSequence, 'a as b, c as d'),
-                "**SyntaxError**",  # src
+                "**ParseError('expecting _Assign_targets, could not parse or coerce')**",  # src
                 "**NodeError('expecting _Assign_targets, got MatchSequence, could not coerce')**",
                 "**NodeError('expecting _Assign_targets, got MatchSequence, could not coerce')**"),
 
@@ -3955,11 +3958,6 @@ BinOp - ROOT 0,0..0,11
                 (MatchSequence, '[ \n a\n ]'),
                 (MatchSequence, '[a]')),
 
-
-
-
-
-
             (code_as__pattern_attrlikes, (Module, '( a )'),
                 (_pattern_attrlikes, '( a )'),
                 (_pattern_attrlikes, 'a')),
@@ -4111,11 +4109,6 @@ BinOp - ROOT 0,0..0,11
             (code_as__pattern_attrlikes, (_withitems, ' \n a\n '),
                 (_pattern_attrlikes, ' \n a\n '),
                 (_pattern_attrlikes, 'a')),
-
-
-
-
-
 
             (code_as__expr_arglikes, (Name, 'a'), (Tuple, 'a')),
             (code_as__expr_arglikes, (Call, 'f()'), (Tuple, 'f()')),

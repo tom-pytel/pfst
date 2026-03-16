@@ -6,11 +6,12 @@
 
 ### Changed
 
-- concretized behavior of locations of nonstandard slices like `comprehension.ifs` or `.decorator_list`, includes extra syntax in when accessed as slice but not when accessed as single item
+- concretized behavior of locations of nonstandard slices like `comprehension.ifs`, `Assign.targets` or `.decorator_list`
+  - includes extra syntax in location when accessed as slice but not when accessed as single item
 
 ### Fixed
 
-- special `FSTView` classes for decorator lists and comprehension ifs so that slice locations from these fields views are correct
+- special `FSTView` classes for decorator lists, `comprehension.ifs` and `Assign.targets` so that slice locations from these field views are correct
 
 
 ## 0.3.1 - alpha - 2026-03-13

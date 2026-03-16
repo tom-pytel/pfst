@@ -208,6 +208,22 @@ DATA_SYNTAX_ERRORS = {
     'SyntaxError: invalid syntax',
 ],
 
+('_Assign_targets', 'a'): [
+    'SyntaxError: invalid Assign targets slice',
+],
+
+('_Assign_targets', 'a = b'): [
+    'SyntaxError: invalid Assign targets slice',
+],
+
+('_Assign_targets', ' a'): [
+    'SyntaxError: invalid Assign targets slice',
+],
+
+('_Assign_targets', '\na'): [
+    'SyntaxError: invalid Assign targets slice',
+],
+
 ('_Assign_targets', '\n\na'): [
     '',
     '    ^',
@@ -233,9 +249,7 @@ DATA_SYNTAX_ERRORS = {
 ],
 
 ('_Assign_targets', 'f()'): [
-    '    f()\\',
-    '    ^^^',
-    'SyntaxError: cannot assign to function call',
+    'SyntaxError: invalid Assign targets slice',
 ],
 
 ('_Assign_targets', 'pass'): [

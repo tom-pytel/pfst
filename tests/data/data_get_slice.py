@@ -13067,15 +13067,15 @@ a = \
 b = \
 c \
 = \
-z
+z =
 '''), r'''
 a = \
 b = \
 c \
 = \
-z
+z =
 ''', r'''
-_Assign_targets - ROOT 0,0..4,1
+_Assign_targets - ROOT 0,0..4,3
   .targets[4]
    0] Name 'a' Store - 0,0..0,1
    1] Name 'b' Store - 1,0..1,1
