@@ -12,6 +12,7 @@
 ### Fixed
 
 - special `FSTView` classes for decorator lists, `comprehension.ifs` and `Assign.targets` so that slice locations from these field views are correct
+- honor `dump()` `eol` parameter when outputting `out='str'`
 
 
 ## 0.3.1 - alpha - 2026-03-13

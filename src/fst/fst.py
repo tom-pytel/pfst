@@ -1596,6 +1596,7 @@ class FST:
         """
 
         src_plus = False
+        eol_specified = eol is not None
 
         if isinstance(src, str):
             if src in ('stmt+', 'node+'):
@@ -1628,10 +1629,10 @@ class FST:
         if isinstance(out, TextIOBase):
             out = out.write
 
-            if eol is None:
+            if not eol_specified:
                 eol = '\n'
 
-        elif eol is None:
+        elif not eol_specified:
             eol = ''
 
         sind = indent if isinstance(indent, str) else ' ' * indent
@@ -1648,7 +1649,7 @@ class FST:
 
             self._dump(st, src_plus)
 
-            return lines if is_lines else '\n'.join(lines)
+            return lines if is_lines else ('' if eol_specified else '\n').join(lines)
 
         st.linefunc = out
 
