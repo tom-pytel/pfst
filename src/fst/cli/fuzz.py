@@ -3089,7 +3089,7 @@ class SliceCoerce(Fuzzy):
         'withitem',
         '_withitems',
         'pattern',
-        # '_pattern_attrlikes',
+        '_pattern_attrlikes',
         '_expr_arglikes',
     ]
 

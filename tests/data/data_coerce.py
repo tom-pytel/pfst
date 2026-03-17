@@ -506,6 +506,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting stmt, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting stmt, got arg, could not coerce')**'''),
 
+('', 0, 0, 'stmt', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting stmt, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting stmt, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'stmt', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -736,6 +746,18 @@ Expr - ROOT 0,0..0,4
 '''),
 
 ('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''(a, *b)''',
 r'''(a, *b)''', r'''
@@ -750,7 +772,32 @@ Expr - ROOT 0,0..0,7
 '''),
 
 ('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
 ],
@@ -1335,6 +1382,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting zero or more stmts, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting zero or more stmts, got arg, could not coerce')**'''),
 
+('', 0, 0, 'stmts', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'stmts', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -1603,6 +1660,20 @@ Module - ROOT 0,0..0,4
 '''),
 
 ('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''(a, *b)''',
 r'''(a, *b)''', r'''
@@ -1619,7 +1690,32 @@ Module - ROOT 0,0..0,7
 '''),
 
 ('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
 ],
@@ -2074,6 +2170,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting expression (standard), got arg, could not coerce, has annotation')**''',
 r'''AST: **NodeError('expecting expression (standard), got arg, could not coerce, has annotation')**'''),
 
+('', 0, 0, 'expr', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (standard), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (standard), got keyword, could not coerce')**'''),
+
+('', 0, 0, 'expr', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (standard), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (standard), got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'expr', {}, ('alias',
 r'''a'''),
 r'''a''',
@@ -2279,6 +2385,17 @@ Tuple - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''',
 r'''(a, *b)''', r'''
@@ -2292,9 +2409,34 @@ Tuple - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**''',
 r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has default_value')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has default_value')**'''),
+
+('', 0, 0, 'expr', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**'''),
 ],
 
 'matrix_expr_all': [  # ................................................................................
@@ -2760,6 +2902,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting expression (all types), got arg, could not coerce, has annotation')**''',
 r'''AST: **NodeError('expecting expression (all types), got arg, could not coerce, has annotation')**'''),
 
+('', 0, 0, 'expr_all', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (all types), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (all types), got keyword, could not coerce')**'''),
+
+('', 0, 0, 'expr_all', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (all types), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (all types), got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'expr_all', {}, ('alias',
 r'''a'''),
 r'''a''',
@@ -2965,6 +3117,17 @@ Tuple - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''',
 r'''(a, *b)''', r'''
@@ -2978,9 +3141,34 @@ Tuple - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**''',
 r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has default_value')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has default_value')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, TypeVar has bound')**'''),
 ],
 
 'matrix_expr_arglike': [  # ................................................................................
@@ -3433,6 +3621,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting expression (arglike), got arg, could not coerce, has annotation')**''',
 r'''AST: **NodeError('expecting expression (arglike), got arg, could not coerce, has annotation')**'''),
 
+('', 0, 0, 'expr_arglike', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (arglike), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got keyword, could not coerce')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (arglike), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('alias',
 r'''a'''),
 r'''a''',
@@ -3638,6 +3836,17 @@ Tuple - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''',
 r'''(a, *b)''', r'''
@@ -3651,9 +3860,34 @@ Tuple - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**''',
 r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has default_value')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has default_value')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, TypeVar has bound')**'''),
 ],
 
 'matrix_expr_slice': [  # ................................................................................
@@ -4110,6 +4344,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting expression (slice), got arg, could not coerce, has annotation')**''',
 r'''AST: **NodeError('expecting expression (slice), got arg, could not coerce, has annotation')**'''),
 
+('', 0, 0, 'expr_slice', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (slice), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (slice), got keyword, could not coerce')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (slice), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (slice), got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'expr_slice', {}, ('alias',
 r'''a'''),
 r'''a''',
@@ -4309,6 +4553,17 @@ Tuple - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''',
 r'''(a, *b)''', r'''
@@ -4322,9 +4577,34 @@ Tuple - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**''',
 r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has default_value')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has default_value')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, TypeVar has bound')**'''),
 ],
 
 'matrix_Tuple_elt': [  # ................................................................................
@@ -4781,6 +5061,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting expression (tuple element), got arg, could not coerce, has annotation')**''',
 r'''AST: **NodeError('expecting expression (tuple element), got arg, could not coerce, has annotation')**'''),
 
+('', 0, 0, 'Tuple_elt', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got keyword, could not coerce')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('alias',
 r'''a'''),
 r'''a''',
@@ -4986,6 +5276,17 @@ Tuple - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''',
 r'''(a, *b)''', r'''
@@ -4999,9 +5300,34 @@ Tuple - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**''',
 r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has default_value')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has default_value')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, TypeVar has bound')**'''),
 ],
 
 'matrix_Tuple': [  # ................................................................................
@@ -5431,6 +5757,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting Tuple, got arg, could not coerce, has annotation')**''',
 r'''AST: **NodeError('expecting Tuple, got arg, could not coerce, has annotation')**'''),
 
+('', 0, 0, 'Tuple', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting Tuple, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'Tuple', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting Tuple, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'Tuple', {}, ('alias',
 r'''a'''),
 r'''FST: **NodeError('expecting Tuple, got alias, could not coerce')**''',
@@ -5620,6 +5956,17 @@ Tuple - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''',
 r'''(a, *b)''', r'''
@@ -5633,9 +5980,34 @@ Tuple - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**''',
 r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has bound')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has default_value')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has default_value')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has bound')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, TypeVar has bound')**'''),
 ],
 
 'matrix__Assign_targets': [  # ................................................................................
@@ -6068,6 +6440,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _Assign_targets, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _Assign_targets, got arg, could not coerce')**'''),
 
+('', 0, 0, '_Assign_targets', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('alias',
 r'''a'''),
 r'''a =''',
@@ -6277,6 +6659,16 @@ _Assign_targets - ROOT 0,0..0,3
 '''),
 
 ('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a = *b =''',
 r'''a = *b =''', r'''
@@ -6289,7 +6681,32 @@ _Assign_targets - ROOT 0,0..0,8
 '''),
 
 ('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
 ],
@@ -6752,6 +7169,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _decorator_list, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _decorator_list, got arg, could not coerce')**'''),
 
+('', 0, 0, '_decorator_list', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _decorator_list, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _decorator_list, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {}, ('alias',
 r'''a'''),
 r'''@a''',
@@ -6989,12 +7416,51 @@ _decorator_list - ROOT 0,0..0,2
 '''),
 
 ('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
 ],
@@ -7449,6 +7915,21 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting expression (arglike), got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting expression (arglike), got arg, could not coerce')**'''),
 
+('', 0, 0, '_arglike', {}, ('keyword',
+r'''a=b'''),
+r'''a=b''', r'''
+keyword - ROOT 0,0..0,3
+  .arg 'a'
+  .value Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, '_arglike', {}, ('keyword',
+r'''**b'''),
+r'''**b''', r'''
+keyword - ROOT 0,0..0,3
+  .value Name 'b' Load - 0,2..0,3
+'''),
+
 ('', 0, 0, '_arglike', {}, ('alias',
 r'''a'''),
 r'''a''',
@@ -7654,6 +8135,17 @@ Tuple - ROOT 0,0..0,4
 '''),
 
 ('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''(a, *b)''',
 r'''(a, *b)''', r'''
@@ -7667,7 +8159,32 @@ Tuple - ROOT 0,0..0,7
 '''),
 
 ('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
 ],
@@ -8161,6 +8678,25 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _arglikes, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _arglikes, got arg, could not coerce')**'''),
 
+('', 0, 0, '_arglikes', {}, ('keyword',
+r'''a=b'''),
+r'''a=b''', r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .arg 'a'
+     .value Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, '_arglikes', {}, ('keyword',
+r'''**b'''),
+r'''**b''', r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .value Name 'b' Load - 0,2..0,3
+'''),
+
 ('', 0, 0, '_arglikes', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -8380,6 +8916,15 @@ _arglikes - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''', r'''
 _arglikes - ROOT 0,0..0,5
@@ -8391,7 +8936,32 @@ _arglikes - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
 ],
@@ -8826,6 +9396,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _comprehension_ifs, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _comprehension_ifs, got arg, could not coerce')**'''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('alias',
 r'''a'''),
 r'''if a''',
@@ -9051,12 +9631,47 @@ _comprehension_ifs - ROOT 0,0..0,4
 '''),
 
 ('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
 ],
@@ -9529,6 +10144,25 @@ arguments - ROOT 0,0..0,6
      .annotation Name 'int' Load - 0,3..0,6
 '''),
 
+('', 0, 0, 'arguments', {}, ('keyword',
+r'''a=b'''),
+r'''a=b''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'arguments', {}, ('keyword',
+r'''**b'''),
+r'''**b''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'b'
+'''),
+
 ('', 0, 0, 'arguments', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -9734,6 +10368,17 @@ arguments - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''', r'''
 arguments - ROOT 0,0..0,5
@@ -9745,7 +10390,32 @@ arguments - ROOT 0,0..0,5
 '''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
 ],
@@ -10039,6 +10709,16 @@ arg - ROOT 0,0..0,6
   .annotation Name 'int' Load - 0,3..0,6
 '''),
 
+('', 0, 0, 'arg', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting arg, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting arg, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -10193,12 +10873,42 @@ r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
 ],
@@ -10491,6 +11201,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting alias, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got arg, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting alias, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -10648,12 +11368,42 @@ r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**'''
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 ],
@@ -11053,6 +11803,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _aliases, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got arg, could not coerce')**'''),
 
+('', 0, 0, '_aliases', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _aliases, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_aliases', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -11266,12 +12026,48 @@ _aliases - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 ],
@@ -11564,6 +12360,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting alias, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got arg, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting alias, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -11721,12 +12527,42 @@ r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**'''
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 ],
@@ -12126,6 +12962,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _aliases, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got arg, could not coerce')**'''),
 
+('', 0, 0, '_Import_names', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _aliases, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_Import_names', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -12339,12 +13185,48 @@ _aliases - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 ],
@@ -12635,6 +13517,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting alias, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got arg, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting alias, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -12792,12 +13684,42 @@ r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**'''
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 ],
@@ -13193,6 +14115,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _aliases, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got arg, could not coerce')**'''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _aliases, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -13406,12 +14338,48 @@ _aliases - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 ],
@@ -13903,6 +14871,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting withitem, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting withitem, got arg, could not coerce')**'''),
 
+('', 0, 0, 'withitem', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting withitem, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting withitem, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'withitem', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -14128,6 +15106,18 @@ withitem - ROOT 0,0..0,4
 '''),
 
 ('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''(a, *b)''',
 r'''(a, *b)''', r'''
@@ -14142,7 +15132,32 @@ withitem - ROOT 0,0..0,7
 '''),
 
 ('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
 ],
@@ -14601,6 +15616,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _withitems, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _withitems, got arg, could not coerce')**'''),
 
+('', 0, 0, '_withitems', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _withitems, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _withitems, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_withitems', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -14842,12 +15867,48 @@ _withitems - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
 ],
@@ -15289,6 +16350,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting pattern, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting pattern, got arg, could not coerce')**'''),
 
+('', 0, 0, 'pattern', {}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting pattern, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting pattern, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'pattern', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -15508,6 +16579,18 @@ MatchSequence - ROOT 0,0..0,3
 '''),
 
 ('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''[a, *b]''',
 r'''[a, *b]''', r'''
@@ -15520,7 +16603,32 @@ MatchSequence - ROOT 0,0..0,7
 '''),
 
 ('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
 ],
@@ -15627,8 +16735,14 @@ r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coe
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+r'''b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+'''),
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
 r'''**b'''),
@@ -15653,8 +16767,17 @@ r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coe
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+r'''a, b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'c'
+'''),
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
 r'''a, **b'''),
@@ -15873,8 +16996,14 @@ r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coe
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+r'''b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+'''),
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
 r'''**b'''),
@@ -15899,8 +17028,17 @@ r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coe
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+r'''a, b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'c'
+'''),
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
 r'''a, **b'''),
@@ -15930,6 +17068,22 @@ _pattern_attrlikes - ROOT 0,0..0,1
 r'''a: int'''),
 r'''FST: **NodeError('expecting _pattern_attrlikes, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _pattern_attrlikes, got arg, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('keyword',
+r'''a=b'''),
+r'''a=b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got keyword, could not coerce')**'''),
 
 ('', 0, 0, '_pattern_attrlikes', {}, ('alias',
 r'''a'''),
@@ -16141,8 +17295,14 @@ _pattern_attrlikes - ROOT 0,0..0,1
 
 ('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('TypeVar',
 r'''a=b'''),
-r'''FST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**''',
-r'''AST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**'''),
+r'''a=b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'b'
+'''),
 
 ('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('TypeVar',
 r'''a: int'''),
@@ -16174,12 +17334,57 @@ _pattern_attrlikes - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''a=c, b=d''', r'''
+_pattern_attrlikes - ROOT 0,0..0,8
+  .kwd_attrs[2]
+   0] 'a'
+   1] 'b'
+  .kwd_patterns[2]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+   1] MatchAs - 0,7..0,8
+     .name 'd'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
 ],
@@ -16472,6 +17677,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting type_param, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got arg, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting type_param, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting type_param, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got keyword, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -16597,7 +17812,7 @@ TypeVar - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', 0, 0, 'type_param', {'_ver': 12}, ('TypeVar',
+('', 0, 0, 'type_param', {'_ver': 13}, ('TypeVar',
 r'''a=b'''),
 r'''a=b''',
 r'''a = b''', r'''
@@ -16614,7 +17829,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('', 0, 0, 'type_param', {'_ver': 12}, ('TypeVar',
+('', 0, 0, 'type_param', {'_ver': 13}, ('TypeVar',
 r'''a: int = b'''),
 r'''a: int = b''', r'''
 TypeVar - ROOT 0,0..0,10
@@ -16643,12 +17858,42 @@ r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')
 r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
 
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
 ],
@@ -17088,6 +18333,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting _type_params, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting _type_params, got arg, could not coerce')**'''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _type_params, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting _type_params, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -17258,7 +18513,7 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
+('', 0, 0, '_type_params', {'_ver': 13}, ('TypeVar',
 r'''a=b'''),
 r'''a=b''',
 r'''a = b''', r'''
@@ -17279,7 +18534,7 @@ _type_params - ROOT 0,0..0,6
      .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
+('', 0, 0, '_type_params', {'_ver': 13}, ('TypeVar',
 r'''a: int = b'''),
 r'''a: int = b''', r'''
 _type_params - ROOT 0,0..0,10
@@ -17318,6 +18573,17 @@ _type_params - ROOT 0,0..0,1
 '''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''', r'''
 _type_params - ROOT 0,0..0,5
@@ -17325,6 +18591,17 @@ _type_params - ROOT 0,0..0,5
    0] TypeVar - 0,0..0,1
      .name 'a'
    1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''a, **b''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] ParamSpec - 0,3..0,6
      .name 'b'
 '''),
 
@@ -17339,6 +18616,58 @@ _type_params - ROOT 0,0..0,10
      .name 'b'
    2] ParamSpec - 0,7..0,10
      .name 'c'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''a: int''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[1]
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''a: int, b: float''', r'''
+_type_params - ROOT 0,0..0,16
+  .type_params[2]
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+   1] TypeVar - 0,8..0,16
+     .name 'b'
+     .bound Name 'float' Load - 0,11..0,16
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''a=c, b=d''',
+r'''a = c, b = d''', r'''
+_type_params - ROOT 0,0..0,8
+  .type_params[2]
+   0] TypeVar - 0,0..0,3
+     .name 'a'
+     .default_value Name 'c' Load - 0,2..0,3
+   1] TypeVar - 0,5..0,8
+     .name 'b'
+     .default_value Name 'd' Load - 0,7..0,8
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
+r'''a: int = c, b: float = d''', r'''
+_type_params - ROOT 0,0..0,24
+  .type_params[2]
+   0] TypeVar - 0,0..0,10
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+     .default_value Name 'c' Load - 0,9..0,10
+   1] TypeVar - 0,12..0,24
+     .name 'b'
+     .bound Name 'float' Load - 0,15..0,20
+     .default_value Name 'd' Load - 0,23..0,24
 '''),
 ],
 
@@ -17851,6 +19180,16 @@ r'''a: int'''),
 r'''FST: **NodeError('expecting Tuple, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got arg, could not coerce')**'''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('keyword',
+r'''a=b'''),
+r'''FST: **NodeError('expecting Tuple, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got keyword, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('keyword',
+r'''**b'''),
+r'''FST: **NodeError('expecting Tuple, got keyword, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got keyword, could not coerce')**'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -18039,7 +19378,7 @@ r'''a, b=c'''),
 r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**'''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('TypeVar',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 Tuple - ROOT 0,0..0,1
@@ -18048,27 +19387,27 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 13, '_verify': False}, ('TypeVar',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 13}, ('TypeVar',
 r'''a=b'''),
 r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('TypeVar',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('TypeVar',
 r'''a: int'''),
 r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 13, '_verify': False}, ('TypeVar',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 13}, ('TypeVar',
 r'''a: int = b'''),
 r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('ParamSpec',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('ParamSpec',
 r'''**a'''),
 r'''FST: **NodeError('expecting Tuple, got ParamSpec, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got ParamSpec, could not coerce')**'''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('TypeVarTuple',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
 r'''*a''', r'''
 Tuple - ROOT 0,0..0,2
@@ -18079,7 +19418,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('_type_params',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
 r'''a'''),
 r'''a''', r'''
 Tuple - ROOT 0,0..0,1
@@ -18088,7 +19427,17 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('_type_params',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
 r'''a, *b'''),
 r'''a, *b''', r'''
 Tuple - ROOT 0,0..0,5
@@ -18100,8 +19449,33 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('_type_params',
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
+r'''a: int'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 12}, ('_type_params',
+r'''a: int, b: float'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 13}, ('_type_params',
+r'''a=c, b=d'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False, '_ver': 13}, ('_type_params',
+r'''a: int = c, b: float = d'''),
 r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
 ],
@@ -18868,6 +20242,70 @@ r'''AST: **NodeError('expecting List, got Name, could not coerce')**'''),
 r'''a'''),
 r'''FST: **NodeError('expecting Set, got Name, could not coerce')**''',
 r'''AST: **NodeError('expecting Set, got Name, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Name',
+r'''_'''),
+r'''_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('keyword',
+r'''_=_'''),
+r'''_=_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] '_'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''_=_'''),
+r'''_=_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] '_'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('TypeVar',
+r'''_'''),
+r'''_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('TypeVar',
+r'''_=_'''),
+r'''_=_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] '_'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''_'''),
+r'''_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('_type_params',
+r'''_=_'''),
+r'''_=_''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] '_'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+'''),
 ],
 
 }
