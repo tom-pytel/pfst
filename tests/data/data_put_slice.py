@@ -44041,8 +44041,18 @@ _arglikes - ROOT 0,0..0,1
 r'''a,'''), ('_pattern_attrlikes', r'''
 x,
 y=z,
+'''), r'''
+x,
+y=z
+''',
+r'''x, y=z''', r'''
+_arglikes - ROOT 0,0..1,3
+  .arglikes[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] keyword - 1,0..1,3
+     .arg 'y'
+     .value Name 'z' Load - 1,2..1,3
 '''),
-r'''**NodeError('expecting _arglikes, got _pattern_attrlikes, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_arglikes',
 r'''a,'''), ('_type_params', r'''

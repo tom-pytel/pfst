@@ -84,6 +84,8 @@ FROMS = [
     ('arguments', {}, 'a, **b'),
     ('arguments', {}, 'a, /'),
     ('arguments', {}, '*, a'),
+    ('arguments', {}, 'a: int'),
+    ('arguments', {}, 'a: int = b'),
     ('arg', {}, 'a'),
     ('arg', {}, 'a: int'),
     ('keyword', {}, 'a=b'),
@@ -115,7 +117,9 @@ FROMS = [
     ('TypeVar', {'_ver': 12}, 'a: int'),
     ('TypeVar', {'_ver': 13}, 'a: int = b'),
     ('ParamSpec', {'_ver': 12}, '**a'),
+    ('ParamSpec', {'_ver': 13}, '**a=b'),
     ('TypeVarTuple', {'_ver': 12}, '*a'),
+    ('TypeVarTuple', {'_ver': 13}, '*a=b'),
     ('_type_params', {'_ver': 12}, 'a'),
     ('_type_params', {'_ver': 12}, 'a, b'),
     ('_type_params', {'_ver': 12}, 'a, *b'),
@@ -125,6 +129,10 @@ FROMS = [
     ('_type_params', {'_ver': 12}, 'a: int, b: float'),
     ('_type_params', {'_ver': 13}, 'a=c, b=d'),
     ('_type_params', {'_ver': 13}, 'a: int = c, b: float = d'),
+    ('_expr_arglikes', {'_verify': False}, 'a'),
+    ('_expr_arglikes', {'_verify': False}, '*b'),
+    ('_expr_arglikes', {'_verify': False}, 'a, b'),
+    ('_expr_arglikes', {'_verify': False}, 'a, *b'),
 ]
 
 
