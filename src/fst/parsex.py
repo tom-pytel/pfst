@@ -1428,7 +1428,7 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 def parse__arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `expr_arglike`s and `keyword`s, returned as an `_arglikes` SPECIAL SLICE. @private"""
+    """Parse single `expr_arglike`s or `keyword`s, returned as an `expr` or `keyword`. @private"""
 
     try:
         ast = _ast_parse1(f'f(\n{src}\n)', parse_params, Expr, Call).value
@@ -1448,7 +1448,7 @@ def parse__arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(args) + len(keywords) != 1:
         raise ParseError('expecting single arglike')
 
-    ast = args[0] if args else keywords[0]
+    ast = (args or keywords)[0]
 
     return _offset_linenos(ast, -1)
 

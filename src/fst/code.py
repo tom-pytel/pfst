@@ -974,6 +974,8 @@ def _coerce_to_pattern_ast__pattern_attrlikes(
     if not is_FST:
         return MatchSequence(patterns=patterns)
 
+    ast.f._delimit_node(delims='[]')
+
     return MatchSequence(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
                          end_col_offset=ast.end_col_offset)
 
@@ -1710,7 +1712,7 @@ def _coerce_to_expr_ast__pattern_attrlikes(
 
         elts.append(pat[0])
 
-    return ret, False, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
+    return ret, True, 2  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
 def _coerce_to_expr_ast_TypeVar(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -3041,6 +3043,8 @@ def _coerce_to__pattern_attrlikes(
     codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
     codea_cls = original_codea_cls = codea.__class__
 
+    # generic pattern to _pattern_attrlikes, with maybe generic to pattern first
+
     if codea_cls not in ASTS_LEAF_PATTERN:  # first lets get a pattern
         code = _coerce_to_pattern(code, options, parse_params, strip=strip)
         codea = code.a
@@ -3079,7 +3083,7 @@ def _coerce_to__pattern_attrlikes(
         raise NodeError(f'expecting pattern attrlikes, got {original_codea_cls.__name__}, could not coerce')
 
     if not is_FST:
-        ast = parse__pattern_attrlikes(src, parse_params)  # should never fail
+        ast = parse__pattern_attrlikes(src, parse_params)  # should never fail if we checked everything above correctly
         fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
     else:

@@ -49,6 +49,18 @@ Expr - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'stmt', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
 ('', 0, 0, 'stmt', {}, ('_decorator_list',
 r'''@a'''),
 r'''(a,)''',
@@ -57,6 +69,22 @@ Expr - ROOT 0,0..0,4
   .value Tuple - 0,0..0,4
     .elts[1]
      0] Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..1,2
+  .value Tuple - 0,0..1,2
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 1,0..1,1
     .ctx Load
 '''),
 
@@ -70,6 +98,65 @@ Expr - ROOT 0,0..0,4
      0] Name 'a' Load - 0,1..0,2
     .ctx Load
 '''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+Expr - ROOT 0,0..0,5
+  .value Tuple - 0,0..0,5
+    .elts[1]
+     0] Starred - 0,1..0,3
+       .value Name 'b' Load - 0,2..0,3
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting stmt, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting stmt, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Expr - ROOT 0,0..0,7
+  .value Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting stmt, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting stmt, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, 'stmt', {}, ('expr_arglike',
 r'''*not a'''),
@@ -165,6 +252,28 @@ Expr - ROOT 0,0..0,3
      0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'stmt', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Expr - ROOT 0,0..0,6
+  .value Set - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'stmt', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Expr - ROOT 0,0..0,7
+  .value Set - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+'''),
+
 ('', 0, 0, 'stmt', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -216,6 +325,30 @@ Expr - ROOT 0,0..0,3
     .ctx Load
 '''),
 
+('', 0, 0, 'stmt', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+Expr - ROOT 0,0..0,6
+  .value List - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+Expr - ROOT 0,0..0,7
+  .value List - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
 ('', 0, 0, 'stmt', {}, ('Tuple',
 r'''a,'''),
 r'''(a,)''',
@@ -224,6 +357,32 @@ Expr - ROOT 0,0..0,4
   .value Tuple - 0,0..0,4
     .elts[1]
      0] Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('Tuple',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('Tuple',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Expr - ROOT 0,0..0,7
+  .value Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
     .ctx Load
 '''),
 
@@ -243,6 +402,18 @@ Expr - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'stmt', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
 ('', 0, 0, 'stmt', {}, ('arguments',
 r'''a'''),
 r'''(a,)''',
@@ -254,6 +425,75 @@ Expr - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+Expr - ROOT 0,0..0,5
+  .value Tuple - 0,0..0,5
+    .elts[1]
+     0] Starred - 0,1..0,3
+       .value Name 'b' Load - 0,2..0,3
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting stmt, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting stmt, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Expr - ROOT 0,0..0,7
+  .value Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting stmt, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting stmt, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting stmt, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting stmt, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arguments, could not coerce')**'''),
+
 ('', 0, 0, 'stmt', {}, ('arg',
 r'''a'''),
 r'''a''', r'''
@@ -261,12 +501,22 @@ Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, 'stmt', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting stmt, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'stmt', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
 Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'stmt', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting stmt, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got alias, could not coerce')**'''),
 
 ('', 0, 0, 'stmt', {}, ('_aliases',
 r'''a'''),
@@ -279,12 +529,34 @@ Expr - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'stmt', {}, ('_aliases',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting stmt, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, 'stmt', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
 Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'stmt', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting stmt, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got withitem, could not coerce')**'''),
 
 ('', 0, 0, 'stmt', {}, ('_withitems',
 r'''a'''),
@@ -296,6 +568,23 @@ Expr - ROOT 0,0..0,4
      0] Name 'a' Load - 0,1..0,2
     .ctx Load
 '''),
+
+('', 0, 0, 'stmt', {}, ('_withitems',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting stmt, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, 'stmt', {}, ('MatchValue',
 r'''1'''),
@@ -366,12 +655,65 @@ Expr - ROOT 0,0..0,5
     .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'stmt', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''(a,)''',
+r'''(a,)''', r'''
+Expr - ROOT 0,0..0,4
+  .value Tuple - 0,0..0,4
+    .elts[1]
+     0] Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting stmt, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Expr - ROOT 0,0..0,6
+  .value Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting stmt, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'stmt', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'stmt', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting stmt, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting stmt, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting stmt, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting stmt, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'stmt', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -392,6 +734,25 @@ Expr - ROOT 0,0..0,4
      0] Name 'a' Load - 0,1..0,2
     .ctx Load
 '''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Expr - ROOT 0,0..0,7
+  .value Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'stmt', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting stmt, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting stmt, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_stmts': [  # ................................................................................
@@ -445,6 +806,20 @@ Module - ROOT 0,0..0,4
        .ctx Load
 '''),
 
+('', 0, 0, 'stmts', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
 ('', 0, 0, 'stmts', {}, ('_decorator_list',
 r'''@a'''),
 r'''(a,)''',
@@ -455,6 +830,24 @@ Module - ROOT 0,0..0,4
      .value Tuple - 0,0..0,4
        .elts[1]
         0] Name 'a' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..1,2
+  .body[1]
+   0] Expr - 0,0..1,2
+     .value Tuple - 0,0..1,2
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 1,0..1,1
        .ctx Load
 '''),
 
@@ -470,6 +863,71 @@ Module - ROOT 0,0..0,4
         0] Name 'a' Load - 0,1..0,2
        .ctx Load
 '''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Expr - 0,0..0,5
+     .value Tuple - 0,0..0,5
+       .elts[1]
+        0] Starred - 0,1..0,3
+          .value Name 'b' Load - 0,2..0,3
+          .ctx Load
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Tuple - 0,0..0,7
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'b' Load - 0,5..0,6
+          .ctx Load
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, 'stmts', {}, ('expr_arglike',
 r'''*not a'''),
@@ -583,6 +1041,32 @@ Module - ROOT 0,0..0,3
         0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'stmts', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Set - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'stmts', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Set - 0,0..0,7
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'b' Load - 0,5..0,6
+          .ctx Load
+'''),
+
 ('', 0, 0, 'stmts', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -646,6 +1130,34 @@ Module - ROOT 0,0..0,3
        .ctx Load
 '''),
 
+('', 0, 0, 'stmts', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value List - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value List - 0,0..0,7
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'b' Load - 0,5..0,6
+          .ctx Load
+       .ctx Load
+'''),
+
 ('', 0, 0, 'stmts', {}, ('Tuple',
 r'''a,'''),
 r'''(a,)''',
@@ -656,6 +1168,36 @@ Module - ROOT 0,0..0,4
      .value Tuple - 0,0..0,4
        .elts[1]
         0] Name 'a' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('Tuple',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('Tuple',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Tuple - 0,0..0,7
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'b' Load - 0,5..0,6
+          .ctx Load
        .ctx Load
 '''),
 
@@ -677,6 +1219,20 @@ Module - ROOT 0,0..0,4
        .ctx Load
 '''),
 
+('', 0, 0, 'stmts', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
 ('', 0, 0, 'stmts', {}, ('arguments',
 r'''a'''),
 r'''(a,)''',
@@ -690,6 +1246,81 @@ Module - ROOT 0,0..0,4
        .ctx Load
 '''),
 
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+   0] Expr - 0,0..0,5
+     .value Tuple - 0,0..0,5
+       .elts[1]
+        0] Starred - 0,1..0,3
+          .value Name 'b' Load - 0,2..0,3
+          .ctx Load
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Tuple - 0,0..0,7
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'b' Load - 0,5..0,6
+          .ctx Load
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arguments, could not coerce')**'''),
+
 ('', 0, 0, 'stmts', {}, ('arg',
 r'''a'''),
 r'''a''', r'''
@@ -699,6 +1330,11 @@ Module - ROOT 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, 'stmts', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting zero or more stmts, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'stmts', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -707,6 +1343,11 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'stmts', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got alias, could not coerce')**'''),
 
 ('', 0, 0, 'stmts', {}, ('_aliases',
 r'''a'''),
@@ -721,6 +1362,25 @@ Module - ROOT 0,0..0,4
        .ctx Load
 '''),
 
+('', 0, 0, 'stmts', {}, ('_aliases',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, 'stmts', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -729,6 +1389,11 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'stmts', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got withitem, could not coerce')**'''),
 
 ('', 0, 0, 'stmts', {}, ('_withitems',
 r'''a'''),
@@ -742,6 +1407,25 @@ Module - ROOT 0,0..0,4
         0] Name 'a' Load - 0,1..0,2
        .ctx Load
 '''),
+
+('', 0, 0, 'stmts', {}, ('_withitems',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, 'stmts', {}, ('MatchValue',
 r'''1'''),
@@ -828,6 +1512,43 @@ Module - ROOT 0,0..0,5
        .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'stmts', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''(a,)''',
+r'''(a,)''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[1]
+        0] Name 'a' Load - 0,1..0,2
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+   0] Expr - 0,0..0,6
+     .value Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'stmts', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -836,6 +1557,26 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'stmts', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting zero or more stmts, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting zero or more stmts, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting zero or more stmts, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'stmts', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -860,6 +1601,27 @@ Module - ROOT 0,0..0,4
         0] Name 'a' Load - 0,1..0,2
        .ctx Load
 '''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Tuple - 0,0..0,7
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'b' Load - 0,5..0,6
+          .ctx Load
+       .ctx Load
+'''),
+
+('', 0, 0, 'stmts', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting zero or more stmts, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_expr': [  # ................................................................................
@@ -894,6 +1656,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr', {}, ('_decorator_list',
 r'''@a'''),
 r'''a,''',
@@ -901,6 +1674,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -913,6 +1701,62 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', 0, 0, 'expr', {}, ('expr_arglike',
 r'''*not a'''),
@@ -999,6 +1843,26 @@ Set - ROOT 0,0..0,3
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'expr', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'expr', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Set - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+'''),
+
 ('', 0, 0, 'expr', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -1042,6 +1906,28 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
+('', 0, 0, 'expr', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+List - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -1049,6 +1935,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -1067,6 +1977,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a'''),
 r'''a,''',
@@ -1077,15 +1998,91 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr', {}, ('arguments',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has position-only arguments')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has position-only arguments')**'''),
+
+('', 0, 0, 'expr', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError("expecting expression (standard), got arguments, could not coerce, has empty vararg '*'")**''',
+r'''AST: **NodeError("expecting expression (standard), got arguments, could not coerce, has empty vararg '*'")**'''),
+
 ('', 0, 0, 'expr', {}, ('arg',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
+('', 0, 0, 'expr', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (standard), got arg, could not coerce, has annotation')**''',
+r'''AST: **NodeError('expecting expression (standard), got arg, could not coerce, has annotation')**'''),
+
 ('', 0, 0, 'expr', {}, ('alias',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (standard), got alias, could not coerce, has asname')**''',
+r'''AST: **NodeError('expecting expression (standard), got alias, could not coerce, has asname')**'''),
 
 ('', 0, 0, 'expr', {}, ('_aliases',
 r'''a'''),
@@ -1097,10 +2094,31 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**''',
+r'''AST: **NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**'''),
+
 ('', 0, 0, 'expr', {}, ('withitem',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (standard), got withitem, could not coerce, has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (standard), got withitem, could not coerce, has optional_vars')**'''),
 
 ('', 0, 0, 'expr', {}, ('_withitems',
 r'''a'''),
@@ -1111,6 +2129,22 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**'''),
 
 ('', 0, 0, 'expr', {}, ('MatchValue',
 r'''1'''),
@@ -1170,10 +2204,61 @@ BinOp - ROOT 0,0..0,5
   .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a,''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
+('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 0, 'expr', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (standard), got TypeVar, could not coerce, has default_value')**''',
+r'''AST: **NodeError('expecting expression (standard), got TypeVar, could not coerce, has default_value')**'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (standard), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (standard), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting expression (standard), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (standard), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting expression (standard), got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (standard), got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -1192,6 +2277,24 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
 ],
 
 'matrix_expr_all': [  # ................................................................................
@@ -1226,6 +2329,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_all', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_all', {}, ('_decorator_list',
 r'''@a'''),
 r'''a,''',
@@ -1233,6 +2347,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -1245,6 +2374,62 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_all', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('expr_arglike',
 r'''*not a'''),
@@ -1340,6 +2525,26 @@ Set - ROOT 0,0..0,3
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'expr_all', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'expr_all', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Set - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+'''),
+
 ('', 0, 0, 'expr_all', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -1383,6 +2588,28 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_all', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+List - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_all', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -1390,6 +2617,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -1412,6 +2663,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_all', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a'''),
 r'''a,''',
@@ -1422,15 +2684,91 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has position-only arguments')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has position-only arguments')**'''),
+
+('', 0, 0, 'expr_all', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError("expecting expression (all types), got arguments, could not coerce, has empty vararg '*'")**''',
+r'''AST: **NodeError("expecting expression (all types), got arguments, could not coerce, has empty vararg '*'")**'''),
+
 ('', 0, 0, 'expr_all', {}, ('arg',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
+('', 0, 0, 'expr_all', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (all types), got arg, could not coerce, has annotation')**''',
+r'''AST: **NodeError('expecting expression (all types), got arg, could not coerce, has annotation')**'''),
+
 ('', 0, 0, 'expr_all', {}, ('alias',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_all', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (all types), got alias, could not coerce, has asname')**''',
+r'''AST: **NodeError('expecting expression (all types), got alias, could not coerce, has asname')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_aliases',
 r'''a'''),
@@ -1442,10 +2780,31 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_all', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (all types), got _aliases, could not coerce, alias has asname')**''',
+r'''AST: **NodeError('expecting expression (all types), got _aliases, could not coerce, alias has asname')**'''),
+
 ('', 0, 0, 'expr_all', {}, ('withitem',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_all', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (all types), got withitem, could not coerce, has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (all types), got withitem, could not coerce, has optional_vars')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_withitems',
 r'''a'''),
@@ -1456,6 +2815,22 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_all', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (all types), got _withitems, could not coerce, withitem has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (all types), got _withitems, could not coerce, withitem has optional_vars')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('MatchValue',
 r'''1'''),
@@ -1515,10 +2890,61 @@ BinOp - ROOT 0,0..0,5
   .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a,''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
+('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_all', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (all types), got TypeVar, could not coerce, has default_value')**''',
+r'''AST: **NodeError('expecting expression (all types), got TypeVar, could not coerce, has default_value')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (all types), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (all types), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting expression (all types), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (all types), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting expression (all types), got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (all types), got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -1537,6 +2963,24 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
 ],
 
 'matrix_expr_arglike': [  # ................................................................................
@@ -1571,6 +3015,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('_decorator_list',
 r'''@a'''),
 r'''a,''',
@@ -1578,6 +3033,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -1590,6 +3060,62 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('expr_arglike',
 r'''*not a'''),
@@ -1676,6 +3202,26 @@ Set - ROOT 0,0..0,3
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Set - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -1719,6 +3265,28 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+List - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -1726,6 +3294,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -1744,6 +3336,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a'''),
 r'''a,''',
@@ -1754,15 +3357,91 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has position-only arguments')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has position-only arguments')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError("expecting expression (arglike), got arguments, could not coerce, has empty vararg '*'")**''',
+r'''AST: **NodeError("expecting expression (arglike), got arguments, could not coerce, has empty vararg '*'")**'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('arg',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
+('', 0, 0, 'expr_arglike', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (arglike), got arg, could not coerce, has annotation')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arg, could not coerce, has annotation')**'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('alias',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_arglike', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (arglike), got alias, could not coerce, has asname')**''',
+r'''AST: **NodeError('expecting expression (arglike), got alias, could not coerce, has asname')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_aliases',
 r'''a'''),
@@ -1774,10 +3453,31 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _aliases, could not coerce, alias has asname')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _aliases, could not coerce, alias has asname')**'''),
+
 ('', 0, 0, 'expr_arglike', {}, ('withitem',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_arglike', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (arglike), got withitem, could not coerce, has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (arglike), got withitem, could not coerce, has optional_vars')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_withitems',
 r'''a'''),
@@ -1788,6 +3488,22 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_arglike', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _withitems, could not coerce, withitem has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _withitems, could not coerce, withitem has optional_vars')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('MatchValue',
 r'''1'''),
@@ -1847,10 +3563,61 @@ BinOp - ROOT 0,0..0,5
   .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a,''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce, has default_value')**''',
+r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce, has default_value')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting expression (arglike), got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -1869,6 +3636,24 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
 ],
 
 'matrix_expr_slice': [  # ................................................................................
@@ -1903,6 +3688,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_slice', {}, ('_decorator_list',
 r'''@a'''),
 r'''a,''',
@@ -1910,6 +3706,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -1922,6 +3733,62 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('expr_arglike',
 r'''*not a'''),
@@ -2011,6 +3878,26 @@ Set - ROOT 0,0..0,3
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Set - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+'''),
+
 ('', 0, 0, 'expr_slice', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -2051,6 +3938,28 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+List - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_slice', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -2058,6 +3967,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -2080,6 +4013,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a'''),
 r'''a,''',
@@ -2090,15 +4034,91 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has position-only arguments')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has position-only arguments')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError("expecting expression (slice), got arguments, could not coerce, has empty vararg '*'")**''',
+r'''AST: **NodeError("expecting expression (slice), got arguments, could not coerce, has empty vararg '*'")**'''),
+
 ('', 0, 0, 'expr_slice', {}, ('arg',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
+('', 0, 0, 'expr_slice', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (slice), got arg, could not coerce, has annotation')**''',
+r'''AST: **NodeError('expecting expression (slice), got arg, could not coerce, has annotation')**'''),
+
 ('', 0, 0, 'expr_slice', {}, ('alias',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_slice', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (slice), got alias, could not coerce, has asname')**''',
+r'''AST: **NodeError('expecting expression (slice), got alias, could not coerce, has asname')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_aliases',
 r'''a'''),
@@ -2110,10 +4130,31 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (slice), got _aliases, could not coerce, alias has asname')**''',
+r'''AST: **NodeError('expecting expression (slice), got _aliases, could not coerce, alias has asname')**'''),
+
 ('', 0, 0, 'expr_slice', {}, ('withitem',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_slice', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (slice), got withitem, could not coerce, has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (slice), got withitem, could not coerce, has optional_vars')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_withitems',
 r'''a'''),
@@ -2124,6 +4165,22 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_slice', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (slice), got _withitems, could not coerce, withitem has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (slice), got _withitems, could not coerce, withitem has optional_vars')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('MatchValue',
 r'''1'''),
@@ -2180,10 +4237,61 @@ BinOp - ROOT 0,0..0,5
   .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a,''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
+('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (slice), got TypeVar, could not coerce, has default_value')**''',
+r'''AST: **NodeError('expecting expression (slice), got TypeVar, could not coerce, has default_value')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (slice), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (slice), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting expression (slice), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (slice), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting expression (slice), got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (slice), got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -2199,6 +4307,24 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
 ],
 
 'matrix_Tuple_elt': [  # ................................................................................
@@ -2233,6 +4359,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('_decorator_list',
 r'''@a'''),
 r'''a,''',
@@ -2240,6 +4377,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -2252,6 +4404,62 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('expr_arglike',
 r'''*not a'''),
@@ -2338,6 +4546,26 @@ Set - ROOT 0,0..0,3
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Set - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -2381,6 +4609,28 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+List - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -2388,6 +4638,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -2410,6 +4684,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a'''),
 r'''a,''',
@@ -2420,15 +4705,91 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has position-only arguments')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has position-only arguments')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError("expecting expression (tuple element), got arguments, could not coerce, has empty vararg '*'")**''',
+r'''AST: **NodeError("expecting expression (tuple element), got arguments, could not coerce, has empty vararg '*'")**'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('arg',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
+('', 0, 0, 'Tuple_elt', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arg, could not coerce, has annotation')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arg, could not coerce, has annotation')**'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('alias',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got alias, could not coerce, has asname')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got alias, could not coerce, has asname')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_aliases',
 r'''a'''),
@@ -2440,10 +4801,31 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _aliases, could not coerce, alias has asname')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _aliases, could not coerce, alias has asname')**'''),
+
 ('', 0, 0, 'Tuple_elt', {}, ('withitem',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got withitem, could not coerce, has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got withitem, could not coerce, has optional_vars')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_withitems',
 r'''a'''),
@@ -2454,6 +4836,22 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _withitems, could not coerce, withitem has optional_vars')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _withitems, could not coerce, withitem has optional_vars')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('MatchValue',
 r'''1'''),
@@ -2513,10 +4911,61 @@ BinOp - ROOT 0,0..0,5
   .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a,''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got TypeVar, could not coerce, has default_value')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got TypeVar, could not coerce, has default_value')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (tuple element), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting expression (tuple element), got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting expression (tuple element), got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -2535,6 +4984,24 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
 ],
 
 'matrix_Tuple': [  # ................................................................................
@@ -2569,6 +5036,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple', {}, ('_decorator_list',
 r'''@a'''),
 r'''a,''',
@@ -2576,6 +5054,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -2588,6 +5081,62 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+
+('', 0, 0, 'Tuple', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('expr_arglike',
 r'''*not a'''),
@@ -2653,6 +5202,30 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple', {}, ('Set',
+r'''{a, b}'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('Set',
+r'''{a, *b}'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting Tuple, got Call, could not coerce')**''',
@@ -2688,6 +5261,30 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple', {}, ('List',
+r'''[a, b]'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('List',
+r'''[a, *b]'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -2695,6 +5292,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -2713,6 +5334,17 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a'''),
 r'''a,''',
@@ -2723,15 +5355,91 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''*b'''),
+r'''*b,''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has position-only arguments')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has position-only arguments')**'''),
+
+('', 0, 0, 'Tuple', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError("expecting Tuple, got arguments, could not coerce, has empty vararg '*'")**''',
+r'''AST: **NodeError("expecting Tuple, got arguments, could not coerce, has empty vararg '*'")**'''),
+
 ('', 0, 0, 'Tuple', {}, ('arg',
 r'''a'''),
 r'''FST: **NodeError('expecting Tuple, got arg, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got arg, could not coerce')**'''),
 
+('', 0, 0, 'Tuple', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting Tuple, got arg, could not coerce, has annotation')**''',
+r'''AST: **NodeError('expecting Tuple, got arg, could not coerce, has annotation')**'''),
+
 ('', 0, 0, 'Tuple', {}, ('alias',
 r'''a'''),
 r'''FST: **NodeError('expecting Tuple, got alias, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got alias, could not coerce')**'''),
+
+('', 0, 0, 'Tuple', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting Tuple, got alias, could not coerce, has asname')**''',
+r'''AST: **NodeError('expecting Tuple, got alias, could not coerce, has asname')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_aliases',
 r'''a'''),
@@ -2743,10 +5451,31 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
+('', 0, 0, 'Tuple', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting Tuple, got _aliases, could not coerce, alias has asname')**''',
+r'''AST: **NodeError('expecting Tuple, got _aliases, could not coerce, alias has asname')**'''),
+
 ('', 0, 0, 'Tuple', {}, ('withitem',
 r'''a'''),
 r'''FST: **NodeError('expecting Tuple, got withitem, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got withitem, could not coerce')**'''),
+
+('', 0, 0, 'Tuple', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting Tuple, got withitem, could not coerce, has optional_vars')**''',
+r'''AST: **NodeError('expecting Tuple, got withitem, could not coerce, has optional_vars')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_withitems',
 r'''a'''),
@@ -2757,6 +5486,22 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'Tuple', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting Tuple, got _withitems, could not coerce, withitem has optional_vars')**''',
+r'''AST: **NodeError('expecting Tuple, got _withitems, could not coerce, withitem has optional_vars')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('MatchValue',
 r'''1'''),
@@ -2803,10 +5548,61 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting Tuple, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a,''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
+('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
 r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce, has default_value')**''',
+r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce, has default_value')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce, has bound')**''',
+r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce, has bound')**'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting Tuple, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -2822,6 +5618,24 @@ Tuple - ROOT 0,0..0,2
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**'''),
 ],
 
 'matrix__Assign_targets': [  # ................................................................................
@@ -2870,6 +5684,15 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('_decorator_list',
 r'''@a'''),
 r'''a =''',
@@ -2877,6 +5700,20 @@ r'''a =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a = \
+b =
+''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..1,3
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 1,0..1,1
 '''),
 
 ('', 0, 0, '_Assign_targets', {}, ('_arglikes',
@@ -2887,6 +5724,59 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''*b'''),
+r'''*b =''',
+r'''*b =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Store - 0,1..0,2
+     .ctx Store
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a = *b =''',
+r'''a = *b =''', r'''
+_Assign_targets - ROOT 0,0..0,8
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Starred - 0,4..0,6
+     .value Name 'b' Store - 0,5..0,6
+     .ctx Store
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_Assign_targets', {}, ('expr_arglike',
 r'''*not a'''),
@@ -2942,6 +5832,28 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('Set',
+r'''{a, b}'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('Set',
+r'''{a, *b}'''),
+r'''a = *b =''',
+r'''a = *b =''', r'''
+_Assign_targets - ROOT 0,0..0,8
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Starred - 0,4..0,6
+     .value Name 'b' Store - 0,5..0,6
+     .ctx Store
+'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting _Assign_targets, got Call, could not coerce')**''',
@@ -2993,6 +5905,28 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('List',
+r'''[a, b]'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('List',
+r'''[a, *b]'''),
+r'''a = *b =''',
+r'''a = *b =''', r'''
+_Assign_targets - ROOT 0,0..0,8
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Starred - 0,4..0,6
+     .value Name 'b' Store - 0,5..0,6
+     .ctx Store
+'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('Tuple',
 r'''a,'''),
 r'''a =''',
@@ -3000,6 +5934,28 @@ r'''a =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('Tuple',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('Tuple',
+r'''a, *b'''),
+r'''a = *b =''',
+r'''a = *b =''', r'''
+_Assign_targets - ROOT 0,0..0,8
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Starred - 0,4..0,6
+     .value Name 'b' Store - 0,5..0,6
+     .ctx Store
 '''),
 
 ('', 0, 0, '_Assign_targets', {}, ('Slice',
@@ -3016,6 +5972,16 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('arguments',
 r'''a'''),
 r'''a =''',
@@ -3024,6 +5990,69 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''*b'''),
+r'''*b =''',
+r'''*b =''', r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Store - 0,1..0,2
+     .ctx Store
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''a, *b'''),
+r'''a = *b =''',
+r'''a = *b =''', r'''
+_Assign_targets - ROOT 0,0..0,8
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Starred - 0,4..0,6
+     .value Name 'b' Store - 0,5..0,6
+     .ctx Store
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_Assign_targets', {}, ('arg',
 r'''a'''),
@@ -3034,6 +6063,11 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _Assign_targets, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('alias',
 r'''a'''),
 r'''a =''',
@@ -3042,6 +6076,11 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, '_Assign_targets', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_Assign_targets', {}, ('_aliases',
 r'''a'''),
@@ -3052,6 +6091,21 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('_aliases',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('withitem',
 r'''a'''),
 r'''a =''',
@@ -3061,6 +6115,11 @@ _Assign_targets - ROOT 0,0..0,3
    0] Name 'a' Store - 0,0..0,1
 '''),
 
+('', 0, 0, '_Assign_targets', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_Assign_targets', {}, ('_withitems',
 r'''a'''),
 r'''a =''',
@@ -3069,6 +6128,21 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, '_Assign_targets', {}, ('_withitems',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_Assign_targets', {}, ('MatchValue',
 r'''1'''),
@@ -3124,6 +6198,35 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting _Assign_targets, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting _Assign_targets, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, '_Assign_targets', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a =''',
+r'''a =''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a = b =''',
+r'''a = b =''', r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('', 0, 0, '_Assign_targets', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_Assign_targets', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a =''',
@@ -3132,6 +6235,26 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _Assign_targets, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _Assign_targets, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _Assign_targets, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_Assign_targets', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -3152,6 +6275,23 @@ _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a = *b =''',
+r'''a = *b =''', r'''
+_Assign_targets - ROOT 0,0..0,8
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Starred - 0,4..0,6
+     .value Name 'b' Store - 0,5..0,6
+     .ctx Store
+'''),
+
+('', 0, 0, '_Assign_targets', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _Assign_targets, got _type_params, could not coerce')**'''),
 ],
 
 'matrix__decorator_list': [  # ................................................................................
@@ -3201,12 +6341,39 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('_Assign_targets',
+r'''a = b ='''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
 ('', 0, 0, '_decorator_list', {}, ('_decorator_list',
 r'''@a'''),
 r'''@a''', r'''
 _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
 '''),
 
 ('', 0, 0, '_decorator_list', {}, ('_arglikes',
@@ -3217,6 +6384,50 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {}, ('expr_arglike',
 r'''*not a'''),
@@ -3316,6 +6527,25 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('Set',
+r'''{a, b}'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _decorator_list, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got Set, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {}, ('Call',
 r'''a()'''),
 r'''@a()''',
@@ -3370,6 +6600,25 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('List',
+r'''[a, b]'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _decorator_list, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got List, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {}, ('Tuple',
 r'''a,'''),
 r'''@a''',
@@ -3378,6 +6627,25 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {}, ('Tuple',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _decorator_list, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got Tuple, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {}, ('Slice',
 r'''a:b:c'''),
@@ -3393,6 +6661,20 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('_comprehension_ifs',
+r'''if a if b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
 ('', 0, 0, '_decorator_list', {}, ('arguments',
 r'''a'''),
 r'''@a''',
@@ -3401,6 +6683,60 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {}, ('arg',
 r'''a'''),
@@ -3411,6 +6747,11 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _decorator_list, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {}, ('alias',
 r'''a'''),
 r'''@a''',
@@ -3419,6 +6760,11 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _decorator_list, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {}, ('_aliases',
 r'''a'''),
@@ -3429,6 +6775,25 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('_aliases',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {}, ('withitem',
 r'''a'''),
 r'''@a''',
@@ -3438,6 +6803,11 @@ _decorator_list - ROOT 0,0..0,2
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _decorator_list, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {}, ('_withitems',
 r'''a'''),
 r'''@a''',
@@ -3446,6 +6816,25 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {}, ('_withitems',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {}, ('MatchValue',
 r'''1'''),
@@ -3523,6 +6912,39 @@ _decorator_list - ROOT 0,0..0,6
      .right Name 'b' Load - 0,5..0,6
 '''),
 
+('', 0, 0, '_decorator_list', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''@a''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {}, ('_pattern_attrlikes',
+r'''a, b'''), r'''
+@a
+@b
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 0, 0, '_decorator_list', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_decorator_list', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''@a''',
@@ -3531,6 +6953,26 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _decorator_list, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _decorator_list, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _decorator_list, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _decorator_list, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_decorator_list', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -3545,6 +6987,16 @@ _decorator_list - ROOT 0,0..0,2
   .decorator_list[1]
    0] Name 'a' Load - 0,1..0,2
 '''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_decorator_list', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _decorator_list, got _type_params, could not coerce')**'''),
 ],
 
 'matrix__arglike': [  # ................................................................................
@@ -3579,6 +7031,17 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
+('', 0, 0, '_arglike', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
 ('', 0, 0, '_arglike', {}, ('_decorator_list',
 r'''@a'''),
 r'''(a,)''',
@@ -3586,6 +7049,21 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,4
   .elts[1]
    0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -3598,6 +7076,62 @@ Tuple - ROOT 0,0..0,4
    0] Name 'a' Load - 0,1..0,2
   .ctx Load
 '''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'b' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_arglike', {}, ('expr_arglike',
 r'''*not a'''),
@@ -3684,6 +7218,26 @@ Set - ROOT 0,0..0,3
    0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, '_arglike', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, '_arglike', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+Set - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+'''),
+
 ('', 0, 0, '_arglike', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -3727,6 +7281,28 @@ List - ROOT 0,0..0,3
   .ctx Load
 '''),
 
+('', 0, 0, '_arglike', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+List - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+List - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, '_arglike', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -3734,6 +7310,30 @@ r'''(a,)''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -3752,6 +7352,17 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
+('', 0, 0, '_arglike', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
 ('', 0, 0, '_arglike', {}, ('arguments',
 r'''a'''),
 r'''(a,)''',
@@ -3762,15 +7373,91 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'b' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce')**'''),
+
 ('', 0, 0, '_arglike', {}, ('arg',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
+('', 0, 0, '_arglike', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (arglike), got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arg, could not coerce')**'''),
+
 ('', 0, 0, '_arglike', {}, ('alias',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, '_arglike', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (arglike), got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got alias, could not coerce')**'''),
 
 ('', 0, 0, '_arglike', {}, ('_aliases',
 r'''a'''),
@@ -3782,10 +7469,31 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
+('', 0, 0, '_arglike', {}, ('_aliases',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_arglike', {}, ('withitem',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, '_arglike', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting expression (arglike), got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got withitem, could not coerce')**'''),
 
 ('', 0, 0, '_arglike', {}, ('_withitems',
 r'''a'''),
@@ -3796,6 +7504,22 @@ Tuple - ROOT 0,0..0,4
    0] Name 'a' Load - 0,1..0,2
   .ctx Load
 '''),
+
+('', 0, 0, '_arglike', {}, ('_withitems',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_arglike', {}, ('MatchValue',
 r'''1'''),
@@ -3855,10 +7579,61 @@ BinOp - ROOT 0,0..0,5
   .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, '_arglike', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''(a,)''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_arglike', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
+
+('', 0, 0, '_arglike', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting expression (arglike), got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_arglike', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -3877,6 +7652,24 @@ Tuple - ROOT 0,0..0,4
    0] Name 'a' Load - 0,1..0,2
   .ctx Load
 '''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_arglike', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce')**'''),
 ],
 
 'matrix__arglikes': [  # ................................................................................
@@ -3922,6 +7715,16 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
 ('', 0, 0, '_arglikes', {}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -3931,12 +7734,96 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..1,1
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 1,0..1,1
+'''),
+
 ('', 0, 0, '_arglikes', {}, ('_arglikes',
 r'''a'''),
 r'''a''', r'''
 _arglikes - ROOT 0,0..0,1
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''*b'''),
+r'''*b''', r'''
+_arglikes - ROOT 0,0..0,2
+  .arglikes[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''b=c'''),
+r'''b=c''', r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .arg 'b'
+     .value Name 'c' Load - 0,2..0,3
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''**b'''),
+r'''**b''', r'''
+_arglikes - ROOT 0,0..0,3
+  .arglikes[1]
+   0] keyword - 0,0..0,3
+     .value Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_arglikes - ROOT 0,0..0,5
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''a, b=c''', r'''
+_arglikes - ROOT 0,0..0,6
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] keyword - 0,3..0,6
+     .arg 'b'
+     .value Name 'c' Load - 0,5..0,6
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_arglikes',
+r'''a, **b'''),
+r'''a, **b''', r'''
+_arglikes - ROOT 0,0..0,6
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] keyword - 0,3..0,6
+     .value Name 'b' Load - 0,5..0,6
 '''),
 
 ('', 0, 0, '_arglikes', {}, ('expr_arglike',
@@ -4041,6 +7928,28 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('Set',
+r'''{a, *b}'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+_arglikes - ROOT 0,0..0,5
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+'''),
+
 ('', 0, 0, '_arglikes', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -4096,6 +8005,28 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('List',
+r'''[a, *b]'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+_arglikes - ROOT 0,0..0,5
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+'''),
+
 ('', 0, 0, '_arglikes', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -4103,6 +8034,26 @@ r'''a''', r'''
 _arglikes - ROOT 0,0..0,2
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_arglikes', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_arglikes - ROOT 0,0..0,5
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
 '''),
 
 ('', 0, 0, '_arglikes', {}, ('Slice',
@@ -4119,6 +8070,16 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
 ('', 0, 0, '_arglikes', {}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -4126,6 +8087,66 @@ _arglikes - ROOT 0,0..0,1
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''*b'''),
+r'''*b''', r'''
+_arglikes - ROOT 0,0..0,2
+  .arglikes[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_arglikes - ROOT 0,0..0,5
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_arglikes', {}, ('arg',
 r'''a'''),
@@ -4135,6 +8156,11 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _arglikes, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_arglikes', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -4142,6 +8168,11 @@ _arglikes - ROOT 0,0..0,1
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_arglikes', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _arglikes, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_arglikes', {}, ('_aliases',
 r'''a'''),
@@ -4151,6 +8182,20 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _arglikes, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_arglikes', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -4159,6 +8204,11 @@ _arglikes - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_arglikes', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _arglikes, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_arglikes', {}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -4166,6 +8216,20 @@ _arglikes - ROOT 0,0..0,1
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_arglikes', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _arglikes, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_arglikes', {}, ('MatchValue',
 r'''1'''),
@@ -4242,6 +8306,33 @@ _arglikes - ROOT 0,0..0,5
      .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, '_arglikes', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_arglikes - ROOT 0,0..0,1
+  .arglikes[1]
+   0] Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _arglikes, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_arglikes - ROOT 0,0..0,4
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_arglikes', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _arglikes, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_arglikes', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -4249,6 +8340,26 @@ _arglikes - ROOT 0,0..0,1
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_arglikes', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _arglikes, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _arglikes, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _arglikes, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _arglikes, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_arglikes', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -4267,6 +8378,22 @@ _arglikes - ROOT 0,0..0,1
   .arglikes[1]
    0] Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_arglikes - ROOT 0,0..0,5
+  .arglikes[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+'''),
+
+('', 0, 0, '_arglikes', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got _type_params, could not coerce')**'''),
 ],
 
 'matrix__comprehension_ifs': [  # ................................................................................
@@ -4316,6 +8443,16 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('_decorator_list',
 r'''@a'''),
 r'''if a''',
@@ -4323,6 +8460,20 @@ r'''if a''', r'''
 _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+if a
+if b
+''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..1,4
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 1,3..1,4
 '''),
 
 ('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
@@ -4333,6 +8484,46 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {}, ('expr_arglike',
 r'''*not a'''),
@@ -4432,6 +8623,21 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('Set',
+r'''{a, b}'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got Set, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('Call',
 r'''a()'''),
 r'''if a()''',
@@ -4486,6 +8692,21 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('List',
+r'''[a, b]'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got List, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('Tuple',
 r'''a,'''),
 r'''if a''',
@@ -4494,6 +8715,21 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('Tuple',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got Tuple, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {}, ('Slice',
 r'''a:b:c'''),
@@ -4508,6 +8744,15 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('arguments',
 r'''a'''),
 r'''if a''',
@@ -4516,6 +8761,56 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {}, ('arg',
 r'''a'''),
@@ -4526,6 +8821,11 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('alias',
 r'''a'''),
 r'''if a''',
@@ -4534,6 +8834,11 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {}, ('_aliases',
 r'''a'''),
@@ -4544,6 +8849,21 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('_aliases',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('withitem',
 r'''a'''),
 r'''if a''',
@@ -4553,6 +8873,11 @@ _comprehension_ifs - ROOT 0,0..0,4
    0] Name 'a' Load - 0,3..0,4
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {}, ('_withitems',
 r'''a'''),
 r'''if a''',
@@ -4561,6 +8886,21 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_withitems',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {}, ('MatchValue',
 r'''1'''),
@@ -4638,6 +8978,35 @@ _comprehension_ifs - ROOT 0,0..0,8
      .right Name 'b' Load - 0,7..0,8
 '''),
 
+('', 0, 0, '_comprehension_ifs', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''if a''',
+r'''if a''', r'''
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+   0] Name 'a' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''if a if b''',
+r'''if a if b''', r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+'''),
+
+('', 0, 0, '_comprehension_ifs', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''if a''',
@@ -4646,6 +9015,26 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -4660,6 +9049,16 @@ _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
    0] Name 'a' Load - 0,3..0,4
 '''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_comprehension_ifs', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _comprehension_ifs, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_arguments': [  # ................................................................................
@@ -4710,6 +9109,18 @@ arguments - ROOT 0,0..0,1
      .arg 'a'
 '''),
 
+('', 0, 0, 'arguments', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
 ('', 0, 0, 'arguments', {}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -4718,6 +9129,22 @@ arguments - ROOT 0,0..0,1
   .args[1]
    0] arg - 0,0..0,1
      .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+arguments - ROOT 0,0..1,1
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 1,0..1,1
+     .arg 'b'
 '''),
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
@@ -4729,6 +9156,57 @@ arguments - ROOT 0,0..0,1
    0] arg - 0,0..0,1
      .arg 'a'
 '''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''*b'''),
+r'''*b''',
+r'''*b,''', r'''
+arguments - ROOT 0,0..0,2
+  .vararg arg - 0,1..0,2
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, 'arguments', {}, ('expr_arglike',
 r'''*not a'''),
@@ -4785,6 +9263,30 @@ arguments - ROOT 0,0..0,1
      .arg 'a'
 '''),
 
+('', 0, 0, 'arguments', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('Set',
+r'''{a, *b}'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
 ('', 0, 0, 'arguments', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting arguments, got Call, could not coerce')**''',
@@ -4824,6 +9326,30 @@ arguments - ROOT 0,0..0,1
      .arg 'a'
 '''),
 
+('', 0, 0, 'arguments', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('List',
+r'''[a, *b]'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
 ('', 0, 0, 'arguments', {}, ('Tuple',
 r'''a,'''),
 r'''a,''', r'''
@@ -4831,6 +9357,28 @@ arguments - ROOT 0,0..0,2
   .args[1]
    0] arg - 0,0..0,1
      .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
 '''),
 
 ('', 0, 0, 'arguments', {}, ('Slice',
@@ -4848,6 +9396,18 @@ arguments - ROOT 0,0..0,1
      .arg 'a'
 '''),
 
+('', 0, 0, 'arguments', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
 ('', 0, 0, 'arguments', {}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -4855,6 +9415,99 @@ arguments - ROOT 0,0..0,1
   .args[1]
    0] arg - 0,0..0,1
      .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''*b'''),
+r'''*b''', r'''
+arguments - ROOT 0,0..0,2
+  .vararg arg - 0,1..0,2
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''b=c'''),
+r'''b=c''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''**b'''),
+r'''**b''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''a, b=c'''),
+r'''a, b=c''', r'''
+arguments - ROOT 0,0..0,6
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,5..0,6
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''a, **b'''),
+r'''a, **b''', r'''
+arguments - ROOT 0,0..0,6
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwarg arg - 0,5..0,6
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''a, /'''),
+r'''a, /''', r'''
+arguments - ROOT 0,0..0,4
+  .posonlyargs[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('arguments',
+r'''*, a'''),
+r'''*, a''', r'''
+arguments - ROOT 0,0..0,4
+  .kwonlyargs[1]
+   0] arg - 0,3..0,4
+     .arg 'a'
+  .kw_defaults[1]
+   0] None
 '''),
 
 ('', 0, 0, 'arguments', {}, ('arg',
@@ -4866,6 +9519,16 @@ arguments - ROOT 0,0..0,1
      .arg 'a'
 '''),
 
+('', 0, 0, 'arguments', {}, ('arg',
+r'''a: int'''),
+r'''a: int''', r'''
+arguments - ROOT 0,0..0,6
+  .args[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+'''),
+
 ('', 0, 0, 'arguments', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -4874,6 +9537,11 @@ arguments - ROOT 0,0..0,1
    0] arg - 0,0..0,1
      .arg 'a'
 '''),
+
+('', 0, 0, 'arguments', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting arguments, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got alias, could not coerce')**'''),
 
 ('', 0, 0, 'arguments', {}, ('_aliases',
 r'''a'''),
@@ -4885,6 +9553,22 @@ arguments - ROOT 0,0..0,1
      .arg 'a'
 '''),
 
+('', 0, 0, 'arguments', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting arguments, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, 'arguments', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -4893,6 +9577,11 @@ arguments - ROOT 0,0..0,1
    0] arg - 0,0..0,1
      .arg 'a'
 '''),
+
+('', 0, 0, 'arguments', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting arguments, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got withitem, could not coerce')**'''),
 
 ('', 0, 0, 'arguments', {}, ('_withitems',
 r'''a'''),
@@ -4903,6 +9592,22 @@ arguments - ROOT 0,0..0,1
    0] arg - 0,0..0,1
      .arg 'a'
 '''),
+
+('', 0, 0, 'arguments', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting arguments, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, 'arguments', {}, ('MatchValue',
 r'''1'''),
@@ -4953,6 +9658,37 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting arguments, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting arguments, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''',
+r'''a,''', r'''
+arguments - ROOT 0,0..0,1
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+arguments - ROOT 0,0..0,4
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -4961,6 +9697,26 @@ arguments - ROOT 0,0..0,1
    0] arg - 0,0..0,1
      .arg 'a'
 '''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting arguments, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting arguments, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting arguments, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting arguments, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -4976,6 +9732,22 @@ arguments - ROOT 0,0..0,1
    0] arg - 0,0..0,1
      .arg 'a'
 '''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''', r'''
+arguments - ROOT 0,0..0,5
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_arg': [  # ................................................................................
@@ -5013,13 +9785,60 @@ r'''a ='''),
 r'''FST: **NodeError('expecting arg, got _Assign_targets, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _Assign_targets, could not coerce')**'''),
 
+('', 0, 0, 'arg', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''FST: **NodeError('expecting arg, got _Assign_targets, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _Assign_targets, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('_decorator_list',
 r'''@a'''),
 r'''FST: **NodeError('expecting arg, got _decorator_list, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _decorator_list, could not coerce')**'''),
 
+('', 0, 0, 'arg', {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''FST: **NodeError('expecting arg, got _decorator_list, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _decorator_list, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('_arglikes',
 r'''a'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_arglikes',
+r'''a, **b'''),
 r'''FST: **NodeError('expecting arg, got _arglikes, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _arglikes, could not coerce')**'''),
 
@@ -5073,6 +9892,16 @@ r'''{a}'''),
 r'''FST: **NodeError('expecting arg, got Set, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got Set, could not coerce')**'''),
 
+('', 0, 0, 'arg', {}, ('Set',
+r'''{a, b}'''),
+r'''FST: **NodeError('expecting arg, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got Set, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting arg, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got Set, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting arg, got Call, could not coerce')**''',
@@ -5105,8 +9934,28 @@ r'''[a]'''),
 r'''FST: **NodeError('expecting arg, got List, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got List, could not coerce')**'''),
 
+('', 0, 0, 'arg', {}, ('List',
+r'''[a, b]'''),
+r'''FST: **NodeError('expecting arg, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got List, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting arg, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got List, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('Tuple',
 r'''a,'''),
+r'''FST: **NodeError('expecting arg, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('Tuple',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('Tuple',
+r'''a, *b'''),
 r'''FST: **NodeError('expecting arg, got Tuple, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got Tuple, could not coerce')**'''),
 
@@ -5120,8 +9969,58 @@ r'''if a'''),
 r'''FST: **NodeError('expecting arg, got _comprehension_ifs, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _comprehension_ifs, could not coerce')**'''),
 
+('', 0, 0, 'arg', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''FST: **NodeError('expecting arg, got _comprehension_ifs, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _comprehension_ifs, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('arguments',
 r'''a'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('arguments',
+r'''*, a'''),
 r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
 
@@ -5132,6 +10031,14 @@ arg - ROOT 0,0..0,1
   .arg 'a'
 '''),
 
+('', 0, 0, 'arg', {}, ('arg',
+r'''a: int'''),
+r'''a: int''', r'''
+arg - ROOT 0,0..0,6
+  .arg 'a'
+  .annotation Name 'int' Load - 0,3..0,6
+'''),
+
 ('', 0, 0, 'arg', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -5139,8 +10046,23 @@ arg - ROOT 0,0..0,1
   .arg 'a'
 '''),
 
+('', 0, 0, 'arg', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting arg, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got alias, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('_aliases',
 r'''a'''),
+r'''FST: **NodeError('expecting arg, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_aliases',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_aliases',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting arg, got _aliases, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _aliases, could not coerce')**'''),
 
@@ -5151,8 +10073,23 @@ arg - ROOT 0,0..0,1
   .arg 'a'
 '''),
 
+('', 0, 0, 'arg', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting arg, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got withitem, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {}, ('_withitems',
 r'''a'''),
+r'''FST: **NodeError('expecting arg, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_withitems',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_withitems',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting arg, got _withitems, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _withitems, could not coerce')**'''),
 
@@ -5198,12 +10135,52 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting arg, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'arg', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''FST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'arg', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'arg', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 arg - ROOT 0,0..0,1
   .arg 'a'
 '''),
+
+('', 0, 0, 'arg', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting arg, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting arg, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting arg, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting arg, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'arg', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -5212,6 +10189,16 @@ r'''AST: **NodeError('expecting arg, got TypeVarTuple, could not coerce')**'''),
 
 ('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
 r'''a'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arg', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting arg, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting arg, got _type_params, could not coerce')**'''),
 ],
@@ -5251,13 +10238,60 @@ r'''a ='''),
 r'''FST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''FST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('_decorator_list',
 r'''@a'''),
 r'''FST: **NodeError('expecting alias, got _decorator_list, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _decorator_list, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''FST: **NodeError('expecting alias, got _decorator_list, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _decorator_list, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('_arglikes',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_arglikes',
+r'''a, **b'''),
 r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
 
@@ -5311,6 +10345,16 @@ r'''{a}'''),
 r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('Set',
+r'''{a, b}'''),
+r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting alias, got Call, could not coerce')**''',
@@ -5345,8 +10389,28 @@ r'''[a]'''),
 r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('List',
+r'''[a, b]'''),
+r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('Tuple',
 r'''a,'''),
+r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('Tuple',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('Tuple',
+r'''a, *b'''),
 r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
 
@@ -5360,8 +10424,58 @@ r'''if a'''),
 r'''FST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''FST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('arguments',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('arguments',
+r'''*, a'''),
 r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
 
@@ -5372,6 +10486,11 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'alias', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -5379,8 +10498,26 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'alias', {}, ('alias',
+r'''a as b'''),
+r'''a as b''', r'''
+alias - ROOT 0,0..0,6
+  .name 'a'
+  .asname 'b'
+'''),
+
 ('', 0, 0, 'alias', {}, ('_aliases',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_aliases',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_aliases',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
 
@@ -5391,8 +10528,23 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'alias', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting alias, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got withitem, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {}, ('_withitems',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_withitems',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_withitems',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
 
@@ -5438,12 +10590,52 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting alias, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'alias', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'alias', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'alias', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 alias - ROOT 0,0..0,1
   .name 'a'
 '''),
+
+('', 0, 0, 'alias', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting alias, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'alias', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -5452,6 +10644,16 @@ r'''AST: **NodeError('expecting alias, got TypeVarTuple, could not coerce')**'''
 
 ('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'alias', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 ],
@@ -5504,6 +10706,18 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_aliases', {}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -5514,6 +10728,22 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 1,0..1,1
+     .name 'b'
+'''),
+
 ('', 0, 0, '_aliases', {}, ('_arglikes',
 r'''a'''),
 r'''a''', r'''
@@ -5522,6 +10752,47 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_aliases', {}, ('expr_arglike',
 r'''*not a'''),
@@ -5578,6 +10849,23 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _aliases, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got Set, could not coerce')**'''),
+
 ('', 0, 0, '_aliases', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting _aliases, got Call, could not coerce')**''',
@@ -5621,6 +10909,23 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _aliases, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got List, could not coerce')**'''),
+
 ('', 0, 0, '_aliases', {}, ('Tuple',
 r'''a,'''),
 r'''a''',
@@ -5630,6 +10935,22 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_aliases', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got Tuple, could not coerce')**'''),
 
 ('', 0, 0, '_aliases', {}, ('Slice',
 r'''a:b:c'''),
@@ -5646,6 +10967,18 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_aliases', {}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -5654,6 +10987,57 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_aliases', {}, ('arg',
 r'''a'''),
@@ -5664,6 +11048,11 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_aliases', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -5671,6 +11060,16 @@ _aliases - ROOT 0,0..0,1
   .names[1]
    0] alias - 0,0..0,1
      .name 'a'
+'''),
+
+('', 0, 0, '_aliases', {}, ('alias',
+r'''a as b'''),
+r'''a as b''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'b'
 '''),
 
 ('', 0, 0, '_aliases', {}, ('_aliases',
@@ -5682,6 +11081,29 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('_aliases',
+r'''a, b as c'''),
+r'''a, b as c''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,9
+     .name 'b'
+     .asname 'c'
+'''),
+
 ('', 0, 0, '_aliases', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -5691,6 +11113,11 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_aliases', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _aliases, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_aliases', {}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -5699,6 +11126,22 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_aliases', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _aliases, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_aliases', {}, ('MatchValue',
 r'''1'''),
@@ -5749,6 +11192,36 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting _aliases, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, '_aliases', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_aliases', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_aliases', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_aliases', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -5757,6 +11230,26 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_aliases', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _aliases, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_aliases', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -5771,6 +11264,16 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_aliases', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_Import_name': [  # ................................................................................
@@ -5808,13 +11311,60 @@ r'''a ='''),
 r'''FST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''FST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('_decorator_list',
 r'''@a'''),
 r'''FST: **NodeError('expecting alias, got _decorator_list, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _decorator_list, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''FST: **NodeError('expecting alias, got _decorator_list, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _decorator_list, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('_arglikes',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_arglikes',
+r'''a, **b'''),
 r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
 
@@ -5868,6 +11418,16 @@ r'''{a}'''),
 r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('Set',
+r'''{a, b}'''),
+r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting alias, got Call, could not coerce')**''',
@@ -5902,8 +11462,28 @@ r'''[a]'''),
 r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('List',
+r'''[a, b]'''),
+r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('Tuple',
 r'''a,'''),
+r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('Tuple',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('Tuple',
+r'''a, *b'''),
 r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
 
@@ -5917,8 +11497,58 @@ r'''if a'''),
 r'''FST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''FST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('arguments',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('arguments',
+r'''*, a'''),
 r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
 
@@ -5929,6 +11559,11 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'Import_name', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -5936,8 +11571,26 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'Import_name', {}, ('alias',
+r'''a as b'''),
+r'''a as b''', r'''
+alias - ROOT 0,0..0,6
+  .name 'a'
+  .asname 'b'
+'''),
+
 ('', 0, 0, 'Import_name', {}, ('_aliases',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_aliases',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_aliases',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
 
@@ -5948,8 +11601,23 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'Import_name', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting alias, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got withitem, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {}, ('_withitems',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_withitems',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_withitems',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
 
@@ -5995,12 +11663,52 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting alias, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'Import_name', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'Import_name', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 alias - ROOT 0,0..0,1
   .name 'a'
 '''),
+
+('', 0, 0, 'Import_name', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting alias, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'Import_name', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -6009,6 +11717,16 @@ r'''AST: **NodeError('expecting alias, got TypeVarTuple, could not coerce')**'''
 
 ('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'Import_name', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 ],
@@ -6061,6 +11779,18 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_Import_names', {}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -6071,6 +11801,22 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 1,0..1,1
+     .name 'b'
+'''),
+
 ('', 0, 0, '_Import_names', {}, ('_arglikes',
 r'''a'''),
 r'''a''', r'''
@@ -6079,6 +11825,47 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_Import_names', {}, ('expr_arglike',
 r'''*not a'''),
@@ -6135,6 +11922,23 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _aliases, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got Set, could not coerce')**'''),
+
 ('', 0, 0, '_Import_names', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting _aliases, got Call, could not coerce')**''',
@@ -6178,6 +11982,23 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _aliases, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got List, could not coerce')**'''),
+
 ('', 0, 0, '_Import_names', {}, ('Tuple',
 r'''a,'''),
 r'''a''',
@@ -6187,6 +12008,22 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_Import_names', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got Tuple, could not coerce')**'''),
 
 ('', 0, 0, '_Import_names', {}, ('Slice',
 r'''a:b:c'''),
@@ -6203,6 +12040,18 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_Import_names', {}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -6211,6 +12060,57 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_Import_names', {}, ('arg',
 r'''a'''),
@@ -6221,6 +12121,11 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_Import_names', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -6228,6 +12133,16 @@ _aliases - ROOT 0,0..0,1
   .names[1]
    0] alias - 0,0..0,1
      .name 'a'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('alias',
+r'''a as b'''),
+r'''a as b''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'b'
 '''),
 
 ('', 0, 0, '_Import_names', {}, ('_aliases',
@@ -6239,6 +12154,29 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('_aliases',
+r'''a, b as c'''),
+r'''a, b as c''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,9
+     .name 'b'
+     .asname 'c'
+'''),
+
 ('', 0, 0, '_Import_names', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -6248,6 +12186,11 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_Import_names', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _aliases, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_Import_names', {}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -6256,6 +12199,22 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_Import_names', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _aliases, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_Import_names', {}, ('MatchValue',
 r'''1'''),
@@ -6306,6 +12265,36 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting _aliases, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, '_Import_names', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_Import_names', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_Import_names', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -6314,6 +12303,26 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_Import_names', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _aliases, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_Import_names', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -6328,6 +12337,16 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_Import_names', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_ImportFrom_name': [  # ................................................................................
@@ -6365,13 +12384,60 @@ r'''a ='''),
 r'''FST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''FST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _Assign_targets, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('_decorator_list',
 r'''@a'''),
 r'''FST: **NodeError('expecting alias, got _decorator_list, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _decorator_list, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''FST: **NodeError('expecting alias, got _decorator_list, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _decorator_list, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_arglikes',
+r'''a, **b'''),
 r'''FST: **NodeError('expecting alias, got _arglikes, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _arglikes, could not coerce')**'''),
 
@@ -6425,6 +12491,16 @@ r'''{a}'''),
 r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('Set',
+r'''{a, b}'''),
+r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting alias, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Set, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting alias, got Call, could not coerce')**''',
@@ -6457,8 +12533,28 @@ r'''[a]'''),
 r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('List',
+r'''[a, b]'''),
+r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting alias, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got List, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('Tuple',
 r'''a,'''),
+r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('Tuple',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('Tuple',
+r'''a, *b'''),
 r'''FST: **NodeError('expecting alias, got Tuple, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got Tuple, could not coerce')**'''),
 
@@ -6472,8 +12568,58 @@ r'''if a'''),
 r'''FST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''FST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _comprehension_ifs, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('arguments',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('arguments',
+r'''*, a'''),
 r'''FST: **NodeError('expecting alias, got arguments, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got arguments, could not coerce')**'''),
 
@@ -6484,6 +12630,11 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -6491,8 +12642,26 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('alias',
+r'''a as b'''),
+r'''a as b''', r'''
+alias - ROOT 0,0..0,6
+  .name 'a'
+  .asname 'b'
+'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('_aliases',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_aliases',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_aliases',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting alias, got _aliases, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _aliases, could not coerce')**'''),
 
@@ -6503,8 +12672,23 @@ alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting alias, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got withitem, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {}, ('_withitems',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_withitems',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_withitems',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting alias, got _withitems, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _withitems, could not coerce')**'''),
 
@@ -6550,12 +12734,52 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting alias, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'ImportFrom_name', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 alias - ROOT 0,0..0,1
   .name 'a'
 '''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting alias, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting alias, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -6564,6 +12788,16 @@ r'''AST: **NodeError('expecting alias, got TypeVarTuple, could not coerce')**'''
 
 ('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
 r'''a'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'ImportFrom_name', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting alias, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting alias, got _type_params, could not coerce')**'''),
 ],
@@ -6616,6 +12850,18 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -6626,6 +12872,22 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 1,0..1,1
+     .name 'b'
+'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
 r'''a'''),
 r'''a''', r'''
@@ -6634,6 +12896,47 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_ImportFrom_names', {}, ('expr_arglike',
 r'''*not a'''),
@@ -6690,6 +12993,23 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _aliases, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got Set, could not coerce')**'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting _aliases, got Call, could not coerce')**''',
@@ -6729,6 +13049,23 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _aliases, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got List, could not coerce')**'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('Tuple',
 r'''a,'''),
 r'''a''',
@@ -6738,6 +13075,22 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got Tuple, could not coerce')**'''),
 
 ('', 0, 0, '_ImportFrom_names', {}, ('Slice',
 r'''a:b:c'''),
@@ -6754,6 +13107,18 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -6762,6 +13127,57 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _aliases, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_ImportFrom_names', {}, ('arg',
 r'''a'''),
@@ -6772,6 +13188,11 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -6779,6 +13200,16 @@ _aliases - ROOT 0,0..0,1
   .names[1]
    0] alias - 0,0..0,1
      .name 'a'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('alias',
+r'''a as b'''),
+r'''a as b''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'b'
 '''),
 
 ('', 0, 0, '_ImportFrom_names', {}, ('_aliases',
@@ -6790,6 +13221,29 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_aliases',
+r'''a, b as c'''),
+r'''a, b as c''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,9
+     .name 'b'
+     .asname 'c'
+'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -6799,6 +13253,11 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _aliases, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_ImportFrom_names', {}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -6807,6 +13266,22 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _aliases, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_ImportFrom_names', {}, ('MatchValue',
 r'''1'''),
@@ -6857,6 +13332,36 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting _aliases, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting _aliases, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, '_ImportFrom_names', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_ImportFrom_names', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -6865,6 +13370,26 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _aliases, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -6879,6 +13404,16 @@ _aliases - ROOT 0,0..0,1
    0] alias - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_ImportFrom_names', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _aliases, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _aliases, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_withitem': [  # ................................................................................
@@ -6922,6 +13457,18 @@ withitem - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'withitem', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
 ('', 0, 0, 'withitem', {}, ('_decorator_list',
 r'''@a'''),
 r'''(a,)''',
@@ -6930,6 +13477,22 @@ withitem - ROOT 0,0..0,4
   .context_expr Tuple - 0,0..0,4
     .elts[1]
      0] Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+(a,
+b)
+''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..1,2
+  .context_expr Tuple - 0,0..1,2
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 1,0..1,1
     .ctx Load
 '''),
 
@@ -6943,6 +13506,65 @@ withitem - ROOT 0,0..0,4
      0] Name 'a' Load - 0,1..0,2
     .ctx Load
 '''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+withitem - ROOT 0,0..0,5
+  .context_expr Tuple - 0,0..0,5
+    .elts[1]
+     0] Starred - 0,1..0,3
+       .value Name 'b' Load - 0,2..0,3
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting withitem, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting withitem, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+withitem - ROOT 0,0..0,7
+  .context_expr Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting withitem, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting withitem, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, 'withitem', {}, ('expr_arglike',
 r'''*not a'''),
@@ -7031,6 +13653,28 @@ withitem - ROOT 0,0..0,3
      0] Name 'a' Load - 0,1..0,2
 '''),
 
+('', 0, 0, 'withitem', {}, ('Set',
+r'''{a, b}'''),
+r'''{a, b}''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Set - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 0, 0, 'withitem', {}, ('Set',
+r'''{a, *b}'''),
+r'''{a, *b}''', r'''
+withitem - ROOT 0,0..0,7
+  .context_expr Set - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+'''),
+
 ('', 0, 0, 'withitem', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -7078,6 +13722,30 @@ withitem - ROOT 0,0..0,3
     .ctx Load
 '''),
 
+('', 0, 0, 'withitem', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr List - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+withitem - ROOT 0,0..0,7
+  .context_expr List - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
 ('', 0, 0, 'withitem', {}, ('Tuple',
 r'''a,'''),
 r'''(a,)''',
@@ -7086,6 +13754,32 @@ withitem - ROOT 0,0..0,4
   .context_expr Tuple - 0,0..0,4
     .elts[1]
      0] Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('Tuple',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('Tuple',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+withitem - ROOT 0,0..0,7
+  .context_expr Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
     .ctx Load
 '''),
 
@@ -7105,6 +13799,18 @@ withitem - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'withitem', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
 ('', 0, 0, 'withitem', {}, ('arguments',
 r'''a'''),
 r'''(a,)''',
@@ -7116,6 +13822,75 @@ withitem - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''*b'''),
+r'''(*b,)''',
+r'''(*b,)''', r'''
+withitem - ROOT 0,0..0,5
+  .context_expr Tuple - 0,0..0,5
+    .elts[1]
+     0] Starred - 0,1..0,3
+       .value Name 'b' Load - 0,2..0,3
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting withitem, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting withitem, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+withitem - ROOT 0,0..0,7
+  .context_expr Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting withitem, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting withitem, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting withitem, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting withitem, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arguments, could not coerce')**'''),
+
 ('', 0, 0, 'withitem', {}, ('arg',
 r'''a'''),
 r'''a''', r'''
@@ -7123,12 +13898,22 @@ withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, 'withitem', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting withitem, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'withitem', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
 withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'withitem', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting withitem, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got alias, could not coerce')**'''),
 
 ('', 0, 0, 'withitem', {}, ('_aliases',
 r'''a'''),
@@ -7141,11 +13926,36 @@ withitem - ROOT 0,0..0,4
     .ctx Load
 '''),
 
+('', 0, 0, 'withitem', {}, ('_aliases',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting withitem, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, 'withitem', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
 withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, 'withitem', {}, ('withitem',
+r'''a as b'''),
+r'''a as b''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Name 'a' Load - 0,0..0,1
+  .optional_vars Name 'b' Store - 0,5..0,6
 '''),
 
 ('', 0, 0, 'withitem', {}, ('_withitems',
@@ -7158,6 +13968,23 @@ withitem - ROOT 0,0..0,4
      0] Name 'a' Load - 0,1..0,2
     .ctx Load
 '''),
+
+('', 0, 0, 'withitem', {}, ('_withitems',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting withitem, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, 'withitem', {}, ('MatchValue',
 r'''1'''),
@@ -7224,12 +14051,65 @@ withitem - ROOT 0,0..0,5
     .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, 'withitem', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''(a,)''',
+r'''(a,)''', r'''
+withitem - ROOT 0,0..0,4
+  .context_expr Tuple - 0,0..0,4
+    .elts[1]
+     0] Name 'a' Load - 0,1..0,2
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting withitem, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''(a, b)''',
+r'''(a, b)''', r'''
+withitem - ROOT 0,0..0,6
+  .context_expr Tuple - 0,0..0,6
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting withitem, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'withitem', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, 'withitem', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting withitem, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting withitem, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting withitem, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting withitem, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'withitem', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -7246,6 +14126,25 @@ withitem - ROOT 0,0..0,4
      0] Name 'a' Load - 0,1..0,2
     .ctx Load
 '''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''(a, *b)''',
+r'''(a, *b)''', r'''
+withitem - ROOT 0,0..0,7
+  .context_expr Tuple - 0,0..0,7
+    .elts[2]
+     0] Name 'a' Load - 0,1..0,2
+     1] Starred - 0,4..0,6
+       .value Name 'b' Load - 0,5..0,6
+       .ctx Load
+    .ctx Load
+'''),
+
+('', 0, 0, 'withitem', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting withitem, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting withitem, got _type_params, could not coerce')**'''),
 ],
 
 'matrix__withitems': [  # ................................................................................
@@ -7296,6 +14195,18 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
 ('', 0, 0, '_withitems', {}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -7306,6 +14217,22 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_withitems - ROOT 0,0..1,1
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 1,0..1,1
+     .context_expr Name 'b' Load - 1,0..1,1
+'''),
+
 ('', 0, 0, '_withitems', {}, ('_arglikes',
 r'''a'''),
 r'''a''', r'''
@@ -7314,6 +14241,47 @@ _withitems - ROOT 0,0..0,1
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_withitems', {}, ('expr_arglike',
 r'''*not a'''),
@@ -7417,6 +14385,23 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _withitems, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got Set, could not coerce')**'''),
+
 ('', 0, 0, '_withitems', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -7472,6 +14457,23 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _withitems, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got List, could not coerce')**'''),
+
 ('', 0, 0, '_withitems', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -7481,6 +14483,22 @@ _withitems - ROOT 0,0..0,2
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_withitems', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _withitems, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got Tuple, could not coerce')**'''),
 
 ('', 0, 0, '_withitems', {}, ('Slice',
 r'''a:b:c'''),
@@ -7497,6 +14515,18 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
 ('', 0, 0, '_withitems', {}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -7505,6 +14535,57 @@ _withitems - ROOT 0,0..0,1
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _withitems, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_withitems', {}, ('arg',
 r'''a'''),
@@ -7515,6 +14596,11 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _withitems, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_withitems', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -7523,6 +14609,11 @@ _withitems - ROOT 0,0..0,1
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_withitems', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _withitems, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_withitems', {}, ('_aliases',
 r'''a'''),
@@ -7533,6 +14624,22 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _withitems, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_withitems', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -7542,6 +14649,16 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
+('', 0, 0, '_withitems', {}, ('withitem',
+r'''a as b'''),
+r'''a as b''', r'''
+_withitems - ROOT 0,0..0,6
+  .items[1]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'b' Store - 0,5..0,6
+'''),
+
 ('', 0, 0, '_withitems', {}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -7549,6 +14666,29 @@ _withitems - ROOT 0,0..0,1
   .items[1]
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_withitems', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('_withitems',
+r'''a, b as c'''),
+r'''a, b as c''', r'''
+_withitems - ROOT 0,0..0,9
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,9
+     .context_expr Name 'b' Load - 0,3..0,4
+     .optional_vars Name 'c' Store - 0,8..0,9
 '''),
 
 ('', 0, 0, '_withitems', {}, ('MatchValue',
@@ -7628,6 +14768,36 @@ _withitems - ROOT 0,0..0,5
        .right Name 'b' Load - 0,4..0,5
 '''),
 
+('', 0, 0, '_withitems', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_withitems - ROOT 0,0..0,1
+  .items[1]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_withitems', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _withitems, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_withitems - ROOT 0,0..0,4
+  .items[2]
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
+'''),
+
+('', 0, 0, '_withitems', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _withitems, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_withitems', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -7636,6 +14806,26 @@ _withitems - ROOT 0,0..0,1
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_withitems', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _withitems, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _withitems, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _withitems, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _withitems, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_withitems', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -7650,6 +14840,16 @@ _withitems - ROOT 0,0..0,1
    0] withitem - 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_withitems', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _withitems, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _withitems, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_pattern': [  # ................................................................................
@@ -7692,6 +14892,18 @@ MatchSequence - ROOT 0,0..0,3
      .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
 ('', 0, 0, 'pattern', {}, ('_decorator_list',
 r'''@a'''),
 r'''[a]''',
@@ -7700,6 +14912,22 @@ MatchSequence - ROOT 0,0..0,3
   .patterns[1]
    0] MatchAs - 0,1..0,2
      .name 'a'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+[a,
+b]
+''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..1,2
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 1,0..1,1
+     .name 'b'
 '''),
 
 ('', 0, 0, 'pattern', {}, ('_arglikes',
@@ -7711,6 +14939,60 @@ MatchSequence - ROOT 0,0..0,3
    0] MatchAs - 0,1..0,2
      .name 'a'
 '''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''*b'''),
+r'''[*b]''',
+r'''[*b]''', r'''
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+   0] MatchStar - 0,1..0,3
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting pattern, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting pattern, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''a, b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''a, *b'''),
+r'''[a, *b]''',
+r'''[a, *b]''', r'''
+MatchSequence - ROOT 0,0..0,7
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting pattern, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting pattern, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, 'pattern', {}, ('expr_arglike',
 r'''*not a'''),
@@ -7767,6 +15049,30 @@ MatchSequence - ROOT 0,0..0,3
      .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('Set',
+r'''{a, b}'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('Set',
+r'''{a, *b}'''),
+r'''[a, *b]''',
+r'''[a, *b]''', r'''
+MatchSequence - ROOT 0,0..0,7
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
+     .name 'b'
+'''),
+
 ('', 0, 0, 'pattern', {}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -7814,6 +15120,28 @@ MatchSequence - ROOT 0,0..0,3
      .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('List',
+r'''[a, b]'''),
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('List',
+r'''[a, *b]'''),
+r'''[a, *b]''', r'''
+MatchSequence - ROOT 0,0..0,7
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
+     .name 'b'
+'''),
+
 ('', 0, 0, 'pattern', {}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -7822,6 +15150,30 @@ MatchSequence - ROOT 0,0..0,2
   .patterns[1]
    0] MatchAs - 0,0..0,1
      .name 'a'
+'''),
+
+('', 0, 0, 'pattern', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''',
+r'''[a, *b]''', r'''
+MatchSequence - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchStar - 0,3..0,5
+     .name 'b'
 '''),
 
 ('', 0, 0, 'pattern', {}, ('Slice',
@@ -7839,6 +15191,18 @@ MatchSequence - ROOT 0,0..0,3
      .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
 ('', 0, 0, 'pattern', {}, ('arguments',
 r'''a'''),
 r'''[a]''',
@@ -7849,6 +15213,70 @@ MatchSequence - ROOT 0,0..0,3
      .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''*b'''),
+r'''[*b]''',
+r'''[*b]''', r'''
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+   0] MatchStar - 0,1..0,3
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting pattern, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting pattern, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''a, b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''a, *b'''),
+r'''[a, *b]''',
+r'''[a, *b]''', r'''
+MatchSequence - ROOT 0,0..0,7
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting pattern, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting pattern, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting pattern, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting pattern, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arguments, could not coerce')**'''),
+
 ('', 0, 0, 'pattern', {}, ('arg',
 r'''a'''),
 r'''a''', r'''
@@ -7856,12 +15284,22 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting pattern, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'pattern', {}, ('alias',
 r'''a'''),
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
+
+('', 0, 0, 'pattern', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting pattern, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got alias, could not coerce')**'''),
 
 ('', 0, 0, 'pattern', {}, ('_aliases',
 r'''a'''),
@@ -7873,12 +15311,34 @@ MatchSequence - ROOT 0,0..0,3
      .name 'a'
 '''),
 
+('', 0, 0, 'pattern', {}, ('_aliases',
+r'''a, b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting pattern, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, 'pattern', {}, ('withitem',
 r'''a'''),
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
+
+('', 0, 0, 'pattern', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting pattern, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got withitem, could not coerce')**'''),
 
 ('', 0, 0, 'pattern', {}, ('_withitems',
 r'''a'''),
@@ -7889,6 +15349,23 @@ MatchSequence - ROOT 0,0..0,3
    0] MatchAs - 0,1..0,2
      .name 'a'
 '''),
+
+('', 0, 0, 'pattern', {}, ('_withitems',
+r'''a, b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting pattern, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, 'pattern', {}, ('MatchValue',
 r'''1'''),
@@ -7954,12 +15431,64 @@ MatchOr - ROOT 0,0..0,5
      .name 'b'
 '''),
 
+('', 0, 0, 'pattern', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''[a]''',
+r'''[a]''', r'''
+MatchSequence - ROOT 0,0..0,3
+  .patterns[1]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting pattern, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''[a, b]''',
+r'''[a, b]''', r'''
+MatchSequence - ROOT 0,0..0,6
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting pattern, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'pattern', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
+
+('', 0, 0, 'pattern', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting pattern, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting pattern, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting pattern, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting pattern, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, 'pattern', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
@@ -7977,6 +15506,682 @@ MatchSequence - ROOT 0,0..0,3
    0] MatchAs - 0,1..0,2
      .name 'a'
 '''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''[a, *b]''',
+r'''[a, *b]''', r'''
+MatchSequence - ROOT 0,0..0,7
+  .patterns[2]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
+     .name 'b'
+'''),
+
+('', 0, 0, 'pattern', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting pattern, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting pattern, got _type_params, could not coerce')**'''),
+],
+
+'matrix__pattern_attrlikes': [  # ................................................................................
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Module',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Interactive',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Expression',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Expr',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_Assign_targets',
+r'''a ='''),
+r'''a''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_decorator_list',
+r'''@a'''),
+r'''a''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..1,1
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 1,0..1,1
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('expr_arglike',
+r'''*not a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Starred, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Starred, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('expr_slice',
+r'''a:b, c:d'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Tuple, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('NamedExpr',
+r'''a := b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got NamedExpr, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got NamedExpr, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('BinOp',
+r'''a + b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got BinOp, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got BinOp, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('UnaryOp',
+r'''-a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got UnaryOp, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got UnaryOp, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('IfExp',
+r'''a if b else c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got IfExp, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got IfExp, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Dict',
+r'''{a: b}'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Dict, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Dict, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Yield',
+r'''yield a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Yield, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Yield, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('YieldFrom',
+r'''yield from a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got YieldFrom, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got YieldFrom, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Set',
+r'''{a}'''),
+r'''a''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Set, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Call',
+r'''a()'''),
+r'''a()''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .patterns[1]
+   0] MatchClass - 0,0..0,3
+     .cls Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Constant',
+r'''1'''),
+r'''1''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Attribute',
+r'''a.b'''),
+r'''a.b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .patterns[1]
+   0] MatchValue - 0,0..0,3
+     .value Attribute - 0,0..0,3
+       .value Name 'a' Load - 0,0..0,1
+       .attr 'b'
+       .ctx Load
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Starred',
+r'''*a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Starred, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Starred, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Name',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('List',
+r'''[a]'''),
+r'''a''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got List, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Tuple',
+r'''a,'''),
+r'''a,''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,2
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Tuple',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Tuple, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('Slice',
+r'''a:b:c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got Slice, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got Slice, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_comprehension_ifs',
+r'''if a'''),
+r'''a''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arg',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got arg, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('alias',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got alias, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_aliases',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _aliases, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('withitem',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got withitem, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_withitems',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _withitems, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchValue',
+r'''1'''),
+r'''1''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchSingleton',
+r'''True'''),
+r'''True''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[1]
+   0] MatchSingleton True - 0,0..0,4
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchSequence',
+r'''[a]'''),
+r'''a''',
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchMapping',
+r'''{1: a}'''),
+r'''{1: a}''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchMapping - 0,0..0,6
+     .keys[1]
+      0] Constant 1 - 0,1..0,2
+     .patterns[1]
+      0] MatchAs - 0,4..0,5
+        .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchClass',
+r'''a()'''),
+r'''a()''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .patterns[1]
+   0] MatchClass - 0,0..0,3
+     .cls Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchStar',
+r'''*a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got MatchStar, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got MatchStar, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchAs',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('MatchOr',
+r'''a | b'''),
+r'''a | b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,5
+  .patterns[1]
+   0] MatchOr - 0,0..0,5
+     .patterns[2]
+      0] MatchAs - 0,0..0,1
+        .name 'a'
+      1] MatchAs - 0,4..0,5
+        .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,2..0,3
+     .name 'c'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_pattern_attrlikes - ROOT 0,0..0,4
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''a, b=c''', r'''
+_pattern_attrlikes - ROOT 0,0..0,6
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+  .kwd_attrs[1]
+   0] 'b'
+  .kwd_patterns[1]
+   0] MatchAs - 0,5..0,6
+     .name 'c'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('TypeVar',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 13}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got ParamSpec, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('TypeVarTuple',
+r'''*a'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got TypeVarTuple, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got TypeVarTuple, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a'''),
+r'''a''', r'''
+_pattern_attrlikes - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
+
+('', 0, 0, '_pattern_attrlikes', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce')**'''),
 ],
 
 'matrix_type_param': [  # ................................................................................
@@ -8014,13 +16219,60 @@ r'''a ='''),
 r'''FST: **NodeError('expecting type_param, got _Assign_targets, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _Assign_targets, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('_Assign_targets',
+r'''a = b ='''),
+r'''FST: **NodeError('expecting type_param, got _Assign_targets, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _Assign_targets, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_decorator_list',
 r'''@a'''),
 r'''FST: **NodeError('expecting type_param, got _decorator_list, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _decorator_list, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''FST: **NodeError('expecting type_param, got _decorator_list, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _decorator_list, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
 r'''a'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''*b'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_arglikes',
+r'''a, **b'''),
 r'''FST: **NodeError('expecting type_param, got _arglikes, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _arglikes, could not coerce')**'''),
 
@@ -8074,6 +16326,16 @@ r'''{a}'''),
 r'''FST: **NodeError('expecting type_param, got Set, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got Set, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('Set',
+r'''{a, b}'''),
+r'''FST: **NodeError('expecting type_param, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got Set, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('Set',
+r'''{a, *b}'''),
+r'''FST: **NodeError('expecting type_param, got Set, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got Set, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting type_param, got Call, could not coerce')**''',
@@ -8108,8 +16370,28 @@ r'''[a]'''),
 r'''FST: **NodeError('expecting type_param, got List, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got List, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('List',
+r'''[a, b]'''),
+r'''FST: **NodeError('expecting type_param, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got List, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('List',
+r'''[a, *b]'''),
+r'''FST: **NodeError('expecting type_param, got List, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got List, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('Tuple',
 r'''a,'''),
+r'''FST: **NodeError('expecting type_param, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('Tuple',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got Tuple, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got Tuple, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('Tuple',
+r'''a, *b'''),
 r'''FST: **NodeError('expecting type_param, got Tuple, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got Tuple, could not coerce')**'''),
 
@@ -8123,8 +16405,58 @@ r'''if a'''),
 r'''FST: **NodeError('expecting type_param, got _comprehension_ifs, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _comprehension_ifs, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''FST: **NodeError('expecting type_param, got _comprehension_ifs, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _comprehension_ifs, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
 r'''a'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''*b'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('arguments',
+r'''*, a'''),
 r'''FST: **NodeError('expecting type_param, got arguments, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got arguments, could not coerce')**'''),
 
@@ -8135,6 +16467,11 @@ TypeVar - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting type_param, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got arg, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -8142,8 +16479,23 @@ TypeVar - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting type_param, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got alias, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_aliases',
 r'''a'''),
+r'''FST: **NodeError('expecting type_param, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_aliases',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _aliases, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_aliases',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting type_param, got _aliases, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _aliases, could not coerce')**'''),
 
@@ -8154,8 +16506,23 @@ TypeVar - ROOT 0,0..0,1
   .name 'a'
 '''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting type_param, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got withitem, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_withitems',
 r'''a'''),
+r'''FST: **NodeError('expecting type_param, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_withitems',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _withitems, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_withitems',
+r'''a, b as c'''),
 r'''FST: **NodeError('expecting type_param, got _withitems, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _withitems, could not coerce')**'''),
 
@@ -8203,10 +16570,63 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting type_param, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, 'type_param', {'_ver': 12}, ('_pattern_attrlikes',
+r'''a'''),
+r'''FST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''FST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, 'type_param', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 TypeVar - ROOT 0,0..0,1
+  .name 'a'
+'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('TypeVar',
+r'''a=b'''),
+r'''a=b''',
+r'''a = b''', r'''
+TypeVar - ROOT 0,0..0,3
+  .name 'a'
+  .default_value Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''a: int''', r'''
+TypeVar - ROOT 0,0..0,6
+  .name 'a'
+  .bound Name 'int' Load - 0,3..0,6
+'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('TypeVar',
+r'''a: int = b'''),
+r'''a: int = b''', r'''
+TypeVar - ROOT 0,0..0,10
+  .name 'a'
+  .bound Name 'int' Load - 0,3..0,6
+  .default_value Name 'b' Load - 0,9..0,10
+'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''**a''', r'''
+ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
@@ -8219,6 +16639,16 @@ TypeVarTuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
 r'''a'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'type_param', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
 r'''FST: **NodeError('expecting type_param, got _type_params, could not coerce')**''',
 r'''AST: **NodeError('expecting type_param, got _type_params, could not coerce')**'''),
 ],
@@ -8271,6 +16701,18 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -8281,6 +16723,22 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+_type_params - ROOT 0,0..1,1
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 1,0..1,1
+     .name 'b'
+'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
 r'''a'''),
 r'''a''', r'''
@@ -8289,6 +16747,57 @@ _type_params - ROOT 0,0..0,1
    0] TypeVar - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''*b'''),
+r'''*b''', r'''
+_type_params - ROOT 0,0..0,2
+  .type_params[1]
+   0] TypeVarTuple - 0,0..0,2
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_type_params - ROOT 0,0..0,5
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('expr_arglike',
 r'''*not a'''),
@@ -8345,6 +16854,30 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('Set',
+r'''{a, *b}'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+_type_params - ROOT 0,0..0,5
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('Call',
 r'''a()'''),
 r'''FST: **NodeError('expecting _type_params, got Call, could not coerce')**''',
@@ -8388,6 +16921,30 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('List',
+r'''[a, *b]'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+_type_params - ROOT 0,0..0,5
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('Tuple',
 r'''a,'''),
 r'''a,''',
@@ -8396,6 +16953,28 @@ _type_params - ROOT 0,0..0,2
   .type_params[1]
    0] TypeVar - 0,0..0,1
      .name 'a'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_type_params - ROOT 0,0..0,5
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
 '''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('Slice',
@@ -8413,6 +16992,18 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -8421,6 +17012,67 @@ _type_params - ROOT 0,0..0,1
    0] TypeVar - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''*b'''),
+r'''*b''', r'''
+_type_params - ROOT 0,0..0,2
+  .type_params[1]
+   0] TypeVarTuple - 0,0..0,2
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_type_params - ROOT 0,0..0,5
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arg',
 r'''a'''),
@@ -8431,6 +17083,11 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting _type_params, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -8439,6 +17096,11 @@ _type_params - ROOT 0,0..0,1
    0] TypeVar - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _type_params, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_aliases',
 r'''a'''),
@@ -8449,6 +17111,22 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _type_params, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -8458,6 +17136,11 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting _type_params, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -8466,6 +17149,22 @@ _type_params - ROOT 0,0..0,1
    0] TypeVar - 0,0..0,1
      .name 'a'
 '''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting _type_params, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('MatchValue',
 r'''1'''),
@@ -8520,12 +17219,83 @@ r'''a | b'''),
 r'''FST: **NodeError('expecting _type_params, got MatchOr, could not coerce')**''',
 r'''AST: **NodeError('expecting _type_params, got MatchOr, could not coerce')**'''),
 
+('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+_type_params - ROOT 0,0..0,1
+  .type_params[1]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+_type_params - ROOT 0,0..0,4
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,4
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
 _type_params - ROOT 0,0..0,1
   .type_params[1]
    0] TypeVar - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
+r'''a=b'''),
+r'''a=b''',
+r'''a = b''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] TypeVar - 0,0..0,3
+     .name 'a'
+     .default_value Name 'b' Load - 0,2..0,3
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
+r'''a: int'''),
+r'''a: int''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[1]
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
+r'''a: int = b'''),
+r'''a: int = b''', r'''
+_type_params - ROOT 0,0..0,10
+  .type_params[1]
+   0] TypeVar - 0,0..0,10
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+     .default_value Name 'b' Load - 0,9..0,10
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('ParamSpec',
+r'''**a'''),
+r'''**a''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] ParamSpec - 0,0..0,3
      .name 'a'
 '''),
 
@@ -8545,6 +17315,30 @@ _type_params - ROOT 0,0..0,1
   .type_params[1]
    0] TypeVar - 0,0..0,1
      .name 'a'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''', r'''
+_type_params - ROOT 0,0..0,5
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+r'''a, *b, **c'''),
+r'''a, *b, **c''', r'''
+_type_params - ROOT 0,0..0,10
+  .type_params[3]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'b'
+   2] ParamSpec - 0,7..0,10
+     .name 'c'
 '''),
 ],
 
@@ -8596,6 +17390,17 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_Assign_targets',
+r'''a = b ='''),
+r'''a, b''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_decorator_list',
 r'''@a'''),
 r'''a''',
@@ -8603,6 +17408,21 @@ r'''a''', r'''
 Tuple - ROOT 0,0..0,1
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+a,
+b
+''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..1,1
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
 
@@ -8614,6 +17434,59 @@ Tuple - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''*b'''),
+r'''*b''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''**b'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''a, *b'''),
+r'''a, *b''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_arglikes',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce')**'''),
 
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('expr_arglike',
 r'''*not a'''),
@@ -8726,6 +17599,30 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('Set',
+r'''{a, b}'''),
+r'''a, b''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('Set',
+r'''{a, *b}'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('Call',
 r'''a()'''),
 r'''a()''', r'''
@@ -8787,12 +17684,58 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('List',
+r'''[a, b]'''),
+r'''a, b''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('List',
+r'''[a, *b]'''),
+r'''a, *b''',
+r'''a, *b''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('Tuple',
 r'''a,'''),
 r'''a,''', r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
    0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('Tuple',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('Tuple',
+r'''a, *b'''),
+r'''a, *b''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
   .ctx Load
 '''),
 
@@ -8811,6 +17754,17 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_comprehension_ifs',
+r'''if a if b'''),
+r'''a, b''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
 r'''a'''),
 r'''a''', r'''
@@ -8819,6 +17773,69 @@ Tuple - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''*b'''),
+r'''*b''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'b' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''b=c'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''**b'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''a, *b'''),
+r'''a, *b''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''a, **b'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''a, /'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arguments',
+r'''*, a'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce')**'''),
 
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arg',
 r'''a'''),
@@ -8829,6 +17846,11 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('arg',
+r'''a: int'''),
+r'''FST: **NodeError('expecting Tuple, got arg, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got arg, could not coerce')**'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('alias',
 r'''a'''),
 r'''a''', r'''
@@ -8837,6 +17859,11 @@ Tuple - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('alias',
+r'''a as b'''),
+r'''FST: **NodeError('expecting Tuple, got alias, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got alias, could not coerce')**'''),
 
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_aliases',
 r'''a'''),
@@ -8847,6 +17874,21 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_aliases',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_aliases',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting Tuple, got _aliases, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _aliases, could not coerce')**'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('withitem',
 r'''a'''),
 r'''a''', r'''
@@ -8856,6 +17898,11 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('withitem',
+r'''a as b'''),
+r'''FST: **NodeError('expecting Tuple, got withitem, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got withitem, could not coerce')**'''),
+
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_withitems',
 r'''a'''),
 r'''a''', r'''
@@ -8864,6 +17911,21 @@ Tuple - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_withitems',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_withitems',
+r'''a, b as c'''),
+r'''FST: **NodeError('expecting Tuple, got _withitems, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _withitems, could not coerce')**'''),
 
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('MatchValue',
 r'''1'''),
@@ -8948,6 +18010,35 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_pattern_attrlikes',
+r'''a'''),
+r'''a''', r'''
+Tuple - ROOT 0,0..0,1
+  .elts[1]
+   0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_pattern_attrlikes',
+r'''b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_pattern_attrlikes',
+r'''a, b'''),
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_verify': False}, ('_pattern_attrlikes',
+r'''a, b=c'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce')**'''),
+
 ('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('TypeVar',
 r'''a'''),
 r'''a''', r'''
@@ -8956,6 +18047,26 @@ Tuple - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, '_expr_arglikes', {'_ver': 13, '_verify': False}, ('TypeVar',
+r'''a=b'''),
+r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_ver': 13, '_verify': False}, ('TypeVar',
+r'''a: int = b'''),
+r'''FST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got TypeVar, could not coerce')**'''),
+
+('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('ParamSpec',
+r'''**a'''),
+r'''FST: **NodeError('expecting Tuple, got ParamSpec, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got ParamSpec, could not coerce')**'''),
 
 ('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('TypeVarTuple',
 r'''*a'''),
@@ -8976,6 +18087,23 @@ Tuple - ROOT 0,0..0,1
    0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
+
+('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('_type_params',
+r'''a, *b'''),
+r'''a, *b''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Starred - 0,3..0,5
+     .value Name 'b' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 0, '_expr_arglikes', {'_ver': 12, '_verify': False}, ('_type_params',
+r'''a, *b, **c'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce')**'''),
 ],
 
 'stmt': [  # ................................................................................
