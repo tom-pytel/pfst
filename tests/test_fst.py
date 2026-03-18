@@ -384,6 +384,18 @@ class TestFST(unittest.TestCase):
 
     maxDiff = None
 
+    @classmethod
+    def setUpClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        cls.old_ignore_fields = set_dump_ignore_fields({'is_lazy'})  # for py 3.15 to be slightly less annoying when testing
+
+    @classmethod
+    def tearDownClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        set_dump_ignore_fields(cls.old_ignore_fields)
+
     def test_fst_unparse(self):
         a = fst.parse('if 1: pass')
 

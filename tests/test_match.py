@@ -26,6 +26,18 @@ class TestMatch(unittest.TestCase):
 
     maxDiff = None
 
+    @classmethod
+    def setUpClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        cls.old_ignore_fields = set_dump_ignore_fields({'is_lazy'})  # for py 3.15 to be slightly less annoying when testing
+
+    @classmethod
+    def tearDownClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        set_dump_ignore_fields(cls.old_ignore_fields)
+
     def test_match_pat_repr(self):
         self.assertEqual("M('pat')", repr(M('pat')))
         self.assertEqual("M(pat_tag='pat')", repr(M(pat_tag='pat')))

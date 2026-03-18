@@ -269,6 +269,18 @@ def regen_put_one():
 
 
 class TestFSTPut(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        cls.old_ignore_fields = set_dump_ignore_fields({'is_lazy'})  # for py 3.15 to be slightly less annoying when testing
+
+    @classmethod
+    def tearDownClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        set_dump_ignore_fields(cls.old_ignore_fields)
+
     def test_get_one_from_data(self):
         for case, rest in DATA_GET_ONE.iterate(True):
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):

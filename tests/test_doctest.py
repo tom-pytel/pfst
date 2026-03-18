@@ -64,6 +64,18 @@ def load_tests(loader, tests, ignore):
 
 
 class TestDocTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        cls.old_ignore_fields = set_dump_ignore_fields({'is_lazy'})  # for py 3.15 to be slightly less annoying when testing
+
+    @classmethod
+    def tearDownClass(cls):
+        from fst.fst_misc import set_dump_ignore_fields
+
+        set_dump_ignore_fields(cls.old_ignore_fields)
+
     def test_fst_module(self):
         fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not (k.startswith('_') or k == 'walk' or k == 'match')}  # "walk" and "match" are evil special cases that shadow, fst.fst_traverse.walk() and fst.match.match()
         options = fst.FST.get_options()

@@ -12,7 +12,7 @@ import sys
 from ast import iter_fields, walk
 from math import log10
 from pprint import pformat
-from typing import Any, Literal, Mapping
+from typing import Any, Container, Literal, Mapping
 
 from . import fst
 
@@ -133,6 +133,7 @@ from .common import (
 )
 
 __all__ = [
+    'set_dump_ignore_fields',
     'is_terminal_color_enabled',
     'new_empty_set_star',
     'new_empty_set_call',
@@ -269,7 +270,6 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('pattern',               (MatchAs,)),
 ] for kls in classes}  # fmt: skip
 
-
 _re_dump_line_tail     = re.compile(r'\s* ( \#.*$ | \\$ | ; (?: \s* (?: \#.*$ | \\$ ) )? )', re.VERBOSE)
 _re_one_space_or_end   = re.compile(r'\s|$')
 
@@ -279,6 +279,8 @@ _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][({{[][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)}}\]][{pat_alnum}]')
 
 _re_line_end_ws_maybe_cont = re.compile(r'\s*\\?$')
+
+_DUMP_IGNORE_FIELDS = ()
 
 
 def _dump_lines(
@@ -450,6 +452,9 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
     st.linefunc(f'{cind}{prefix}{c.clr_ast}{ast_cls.__name__}{c.end_ast}{tail}{st.eol}')
 
     for name, child in iter_fields(ast):
+        if name in _DUMP_IGNORE_FIELDS:
+            continue
+
         is_list = isinstance(child, list)
 
         if (is_list and child and st.src
@@ -536,6 +541,28 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+def set_dump_ignore_fields(fields: Container[str] = ()) -> Container | None:
+    """This exists in order to allow exclusion of all `fields` from ever being output byt `dump()`. Added when Python
+    3.15 added the `is_lazy` field to imports which made tests more annoying without this.
+
+    This applies globally across all threads.
+
+    **Parameters:**
+    - `fields`: A `Container` of field names to exclude from dump. Fields are tested using `field in fields` so a hashed
+        container like a `set` or a `dict` is preferred.
+
+    **Returns:**
+    - `fields`: Previous value of feilds being ignored.
+    """
+
+    global _DUMP_IGNORE_FIELDS
+
+    old_ignore_fields = _DUMP_IGNORE_FIELDS
+    _DUMP_IGNORE_FIELDS = fields
+
+    return old_ignore_fields
+
 
 def is_terminal_color_enabled() -> bool:
     if DEFAULT_COLOR is not None:

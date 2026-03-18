@@ -200,9 +200,17 @@ class BaseCases(dict):
             raise
 
     def generate(self):
-        for case, rest in self.iterate(True):
-            if _check_version(case.options):
-                self[case.key][case.idx] = BaseCase(*case[:-1], rest)
+        from fst.fst_misc import set_dump_ignore_fields
+
+        old_ignore_fields = set_dump_ignore_fields({'is_lazy'})  # for py 3.15 to be slightly less annoying when testing, TEMPORARY!
+
+        try:
+            for case, rest in self.iterate(True):
+                if _check_version(case.options):
+                    self[case.key][case.idx] = BaseCase(*case[:-1], rest)
+
+        finally:
+            set_dump_ignore_fields(old_ignore_fields)  # for py 3.15 to be slightly less annoying when testing,
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
         raise NotImplementedError('this must be implemented in a subclass')
