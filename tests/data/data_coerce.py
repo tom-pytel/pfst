@@ -10662,8 +10662,7 @@ arguments - ROOT 0,0..1,1
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''a'''),
-r'''a''',
-r'''a,''', r'''
+r'''a''', r'''
 arguments - ROOT 0,0..0,1
   .args[1]
    0] arg - 0,0..0,1
@@ -10672,8 +10671,7 @@ arguments - ROOT 0,0..0,1
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''*b'''),
-r'''*b''',
-r'''*b,''', r'''
+r'''*b''', r'''
 arguments - ROOT 0,0..0,2
   .vararg arg - 0,1..0,2
     .arg 'b'
@@ -10681,13 +10679,22 @@ arguments - ROOT 0,0..0,2
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+r'''b=c''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+r'''**b''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'b'
+'''),
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''a, b'''),
@@ -10713,13 +10720,27 @@ arguments - ROOT 0,0..0,5
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+r'''a, b=c''', r'''
+arguments - ROOT 0,0..0,6
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,5..0,6
+'''),
 
 ('', 0, 0, 'arguments', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting arguments, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _arglikes, could not coerce')**'''),
+r'''a, **b''', r'''
+arguments - ROOT 0,0..0,6
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwarg arg - 0,5..0,6
+    .arg 'b'
+'''),
 
 ('', 0, 0, 'arguments', {}, ('expr_arglike',
 r'''*not a'''),
@@ -10817,8 +10838,11 @@ r'''AST: **NodeError('expecting arguments, got Attribute, could not coerce')**''
 
 ('', 0, 0, 'arguments', {}, ('Starred',
 r'''*a'''),
-r'''FST: **NodeError('expecting arguments, got Starred, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got Starred, could not coerce')**'''),
+r'''*a''', r'''
+arguments - ROOT 0,0..0,2
+  .vararg arg - 0,1..0,2
+    .arg 'a'
+'''),
 
 ('', 0, 0, 'arguments', {}, ('Name',
 r'''a'''),
@@ -11196,8 +11220,11 @@ r'''AST: **NodeError('expecting arguments, got MatchClass, could not coerce')**'
 
 ('', 0, 0, 'arguments', {}, ('MatchStar',
 r'''*a'''),
-r'''FST: **NodeError('expecting arguments, got MatchStar, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got MatchStar, could not coerce')**'''),
+r'''*a''', r'''
+arguments - ROOT 0,0..0,2
+  .vararg arg - 0,1..0,2
+    .arg 'a'
+'''),
 
 ('', 0, 0, 'arguments', {}, ('MatchAs',
 r'''a'''),
@@ -11215,8 +11242,7 @@ r'''AST: **NodeError('expecting arguments, got MatchOr, could not coerce')**''')
 
 ('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
 r'''a'''),
-r'''a''',
-r'''a,''', r'''
+r'''a''', r'''
 arguments - ROOT 0,0..0,1
   .args[1]
    0] arg - 0,0..0,1
@@ -11225,8 +11251,14 @@ arguments - ROOT 0,0..0,1
 
 ('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**'''),
+r'''b=c''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -11241,8 +11273,16 @@ arguments - ROOT 0,0..0,4
 
 ('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _pattern_attrlikes, could not coerce')**'''),
+r'''a, b=c''', r'''
+arguments - ROOT 0,0..0,6
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,5..0,6
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -11255,23 +11295,45 @@ arguments - ROOT 0,0..0,1
 
 ('', 0, 0, 'arguments', {'_ver': 13}, ('TypeVar',
 r'''a=b'''),
-r'''FST: **NodeError('expecting arguments, got TypeVar, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got TypeVar, could not coerce')**'''),
+r'''a=b''', r'''
+arguments - ROOT 0,0..0,3
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .defaults[1]
+   0] Name 'b' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVar',
 r'''a: int'''),
-r'''FST: **NodeError('expecting arguments, got TypeVar, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got TypeVar, could not coerce')**'''),
+r'''a: int''', r'''
+arguments - ROOT 0,0..0,6
+  .args[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 13}, ('TypeVar',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting arguments, got TypeVar, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got TypeVar, could not coerce')**'''),
+r'''a: int = b''',
+r'''a: int=b''', r'''
+arguments - ROOT 0,0..0,10
+  .args[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+  .defaults[1]
+   0] Name 'b' Load - 0,9..0,10
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('ParamSpec',
 r'''**a'''),
-r'''FST: **NodeError('expecting arguments, got ParamSpec, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got ParamSpec, could not coerce')**'''),
+r'''**a''', r'''
+arguments - ROOT 0,0..0,3
+  .kwarg arg - 0,2..0,3
+    .arg 'a'
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 13}, ('ParamSpec',
 r'''**a=b'''),
@@ -11280,8 +11342,11 @@ r'''AST: **NodeError('expecting arguments, got ParamSpec, could not coerce')**''
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
-r'''FST: **NodeError('expecting arguments, got TypeVarTuple, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got TypeVarTuple, could not coerce')**'''),
+r'''*a''', r'''
+arguments - ROOT 0,0..0,2
+  .vararg arg - 0,1..0,2
+    .arg 'a'
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 13}, ('TypeVarTuple',
 r'''*a=b'''),
@@ -11290,8 +11355,7 @@ r'''AST: **NodeError('expecting arguments, got TypeVarTuple, could not coerce')*
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a'''),
-r'''a''',
-r'''a,''', r'''
+r'''a''', r'''
 arguments - ROOT 0,0..0,1
   .args[1]
    0] arg - 0,0..0,1
@@ -11322,33 +11386,81 @@ arguments - ROOT 0,0..0,5
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+r'''a, **b''', r'''
+arguments - ROOT 0,0..0,6
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .kwarg arg - 0,5..0,6
+    .arg 'b'
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+r'''a, *b, **c''', r'''
+arguments - ROOT 0,0..0,10
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+  .vararg arg - 0,4..0,5
+    .arg 'b'
+  .kwarg arg - 0,9..0,10
+    .arg 'c'
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
-r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+r'''a: int''', r'''
+arguments - ROOT 0,0..0,6
+  .args[1]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 12}, ('_type_params',
 r'''a: int, b: float'''),
-r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+r'''a: int, b: float''', r'''
+arguments - ROOT 0,0..0,16
+  .args[2]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+   1] arg - 0,8..0,16
+     .arg 'b'
+     .annotation Name 'float' Load - 0,11..0,16
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
 r'''a=c, b=d'''),
-r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+r'''a=c, b=d''', r'''
+arguments - ROOT 0,0..0,8
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .defaults[2]
+   0] Name 'c' Load - 0,2..0,3
+   1] Name 'd' Load - 0,7..0,8
+'''),
 
 ('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
 r'''a: int = c, b: float = d'''),
-r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
-r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+r'''a: int = c, b: float = d''',
+r'''a: int=c, b: float=d''', r'''
+arguments - ROOT 0,0..0,24
+  .args[2]
+   0] arg - 0,0..0,6
+     .arg 'a'
+     .annotation Name 'int' Load - 0,3..0,6
+   1] arg - 0,12..0,20
+     .arg 'b'
+     .annotation Name 'float' Load - 0,15..0,20
+  .defaults[2]
+   0] Name 'c' Load - 0,9..0,10
+   1] Name 'd' Load - 0,23..0,24
+'''),
 
 ('', 0, 0, 'arguments', {'_verify': False}, ('_expr_arglikes',
 r'''a'''),
@@ -21320,6 +21432,27 @@ arguments - ROOT 0,0..0,3
 '''),
 
 ('', 0, 0, 'arguments', {}, ('keyword',
+r''' a = ( b ) '''),
+r''' a = ( b ) ''',
+r'''a=b''', r'''
+arguments - ROOT 0,0..0,11
+  .args[1]
+   0] arg - 0,1..0,2
+     .arg 'a'
+  .defaults[1]
+   0] Name 'b' Load - 0,7..0,8
+'''),
+
+('', 0, 0, 'arguments', {}, ('keyword',
+r''' ** ( b ) '''),
+r''' ** b ''',
+r'''**b''', r'''
+arguments - ROOT 0,0..0,6
+  .kwarg arg - 0,4..0,5
+    .arg 'b'
+'''),
+
+('', 0, 0, 'arguments', {}, ('keyword',
 r'''**b'''),
 r'''**b''', r'''
 arguments - ROOT 0,0..0,3
@@ -21331,6 +21464,153 @@ arguments - ROOT 0,0..0,3
 r'''**(a + b)'''),
 r'''FST: **NodeError('expecting arguments, got keyword, could not coerce')**''',
 r'''AST: **NodeError('expecting arguments, got keyword, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {}, ('Starred',
+r''' * ( a ) '''),
+r''' * a ''',
+r'''*a''', r'''
+arguments - ROOT 0,0..0,5
+  .vararg arg - 0,3..0,4
+    .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('MatchStar',
+r''' * a '''),
+r''' * a ''',
+r'''*a''', r'''
+arguments - ROOT 0,0..0,5
+  .vararg arg - 0,3..0,4
+    .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r''' a , b = ( c ) '''),
+r''' a , b = ( c ) ''',
+r'''a, b=c''', r'''
+arguments - ROOT 0,0..0,15
+  .args[2]
+   0] arg - 0,1..0,2
+     .arg 'a'
+   1] arg - 0,5..0,6
+     .arg 'b'
+  .defaults[1]
+   0] Name 'c' Load - 0,11..0,12
+'''),
+
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r''' a = c(d, e=f), b = g '''),
+r''' a = c(d, e=f), b = g ''',
+r'''a=c(d, e=f), b=g''', r'''
+arguments - ROOT 0,0..0,22
+  .args[2]
+   0] arg - 0,1..0,2
+     .arg 'a'
+   1] arg - 0,16..0,17
+     .arg 'b'
+  .defaults[2]
+   0] Call - 0,5..0,14
+     .func Name 'c' Load - 0,5..0,6
+     .args[1]
+      0] Name 'd' Load - 0,7..0,8
+     .keywords[1]
+      0] keyword - 0,10..0,13
+        .arg 'e'
+        .value Name 'f' Load - 0,12..0,13
+   1] Name 'g' Load - 0,20..0,21
+'''),
+
+('', 0, 0, 'arguments', {}, ('_pattern_attrlikes',
+r'''(a)'''),
+r'''a''',
+r'''a''', r'''
+arguments - ROOT 0,0..0,1
+  .args[1]
+   0] arg - 0,0..0,1
+     .arg 'a'
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 12}, ('TypeVar',
+r''' a : ( int ) '''),
+r''' a : ( int ) ''',
+r'''a: int''', r'''
+arguments - ROOT 0,0..0,13
+  .args[1]
+   0] arg - 0,1..0,12
+     .arg 'a'
+     .annotation Name 'int' Load - 0,7..0,10
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('TypeVar',
+r''' a : ( int ) = ( 2 ) '''),
+r''' a : ( int ) = ( 2 ) ''',
+r'''a: int=2''', r'''
+arguments - ROOT 0,0..0,21
+  .args[1]
+   0] arg - 0,1..0,12
+     .arg 'a'
+     .annotation Name 'int' Load - 0,7..0,10
+  .defaults[1]
+   0] Constant 2 - 0,17..0,18
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''*a, *b'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''a, b=1'''),
+r'''a, b=1''', r'''
+arguments - ROOT 0,0..0,6
+  .args[2]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,4
+     .arg 'b'
+  .defaults[1]
+   0] Constant 1 - 0,5..0,6
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''a=1, b'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''*a, b=1, c'''),
+r'''*a, b=1, c''', r'''
+arguments - ROOT 0,0..0,10
+  .vararg arg - 0,1..0,2
+    .arg 'a'
+  .kwonlyargs[2]
+   0] arg - 0,4..0,5
+     .arg 'b'
+   1] arg - 0,9..0,10
+     .arg 'c'
+  .kw_defaults[2]
+   0] Constant 1 - 0,6..0,7
+   1] None
+'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''**a, b'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''**a, *b'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments', {'_ver': 13}, ('_type_params',
+r'''**a, **b'''),
+r'''FST: **NodeError('expecting arguments, got _type_params, could not coerce')**''',
+r'''AST: **NodeError('expecting arguments, got _type_params, could not coerce')**'''),
+
+('', 0, 0, 'arguments_lambda', {'_ver': 13}, ('TypeVar',
+r'''a: int'''),
+r'''FST: **NodeError('expecting lambda arguments, got TypeVar, could not coerce')**''',
+r'''AST: **NodeError('expecting lambda arguments, got TypeVar, could not coerce')**'''),
 ],
 
 '_withitems': [  # ................................................................................
