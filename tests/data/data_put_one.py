@@ -1161,6 +1161,19 @@ Module - ROOT 0,0..0,19
         .asname 'thing'
 '''),
 
+('body[0].names[0]', None, None, 'name', {'_ver': 15}, ('exec',
+r'''lazy import oldname as thing'''), (None,
+r'''new'''),
+r'''lazy import new as thing''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] Import - 0,0..0,24
+     .names[1]
+      0] alias - 0,12..0,24
+        .name 'new'
+        .asname 'thing'
+'''),
+
 ('body[0].type_params[0]', None, None, 'name', {'_ver': 12}, ('exec',
 r'''def f[T](): pass'''), (None,
 r'''new'''),
@@ -5600,6 +5613,19 @@ Module - ROOT 0,0..0,15
         .asname 'new'
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a as b'''), (None,
+r'''new'''),
+r'''lazy import a as new''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+   0] Import - 0,0..0,20
+     .names[1]
+      0] alias - 0,12..0,20
+        .name 'a'
+        .asname 'new'
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''import a as b'''), (None,
 r'''**DEL**'''),
@@ -5609,6 +5635,18 @@ Module - ROOT 0,0..0,8
    0] Import - 0,0..0,8
      .names[1]
       0] alias - 0,7..0,8
+        .name 'a'
+'''),
+
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a as b'''), (None,
+r'''**DEL**'''),
+r'''lazy import a''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+   0] Import - 0,0..0,13
+     .names[1]
+      0] alias - 0,12..0,13
         .name 'a'
 '''),
 
@@ -5625,6 +5663,19 @@ Module - ROOT 0,0..0,15
         .asname 'new'
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a'''), (None,
+r'''new'''),
+r'''lazy import a as new''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+   0] Import - 0,0..0,20
+     .names[1]
+      0] alias - 0,12..0,20
+        .name 'a'
+        .asname 'new'
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''import a'''), (None,
 r'''**DEL**'''),
@@ -5637,6 +5688,18 @@ Module - ROOT 0,0..0,8
         .name 'a'
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a'''), (None,
+r'''**DEL**'''),
+r'''lazy import a''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+   0] Import - 0,0..0,13
+     .names[1]
+      0] alias - 0,12..0,13
+        .name 'a'
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''import a as b, c'''), (None,
 r'''new'''),
@@ -5652,6 +5715,21 @@ Module - ROOT 0,0..0,18
         .name 'c'
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a as b, c'''), (None,
+r'''new'''),
+r'''lazy import a as new, c''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] Import - 0,0..0,23
+     .names[2]
+      0] alias - 0,12..0,20
+        .name 'a'
+        .asname 'new'
+      1] alias - 0,22..0,23
+        .name 'c'
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''import a as b, c'''), (None,
 r'''**DEL**'''),
@@ -5663,6 +5741,20 @@ Module - ROOT 0,0..0,11
       0] alias - 0,7..0,8
         .name 'a'
       1] alias - 0,10..0,11
+        .name 'c'
+'''),
+
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a as b, c'''), (None,
+r'''**DEL**'''),
+r'''lazy import a, c''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+   0] Import - 0,0..0,16
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'a'
+      1] alias - 0,15..0,16
         .name 'c'
 '''),
 
@@ -5681,6 +5773,21 @@ Module - ROOT 0,0..0,18
         .name 'c'
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a, c'''), (None,
+r'''new'''),
+r'''lazy import a as new, c''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] Import - 0,0..0,23
+     .names[2]
+      0] alias - 0,12..0,20
+        .name 'a'
+        .asname 'new'
+      1] alias - 0,22..0,23
+        .name 'c'
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''import a, c'''), (None,
 r'''**DEL**'''),
@@ -5695,6 +5802,20 @@ Module - ROOT 0,0..0,11
         .name 'c'
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import a, c'''), (None,
+r'''**DEL**'''),
+r'''lazy import a, c''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+   0] Import - 0,0..0,16
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'a'
+      1] alias - 0,15..0,16
+        .name 'c'
+'''),
+
 ('body[0].names[1]', None, None, 'asname', {}, ('exec',
 r'''import c, a as b'''), (None,
 r'''new'''),
@@ -5706,6 +5827,21 @@ Module - ROOT 0,0..0,18
       0] alias - 0,7..0,8
         .name 'c'
       1] alias - 0,10..0,18
+        .name 'a'
+        .asname 'new'
+'''),
+
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import c, a as b'''), (None,
+r'''new'''),
+r'''lazy import c, a as new''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] Import - 0,0..0,23
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'c'
+      1] alias - 0,15..0,23
         .name 'a'
         .asname 'new'
 '''),
@@ -5724,6 +5860,20 @@ Module - ROOT 0,0..0,11
         .name 'a'
 '''),
 
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import c, a as b'''), (None,
+r'''**DEL**'''),
+r'''lazy import c, a''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+   0] Import - 0,0..0,16
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'c'
+      1] alias - 0,15..0,16
+        .name 'a'
+'''),
+
 ('body[0].names[1]', None, None, 'asname', {}, ('exec',
 r'''import c, a'''), (None,
 r'''new'''),
@@ -5739,6 +5889,21 @@ Module - ROOT 0,0..0,18
         .asname 'new'
 '''),
 
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import c, a'''), (None,
+r'''new'''),
+r'''lazy import c, a as new''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] Import - 0,0..0,23
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'c'
+      1] alias - 0,15..0,23
+        .name 'a'
+        .asname 'new'
+'''),
+
 ('body[0].names[1]', None, None, 'asname', {}, ('exec',
 r'''import c, a'''), (None,
 r'''**DEL**'''),
@@ -5750,6 +5915,20 @@ Module - ROOT 0,0..0,11
       0] alias - 0,7..0,8
         .name 'c'
       1] alias - 0,10..0,11
+        .name 'a'
+'''),
+
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy import c, a'''), (None,
+r'''**DEL**'''),
+r'''lazy import c, a''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+   0] Import - 0,0..0,16
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'c'
+      1] alias - 0,15..0,16
         .name 'a'
 '''),
 
@@ -5763,6 +5942,21 @@ Module - ROOT 0,0..0,24
      .module 'z'
      .names[1]
       0] alias - 0,15..0,23
+        .name 'a'
+        .asname 'new'
+     .level 0
+'''),
+
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a as b)'''), (None,
+r'''new'''),
+r'''lazy from z import (a as new)''', r'''
+Module - ROOT 0,0..0,29
+  .body[1]
+   0] ImportFrom - 0,0..0,29
+     .module 'z'
+     .names[1]
+      0] alias - 0,20..0,28
         .name 'a'
         .asname 'new'
      .level 0
@@ -5782,6 +5976,20 @@ Module - ROOT 0,0..0,17
      .level 0
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a as b)'''), (None,
+r'''**DEL**'''),
+r'''lazy from z import (a)''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'z'
+     .names[1]
+      0] alias - 0,20..0,21
+        .name 'a'
+     .level 0
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''from z import (a)'''), (None,
 r'''new'''),
@@ -5797,6 +6005,21 @@ Module - ROOT 0,0..0,24
      .level 0
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a)'''), (None,
+r'''new'''),
+r'''lazy from z import (a as new)''', r'''
+Module - ROOT 0,0..0,29
+  .body[1]
+   0] ImportFrom - 0,0..0,29
+     .module 'z'
+     .names[1]
+      0] alias - 0,20..0,28
+        .name 'a'
+        .asname 'new'
+     .level 0
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''from z import (a)'''), (None,
 r'''**DEL**'''),
@@ -5807,6 +6030,20 @@ Module - ROOT 0,0..0,17
      .module 'z'
      .names[1]
       0] alias - 0,15..0,16
+        .name 'a'
+     .level 0
+'''),
+
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a)'''), (None,
+r'''**DEL**'''),
+r'''lazy from z import (a)''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'z'
+     .names[1]
+      0] alias - 0,20..0,21
         .name 'a'
      .level 0
 '''),
@@ -5828,6 +6065,23 @@ Module - ROOT 0,0..0,27
      .level 0
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a as b, c)'''), (None,
+r'''new'''),
+r'''lazy from z import (a as new, c)''', r'''
+Module - ROOT 0,0..0,32
+  .body[1]
+   0] ImportFrom - 0,0..0,32
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,28
+        .name 'a'
+        .asname 'new'
+      1] alias - 0,30..0,31
+        .name 'c'
+     .level 0
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''from z import (a as b, c)'''), (None,
 r'''**DEL**'''),
@@ -5840,6 +6094,22 @@ Module - ROOT 0,0..0,20
       0] alias - 0,15..0,16
         .name 'a'
       1] alias - 0,18..0,19
+        .name 'c'
+     .level 0
+'''),
+
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a as b, c)'''), (None,
+r'''**DEL**'''),
+r'''lazy from z import (a, c)''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+   0] ImportFrom - 0,0..0,25
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'a'
+      1] alias - 0,23..0,24
         .name 'c'
      .level 0
 '''),
@@ -5861,6 +6131,23 @@ Module - ROOT 0,0..0,27
      .level 0
 '''),
 
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c)'''), (None,
+r'''new'''),
+r'''lazy from z import (a as new, c)''', r'''
+Module - ROOT 0,0..0,32
+  .body[1]
+   0] ImportFrom - 0,0..0,32
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,28
+        .name 'a'
+        .asname 'new'
+      1] alias - 0,30..0,31
+        .name 'c'
+     .level 0
+'''),
+
 ('body[0].names[0]', None, None, 'asname', {}, ('exec',
 r'''from z import (a, c)'''), (None,
 r'''**DEL**'''),
@@ -5873,6 +6160,22 @@ Module - ROOT 0,0..0,20
       0] alias - 0,15..0,16
         .name 'a'
       1] alias - 0,18..0,19
+        .name 'c'
+     .level 0
+'''),
+
+('body[0].names[0]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c)'''), (None,
+r'''**DEL**'''),
+r'''lazy from z import (a, c)''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+   0] ImportFrom - 0,0..0,25
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'a'
+      1] alias - 0,23..0,24
         .name 'c'
      .level 0
 '''),
@@ -5894,6 +6197,23 @@ Module - ROOT 0,0..0,27
      .level 0
 '''),
 
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (c, b as a)'''), (None,
+r'''new'''),
+r'''lazy from z import (c, b as new)''', r'''
+Module - ROOT 0,0..0,32
+  .body[1]
+   0] ImportFrom - 0,0..0,32
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'c'
+      1] alias - 0,23..0,31
+        .name 'b'
+        .asname 'new'
+     .level 0
+'''),
+
 ('body[0].names[1]', None, None, 'asname', {}, ('exec',
 r'''from z import (c, a as b)'''), (None,
 r'''**DEL**'''),
@@ -5906,6 +6226,22 @@ Module - ROOT 0,0..0,20
       0] alias - 0,15..0,16
         .name 'c'
       1] alias - 0,18..0,19
+        .name 'a'
+     .level 0
+'''),
+
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (c, a as b)'''), (None,
+r'''**DEL**'''),
+r'''lazy from z import (c, a)''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+   0] ImportFrom - 0,0..0,25
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'c'
+      1] alias - 0,23..0,24
         .name 'a'
      .level 0
 '''),
@@ -5927,6 +6263,23 @@ Module - ROOT 0,0..0,27
      .level 0
 '''),
 
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (c, a)'''), (None,
+r'''new'''),
+r'''lazy from z import (c, a as new)''', r'''
+Module - ROOT 0,0..0,32
+  .body[1]
+   0] ImportFrom - 0,0..0,32
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'c'
+      1] alias - 0,23..0,31
+        .name 'a'
+        .asname 'new'
+     .level 0
+'''),
+
 ('body[0].names[1]', None, None, 'asname', {}, ('exec',
 r'''from z import (c, a)'''), (None,
 r'''**DEL**'''),
@@ -5939,6 +6292,22 @@ Module - ROOT 0,0..0,20
       0] alias - 0,15..0,16
         .name 'c'
       1] alias - 0,18..0,19
+        .name 'a'
+     .level 0
+'''),
+
+('body[0].names[1]', None, None, 'asname', {'_ver': 15}, ('exec',
+r'''lazy from z import (c, a)'''), (None,
+r'''**DEL**'''),
+r'''lazy from z import (c, a)''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+   0] ImportFrom - 0,0..0,25
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'c'
+      1] alias - 0,23..0,24
         .name 'a'
      .level 0
 '''),
@@ -12641,7 +13010,558 @@ r'''*'''),
 r'''**SyntaxError('invalid syntax')**'''),
 ],
 
+'Import_names_lazy': [  # ................................................................................
+
+('body[0]', 0, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), (None,
+r'''**DEL**'''),
+r'''lazy import c.d as e''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+   0] Import - 0,0..0,20
+     .names[1]
+      0] alias - 0,12..0,20
+        .name 'c.d'
+        .asname 'e'
+'''),
+
+('body[0]', 0, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), ('alias',
+r'''f as g'''),
+r'''lazy import f as g, c.d as e''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+   0] Import - 0,0..0,28
+     .names[2]
+      0] alias - 0,12..0,18
+        .name 'f'
+        .asname 'g'
+      1] alias - 0,20..0,28
+        .name 'c.d'
+        .asname 'e'
+'''),
+
+('body[0]', 1, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), ('alias',
+r'''f as g'''),
+r'''lazy import a, f as g''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+   0] Import - 0,0..0,21
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'a'
+      1] alias - 0,15..0,21
+        .name 'f'
+        .asname 'g'
+'''),
+
+('body[0]', -1, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), ('alias',
+r'''f as g'''),
+r'''lazy import a, f as g''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+   0] Import - 0,0..0,21
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'a'
+      1] alias - 0,15..0,21
+        .name 'f'
+        .asname 'g'
+'''),
+
+('body[0]', -2, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), ('alias',
+r'''f as g'''),
+r'''lazy import f as g, c.d as e''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+   0] Import - 0,0..0,28
+     .names[2]
+      0] alias - 0,12..0,18
+        .name 'f'
+        .asname 'g'
+      1] alias - 0,20..0,28
+        .name 'c.d'
+        .asname 'e'
+'''),
+
+('body[0]', -4, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), ('alias',
+r'''f as g'''),
+r'''**IndexError('index out of range')**'''),
+
+('body[0]', 0, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy import a, c.d as e'''), ('alias',
+r'''x.y as z'''),
+r'''lazy import x.y as z, c.d as e''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+   0] Import - 0,0..0,30
+     .names[2]
+      0] alias - 0,12..0,20
+        .name 'x.y'
+        .asname 'z'
+      1] alias - 0,22..0,30
+        .name 'c.d'
+        .asname 'e'
+'''),
+
+('', 0, None, 'names', {'_ver': 15, 'raw': False}, (None,
+r'''lazy import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('', 0, None, 'names', {'_ver': 15, 'coerce': False}, (None,
+r'''lazy import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('', 0, None, 'names', {'_ver': 15}, ('Import',
+r'''lazy import _'''), ('alias',
+r'''*'''),
+r'''**SyntaxError('invalid syntax')**'''),
+],
+
 'ImportFrom_names': [  # ................................................................................
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from a import *'''), (None,
+r'''new'''),
+r'''lazy from new import *''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'new'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name '*'
+     .level 0
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from a import *'''), (None,
+r'''x.y'''),
+r'''lazy from x.y import *''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'x.y'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name '*'
+     .level 0
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from a import *'''), (None,
+r'''**DEL**'''),
+r'''**ValueError('cannot delete ImportFrom.module in this state')**'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from .a import *'''), (None,
+r'''new'''),
+r'''lazy from .new import *''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] ImportFrom - 0,0..0,23
+     .module 'new'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from .a import *'''), (None,
+r'''x.y'''),
+r'''lazy from .x.y import *''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] ImportFrom - 0,0..0,23
+     .module 'x.y'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from .a import *'''), (None,
+r'''**DEL**'''),
+r'''lazy from . import *''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+   0] ImportFrom - 0,0..0,20
+     .names[1]
+      0] alias - 0,19..0,20
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from . a import *'''), (None,
+r'''new'''),
+r'''lazy from . new import *''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] ImportFrom - 0,0..0,24
+     .module 'new'
+     .names[1]
+      0] alias - 0,23..0,24
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from . a import *'''), (None,
+r'''x.y'''),
+r'''lazy from . x.y import *''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] ImportFrom - 0,0..0,24
+     .module 'x.y'
+     .names[1]
+      0] alias - 0,23..0,24
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from . a import *'''), (None,
+r'''**DEL**'''),
+r'''lazy from .  import *''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+   0] ImportFrom - 0,0..0,21
+     .names[1]
+      0] alias - 0,20..0,21
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from . import *'''), (None,
+r'''new'''),
+r'''lazy from .new import *''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] ImportFrom - 0,0..0,23
+     .module 'new'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name '*'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec', r'''
+from . \
+ .\
+a import *
+'''), (None,
+r'''new'''), r'''
+from . \
+ .\
+new import *
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+   0] ImportFrom - 0,0..2,12
+     .module 'new'
+     .names[1]
+      0] alias - 2,11..2,12
+        .name '*'
+     .level 2
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec', r'''
+from . \
+.\
+  a import *
+'''), (None,
+r'''**DEL**'''), r'''
+from . \
+.\
+   import *
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+   0] ImportFrom - 0,0..2,11
+     .names[1]
+      0] alias - 2,10..2,11
+        .name '*'
+     .level 2
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec', r'''
+from . \
+ . \
+ import *
+'''), (None,
+r'''new'''), r'''
+from . \
+ .new \
+ import *
+''', r'''
+Module - ROOT 0,0..2,9
+  .body[1]
+   0] ImportFrom - 0,0..2,9
+     .module 'new'
+     .names[1]
+      0] alias - 2,8..2,9
+        .name '*'
+     .level 2
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from a.b import c'''), (None,
+r'''**DEL**'''),
+r'''**ValueError('cannot delete ImportFrom.module in this state')**'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from a.b import c'''), (None,
+r'''new'''),
+r'''lazy from new import c''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'new'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name 'c'
+     .level 0
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from a.b import c'''), (None,
+r'''x.y'''),
+r'''lazy from x.y import c''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'x.y'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name 'c'
+     .level 0
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from .a.b import c'''), (None,
+r'''**DEL**'''),
+r'''lazy from . import c''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+   0] ImportFrom - 0,0..0,20
+     .names[1]
+      0] alias - 0,19..0,20
+        .name 'c'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from .a.b import c'''), (None,
+r'''new'''),
+r'''lazy from .new import c''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] ImportFrom - 0,0..0,23
+     .module 'new'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name 'c'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from .a.b import c'''), (None,
+r'''x.y'''),
+r'''lazy from .x.y import c''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+   0] ImportFrom - 0,0..0,23
+     .module 'x.y'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name 'c'
+     .level 1
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from ..a.b import c'''), (None,
+r'''**DEL**'''),
+r'''lazy from .. import c''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+   0] ImportFrom - 0,0..0,21
+     .names[1]
+      0] alias - 0,20..0,21
+        .name 'c'
+     .level 2
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from ..a.b import c'''), (None,
+r'''new'''),
+r'''lazy from ..new import c''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] ImportFrom - 0,0..0,24
+     .module 'new'
+     .names[1]
+      0] alias - 0,23..0,24
+        .name 'c'
+     .level 2
+'''),
+
+('body[0]', None, None, 'module', {'_ver': 15}, ('exec',
+r'''lazy from ..a.b import c'''), (None,
+r'''x.y'''),
+r'''lazy from ..x.y import c''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] ImportFrom - 0,0..0,24
+     .module 'x.y'
+     .names[1]
+      0] alias - 0,23..0,24
+        .name 'c'
+     .level 2
+'''),
+
+('body[0]', 0, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c as d)'''), ('alias',
+r'''**DEL**'''),
+r'''lazy from z import (c as d)''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+   0] ImportFrom - 0,0..0,27
+     .module 'z'
+     .names[1]
+      0] alias - 0,20..0,26
+        .name 'c'
+        .asname 'd'
+     .level 0
+'''),
+
+('body[0]', 0, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c as d)'''), ('alias',
+r'''f as g'''),
+r'''lazy from z import (f as g, c as d)''', r'''
+Module - ROOT 0,0..0,35
+  .body[1]
+   0] ImportFrom - 0,0..0,35
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,26
+        .name 'f'
+        .asname 'g'
+      1] alias - 0,28..0,34
+        .name 'c'
+        .asname 'd'
+     .level 0
+'''),
+
+('body[0]', 1, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c as d)'''), ('alias',
+r'''f as g'''),
+r'''lazy from z import (a, f as g)''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+   0] ImportFrom - 0,0..0,30
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'a'
+      1] alias - 0,23..0,29
+        .name 'f'
+        .asname 'g'
+     .level 0
+'''),
+
+('body[0]', -1, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c as d)'''), ('alias',
+r'''f as g'''),
+r'''lazy from z import (a, f as g)''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+   0] ImportFrom - 0,0..0,30
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,21
+        .name 'a'
+      1] alias - 0,23..0,29
+        .name 'f'
+        .asname 'g'
+     .level 0
+'''),
+
+('body[0]', -2, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c as d)'''), ('alias',
+r'''f as g'''),
+r'''lazy from z import (f as g, c as d)''', r'''
+Module - ROOT 0,0..0,35
+  .body[1]
+   0] ImportFrom - 0,0..0,35
+     .module 'z'
+     .names[2]
+      0] alias - 0,20..0,26
+        .name 'f'
+        .asname 'g'
+      1] alias - 0,28..0,34
+        .name 'c'
+        .asname 'd'
+     .level 0
+'''),
+
+('body[0]', -4, None, 'names', {'_ver': 15}, ('exec',
+r'''lazy from z import (a, c as d)'''), ('alias',
+r'''f as g'''),
+r'''**IndexError('index out of range')**'''),
+
+('', 0, None, 'names', {'_ver': 15, 'raw': False}, (None,
+r'''lazy from . import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
+
+('', 0, None, 'names', {'_ver': 15}, (None,
+r'''lazy from . import _'''), (None,
+r'''(a, b)'''),
+r'''**ParseError('expecting single alias')**'''),
+
+('', 0, None, 'names', {'_ver': 15, 'coerce': False}, (None,
+r'''lazy from . import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
+
+('', 0, None, 'names', {'_ver': 15, 'coerce': False}, (None,
+r'''lazy from . import _'''), (None,
+r'''(a, b)'''),
+r'''**ParseError('expecting single alias')**'''),
+
+('', 0, None, 'names', {'_ver': 15}, ('ImportFrom',
+r'''lazy from . import _'''), ('alias',
+r'''*'''),
+r'''lazy from . import *''', r'''
+ImportFrom - ROOT 0,0..0,20
+  .names[1]
+   0] alias - 0,19..0,20
+     .name '*'
+  .level 1
+'''),
+
+('', 0, None, 'names', {'_ver': 15}, ('ImportFrom',
+r'''from . import a, b'''), ('alias',
+r'''*'''),
+r'''**NodeError('cannot put star alias to ImportFrom.names containing multiple aliases')**'''),
+
+('', 0, None, 'names', {'_ver': 15}, ('ImportFrom',
+r'''from . import _'''), ('alias',
+r'''x.y'''),
+r'''**SyntaxError('invalid syntax')**'''),
+],
+
+'ImportFrom_names_lazy': [  # ................................................................................
 
 ('body[0]', None, None, 'module', {}, ('exec',
 r'''from a import *'''), (None,

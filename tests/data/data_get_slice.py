@@ -14748,6 +14748,317 @@ _aliases - ROOT 0,0..0,1
 '''),
 ],
 
+'Import_names_lazy': [  # ................................................................................
+
+('body[0]', 1, 2, None, {'_ver': 15}, ('exec',
+r'''lazy import a, b as y, c  # comment'''),
+r'''lazy import a, c  # comment''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+   0] Import - 0,0..0,16
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'a'
+      1] alias - 0,15..0,16
+        .name 'c'
+''',
+r'''b as y''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 3, None, {'_ver': 15}, ('exec',
+r'''lazy import a, b as y, c  # comment'''),
+r'''lazy import a  # comment''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] Import - 0,0..0,13
+     .names[1]
+      0] alias - 0,12..0,13
+        .name 'a'
+''',
+r'''b as y, c''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'b'
+     .asname 'y'
+   1] alias - 0,8..0,9
+     .name 'c'
+'''),
+
+('body[0]', 0, 2, None, {'_ver': 15}, ('exec',
+r'''lazy import a, b as y, c  # comment'''),
+r'''lazy import c  # comment''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+   0] Import - 0,0..0,13
+     .names[1]
+      0] alias - 0,12..0,13
+        .name 'c'
+''',
+r'''a, b as y''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,9
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 2, None, {'_ver': 15}, ('exec', r'''
+lazy import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+lazy import a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+   0] Import - 0,0..2,1
+     .names[2]
+      0] alias - 0,12..0,13
+        .name 'a'
+      1] alias - 2,0..2,1
+        .name 'c'
+''', r'''
+
+b \
+as \
+y \
+ \
+
+''', r'''
+_aliases - ROOT 0,0..5,0
+  .names[1]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 0, 2, None, {'_ver': 15}, ('exec', r'''
+lazy import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+lazy import \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+   0] Import - 0,0..1,1
+     .names[1]
+      0] alias - 1,0..1,1
+        .name 'c'
+''', r'''
+a \
+, \
+b \
+as \
+y \
+ \
+
+''', r'''
+_aliases - ROOT 0,0..6,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 2,0..4,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 3, None, {'_ver': 15}, ('exec', r'''
+lazy import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+lazy import a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+   0] Import - 0,0..0,13
+     .names[1]
+      0] alias - 0,12..0,13
+        .name 'a'
+''', r'''
+
+b \
+as \
+y \
+, \
+c
+''', r'''
+_aliases - ROOT 0,0..5,1
+  .names[2]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+   1] alias - 5,0..5,1
+     .name 'c'
+'''),
+
+('body[0].body[0]', 0, 1, None, {'_ver': 15}, ('exec', r'''
+if 1:
+  lazy import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  lazy import  \
+  b \
+  as \
+  y # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Import - 1,2..4,3
+        .names[1]
+         0] alias - 2,2..4,3
+           .name 'b'
+           .asname 'y'
+      1] Pass - 5,2..5,6
+''', r'''
+a \
+
+''', r'''
+_aliases - ROOT 0,0..1,0
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+('body[0].body[0]', 1, 2, None, {'_ver': 15}, ('exec', r'''
+if 1:
+  lazy import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  lazy import a \
+   \
+   # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Import - 1,2..1,15
+        .names[1]
+         0] alias - 1,14..1,15
+           .name 'a'
+      1] Pass - 4,2..4,6
+''', r'''
+b \
+as \
+y
+''', r'''
+_aliases - ROOT 0,0..2,1
+  .names[1]
+   0] alias - 0,0..2,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('', 0, 3, None, {'_ver': 15, 'norm': True}, (None,
+r'''lazy import a, b, c'''),
+r'''**ValueError('cannot cut all Import.names without norm_self=False')**''',
+r'''a, b, c''', r'''
+_aliases - ROOT 0,0..0,7
+  .names[3]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+   2] alias - 0,6..0,7
+     .name 'c'
+'''),
+
+('', 0, 3, None, {'_ver': 15, 'norm_self': False, '_verify_self': False}, (None, r'''
+lazy import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''),
+r'''lazy import   # comment''',
+r'''Import - ROOT 0,0..0,12''', r'''
+a \
+, \
+b \
+as \
+y \
+, \
+c
+''', r'''
+_aliases - ROOT 0,0..6,1
+  .names[3]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 2,0..4,1
+     .name 'b'
+     .asname 'y'
+   2] alias - 6,0..6,1
+     .name 'c'
+'''),
+
+('body[0]', 1, 2, None, {'_ver': 15}, (None, r'''
+if 1:
+  lazy import a, b;
+'''), r'''
+if 1:
+  lazy import a;
+''', r'''
+If - ROOT 0,0..1,16
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Import - 1,2..1,15
+     .names[1]
+      0] alias - 1,14..1,15
+        .name 'a'
+''',
+r'''b''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'b'
+'''),
+],
+
 'ImportFrom_names': [  # ................................................................................
 
 ('body[0]', 1, 2, None, {}, ('exec',
@@ -15093,6 +15404,351 @@ r'''''',
 r'''_aliases - ROOT 0,0..0,0'''),
 ],
 
+'ImportFrom_names_lazy': [  # ................................................................................
+
+('body[0]', 1, 2, None, {'_ver': 15}, ('exec',
+r'''lazy from mod import a, b as y, c  # comment'''),
+r'''lazy from mod import a, c  # comment''', r'''
+Module - ROOT 0,0..0,36
+  .body[1]
+   0] ImportFrom - 0,0..0,25
+     .module 'mod'
+     .names[2]
+      0] alias - 0,21..0,22
+        .name 'a'
+      1] alias - 0,24..0,25
+        .name 'c'
+     .level 0
+''',
+r'''b as y''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 3, None, {'_ver': 15}, ('exec',
+r'''lazy from mod import a, b as y, c  # comment'''),
+r'''lazy from mod import a  # comment''', r'''
+Module - ROOT 0,0..0,33
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'mod'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name 'a'
+     .level 0
+''',
+r'''b as y, c''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'b'
+     .asname 'y'
+   1] alias - 0,8..0,9
+     .name 'c'
+'''),
+
+('body[0]', 0, 2, None, {'_ver': 15}, ('exec',
+r'''lazy from mod import a, b as y, c  # comment'''),
+r'''lazy from mod import c  # comment''', r'''
+Module - ROOT 0,0..0,33
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'mod'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name 'c'
+     .level 0
+''',
+r'''a, b as y''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,9
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 2, None, {'_ver': 15}, ('exec', r'''
+lazy from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+lazy from mod import a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+   0] ImportFrom - 0,0..2,1
+     .module 'mod'
+     .names[2]
+      0] alias - 0,21..0,22
+        .name 'a'
+      1] alias - 2,0..2,1
+        .name 'c'
+     .level 0
+''', r'''
+
+b \
+as \
+y \
+ \
+
+''', r'''
+_aliases - ROOT 0,0..5,0
+  .names[1]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 0, 2, None, {'_ver': 15}, ('exec', r'''
+lazy from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+lazy from mod import (
+c)  # comment
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+   0] ImportFrom - 0,0..1,2
+     .module 'mod'
+     .names[1]
+      0] alias - 1,0..1,1
+        .name 'c'
+     .level 0
+''', r'''
+a \
+, \
+b \
+as \
+y \
+ \
+
+''', r'''
+_aliases - ROOT 0,0..6,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 2,0..4,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 3, None, {'_ver': 15}, ('exec', r'''
+lazy from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+lazy from mod import a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+   0] ImportFrom - 0,0..0,22
+     .module 'mod'
+     .names[1]
+      0] alias - 0,21..0,22
+        .name 'a'
+     .level 0
+''', r'''
+
+b \
+as \
+y \
+, \
+c
+''', r'''
+_aliases - ROOT 0,0..5,1
+  .names[2]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+   1] alias - 5,0..5,1
+     .name 'c'
+'''),
+
+('body[0].body[0]', 0, 1, None, {'_ver': 15}, ('exec', r'''
+if 1:
+  lazy from mod import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  lazy from mod import  \
+  b \
+  as \
+  y # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..4,3
+        .module 'mod'
+        .names[1]
+         0] alias - 2,2..4,3
+           .name 'b'
+           .asname 'y'
+        .level 0
+      1] Pass - 5,2..5,6
+''', r'''
+a \
+
+''', r'''
+_aliases - ROOT 0,0..1,0
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+('body[0].body[0]', 1, 2, None, {'_ver': 15}, ('exec', r'''
+if 1:
+  lazy from mod import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  lazy from mod import a \
+   \
+   # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..1,24
+        .module 'mod'
+        .names[1]
+         0] alias - 1,23..1,24
+           .name 'a'
+        .level 0
+      1] Pass - 4,2..4,6
+''', r'''
+b \
+as \
+y
+''', r'''
+_aliases - ROOT 0,0..2,1
+  .names[1]
+   0] alias - 0,0..2,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('', 0, 3, None, {'_ver': 15, 'norm': True}, (None,
+r'''lazy from mod import a, b, c'''),
+r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
+r'''a, b, c''', r'''
+_aliases - ROOT 0,0..0,7
+  .names[3]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+   2] alias - 0,6..0,7
+     .name 'c'
+'''),
+
+('', 0, 3, None, {'_ver': 15, 'norm_self': False, '_verify_self': False}, (None, r'''
+lazy from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''),
+r'''lazy from mod import   # comment''', r'''
+ImportFrom - ROOT 0,0..0,21
+  .module 'mod'
+  .level 0
+''', r'''
+a \
+, \
+b \
+as \
+y \
+, \
+c
+''', r'''
+_aliases - ROOT 0,0..6,1
+  .names[3]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 2,0..4,1
+     .name 'b'
+     .asname 'y'
+   2] alias - 6,0..6,1
+     .name 'c'
+'''),
+
+('body[0]', 1, 2, None, {'_ver': 15}, (None, r'''
+if 1:
+  lazy from mod import a, b;
+'''), r'''
+if 1:
+  lazy from mod import a;
+''', r'''
+If - ROOT 0,0..1,25
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ImportFrom - 1,2..1,24
+     .module 'mod'
+     .names[1]
+      0] alias - 1,23..1,24
+        .name 'a'
+     .level 0
+''',
+r'''b''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'b'
+'''),
+
+('', 0, 0, None, {'_ver': 15}, (None,
+r'''lazy from mod import a'''),
+r'''lazy from mod import a''', r'''
+ImportFrom - ROOT 0,0..0,22
+  .module 'mod'
+  .names[1]
+   0] alias - 0,21..0,22
+     .name 'a'
+  .level 0
+''',
+r'''''',
+r'''_aliases - ROOT 0,0..0,0'''),
+],
+
 'ImportFrom_names_w_pars': [  # ................................................................................
 
 ('body[0]', 1, 2, None, {}, ('exec',
@@ -15422,6 +16078,346 @@ If - ROOT 0,0..1,22
      .module 'mod'
      .names[1]
       0] alias - 1,19..1,20
+        .name 'a'
+     .level 0
+''',
+r'''b''', r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'b'
+'''),
+],
+
+'ImportFrom_names_w_pars_lazy': [  # ................................................................................
+
+('body[0]', 1, 2, None, {'_ver': 15}, ('exec',
+r'''lazy from mod import (a, b as y, c)  # comment'''),
+r'''lazy from mod import (a, c)  # comment''', r'''
+Module - ROOT 0,0..0,38
+  .body[1]
+   0] ImportFrom - 0,0..0,27
+     .module 'mod'
+     .names[2]
+      0] alias - 0,22..0,23
+        .name 'a'
+      1] alias - 0,25..0,26
+        .name 'c'
+     .level 0
+''',
+r'''b as y''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 3, None, {'_ver': 15}, ('exec',
+r'''lazy from mod import (a, b as y, c)  # comment'''),
+r'''lazy from mod import (a)  # comment''', r'''
+Module - ROOT 0,0..0,35
+  .body[1]
+   0] ImportFrom - 0,0..0,24
+     .module 'mod'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name 'a'
+     .level 0
+''',
+r'''b as y, c''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'b'
+     .asname 'y'
+   1] alias - 0,8..0,9
+     .name 'c'
+'''),
+
+('body[0]', 0, 2, None, {'_ver': 15}, ('exec',
+r'''lazy from mod import (a, b as y, c)  # comment'''),
+r'''lazy from mod import (c)  # comment''', r'''
+Module - ROOT 0,0..0,35
+  .body[1]
+   0] ImportFrom - 0,0..0,24
+     .module 'mod'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name 'c'
+     .level 0
+''',
+r'''a, b as y''', r'''
+_aliases - ROOT 0,0..0,9
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,9
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 2, None, {'_ver': 15}, ('exec', r'''
+lazy from mod import (a
+,
+b
+as
+y
+,
+c  # blah
+)  # comment
+'''), r'''
+lazy from mod import (a
+,
+c  # blah
+)  # comment
+''', r'''
+Module - ROOT 0,0..3,12
+  .body[1]
+   0] ImportFrom - 0,0..3,1
+     .module 'mod'
+     .names[2]
+      0] alias - 0,22..0,23
+        .name 'a'
+      1] alias - 2,0..2,1
+        .name 'c'
+     .level 0
+''', r'''
+
+b
+as
+y
+
+
+''', r'''
+_aliases - ROOT 0,0..5,0
+  .names[1]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 0, 2, None, {'_ver': 15}, ('exec', r'''
+lazy from mod import (a
+,
+b
+as
+y
+,  # blah
+c)  # comment
+'''), r'''
+lazy from mod import (
+c)  # comment
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+   0] ImportFrom - 0,0..1,2
+     .module 'mod'
+     .names[1]
+      0] alias - 1,0..1,1
+        .name 'c'
+     .level 0
+''', r'''
+a
+,
+b
+as
+y
+  # blah
+
+''', r'''
+_aliases - ROOT 0,0..6,0
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 2,0..4,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('body[0]', 1, 3, None, {'_ver': 15}, ('exec', r'''
+lazy from mod import (a
+,
+b
+as
+y
+,
+c  # blah
+)  # comment
+'''), r'''
+lazy from mod import (a
+
+)  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+   0] ImportFrom - 0,0..2,1
+     .module 'mod'
+     .names[1]
+      0] alias - 0,22..0,23
+        .name 'a'
+     .level 0
+''', r'''
+
+b
+as
+y
+,
+c  # blah
+
+''', r'''
+_aliases - ROOT 0,0..6,0
+  .names[2]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+   1] alias - 5,0..5,1
+     .name 'c'
+'''),
+
+('body[0].body[0]', 0, 1, None, {'_ver': 15}, ('exec', r'''
+if 1:
+  lazy from mod import (a
+  ,
+  b
+  as
+  y  # blah
+  )  # comment
+  pass
+'''), r'''
+if 1:
+  lazy from mod import (
+  b
+  as
+  y  # blah
+  )  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..6,6
+  .body[1]
+   0] If - 0,0..6,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..5,3
+        .module 'mod'
+        .names[1]
+         0] alias - 2,2..4,3
+           .name 'b'
+           .asname 'y'
+        .level 0
+      1] Pass - 6,2..6,6
+''', r'''
+a
+
+''', r'''
+_aliases - ROOT 0,0..1,0
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+('body[0].body[0]', 1, 2, None, {'_ver': 15}, ('exec', r'''
+if 1:
+  lazy from mod import (a
+  ,
+  b
+  as
+  y  # blah
+  )  # comment
+  pass
+'''),
+'if 1:\n  lazy from mod import (a\n  \n  )  # comment\n  pass', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..3,3
+        .module 'mod'
+        .names[1]
+         0] alias - 1,24..1,25
+           .name 'a'
+        .level 0
+      1] Pass - 4,2..4,6
+''', r'''
+
+b
+as
+y  # blah
+
+''', r'''
+_aliases - ROOT 0,0..4,0
+  .names[1]
+   0] alias - 1,0..3,1
+     .name 'b'
+     .asname 'y'
+'''),
+
+('', 0, 3, None, {'_ver': 15, 'norm': True}, (None,
+r'''lazy from mod import a, b, c'''),
+r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
+r'''a, b, c''', r'''
+_aliases - ROOT 0,0..0,7
+  .names[3]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+   2] alias - 0,6..0,7
+     .name 'c'
+'''),
+
+('', 0, 3, None, {'_ver': 15, 'norm_self': False, '_verify_self': False}, (None, r'''
+lazy from mod import (a
+,
+b
+as
+y
+,
+c  # blah
+)  # comment
+'''), r'''
+lazy from mod import (
+)  # comment
+''', r'''
+ImportFrom - ROOT 0,0..1,1
+  .module 'mod'
+  .level 0
+''', r'''
+a
+,
+b
+as
+y
+,
+c  # blah
+
+''', r'''
+_aliases - ROOT 0,0..7,0
+  .names[3]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 2,0..4,1
+     .name 'b'
+     .asname 'y'
+   2] alias - 6,0..6,1
+     .name 'c'
+'''),
+
+('body[0]', 1, 2, None, {'_ver': 15}, (None, r'''
+if 1:
+  lazy from mod import (a, b);
+'''), r'''
+if 1:
+  lazy from mod import (a);
+''', r'''
+If - ROOT 0,0..1,27
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ImportFrom - 1,2..1,26
+     .module 'mod'
+     .names[1]
+      0] alias - 1,24..1,25
         .name 'a'
      .level 0
 ''',

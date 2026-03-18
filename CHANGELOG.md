@@ -2,7 +2,10 @@
 
 ### Added
 
-- `MatchClass.patterns+kwd_attrs=kwd_patterns` sequence via `_attrs` virtual field, special slice container is `_pattern_attrlikes`
+- Python 3.15 lazy import support
+- `MatchClass.patterns+kwd_attrs=kwd_patterns` slice get ant put
+  - `_pattern_attrlikes` special slice container holds both combined unnamed and keyword patterns, e.g `a, b, c=d, e=f`
+  - `_attrs` virtual field on `MatchClass` and `_pattern_attrlikes`
 
 ### Changed
 

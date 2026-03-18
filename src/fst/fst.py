@@ -5593,6 +5593,7 @@ class FST:
         finalbody,
         msg,
         names,
+        is_lazy,
         module,
         level,
         values,

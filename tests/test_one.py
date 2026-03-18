@@ -6,7 +6,7 @@ import unittest
 from fst import *
 
 from fst.asttypes import *
-from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE13, PYGE14
+from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE13, PYGE14, PYGE15
 
 from support import GetCases, PutCases, assertRaises
 
@@ -4171,6 +4171,27 @@ f'd{t"e{f=!s:0.1f<1}"=}'
                     print(f'{mode=}, {field=}')
 
                     raise
+
+    @unittest.skipUnless(PYGE15, 'only valid for py >= 3.15')
+    def test_put_is_lazy(self):
+        assertRaises(ValueError('expecting 0 or 1, got -1'), FST('import a').put, -1, 'is_lazy')
+        assertRaises(ValueError('expecting 0 or 1, got 2'), FST('import a').put, 2, 'is_lazy')
+
+        self.assertEqual('lazy import a', (f := FST('import a')).put(1, 'is_lazy').verify().src)
+        self.assertEqual(1, f.is_lazy)
+        self.assertEqual('import a', f.put(0, 'is_lazy').verify().src)
+        self.assertEqual(0, f.is_lazy)
+
+        self.assertEqual('import a', (f := FST('lazy  \\\n  import a')).put(0, 'is_lazy').verify().src)
+        self.assertEqual('lazy import a', f.put(1, 'is_lazy').verify().src)
+
+        self.assertEqual('lazy from a import b', (f := FST('from a import b')).put(1, 'is_lazy').verify().src)
+        self.assertEqual(1, f.is_lazy)
+        self.assertEqual('from a import b', f.put(0, 'is_lazy').verify().src)
+        self.assertEqual(0, f.is_lazy)
+
+        self.assertEqual('from a import b', (f := FST('lazy  \\\n  from a import b')).put(0, 'is_lazy').verify().src)
+        self.assertEqual('lazy from a import b', f.put(1, 'is_lazy').verify().src)
 
 
 if __name__ == '__main__':

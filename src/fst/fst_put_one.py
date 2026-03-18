@@ -376,6 +376,59 @@ def _fix_With_items(self: fst.FST) -> None:
 
 
 # ......................................................................................................................
+# errors
+
+def _put_one_DOES_NOT_EXIST_IN_THIS_VERSION(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    raise RuntimeError('does not exist in this version of Python')
+
+
+def _put_one_NOT_IMPLEMENTED_YET(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    raise NotImplementedError('this is not implemented yet')
+
+
+@pyver(lt=12, else_=_put_one_NOT_IMPLEMENTED_YET)
+def _put_one_NOT_IMPLEMENTED_YET_12(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    raise NotImplementedError('this will only be implemented on python version 3.12 and above')
+
+
+@pyver(lt=14, else_=_put_one_NOT_IMPLEMENTED_YET)
+def _put_one_NOT_IMPLEMENTED_YET_14(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    raise NotImplementedError('this will only be implemented on python version 3.14 and above')
+
+
+# ......................................................................................................................
 # misc put
 
 def _put_one_constant(
@@ -547,7 +600,7 @@ def _put_one_ImportFrom_level(
     static: None,
     options: Mapping[str, Any],
 ) -> fst.FST:  # child: int
-    """Set a comprehension as async or sync."""
+    """Set a `from .mod import` level (number of dots before `mod`)."""
 
     ast = self.a
     root = self.root
@@ -578,6 +631,45 @@ def _put_one_ImportFrom_level(
         self._put_src('.' * value, start_ln, start_col, ln, col, False)
 
         ast.level = value
+
+    return self  # cannot return primitive
+
+
+@pyver(ge=15, else_=_put_one_DOES_NOT_EXIST_IN_THIS_VERSION)
+def _put_one_Import_ImportFrom_is_lazy(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: None,
+    options: Mapping[str, Any],
+) -> fst.FST:  # child: int
+    """Set `import` of `from ... import` `lazy` state."""
+
+    ast = self.a
+    root = self.root
+    child, idx = _validate_put(self, code, idx, field, child)
+    value = code_as_constant(code, options, root._parse_params)
+
+    if not isinstance(value, int) or value not in (0, 1):
+        raise ValueError(f'expecting 0 or 1, got {value!r}')
+
+    if value != child:
+        lines = root._lines
+        ln, col, end_ln, end_col = self.loc
+
+        if value:
+            self._put_src('lazy ', ln, col, ln, col, False, False)
+
+        else:
+            end_ln, end_col, src = next_frag(lines, ln, col + 4, end_ln, end_col)  # must be there, col + 4 is just past 'lazy'
+
+            assert src.startswith('import') if ast.__class__ is Import else src.startswith('from')
+
+            self._put_src(None, ln, col, end_ln, end_col, False)
+
+        ast.is_lazy = value
 
     return self  # cannot return primitive
 
@@ -695,44 +787,6 @@ def _put_one_comprehension_is_async(
         self.a.is_async = value
 
     return self  # cannot return primitive
-
-
-def _put_one_NOT_IMPLEMENTED_YET(
-    self: fst.FST,
-    code: _PutOneCode,
-    idx: int | None,
-    field: str,
-    child: _Child,
-    static: onestatic,
-    options: Mapping[str, Any],
-) -> fst.FST:
-    raise NotImplementedError('this is not implemented yet')
-
-
-@pyver(lt=12, else_=_put_one_NOT_IMPLEMENTED_YET)
-def _put_one_NOT_IMPLEMENTED_YET_12(
-    self: fst.FST,
-    code: _PutOneCode,
-    idx: int | None,
-    field: str,
-    child: _Child,
-    static: onestatic,
-    options: Mapping[str, Any],
-) -> fst.FST:
-    raise NotImplementedError('this will only be implemented on python version 3.12 and above')
-
-
-@pyver(lt=14, else_=_put_one_NOT_IMPLEMENTED_YET)
-def _put_one_NOT_IMPLEMENTED_YET_14(
-    self: fst.FST,
-    code: _PutOneCode,
-    idx: int | None,
-    field: str,
-    child: _Child,
-    static: onestatic,
-    options: Mapping[str, Any],
-) -> fst.FST:
-    raise NotImplementedError('this will only be implemented on python version 3.14 and above')
 
 
 # ......................................................................................................................
@@ -2205,22 +2259,25 @@ def _one_info_Assert_msg(self: fst.FST, static: onestatic, idx: int | None, fiel
     return oneinfo(', ', fstloc((loc := self.a.test.f.pars()).end_ln, loc.end_col, self.end_ln, self.end_col))
 
 def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self.loc
+    ast = self.a
     lines = self.root._lines
+    self_ln, self_col, end_ln, end_col = self.loc
 
-    if not self.a.level:  # cannot insert or delete
-        ln, col, src = next_find_re(lines, ln, col + 4, end_ln, end_col, re_identifier_dotted, lcont=None)  # must be there, col+4 is for 'from'
+    if getattr(ast, 'is_lazy', False):
+        self_ln, self_col, _ = next_frag(lines, self_ln, self_col + 4, end_ln, end_col)  # skip 'lazy' and set start to 'from'
+
+    if not ast.level:  # cannot insert or delete
+        ln, col, src = next_find_re(lines, self_ln, self_col + 4, end_ln, end_col, re_identifier_dotted, lcont=None)  # must be there, self_col+4 is for 'from'
         end_col = col + len(src)
 
         return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-    self_ln, self_col, _, _ = self.loc
-    ln, col = prev_find(lines, self_ln, self_col, *self.a.names[0].f.loc[:2], 'import')
+    ln, col = prev_find(lines, self_ln, self_col, *ast.names[0].f.loc[:2], 'import')
     ln, col, src = prev_frag(lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
     end_col = col + len(src)
     col = end_col - len((src[4:] if col == self_col and ln == self_ln else src).lstrip('.'))  # may be special case, dot right after 'from', e.g. 'from.something import ...'
 
-    if (lines[ln][col : end_col] or None) != self.a.module:
+    if (lines[ln][col : end_col] or None) != ast.module:
         raise NotImplementedError('ImportFrom.module not a contiguous string')
 
     return oneinfo('', loc := fstloc(ln, col, ln, end_col), loc)
@@ -2805,9 +2862,11 @@ _PUT_ONE_HANDLERS = {
     (Assert, 'test'):                     (False, _put_one_exprlike_required, _onestatic_expr_required),  # expr
     (Assert, 'msg'):                      (False, _put_one_exprlike_optional, onestatic(_one_info_Assert_msg, _restrict_default)),  # expr?
     (Import, 'names'):                    (True,  _put_one_Import_names, onestatic(_one_info_exprlike_required, _restrict_default, code_as=code_as_Import_name)),  # alias*
+    (Import, 'is_lazy'):                  (False, _put_one_Import_ImportFrom_is_lazy, None),  # int?
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=code_as_identifier_dotted)),  # identifier? (dotted)
     (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprlike_required, _restrict_default, code_as=code_as_ImportFrom_name)),  # alias*
     (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None),  # int?
+    (ImportFrom, 'is_lazy'):              (False, _put_one_Import_ImportFrom_is_lazy, None),  # int?
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
     (Expr, 'value'):                      (False, _put_one_exprlike_required, _onestatic_expr_required_w_starred),  # expr

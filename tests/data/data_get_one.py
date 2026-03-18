@@ -904,6 +904,78 @@ r'''**ValueError('cannot delete ImportFrom.level')**''',
 r'''0''',
 r'''<class 'int'>'''),
 
+('', 0, None, 'names', {'_ver': 15, 'norm': True}, (Import,
+r'''lazy import mod'''),
+r'''**ValueError('cannot delete all Import.names without norm_self=False')**''',
+r'''mod''', r'''
+alias - ROOT 0,0..0,3
+  .name 'mod'
+'''),
+
+('', 0, None, 'names', {'_ver': 15, '_verify_self': False, 'norm_self': False}, (Import,
+r'''lazy import mod'''),
+r'''lazy import ''',
+r'''Import - ROOT 0,0..0,12''',
+r'''mod''', r'''
+alias - ROOT 0,0..0,3
+  .name 'mod'
+'''),
+
+('', None, None, 'module', {'_ver': 15}, (ImportFrom,
+r'''lazy from mod import name'''),
+r'''**ValueError('cannot delete ImportFrom.module in this state')**''',
+"\n'mod'\n",
+r'''<class 'str'>'''),
+
+('', None, None, 'module', {'_ver': 15}, (ImportFrom,
+r'''lazy from . import name'''),
+r'''lazy from . import name''', r'''
+ImportFrom - ROOT 0,0..0,23
+  .names[1]
+   0] alias - 0,19..0,23
+     .name 'name'
+  .level 1
+''',
+r'''**None**'''),
+
+('', None, None, 'module', {'_ver': 15}, (ImportFrom,
+r'''lazy from .mod import name'''),
+r'''lazy from . import name''', r'''
+ImportFrom - ROOT 0,0..0,23
+  .names[1]
+   0] alias - 0,19..0,23
+     .name 'name'
+  .level 1
+''',
+"\n'mod'\n",
+r'''<class 'str'>'''),
+
+('', 0, None, 'names', {'_ver': 15, 'norm': True}, (ImportFrom,
+r'''lazy from mod import name'''),
+r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**''',
+r'''name''', r'''
+alias - ROOT 0,0..0,4
+  .name 'name'
+'''),
+
+('', 0, None, 'names', {'_ver': 15, '_verify_self': False, 'norm_self': False}, (ImportFrom,
+r'''lazy from mod import name'''),
+r'''lazy from mod import ''', r'''
+ImportFrom - ROOT 0,0..0,21
+  .module 'mod'
+  .level 0
+''',
+r'''name''', r'''
+alias - ROOT 0,0..0,4
+  .name 'name'
+'''),
+
+('', None, None, 'level', {'_ver': 15}, (ImportFrom,
+r'''lazy from mod import name'''),
+r'''**ValueError('cannot delete ImportFrom.level')**''',
+r'''0''',
+r'''<class 'int'>'''),
+
 ('', 0, None, 'names', {'norm': True, 'promote': False}, (Global,
 r'''global var'''),
 r'''**ValueError('cannot delete all Global.names without norm_self=False')**''',

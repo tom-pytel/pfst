@@ -76,6 +76,39 @@ else:  # safely access nonexistent field
         pass
 '''.strip())
 
+            elif field == 'is_lazy':  # SPECIAL CASE!!!
+                print(f'''
+if PYGE15:
+    @property
+    def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
+        """`FST` accessor for `AST` field `{field}`."""
+
+        return self.a.{field}
+
+    @{field}.setter
+    def {field}(self: 'fst.FST', code: Code | constant | None) -> None:
+        self._put_one(code, None, {field!r})
+
+    @{field}.deleter
+    def {field}(self: 'fst.FST') -> None:
+        self._put_one(None, None, {field!r})
+
+else:  # safely access nonexistent field
+    @property
+    def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
+        """`FST` accessor for `AST` field `{field}`."""
+
+        return 0
+
+    @{field}.setter
+    def {field}(self: 'fst.FST', code: Code | constant | None) -> None:
+        self._put_one(code, None, {field!r})
+
+    @{field}.deleter
+    def {field}(self: 'fst.FST') -> None:
+        self._put_one(None, None, {field!r})
+'''.strip())
+
             elif astorprim == 1:  # only AST
                 print(f'''
 @property
@@ -102,7 +135,7 @@ def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
     return child.f if isinstance(child := self.a.{field}, AST) else child
 '''.strip())
 
-            if field != 'default_value':  # if not printed in SPECIAL CASE!!!
+            if field not in ('default_value', 'is_lazy'):  # if not printed in SPECIAL CASE!!!
                 print(f'''
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | constant | None) -> None:
@@ -328,7 +361,7 @@ from .asttypes import (
 )
 
 from .astutil import constant
-from .common import PYGE12, PYGE13
+from .common import PYGE12, PYGE13, PYGE15
 from .code import Code
 
 from .view import (

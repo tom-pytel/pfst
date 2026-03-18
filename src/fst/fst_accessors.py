@@ -19,7 +19,7 @@ from .asttypes import (
 )
 
 from .astutil import constant
-from .common import PYGE12, PYGE13
+from .common import PYGE12, PYGE13, PYGE15
 from .code import Code
 
 from .view import (
@@ -64,6 +64,7 @@ __all__ = [
     'finalbody',
     'msg',
     'names',
+    'is_lazy',
     'module',
     'level',
     'values',
@@ -657,6 +658,38 @@ def names(self: 'fst.FST', code: Code | None) -> None:
 @names.deleter
 def names(self: 'fst.FST') -> None:
     self._put_slice(None, 0, 'end', 'names')
+
+
+# Import, ImportFrom
+if PYGE15:
+    @property
+    def is_lazy(self: 'fst.FST') -> Union['fst.FST', None, constant]:
+        """`FST` accessor for `AST` field `is_lazy`."""
+
+        return self.a.is_lazy
+
+    @is_lazy.setter
+    def is_lazy(self: 'fst.FST', code: Code | constant | None) -> None:
+        self._put_one(code, None, 'is_lazy')
+
+    @is_lazy.deleter
+    def is_lazy(self: 'fst.FST') -> None:
+        self._put_one(None, None, 'is_lazy')
+
+else:  # safely access nonexistent field
+    @property
+    def is_lazy(self: 'fst.FST') -> Union['fst.FST', None, constant]:
+        """`FST` accessor for `AST` field `is_lazy`."""
+
+        return 0
+
+    @is_lazy.setter
+    def is_lazy(self: 'fst.FST', code: Code | constant | None) -> None:
+        self._put_one(code, None, 'is_lazy')
+
+    @is_lazy.deleter
+    def is_lazy(self: 'fst.FST') -> None:
+        self._put_one(None, None, 'is_lazy')
 
 
 # ImportFrom

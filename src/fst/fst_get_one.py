@@ -582,9 +582,11 @@ _GET_ONE_HANDLERS = {
     (Assert, 'test'):                     _get_one_default,  # expr
     (Assert, 'msg'):                      _get_one_default,  # expr?
     (Import, 'names'):                    _get_one_default,  # alias*
+    (Import, 'is_lazy'):                  _get_one_constant,  # int?
     (ImportFrom, 'module'):               _get_one_identifier,  # identifier? (dotted)
     (ImportFrom, 'names'):                _get_one_default,  # alias*
     (ImportFrom, 'level'):                _get_one_constant,  # int?
+    (ImportFrom, 'is_lazy'):              _get_one_constant,  # int?
     (Global, 'names'):                    _get_one_identifier_promote_true,  # identifier*
     (Nonlocal, 'names'):                  _get_one_identifier_promote_true,  # identifier*
     (Expr, 'value'):                      _get_one_default,  # expr
