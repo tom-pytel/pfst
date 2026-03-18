@@ -18829,7 +18829,15 @@ r'''**NodeError('expecting expression (arglike), got TypeVar, could not coerce')
 ('', 0, None, '_args', {'_src': False, '_ver': 13}, (None,
 r'''call(a)'''), ('TypeVar',
 r'''T = int'''),
-r'''**NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
+r'''call(T = int)''',
+r'''call(T=int)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,12
+     .arg 'T'
+     .value Name 'int' Load - 0,9..0,12
+'''),
 
 ('', 0, None, '_args', {'_src': False, '_ver': 12}, (None,
 r'''call(a)'''), ('TypeVarTuple',

@@ -8767,8 +8767,11 @@ r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
 ('', 0, 0, '_arglike', {'_ver': 13}, ('TypeVar',
 r'''a=b'''),
-r'''FST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**''',
-r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coerce')**'''),
+r'''a=b''', r'''
+keyword - ROOT 0,0..0,3
+  .arg 'a'
+  .value Name 'b' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, '_arglike', {'_ver': 12}, ('TypeVar',
 r'''a: int'''),
@@ -8782,8 +8785,10 @@ r'''AST: **NodeError('expecting expression (arglike), got TypeVar, could not coe
 
 ('', 0, 0, '_arglike', {'_ver': 12}, ('ParamSpec',
 r'''**a'''),
-r'''FST: **NodeError('expecting expression (arglike), got ParamSpec, could not coerce')**''',
-r'''AST: **NodeError('expecting expression (arglike), got ParamSpec, could not coerce')**'''),
+r'''**a''', r'''
+keyword - ROOT 0,0..0,3
+  .value Name 'a' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, '_arglike', {'_ver': 13}, ('ParamSpec',
 r'''**a=b'''),

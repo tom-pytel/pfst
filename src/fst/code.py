@@ -2665,10 +2665,31 @@ def _coerce_to__arglike(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    code_cls = code.__class__
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+    codea_cls = codea.__class__
+    ast = None
 
-    if code_cls is keyword or (issubclass(code_cls, fst.FST) and code.a.__class__ is keyword):
-        return code_as_keyword(code, options, parse_params, strip=strip)  # pragma: no cover  # can't get here normally because _code_as() will see the keyword first and accept it
+    if codea_cls is TypeVar:
+        ast = _coerce_to__arglike_ast_TypeVar(codea, is_FST, options, parse_params)
+    elif codea_cls is ParamSpec:
+        ast = _coerce_to__arglike_ast_ParamSpec(codea, is_FST, options, parse_params)
+
+    if ast is not None:
+        if not is_FST:
+            src = unparse(ast)
+            ast = parse__arglike(src, parse_params)
+
+            fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+
+        else:
+            fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
+
+            if strip:
+                fst_.strip()
+
+        return fst_
+
+    # fall through to exprlike coercion, TypeVarTuple is handled in this as it is expression-compatible
 
     fst_ = code_as_expr_arglike(code, options, parse_params, strip=strip, coerce=True)
 
@@ -2692,7 +2713,7 @@ def _coerce_to__arglikes(
 
     if codea_cls is arguments:
         if codea.posonlyargs:
-            raise NodeError('expecting _arglikes, got arguments, could not coerce, posonlyargs not allowed')
+            raise NodeError('expecting _arglikes, got arguments, could not coerce, has position-only arguments')
 
         set_arglikes = False
         args = codea.args
@@ -2705,7 +2726,7 @@ def _coerce_to__arglikes(
 
         for arg, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):  # arg and arg=default
             if arg.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, annotations not allowed')
+                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
             name = arg.arg
 
@@ -2730,7 +2751,7 @@ def _coerce_to__arglikes(
 
         if vararg := codea.vararg:  # *vararg
             if vararg.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, annotations not allowed')
+                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
             name = vararg.arg
 
@@ -2748,11 +2769,11 @@ def _coerce_to__arglikes(
             arglikes.append(ast)
 
         elif kwonlyargs:  # we have a `*, ` in the arguments, not allowed without a vararg
-            raise NodeError("expecting _arglikes, got arguments, could not coerce, cannot have '*' without vararg")
+            raise NodeError("expecting _arglikes, got arguments, could not coerce, has empty vararg '*'")
 
         for arg, dflt in zip(kwonlyargs, kw_defaults, strict=True):  # kwarg and kwarg=kwdefault
             if arg.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, annotations not allowed')
+                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
             name = arg.arg
 
@@ -2781,7 +2802,7 @@ def _coerce_to__arglikes(
 
         if kwarg := codea.kwarg:  # **kwarg
             if kwarg.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, annotations not allowed')
+                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
             name = kwarg.arg
 
@@ -2798,24 +2819,6 @@ def _coerce_to__arglikes(
                               end_col_offset=kwarg.end_col_offset)
 
             arglikes.append(ast)
-
-    # from TypeVar
-
-    elif codea_cls is TypeVar:
-        set_arglikes = False
-
-        ast = _coerce_to__arglike_ast_TypeVar(codea, is_FST, options, parse_params)
-
-        arglikes.append(ast)
-
-    # from ParamSpec
-
-    elif codea_cls is ParamSpec:
-        set_arglikes = False
-
-        ast = _coerce_to__arglike_ast_ParamSpec(codea, is_FST, options, parse_params)
-
-        arglikes.append(ast)
 
     # from _type_params
 

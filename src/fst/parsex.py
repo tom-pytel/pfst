@@ -130,7 +130,7 @@ from .asttypes import (
 )
 
 from .astutil import (
-    pat_alnum,
+    pat_identifier,
     FIELDS,
     OPSTR2CLS_UNARY,
     OPSTR2CLS_BIN,
@@ -224,7 +224,7 @@ _re_parse_all_category = re.compile(r'''
     (?P<boolop>                        (?: and | or ) \b ) |
     (?P<cmpop_w>                       (?: is | in ) \b ) |
     (?P<syntax_error>                  (?: elif | else | finally | as ) \b ) |
-    (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |  # soft keywords
+    (?P<match_type_lazy_identifier>    (?: ''' + pat_identifier + r''' ) \b ) |  # soft keywords: match | type | lazy  (handled by identifier pattern)
     (?P<stmt_or_expr_or_pat_or_witem>  (?: [(\[{"'.\d] ) ) |
     (?P<minus>                         (?: - ) ) |
     (?P<starstar>                      (?: \*\* ) ) |
@@ -878,11 +878,11 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     groupdict = cat.groupdict()
 
     if groupdict['stmt_or_expr_or_pat_or_witem']:
-        return _parse_all_multiple(src, parse_params, not first.group(1),
+        return _parse_all_multiple(src, parse_params, not first.group(1),  # .group(1) is leading whitespace on line (if any)
                                    (parse_expr_all, parse_pattern, _parse_all__withitems, parse__Assign_targets,
                                     parse__pattern_attrlikes))  # parse_expr_all because could be Slice
 
-    if groupdict['match_type_identifier']:
+    if groupdict['match_type_lazy_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arg,  # because of "vararg: *TypeVarTuple"
                                     parse_arguments, parse_arguments_lambda, _parse_all__withitems,
