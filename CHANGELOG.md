@@ -8,7 +8,8 @@
   - `_attrs` virtual field on `MatchClass` and `_pattern_attrlikes`
 - filled out lots of non-basic coercions, mostly between forms like `**a`, keywords `kw=val` and annotations `v: ann`
   - `arguments`, `_arglikes`, `_expr_arglikes`, `_pattern_attrlikes` and `_type_params` between each other
-  - `TypeVar` with `default_value` and solo `ParamSpec` to the previous and also to single `_arglike`
+  - `TypeVar=default_value` and `**ParamSpec` to the previous and also to single `_arglike` and to/from `keyword`
+  - `TypeVar: bound` <-> `arg: annotation`
 
 ### Changed
 

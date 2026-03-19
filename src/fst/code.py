@@ -109,6 +109,7 @@ from .astutil import (
 )
 
 from .common import (
+    PYLT13,
     re_line_end_ws_cont_or_comment,
     NodeError,
     nspace,
@@ -1057,7 +1058,8 @@ def _coerce_to_pattern_ast(
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
         should be done in that case to get the correct locations.
     - `expecting`: Text for error messages.
-    - `unmake`: Whether to unmake an `FST` node or the caller will take care of it.
+    - `unmake`: Whether to unmake an `FST` node or the caller will take care of it. This should be `False` for recursed
+        coercion as the tree structure needs to remain valid for possible modifications like parsentheses.
 
     **Returns:**
     - `AST`: The coerced `AST`.
@@ -1944,6 +1946,8 @@ def _coerce_to_expr_ast(
     - `is_FST`: Whether the `ast` node is part of an `FST` tree, meaning it has source for any possible reparse which
         should be done in that case to get the correct locations.
     - `expecting`: Text for error messages.
+    - `unmake`: Whether to unmake an `FST` node or the caller will take care of it. This should be `False` for recursed
+        coercion as the tree structure needs to remain valid for possible modifications like parsentheses.
     - `two_step`: This enables two-step coercion like `Expr` -> `Set` -> `Tuple` or `MatchSequence` -> `List` ->
         `Tuple`. If this is an `AST` type instead of a bool then two-step is enabled but the target is specified by the
         type so if the first step arrives at it the second step is not taken to `Tuple`.
@@ -2159,21 +2163,20 @@ def _coerce_to__arglike_ast_TypeVar(
 
     name = ast.name
 
-    if value := getattr(ast, 'default_value', None):
-        if not is_FST:
-            ast = keyword(arg=name, value=value)
-
-        else:
-            _, _, end_ln, end_col = value.f.pars()
-
-            ast = keyword(arg=name, value=value, lineno=ast.lineno, col_offset=ast.col_offset,
-                          end_lineno=end_ln + 1, end_col_offset=ast.f.root._lines[end_ln].c2b(end_col))  # we could make a blank keyword then _set_field() the value from the existing one but wouldn't really save much and is messier
-
-    else:
+    if not (value := getattr(ast, 'default_value', None)):
         ast = (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
                if is_FST else
                Name(id=name))
+
+    elif not is_FST:
+        ast = keyword(arg=name, value=value)
+
+    else:
+        _, _, end_ln, end_col = value.f.pars()
+
+        ast = keyword(arg=name, value=value, lineno=ast.lineno, col_offset=ast.col_offset,
+                      end_lineno=end_ln + 1, end_col_offset=ast.f.root._lines[end_ln].c2b(end_col))  # we could make a blank keyword then _set_field() the value from the existing one but wouldn't really save much and is messier
 
     return ast
 
@@ -2219,29 +2222,33 @@ def _coerce_to_argument_ast_keyword(
 
     arg_ = ast.arg
     value = ast.value
-    is_kwarg = arg_ is None
 
-    if is_kwarg:
-        if value.__class__ is not Name:
-            raise NodeError(f"expecting {expecting}, got keyword, could not coerce, '**' value must be Name")
+    if arg_ is not None:  # arg=value
+        if not is_FST:
+            arg_ = arg(arg=arg_)
 
-        if is_FST:  # may be parenthesized
-            if value.f.pars().n:
-                value.f._unparenthesize_grouping()
+        else:
+            lineno = ast.lineno
+            col_offset = ast.col_offset
 
-        return (arg(arg=value.id, lineno=value.lineno, col_offset=value.col_offset, end_lineno=value.end_lineno,
-                    end_col_offset=value.end_col_offset)
-                if is_FST else
-                arg(arg=value.id))
+            arg_ = arg(arg=arg_, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+                       end_col_offset=col_offset + len(arg_.encode()))
 
-    # arg=value
+        return arg_, value
 
-    lineno = ast.lineno
-    col_offset = ast.col_offset
-    arg_ = arg(arg=arg_, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-                end_col_offset=col_offset + len(arg_.encode()))
+    # **kwarg
 
-    return arg_, value
+    if value.__class__ is not Name:
+        raise NodeError(f"expecting {expecting}, got keyword, could not coerce, '**' value must be Name")
+
+    if not is_FST:
+        return arg(arg=value.id)
+
+    if value.f.pars().n:  # may be parenthesized
+        value.f._unparenthesize_grouping()
+
+    return arg(arg=value.id, lineno=value.lineno, col_offset=value.col_offset, end_lineno=value.end_lineno,
+               end_col_offset=value.end_col_offset)
 
 
 def _coerce_to_argument_ast_Starred(
@@ -2258,14 +2265,14 @@ def _coerce_to_argument_ast_Starred(
     if value.__class__ is not Name:
         raise NodeError(f"expecting {expecting}, got Starred, could not coerce, value must be Name")
 
-    if is_FST:  # may be parenthesized (the child, but unparenthesize the Starred)
-        if value.f.pars().n:
-            ast.f._unparenthesize_grouping()
+    if not is_FST:
+        return arg(arg=value.id)
 
-        return arg(arg=value.id, lineno=value.lineno, col_offset=value.col_offset, end_lineno=value.end_lineno,
-                   end_col_offset=value.end_col_offset)
+    if value.f.pars().n:  # may be parenthesized (the child, but unparenthesize the Starred)
+        ast.f._unparenthesize_grouping()
 
-    return arg(arg=value.id)
+    return arg(arg=value.id, lineno=value.lineno, col_offset=value.col_offset, end_lineno=value.end_lineno,
+               end_col_offset=value.end_col_offset)
 
 
 def _coerce_to_argument_ast_TypeVar(
@@ -2283,24 +2290,23 @@ def _coerce_to_argument_ast_TypeVar(
     lineno = ast.lineno
     col_offset = ast.col_offset
 
-    if bound:
-        if is_lambda:
-            raise NodeError(f"expecting {expecting}, got TypeVar, could not coerce, has bound")
-
-        if is_FST:
-            _, _, end_ln, end_col = bound.f.pars()
-
-            arg_ = arg(arg=name, annotation=bound, lineno=lineno, col_offset=col_offset, end_lineno=end_ln + 1,
-                       end_col_offset=ast.f.root._lines[end_ln].c2b(end_col))
-
-        else:
-            arg_ = arg(arg=name, annotation=bound)
-
-    else:
+    if not bound:
         arg_ = (arg(arg=name, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
                     end_col_offset=col_offset + len(name.encode()))
                 if is_FST else
                 arg(arg=name))
+
+    elif is_lambda:
+        raise NodeError(f"expecting {expecting}, got TypeVar, could not coerce, has bound")
+
+    elif not is_FST:
+        arg_ = arg(arg=name, annotation=bound)
+
+    else:
+        _, _, end_ln, end_col = bound.f.pars()
+
+        arg_ = arg(arg=name, annotation=bound, lineno=lineno, col_offset=col_offset, end_lineno=end_ln + 1,
+                   end_col_offset=ast.f.root._lines[end_ln].c2b(end_col))
 
     if default_value := getattr(ast, 'default_value', None):
         return arg_, default_value
@@ -2536,8 +2542,6 @@ def _coerce_to_Dict(
         raise NodeError(f'expecting Dict, got {codea.__class__.__name__}, could not coerce')
 
     if is_FST:
-        code._unmake_fst_tree()
-
         fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 
         if strip:
@@ -2577,9 +2581,10 @@ def _coerce_to__Assign_targets(
 
     If a coerce function can handle source (because we want to be able to parse a different source representation of the
     node than the one the default parse function for the type handles), then the attribute `allow_coerce_src=True`
-    should be set on the function. Most should have this False (or not present) as the parse attempt should already have
-    given a definitive answer. Exists for stuff like `_decorator_names` and `_comprehension_ifs` where those parse
-    functions expect a prefix like `@` or `if` but we want to allow expressions without the prefixes as well.
+    should be set on the function. Most should have not present (same as `False`) as the parse attempt should already
+    have given a definitive answer. Exists for stuff like `_decorator_names` and `_comprehension_ifs` where those parse
+    functions expect a prefix like `@` or `if` but we want to allow source expressions without the prefixes as well when
+    `coerce=True`.
     """
 
     if not isinstance(code, (str, list)):  # this function accepts source so make sure is not that
@@ -3157,6 +3162,40 @@ def _coerce_to_arg(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+
+    # from non-expr-compatible
+
+    if codea.__class__ is TypeVar:  # from TypeVar: bound or without bound
+        if getattr(codea, 'default_value', None):
+            raise NodeError('expecting arg, got TypeVar, could not coerce, has default value')
+
+        name = codea.name
+        bound = codea.bound
+
+        if not is_FST:
+            src = unparse(arg(arg=name, annotation=bound)) if bound else name
+            ast = parse_arg(src, parse_params)
+
+            fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+
+        else:  # doesn't matter if bound is None
+            ast = arg(arg=name, annotation=bound, lineno=codea.lineno, col_offset=codea.col_offset,
+                      end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
+
+            codea.bound = None  # so it doesn't get unmade only to be remade again
+
+            code._unmake_fst_tree()
+
+            fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
+
+            if strip:
+                fst_.strip()
+
+        return fst_
+
+    # coerce to expression first then Name -> arg
+
     fst_ = code_as_expr(code, options, parse_params, strip=strip, coerce=True)
     ast_ = fst_.a
 
@@ -3169,6 +3208,70 @@ def _coerce_to_arg(
               end_col_offset=ast_.end_col_offset)
 
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
+
+
+def _coerce_to_keyword(
+    code: Code, options: Mapping[str, Any] = {}, parse_params: Mapping[str, Any] = {}, *, strip: bool = False
+) -> fst.FST:
+    """See `_coerce_to__Assign_targets()`."""
+
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+    codea_cls = codea.__class__
+
+    if codea_cls is TypeVar:  # from `name=default_value`
+        if codea.bound:
+            raise NodeError('expecting keyword, got TypeVar, could not coerce, has bound')
+
+        default_value = getattr(codea, 'default_value', None)
+
+        if not default_value:
+            raise NodeError('expecting keyword, got TypeVar, could not coerce, needs default value')
+
+        if not is_FST:
+            src = unparse(keyword(arg=codea.name, value=default_value))
+
+        else:
+            ast = keyword(arg=codea.name, value=default_value, lineno=codea.lineno, col_offset=codea. col_offset,
+                          end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
+
+            codea.value = None  # so it doesn't get unmade only to be remade again
+
+    elif codea_cls is ParamSpec:  # from `**name`
+        if getattr(codea, 'default_value', None):
+            raise NodeError('expecting keyword, got ParamSpec, could not coerce, has default value')
+
+        name = codea.name
+
+        if not is_FST:
+            src = f'**{name}'
+
+        else:
+            end_lineno = codea.end_lineno
+            end_col_offset = codea.end_col_offset
+
+            ast = keyword(arg=None, value=Name(id=name, ctx=Load(), lineno=end_lineno,
+                                               col_offset=end_col_offset - len(name.encode()), end_lineno=end_lineno,
+                                               end_col_offset=end_col_offset),
+                          lineno=codea.lineno, col_offset=codea.col_offset, end_lineno=codea.end_lineno,
+                          end_col_offset=codea.end_col_offset)
+
+    else:
+        raise NodeError(f'expecting keyword, got {codea_cls.__name__}, could not coerce')
+
+    if not is_FST:
+        ast = parse_keyword(src, parse_params)
+
+        fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+
+    else:
+        code._unmake_fst_tree()
+
+        fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
+
+        if strip:  # doesn't do anything currently but maybe in future will strip inside open containers
+            fst_.strip()
+
+    return fst_
 
 
 def _coerce_to_alias(
@@ -3555,7 +3658,7 @@ def _coerce_to_arguments(
                                     f', could not coerce, Starred is {e.__class__.__name__}, must be Name')
 
                 ast.vararg = arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
-                                end_col_offset=e.end_col_offset)
+                                 end_col_offset=e.end_col_offset)
                 args = ast.kwonlyargs
 
             else:
@@ -3912,7 +4015,79 @@ def _coerce_to_type_param(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    # TODO: coerce keyword (default value)? AnnAssign (bound and maybe default value)? Assign (default value)?
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+    codea_cls = codea.__class__
+    coerced = False
+
+    # from non-expr-compatible
+
+    if codea_cls is arg:  # to TypeVar, with or without bound
+        coerced = True
+        arg_ = codea.arg
+        annotation = codea.annotation
+
+        if is_FST:  # doesn't matter if annotation is None
+            ast = TypeVar(name=arg_, bound=annotation, lineno=codea.lineno, col_offset=codea.col_offset,
+                          end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
+
+            codea.annotation = None  # so it doesn't get unmade only to be remade again
+
+        elif annotation:
+            src = unparse(TypeVar(name=arg_, bound=annotation))
+        else:
+            src = arg_
+
+    elif codea_cls is keyword:  # to TypeVar `name=default_value` or ParamSpec `**name`
+        coerced = True
+        arg_ = codea.arg
+        value = codea.value
+
+        if arg_ is None:  # **kwarg -> ParamSpec
+            if value.__class__ is not Name:
+                raise NodeError("expecting type_param, got keyword, could not coerce, '**' value must be Name")
+
+            if not is_FST:
+                src = f'**{value.id}'
+
+            else:
+                if value.f.pars().n:  # may be parenthesized
+                    value.f._unparenthesize_grouping()
+
+                ast = ParamSpec(name=value.id, lineno=codea.lineno, col_offset=codea.col_offset,
+                                end_lineno=value.end_lineno, end_col_offset=value.end_col_offset)
+
+        elif PYLT13:
+            raise NodeError("expecting type_param, got keyword, could not coerce, has default value")
+
+        else:  # arg=value -> TypeVar (py 3.13+)
+            if not is_FST:
+                src = unparse(TypeVar(name=arg_, default_value=value))
+
+            else:
+                _, _, end_ln, end_col = value.f.pars()
+
+                ast = TypeVar(name=arg_, default_value=value, lineno=codea.lineno, col_offset=codea. col_offset,
+                              end_lineno=end_ln + 1, end_col_offset=code._lines[end_ln].c2b(end_col))
+
+                codea.value = None  # so it doesn't get unmade only to be remade again
+
+    if coerced:
+        if not is_FST:
+            ast = parse_type_param(src, parse_params)
+
+            fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+
+        else:
+            code._unmake_fst_tree()
+
+            fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
+
+            if strip:
+                fst_.strip()
+
+        return fst_
+
+    # coerce to expression first then Name -> TypeVar or Starred -> TypeVarTuple
 
     fst_ = code_as_expr(code, options, parse_params, strip=strip, coerce=True)
     ast_ = fst_.a
@@ -4886,7 +5061,7 @@ def code_as_keyword(
 ) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
-    return _code_as(code, options, parse_params, parse_keyword, keyword, strip)
+    return _code_as(code, options, parse_params, parse_keyword, keyword, strip, _coerce_to_keyword if coerce else False)
 
 
 def code_as_alias(

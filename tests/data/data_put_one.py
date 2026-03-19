@@ -19793,7 +19793,17 @@ arguments - ROOT 0,0..0,7
 ('', 1, None, 'args', {'_src': False, '_ver': 12}, ('arguments',
 r'''a, b, c'''), ('TypeVar',
 r'''T: int'''),
-r'''**NodeError('expecting arg, got TypeVar, could not coerce')**'''),
+r'''a, T: int, c''', r'''
+arguments - ROOT 0,0..0,12
+  .args[3]
+   0] arg - 0,0..0,1
+     .arg 'a'
+   1] arg - 0,3..0,9
+     .arg 'T'
+     .annotation Name 'int' Load - 0,6..0,9
+   2] arg - 0,11..0,12
+     .arg 'c'
+'''),
 
 ('', 1, None, 'args', {'_src': False, '_ver': 13}, ('arguments',
 r'''a, b, c'''), ('TypeVar',
@@ -21705,7 +21715,15 @@ TypeAlias - ROOT 0,0..0,15
 ('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
 r'''type t[T] = ...'''), ('arg',
 r'''x: int'''),
-r'''**NodeError('expecting type_param, got arg, could not coerce')**'''),
+r'''type t[x: int] = ...''', r'''
+TypeAlias - ROOT 0,0..0,20
+  .name Name 't' Store - 0,5..0,6
+  .type_params[1]
+   0] TypeVar - 0,7..0,13
+     .name 'x'
+     .bound Name 'int' Load - 0,10..0,13
+  .value Constant Ellipsis - 0,17..0,20
+'''),
 
 ('', 0, None, 'type_params', {'_src': False, '_ver': 12}, (None,
 r'''type t[T] = ...'''), ('alias',
