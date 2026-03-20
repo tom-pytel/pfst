@@ -39,8 +39,45 @@ def resolve_repl(args: argparse.Namespace) -> str:
     return fst.FST(repl, args.mode)
 
 
+match_data = None  # (parent FST, parent field, parent field len) | None
+
+def on_match(args: argparse.Namespace, f: fst.FST, fnm: str) -> bool:
+    """This exists so that we can correctly print when a single element is replaced by multiple elements."""
+
+    global match_data
+
+    if not print_match(args, f, fnm):
+        return True
+
+    match_data = None
+
+    if not (parent := f.parent):
+        return False
+
+    field, idx = f.pfield
+
+    if idx is None:
+        return None
+
+    match_data = (parent, field, len(getattr(parent.a, field)))
+
+    return False
+
+
 def print_sub(args: argparse.Namespace, f: fst.FST) -> None:
     print(f'{args.clr_sub}...{args.clr_reset}')
+
+    if match_data is not None:
+        parent, field, old_len = match_data
+
+        if parenta := parent.a:
+            body = getattr(parenta, field)
+            delta = len(body) - old_len
+
+            if delta > 0:
+                print_lines(args, f, body[f.pfield.idx + delta].f)
+
+                return
 
     print_lines(args, f)
 
@@ -88,7 +125,7 @@ the combination of pattern and replacement template cannot cause this.
             pattern,
             repl,
             nested=args.nested,
-            callback=lambda f: not print_match(args, f, fnm),  # noqa: B023
+            callback=lambda f: on_match(args, f, fnm),  # noqa: B023
             callback_after=lambda f: print_sub(args, f),
             ctx=args.ctx,
             back=args.back,

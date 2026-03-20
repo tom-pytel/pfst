@@ -127,10 +127,18 @@ def iter_files(args: argparse.Namespace) -> Generator[tuple[str, fst.FST], None,
         yield fnm, mod
 
 
-def print_lines(args: argparse.Namespace, f: fst.FST) -> None:
-    lines = f.lines
+def print_lines(args: argparse.Namespace, f: fst.FST, to_f: fst.FST | None = None) -> None:
+    if not to_f:
+        lines = f.lines
+        loc = f.loc
 
-    if loc := f.loc:
+    else:  # in this case we assume all needed locations present
+        ln, col, _, _ = f.loc
+        _, _, end_ln, end_col = to_f.loc
+        lines = f.root._lines[ln : end_ln + 1]
+        loc = (ln, col, end_ln, end_col)
+
+    if loc:
         _, col, _, end_col = loc
 
         if args.color:

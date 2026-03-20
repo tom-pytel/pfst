@@ -15,6 +15,7 @@
 
 - concretized behavior of locations of nonstandard slices like `comprehension.ifs`, `Assign.targets` or `.decorator_list`
   - includes extra syntax in location when accessed as slice but not when accessed as single item
+- `fst.cli.sub` properly prints multiple statement substution lines
 
 ### Fixed
 
