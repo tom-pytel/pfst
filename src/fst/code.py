@@ -1377,7 +1377,7 @@ def _coerce_to_expr_ast_arguments(
     if ast.posonlyargs:
         return 'has posonlyargs'
     if ast.defaults or any(a for a in ast.kw_defaults):
-        return 'has default values'
+        return 'has defaults'
     if ast.kwarg or any(a for a in ast.kw_defaults):
         return 'has kwarg'
 
@@ -3174,21 +3174,45 @@ def _coerce_to_arg(
     """See `_coerce_to__Assign_targets()`."""
 
     codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+    codea_cls = codea.__class__
+    coerced = False
 
     # from non-expr-compatible
 
-    if codea.__class__ is TypeVar:  # from TypeVar: bound or without bound
+    if codea_cls is arguments:  # only singleton accepted
+        coerced = True
+        args = codea.args
+
+        if codea.posonlyargs:
+            raise _coerce_error('arg', 'arguments', 'has posonlyargs')
+        if codea.vararg:
+            raise _coerce_error('arg', 'arguments', 'has vararg')
+        if codea.kwonlyargs:
+            raise _coerce_error('arg', 'arguments', "has empty vararg '*'")
+        if codea.kwarg:
+            raise _coerce_error('arg', 'arguments', 'has kwarg')
+        if codea.defaults:
+            raise _coerce_error('arg', 'arguments', 'has defaults')
+        if len(args) != 1:
+            raise _coerce_error('arg', 'arguments', 'not single argument')
+
+        ast = args[0]
+
+        if not is_FST:
+            src = unparse(ast)
+        else:  # doesn't matter if annotation is None
+            args.clear()  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
+
+    elif codea_cls is TypeVar:  # from TypeVar: bound or without bound
         if getattr(codea, 'default_value', None):
             raise _coerce_error('arg', 'TypeVar', 'has default_value')
 
+        coerced = True
         name = codea.name
         bound = codea.bound
 
         if not is_FST:
             src = unparse(arg(arg=name, annotation=bound)) if bound else name
-            ast = parse_arg(src, parse_params)
-
-            fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
 
         else:  # doesn't matter if bound is None
             ast = arg(arg=name, annotation=bound, lineno=codea.lineno, col_offset=codea.col_offset,
@@ -3196,6 +3220,41 @@ def _coerce_to_arg(
 
             codea.bound = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
 
+    elif codea_cls is _pattern_attrlikes:  # only singleton accepted
+        coerced = True
+        patterns = codea.patterns
+
+        if codea.kwd_patterns:
+            raise _coerce_error('arg', '_pattern_attrlikes', 'has keyword attrlikes')
+        if len(patterns) != 1:
+            raise _coerce_error('arg', '_pattern_attrlikes', 'not single pattern attrlike')
+
+        pat = patterns[0]
+
+        if pat.__class__ is not MatchAs:
+            raise _coerce_error('arg', '_pattern_attrlikes', 'has non-MatchAs arg')
+        if pat.pattern:
+            raise _coerce_error('arg', '_pattern_attrlikes', 'MatchAs arg has pattern')
+
+        name = pat.name or '_'  # None == '_'
+
+        if not is_FST:
+            ast = arg(arg=name)
+            src = unparse(ast)
+
+        else:  # may be parenthesized
+            pat.f._unparenthesize_grouping(False)  # arg name cannot be parenthesized
+
+            ast = arg(arg=name, lineno=pat.lineno, col_offset=pat.col_offset, end_lineno=pat.end_lineno,
+                      end_col_offset=pat.end_col_offset)
+
+    if coerced:
+        if not is_FST:
+            ast = parse_arg(src, parse_params)
+
+            fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+
+        else:
             code._unmake_fst_tree()
 
             fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
@@ -3229,7 +3288,66 @@ def _coerce_to_keyword(
     codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
     codea_cls = codea.__class__
 
-    if codea_cls is TypeVar:  # from `name=default_value`
+    if codea_cls is arguments:  # only singleton accepted
+        args = codea.args
+        kwarg = codea.kwarg
+        defaults = codea.defaults
+
+        if codea.posonlyargs:
+            raise _coerce_error('keyword', 'arguments', 'has posonlyargs')
+        if codea.vararg:
+            raise _coerce_error('keyword', 'arguments', 'has vararg')
+        if codea.kwonlyargs:
+            raise _coerce_error('keyword', 'arguments', "has empty vararg '*'")
+        if len(args) + bool(kwarg) != 1:
+            raise _coerce_error('keyword', 'arguments', 'not single argument')
+
+        if kwarg:
+            if kwarg.annotation:
+                raise _coerce_error('keyword', 'arguments', 'has annotation')
+
+            name = kwarg.arg
+
+            if not is_FST:
+                ast = keyword(arg=None, value=Name(id=name))
+                src = unparse(ast)
+
+            else:
+                ln, col, _, _ = kwarg.f._loc_argument()
+                end_lineno = kwarg.end_lineno
+                end_col_offset = kwarg.end_col_offset
+
+                ast = keyword(arg=None, value=Name(id=name, ctx=Load(), lineno=end_lineno,
+                                                   col_offset=end_col_offset - len(name.encode()),
+                                                   end_lineno=end_lineno, end_col_offset=end_col_offset),
+                              lineno=ln + 1, col_offset=code._lines[ln].c2b(col),
+                              end_lineno=end_lineno, end_col_offset=end_col_offset)
+
+        else:
+            arg_ = args[0]
+
+            if len(defaults) != 1:
+                raise _coerce_error('keyword', 'arguments', 'no default')
+            if arg_.annotation:
+                raise _coerce_error('keyword', 'arguments', 'has annotation')
+
+            name = arg_.arg
+            dflt = defaults[0]
+
+            if not is_FST:
+                ast = keyword(arg=name, value=dflt)
+                src = unparse(ast)
+
+            else:
+                _, _, end_ln, end_col = dflt.f.pars()  # if this then we need to include possible parentheses in keyword
+
+                ast = keyword(arg=name, value=dflt,
+                              lineno=arg_.lineno, col_offset=arg_.col_offset, end_lineno=end_ln + 1,
+                              end_col_offset=code._lines[end_ln].c2b(end_col))
+
+            defaults.clear()  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
+
+    elif codea_cls is TypeVar:  # from `name=default_value`
         if codea.bound:
             raise _coerce_error('keyword', 'TypeVar', 'has bound')
 
@@ -3242,7 +3360,7 @@ def _coerce_to_keyword(
             src = unparse(keyword(arg=codea.name, value=default_value))
 
         else:
-            ast = keyword(arg=codea.name, value=default_value, lineno=codea.lineno, col_offset=codea. col_offset,
+            ast = keyword(arg=codea.name, value=default_value, lineno=codea.lineno, col_offset=codea.col_offset,
                           end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
             codea.value = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
@@ -3265,6 +3383,27 @@ def _coerce_to_keyword(
                                                end_col_offset=end_col_offset),
                           lineno=codea.lineno, col_offset=codea.col_offset, end_lineno=codea.end_lineno,
                           end_col_offset=codea.end_col_offset)
+
+    elif codea_cls is _pattern_attrlikes:  # only singleton accepted
+        kwd_patterns = codea.kwd_patterns
+
+        if codea.patterns:
+            raise _coerce_error('keyword', '_pattern_attrlikes', 'has non-keyword attrlike')
+        if len(kwd_patterns) != 1:
+            raise _coerce_error('keyword', '_pattern_attrlikes', 'not single pattern attrlike')
+
+        name = codea.kwd_attrs[0]
+        value, _ = _coerce_to_expr_ast(kwd_patterns[0], is_FST, options, parse_params, unmake=False)
+
+        if not is_FST:
+            src = unparse(keyword(arg=name, value=value))
+
+        else:
+            lines = code._lines
+            ln, col, end_ln, end_col = code._loc_pattern_attrlikes__attr(0)
+
+            ast = keyword(arg=name, value=value, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                          end_lineno=end_ln + 1, end_col_offset=lines[end_ln].c2b(end_col))
 
     else:
         raise _coerce_error('keyword', codea_cls)
@@ -3836,13 +3975,10 @@ def _coerce_to__pattern_attrlikes(
     elif codea_cls is arguments:
         if codea.vararg:
             raise _coerce_error('_pattern_attrlikes', 'arguments', 'has vararg')
-
         if codea.kwarg:
             raise _coerce_error('_pattern_attrlikes', 'arguments', 'has kwarg')
-
         if codea.posonlyargs:
             raise _coerce_error('_pattern_attrlikes', 'arguments', 'has posonlyargs')
-
         if codea.kwonlyargs:
             raise _coerce_error('_pattern_attrlikes', 'arguments', 'has kwonlyargs')
 
@@ -4065,7 +4201,7 @@ def _coerce_to_type_param(
             else:
                 _, _, end_ln, end_col = value.f.pars()
 
-                ast = TypeVar(name=arg_, default_value=value, lineno=codea.lineno, col_offset=codea. col_offset,
+                ast = TypeVar(name=arg_, default_value=value, lineno=codea.lineno, col_offset=codea.col_offset,
                               end_lineno=end_ln + 1, end_col_offset=code._lines[end_ln].c2b(end_col))
 
                 codea.value = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow

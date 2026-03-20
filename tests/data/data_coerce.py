@@ -2696,8 +2696,8 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''**b'''),
@@ -2730,8 +2730,8 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a, **b'''),
@@ -2755,18 +2755,18 @@ r'''AST: **NodeError('expecting expression (standard), got arguments, could not 
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr', {}, ('arg',
 r'''a'''),
@@ -3656,8 +3656,8 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''**b'''),
@@ -3690,8 +3690,8 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a, **b'''),
@@ -3715,18 +3715,18 @@ r'''AST: **NodeError('expecting expression (all types), got arguments, could not
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arg',
 r'''a'''),
@@ -4603,8 +4603,8 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''**b'''),
@@ -4637,8 +4637,8 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a, **b'''),
@@ -4662,18 +4662,18 @@ r'''AST: **NodeError('expecting expression (arglike), got arguments, could not c
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arg',
 r'''a'''),
@@ -5550,8 +5550,8 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''**b'''),
@@ -5584,8 +5584,8 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a, **b'''),
@@ -5609,18 +5609,18 @@ r'''AST: **NodeError('expecting expression (slice), got arguments, could not coe
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arg',
 r'''a'''),
@@ -6495,8 +6495,8 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''**b'''),
@@ -6529,8 +6529,8 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a, **b'''),
@@ -6554,18 +6554,18 @@ r'''AST: **NodeError('expecting expression (tuple element), got arguments, could
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arg',
 r'''a'''),
@@ -7411,8 +7411,8 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''**b'''),
@@ -7445,8 +7445,8 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a, **b'''),
@@ -7470,18 +7470,18 @@ r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, arg has 
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has default values')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defaults')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arg',
 r'''a'''),
@@ -14193,8 +14193,10 @@ r'''AST: **NodeError('expecting arg, got _comprehension_ifs, could not coerce')*
 
 ('', 0, 0, 'arg', {}, ('arguments',
 r'''a'''),
-r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+r'''a''', r'''
+arg - ROOT 0,0..0,1
+  .arg 'a'
+'''),
 
 ('', 0, 0, 'arg', {}, ('arguments',
 r'''*b'''),
@@ -14243,8 +14245,11 @@ r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
 
 ('', 0, 0, 'arg', {}, ('arguments',
 r'''a: int'''),
-r'''FST: **NodeError('expecting arg, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting arg, got arguments, could not coerce')**'''),
+r'''a: int''', r'''
+arg - ROOT 0,0..0,6
+  .arg 'a'
+  .annotation Name 'int' Load - 0,3..0,6
+'''),
 
 ('', 0, 0, 'arg', {}, ('arguments',
 r'''a: int = b'''),
@@ -14408,8 +14413,10 @@ r'''AST: **NodeError('expecting arg, got MatchOr, could not coerce')**'''),
 
 ('', 0, 0, 'arg', {}, ('_pattern_attrlikes',
 r'''a'''),
-r'''FST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting arg, got _pattern_attrlikes, could not coerce')**'''),
+r'''a''', r'''
+arg - ROOT 0,0..0,1
+  .arg 'a'
+'''),
 
 ('', 0, 0, 'arg', {}, ('_pattern_attrlikes',
 r'''b=c'''),
@@ -14845,13 +14852,18 @@ r'''AST: **NodeError('expecting keyword, got arguments, could not coerce')**''')
 
 ('', 0, 0, 'keyword', {}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting keyword, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting keyword, got arguments, could not coerce')**'''),
+r'''b=c''', r'''
+keyword - ROOT 0,0..0,3
+  .arg 'b'
+  .value Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, 'keyword', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting keyword, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting keyword, got arguments, could not coerce')**'''),
+r'''**b''', r'''
+keyword - ROOT 0,0..0,3
+  .value Name 'b' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, 'keyword', {}, ('arguments',
 r'''a, b'''),
@@ -14895,8 +14907,12 @@ r'''AST: **NodeError('expecting keyword, got arguments, could not coerce')**''')
 
 ('', 0, 0, 'keyword', {}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting keyword, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting keyword, got arguments, could not coerce')**'''),
+r''' a = ( b ) ''',
+r'''a=b''', r'''
+keyword - ROOT 0,1..0,10
+  .arg 'a'
+  .value Name 'b' Load - 0,7..0,8
+'''),
 
 ('', 0, 0, 'keyword', {}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
@@ -15052,8 +15068,11 @@ r'''AST: **NodeError('expecting keyword, got _pattern_attrlikes, could not coerc
 
 ('', 0, 0, 'keyword', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting keyword, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting keyword, got _pattern_attrlikes, could not coerce')**'''),
+r'''b=c''', r'''
+keyword - ROOT 0,0..0,3
+  .arg 'b'
+  .value Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, 'keyword', {}, ('_pattern_attrlikes',
 r'''a, b'''),

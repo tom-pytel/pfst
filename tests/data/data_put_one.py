@@ -17792,7 +17792,7 @@ r'''**NodeError('expecting expression (standard), got arguments, could not coerc
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('arguments',
 r'''x=1'''),
-r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has default values')**'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has defaults')**'''),
 
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('arguments',
