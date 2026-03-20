@@ -3128,7 +3128,9 @@ class SliceCoerce(Fuzzy):
                         continue
 
                     except NodeError as exc:
-                        if not str(exc).startswith('expecting '):
+                        s = str(exc)
+
+                        if not s.startswith('expecting '):# and not s.startswith('cannot coerce '):
                             raise
 
                         continue
@@ -3157,6 +3159,7 @@ class SliceCoerce(Fuzzy):
 
                         if not (
                             s.startswith('expecting ')
+                            # or s.startswith('cannot coerce ')
                             or s == "'.' dotted alias not allowed"  # _aliases shared between Import_names and ImportFrom_names and may have illegal names for the other
                         ):
                             raise
@@ -3183,6 +3186,7 @@ class SliceCoerce(Fuzzy):
 
                         if not (
                             s.startswith('expecting ')
+                            # or s.startswith('cannot coerce ')
                             or s == "'.' dotted alias not allowed"  # _aliases shared between Import_names and ImportFrom_names and may have illegal names for the other
                         ):
                             raise

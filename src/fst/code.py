@@ -396,6 +396,28 @@ def _par_if_needed(  # TODO: candidate function to move into core, possibly just
     return need_pars
 
 
+def _coerce_error(to: str | AST | type[AST], from_: str | AST | type[AST], reason: str = '') -> Exception:
+    if isinstance(to, type):
+        to = to.__qualname__
+    elif not isinstance(to, str):
+        to = to.__class__.__qualname__
+
+    if isinstance(from_, type):
+        from_ = from_.__qualname__
+    elif not isinstance(from_, str):
+        from_ = from_.__class__.__qualname__
+
+    if not reason:
+        reason = ', could not coerce'
+    elif reason == 'coerce disabled':
+        reason = ', coerce disabled'
+    elif reason:
+        reason = f', could not coerce, {reason}'
+
+    # return NodeError(f'cannot coerce to {to} from {from_}{reason}')
+    return NodeError(f'expecting {to}, got {from_}{reason}')
+
+
 # ......................................................................................................................
 # general coerce to patterns
 
@@ -534,7 +556,7 @@ def _coerce_to_pattern_ast_Starred(
     value = ast.value
 
     if value.__class__ is not Name:
-        return f'value must be Name, not {value.__class__.__name__}'
+        return 'value must be Name'
 
     if (name := value.id) == '_':
         name = None
@@ -570,7 +592,7 @@ def _coerce_to_pattern_ast_arg(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if ast.annotation:
-        return 'arg has annotation'
+        return 'has annotation'
 
     if (name := ast.arg) == '_':
         name = None
@@ -587,11 +609,11 @@ def _coerce_to_pattern_ast_alias(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if ast.asname:
-        return 'alias has asname'
+        return 'has asname'
     if (name := ast.name) == '*':
-        return "star '*' alias"
+        return "is star '*'"
     if '.' in name:
-        return "dotted alias"
+        return "is dotted"
 
     if (name := name) == '_':
         name = None
@@ -929,7 +951,7 @@ def _coerce_to_pattern_ast_seq(
         elts = ast.arglikes
 
         if any(e.__class__ is keyword for e in elts):
-            return 'cannot have keyword'
+            return 'has keyword'
 
         if is_FST:
             fst_._fix_undelimited_seq(elts, '[]', True)
@@ -987,7 +1009,7 @@ def _coerce_to_pattern_ast__pattern_attrlikes(
     """See `_coerce_to_pattern_ast_ret_empty_str()`."""
 
     if ast.kwd_patterns:
-        return 'cannot have keyword attributes'
+        return 'has keyword attributes'
 
     patterns = ast.patterns
 
@@ -1070,8 +1092,7 @@ def _coerce_to_pattern_ast(
         ast.__class__, _coerce_to_pattern_ast_ret_empty_str)(ast, is_FST, options, parse_params)
 
     if isinstance(ret, str):
-        raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
-                        f', could not coerce{", " + ret if ret else ""}')  # ret here is reason str
+        raise _coerce_error(expecting, ast, ret)  # ret here is reason str
 
     ret, unmake_which = ret
 
@@ -1247,7 +1268,7 @@ def _coerce_to_expr_ast__arglikes(
 
     if not is_FST:
         if any(a.__class__ is keyword for a in arglikes):
-            return 'cannot have keyword'
+            return 'has keyword'
 
         ret = Tuple(elts=arglikes)
 
@@ -1256,7 +1277,7 @@ def _coerce_to_expr_ast__arglikes(
 
         for a in arglikes:
             if a.__class__ is keyword:
-                return 'cannot have keyword'
+                return 'has keyword'
 
             if pars_arglike and a.f._is_expr_arglike_only():
                 a.f._parenthesize_grouping()
@@ -1326,7 +1347,7 @@ def _coerce_to_expr_ast_Tuple(
 
     if not is_FST:
         if any(a.__class__ is Slice for a in elts):
-            return 'cannot have Slice'
+            return 'has Slice'
 
         ret = Tuple(elts=elts)
 
@@ -1335,7 +1356,7 @@ def _coerce_to_expr_ast_Tuple(
 
         for a in elts:
             if a.__class__ is Slice:
-                return 'cannot have Slice'
+                return 'has Slice'
 
             if pars_arglike and a.f._is_expr_arglike_only():
                 a.f._parenthesize_grouping()
@@ -1358,7 +1379,7 @@ def _coerce_to_expr_ast_arguments(
     if ast.defaults or any(a for a in ast.kw_defaults):
         return 'has default values'
     if ast.kwarg or any(a for a in ast.kw_defaults):
-        return 'has **kwargs'
+        return 'has kwarg'
 
     if vararg:
         if vararg.annotation:
@@ -1444,7 +1465,7 @@ def _coerce_to_expr_ast_alias(
     if ast.asname:
         return 'has asname'
     if ast.name == '*':
-        return "star '*' alias"
+        return "is star '*'"
 
     if '.' not in (name := ast.name):
         ast = (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
@@ -1481,9 +1502,9 @@ def _coerce_to_expr_ast__aliases(
     if names:
         for a in names:
             if a.asname:
-                return 'alias has asname'
+                return 'has alias with asname'
             if a.name == '*':
-                return "star '*' alias"
+                return "has star '*' alias"
 
         if not is_FST:
             for a in ast.names:
@@ -1532,7 +1553,7 @@ def _coerce_to_expr_ast__withitems(
 
     for a in ast.items:
         if a.optional_vars:
-            return 'withitem has optional_vars'
+            return 'has withitem with optional_vars'
 
         elts.append(a.context_expr)
 
@@ -1589,7 +1610,7 @@ def _coerce_to_expr_ast_MatchAs(
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
     if ast.pattern:
-        return 'has pattern'
+        return 'MatchAs has pattern'
 
     name = ast.name or '_'
 
@@ -1772,7 +1793,7 @@ def _coerce_to_expr_ast__pattern_attrlikes(
     """See `_coerce_to_expr_ast_ret_empty_str()`. This coercer RECURSES!"""
 
     if ast.kwd_patterns:
-        return 'cannot have keyword attributes'
+        return 'has keyword attributes'
 
     elts = []
 
@@ -1874,7 +1895,7 @@ def _coerce_to_expr_ast__type_params(
                             end_col_offset=end_col_offset)
 
         else:
-            return f'incompatible type {ast_cls.__name__}'
+            return f'has {ast_cls.__name__}'
 
         elts.append(a)
 
@@ -1964,8 +1985,7 @@ def _coerce_to_expr_ast(
         ast.__class__, _coerce_to_expr_ast_maybe_expr)(ast, is_FST, options, parse_params)
 
     if isinstance(ret, str):
-        raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
-                        f', could not coerce{", " + ret if ret else ""}')  # ret here is reason str
+        raise _coerce_error(expecting, ast, ret)  # ret here is reason str
 
     ret, unmake_which, is_nonstd_tuple = ret
 
@@ -1976,8 +1996,7 @@ def _coerce_to_expr_ast(
         ret = _coerce_to_expr_ast_List_or_Set(ret, is_FST, options, parse_params)
 
         if isinstance(ret, str):
-            raise NodeError(f'expecting {expecting}, got {ast.__class__.__name__}'
-                            f', could not coerce{", " + ret if ret else ""}')  # pragma: no cover  # can't currently happen as List and Set can always coerce to each other
+            raise _coerce_error(expecting, ast, ret)  # pragma: no cover  # can't currently happen as List and Set can always coerce to each other
 
         ret = ret[0]  # don't even check for is_nonstd_tuple because wasn't tuple and this one isn't either
         unmake_which = 2  # at this point its just safer and easier
@@ -2049,7 +2068,7 @@ def _coerce_to_seq(
     else:
         if ast_cls is Tuple:
             if any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'expecting {to_cls.__name__}, got Tuple with a Slice in it, could not coerce')
+                raise _coerce_error(to_cls, 'Tuple', 'has Slice')
 
         if is_FST:
             if code.is_parenthesized_tuple() is not False:
@@ -2058,7 +2077,7 @@ def _coerce_to_seq(
             getattr(codea := code.a, 'ctx', codea).f._unmake_fst_parents(True)  # if there is a ctx then make sure to unmake that as well
 
     if not allow_starred and any(e.__class__ is Starred for e in ast.elts):
-        raise NodeError(f'expecting {to_cls.__name__}, got {ast_cls.__name__}, could not coerce, found Starred')
+        raise _coerce_error(to_cls, ast_cls, 'has Starred')
 
     if ret_elts:
         return ast.elts, is_FST
@@ -2118,8 +2137,7 @@ def _coerce_to__aliases_common(
                     attr = f'{ee.attr}.{attr}'
 
                 if ee_cls is not Name:
-                    raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                    f', could not coerce, found {ee_cls.__name__}')
+                    raise _coerce_error(expecting, codea, f'has {ee_cls.__qualname__}')
 
                 ee.f._unparenthesize_grouping(False)
 
@@ -2127,8 +2145,7 @@ def _coerce_to__aliases_common(
                           end_col_offset=e.end_col_offset)
 
             else:
-                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                f', could not coerce, found {e_cls.__name__}')
+                raise _coerce_error(expecting, codea, f'has {e_cls.__qualname__}')
 
             names.append(a)
 
@@ -2160,7 +2177,7 @@ def _coerce_to__arglike_ast_TypeVar(
     """Quick convert `TypeVar` to either an `expr_arglike` or a `kw=val` `keyword`."""
 
     if ast.bound:
-        raise NodeError(f'expecting {expecting}, got TypeVar, could not coerce, has bound')
+        raise _coerce_error(expecting, 'TypeVar', 'has bound')
 
     name = ast.name
 
@@ -2192,7 +2209,7 @@ def _coerce_to__arglike_ast_ParamSpec(
     """Quick convert `ParamSpec` a `**kw` `keyword`."""
 
     if getattr(ast, 'default_value', None):
-        raise NodeError(f'expecting {expecting}, got ParamSpec, could not coerce, has default_value')
+        raise _coerce_error(expecting, 'ParamSpec', 'has default_value')
 
     name = ast.name
 
@@ -2240,7 +2257,7 @@ def _coerce_to_argument_ast_keyword(
     # **kwarg
 
     if value.__class__ is not Name:
-        raise NodeError(f"expecting {expecting}, got keyword, could not coerce, '**' value must be Name")
+        raise _coerce_error(expecting, 'keyword', "'**' value must be Name")
 
     if not is_FST:
         return arg(arg=value.id)
@@ -2263,7 +2280,7 @@ def _coerce_to_argument_ast_Starred(
     value = ast.value
 
     if value.__class__ is not Name:
-        raise NodeError(f"expecting {expecting}, got Starred, could not coerce, value must be Name")
+        raise _coerce_error(expecting, 'Starred', "value must be Name")
 
     if not is_FST:
         return arg(arg=value.id)
@@ -2296,7 +2313,7 @@ def _coerce_to_argument_ast_TypeVar(
                 arg(arg=name))
 
     elif is_lambda:
-        raise NodeError(f"expecting {expecting}, got TypeVar, could not coerce, has bound")
+        raise _coerce_error(expecting, 'TypeVar', 'has bound')
 
     elif not is_FST:
         arg_ = arg(arg=name, annotation=bound)
@@ -2323,7 +2340,7 @@ def _coerce_to_argument_ast_TypeVarTuple_or_ParamSpec(
     """Quick convert `TypeVarTuple` to `vararg` or `ParamSpec` to `kwarg` suitable for `arguments`."""
 
     if getattr(ast, 'default_value', None):
-        raise NodeError(f"expecting {expecting}, got TypeVarTuple, could not coerce, has default value")
+        raise _coerce_error(expecting, ast, 'has default_value')
 
     name = ast.name
     end_lineno = ast.end_lineno
@@ -2412,7 +2429,7 @@ def _coerce_to_match_case(
 
     codea = code.a if isinstance(code, fst.FST) else code
 
-    raise NodeError(f'expecting match_case, got {codea.__class__.__name__}, could not coerce')  # if got here then is not match_case and we do not coerce down from _match_cases, so automatically fail
+    raise _coerce_error('match_case', codea)  # if got here then is not match_case and we do not coerce down from _match_cases, so automatically fail
 
 
 def _coerce_to__match_cases(
@@ -2430,7 +2447,7 @@ def _coerce_to__match_cases(
             return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                         end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
-        raise NodeError(f'expecting _match_cases, got {codea_cls.__name__}, could not coerce')
+        raise _coerce_error('_match_cases', codea_cls)
 
     elif code_cls is match_case:
         code = _fixing_unparse(code)
@@ -2438,7 +2455,7 @@ def _coerce_to__match_cases(
 
         return fst.FST(parse__match_cases(code, parse_params), lines, None, parse_params=parse_params)
 
-    raise NodeError(f'expecting _match_cases, got {code.__class__.__name__}, could not coerce')
+    raise _coerce_error('_match_cases', code_cls)
 
 
 def _coerce_to_Set(
@@ -2480,7 +2497,7 @@ def _coerce_to_List(
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)  # no fixes needed, already a to_cls
 
         elif ast_cls is not Tuple:
-            raise NodeError(f'expecting {to_cls.__name__}, got {codea.__class__.__name__}, could not coerce')
+            raise _coerce_error(to_cls, codea)
 
         else:
             if to_cls is List:
@@ -2514,7 +2531,7 @@ def _coerce_to_List(
 
         if ast_cls is not to_cls:
             if ast_cls is not Tuple:
-                raise NodeError(f'expecting {to_cls.__name__}, got {code.__class__.__name__}, could not coerce')
+                raise _coerce_error(to_cls, code)
 
             ast = to_cls(elts=ast.elts)
 
@@ -2537,7 +2554,7 @@ def _coerce_to_Dict(
     ast, _ = _coerce_to_expr_ast(codea, is_FST, options, parse_params, 'Dict')
 
     if ast.__class__ is not Dict:
-        raise NodeError(f'expecting Dict, got {codea.__class__.__name__}, could not coerce')
+        raise _coerce_error('Dict', codea)
 
     if is_FST:
         fst_ = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
@@ -2565,7 +2582,7 @@ def _coerce_to_MatchMapping(
     fst_ = _coerce_to_pattern(code, options, parse_params, strip=strip)
 
     if fst_.a.__class__ is not MatchMapping:  # only this can coerce to a MatchMapping
-        raise NodeError(f'expecting MatchMapping, got {codea.__class__.__name__}, could not coerce')
+        raise _coerce_error('MatchMapping', codea)
 
     return fst_
 
@@ -2610,8 +2627,7 @@ def _coerce_to__Assign_targets(
 
             for e in elts:
                 if not is_valid_target(e):
-                    raise NodeError(f'expecting _Assign_targets, got {codea.__class__.__name__}, could not coerce'
-                                    f', found {e.__class__.__name__}')
+                    raise _coerce_error('_Assign_targets', codea, f'{e.__class__.__name__} is not a target')
 
                 f = e.f
                 _, _, end_ln, end_col = f.pars()
@@ -2661,8 +2677,7 @@ def _code_as_one__Assign_targets(
     ast_ = fst_.a
 
     if not is_valid_target(ast_):
-        raise NodeError(f'expecting _Assign_targets expression, got {ast_.__class__.__name__}'
-                        f'{", could not coerce" if coerce else ", coerce disabled"}')
+        raise _coerce_error('Assign target', ast_, '' if coerce else 'coerce disabled')
 
     fst_._set_ctx(Store)
 
@@ -2846,7 +2861,7 @@ def _coerce_to__arglikes(
 
     if codea_cls is arguments:
         if codea.posonlyargs:
-            raise NodeError('expecting _arglikes, got arguments, could not coerce, has posonlyargs')
+            raise _coerce_error('_arglikes', 'arguments', 'has posonlyargs')
 
         coerced = True
         args = codea.args
@@ -2861,7 +2876,7 @@ def _coerce_to__arglikes(
 
         for arg_, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):  # arg and arg=default
             if arg_.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
+                raise _coerce_error('_arglikes', 'arguments', 'has annotations')
 
             name = arg_.arg
 
@@ -2885,7 +2900,7 @@ def _coerce_to__arglikes(
 
         if vararg:  # *vararg
             if vararg.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
+                raise _coerce_error('_arglikes', 'arguments', 'vararg has annotation')
 
             name = vararg.arg
 
@@ -2903,18 +2918,17 @@ def _coerce_to__arglikes(
             arglikes.append(ast)
 
         elif kwonlyargs:  # we have a `*, ` in the arguments, not allowed without a vararg
-            raise NodeError("expecting _arglikes, got arguments, could not coerce, has empty vararg '*'")
+            raise _coerce_error('_arglikes', 'arguments', "has empty vararg '*'")
 
         for arg_, dflt in zip(kwonlyargs, kw_defaults, strict=True):  # kwarg and kwarg=kwdefault
             if arg_.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
+                raise _coerce_error('_arglikes', 'arguments', 'arg has annotation')
 
             name = arg_.arg
 
             if not dflt:
                 if defaults:  # call(a=1, b) is invalid
-                    raise NodeError('expecting _arglikes, got arguments, could not coerce'
-                                    ', args without defaults cannot follow args with defaults')
+                    raise _coerce_error('_arglikes', 'arguments', 'arg without default follows arg with default')
 
                 ast = (Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
                             end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
@@ -2935,7 +2949,7 @@ def _coerce_to__arglikes(
 
         if kwarg:  # **kwarg
             if kwarg.annotation:
-                raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
+                raise _coerce_error('_arglikes', 'arguments', 'kwarg has annotation')
 
             name = kwarg.arg
 
@@ -3165,7 +3179,7 @@ def _coerce_to_arg(
 
     if codea.__class__ is TypeVar:  # from TypeVar: bound or without bound
         if getattr(codea, 'default_value', None):
-            raise NodeError('expecting arg, got TypeVar, could not coerce, has default value')
+            raise _coerce_error('arg', 'TypeVar', 'has default_value')
 
         name = codea.name
         bound = codea.bound
@@ -3180,7 +3194,7 @@ def _coerce_to_arg(
             ast = arg(arg=name, annotation=bound, lineno=codea.lineno, col_offset=codea.col_offset,
                       end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
-            codea.bound = None  # so it doesn't get unmade only to be remade again
+            codea.bound = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
 
             code._unmake_fst_tree()
 
@@ -3197,7 +3211,7 @@ def _coerce_to_arg(
     ast_ = fst_.a
 
     if ast_.__class__ is not Name:
-        raise NodeError(f'cannot coerce {ast_.__class__.__name__} to arg, must be Name')
+        raise _coerce_error('arg', codea)
 
     fst_._unparenthesize_grouping(False)  # args can't have pars
 
@@ -3217,12 +3231,12 @@ def _coerce_to_keyword(
 
     if codea_cls is TypeVar:  # from `name=default_value`
         if codea.bound:
-            raise NodeError('expecting keyword, got TypeVar, could not coerce, has bound')
+            raise _coerce_error('keyword', 'TypeVar', 'has bound')
 
         default_value = getattr(codea, 'default_value', None)
 
         if not default_value:
-            raise NodeError('expecting keyword, got TypeVar, could not coerce, needs default value')
+            raise _coerce_error('keyword', 'TypeVar', 'has default_value')
 
         if not is_FST:
             src = unparse(keyword(arg=codea.name, value=default_value))
@@ -3231,11 +3245,11 @@ def _coerce_to_keyword(
             ast = keyword(arg=codea.name, value=default_value, lineno=codea.lineno, col_offset=codea. col_offset,
                           end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
-            codea.value = None  # so it doesn't get unmade only to be remade again
+            codea.value = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
 
     elif codea_cls is ParamSpec:  # from `**name`
         if getattr(codea, 'default_value', None):
-            raise NodeError('expecting keyword, got ParamSpec, could not coerce, has default value')
+            raise _coerce_error('keyword', 'ParamSpec', 'has default_value')
 
         name = codea.name
 
@@ -3253,7 +3267,7 @@ def _coerce_to_keyword(
                           end_col_offset=codea.end_col_offset)
 
     else:
-        raise NodeError(f'expecting keyword, got {codea_cls.__name__}, could not coerce')
+        raise _coerce_error('keyword', codea_cls)
 
     if not is_FST:
         ast = parse_keyword(src, parse_params)
@@ -3278,6 +3292,8 @@ def _coerce_to_alias(
 
     # TODO: coerce "with a as b" items[0] -> "import a as b"? doesn't really seem as something that would ever be used
 
+    codea = code.a if isinstance(code, fst.FST) else code
+
     fst_ = code_as_expr(code, options, parse_params, strip=True, coerce=True)  # strip because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = a = fst_.a
     name = ''
@@ -3289,7 +3305,7 @@ def _coerce_to_alias(
         a.f._unparenthesize_grouping(False)  # aliases can't have pars
 
     if a.__class__ is not Name:
-        raise NodeError(f'cannot coerce {a.__class__.__name__} to alias, must be Name or Attribute')
+        raise _coerce_error('alias', codea)
 
     fst_._unparenthesize_grouping(False)  # aliases can't have pars
 
@@ -3347,11 +3363,13 @@ def _coerce_to__ImportFrom_name(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
+    codea = code.a if isinstance(code, fst.FST) else code
+
     fst_ = code_as_expr(code, options, parse_params, strip=True, coerce=True)  # strip because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = fst_.a
 
     if ast_.__class__ is not Name:
-        raise NodeError(f'cannot coerce {ast_.__class__.__name__} to ImportFrom.names alias, must be Name')
+        raise _coerce_error('ImportFrom.names alias', codea)
 
     fst_._unparenthesize_grouping(False)  # aliases can't have pars
 
@@ -3426,7 +3444,7 @@ def _coerce_to_arguments(
 
         for a in codea.arglikes:
             if kwarg:
-                raise NodeError(f"expecting {expecting}, got _arglikes, could not coerce, args found after kwarg")
+                raise _coerce_error(expecting, '_arglikes', 'has args after kwarg')
 
             a_cls = a.__class__
 
@@ -3445,14 +3463,13 @@ def _coerce_to_arguments(
                     kw_defaults.append(None)  # can be None
 
                 elif defaults:
-                    raise NodeError(f"expecting {expecting}, got _arglikes, could not coerce"
-                                    ', args without defaults cannot follow args with defaults')
+                    raise _coerce_error(expecting, '_arglikes', 'arg without default follows arg with default')
                 else:
                     args.append(arg_)
 
             elif a_cls is Starred:
                 if vararg:
-                    raise NodeError(f"expecting {expecting}, got _arglikes, could not coerce, multiple varargs")
+                    raise _coerce_error(expecting, '_arglikes', 'has multiple Starred')
 
                 vararg = _coerce_to_argument_ast_Starred(a, is_FST, options, parse_params, expecting)
 
@@ -3473,7 +3490,7 @@ def _coerce_to_arguments(
                         defaults.append(default)
 
             else:  # expression
-                raise NodeError(f"expecting {expecting}, got _arglikes, could not coerce, found {a_cls.__name__}")
+                raise _coerce_error(expecting, '_arglikes', f'has {a_cls.__name__}')
 
     elif codea_cls is MatchStar:
         coerced = True
@@ -3496,11 +3513,9 @@ def _coerce_to_arguments(
 
         for pat in codea.patterns:
             if pat.__class__ is not MatchAs:
-                raise NodeError(f"expecting {expecting}, got _pattern_attrlikes, could not coerce"
-                                ', found non-MatchAs arg')
+                raise _coerce_error(expecting, '_pattern_attrlikes', 'has non-MatchAs arg')
             if pat.pattern:
-                raise NodeError(f"expecting {expecting}, got _pattern_attrlikes, could not coerce"
-                                ', MatchAs arg has pattern')
+                raise _coerce_error(expecting, '_pattern_attrlikes', 'MatchAs arg has pattern')
 
             name = pat.name or '_'  # None == '_'
 
@@ -3556,7 +3571,7 @@ def _coerce_to_arguments(
 
         for a in codea.type_params:
             if kwarg:
-                raise NodeError(f"expecting {expecting}, got _type_params, could not coerce, args found after kwarg")
+                raise _coerce_error(expecting, '_type_params', 'has args after kwarg')
 
             a_cls = a.__class__
 
@@ -3573,12 +3588,11 @@ def _coerce_to_arguments(
                     if default:
                         defaults.append(default)
                     elif defaults:
-                        raise NodeError(f"expecting {expecting}, got _type_params, could not coerce"
-                                        ', args without defaults cannot follow args with defaults')
+                        raise _coerce_error(expecting, '_type_params', 'arg without default follows arg with default')
 
             elif a_cls is TypeVarTuple:
                 if vararg:
-                    raise NodeError(f"expecting {expecting}, got _type_params, could not coerce, multiple varargs")
+                    raise _coerce_error(expecting, '_type_params', 'has multiple TypeVarTuple')
 
                 vararg = _coerce_to_argument_ast_TypeVarTuple_or_ParamSpec(a, is_FST, options, parse_params, expecting)
 
@@ -3642,20 +3656,17 @@ def _coerce_to_arguments(
 
             elif e_cls is Starred:
                 if ast.vararg:
-                    raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                    f', could not coerce, multiple Starred')
+                    raise _coerce_error(expecting, codea, 'has multiple Starred')
 
                 if (e := e.value).__class__ is not Name:
-                    raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                    f', could not coerce, Starred is {e.__class__.__name__}, must be Name')
+                    raise _coerce_error(expecting, codea, 'Starred value must be Name')
 
                 ast.vararg = arg(arg=e.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
                                  end_col_offset=e.end_col_offset)
                 args = ast.kwonlyargs
 
             else:
-                raise NodeError(f'expecting {expecting}, got {codea.__class__.__name__}'
-                                f', could not coerce, found {e_cls.__name__}')
+                raise _coerce_error(expecting, codea, f'has {e_cls.__name__}')
 
         ast.kw_defaults = [None] * len(ast.kwonlyargs)
 
@@ -3671,7 +3682,7 @@ def _coerce_to_arguments(
     ast_ = fst_.a
 
     if is_lambda and ast_.annotation:
-        raise NodeError('lambda arguments cannot have annotations')
+        raise _coerce_error('lambda arguments', codea_cls, 'has annotation')
 
     ast = arguments(posonlyargs=[], args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
 
@@ -3789,7 +3800,7 @@ def _coerce_to__pattern_attrlikes(
         arg_ = codea.arg
 
         if arg_ is None:
-            raise NodeError("expecting _pattern_attrlikes, got keyword, could not coerce, cannot be '**' keyword")
+            raise _coerce_error('_pattern_attrlikes', 'keyword', "is '**'")
 
         pat = _coerce_to_pattern_ast(codea.value, is_FST, options, parse_params, unmake=False)
 
@@ -3803,15 +3814,14 @@ def _coerce_to__pattern_attrlikes(
             a_cls = a.__class__
 
             if a_cls is Starred:
-                raise NodeError("expecting _pattern_attrlikes, got _arglikes, could not coerce, cannot have Starred")
+                raise _coerce_error('pattern attrlike', 'Starred')
 
             if a_cls is keyword:
                 arg_ = a.arg
                 value = a.value
 
                 if arg_ is None:
-                    raise NodeError("expecting _pattern_attrlikes, got _arglikes, could not coerce"
-                                    ", cannot have '**' keyword")
+                    raise _coerce_error('pattern attrlike', 'keyword', "is '**'")
 
                 pat = _coerce_to_pattern_ast(value, is_FST, options, parse_params, unmake=False)
 
@@ -3825,16 +3835,16 @@ def _coerce_to__pattern_attrlikes(
 
     elif codea_cls is arguments:
         if codea.vararg:
-            raise NodeError('expecting _pattern_attrlikes, got arguments, could not coerce, vararg not allowed')
+            raise _coerce_error('_pattern_attrlikes', 'arguments', 'has vararg')
 
         if codea.kwarg:
-            raise NodeError('expecting _pattern_attrlikes, got arguments, could not coerce, kwarg not allowed')
+            raise _coerce_error('_pattern_attrlikes', 'arguments', 'has kwarg')
 
         if codea.posonlyargs:
-            raise NodeError('expecting _pattern_attrlikes, got arguments, could not coerce, posonlyargs not allowed')
+            raise _coerce_error('_pattern_attrlikes', 'arguments', 'has posonlyargs')
 
         if codea.kwonlyargs:
-            raise NodeError('expecting _pattern_attrlikes, got arguments, could not coerce, kwonlyargs not allowed')
+            raise _coerce_error('_pattern_attrlikes', 'arguments', 'has kwonlyargs')
 
         set_patterns = False
         args = codea.args
@@ -3842,8 +3852,7 @@ def _coerce_to__pattern_attrlikes(
 
         for arg_, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):
             if arg_.annotation:
-                raise NodeError('expecting _pattern_attrlikes, got arguments, could not coerce'
-                                ', args cannot have annotations')
+                raise _coerce_error('pattern attrlike', 'arg', 'has annotation')
 
             name = arg_.arg
 
@@ -3866,7 +3875,7 @@ def _coerce_to__pattern_attrlikes(
 
     elif codea_cls is TypeVar:
         if codea.bound:
-            raise NodeError('expecting _pattern_attrlikes, got TypeVar, could not coerce, has bound')
+            raise _coerce_error('_pattern_attrlikes', 'TypeVar', 'has bound')
 
         set_patterns = False
         name = codea.name
@@ -3895,13 +3904,12 @@ def _coerce_to__pattern_attrlikes(
             a_cls = a.__class__
 
             if a_cls is not TypeVar:
-                raise NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce'
-                                f", cannot have {a_cls.__name__}")
+                raise _coerce_error('pattern attrlike', a_cls)
 
             name = a.name
 
             if a.bound:
-                raise NodeError('expecting _pattern_attrlikes, got _type_params, could not coerce, has bound')
+                raise _coerce_error('pattern attrlike', 'TypeVar', 'has bound')
 
             if value := getattr(a, 'default_value', None):
                 pat = _coerce_to_pattern_ast(value, is_FST, options, parse_params, unmake=False)
@@ -3935,7 +3943,7 @@ def _coerce_to__pattern_attrlikes(
 
         if codea_cls is MatchSequence:
             if any(a.__class__ is MatchStar for a in codea.patterns):
-                raise NodeError('expecting pattern attrlikes, got MatchSequence, could not coerce, contains MatchStar')
+                raise _coerce_error('_pattern_attrlikes', 'MatchSequence', 'has MatchStar')
 
             if not is_FST:
                 src = unparse(codea)[1:-1]  # strip '[]' delimiters at ends
@@ -3950,7 +3958,7 @@ def _coerce_to__pattern_attrlikes(
 
         elif codea_cls in ASTS_LEAF_PATTERN:  # this is essentially one=True
             if codea_cls is MatchStar:
-                raise NodeError('expecting pattern attrlikes, got MatchStar, could not coerce, not allowed')
+                raise _coerce_error('_pattern_attrlikes', 'MatchStar')
 
             if not is_FST:
                 src = unparse(codea)
@@ -3962,7 +3970,7 @@ def _coerce_to__pattern_attrlikes(
                 set_patterns = [codea]
 
         else:
-            raise NodeError(f'expecting pattern attrlikes, got {original_codea_cls.__name__}, could not coerce')
+            raise _coerce_error('_pattern_attrlikes', original_codea_cls)
 
     # final put together of coerced _pattern_attrlikes
 
@@ -4022,7 +4030,7 @@ def _coerce_to_type_param(
             ast = TypeVar(name=arg_, bound=annotation, lineno=codea.lineno, col_offset=codea.col_offset,
                           end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
-            codea.annotation = None  # so it doesn't get unmade only to be remade again
+            codea.annotation = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
 
         elif annotation:
             src = unparse(TypeVar(name=arg_, bound=annotation))
@@ -4036,7 +4044,7 @@ def _coerce_to_type_param(
 
         if arg_ is None:  # **kwarg -> ParamSpec
             if value.__class__ is not Name:
-                raise NodeError("expecting type_param, got keyword, could not coerce, '**' value must be Name")
+                raise _coerce_error('type_param', 'keyword', "'**' value must be Name")
 
             if not is_FST:
                 src = f'**{value.id}'
@@ -4048,7 +4056,7 @@ def _coerce_to_type_param(
                                 end_lineno=value.end_lineno, end_col_offset=value.end_col_offset)
 
         elif PYLT13:
-            raise NodeError("expecting type_param, got keyword, could not coerce, has default value")
+            raise _coerce_error('type_param', 'keyword', 'default value not allowed on Python < 3.13')
 
         else:  # arg=value -> TypeVar (py 3.13+)
             if not is_FST:
@@ -4060,7 +4068,7 @@ def _coerce_to_type_param(
                 ast = TypeVar(name=arg_, default_value=value, lineno=codea.lineno, col_offset=codea. col_offset,
                               end_lineno=end_ln + 1, end_col_offset=code._lines[end_ln].c2b(end_col))
 
-                codea.value = None  # so it doesn't get unmade only to be remade again
+                codea.value = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
 
     if coerced:
         if not is_FST:
@@ -4091,7 +4099,7 @@ def _coerce_to_type_param(
 
     elif ast_.__class__ is Starred:
         if (value := fst_.a.value).__class__ is not Name:
-            raise NodeError(f'cannot coerce {value.__class__.__name__} to TypeVarTuple name, must be Name')
+            raise _coerce_error('TypeVarTuple', codea, 'value must be name')
 
         value.f._unparenthesize_grouping(False)  # type_params can't have pars
 
@@ -4099,7 +4107,7 @@ def _coerce_to_type_param(
                            end_col_offset=ast_.end_col_offset)
 
     else:
-        raise NodeError(f'cannot coerce {ast_.__class__.__name__} to type_param, must be Name or Starred Name')
+        raise _coerce_error('type_param', codea, 'must be name or *name')
 
     return fst.FST(ast, fst_._lines, None, from_=fst_, lcopy=False)
 
@@ -4119,7 +4127,7 @@ def _coerce_to__type_params(
 
     if codea_cls is arguments:
         if codea.posonlyargs:
-            raise NodeError('expecting _type_params, got arguments, could not coerce, has posonlyargs')
+            raise _coerce_error('_type_params', 'arguments', 'has posonlyargs')
 
         coerced = True
         args = codea.args
@@ -4130,11 +4138,10 @@ def _coerce_to__type_params(
         defaults = codea.defaults
 
         if PYLT13 and (defaults or any(kw_defaults)):
-            raise NodeError('expecting _type_params, got arguments, could not coerce'
-                            ', cannot have default values on Python < 3.13')
+            raise _coerce_error('_type_params', 'arguments', 'default values not allowed on Python < 3.13')
 
         if kwonlyargs and not vararg:  # we have a `*, ` in the arguments, not allowed without a vararg
-            raise NodeError("expecting _type_params, got arguments, could not coerce, has empty vararg '*'")
+            raise _coerce_error('_type_params', 'arguments', "has empty vararg '*'")
 
         if is_FST:
             lines = code.root._lines
@@ -4147,28 +4154,30 @@ def _coerce_to__type_params(
                 name = arg_.arg
                 annotation = arg_.annotation  # doesn't matter if annotation is None
 
-                if not dflt:
-                    ast = (TypeVar(name=name, bound=annotation, lineno=arg_.lineno, col_offset=arg_.col_offset,
-                                   end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
-                           if is_FST else
-                           TypeVar(name=name, bound=annotation))
+                if not is_FST:
+                    if dflt:
+                        ast = TypeVar(name=name, bound=annotation, default_value=dflt)
+                    else:
+                        ast = TypeVar(name=name, bound=annotation)
 
                 else:
-                    if not is_FST:
-                        ast = TypeVar(name=name, bound=annotation, default_value=dflt)
+                    if not dflt:
+                        ast = TypeVar(name=name, bound=annotation,
+                                      lineno=arg_.lineno, col_offset=arg_.col_offset,
+                                      end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
 
                     else:  # if this then we need to include possible parentheses in TypeVar
                         _, _, end_ln, end_col = dflt.f.pars()
 
-                        ast = TypeVar(name=name, bound=annotation, default_value=dflt, lineno=arg_.lineno,
-                                      col_offset=arg_.col_offset, end_lineno=end_ln + 1,
+                        ast = TypeVar(name=name, bound=annotation, default_value=dflt,
+                                      lineno=arg_.lineno, col_offset=arg_.col_offset, end_lineno=end_ln + 1,
                                       end_col_offset=lines[end_ln].c2b(end_col))
 
                 type_params.append(ast)
 
             if is_args and vararg:  # *vararg -> *TypeVarTuple, only do when going from normal args to kwonlyargs
                 if vararg.annotation:
-                    raise NodeError('cannot coerce vararg with annotation to type_param')
+                    raise _coerce_error('TypeVarTuple', 'vararg', 'has annotation')
 
                 name = vararg.arg
 
@@ -4185,7 +4194,7 @@ def _coerce_to__type_params(
 
         if kwarg:  # **kwarg -> **ParamSpec
             if kwarg.annotation:
-                raise NodeError('cannot coerce kwarg with annotation to type_param')
+                raise _coerce_error('ParamSpec', 'kwarg', 'has annotation')
 
             name = kwarg.arg
 
@@ -4218,7 +4227,7 @@ def _coerce_to__type_params(
 
             elif a_cls is Starred:
                 if (value := a.value).__class__ is not Name:
-                    raise NodeError(f'cannot coerce *{value.__class__.__name__} to TypeVarTuple, must be Name')
+                    raise _coerce_error('TypeVarTuple', 'Starred', 'value must be Name')
 
                 if not is_FST:
                     ast = TypeVarTuple(name=value.id)
@@ -4235,7 +4244,7 @@ def _coerce_to__type_params(
 
                 if arg_ is None:  # **ParamSpec
                     if value.__class__ is not Name:
-                        raise NodeError(f"cannot coerce **{value.__class__.__name__} to ParamSpec, must be Name")
+                        raise _coerce_error('ParamSpec', 'keyword', "'**' value must be Name")
 
                     if not is_FST:
                         ast = ParamSpec(name=value.id)
@@ -4247,17 +4256,20 @@ def _coerce_to__type_params(
                                         end_lineno=value.end_lineno, end_col_offset=value.end_col_offset)
 
                 elif PYLT13:
-                    raise NodeError("cannot coerce keyword to TypeVar with default value on Python < 3.13")
+                    raise _coerce_error('TypeVar', 'keyword', 'default value not allowed on Python < 3.13')
 
                 else:  # TypeVar=default_value
                     if not is_FST:
                         ast = TypeVar(name=arg_, default_value=value)
+
                     else:
                         ast = TypeVar(name=arg_, default_value=value, lineno=a.lineno, col_offset=a.col_offset,
                                       end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
 
+                        a.value = None  # misc, so doesn't get unmade and remade, safe to do because no FST ops follow
+
             else:
-                raise NodeError(f"expecting _type_params, got _arglikes, could not coerce, found {a_cls.__name__}")
+                raise _coerce_error('_type_params', '_arglikes', f'has {a_cls.__name__}')
 
             type_params.append(ast)
 
@@ -4268,11 +4280,9 @@ def _coerce_to__type_params(
 
         for pat in patterns:
             if pat.__class__ is not MatchAs:
-                raise NodeError("expecting _type_params, got _pattern_attrlikes, could not coerce"
-                                ', found non-MatchAs arg')
+                raise _coerce_error('_type_params', '_pattern_attrlikes', 'has non-MatchAs arg')
             if pat.pattern:
-                raise NodeError("expecting _type_params, got _pattern_attrlikes, could not coerce"
-                                ', MatchAs arg has pattern')
+                raise _coerce_error('_type_params', '_pattern_attrlikes', 'MatchAs arg has pattern')
 
             name = pat.name or '_'  # None == '_'
 
@@ -4289,7 +4299,7 @@ def _coerce_to__type_params(
 
         if kwd_patterns:
             if PYLT13:
-                raise NodeError("expecting _type_params, got _pattern_attrlikes, could not coerce, has default values")
+                raise _coerce_error('_type_params', '_pattern_attrlikes', 'default values not allowed on Python < 3.13')
 
             if is_FST:
                 lines = code.lines
@@ -4355,12 +4365,10 @@ def _coerce_to__type_params(
                         tp = TypeVarTuple(name=v.id, lineno=e.lineno, col_offset=e.col_offset, end_lineno=e.end_lineno,
                                           end_col_offset=e.end_col_offset)
                     else:
-                        raise NodeError(f'expecting _type_params, got {codea.__class__.__name__}'
-                                        f', could not coerce, found Starred {v.__class__.__name__}')
+                        raise _coerce_error('type_param', 'Starred', 'value must be Name')
 
                 else:
-                    raise NodeError(f'expecting _type_params, got {codea.__class__.__name__}'
-                                    f', could not coerce, found {e_cls.__name__}')
+                    raise _coerce_error('type_param', e_cls)
 
                 type_params.append(tp)
 
@@ -4434,27 +4442,21 @@ def _code_as(
 
         if not isinstance(codea, ast_type):
             if not coerce_to:
-                raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}'
-                                f'{", coerce disabled" if coerce_to is False else ""}')
-
+                raise _coerce_error(name or ast_type, codea, 'coerce disabled' if coerce_to is False else '')
             try:
                 return coerce_to(code, options, parse_params, strip=strip)
             except (NodeError, SyntaxError, NotImplementedError) as exc:
-                raise NodeError(f'expecting {name or ast_type.__name__}, got {codea.__class__.__name__}, '
-                                'could not coerce') from exc
+                raise _coerce_error(name or ast_type, codea) from exc
 
     else:
         if isinstance(code, AST):
             if not isinstance(code, ast_type):
                 if not coerce_to:
-                    raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}'
-                                    f'{", coerce disabled" if coerce_to is False else ""}')
-
+                    raise _coerce_error(name or ast_type, code, 'coerce disabled' if coerce_to is False else '')
                 try:
                     return coerce_to(code, options, parse_params, strip=strip)
                 except (NodeError, SyntaxError, NotImplementedError) as exc:
-                    raise NodeError(f'expecting {name or ast_type.__name__}, got {code.__class__.__name__}, '
-                                    'could not coerce') from exc
+                    raise _coerce_error(name or ast_type, code) from exc
 
             src = unparse(code)
             lines = src.split('\n')
@@ -4522,17 +4524,16 @@ def _code_as_expr(
 
         if ast_cls not in no_coerce_clss:  # if not an expr then try coerce if allowed
             if not coerce:
-                raise NodeError(f'expecting {expecting}, got {ast_cls.__name__}, coerce disabled')
+                raise _coerce_error(expecting, ast_cls, 'coerce disabled')
 
             old_ast = ast
             ast, fix_coerced_tuple = _coerce_to_expr_ast(ast, True, options, parse_params, expecting, two_step=to_tuple)
             ast_cls = ast.__class__
 
             if ast_cls not in no_coerce_clss:  # we do this because if no_coerce_clss restricted to one type of expr instead of all then the same expr can come back and we need to make sure it is the one we want
-                raise NodeError(f'expecting {expecting}, got {old_ast.__class__.__name__}, could not coerce')
+                raise _coerce_error(expecting, old_ast)
             elif ast_cls is Starred and parse is parse_expr_slice:
-                raise NodeError(f'expecting expression (slice), got {old_ast.__class__.__name__}, coerced to Starred'
-                                ', must be in a sequence')
+                raise _coerce_error('expression (slice)', old_ast, 'coercion to Starred must be in a sequence')
 
             parse = None  # this is a signal so that singleton tuples always get trailing comma, maybe review this behavior
 
@@ -4540,11 +4541,11 @@ def _code_as_expr(
 
         if ast_cls is Slice:
             if not allow_Slice:
-                raise NodeError(f'expecting {expecting}, got Slice')
+                raise _coerce_error(expecting, 'Slice')
 
         elif ast_cls is Tuple:
             if not allow_Tuple_of_Slice and any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'expecting {expecting}, got Tuple with a Slice in it')
+                raise _coerce_error(expecting, 'Tuple', 'has Slice')
 
             if fix_coerced_tuple:
                 code._fix_Tuple(False)  # it is not parenthesized
@@ -4557,12 +4558,12 @@ def _code_as_expr(
         if is_ast := isinstance(code, AST):
             if code.__class__ not in no_coerce_clss:  # if not an expr then try coerce if allowed
                 if not coerce:
-                    raise NodeError(f'expecting {expecting}, got {code.__class__.__name__}, coerce disabled')
+                    raise _coerce_error(expecting, code, 'coerce disabled')
 
                 code, _ = _coerce_to_expr_ast(code, False, options, parse_params, expecting, two_step=to_tuple)
 
                 if code.__class__ not in no_coerce_clss:
-                    raise NodeError(f'expecting {expecting}, got {old_code.__class__.__name__}, could not coerce')
+                    raise _coerce_error(expecting, old_code)
 
             src = unparse(code)
             lines = src.split('\n')
@@ -4581,10 +4582,9 @@ def _code_as_expr(
             if ast_cls is not code_cls:  # sanity check, could have tried with a FormattedValue
                 if parse is parse_expr_slice and ast_cls is Tuple and code_cls is Starred:  # SPECIAL CASE specifically for lone '*starred' being parsed as a `Tuple`
                     if code is old_code:
-                        raise NodeError('expecting expression (slice), got Starred, must be in a sequence')  # pragma: no cover  # this currently gets rejected in code_as_expr_slice() so will not get here
+                        raise _coerce_error('expression (slice)', 'Starred', 'must be in a sequence')  # pragma: no cover  # this currently gets rejected in code_as_expr_slice() so will not get here
                     else:
-                        raise NodeError(f'expecting expression (slice), got {old_code.__class__.__name__}'
-                                        f', coerced to Starred, must be in a sequence')
+                        raise _coerce_error('expression (slice)', old_code, 'coercion to Starred must be in a sequence')
 
                 else:
                     raise ParseError(f'could not reparse AST to {old_code.__class__.__name__}'
@@ -4610,11 +4610,11 @@ def _code_as_op(
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, op_type):
-            raise NodeError(f'expecting {op_type.__name__}, got {code.a.__class__.__name__}')
+            raise _coerce_error(op_type, code.a)
 
     elif isinstance(code, AST):
         if not isinstance(code, op_type):
-            raise NodeError(f'expecting {op_type.__name__}, got {code.__class__.__name__}')
+            raise _coerce_error(op_type, code)
 
         code_cls = code.__class__
 
@@ -4679,8 +4679,7 @@ def code_as(
         mode_type = _AST_TYPE_BY_NAME_OR_TYPE.get(mode)  # `expr` or expr -> expr, etc...
 
         if mode_type and not isinstance(fst_.a, mode_type):
-            raise NodeError(f'expecting {mode_type.__name__}, got {fst_.a.__class__.__name__}'
-                            f'{", could not coerce" if coerce else ", coerce disabled"}')  # pragma: no cover  # can't think of a case where this would happen
+            raise _coerce_error(mode_type, fst_.a, '' if coerce else 'coerce disabled')  # pragma: no cover  # can't think of a case where this would happen
 
         return fst_
 
@@ -4778,7 +4777,7 @@ def code_as_ExceptHandler(
             raise ValueError('expecting root node')
 
         if code.a.__class__ is not ExceptHandler:
-            raise NodeError(f'expecting ExceptHandler, got {code.a.__class__}')
+            raise _coerce_error('ExceptHandler', code.a)
 
         error = NodeError
 
@@ -4787,7 +4786,7 @@ def code_as_ExceptHandler(
             code_cls = code.__class__
 
             if code_cls is not ExceptHandler:
-                raise NodeError(f'expecting ExceptHandler, got {code.__class__}')
+                raise _coerce_error('ExceptHandler', code_cls)
 
             code = _fixing_unparse((TryStar if star else Try)(body=[Pass()],
                                                               handlers=[code], orelse=[], finalbody=[]))
@@ -4842,13 +4841,13 @@ def code_as__ExceptHandlers(
 
         if codea_cls is ExceptHandler:
             if not coerce:
-                raise NodeError('expecting _ExceptHandlers, got ExceptHandler, coerce disabled')
+                raise _coerce_error('_ExceptHandlers', 'ExceptHandler', 'coerce disabled')
 
             code = fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                            end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
         elif codea_cls is not _ExceptHandlers:
-            raise NodeError(f'expecting _ExceptHandlers, got {codea_cls.__name__}, could not coerce')
+            raise _coerce_error('_ExceptHandlers', codea_cls)
 
         error = NodeError
 
@@ -4858,7 +4857,7 @@ def code_as__ExceptHandlers(
 
             if code_cls is ExceptHandler:
                 if not coerce:
-                    raise NodeError('expecting _ExceptHandlers, got ExceptHandler, coerce disabled')
+                    raise _coerce_error('_ExceptHandlers', 'ExceptHandler', 'coerce disabled')
 
                 handlers = [code]
 
@@ -4868,7 +4867,7 @@ def code_as__ExceptHandlers(
                                    [''], None, parse_params=parse_params)
 
             else:
-                raise NodeError(f'expecting _ExceptHandlers, got {code_cls.__name__}, could not coerce')
+                raise _coerce_error('_ExceptHandlers', code_cls)
 
             code = _fixing_unparse((TryStar if star else Try)(body=[Pass()],
                                                               handlers=handlers, orelse=[], finalbody=[]))
@@ -4980,7 +4979,7 @@ def code_as_expr_slice(
     codea = code.a if isinstance(code, fst.FST) else code
 
     if codea.__class__ is Starred:  # Starred cannot be a direct slice
-        raise NodeError('expecting expression (slice), got Starred, must be in sequence')
+        raise _coerce_error('expression (slice)', 'Starred', 'must be in sequence')
 
     return _code_as_expr(code, options, parse_params, parse_expr_slice, True, True, strip, coerce)
 
@@ -5091,9 +5090,9 @@ def code_as__arglike(
         ast_cls = ast_.__class__
 
         if ast_cls in ASTS_LEAF_FTSTR_FMT_OR_SLICE:  # need to check coercions as well as origina fst_
-            raise NodeError(f'expecting expression (arglike), got {fst_.a.__class__.__name__}')
+            raise _coerce_error('expression (arglike)', fst_.a)
         elif ast_cls is Tuple and any(e.__class__ is Slice for e in ast_.elts):
-            raise NodeError('expecting expression (arglike), got Tuple with a Slice in it')
+            raise _coerce_error('expression (arglike)', 'Tuple', 'has Slice')
 
     return fst_
 
@@ -5433,7 +5432,7 @@ def code_as_pattern(
     if fst_ is code:  # validation if returning same FST that was passed in
         if not allow_invalid_matchor and (a := fst_.a).__class__ is MatchOr:  # SPECIAL SLICE
             if not (len_pattern := len(a.patterns)):
-                raise NodeError('expecting valid pattern, got zero-length MatchOr')
+                raise _coerce_error('pattern', 'zero-length MatchOr')
 
             if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
                 fst_._unmake_fst_parents(True)
@@ -5508,9 +5507,9 @@ def code_as_Load(
 
         if codea_cls is not as_cls:
             if not coerce:
-                raise NodeError(f'expecting {as_cls.__name__}, got {codea_cls.__name__}, coerce disabled')
+                raise _coerce_error(as_cls, codea_cls, 'coerce disabled')
             if codea_cls not in ASTS_LEAF_EXPR_CONTEXT:
-                raise NodeError(f'expecting {as_cls.__name__}, got {codea_cls.__name__}, could not coerce')
+                raise _coerce_error(as_cls, codea_cls)
 
             code = fst.FST(as_cls(), code._lines, None, from_=code, lcopy=False)
 
@@ -5521,9 +5520,9 @@ def code_as_Load(
 
         if code_cls is not as_cls:
             if not coerce:
-                raise NodeError(f'expecting {as_cls.__name__}, got {code_cls.__name__}, coerce disabled')
+                raise _coerce_error(as_cls, code_cls, 'coerce disabled')
             if code_cls not in ASTS_LEAF_EXPR_CONTEXT:
-                raise NodeError(f'expecting {as_cls.__name__}, got {code_cls.__name__}, could not coerce')
+                raise _coerce_error(as_cls, code_cls)
 
         code = ['']
 
@@ -5724,7 +5723,7 @@ def code_as_constant(
             code = code.operand
 
         if code.__class__ is not Constant:
-            raise NodeError('expecting Constant')
+            raise _coerce_error('Constant', code)
 
         code = -code.value if neg else code.value
 
@@ -5741,7 +5740,7 @@ def code_as_constant(
     elif isinstance(code, list):
         code = '\n'.join(code)
     elif not isinstance(code, constant):
-        raise NodeError('expecting Constant')
+        raise _coerce_error('Constant', code.__class__.__qualname__)
 
     return code
 
@@ -5768,6 +5767,8 @@ def code_as__expr_arglikes(
     internal use only! May fail `verify()`.
     """
 
+    codea = code.a if isinstance(code, fst.FST) else code
+
     if not one and code.__class__ is Tuple:  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
@@ -5776,7 +5777,7 @@ def code_as__expr_arglikes(
 
     if fst_ is code:  # validation if returning same FST that was passed in
         if any(e.__class__ is Slice for e in fst_.a.elts):
-            raise NodeError('expecting non-Slice expressions (arglike), found Slice')
+            raise _coerce_error('expression(s) (arglike)', codea, 'has Slice')
 
         if fst_._is_delimited_seq():
             fst_._trim_delimiters()

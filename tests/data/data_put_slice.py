@@ -45373,7 +45373,7 @@ r'''a,'''), ('_pattern_attrlikes', r'''
 x,
 y=z,
 '''),
-r'''**NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''**NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('expr',
 r'''a,'''), ('_type_params', r'''
@@ -48453,7 +48453,7 @@ r'''a ='''), ('Set', r'''
 x
 }
 '''),
-r'''**NodeError('expecting _Assign_targets expression, got Set, could not coerce')**'''),
+r'''**NodeError('expecting Assign target, got Set, could not coerce')**'''),
 
 ('', 0, 'end', None, {'one': True}, ('_Assign_targets',
 r'''a ='''), ('Dict', r'''
@@ -48461,7 +48461,7 @@ r'''a ='''), ('Dict', r'''
 x: y
 }
 '''),
-r'''**NodeError('expecting _Assign_targets expression, got Dict, could not coerce')**'''),
+r'''**NodeError('expecting Assign target, got Dict, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, 'one': True}, ('_Assign_targets',
 r'''a ='''), ('_Assign_targets',

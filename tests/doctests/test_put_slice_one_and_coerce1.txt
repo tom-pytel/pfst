@@ -208,13 +208,13 @@ src: [x] = b  # src='[x]'
 FST: [x] = b
 AST: [x] = b
  
-src: **NodeError('expecting _Assign_targets expression, got Set, could not coerce')**  # src='{x}'
-FST: **NodeError('expecting _Assign_targets expression, got Set, could not coerce')**
-AST: **NodeError('expecting _Assign_targets expression, got Set, could not coerce')**
+src: **NodeError('expecting Assign target, got Set, could not coerce')**  # src='{x}'
+FST: **NodeError('expecting Assign target, got Set, could not coerce')**
+AST: **NodeError('expecting Assign target, got Set, could not coerce')**
  
-src: **NodeError('expecting _Assign_targets expression, got Dict, could not coerce')**  # src='{x: y}'
-FST: **NodeError('expecting _Assign_targets expression, got Dict, could not coerce')**
-AST: **NodeError('expecting _Assign_targets expression, got Dict, could not coerce')**
+src: **NodeError('expecting Assign target, got Dict, could not coerce')**  # src='{x: y}'
+FST: **NodeError('expecting Assign target, got Dict, could not coerce')**
+AST: **NodeError('expecting Assign target, got Dict, could not coerce')**
  
 src: x, y = b  # src='x, y'
 FST: x, y = b
@@ -261,13 +261,13 @@ src: [x] = b  # src='[x]'
 FST: [x] = b
 AST: [x] = b
  
-src: **NodeError('expecting _Assign_targets expression, got Set, coerce disabled')**  # src='{x}'
-FST: **NodeError('expecting _Assign_targets expression, got Set, coerce disabled')**
-AST: **NodeError('expecting _Assign_targets expression, got Set, coerce disabled')**
+src: **NodeError('expecting Assign target, got Set, coerce disabled')**  # src='{x}'
+FST: **NodeError('expecting Assign target, got Set, coerce disabled')**
+AST: **NodeError('expecting Assign target, got Set, coerce disabled')**
  
-src: **NodeError('expecting _Assign_targets expression, got Dict, coerce disabled')**  # src='{x: y}'
-FST: **NodeError('expecting _Assign_targets expression, got Dict, coerce disabled')**
-AST: **NodeError('expecting _Assign_targets expression, got Dict, coerce disabled')**
+src: **NodeError('expecting Assign target, got Dict, coerce disabled')**  # src='{x: y}'
+FST: **NodeError('expecting Assign target, got Dict, coerce disabled')**
+AST: **NodeError('expecting Assign target, got Dict, coerce disabled')**
  
 src: x, y = b  # src='x, y'
 FST: x, y = b

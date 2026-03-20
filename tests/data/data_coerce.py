@@ -2348,13 +2348,13 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr', {}, ('_arglikes',
 r'''a, b'''),
@@ -2382,18 +2382,18 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr', {}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr', {}, ('expr_arglike',
 r'''*not a'''),
@@ -2408,7 +2408,7 @@ Starred - ROOT 0,0..0,6
 
 ('', 0, 0, 'expr', {}, ('expr_slice',
 r'''a:b, c:d'''),
-r'''FST: **NodeError('expecting expression (standard), got Tuple with a Slice in it')**''',
+r'''FST: **NodeError('expecting expression (standard), got Tuple, could not coerce, has Slice')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, 'expr', {}, ('NamedExpr',
@@ -2637,7 +2637,7 @@ Tuple - ROOT 0,1..0,16
 
 ('', 0, 0, 'expr', {}, ('Slice',
 r'''a:b:c'''),
-r'''FST: **NodeError('expecting expression (standard), got Slice')**''',
+r'''FST: **NodeError('expecting expression (standard), got Slice, could not coerce')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, 'expr', {}, ('_comprehension_ifs',
@@ -2701,8 +2701,8 @@ r'''AST: **NodeError('expecting expression (standard), got arguments, could not 
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a, b'''),
@@ -2735,8 +2735,8 @@ r'''AST: **NodeError('expecting expression (standard), got arguments, could not 
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a, /'''),
@@ -2836,8 +2836,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr', {}, ('_aliases',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**''',
-r'''AST: **NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _aliases, could not coerce, has alias with asname')**''',
+r'''AST: **NodeError('expecting expression (standard), got _aliases, could not coerce, has alias with asname')**'''),
 
 ('', 0, 0, 'expr', {}, ('withitem',
 r'''a'''),
@@ -2872,8 +2872,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr', {}, ('_withitems',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**''',
-r'''AST: **NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _withitems, could not coerce, has withitem with optional_vars')**''',
+r'''AST: **NodeError('expecting expression (standard), got _withitems, could not coerce, has withitem with optional_vars')**'''),
 
 ('', 0, 0, 'expr', {}, ('_withitems',
 r''' ( a ) , ( b ) '''),
@@ -2956,8 +2956,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -2972,13 +2972,13 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr', {}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (standard), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -3079,13 +3079,13 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (standard), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (standard), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
@@ -3295,13 +3295,13 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_all', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_arglikes',
 r'''a, b'''),
@@ -3329,18 +3329,18 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_all', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (all types), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('expr_arglike',
 r'''*not a'''),
@@ -3661,8 +3661,8 @@ r'''AST: **NodeError('expecting expression (all types), got arguments, could not
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a, b'''),
@@ -3695,8 +3695,8 @@ r'''AST: **NodeError('expecting expression (all types), got arguments, could not
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a, /'''),
@@ -3796,8 +3796,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_all', {}, ('_aliases',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (all types), got _aliases, could not coerce, alias has asname')**''',
-r'''AST: **NodeError('expecting expression (all types), got _aliases, could not coerce, alias has asname')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _aliases, could not coerce, has alias with asname')**''',
+r'''AST: **NodeError('expecting expression (all types), got _aliases, could not coerce, has alias with asname')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('withitem',
 r'''a'''),
@@ -3832,8 +3832,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_all', {}, ('_withitems',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (all types), got _withitems, could not coerce, withitem has optional_vars')**''',
-r'''AST: **NodeError('expecting expression (all types), got _withitems, could not coerce, withitem has optional_vars')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _withitems, could not coerce, has withitem with optional_vars')**''',
+r'''AST: **NodeError('expecting expression (all types), got _withitems, could not coerce, has withitem with optional_vars')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_withitems',
 r''' ( a ) , ( b ) '''),
@@ -3916,8 +3916,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -3932,13 +3932,13 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (all types), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -4039,13 +4039,13 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (all types), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (all types), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr_all', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
@@ -4255,13 +4255,13 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_arglike', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_arglikes',
 r'''a, b'''),
@@ -4289,18 +4289,18 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_arglike', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('expr_arglike',
 r'''*not a'''),
@@ -4315,7 +4315,7 @@ Starred - ROOT 0,0..0,6
 
 ('', 0, 0, 'expr_arglike', {}, ('expr_slice',
 r'''a:b, c:d'''),
-r'''FST: **NodeError('expecting expression (arglike), got Tuple with a Slice in it')**''',
+r'''FST: **NodeError('expecting expression (arglike), got Tuple, could not coerce, has Slice')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('NamedExpr',
@@ -4544,7 +4544,7 @@ Tuple - ROOT 0,1..0,16
 
 ('', 0, 0, 'expr_arglike', {}, ('Slice',
 r'''a:b:c'''),
-r'''FST: **NodeError('expecting expression (arglike), got Slice')**''',
+r'''FST: **NodeError('expecting expression (arglike), got Slice, could not coerce')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_comprehension_ifs',
@@ -4608,8 +4608,8 @@ r'''AST: **NodeError('expecting expression (arglike), got arguments, could not c
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a, b'''),
@@ -4642,8 +4642,8 @@ r'''AST: **NodeError('expecting expression (arglike), got arguments, could not c
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a, /'''),
@@ -4743,8 +4743,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_arglike', {}, ('_aliases',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _aliases, could not coerce, alias has asname')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _aliases, could not coerce, alias has asname')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _aliases, could not coerce, has alias with asname')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _aliases, could not coerce, has alias with asname')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('withitem',
 r'''a'''),
@@ -4779,8 +4779,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_arglike', {}, ('_withitems',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _withitems, could not coerce, withitem has optional_vars')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _withitems, could not coerce, withitem has optional_vars')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _withitems, could not coerce, has withitem with optional_vars')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _withitems, could not coerce, has withitem with optional_vars')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_withitems',
 r''' ( a ) , ( b ) '''),
@@ -4863,8 +4863,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -4879,13 +4879,13 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -4986,13 +4986,13 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (arglike), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr_arglike', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
@@ -5202,13 +5202,13 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_arglikes',
 r'''a, b'''),
@@ -5236,23 +5236,23 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_slice', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (slice), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('expr_arglike',
 r'''*not a'''),
-r'''FST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**''',
-r'''AST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**'''),
+r'''FST: **NodeError('expecting expression (slice), got Starred, could not coerce, must be in sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got Starred, could not coerce, must be in sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('expr_slice',
 r'''a:b, c:d'''),
@@ -5388,13 +5388,13 @@ Attribute - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {}, ('Starred',
 r'''*a'''),
-r'''FST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**''',
-r'''AST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**'''),
+r'''FST: **NodeError('expecting expression (slice), got Starred, could not coerce, must be in sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got Starred, could not coerce, must be in sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('Starred',
 r''' * ( a ) '''),
-r'''FST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**''',
-r'''AST: **NodeError('expecting expression (slice), got Starred, must be in sequence')**'''),
+r'''FST: **NodeError('expecting expression (slice), got Starred, could not coerce, must be in sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got Starred, could not coerce, must be in sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('Name',
 r'''a'''),
@@ -5555,8 +5555,8 @@ r'''AST: **NodeError('expecting expression (slice), got arguments, could not coe
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a, b'''),
@@ -5589,8 +5589,8 @@ r'''AST: **NodeError('expecting expression (slice), got arguments, could not coe
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a, /'''),
@@ -5690,8 +5690,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_slice', {}, ('_aliases',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (slice), got _aliases, could not coerce, alias has asname')**''',
-r'''AST: **NodeError('expecting expression (slice), got _aliases, could not coerce, alias has asname')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _aliases, could not coerce, has alias with asname')**''',
+r'''AST: **NodeError('expecting expression (slice), got _aliases, could not coerce, has alias with asname')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('withitem',
 r'''a'''),
@@ -5726,8 +5726,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_slice', {}, ('_withitems',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (slice), got _withitems, could not coerce, withitem has optional_vars')**''',
-r'''AST: **NodeError('expecting expression (slice), got _withitems, could not coerce, withitem has optional_vars')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _withitems, could not coerce, has withitem with optional_vars')**''',
+r'''AST: **NodeError('expecting expression (slice), got _withitems, could not coerce, has withitem with optional_vars')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_withitems',
 r''' ( a ) , ( b ) '''),
@@ -5778,8 +5778,8 @@ Call - ROOT 0,0..0,3
 
 ('', 0, 0, 'expr_slice', {'_ver': 11}, ('MatchStar',
 r'''*a'''),
-r'''FST: **NodeError('expecting expression (slice), got MatchStar, coerced to Starred, must be in a sequence')**''',
-r'''AST: **NodeError('expecting expression (slice), got MatchStar, coerced to Starred, must be in a sequence')**'''),
+r'''FST: **NodeError('expecting expression (slice), got MatchStar, could not coerce, coercion to Starred must be in a sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got MatchStar, could not coerce, coercion to Starred must be in a sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('MatchAs',
 r'''a'''),
@@ -5807,8 +5807,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -5823,13 +5823,13 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (slice), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -5878,8 +5878,8 @@ r'''AST: **NodeError('expecting expression (slice), got ParamSpec, could not coe
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('TypeVarTuple',
 r'''*a'''),
-r'''FST: **NodeError('expecting expression (slice), got TypeVarTuple, coerced to Starred, must be in a sequence')**''',
-r'''AST: **NodeError('expecting expression (slice), got TypeVarTuple, coerced to Starred, must be in a sequence')**'''),
+r'''FST: **NodeError('expecting expression (slice), got TypeVarTuple, could not coerce, coercion to Starred must be in a sequence')**''',
+r'''AST: **NodeError('expecting expression (slice), got TypeVarTuple, could not coerce, coercion to Starred must be in a sequence')**'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 13}, ('TypeVarTuple',
 r'''*a=b'''),
@@ -5927,13 +5927,13 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (slice), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (slice), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'expr_slice', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
@@ -6143,13 +6143,13 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
 r'''a, b'''),
@@ -6177,18 +6177,18 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('expr_arglike',
 r'''*not a'''),
@@ -6203,7 +6203,7 @@ Starred - ROOT 0,0..0,6
 
 ('', 0, 0, 'Tuple_elt', {}, ('expr_slice',
 r'''a:b, c:d'''),
-r'''FST: **NodeError('expecting expression (tuple element), got Tuple with a Slice in it')**''',
+r'''FST: **NodeError('expecting expression (tuple element), got Tuple, could not coerce, has Slice')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('NamedExpr',
@@ -6500,8 +6500,8 @@ r'''AST: **NodeError('expecting expression (tuple element), got arguments, could
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a, b'''),
@@ -6534,8 +6534,8 @@ r'''AST: **NodeError('expecting expression (tuple element), got arguments, could
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a, /'''),
@@ -6635,8 +6635,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'Tuple_elt', {}, ('_aliases',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _aliases, could not coerce, alias has asname')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _aliases, could not coerce, alias has asname')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _aliases, could not coerce, has alias with asname')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _aliases, could not coerce, has alias with asname')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('withitem',
 r'''a'''),
@@ -6671,8 +6671,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'Tuple_elt', {}, ('_withitems',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _withitems, could not coerce, withitem has optional_vars')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _withitems, could not coerce, withitem has optional_vars')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _withitems, could not coerce, has withitem with optional_vars')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _withitems, could not coerce, has withitem with optional_vars')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_withitems',
 r''' ( a ) , ( b ) '''),
@@ -6755,8 +6755,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -6771,13 +6771,13 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -6878,13 +6878,13 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'Tuple_elt', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
@@ -7094,13 +7094,13 @@ Tuple - ROOT 0,0..0,3
 
 ('', 0, 0, 'Tuple', {}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_arglikes',
 r'''a, b'''),
@@ -7128,18 +7128,18 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'Tuple', {}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**''',
-r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**'''),
+r'''FST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**''',
+r'''AST: **NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('expr_arglike',
 r'''*not a'''),
@@ -7416,8 +7416,8 @@ r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defa
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a, b'''),
@@ -7450,8 +7450,8 @@ r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has defa
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kwargs')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has kwarg')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has kwarg')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a, /'''),
@@ -7551,8 +7551,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'Tuple', {}, ('_aliases',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting Tuple, got _aliases, could not coerce, alias has asname')**''',
-r'''AST: **NodeError('expecting Tuple, got _aliases, could not coerce, alias has asname')**'''),
+r'''FST: **NodeError('expecting Tuple, got _aliases, could not coerce, has alias with asname')**''',
+r'''AST: **NodeError('expecting Tuple, got _aliases, could not coerce, has alias with asname')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('withitem',
 r'''a'''),
@@ -7587,8 +7587,8 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'Tuple', {}, ('_withitems',
 r'''a, b as c'''),
-r'''FST: **NodeError('expecting Tuple, got _withitems, could not coerce, withitem has optional_vars')**''',
-r'''AST: **NodeError('expecting Tuple, got _withitems, could not coerce, withitem has optional_vars')**'''),
+r'''FST: **NodeError('expecting Tuple, got _withitems, could not coerce, has withitem with optional_vars')**''',
+r'''AST: **NodeError('expecting Tuple, got _withitems, could not coerce, has withitem with optional_vars')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_withitems',
 r''' ( a ) , ( b ) '''),
@@ -7658,8 +7658,8 @@ Tuple - ROOT 0,0..0,2
 
 ('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -7674,13 +7674,13 @@ Tuple - ROOT 0,0..0,4
 
 ('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**''',
-r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, cannot have keyword attributes')**'''),
+r'''FST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, has keyword attributes')**''',
+r'''AST: **NodeError('expecting Tuple, got _pattern_attrlikes, could not coerce, has keyword attributes')**'''),
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -7778,13 +7778,13 @@ Tuple - ROOT 0,0..0,5
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
 r'''a, *b, **c'''),
-r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**''',
-r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, incompatible type ParamSpec')**'''),
+r'''FST: **NodeError('expecting Tuple, got _type_params, could not coerce, has ParamSpec')**''',
+r'''AST: **NodeError('expecting Tuple, got _type_params, could not coerce, has ParamSpec')**'''),
 
 ('', 0, 0, 'Tuple', {'_ver': 12}, ('_type_params',
 r'''a: int'''),
@@ -9933,7 +9933,7 @@ Starred - ROOT 0,0..0,6
 
 ('', 0, 0, '_arglike', {}, ('expr_slice',
 r'''a:b, c:d'''),
-r'''FST: **NodeError('expecting expression (arglike), got Tuple with a Slice in it')**''',
+r'''FST: **NodeError('expecting expression (arglike), got Tuple, could not coerce, has Slice')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, '_arglike', {}, ('NamedExpr',
@@ -10162,7 +10162,7 @@ Tuple - ROOT 0,1..0,16
 
 ('', 0, 0, '_arglike', {}, ('Slice',
 r'''a:b:c'''),
-r'''FST: **NodeError('expecting expression (arglike), got Slice')**''',
+r'''FST: **NodeError('expecting expression (arglike), got Slice, could not coerce')**''',
 r'''AST: **SyntaxError('invalid syntax')**'''),
 
 ('', 0, 0, '_arglike', {}, ('_comprehension_ifs',
@@ -25763,7 +25763,7 @@ Tuple - ROOT 0,0..0,6
 
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('expr_slice',
 r'''a:b, c:d'''),
-r'''FST: **NodeError('expecting non-Slice expressions (arglike), found Slice')**''',
+r'''FST: **NodeError('expecting expression(s) (arglike), got Tuple, could not coerce, has Slice')**''',
 r'''AST: **SyntaxError('invalid expression(s) (arglike)')**'''),
 
 ('', 0, 0, '_expr_arglikes', {'_verify': False}, ('NamedExpr',

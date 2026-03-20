@@ -2390,8 +2390,8 @@ BinOp - ROOT 0,0..0,11
                 "**NodeError('expecting expression (standard), got alias, could not coerce, has asname')**"),  # AST
             (code_as_expr, (alias, '*'),
                 "**SyntaxError**",  # src
-                "**NodeError(\"expecting expression (standard), got alias, could not coerce, star '*' alias\")**",  # FST
-                "**NodeError(\"expecting expression (standard), got alias, could not coerce, star '*' alias\")**"),  # AST
+                "**NodeError(\"expecting expression (standard), got alias, could not coerce, is star '*'\")**",  # FST
+                "**NodeError(\"expecting expression (standard), got alias, could not coerce, is star '*'\")**"),  # AST
             (code_as_expr, (alias, 'a.b'), (Attribute, 'a.b')),
             (code_as_expr, (alias, 'a\\\n.\\\nb'), (Attribute, 'a\\\n.\\\nb'), (Attribute, 'a.b')),
             (code_as_expr, (_aliases, ''),
@@ -2404,12 +2404,12 @@ BinOp - ROOT 0,0..0,11
                 (Tuple, '(a,)')),  # AST
             (code_as_expr, (_aliases, 'a, b as c'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**",  # FST
-                "**NodeError('expecting expression (standard), got _aliases, could not coerce, alias has asname')**"),  # AST
+                "**NodeError('expecting expression (standard), got _aliases, could not coerce, has alias with asname')**",  # FST
+                "**NodeError('expecting expression (standard), got _aliases, could not coerce, has alias with asname')**"),  # AST
             (code_as_expr, (_aliases, '*'),
                 "**SyntaxError**",  # src
-                "**NodeError(\"expecting expression (standard), got _aliases, could not coerce, star '*' alias\")**",  # FST
-                "**NodeError(\"expecting expression (standard), got _aliases, could not coerce, star '*' alias\")**"),  # AST
+                "**NodeError(\"expecting expression (standard), got _aliases, could not coerce, has star '*' alias\")**",  # FST
+                "**NodeError(\"expecting expression (standard), got _aliases, could not coerce, has star '*' alias\")**"),  # AST
             (code_as_expr, (_aliases, 'a, b.c'),
                 (Tuple, 'a, b.c'),  # src
                 (Tuple, 'a, b.c'),  # FST
@@ -2431,8 +2431,8 @@ BinOp - ROOT 0,0..0,11
             (code_as_expr, (MatchAs, 'a'), (Name, 'a')),
             (code_as_expr, (MatchAs, 'a as b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, has pattern')**",  # FST
-                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, has pattern')**"),  # AST
+                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**",  # FST
+                "**NodeError('expecting expression (standard), got MatchAs, could not coerce, MatchAs has pattern')**"),  # AST
             (code_as_expr, (MatchSequence, 'x, 1, True, *y'), (Tuple, 'x, 1, True, *y'), (List, '[x, 1, True, *y]')),
             (code_as_expr, (MatchSequence, '(x, 1, True, *y)'), (Tuple, '(x, 1, True, *y)'), (List, '[x, 1, True, *y]')),
             (code_as_expr, (MatchSequence, '[x, 1, True, *y]'), (List, '[x, 1, True, *y]')),
@@ -2483,8 +2483,8 @@ BinOp - ROOT 0,0..0,11
                 (Tuple, '(a,)')),  # AST
             (code_as_expr, (_arglikes, 'a, b=c'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**",  # FST
-                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, cannot have keyword')**"),  # AST
+                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**",  # FST
+                "**NodeError('expecting expression (standard), got _arglikes, could not coerce, has keyword')**"),  # AST
             (code_as_expr, (_arglikes, 'a, *b'),
                 (Tuple, 'a, *b'),  # src
                 (Tuple, 'a, *b'),  # FST
@@ -2507,8 +2507,8 @@ BinOp - ROOT 0,0..0,11
                 (Tuple, '(a,)')),  # AST
             (code_as_expr, (_withitems, 'a as b'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**",  # FST
-                "**NodeError('expecting expression (standard), got _withitems, could not coerce, withitem has optional_vars')**"),  # AST
+                "**NodeError('expecting expression (standard), got _withitems, could not coerce, has withitem with optional_vars')**",  # FST
+                "**NodeError('expecting expression (standard), got _withitems, could not coerce, has withitem with optional_vars')**"),  # AST
             (code_as_expr, (_withitems, 'a, b'),
                 (Tuple, 'a, b'),  # src
                 (Tuple, 'a, b'),  # FST
@@ -2733,12 +2733,12 @@ BinOp - ROOT 0,0..0,11
             #     (Tuple, '(a, *(not b))')),
             (code_as_Tuple, (_arglikes, '\na\n,\nb=c\n'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**",
-                "**NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**"),
+                "**NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**",
+                "**NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**"),
             (code_as_Tuple, (_arglikes, '\na\n,\nb=c\n'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**",
-                "**NodeError('expecting Tuple, got _arglikes, could not coerce, cannot have keyword')**"),
+                "**NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**",
+                "**NodeError('expecting Tuple, got _arglikes, could not coerce, has keyword')**"),
             (code_as_Tuple, (_comprehension_ifs, '\nif\na\nif\nb\n'),
                 '**SyntaxError**',
                 (Tuple, '(\na,\nb\n)'),
@@ -2749,24 +2749,24 @@ BinOp - ROOT 0,0..0,11
                 (Tuple, '(a, b)')),
             (code_as_Tuple, (_aliases, 'a as b, c as d'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting Tuple, got _aliases, could not coerce, alias has asname')**",
-                "**NodeError('expecting Tuple, got _aliases, could not coerce, alias has asname')**"),
+                "**NodeError('expecting Tuple, got _aliases, could not coerce, has alias with asname')**",
+                "**NodeError('expecting Tuple, got _aliases, could not coerce, has alias with asname')**"),
             # (code_as_Tuple, (Tuple, '\na\n,\nb\n'),
             #     (Tuple, '\na\n,\nb\n'),
             #     (Tuple, '\na\n,\nb\n'),
             #     (Tuple, 'a, b')),
             (code_as_Tuple, (_withitems, 'a as b, c as d'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting Tuple, got _withitems, could not coerce, withitem has optional_vars')**",
-                "**NodeError('expecting Tuple, got _withitems, could not coerce, withitem has optional_vars')**"),
+                "**NodeError('expecting Tuple, got _withitems, could not coerce, has withitem with optional_vars')**",
+                "**NodeError('expecting Tuple, got _withitems, could not coerce, has withitem with optional_vars')**"),
             (code_as_Tuple, (MatchSequence, '\na\n,\nb\n'),
                 (Tuple, '\na\n,\nb\n'),
                 (Tuple, '\na\n,\nb\n'),
                 (Tuple, '(a, b)')),
             (code_as_Tuple, (MatchSequence, 'a as b, c as d'),
                 "**SyntaxError**",  # src
-                "**NodeError('expecting Tuple, got MatchSequence, could not coerce, has pattern')**",
-                "**NodeError('expecting Tuple, got MatchSequence, could not coerce, has pattern')**"),
+                "**NodeError('expecting Tuple, got MatchSequence, could not coerce, MatchAs has pattern')**",
+                "**NodeError('expecting Tuple, got MatchSequence, could not coerce, MatchAs has pattern')**"),
 
             (code_as_List, (Tuple, 'a, b'),
                 "**SyntaxError**",
@@ -4133,7 +4133,7 @@ BinOp - ROOT 0,0..0,11
                 (Tuple, 'a.b.c, d')),
             (code_as__expr_arglikes, (Tuple, 'a:b, c:d:e'),
                 "**SyntaxError**",
-                "**NodeError('expecting non-Slice expressions (arglike), found Slice')**",
+                "**NodeError('expecting expression(s) (arglike), got Tuple, could not coerce, has Slice')**",
                 "**SyntaxError**"),
             (code_as__expr_arglikes, (Tuple, 'a\n,\nb'),
                 (Tuple, 'a\n,\nb'),
@@ -4239,8 +4239,8 @@ BinOp - ROOT 0,0..0,11
                     (Tuple, '(T, *U)')),  # AST
                 (code_as_expr, (_type_params, 'T, *U, **V'),
                     "**SyntaxError**",  # src
-                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**",  # FST
-                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, incompatible type ParamSpec')**"),  # AST
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, has ParamSpec')**",  # FST
+                    "**NodeError('expecting expression (standard), got _type_params, could not coerce, has ParamSpec')**"),  # AST
                 (code_as_expr, (_type_params, 'T: int, *U'),
                     "**SyntaxError**",  # src
                     "**NodeError('expecting expression (standard), got _type_params, could not coerce, TypeVar has bound')**",  # FST
