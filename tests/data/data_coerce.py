@@ -2397,12 +2397,12 @@ r'''AST: **NodeError('expecting expression (standard), got _arglikes, could not 
 
 ('', 0, 0, 'expr', {}, ('expr_arglike',
 r'''*not a'''),
-r'''*not a''',
+r'''*(not a)''',
 r'''*(not a)''', r'''
-Starred - ROOT 0,0..0,6
-  .value UnaryOp - 0,1..0,6
-    .op Not - 0,1..0,4
-    .operand Name 'a' Load - 0,5..0,6
+Starred - ROOT 0,0..0,8
+  .value UnaryOp - 0,2..0,7
+    .op Not - 0,2..0,5
+    .operand Name 'a' Load - 0,6..0,7
   .ctx Load
 '''),
 

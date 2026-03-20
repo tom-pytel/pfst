@@ -20,6 +20,7 @@
 
 - special `FSTView` classes for decorator lists, `comprehension.ifs` and `Assign.targets` so that slice locations from these field views are correct
 - honor `dump()` `eol` parameter when outputting `out='str'`
+- coercing `FST` expression to a non-arglike expression, if it is arglike-only then it will be appropriately parenthesized, e.g. `*not a` -> `*(not a)`
 
 
 ## 0.3.1 - alpha - 2026-03-13

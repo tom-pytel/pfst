@@ -4688,6 +4688,13 @@ def _code_as_expr(
             elif parse is not parse_expr_slice:  # SPECIAL CASE specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, doesn't happen organically but can be created with FST('*a', 'expr_slice'), should we bother? for now on the side of yes
                 code._maybe_add_singleton_comma()
 
+        elif ast_cls is Starred:  # may need to parenthesize arglike Starred
+            if parse not in (parse_expr_arglike, parse_expr_all, parse_Tuple_elt):  # only if not asking something which CAN be arglike
+                pars_arglike = fst.FST._get_opt_eff_pars_arglike(options)
+
+                if pars_arglike and code._is_expr_arglike_only():
+                    code._parenthesize_grouping()
+
     else:
         old_code = code
 
