@@ -924,7 +924,7 @@ def _is_solo_call_arg(self: fst.FST) -> bool:
     """
 
     return (
-        (parent := self.parent)
+        ((parent := self.parent) or False)  # because returning bool, not possibly None
         and self.pfield.name == 'args'
         and (parenta := parent.a).__class__ is Call
         and not parenta.keywords
@@ -953,7 +953,7 @@ def _is_solo_call_arg_genexp(self: fst.FST) -> bool:
     """
 
     return (
-        (parent := self.parent)
+        ((parent := self.parent) or False)  # because returning bool, not possibly None
         and self.pfield.name == 'args'
         and self.a.__class__ is GeneratorExp
         and (parenta := parent.a).__class__ is Call
@@ -992,7 +992,7 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
         self = parent
 
     return (
-        (parent := self.parent)
+        ((parent := self.parent) or False)  # because returning bool, not possibly None
         and self.pfield.name == 'patterns'
         and (parenta := parent.a).__class__ is MatchClass
         and not parenta.kwd_patterns

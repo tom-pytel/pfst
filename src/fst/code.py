@@ -1,6 +1,7 @@
 """Convert `Code` to `FST`, coercion happens here."""
 
 # TODO: some coercions need simplification
+# TODO: mixed usage of _set_field() and set field=None before full FST() build may be confusing, maybe simplify to first one?
 
 from __future__ import annotations
 
@@ -1353,7 +1354,7 @@ def _coerce_to_expr_ast_arguments(
     elts = []
 
     if ast.posonlyargs:
-        return 'has position-only arguments'
+        return 'has posonlyargs'
     if ast.defaults or any(a for a in ast.kw_defaults):
         return 'has default values'
     if ast.kwarg or any(a for a in ast.kw_defaults):
@@ -2244,8 +2245,7 @@ def _coerce_to_argument_ast_keyword(
     if not is_FST:
         return arg(arg=value.id)
 
-    if value.f.pars().n:  # may be parenthesized
-        value.f._unparenthesize_grouping()
+    value.f._unparenthesize_grouping(False)  # arg name cannot be parenthesized
 
     return arg(arg=value.id, lineno=value.lineno, col_offset=value.col_offset, end_lineno=value.end_lineno,
                end_col_offset=value.end_col_offset)
@@ -2268,8 +2268,7 @@ def _coerce_to_argument_ast_Starred(
     if not is_FST:
         return arg(arg=value.id)
 
-    if value.f.pars().n:  # may be parenthesized (the child, but unparenthesize the Starred)
-        ast.f._unparenthesize_grouping()
+    ast.f._unparenthesize_grouping(False)  # vararg cannot be parenthesized
 
     return arg(arg=value.id, lineno=value.lineno, col_offset=value.col_offset, end_lineno=value.end_lineno,
                end_col_offset=value.end_col_offset)
@@ -2362,7 +2361,6 @@ def _coerce_to_stmt(
 
     ast = Expr(value=None, lineno=new_ln + 1, col_offset=0, end_lineno=end_ln + 1,
                end_col_offset=lines[end_ln].c2b(end_col))
-
     fst_ = fst.FST(ast, lines, None, from_=fst_, lcopy=False)._set_field(ast_, 'value', True, False)
 
     _par_if_needed(ast_.f, bool(pars.n))
@@ -2848,26 +2846,28 @@ def _coerce_to__arglikes(
 
     if codea_cls is arguments:
         if codea.posonlyargs:
-            raise NodeError('expecting _arglikes, got arguments, could not coerce, has position-only arguments')
+            raise NodeError('expecting _arglikes, got arguments, could not coerce, has posonlyargs')
 
         coerced = True
         args = codea.args
+        vararg = codea.vararg
         kwonlyargs = codea.kwonlyargs
         kw_defaults = codea.kw_defaults
+        kwarg = codea.kwarg
         defaults = codea.defaults
 
         if is_FST:
             lines = code.root._lines
 
-        for arg, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):  # arg and arg=default
-            if arg.annotation:
+        for arg_, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):  # arg and arg=default
+            if arg_.annotation:
                 raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
-            name = arg.arg
+            name = arg_.arg
 
             if not dflt:
-                ast = (Name(id=name, ctx=Load(), lineno=arg.lineno, col_offset=arg.col_offset,
-                            end_lineno=arg.end_lineno, end_col_offset=arg.end_col_offset)
+                ast = (Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
+                            end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
                        if is_FST else
                        Name(id=name))
 
@@ -2876,15 +2876,14 @@ def _coerce_to__arglikes(
                     ast = keyword(arg=name, value=dflt)
 
                 else:  # if this then we need to include possible parentheses in keyword
-                    ln, col, _, _ = arg.f._loc_argument(False, False)
                     _, _, end_ln, end_col = dflt.f.pars()
 
-                    ast = keyword(arg=name, value=dflt, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                    ast = keyword(arg=name, value=dflt, lineno=arg_.lineno, col_offset=arg_.col_offset,
                                   end_lineno=end_ln + 1, end_col_offset=lines[end_ln].c2b(end_col))
 
             arglikes.append(ast)
 
-        if vararg := codea.vararg:  # *vararg
+        if vararg:  # *vararg
             if vararg.annotation:
                 raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
@@ -2906,19 +2905,19 @@ def _coerce_to__arglikes(
         elif kwonlyargs:  # we have a `*, ` in the arguments, not allowed without a vararg
             raise NodeError("expecting _arglikes, got arguments, could not coerce, has empty vararg '*'")
 
-        for arg, dflt in zip(kwonlyargs, kw_defaults, strict=True):  # kwarg and kwarg=kwdefault
-            if arg.annotation:
+        for arg_, dflt in zip(kwonlyargs, kw_defaults, strict=True):  # kwarg and kwarg=kwdefault
+            if arg_.annotation:
                 raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
-            name = arg.arg
+            name = arg_.arg
 
             if not dflt:
-                if defaults:
+                if defaults:  # call(a=1, b) is invalid
                     raise NodeError('expecting _arglikes, got arguments, could not coerce'
                                     ', args without defaults cannot follow args with defaults')
 
-                ast = (Name(id=name, ctx=Load(), lineno=arg.lineno, col_offset=arg.col_offset,
-                            end_lineno=arg.end_lineno, end_col_offset=arg.end_col_offset)
+                ast = (Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
+                            end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
                        if is_FST else
                        Name(id=name))
 
@@ -2927,15 +2926,14 @@ def _coerce_to__arglikes(
                     ast = keyword(arg=name, value=dflt)
 
                 else:  # if this then we need to include possible parentheses in keyword
-                    ln, col, _, _ = arg.f._loc_argument(False, False)
                     _, _, end_ln, end_col = dflt.f.pars()
 
-                    ast = keyword(arg=name, value=dflt, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                    ast = keyword(arg=name, value=dflt, lineno=arg_.lineno, col_offset=arg_.col_offset,
                                   end_lineno=end_ln + 1, end_col_offset=lines[end_ln].c2b(end_col))
 
             arglikes.append(ast)
 
-        if kwarg := codea.kwarg:  # **kwarg
+        if kwarg:  # **kwarg
             if kwarg.annotation:
                 raise NodeError('expecting _arglikes, got arguments, could not coerce, has annotations')
 
@@ -2972,13 +2970,12 @@ def _coerce_to__arglikes(
 
     elif codea_cls is _pattern_attrlikes:
         coerced = True
-        options_arglike = dict(options, pars_arglike=False)
 
         if is_FST:
             lines = code._lines
 
         for pat in codea.patterns:
-            ast, _ = _coerce_to_expr_ast(pat, is_FST, options_arglike, parse_params, unmake=False)
+            ast, _ = _coerce_to_expr_ast(pat, is_FST, options, parse_params, unmake=False)
 
             arglikes.append(ast)
 
@@ -3314,8 +3311,7 @@ def _coerce_to__aliases(
         fst_ = code_as_alias(code, options, parse_params, strip=strip, coerce=True)  # single element as sequence
 
         ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                    end_col_offset=ls[-1].lenbytes)
-
+                       end_col_offset=ls[-1].lenbytes)
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
     _fix__aliases(fst_)
@@ -3339,7 +3335,6 @@ def _coerce_to__Import_names(
 
         ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
-
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
     _fix__aliases(fst_)
@@ -3379,7 +3374,6 @@ def _coerce_to__ImportFrom_names(
 
         ast = _aliases(names=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
-
         fst_ = fst.FST(ast, ls, None, from_=fst_, lcopy=False)._set_field([fst_.a], 'names', True, False)
 
     _fix__aliases(fst_)
@@ -3437,15 +3431,14 @@ def _coerce_to_arguments(
             a_cls = a.__class__
 
             if a_cls is Name:
-                if is_FST:  # may be parenthesized
-                    if a.f.pars().n:
-                        a.f._unparenthesize_grouping()
+                if not is_FST:
+                    arg_ = arg(arg=a.id)
+
+                else:
+                    a.f._unparenthesize_grouping(False)  # arg name cannot be parenthesized
 
                     arg_ = arg(arg=a.id, lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
                                end_col_offset=a.end_col_offset)
-
-                else:
-                    arg_ = arg(arg=a.id)
 
                 if vararg:
                     kwonlyargs.append(arg_)
@@ -3512,8 +3505,7 @@ def _coerce_to_arguments(
             name = pat.name or '_'  # None == '_'
 
             if is_FST:  # may be parenthesized
-                if pat.f.pars().n:
-                    pat.f._unparenthesize_grouping()
+                pat.f._unparenthesize_grouping(False)  # arg name cannot be parenthesized
 
                 arg_ = arg(arg=name, lineno=pat.lineno, col_offset=pat.col_offset, end_lineno=pat.end_lineno,
                            end_col_offset=pat.end_col_offset)
@@ -3794,14 +3786,14 @@ def _coerce_to__pattern_attrlikes(
 
     if codea_cls is keyword:
         set_patterns = False  # flag to build FST from scratch instead of _set_field()
-        arg = codea.arg
+        arg_ = codea.arg
 
-        if arg is None:
+        if arg_ is None:
             raise NodeError("expecting _pattern_attrlikes, got keyword, could not coerce, cannot be '**' keyword")
 
         pat = _coerce_to_pattern_ast(codea.value, is_FST, options, parse_params, unmake=False)
 
-        kwd_attrs.append(arg)
+        kwd_attrs.append(arg_)
         kwd_patterns.append(pat)
 
     elif codea_cls is _arglikes:
@@ -3814,16 +3806,16 @@ def _coerce_to__pattern_attrlikes(
                 raise NodeError("expecting _pattern_attrlikes, got _arglikes, could not coerce, cannot have Starred")
 
             if a_cls is keyword:
-                arg = a.arg
+                arg_ = a.arg
                 value = a.value
 
-                if arg is None:
+                if arg_ is None:
                     raise NodeError("expecting _pattern_attrlikes, got _arglikes, could not coerce"
                                     ", cannot have '**' keyword")
 
                 pat = _coerce_to_pattern_ast(value, is_FST, options, parse_params, unmake=False)
 
-                kwd_attrs.append(arg)
+                kwd_attrs.append(arg_)
                 kwd_patterns.append(pat)
 
             else:  # expression
@@ -3848,12 +3840,12 @@ def _coerce_to__pattern_attrlikes(
         args = codea.args
         defaults = codea.defaults
 
-        for arg, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):
-            if arg.annotation:
+        for arg_, dflt in zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True):
+            if arg_.annotation:
                 raise NodeError('expecting _pattern_attrlikes, got arguments, could not coerce'
                                 ', args cannot have annotations')
 
-            name = arg.arg
+            name = arg_.arg
 
             if dflt:
                 pat = _coerce_to_pattern_ast(dflt, is_FST, options, parse_params, unmake=False)
@@ -3865,8 +3857,8 @@ def _coerce_to__pattern_attrlikes(
                 if name == '_':
                     name = None
 
-                pat = (MatchAs(pattern=None, name=name, lineno=arg.lineno, col_offset=arg.col_offset,
-                               end_lineno=arg.end_lineno, end_col_offset=arg.end_col_offset)
+                pat = (MatchAs(pattern=None, name=name, lineno=arg_.lineno, col_offset=arg_.col_offset,
+                               end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
                        if is_FST else
                        MatchAs(pattern=None, name=name))
 
@@ -3928,7 +3920,7 @@ def _coerce_to__pattern_attrlikes(
 
                 patterns.append(pat)
 
-    # from generic pattern, with maybe coerce generic to pattern first
+    # from generic pattern, with maybe coerce generic to pattern first, expr-compatible sequences come through this
 
     else:
         set_patterns = None
@@ -4050,8 +4042,7 @@ def _coerce_to_type_param(
                 src = f'**{value.id}'
 
             else:
-                if value.f.pars().n:  # may be parenthesized
-                    value.f._unparenthesize_grouping()
+                value.f._unparenthesize_grouping(False)  # type_param name cannot be parenthesized
 
                 ast = ParamSpec(name=value.id, lineno=codea.lineno, col_offset=codea.col_offset,
                                 end_lineno=value.end_lineno, end_col_offset=value.end_col_offset)
@@ -4119,7 +4110,227 @@ def _coerce_to__type_params(
 ) -> fst.FST:
     """See `_coerce_to__Assign_targets()`."""
 
-    codea = code.a if isinstance(code, fst.FST) else None
+    codea = code.a if (is_FST := isinstance(code, fst.FST)) else code
+    codea_cls = codea.__class__
+    type_params = []
+    coerced = False
+
+    # non expr-compatible
+
+    if codea_cls is arguments:
+        if codea.posonlyargs:
+            raise NodeError('expecting _type_params, got arguments, could not coerce, has posonlyargs')
+
+        coerced = True
+        args = codea.args
+        vararg = codea.vararg
+        kwonlyargs = codea.kwonlyargs
+        kw_defaults = codea.kw_defaults
+        kwarg = codea.kwarg
+        defaults = codea.defaults
+
+        if PYLT13 and (defaults or any(kw_defaults)):
+            raise NodeError('expecting _type_params, got arguments, could not coerce'
+                            ', cannot have default values on Python < 3.13')
+
+        if kwonlyargs and not vararg:  # we have a `*, ` in the arguments, not allowed without a vararg
+            raise NodeError("expecting _type_params, got arguments, could not coerce, has empty vararg '*'")
+
+        if is_FST:
+            lines = code.root._lines
+
+        for is_args, args_n_dflts in [
+            (True, zip(args, [None] * (len(args) - len(defaults)) + defaults, strict=True)),
+            (False, zip(kwonlyargs, kw_defaults, strict=True)),
+        ]:  # args=defaults, kwonlyargs=kw_defaults
+            for arg_, dflt in args_n_dflts:  # arg and arg=default
+                name = arg_.arg
+                annotation = arg_.annotation  # doesn't matter if annotation is None
+
+                if not dflt:
+                    ast = (TypeVar(name=name, bound=annotation, lineno=arg_.lineno, col_offset=arg_.col_offset,
+                                   end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
+                           if is_FST else
+                           TypeVar(name=name, bound=annotation))
+
+                else:
+                    if not is_FST:
+                        ast = TypeVar(name=name, bound=annotation, default_value=dflt)
+
+                    else:  # if this then we need to include possible parentheses in TypeVar
+                        _, _, end_ln, end_col = dflt.f.pars()
+
+                        ast = TypeVar(name=name, bound=annotation, default_value=dflt, lineno=arg_.lineno,
+                                      col_offset=arg_.col_offset, end_lineno=end_ln + 1,
+                                      end_col_offset=lines[end_ln].c2b(end_col))
+
+                type_params.append(ast)
+
+            if is_args and vararg:  # *vararg -> *TypeVarTuple, only do when going from normal args to kwonlyargs
+                if vararg.annotation:
+                    raise NodeError('cannot coerce vararg with annotation to type_param')
+
+                name = vararg.arg
+
+                if not is_FST:
+                    ast = TypeVarTuple(name=name)
+
+                else:
+                    ln, col, _, _ = vararg.f._loc_argument()
+
+                    ast = TypeVarTuple(name=name, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                                       end_lineno=vararg.end_lineno, end_col_offset=vararg.end_col_offset)
+
+                type_params.append(ast)
+
+        if kwarg:  # **kwarg -> **ParamSpec
+            if kwarg.annotation:
+                raise NodeError('cannot coerce kwarg with annotation to type_param')
+
+            name = kwarg.arg
+
+            if not is_FST:
+                ast = ParamSpec(name=name)
+
+            else:
+                ln, col, _, _ = kwarg.f._loc_argument()
+
+                ast = ParamSpec(name=name, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                                end_lineno=kwarg.end_lineno, end_col_offset=kwarg.end_col_offset)
+
+            type_params.append(ast)
+
+    elif codea_cls is _arglikes:
+        coerced = True
+
+        for a in codea.arglikes:
+            a_cls = a.__class__
+
+            if a_cls is Name:
+                if not is_FST:
+                    ast = TypeVar(name=a.id)
+
+                else:
+                    a.f._unparenthesize_grouping(False)  # type_param name cannot be parenthesized
+
+                    ast = TypeVar(name=a.id, lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                                  end_col_offset=a.end_col_offset)
+
+            elif a_cls is Starred:
+                if (value := a.value).__class__ is not Name:
+                    raise NodeError(f'cannot coerce *{value.__class__.__name__} to TypeVarTuple, must be Name')
+
+                if not is_FST:
+                    ast = TypeVarTuple(name=value.id)
+
+                else:
+                    value.f._unparenthesize_grouping(False)  # type_param name cannot be parenthesized
+
+                    ast = TypeVarTuple(name=value.id, lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                                       end_col_offset=a.end_col_offset)
+
+            elif a_cls is keyword:
+                arg_ = a.arg
+                value = a.value
+
+                if arg_ is None:  # **ParamSpec
+                    if value.__class__ is not Name:
+                        raise NodeError(f"cannot coerce **{value.__class__.__name__} to ParamSpec, must be Name")
+
+                    if not is_FST:
+                        ast = ParamSpec(name=value.id)
+
+                    else:
+                        value.f._unparenthesize_grouping(False)  # ParamSpec name cannot be parenthesized
+
+                        ast = ParamSpec(name=value.id, lineno=a.lineno, col_offset=a.col_offset,
+                                        end_lineno=value.end_lineno, end_col_offset=value.end_col_offset)
+
+                elif PYLT13:
+                    raise NodeError("cannot coerce keyword to TypeVar with default value on Python < 3.13")
+
+                else:  # TypeVar=default_value
+                    if not is_FST:
+                        ast = TypeVar(name=arg_, default_value=value)
+                    else:
+                        ast = TypeVar(name=arg_, default_value=value, lineno=a.lineno, col_offset=a.col_offset,
+                                      end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
+
+            else:
+                raise NodeError(f"expecting _type_params, got _arglikes, could not coerce, found {a_cls.__name__}")
+
+            type_params.append(ast)
+
+    elif codea_cls is _pattern_attrlikes:
+        coerced = True
+        patterns = codea.patterns
+        kwd_patterns = codea.kwd_patterns
+
+        for pat in patterns:
+            if pat.__class__ is not MatchAs:
+                raise NodeError("expecting _type_params, got _pattern_attrlikes, could not coerce"
+                                ', found non-MatchAs arg')
+            if pat.pattern:
+                raise NodeError("expecting _type_params, got _pattern_attrlikes, could not coerce"
+                                ', MatchAs arg has pattern')
+
+            name = pat.name or '_'  # None == '_'
+
+            if not is_FST:
+                ast = TypeVar(name=name)
+
+            else:  # may be parenthesized
+                pat.f._unparenthesize_grouping(False)  # type_param name cannot be parenthesized
+
+                ast = TypeVar(name=name, lineno=pat.lineno, col_offset=pat.col_offset, end_lineno=pat.end_lineno,
+                              end_col_offset=pat.end_col_offset)
+
+            type_params.append(ast)
+
+        if kwd_patterns:
+            if PYLT13:
+                raise NodeError("expecting _type_params, got _pattern_attrlikes, could not coerce, has default values")
+
+            if is_FST:
+                lines = code.lines
+
+            for idx, (arg_, pat) in enumerate(zip(codea.kwd_attrs, kwd_patterns, strict=True), len(patterns)):
+                default_value, _ = _coerce_to_expr_ast(pat, is_FST, options, parse_params, unmake=False)
+
+                if not is_FST:
+                    ast = TypeVar(name=arg_, default_value=default_value)
+
+                else:
+                    ln, col, end_ln, end_col = code._loc_pattern_attrlikes__attr(idx)
+
+                    ast = TypeVar(name=arg_, default_value=default_value, lineno=ln + 1, col_offset=lines[ln].c2b(col),
+                                  end_lineno=end_ln + 1, end_col_offset=lines[end_ln].c2b(end_col))
+
+                type_params.append(ast)
+
+    # if coercion was done above then final put together of coerced _type_params
+
+    if coerced:
+        if not is_FST:
+            ast = _type_params(type_params=type_params)
+            src = unparse(ast)
+            ast = parse__type_params(src, parse_params)
+
+            fst_ = fst.FST(ast, src.split('\n'), None, parse_params=parse_params)  # this is already stripped
+
+        else:
+            code._unmake_fst_tree()
+
+            ast = _type_params(type_params=type_params, lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                               end_col_offset=ls[-1].lenbytes)
+            fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
+
+            if strip:  # doesn't do anything currently but maybe in future will strip inside open containers
+                fst_.strip()
+
+        return fst_
+
+    # if coercion not done yet then standard coerce sequence
 
     fst_ = _coerce_to_seq(code, options, parse_params, parse__type_params, _type_params, None, True)  # sequence as sequence?
 
@@ -4128,7 +4339,6 @@ def _coerce_to__type_params(
             elts = fst_
             ast = Tuple(elts=elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                         end_col_offset=ls[-1].lenbytes)
-
             tmp = fst.FST(ast, ls, None, from_=code, lcopy=False)  # temporary Tuple so that we can unparenthesize everything
 
             type_params = []
@@ -4158,7 +4368,6 @@ def _coerce_to__type_params(
 
             ast = _type_params(type_params=type_params, lineno=1, col_offset=0, end_lineno=tmp.end_lineno,
                                end_col_offset=tmp.end_col_offset)
-
             fst_ = fst.FST(ast, ls, None, from_=code, lcopy=False)
 
         return fst_.strip() if strip else fst_

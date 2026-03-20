@@ -21,8 +21,18 @@ test:  ## Run basic unit tests
 	# pytest -vv tests
 
 
-.PHONY: typecheck
-typecheck:  ## Run type checker on tests verify FST typing
+.PHONY: test-doctests
+test-doctests:  ## Test test_*.txt docstring tests in tests/doctests/
+	python -m unittest discover -v tests -k doctests
+
+
+.PHONY: test-documentation
+test-documentation:  ## Test all docstrings in the source
+	python -m unittest discover tests -k test_doc
+
+
+.PHONY: test-typecheck
+test-typecheck:  ## Run type checker on tests to verify FST typing
 	mypy tests/*.py
 
 

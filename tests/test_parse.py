@@ -4409,8 +4409,8 @@ BinOp - ROOT 0,0..0,11
 
                 (code_as__type_params, (_arglikes, '\na\n,\nb=c\n'),
                     (_type_params, '\na\n,\nb=c\n'),
-                    "**NodeError('expecting _type_params, got _arglikes, could not coerce')**",
-                    "**NodeError('expecting _type_params, got _arglikes, could not coerce')**"),
+                    (_type_params, '\na\n,\nb=c\n'),
+                    (_type_params, 'a, b = c')),
             ])
 
         for case in cases:

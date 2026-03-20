@@ -17787,7 +17787,7 @@ Assign - ROOT 0,0..4,2
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('arguments',
 r'''x, /'''),
-r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has position-only arguments')**'''),
+r'''**NodeError('expecting expression (standard), got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', None, None, 'value', {'_src': False, 'raw': False}, (None,
 r'''i = v'''), ('arguments',

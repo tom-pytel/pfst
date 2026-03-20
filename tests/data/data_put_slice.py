@@ -47272,12 +47272,23 @@ _type_params - ROOT 0,0..0,1
      .name 'x'
 '''),
 
-('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
+('', 0, 'end', None, {'_src': False, '_ver': 13}, ('_type_params',
 r'''a,'''), ('_pattern_attrlikes', r'''
 x,
 y=z,
+'''), r'''
+x,
+y=z
+''',
+r'''x, y = z''', r'''
+_type_params - ROOT 0,0..1,3
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'x'
+   1] TypeVar - 1,0..1,3
+     .name 'y'
+     .default_value Name 'z' Load - 1,2..1,3
 '''),
-r'''**NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
 
 ('', 0, 'end', None, {'_src': False, '_ver': 12}, ('_type_params',
 r'''a,'''), ('_type_params', r'''

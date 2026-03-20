@@ -1,0 +1,170 @@
+>>> import os; os.environ['NO_COLOR'] = '1'
+>>> import ast
+>>> import re
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+>>> from fst.asttypes import *
+>>> from fst.astutil import copy_ast
+>>> from fst.match import *
+
+>>> FST('[a, b, c]', pattern).put_slice(FST('x, y, z', _pattern_attrlikes), 1, 2).verify().dump('N')
+0: [a, x, y, z, c]
+MatchSequence - ROOT 0,0..0,15
+  .patterns[5]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+0:     x
+   1] MatchAs - 0,4..0,5
+     .name 'x'
+0:        y
+   2] MatchAs - 0,7..0,8
+     .name 'y'
+0:           z
+   3] MatchAs - 0,10..0,11
+     .name 'z'
+0:              c
+   4] MatchAs - 0,13..0,14
+     .name 'c'
+<MatchSequence ROOT 0,0..0,15>
+
+>>> (f := FST('[a, b, c]', pattern))[1:2] = FST('x, y, z', _pattern_attrlikes)
+>>> f.dump('N').verify()
+0: [a, x, y, z, c]
+MatchSequence - ROOT 0,0..0,15
+  .patterns[5]
+0:  a
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+0:     x
+   1] MatchAs - 0,4..0,5
+     .name 'x'
+0:        y
+   2] MatchAs - 0,7..0,8
+     .name 'y'
+0:           z
+   3] MatchAs - 0,10..0,11
+     .name 'z'
+0:              c
+   4] MatchAs - 0,13..0,14
+     .name 'c'
+<MatchSequence ROOT 0,0..0,15>
+
+>>> FST('[a, b, c]').put_slice('d', 1, 2).src
+'[a, d, c]'
+
+>>> FST('cls(a, b, c)', pattern).put_slice(FST('{1: x, 2: y}'), 1, 2, one=True).dump('N')
+0: cls(a, {1: x, 2: y}, c)
+MatchClass - ROOT 0,0..0,23
+0: cls
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[3]
+0:     a
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+0:        {1: x, 2: y}
+   1] MatchMapping - 0,7..0,19
+     .keys[2]
+0:         1
+      0] Constant 1 - 0,8..0,9
+0:               2
+      1] Constant 2 - 0,14..0,15
+     .patterns[2]
+0:            x
+      0] MatchAs - 0,11..0,12
+        .name 'x'
+0:                  y
+      1] MatchAs - 0,17..0,18
+        .name 'y'
+0:                      c
+   2] MatchAs - 0,21..0,22
+     .name 'c'
+<MatchClass ROOT 0,0..0,23>
+
+>>> FST('[a, b, c]').put_slice('d, e', 1, 2, one=True).src
+'[a, (d, e), c]'
+
+>>> FST('a =', '_Assign_targets').dump('N')
+0: a =
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+0: a
+   0] Name 'a' Store - 0,0..0,1
+<_Assign_targets ROOT 0,0..0,3>
+
+>>> FST(FST('a'), '_Assign_targets').dump('N')
+0: a =
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+0: a
+   0] Name 'a' Store - 0,0..0,1
+<_Assign_targets ROOT 0,0..0,3>
+
+>>> FST(FST('a'), '_decorator_list').dump('N')
+0: @a
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+0:  a
+   0] Name 'a' Load - 0,1..0,2
+<_decorator_list ROOT 0,0..0,2>
+
+>>> FST(FST('a'), '_comprehension_ifs').dump('N')
+0: if a
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+0:    a
+   0] Name 'a' Load - 0,3..0,4
+<_comprehension_ifs ROOT 0,0..0,4>
+
+>>> print(FST('a = b = c = d')._loc_Assign_target(0))
+fstloc(0, 0, 0, 3)
+
+>>> print(FST('a = b = c = d')._loc_Assign_target(1))
+fstloc(0, 4, 0, 7)
+
+>>> print(FST('a = b = c = d')._loc_Assign_target(2))
+fstloc(0, 8, 0, 11)
+
+>>> print(FST('a = \\\n  b \\\n =  \\\n c = d')._loc_Assign_target(1))
+fstloc(1, 2, 2, 2)
+
+>>> (f := FST('a = b = c = d')).put('x', 1, 'targets', raw=True).src
+'a = x = c = d'
+
+>>> (f := FST('@a\n@b\n@c\ndef f(): pass')).put('x', 1, 'decorator_list', raw=True).src
+'@a\n@x\n@c\ndef f(): pass'
+
+>>> (f := FST('for _ in _ if a if b if c')).put('x', 1, 'ifs', raw=True).src
+'for _ in _ if a if x if c'
+
+>>> (f := FST('a = b = c = d')).put_slice('x =', 1, 2, 'targets', raw=True).src
+'a = x = c = d'
+
+>>> FST('a = b = c = v').targets.loc
+fstlocn(0, 0, 0, 11, n=0)
+
+>>> FST('a = b = c = v').targets.at(1, True).loc
+fstloc(0, 4, 0, 7)
+
+>>> FST('a = b = c = v').targets.at(-1, True).loc
+fstloc(0, 8, 0, 11)
+
+>>> FST('a = b = c = v').targets.at(-3, True).src
+'a ='
+
+>>> FST('{**c}').put('a: ', 0, 'keys', raw=True).src
+'{a: c}'
+
+>>> FST('a = b = c = v').targets.at(-2, True).src
+'b ='
+
+>>> FST('for _ in _ if a if b if c').ifs.at(-2, True).src
+'if b'
+
+>>> FST('@a\n@b\n@c\ndef f(): pass').decorator_list.at(-2, True).src
+'@b'
+
+>>> FST('@deco\ndef f(): pass\n@deco2\nclass cls: pass\n@deco3\nasync def g(): pass').body.at(1, True).src
+'@deco2\nclass cls: pass'
+

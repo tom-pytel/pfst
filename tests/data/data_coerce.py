@@ -2740,8 +2740,8 @@ r'''AST: **NodeError('expecting expression (standard), got arguments, could not 
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''a, /'''),
-r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has position-only arguments')**''',
-r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has position-only arguments')**'''),
+r'''FST: **NodeError('expecting expression (standard), got arguments, could not coerce, has posonlyargs')**''',
+r'''AST: **NodeError('expecting expression (standard), got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', 0, 0, 'expr', {}, ('arguments',
 r'''*, a'''),
@@ -3700,8 +3700,8 @@ r'''AST: **NodeError('expecting expression (all types), got arguments, could not
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''a, /'''),
-r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has position-only arguments')**''',
-r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has position-only arguments')**'''),
+r'''FST: **NodeError('expecting expression (all types), got arguments, could not coerce, has posonlyargs')**''',
+r'''AST: **NodeError('expecting expression (all types), got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', 0, 0, 'expr_all', {}, ('arguments',
 r'''*, a'''),
@@ -4647,8 +4647,8 @@ r'''AST: **NodeError('expecting expression (arglike), got arguments, could not c
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''a, /'''),
-r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has position-only arguments')**''',
-r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has position-only arguments')**'''),
+r'''FST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has posonlyargs')**''',
+r'''AST: **NodeError('expecting expression (arglike), got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', 0, 0, 'expr_arglike', {}, ('arguments',
 r'''*, a'''),
@@ -5594,8 +5594,8 @@ r'''AST: **NodeError('expecting expression (slice), got arguments, could not coe
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''a, /'''),
-r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has position-only arguments')**''',
-r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has position-only arguments')**'''),
+r'''FST: **NodeError('expecting expression (slice), got arguments, could not coerce, has posonlyargs')**''',
+r'''AST: **NodeError('expecting expression (slice), got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', 0, 0, 'expr_slice', {}, ('arguments',
 r'''*, a'''),
@@ -6539,8 +6539,8 @@ r'''AST: **NodeError('expecting expression (tuple element), got arguments, could
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''a, /'''),
-r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has position-only arguments')**''',
-r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has position-only arguments')**'''),
+r'''FST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has posonlyargs')**''',
+r'''AST: **NodeError('expecting expression (tuple element), got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', 0, 0, 'Tuple_elt', {}, ('arguments',
 r'''*, a'''),
@@ -7455,8 +7455,8 @@ r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has **kw
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''a, /'''),
-r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has position-only arguments')**''',
-r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has position-only arguments')**'''),
+r'''FST: **NodeError('expecting Tuple, got arguments, could not coerce, has posonlyargs')**''',
+r'''AST: **NodeError('expecting Tuple, got arguments, could not coerce, has posonlyargs')**'''),
 
 ('', 0, 0, 'Tuple', {}, ('arguments',
 r'''*, a'''),
@@ -24508,15 +24508,25 @@ _type_params - ROOT 0,0..0,2
      .name 'b'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+('', 0, 0, '_type_params', {'_ver': 13}, ('_arglikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+r'''b=c''',
+r'''b = c''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] TypeVar - 0,0..0,3
+     .name 'b'
+     .default_value Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
 r'''**b'''),
-r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+r'''**b''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] ParamSpec - 0,0..0,3
+     .name 'b'
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
 r'''a, b'''),
@@ -24540,20 +24550,46 @@ _type_params - ROOT 0,0..0,5
      .name 'b'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+('', 0, 0, '_type_params', {'_ver': 13}, ('_arglikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+r'''a, b=c''',
+r'''a, b = c''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,6
+     .name 'b'
+     .default_value Name 'c' Load - 0,5..0,6
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+r'''a, **b''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] ParamSpec - 0,3..0,6
+     .name 'b'
+'''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('_arglikes',
+('', 0, 0, '_type_params', {'_ver': 13}, ('_arglikes',
 r''' ( a ) , * ( b ) , c = ( d ) , ** ( e ) '''),
-r'''FST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _arglikes, could not coerce')**'''),
+r''' a , * b , c = ( d ) , ** e ''',
+r'''a, *b, c = d, **e''', r'''
+_type_params - ROOT 0,0..0,28
+  .type_params[4]
+   0] TypeVar - 0,1..0,2
+     .name 'a'
+   1] TypeVarTuple - 0,5..0,8
+     .name 'b'
+   2] TypeVar - 0,11..0,20
+     .name 'c'
+     .default_value Name 'd' Load - 0,17..0,18
+   3] ParamSpec - 0,23..0,27
+     .name 'e'
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('expr_arglike',
 r'''*not a'''),
@@ -24827,15 +24863,25 @@ _type_params - ROOT 0,0..0,2
      .name 'b'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+('', 0, 0, '_type_params', {'_ver': 13}, ('arguments',
 r'''b=c'''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r'''b=c''',
+r'''b = c''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] TypeVar - 0,0..0,3
+     .name 'b'
+     .default_value Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
 r'''**b'''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r'''**b''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] ParamSpec - 0,0..0,3
+     .name 'b'
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
 r'''a, b'''),
@@ -24859,15 +24905,29 @@ _type_params - ROOT 0,0..0,5
      .name 'b'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+('', 0, 0, '_type_params', {'_ver': 13}, ('arguments',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r'''a, b=c''',
+r'''a, b = c''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,6
+     .name 'b'
+     .default_value Name 'c' Load - 0,5..0,6
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
 r'''a, **b'''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r'''a, **b''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] ParamSpec - 0,3..0,6
+     .name 'b'
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
 r'''a, /'''),
@@ -24881,23 +24941,47 @@ r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')*
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
 r'''a: int'''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r'''a: int''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[1]
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+'''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+('', 0, 0, '_type_params', {'_ver': 13}, ('arguments',
 r'''a: int = b'''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r'''a: int = b''', r'''
+_type_params - ROOT 0,0..0,10
+  .type_params[1]
+   0] TypeVar - 0,0..0,10
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+     .default_value Name 'b' Load - 0,9..0,10
+'''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+('', 0, 0, '_type_params', {'_ver': 13}, ('arguments',
 r''' a = ( b ) '''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r''' a = ( b ) ''',
+r'''a = b''', r'''
+_type_params - ROOT 0,0..0,11
+  .type_params[1]
+   0] TypeVar - 0,1..0,10
+     .name 'a'
+     .default_value Name 'b' Load - 0,7..0,8
+'''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('arguments',
+('', 0, 0, '_type_params', {'_ver': 13}, ('arguments',
 r''' a : ( int ) = ( b ) '''),
-r'''FST: **NodeError('expecting _type_params, got arguments, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got arguments, could not coerce')**'''),
+r''' a : ( int ) = ( b ) ''',
+r'''a: int = b''', r'''
+_type_params - ROOT 0,0..0,21
+  .type_params[1]
+   0] TypeVar - 0,1..0,20
+     .name 'a'
+     .bound Name 'int' Load - 0,7..0,10
+     .default_value Name 'b' Load - 0,17..0,18
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('arg',
 r'''a'''),
@@ -25122,10 +25206,16 @@ _type_params - ROOT 0,0..0,1
      .name 'a'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+('', 0, 0, '_type_params', {'_ver': 13}, ('_pattern_attrlikes',
 r'''b=c'''),
-r'''FST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
+r'''b=c''',
+r'''b = c''', r'''
+_type_params - ROOT 0,0..0,3
+  .type_params[1]
+   0] TypeVar - 0,0..0,3
+     .name 'b'
+     .default_value Name 'c' Load - 0,2..0,3
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
 r'''a, b'''),
@@ -25138,15 +25228,31 @@ _type_params - ROOT 0,0..0,4
      .name 'b'
 '''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+('', 0, 0, '_type_params', {'_ver': 13}, ('_pattern_attrlikes',
 r'''a, b=c'''),
-r'''FST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
+r'''a, b=c''',
+r'''a, b = c''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+   1] TypeVar - 0,3..0,6
+     .name 'b'
+     .default_value Name 'c' Load - 0,5..0,6
+'''),
 
-('', 0, 0, '_type_params', {'_ver': 12}, ('_pattern_attrlikes',
+('', 0, 0, '_type_params', {'_ver': 13}, ('_pattern_attrlikes',
 r''' ( a ) , b = ( c ) '''),
-r'''FST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**''',
-r'''AST: **NodeError('expecting _type_params, got _pattern_attrlikes, could not coerce')**'''),
+r''' a , b = ( c ) ''',
+r'''a, b = c''', r'''
+_type_params - ROOT 0,0..0,15
+  .type_params[2]
+   0] TypeVar - 0,1..0,2
+     .name 'a'
+   1] TypeVar - 0,5..0,14
+     .name 'b'
+     .default_value Name 'c' Load - 0,11..0,12
+'''),
 
 ('', 0, 0, '_type_params', {'_ver': 12}, ('TypeVar',
 r'''a'''),
@@ -27503,6 +27609,11 @@ _pattern_attrlikes - ROOT 0,0..0,3
   .kwd_patterns[1]
    0] MatchAs - 0,2..0,3
 '''),
+
+('', 0, 0, '_arglikes', {}, ('arguments',
+r'''a=1, *b, c'''),
+r'''FST: **NodeError('expecting _arglikes, got arguments, could not coerce')**''',
+r'''AST: **NodeError('expecting _arglikes, got arguments, could not coerce')**'''),
 ],
 
 }

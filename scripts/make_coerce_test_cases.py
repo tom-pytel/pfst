@@ -169,6 +169,8 @@ def main():
                 from_opts = {'_ver': 11}
             elif to_name in ('type_param', '_type_params') and from_name == 'keyword' and '*' not in from_src:
                 from_opts = {'_ver': 13}
+            elif to_name == '_type_params' and from_name in ('arguments', '_arglikes', '_pattern_attrlikes') and '=' in from_src:
+                from_opts = {'_ver': 13}
 
             print(f"\n('', 0, 0, '{to_name}', { {**to_opts, **from_opts} }, ('{from_name}', {from_src!r}),),")
 
