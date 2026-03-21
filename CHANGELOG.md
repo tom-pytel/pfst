@@ -3,25 +3,26 @@
 ### Added
 
 - Python 3.15 lazy import support
-- `MatchClass.patterns+kwd_attrs=kwd_patterns` slice get ant put
+- `MatchClass.patterns+kwd_attrs=kwd_patterns` slice get and put
   - `_pattern_attrlikes` special slice container holds both combined unnamed and keyword patterns, e.g `a, b, c=d, e=f`
   - `_attrs` virtual field on `MatchClass` and `_pattern_attrlikes`
 - filled out lots of non-basic coercions, mostly between forms like `**a`, keywords `kw=val` and annotations `v: ann`
   - `arguments`, `_arglikes`, `_expr_arglikes`, `_pattern_attrlikes` and `_type_params` between each other
   - `TypeVar=default_value` and `**ParamSpec` to the previous and also to single `_arglike` and to/from `keyword`
   - `TypeVar: bound` <-> `arg: annotation`
+  - singleton `arguments` and `_pattern_attrlikes` to single `arg` and `keyword` if possible
 
 ### Changed
 
 - concretized behavior of locations of nonstandard slices like `comprehension.ifs`, `Assign.targets` or `.decorator_list`
   - includes extra syntax in location when accessed as slice but not when accessed as single item
-- `fst.cli.sub` properly prints multiple statement substution lines
 
 ### Fixed
 
 - special `FSTView` classes for decorator lists, `comprehension.ifs` and `Assign.targets` so that slice locations from these field views are correct
 - honor `dump()` `eol` parameter when outputting `out='str'`
 - coercing `FST` expression to a non-arglike expression, if it is arglike-only then it will be appropriately parenthesized, e.g. `*not a` -> `*(not a)`
+- `fst.cli.sub` properly prints multiple statement substution lines
 
 
 ## 0.3.1 - alpha - 2026-03-13

@@ -505,20 +505,24 @@ def _coerce_to_pattern_ast_Constant(
     value_cls = value.__class__
 
     if value_cls in (bool, NoneType):
-        return (MatchSingleton(value=value, lineno=ast.lineno, col_offset=ast.col_offset,
-                               end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-                if is_FST else  # may not have location attrs
-                MatchSingleton(value=value)
-        ), 2
+        if not is_FST:
+            ret = MatchSingleton(value=value)
+        else:
+            ret = MatchSingleton(value=value, lineno=ast.lineno, col_offset=ast.col_offset,
+                                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+        return ret, 2
 
     elif value is ...:
         return 'cannot be Ellipsis'
 
-    return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchValue(value=ast)
-    ), 2
+    if not is_FST:
+        ret = MatchValue(value=ast)
+    else:
+        ret = MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_Attribute(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -542,11 +546,13 @@ def _coerce_to_pattern_ast_Attribute(
     elif value.id == '_':
         return "base Name cannot be '_'"
 
-    return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchValue(value=ast)
-    ), 2
+    if not is_FST:
+        ret = MatchValue(value=ast)
+    else:
+        ret = MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_Starred(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -580,11 +586,13 @@ def _coerce_to_pattern_ast_Name(
     if (name := ast.id) == '_':
         name = None
 
-    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
-                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            MatchAs(name=name)
-    ), 2
+    if not is_FST:
+        ret = MatchAs(name=name)
+    else:
+        ret = MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
+                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_arg(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -597,11 +605,13 @@ def _coerce_to_pattern_ast_arg(
     if (name := ast.arg) == '_':
         name = None
 
-    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                    end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            MatchAs(name=name)
-    ), 2
+    if not is_FST:
+        ret = MatchAs(name=name)
+    else:
+        ret = MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                      end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_alias(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -618,11 +628,13 @@ def _coerce_to_pattern_ast_alias(
     if (name := name) == '_':
         name = None
 
-    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
-                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            MatchAs(name=name)
-    ), 2
+    if not is_FST:
+        ret = MatchAs(name=name)
+    else:
+        ret = MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
+                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_withitem(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -650,11 +662,13 @@ def _coerce_to_pattern_ast_TypeVar(
     if (name := ast.name) == '_':
         name = None
 
-    return (MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
-                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            MatchAs(name=name)
-    ), 2
+    if not is_FST:
+        ret = MatchAs(name=name)
+    else:
+        ret = MatchAs(name=name, lineno=ast.lineno, col_offset=ast.col_offset,
+                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_TypeVarTuple(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -667,11 +681,13 @@ def _coerce_to_pattern_ast_TypeVarTuple(
     if (name := ast.name) == '_':
         name = None
 
-    return (MatchStar(name=name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                      end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchStar(name=name)
-    ), 2
+    if not is_FST:
+        ret = MatchStar(name=name)
+    else:
+        ret = MatchStar(name=name, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                        end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_Dict(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -725,11 +741,13 @@ def _coerce_to_pattern_ast_Dict(
 
         patterns.append(value[0])  # here we do want the actual pattern
 
-    return (MatchMapping(keys=keys, patterns=patterns, rest=rest, lineno=ast.lineno, col_offset=ast.col_offset,
-                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchMapping(keys=keys, patterns=patterns, rest=rest)
-    ), 2
+    if not is_FST:
+        ret = MatchMapping(keys=keys, patterns=patterns, rest=rest)
+    else:
+        ret = MatchMapping(keys=keys, patterns=patterns, rest=rest, lineno=ast.lineno, col_offset=ast.col_offset,
+                           end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_Call(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -785,11 +803,13 @@ def _coerce_to_pattern_ast_Call(
         kwd_attrs.append(arg)
         kwd_patterns.append(pat[0])
 
-    return (MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
-                       col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns)
-    ), 2
+    if not is_FST:
+        ret = MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns)
+    else:
+        ret = MatchClass(cls=func, patterns=patterns, kwd_attrs=kwd_attrs, kwd_patterns=kwd_patterns, lineno=ast.lineno,
+                         col_offset=ast.col_offset, end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_BinOp(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -842,11 +862,13 @@ def _coerce_to_pattern_ast_BinOp(
             if operand:
                 operand.f._unparenthesize_grouping(False)
 
-        return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                           end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-                if is_FST else
-                MatchValue(value=ast)
-        ), 2
+        if not is_FST:
+            ret = MatchValue(value=ast)
+        else:
+            ret = MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                             end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+        return ret, 2
 
     # 'a | b' -> MatchOr
 
@@ -884,11 +906,13 @@ def _coerce_to_pattern_ast_BinOp(
     else:
         patterns = [pat_left, pat_right]
 
-    return (MatchOr(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                    end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchOr(patterns=patterns)
-    ), 2
+    if not is_FST:
+        ret = MatchOr(patterns=patterns)
+    else:
+        ret = MatchOr(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                      end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_UnaryOp(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -919,11 +943,13 @@ def _coerce_to_pattern_ast_UnaryOp(
     if is_FST:
         operand.f._unparenthesize_grouping(False)
 
-    return (MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
-                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchValue(value=ast)
-    ), 2
+    if not is_FST:
+        ret = MatchValue(value=ast)
+    else:
+        ret = MatchValue(value=ast, lineno=ast.lineno, col_offset=ast.col_offset,
+                         end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast_seq(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -997,11 +1023,13 @@ def _coerce_to_pattern_ast_seq(
 
         patterns.append(e[0])
 
-    return (MatchSequence(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                          end_col_offset=ast.end_col_offset)
-            if is_FST else
-            MatchSequence(patterns=patterns)
-    ), 2
+    if not is_FST:
+        ret = MatchSequence(patterns=patterns)
+    else:
+        ret = MatchSequence(patterns=patterns, lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                            end_col_offset=ast.end_col_offset)
+
+    return ret, 2
 
 def _coerce_to_pattern_ast__pattern_attrlikes(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1391,10 +1419,13 @@ def _coerce_to_expr_ast_arguments(
         if a.annotation:
             return 'arg has annotation'
 
-        elts.append(Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
-                         end_col_offset=a.end_col_offset)
-                    if is_FST else  # may not have location attrs
-                    Name(id=a.arg))
+        if not is_FST:
+            a = Name(id=a.arg)
+        else:
+            a = Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                     end_col_offset=a.end_col_offset)
+
+        elts.append(a)
 
     if is_FST:
         lines = ast.f._lines
@@ -1425,10 +1456,13 @@ def _coerce_to_expr_ast_arguments(
         if a.annotation:
             return 'kwonlyarg has annotation'
 
-        elts.append(Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
-                         end_col_offset=a.end_col_offset)
-                    if is_FST else  # may not have location attrs
-                    Name(id=a.arg))
+        if not is_FST:
+            a = Name(id=a.arg)
+        else:
+            a = Name(id=a.arg, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset, end_lineno=a.end_lineno,
+                     end_col_offset=a.end_col_offset)
+
+        elts.append(a)
 
     if not is_FST:
         return Tuple(elts=elts), 2, False
@@ -1451,11 +1485,13 @@ def _coerce_to_expr_ast_arg(
     if ast.annotation:
         return 'has annotation'
 
-    return (Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                 end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            Name(id=ast.arg)
-    ), 2, False
+    if not is_FST:
+        ret = Name(id=ast.arg)
+    else:
+        ret = Name(id=ast.arg, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                   end_col_offset=ast.end_col_offset)
+
+    return ret, 2, False
 
 def _coerce_to_expr_ast_alias(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1468,10 +1504,11 @@ def _coerce_to_expr_ast_alias(
         return "is star '*'"
 
     if '.' not in (name := ast.name):
-        ast = (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-               if is_FST else  # may not have location attrs
-               Name(id=name))
+        if not is_FST:
+            ast = Name(id=name)
+        else:
+            ast = Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     elif not is_FST:  # or (f := ast.f).end_ln != f.ln or f.end_col != f.col + len(name):  # NOTE: could calculate locations but parse_expr() is probably faster
         parts = name.split('.')[::-1]
@@ -1528,11 +1565,13 @@ def _coerce_to_expr_ast__aliases(
             else:
                 return 'failed reparse to Attribute'  # pragma: no cover  # sanity
 
-    return (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                  end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            Tuple(elts=elts)
-    ), 2, True
+    if not is_FST:
+        ret = Tuple(elts=elts)
+    else:
+        ret = Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                    end_col_offset=ast.end_col_offset)
+
+    return ret, 2, True
 
 def _coerce_to_expr_ast_withitem(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1557,11 +1596,13 @@ def _coerce_to_expr_ast__withitems(
 
         elts.append(a.context_expr)
 
-    return (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                  end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            Tuple(elts=elts)
-    ), 2, True
+    if not is_FST:
+        ret = Tuple(elts=elts)
+    else:
+        ret = Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                    end_col_offset=ast.end_col_offset)
+
+    return ret, 2, True
 
 def _coerce_to_expr_ast_MatchValue(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1575,11 +1616,13 @@ def _coerce_to_expr_ast_MatchSingleton(
 ) -> tuple[AST, int, bool] | str:
     """See `_coerce_to_expr_ast_ret_empty_str()`."""
 
-    return (Constant(value=ast.value, lineno=ast.lineno, col_offset=ast.col_offset,
-                     end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            Constant(value=ast.value)
-    ), 2, False
+    if not is_FST:
+        ret = Constant(value=ast.value)
+    else:
+        ret = Constant(value=ast.value, lineno=ast.lineno, col_offset=ast.col_offset,
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2, False
 
 def _coerce_to_expr_ast_MatchStar(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1614,11 +1657,13 @@ def _coerce_to_expr_ast_MatchAs(
 
     name = ast.name or '_'
 
-    return (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            Name(id=name)
-    ), 2, False
+    if not is_FST:
+        ret = Name(id=name)
+    else:
+        ret = Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2, False
 
 def _coerce_to_expr_ast_MatchSequence(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1641,10 +1686,11 @@ def _coerce_to_expr_ast_MatchSequence(
 
         elts.append(pat[0])
 
-    ret = (ast_cls(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-           if is_FST else  # may not have location attrs
-           ast_cls(elts=elts))
+    if not is_FST:
+        ret = ast_cls(elts=elts)
+    else:
+        ret = ast_cls(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                      end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     return ret, 2, False  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
@@ -1680,10 +1726,11 @@ def _coerce_to_expr_ast_MatchMapping(
             values.append(Name(id=rest, ctx=Load(), lineno=ln + 1, col_offset=lines[ln].c2b(col), end_lineno=end_ln + 1,
                                end_col_offset=lines[end_ln].c2b(end_col)))
 
-    ret = (Dict(keys=keys, values=values, lineno=ast.lineno, col_offset=ast.col_offset,
-                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-           if is_FST else  # may not have location attrs
-           Dict(keys=keys, values=values))
+    if not is_FST:
+        ret = Dict(keys=keys, values=values)
+    else:
+        ret = Dict(keys=keys, values=values, lineno=ast.lineno, col_offset=ast.col_offset,
+                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     return ret, 2, False  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
@@ -1730,10 +1777,11 @@ def _coerce_to_expr_ast_MatchClass(
             prev_end_ln = end_ln
             prev_end_col = end_col
 
-    ret = (Call(func=ast.cls, args=args, keywords=keywords, lineno=ast.lineno, col_offset=ast.col_offset,
-                end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-           if is_FST else  # may not have location attrs
-           Call(func=ast.cls, args=args, keywords=keywords))
+    if not is_FST:
+        ret = Call(func=ast.cls, args=args, keywords=keywords)
+    else:
+        ret = Call(func=ast.cls, args=args, keywords=keywords, lineno=ast.lineno, col_offset=ast.col_offset,
+                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     return ret, 2, False  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
@@ -1806,10 +1854,11 @@ def _coerce_to_expr_ast__pattern_attrlikes(
 
         elts.append(pat[0])
 
-    ret = (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-           if is_FST else  # may not have location attrs
-           Tuple(elts=elts))
+    if not is_FST:
+        ret = Tuple(elts=elts)
+    else:
+        ret = Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     return ret, 2, True  # we do not unmake trees here for subpatterns because this return signals that the whole tree needs to be unmade (FST nodes will be recreated)
 
@@ -1823,11 +1872,13 @@ def _coerce_to_expr_ast_TypeVar(
     if getattr(ast, 'default_value', None):
         return 'has default_value'
 
-    return (Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                 end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-            if is_FST else  # may not have location attrs
-            Name(id=ast.name)
-    ), 2, False
+    if not is_FST:
+        ret = Name(id=ast.name)
+    else:
+        ret = Name(id=ast.name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+
+    return ret, 2, False
 
 def _coerce_to_expr_ast_TypeVarTuple(
     ast: AST, is_FST: bool, options: Mapping[str, Any], parse_params: Mapping[str, Any]
@@ -1871,10 +1922,11 @@ def _coerce_to_expr_ast__type_params(
         ast_cls = a.__class__
 
         if ast_cls is TypeVar:
-            a = (Name(id=a.name, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset,
-                      end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
-                 if is_FST else  # may not have location attrs
-                 Name(id=a.name))
+            if not is_FST:
+                a = Name(id=a.name)
+            else:
+                a = Name(id=a.name, ctx=Load(), lineno=a.lineno, col_offset=a.col_offset,
+                         end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
 
         elif ast_cls is TypeVarTuple:
             name = a.name
@@ -1899,10 +1951,11 @@ def _coerce_to_expr_ast__type_params(
 
         elts.append(a)
 
-    ret = (Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
-                 end_col_offset=ast.end_col_offset)
-           if is_FST else  # may not have location attrs
-           Tuple(elts=elts))
+    if not is_FST:
+        ret = Tuple(elts=elts)
+    else:
+        ret = Tuple(elts=elts, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset, end_lineno=ast.end_lineno,
+                    end_col_offset=ast.end_col_offset)
 
     return ret, 2, True
 
@@ -2182,10 +2235,11 @@ def _coerce_to__arglike_ast_TypeVar(
     name = ast.name
 
     if not (value := getattr(ast, 'default_value', None)):
-        ast = (Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
-                    end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
-               if is_FST else
-               Name(id=name))
+        if not is_FST:
+            ast = Name(id=name)
+        else:
+            ast = Name(id=name, ctx=Load(), lineno=ast.lineno, col_offset=ast.col_offset,
+                       end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
 
     elif not is_FST:
         ast = keyword(arg=name, value=value)
@@ -2307,10 +2361,11 @@ def _coerce_to_argument_ast_TypeVar(
     col_offset = ast.col_offset
 
     if not bound:
-        arg_ = (arg(arg=name, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-                    end_col_offset=col_offset + len(name.encode()))
-                if is_FST else
-                arg(arg=name))
+        if not is_FST:
+            arg_ = arg(arg=name)
+        else:
+            arg_ = arg(arg=name, lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+                       end_col_offset=col_offset + len(name.encode()))
 
     elif is_lambda:
         raise _coerce_error(expecting, 'TypeVar', 'has bound')
@@ -2346,10 +2401,11 @@ def _coerce_to_argument_ast_TypeVarTuple_or_ParamSpec(
     end_lineno = ast.end_lineno
     end_col_offset = ast.end_col_offset
 
-    return (arg(arg=name, lineno=end_lineno, col_offset=end_col_offset - len(name.encode()),
-                end_lineno=end_lineno, end_col_offset=end_col_offset)
-            if is_FST else
-            arg(arg=name))
+    if not is_FST:
+        return arg(arg=name)
+
+    return arg(arg=name, lineno=end_lineno, col_offset=end_col_offset - len(name.encode()),
+               end_lineno=end_lineno, end_col_offset=end_col_offset)
 
 
 # ......................................................................................................................
@@ -2881,10 +2937,11 @@ def _coerce_to__arglikes(
             name = arg_.arg
 
             if not dflt:
-                ast = (Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
-                            end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
-                       if is_FST else
-                       Name(id=name))
+                if not is_FST:
+                    ast = Name(id=name)
+                else:
+                    ast = Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
+                               end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
 
             else:
                 if not is_FST:
@@ -2930,10 +2987,11 @@ def _coerce_to__arglikes(
                 if defaults:  # call(a=1, b) is invalid
                     raise _coerce_error('_arglikes', 'arguments', 'arg without default follows arg with default')
 
-                ast = (Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
-                            end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
-                       if is_FST else
-                       Name(id=name))
+                if not is_FST:
+                    ast = Name(id=name)
+                else:
+                    ast = Name(id=name, ctx=Load(), lineno=arg_.lineno, col_offset=arg_.col_offset,
+                               end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
 
             else:
                 if not is_FST:
@@ -3637,10 +3695,11 @@ def _coerce_to_arguments(
         end_lineno = codea.end_lineno
         end_col_offset = codea.end_col_offset
 
-        vararg = (arg(arg=name, lineno=end_lineno, col_offset=end_col_offset - len(name.encode()),
-                      end_lineno=end_lineno, end_col_offset=end_col_offset)
-                  if is_FST else
-                  arg(arg=name))
+        if not is_FST:
+            vararg = arg(arg=name)
+        else:
+            vararg = arg(arg=name, lineno=end_lineno, col_offset=end_col_offset - len(name.encode()),
+                         end_lineno=end_lineno, end_col_offset=end_col_offset)
 
     elif codea_cls is _pattern_attrlikes:
         coerced = True
@@ -4002,10 +4061,11 @@ def _coerce_to__pattern_attrlikes(
                 if name == '_':
                     name = None
 
-                pat = (MatchAs(pattern=None, name=name, lineno=arg_.lineno, col_offset=arg_.col_offset,
-                               end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
-                       if is_FST else
-                       MatchAs(pattern=None, name=name))
+                if not is_FST:
+                    pat = MatchAs(pattern=None, name=name)
+                else:
+                    pat = MatchAs(pattern=None, name=name, lineno=arg_.lineno, col_offset=arg_.col_offset,
+                                  end_lineno=arg_.end_lineno, end_col_offset=arg_.end_col_offset)
 
                 patterns.append(pat)
 
@@ -4026,10 +4086,11 @@ def _coerce_to__pattern_attrlikes(
             if name == '_':
                 name = None
 
-            pat = (MatchAs(pattern=None, name=name, lineno=codea.lineno, col_offset=codea.col_offset,
-                           end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
-                   if is_FST else
-                   MatchAs(pattern=None, name=name))
+            if not is_FST:
+                pat = MatchAs(pattern=None, name=name)
+            else:
+                pat = MatchAs(pattern=None, name=name, lineno=codea.lineno, col_offset=codea.col_offset,
+                              end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
             patterns.append(pat)
 
@@ -4057,10 +4118,11 @@ def _coerce_to__pattern_attrlikes(
                 if name == '_':
                     name = None
 
-                pat = (MatchAs(pattern=None, name=name, lineno=a.lineno, col_offset=a.col_offset,
-                               end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
-                       if is_FST else
-                       MatchAs(pattern=None, name=name))
+                if not is_FST:
+                    pat = MatchAs(pattern=None, name=name)
+                else:
+                    pat = MatchAs(pattern=None, name=name, lineno=a.lineno, col_offset=a.col_offset,
+                                  end_lineno=a.end_lineno, end_col_offset=a.end_col_offset)
 
                 patterns.append(pat)
 
