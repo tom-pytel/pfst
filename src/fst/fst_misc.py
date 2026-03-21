@@ -800,15 +800,17 @@ def is_delimited_MatchSequence(self: fst.FST) -> bool:
 # private FST class methods
 
 def _repr_tail(self: fst.FST, loc: bool = True) -> str:
-    if loc:
-        try:
-            loc = self.loc
-        except Exception:  # pragma: no cover  - maybe in middle of operation changing locations and lines
-            loc = '????'
-
-        # self.root._touchall()  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+    if not loc:
+        return ''
 
     tail = ' ROOT' if self.is_root else ''
+
+    try:
+        loc = self.loc
+    except Exception:  # pragma: no cover  - maybe in middle of operation changing locations and lines
+        loc = '????'
+
+    # self.root._touchall()  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
     return f'{tail} {loc[0]},{loc[1]}..{loc[2]},{loc[3]}' if loc else tail
 

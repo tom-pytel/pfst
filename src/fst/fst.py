@@ -1319,7 +1319,7 @@ class FST:
 
         >>> _ = f.dump('stmt', loc=False)  # loc=False because of py < 3.12
         0: f"{expr}"
-        JoinedStr - ROOT
+        JoinedStr
           .values[1]
            0] FormattedValue
              .value Name 'expr' Load
@@ -1330,7 +1330,7 @@ class FST:
 
         >>> _ = f.dump('stmt', loc=False)
         0: f"{expr=}"
-        JoinedStr - ROOT
+        JoinedStr
           .values[1]
            0] FormattedValue
              .value Name 'expr' Load
@@ -1346,7 +1346,7 @@ class FST:
 
         >>> _ = f.dump('stmt', loc=False)
         0: f"{expr=}"
-        JoinedStr - ROOT
+        JoinedStr
           .values[2]
            0] Constant 'expr='
            1] FormattedValue
@@ -1580,7 +1580,7 @@ class FST:
         >>> from pprint import pp
         >>> pp(f.dump('stmt', loc=False, out='lines'))
         ['0: if 1:',
-         'If - ROOT',
+         'If',
          '  .test Constant 1',
          '  .body[1]',
          '1:     call(a=b, **c)',

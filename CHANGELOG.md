@@ -17,6 +17,7 @@
 - concretized behavior of locations of nonstandard slices like `comprehension.ifs`, `Assign.targets` or `.decorator_list`
   - includes extra syntax in location when accessed as slice but not when accessed as single item
 - parse unspecified type will not reduce statement `Expr` to single expression if has trailing semicolon
+- `dump(loc=False)` will no longer output `ROOT` for root node, easier to compare just structure dumps
 
 ### Fixed
 

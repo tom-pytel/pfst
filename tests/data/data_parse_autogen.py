@@ -3260,7 +3260,7 @@ Call - ROOT 0,0..3,1
 
 ('parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\nf'{a}'\n"), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[1]
    0] FormattedValue
      .value Name 'a' Load
@@ -3269,7 +3269,7 @@ JoinedStr - ROOT
 
 ('parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 r'''f"{a}"'''), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[1]
    0] FormattedValue
      .value Name 'a' Load
@@ -3283,7 +3283,7 @@ a
 }
 '''
 """), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[3]
    0] Constant '\n'
    1] FormattedValue
@@ -3299,7 +3299,7 @@ a
 }
 """
 '''), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[3]
    0] Constant '\n'
    1] FormattedValue
@@ -3733,7 +3733,7 @@ Call - ROOT 1,1..4,2
 
 ('parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\n f'{a}'\n "), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[1]
    0] FormattedValue
      .value Name 'a' Load
@@ -3742,7 +3742,7 @@ JoinedStr - ROOT
 
 ('parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 '\n f"{a}"\n         '), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[1]
    0] FormattedValue
      .value Name 'a' Load
@@ -3751,7 +3751,7 @@ JoinedStr - ROOT
 
 ('parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\n f'''\n {\n a\n }\n         '''\n "), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[3]
    0] Constant '\n '
    1] FormattedValue
@@ -3762,7 +3762,7 @@ JoinedStr - ROOT
 
 ('parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 '\n f"""\n {\n a\n }\n """\n         '), r'''
-JoinedStr - ROOT
+JoinedStr
   .values[3]
    0] Constant '\n '
    1] FormattedValue

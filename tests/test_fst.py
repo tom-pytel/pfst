@@ -2719,7 +2719,7 @@ if 1:
 
         f = FST('call() ;', 'exec')
         self.assertEqual(f.dump('node', loc=False, out='lines'), [
-            'Module - ROOT',
+            'Module',
             '  .body[1]',
             '0: call() ;',
             '   0] Expr',
