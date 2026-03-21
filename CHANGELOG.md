@@ -16,13 +16,15 @@
 
 - concretized behavior of locations of nonstandard slices like `comprehension.ifs`, `Assign.targets` or `.decorator_list`
   - includes extra syntax in location when accessed as slice but not when accessed as single item
+- parse unspecified type will not reduce statement `Expr` to single expression if has trailing semicolon
 
 ### Fixed
 
 - special `FSTView` classes for decorator lists, `comprehension.ifs` and `Assign.targets` so that slice locations from these field views are correct
 - honor `dump()` `eol` parameter when outputting `out='str'`
-- coercing `FST` expression to a non-arglike expression, if it is arglike-only then it will be appropriately parenthesized, e.g. `*not a` -> `*(not a)`
+- coercing `FST` expression to a non-arglike expression, if it is arglike-only then it will be appropriately parenthesized, e.g. FST(`*not a`, 'expr_arglike').as_('expr') -> `*(not a)`
 - `fst.cli.sub` properly prints multiple statement substution lines
+- fixed a few cases of parse expression where trailing semicolon was accepted for an expression
 
 
 ## 0.3.1 - alpha - 2026-03-13

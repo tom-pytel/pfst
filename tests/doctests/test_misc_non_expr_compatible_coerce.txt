@@ -1,0 +1,194 @@
+>>> import os; os.environ['NO_COLOR'] = '1'
+>>> import ast
+>>> import re
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst import code as cd, parsex as px
+>>> from fst.asttypes import *
+>>> from fst.astutil import copy_ast
+>>> from fst.match import *
+
+>>> FST('a=b', keyword).as_(_pattern_attrlikes).dump('N').verify()
+0: a=b
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+0:   b
+   0] MatchAs - 0,2..0,3
+     .name 'b'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> FST('a, [b], (c)', _pattern_attrlikes).as_('_arglikes').dump('N')
+0: a, [b], (c)
+_arglikes - ROOT 0,0..0,11
+  .arglikes[3]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    [b]
+   1] List - 0,3..0,6
+     .elts[1]
+0:     b
+      0] Name 'b' Load - 0,4..0,5
+     .ctx Load
+0:          c
+   2] Name 'c' Load - 0,9..0,10
+<_arglikes ROOT 0,0..0,11>
+
+>>> FST('a, b=c, d = (e)', _pattern_attrlikes).as_('_arglikes').dump('N')
+0: a, b=c, d = (e)
+_arglikes - ROOT 0,0..0,15
+  .arglikes[3]
+0: a
+   0] Name 'a' Load - 0,0..0,1
+0:    b=c
+   1] keyword - 0,3..0,6
+     .arg 'b'
+0:      c
+     .value Name 'c' Load - 0,5..0,6
+0:         d = (e)
+   2] keyword - 0,8..0,15
+     .arg 'd'
+0:              e
+     .value Name 'e' Load - 0,13..0,14
+<_arglikes ROOT 0,0..0,15>
+
+>>> FST('  T = ( 1 )  ', TypeVar).as_('_arglike').dump('N').verify()
+0:   T = ( 1 )
+keyword - ROOT 0,2..0,11
+  .arg 'T'
+0:         1
+  .value Constant 1 - 0,8..0,9
+<keyword ROOT 0,2..0,11>
+
+>>> FST(' T: ( int ) = ( bool ) ', TypeVar).as_('arguments').dump('N').verify()
+0:  T: ( int ) = ( bool ) <*END*
+arguments - ROOT 0,0..0,23
+  .args[1]
+0:  T: ( int )
+   0] arg - 0,1..0,11
+     .arg 'T'
+0:       int
+     .annotation Name 'int' Load - 0,6..0,9
+  .defaults[1]
+0:                 bool
+   0] Name 'bool' Load - 0,16..0,20
+<arguments ROOT 0,0..0,23>
+
+>>> (f := FST('a=1, *b, c=2, **d')).as_('_arglikes').dump('N').verify()
+0: a=1, *b, c=2, **d
+_arglikes - ROOT 0,0..0,17
+  .arglikes[4]
+0: a=1
+   0] keyword - 0,0..0,3
+     .arg 'a'
+0:   1
+     .value Constant 1 - 0,2..0,3
+0:      *b
+   1] Starred - 0,5..0,7
+0:       b
+     .value Name 'b' Load - 0,6..0,7
+     .ctx Load
+0:          c=2
+   2] keyword - 0,9..0,12
+     .arg 'c'
+0:            2
+     .value Constant 2 - 0,11..0,12
+0:               **d
+   3] keyword - 0,14..0,17
+0:                 d
+     .value Name 'd' Load - 0,16..0,17
+<_arglikes ROOT 0,0..0,17>
+
+>>> f
+<*DEADFST*>
+
+>>> FST('T, *U', _type_params).as_(expr).dump('N')
+0: T, *U
+Tuple - ROOT 0,0..0,5
+  .elts[2]
+0: T
+   0] Name 'T' Load - 0,0..0,1
+0:    *U
+   1] Starred - 0,3..0,5
+0:     U
+     .value Name 'U' Load - 0,4..0,5
+     .ctx Load
+  .ctx Load
+<Tuple ROOT 0,0..0,5>
+
+>>> FST(' ** V ', type_param).as_(keyword).dump('N')
+0:  ** V
+keyword - ROOT 0,1..0,5
+0:     V
+  .value Name 'V' Load - 0,4..0,5
+<keyword ROOT 0,1..0,5>
+
+>>> FST('a, b=c', _pattern_attrlikes).as_(_type_params).dump('N').verify()
+0: a, b=c
+_type_params - ROOT 0,0..0,6
+  .type_params[2]
+0: a
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+0:    b=c
+   1] TypeVar - 0,3..0,6
+     .name 'b'
+0:      c
+     .default_value Name 'c' Load - 0,5..0,6
+<_type_params ROOT 0,0..0,6>
+
+>>> FST(FST('a, b=c', _pattern_attrlikes).a, _type_params).dump('N').verify()
+0: a, b = c
+_type_params - ROOT 0,0..0,8
+  .type_params[2]
+0: a
+   0] TypeVar - 0,0..0,1
+     .name 'a'
+0:    b = c
+   1] TypeVar - 0,3..0,8
+     .name 'b'
+0:        c
+     .default_value Name 'c' Load - 0,7..0,8
+<_type_params ROOT 0,0..0,8>
+
+>>> FST(FST('b=c', _arglikes).a, _type_params).dump('N').verify()
+0: b = c
+_type_params - ROOT 0,0..0,5
+  .type_params[1]
+0: b = c
+   0] TypeVar - 0,0..0,5
+     .name 'b'
+0:     c
+     .default_value Name 'c' Load - 0,4..0,5
+<_type_params ROOT 0,0..0,5>
+
+>>> FST('a=b', TypeVar).as_(_pattern_attrlikes).dump('N').verify()
+0: a=b
+_pattern_attrlikes - ROOT 0,0..0,3
+  .kwd_attrs[1]
+   0] 'a'
+  .kwd_patterns[1]
+0:   b
+   0] MatchAs - 0,2..0,3
+     .name 'b'
+<_pattern_attrlikes ROOT 0,0..0,3>
+
+>>> FST('a=x, *b, **c', arguments).as_(_type_params).dump('N').verify()
+0: a=x, *b, **c
+_type_params - ROOT 0,0..0,12
+  .type_params[3]
+0: a=x
+   0] TypeVar - 0,0..0,3
+     .name 'a'
+0:   x
+     .default_value Name 'x' Load - 0,2..0,3
+0:      *b
+   1] TypeVarTuple - 0,5..0,7
+     .name 'b'
+0:          **c
+   2] ParamSpec - 0,9..0,12
+     .name 'c'
+<_type_params ROOT 0,0..0,12>
+
+

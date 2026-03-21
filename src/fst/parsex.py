@@ -139,7 +139,6 @@ from .astutil import (
     OPCLS2STR,
     bistr,
     walk,
-    reduce_ast,
     merge_arglikes,
 )
 
@@ -208,6 +207,7 @@ __all__ = [
 
 _re_non_lcont_newline  = re.compile(r'(?<!\\)\n')  # used to substitute line continuations for non-line-continued lines
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
+_re_trailing_semicolon = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ;', re.VERBOSE)  # trailing semicolon search ignoring comments and line continuation backslashes
 _re_first_src          = re.compile(r'^ ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for non-comment non-linecont coding source code starting on a new line
 _re_next_src_space     = re.compile(r'  ([^\S\n]+) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # match for non-comment non-linecont coding source code starting not necessarily on a new line but with at least one whitespace, meant for followup search for multiword code like 'is not'
 _re_next_src_no_space  = re.compile(r'  ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # match for non-comment non-linecont coding source code starting not necessarily on a new line and no whitespace constraint
@@ -510,6 +510,8 @@ def _ast_parse1(
     stmt_types: type[AST] | tuple[type[AST], ...] | None = None,
     child_types: type[AST] | tuple[type[AST], ...] | None = None,
     child_field: str = 'value',
+    *,
+    check_semicolon: bool = False,
 ) -> AST:
     """Parse a single statment, optionally verifying that what was parsed is what was expected.
 
@@ -517,6 +519,7 @@ def _ast_parse1(
     - `stmt_types`: If not `None` then will check that the single statement is of this `AST` type(s).
     - `child_types`: If not `None` then will check that the child at `child_field` is of this `AST` type(s).
     - `child_field`: The field to get the child from for the child type check.
+    - `check_semicolon`: Should check to make sure there is no trailing semicolon and error if there is one.
     """
 
     if src.endswith('\\\n'):  # python doesn't like trailing line continuation (which we may actually want to parse like this)
@@ -530,8 +533,9 @@ def _ast_parse1(
     ast = body[0]
 
     if ((stmt_types and not isinstance(ast, stmt_types))
-        or (child_types and not isinstance(getattr(ast, child_field), child_types))
-    ):  # this exists juuuuust in case to catch source which may parse to something valid but unexpected, we use the fact that we don't send location to differentiate between our SyntaxError and one from the python parser
+        or (child_types and not isinstance(getattr(ast, child_field), child_types))  # these type checks exists juuuuust in case to catch source which may parse to something valid but unexpected, we use the fact that we don't send location to differentiate between our SyntaxError and one from the python parser
+        or (check_semicolon and _has_trailing_semicolon(src, ast.end_lineno, ast.end_col_offset))  # this to catch disallowed trailing semicolons (if needed to be checked)
+    ):
         raise SyntaxError('invalid syntax')
 
     return ast
@@ -731,6 +735,32 @@ def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
     return bool(_re_trailing_comma.match(src, pos))
 
 
+def _has_trailing_semicolon(src: str, end_lineno: int, end_col_offset: int) -> bool:
+    """See if there is a trailing semicolon after `(end_lineno, end_col_offset)`."""
+
+    pos = 0
+
+    for _ in range(end_lineno - 1):  # skip leading lines
+        pos = src.find('\n', pos) + 1  # assumed to all be there
+
+    pos += len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())
+
+    return bool(_re_trailing_semicolon.match(src, pos))
+
+
+def _reduce_stmts(ast: Module, src: str) -> AST:
+    """Try to reduce zero or more statements to a single statement or a single expression from an `Expr`. Do not reduce
+    if the statement has a trailing semicolon."""
+
+    if (len(body := ast.body) != 1
+        or (ast := body[0]).__class__ is not Expr
+        or _has_trailing_semicolon(src, ast.end_lineno, ast.end_col_offset)
+    ):
+        return ast
+
+    return ast.value
+
+
 def _parse_all__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse either a single `comprehension` preferentially or multiple `comprehensions`s returned in `_comprehensions`.
     Called from `parse_all()` on finding source which may parse to a `comprehension` so there may be at least one."""
@@ -771,9 +801,11 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
 
     if stmt:
         try:
-            return reduce_ast(parse_stmts(src, parse_params), True)
+            ast = parse_stmts(src, parse_params)
         except SyntaxError:
             pass
+        else:
+            return _reduce_stmts(ast, src)
 
     for parse in rest:
         try:
@@ -890,7 +922,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                                     parse__pattern_attrlikes))
 
     if groupdict['stmt']:
-        return reduce_ast(parse_stmts(src, parse_params), True)
+        return _reduce_stmts(parse_stmts(src, parse_params), True)
 
     if groupdict['True_False_None']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
@@ -906,13 +938,17 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         return _parse_all_multiple(src, parse_params, True, (parse__comprehension_ifs,))
 
     if groupdict['except']:
-        return reduce_ast(parse__ExceptHandlers(src, parse_params), True)
+        ast = parse__ExceptHandlers(src, parse_params)
+
+        return handlers[0] if len(handlers := ast.handlers) == 1 else ast
 
     if groupdict['case']:
         try:
-            return reduce_ast(parse__match_cases(src, parse_params), True)
+            ast = parse__match_cases(src, parse_params)
         except SyntaxError:
             pass
+        else:
+            return cases[0] if len(cases := ast.cases) == 1 else ast
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arg,  # because of "vararg: *TypeVarTuple"
@@ -981,7 +1017,7 @@ def parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
     parses what `ast.parse()` can, no funny stuff. @private"""
 
-    return reduce_ast(_ast_parse(src, parse_params), True)
+    return _reduce_stmts(_ast_parse(src, parse_params), src)
 
 
 def parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1140,6 +1176,9 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         bare_exc = None
 
         if len(body) == 1 and (b0 := body[0]).__class__ is Expr:  # if parsed to single expression then done
+            if _has_trailing_semicolon(src, b0.end_lineno, b0.end_col_offset):
+                raise SyntaxError('invalid syntax')
+
             return b0.value
 
     try:
@@ -1652,13 +1691,13 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     "name as alias". @private"""
 
     try:
-        names = _ast_parse1(f'import \\\n{src}', parse_params, Import).names
+        names = _ast_parse1(f'import \\\n{src}', parse_params, Import, check_semicolon=True).names
 
     except SyntaxError:
         src = _re_non_lcont_newline.sub('\\\n', src)
 
         try:
-            names = _ast_parse1(f'import \\\n{src}', parse_params, Import).names  # multiline?
+            names = _ast_parse1(f'import \\\n{src}', parse_params, Import, check_semicolon=True).names  # multiline?
         except SyntaxError as exc:
             raise exc from None
 
@@ -1672,7 +1711,7 @@ def parse__Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing dotted notation but not star. @private"""
 
     try:
-        names = _ast_parse1(f'import \\\n{src}', parse_params, Import).names
+        names = _ast_parse1(f'import \\\n{src}', parse_params, Import, check_semicolon=True).names
 
     except SyntaxError:
         if not _re_first_src.search(src):  # empty?
@@ -1682,7 +1721,7 @@ def parse__Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             src = _re_non_lcont_newline.sub('\\\n', src)
 
             try:
-                names = _ast_parse1(f'import \\\n{src}', parse_params, Import).names  # multiline?
+                names = _ast_parse1(f'import \\\n{src}', parse_params, Import, check_semicolon=True).names  # multiline?
             except SyntaxError as exc:
                 raise exc from None
 
@@ -1695,13 +1734,13 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     """Parse to an `alias`, allowing star but not dotted. @private"""
 
     try:
-        import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom)  # this instead of parentheses because could be '*' which doesn't like parentheses
+        import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom, check_semicolon=True)  # this instead of parentheses because could be '*' which doesn't like parentheses
 
     except SyntaxError:
         src = _re_non_lcont_newline.sub('\\\n', src)
 
         try:
-            import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom)  # multiline?
+            import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom, check_semicolon=True)  # multiline?
         except SyntaxError as exc:
             raise exc from None
 
@@ -1722,7 +1761,7 @@ def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> A
     """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star but not dotted. @private"""
 
     try:
-        import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom)  # this instead of parentheses because could be '*' which doesn't like parentheses
+        import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom, check_semicolon=True)  # this instead of parentheses because could be '*' which doesn't like parentheses
 
     except SyntaxError:
         if not _re_first_src.search(src):  # empty?
@@ -1732,7 +1771,7 @@ def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> A
             src = _re_non_lcont_newline.sub('\\\n', src)
 
             try:
-                import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom)  # multiline?
+                import_ = _ast_parse1(f'from . import \\\n{src}', parse_params, ImportFrom, check_semicolon=True)  # multiline?
             except SyntaxError as exc:
                 raise exc from None
 
