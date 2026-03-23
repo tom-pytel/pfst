@@ -2250,10 +2250,44 @@ y"
         # for coverage
 
         f = FST('i = a, b')
-        m = f.value.elts[0]._modifying()
-        m.enter()
+        m = f.value.elts[0]._modifying().enter()
         f._set_ast(FST('i = a, b').a, True)
         m.success(f)
+
+        if PYGE12:
+            # nested modifying
+
+            f = FST('f"{a   + b=}"')
+            m = f.values[1].value._modifying().enter()
+            f._put_src(' ', 0, 4, 0, 7, True)
+            self.assertEqual('a   + b=', f.values[0].value)
+            m.success()
+            self.assertEqual('a + b=', f.values[0].value)
+
+            f = FST('f"{a   + b=}"')
+            m = f.values[1].value._modifying().enter()
+            n = f.values[1].value._modifying().enter()
+            f._put_src(' ', 0, 4, 0, 7, True)
+            self.assertEqual('a   + b=', f.values[0].value)
+            n.success()
+            self.assertEqual('a   + b=', f.values[0].value)
+            m.success()
+            self.assertEqual('a + b=', f.values[0].value)
+
+            f = FST('f"{a   + b=}"')
+            m = f.values[1].value._modifying().enter()
+            n = f.values[1].value.op._modifying()
+            assertRaises(RuntimeError('nested modification of different nodes not allowed'), n.enter)
+
+            f = FST('f"{a   + b=}"')
+            m = f.values[1].value._modifying().enter()
+            n = f.values[1].value._modifying(force=True).enter()
+            f._put_src(' ', 0, 4, 0, 7, True)
+            self.assertEqual('a   + b=', f.values[0].value)
+            n.success()
+            self.assertEqual('a   + b=', f.values[0].value)
+            m.success()
+            self.assertEqual('a + b=', f.values[0].value)
 
     def test___new__(self):
         f = FST()

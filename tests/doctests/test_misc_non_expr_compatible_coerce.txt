@@ -7,6 +7,7 @@
 >>> from fst.asttypes import *
 >>> from fst.astutil import copy_ast
 >>> from fst.match import *
+>>> from fst.docs import py_version_ok_then_exec_else_print
 
 >>> FST('a=b', keyword).as_(_pattern_attrlikes).dump('N').verify()
 0: a=b
@@ -53,7 +54,8 @@ _arglikes - ROOT 0,0..0,15
      .value Name 'e' Load - 0,13..0,14
 <_arglikes ROOT 0,0..0,15>
 
->>> FST('  T = ( 1 )  ', TypeVar).as_('_arglike').dump('N').verify()
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START00', 'STOP00'):
+...     print(FST('  T = ( 1 )  ', TypeVar).as_('_arglike').dump('N').verify())  # START00
 0:   T = ( 1 )
 keyword - ROOT 0,2..0,11
   .arg 'T'
@@ -61,7 +63,10 @@ keyword - ROOT 0,2..0,11
   .value Constant 1 - 0,8..0,9
 <keyword ROOT 0,2..0,11>
 
->>> FST(' T: ( int ) = ( bool ) ', TypeVar).as_('arguments').dump('N').verify()
+# STOP00
+
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START01', 'STOP01'):
+...     FST(' T: ( int ) = ( bool ) ', TypeVar).as_('arguments').dump('N').verify()  # START01
 0:  T: ( int ) = ( bool ) <*END*
 arguments - ROOT 0,0..0,23
   .args[1]
@@ -74,6 +79,8 @@ arguments - ROOT 0,0..0,23
 0:                 bool
    0] Name 'bool' Load - 0,16..0,20
 <arguments ROOT 0,0..0,23>
+
+# STOP01
 
 >>> (f := FST('a=1, *b, c=2, **d')).as_('_arglikes').dump('N').verify()
 0: a=1, *b, c=2, **d
@@ -103,7 +110,8 @@ _arglikes - ROOT 0,0..0,17
 >>> f
 <*DEADFST*>
 
->>> FST('T, *U', _type_params).as_(expr).dump('N')
+>>> if py_version_ok_then_exec_else_print(12, __file__, 'START02', 'STOP02'):
+...     FST('T, *U', _type_params).as_(expr).dump('N')  # START02
 0: T, *U
 Tuple - ROOT 0,0..0,5
   .elts[2]
@@ -117,14 +125,20 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 <Tuple ROOT 0,0..0,5>
 
->>> FST(' ** V ', type_param).as_(keyword).dump('N')
+# STOP02
+
+>>> if py_version_ok_then_exec_else_print(12, __file__, 'START03', 'STOP03'):
+...     FST(' ** V ', type_param).as_(keyword).dump('N')  # START03
 0:  ** V
 keyword - ROOT 0,1..0,5
 0:     V
   .value Name 'V' Load - 0,4..0,5
 <keyword ROOT 0,1..0,5>
 
->>> FST('a, b=c', _pattern_attrlikes).as_(_type_params).dump('N').verify()
+# STOP03
+
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START04', 'STOP04'):
+...     FST('a, b=c', _pattern_attrlikes).as_(_type_params).dump('N').verify()  # START04
 0: a, b=c
 _type_params - ROOT 0,0..0,6
   .type_params[2]
@@ -138,7 +152,10 @@ _type_params - ROOT 0,0..0,6
      .default_value Name 'c' Load - 0,5..0,6
 <_type_params ROOT 0,0..0,6>
 
->>> FST(FST('a, b=c', _pattern_attrlikes).a, _type_params).dump('N').verify()
+# STOP04
+
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START05', 'STOP05'):
+...     FST(FST('a, b=c', _pattern_attrlikes).a, _type_params).dump('N').verify()  # START05
 0: a, b = c
 _type_params - ROOT 0,0..0,8
   .type_params[2]
@@ -152,7 +169,10 @@ _type_params - ROOT 0,0..0,8
      .default_value Name 'c' Load - 0,7..0,8
 <_type_params ROOT 0,0..0,8>
 
->>> FST(FST('b=c', _arglikes).a, _type_params).dump('N').verify()
+# STOP05
+
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START06', 'STOP06'):
+...     FST(FST('b=c', _arglikes).a, _type_params).dump('N').verify()  # START06
 0: b = c
 _type_params - ROOT 0,0..0,5
   .type_params[1]
@@ -163,7 +183,10 @@ _type_params - ROOT 0,0..0,5
      .default_value Name 'c' Load - 0,4..0,5
 <_type_params ROOT 0,0..0,5>
 
->>> FST('a=b', TypeVar).as_(_pattern_attrlikes).dump('N').verify()
+# STOP06
+
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START07', 'STOP07'):
+...     FST('a=b', TypeVar).as_(_pattern_attrlikes).dump('N').verify()  # START07
 0: a=b
 _pattern_attrlikes - ROOT 0,0..0,3
   .kwd_attrs[1]
@@ -174,7 +197,10 @@ _pattern_attrlikes - ROOT 0,0..0,3
      .name 'b'
 <_pattern_attrlikes ROOT 0,0..0,3>
 
->>> FST('a=x, *b, **c', arguments).as_(_type_params).dump('N').verify()
+# STOP07
+
+>>> if py_version_ok_then_exec_else_print(13, __file__, 'START08', 'STOP08'):
+...     FST('a=x, *b, **c', arguments).as_(_type_params).dump('N').verify()  # START08
 0: a=x, *b, **c
 _type_params - ROOT 0,0..0,12
   .type_params[3]
@@ -191,4 +217,4 @@ _type_params - ROOT 0,0..0,12
      .name 'c'
 <_type_params ROOT 0,0..0,12>
 
-
+# STOP08

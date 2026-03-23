@@ -290,33 +290,40 @@ class _Modifying:
         fst_, field, raw, force = self._params
         self.root = root = fst_.root
 
-        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0] and not force:
-            raise RuntimeError(f'nested modification of different nodes not allowed on {root}')
+        if nesting := _MODIFYING.get(root):  # if already present then either error or noop
+            if fst_ is not nesting[0] and not force:
+                raise RuntimeError('nested modification of different nodes not allowed')
+
+            _MODIFYING[root] = (nesting[0], nesting[1] + 1)
+
+            return self
 
         if raw:
             self.fst = False
 
         else:
-            if field is False:
-                pfield = fst_.pfield
+            cur = fst_
 
-                if fst_ := fst_.parent:
+            if field is False:
+                pfield = cur.pfield
+
+                if cur := cur.parent:
                     field = pfield.name
 
-            if not fst_ or fst_.a.__class__ not in ASTS_LEAF_EXPR_CHAIN:
-                fst_ = False
+            if not cur or cur.a.__class__ not in ASTS_LEAF_EXPR_CHAIN:
+                cur = False
 
-            self.fst = fst_
+            self.fst = cur
 
-            if fst_:
+            if cur:
                 self.field = field
                 self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-                while fst_.a.__class__ in ASTS_LEAF_EXPR_CHAIN:
-                    parent = fst_.parent
-                    pfield = fst_.pfield
+                while cur.a.__class__ in ASTS_LEAF_EXPR_CHAIN:
+                    parent = cur.parent
+                    pfield = cur.pfield
 
-                    if field == 'value' and (strs := _get_fmtval_interp_strs(fst_)):  # this will never proc for py < 3.12, in case we ever make this code common
+                    if field == 'value' and (strs := _get_fmtval_interp_strs(cur)):  # this will never proc for py < 3.12, in case we ever make this code common
                         dbg_str, val_str, end_ln, end_col = strs
 
                         if (dbg_str is None
@@ -329,20 +336,20 @@ class _Modifying:
                             or prevf.end_ln != end_ln
                         ):
                             if val_str is not None:
-                                data.append((fst_, None, True))
+                                data.append((cur, None, True))
                             elif not data:  # first one always gets put because needs to do other stuff
-                                data.append((fst_, None, False))
+                                data.append((cur, None, False))
 
                         else:
-                            data.append((fst_, len(dbg_str), bool(val_str)))
+                            data.append((cur, len(dbg_str), bool(val_str)))
 
                     if not parent:
                         break
 
                     field = pfield.name
-                    fst_ = parent
+                    cur = parent
 
-        _MODIFYING[root] = (nesting[0], nesting[1] + 1) if nesting else (fst_, 1)
+        _MODIFYING[root] = (fst_, 1)
 
         return self
 
@@ -358,10 +365,12 @@ class _Modifying:
 
         root = self.root  # should be same as fst_.root if passed in since root node never changes even with raw reparse
 
-        if (nesting := _MODIFYING.get(root))[1] > 1:
+        if (nesting := _MODIFYING.get(root))[1] > 1:  # if count > 1 then just decrement and noop
             _MODIFYING[root] = (nesting[0], nesting[1] - 1)
-        else:
-            del _MODIFYING[root]
+
+            return
+
+        del _MODIFYING[root]
 
         if fst_ is False:
             if not (fst_ := self.fst):
@@ -439,15 +448,20 @@ class _Modifying:
         fst_, _, raw, force = self._params
         self.root = root = fst_.root
 
-        if (nesting := _MODIFYING.get(root)) and fst_ is not nesting[0] and not force:
-            raise RuntimeError(f'nested modification of different nodes not allowed on {root}')
+        if nesting := _MODIFYING.get(root):  # if already present then either error or noop
+            if fst_ is not nesting[0] and not force:
+                raise RuntimeError('nested modification of different nodes not allowed')
+
+            _MODIFYING[root] = (nesting[0], nesting[1] + 1)
+
+            return self
 
         if raw is False:
             while (fst_ := fst_.parent) and not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
                 if a.__class__ is JoinedStr:
                     raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
 
-        _MODIFYING[root] = (nesting[0], nesting[1] + 1) if nesting else (fst_, 1)
+        _MODIFYING[root] = (fst_, 1)
 
         return self
 
