@@ -736,10 +736,9 @@ all other slice targets.</p>
 </code></pre>
 </div>
 
-<p>If you pass a single element as text source instead of a node for most slice targets other than <code>Tuple</code>, <code>List</code> or
-<code>Set</code>, it will work without <code>one=True</code> or <code>coerce=True</code> as the parsing for those slice target types accept single
-elements as singleton sequences, since those target sequences normally don't require trailing separators to indicate a
-sequence.</p>
+<p>If you pass a single item as text source instead of a node for most slice targets other than <code>Tuple</code>, <code>List</code> or <code>Set</code>,
+it will work without <code>one=True</code> or <code>coerce=True</code> as the parsing for those slice target types accept single items as
+singleton sequences, since those target sequences normally don't require trailing separators to indicate a sequence.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a, b, c, d)&#39;</span><span class="p">)</span> \
@@ -748,9 +747,29 @@ sequence.</p>
 </code></pre>
 </div>
 
+<p>However, for slice types that normally require extra syntax, like <code>@</code> for decorator lists, <code>if</code> for <code>comprehension.ifs</code>
+or <code>=</code> for <code>Assign.targets</code>, either <code>one=True</code> or <code>coerce=True</code> is required if you want to pass single items without
+those syntactic elements.</p>
+
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c = d = e&#39;</span><span class="p">)</span> \
 <span class="gp">... </span>    <span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">coerce</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">SyntaxError</span>: <span class="n">invalid Assign targets slice</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c = d = e&#39;</span><span class="p">)</span> \
+<span class="gp">... </span>    <span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">coerce</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;a = x = d = e&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c = d = e&#39;</span><span class="p">)</span> \
+<span class="gp">... </span>    <span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="go">&#39;a = x = d = e&#39;</span>
 </code></pre>
 </div>

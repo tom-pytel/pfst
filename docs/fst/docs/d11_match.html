@@ -45,6 +45,7 @@
     <li><a href="#mqstar-mqplus-mqopt-mqmin-mqmax-and-mqn-quantifier-patterns"><code>MQSTAR()</code>, <code>MQPLUS()</code>, <code>MQOPT()</code>, <code>MQMIN()</code>, <code>MQMAX()</code> and <code>MQN()</code> quantifier patterns</a></li>
     <li><a href="#virtual-fields-and-fstview">Virtual fields and <code>FSTView</code></a></li>
     <li><a href="#arguments-virtual-field-matching"><code>arguments</code> virtual field matching</a></li>
+    <li><a href="#matchclass-virtual-field-matching"><code>MatchClass</code> virtual field matching</a></li>
     <li><a href="#ast-nodes-as-pattern-or-target"><code>AST</code> nodes as pattern or target</a></li>
   </ul></li>
   <li><a href="#search">Search</a></li>
@@ -1615,6 +1616,62 @@ used here for demonstration purposes in place of a more complicated comparison a
 <li><p>This discussion has been about matching <code>arguments</code> nodes representing INDIVIDUAL arguments in a virtual <code>_all</code> field.
 If you will be matching a whole <code>.args</code> field of a <code>FunctionDef</code> to another one then normal exact matching rules apply.</p></li>
 </ul>
+
+<h2 id="matchclass-virtual-field-matching"><code>MatchClass</code> virtual field matching</h2>
+
+<p>This works very similarly to <code>arguments</code> except the pattern class to specify individual items in the <code>_attrs</code> virtual
+field is <code>M_pattern_attrlikes</code> with a single item.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span> <span class="o">=</span> <span class="n">MMatchClass</span><span class="p">(</span><span class="n">_attrs</span><span class="o">=</span><span class="p">[</span><span class="n">M_pattern_attrlikes</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)])</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;mcls(a)&#39;</span><span class="p">,</span> <span class="s1">&#39;MatchClass&#39;</span><span class="p">))</span>
+<span class="go">&lt;FSTMatch &lt;MatchClass ROOT 0,0..0,7&gt;&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;mcls(b)&#39;</span><span class="p">,</span> <span class="s1">&#39;MatchClass&#39;</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;mcls(a=b)&#39;</span><span class="p">,</span> <span class="s1">&#39;MatchClass&#39;</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span> <span class="o">=</span> <span class="n">MMatchClass</span><span class="p">(</span><span class="n">_attrs</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">... </span>    <span class="n">M_pattern_attrlikes</span><span class="p">(</span><span class="n">kwd_attrs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">],</span> <span class="n">kwd_patterns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]),</span>
+<span class="gp">... </span><span class="p">])</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;mcls(a=b)&#39;</span><span class="p">,</span> <span class="s1">&#39;MatchClass&#39;</span><span class="p">))</span>
+<span class="go">&lt;FSTMatch &lt;MatchClass ROOT 0,0..0,9&gt;&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pat</span> <span class="o">=</span> <span class="n">MMatchClass</span><span class="p">(</span><span class="n">_attrs</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">M_pattern_attrlikes</span><span class="p">),</span> <span class="n">MQSTAR</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">MTAG</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">))])</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ppmatch</span><span class="p">(</span><span class="n">pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;mcls(a, a, a)&#39;</span><span class="p">,</span> <span class="s1">&#39;MatchClass&#39;</span><span class="p">)))</span>
+<span class="go">&lt;FSTMatch &lt;MatchClass ROOT 0,0..0,13&gt;</span>
+<span class="go">  &#39;t&#39;: &lt;&lt;MatchClass ROOT 0,0..0,13&gt;._attrs[0]&gt;,</span>
+<span class="go">  &#39;u&#39;: [</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;MatchClass ROOT 0,0..0,13&gt;._attrs[1]&gt;&gt;,</span>
+<span class="go">    &lt;FSTMatch &lt;&lt;MatchClass ROOT 0,0..0,13&gt;._attrs[2]&gt;&gt;,</span>
+<span class="go">  ],</span>
+<span class="go">}&gt;</span>
+</code></pre>
+</div>
 
 <h2 id="ast-nodes-as-pattern-or-target"><code>AST</code> nodes as pattern or target</h2>
 

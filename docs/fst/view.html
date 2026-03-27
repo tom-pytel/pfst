@@ -523,7 +523,8 @@ Will have indentation as it appears in the top level source if multiple lines.</
     </div>
     <a class="headerlink" href="#FSTView.loc"></a>
     
-            <div class="docstring"><p>Zero based character indexed location of view (including parentheses and / or decorators where present).</p>
+            <div class="docstring"><p>Zero based character indexed location of view (including parentheses and / or decorators where present). May
+return an <code>fstloc</code> or an <code>fstlocn</code> with an <code>n</code> parameter.</p>
 </div>
 
 
@@ -589,7 +590,7 @@ Will have indentation as it appears in the top level source if multiple lines.</
     <a class="headerlink" href="#FSTView.bloc"></a>
     
             <div class="docstring"><p>Zero based character indexed location of view (including parentheses and / or decorators where present). This
-is identical to <code>.loc</code> for views.</p>
+is identical to <code>.loc</code> for views. May return an <code>fstloc</code> or an <code>fstlocn</code> with an <code>n</code> parameter.</p>
 </div>
 
 

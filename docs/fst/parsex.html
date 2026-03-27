@@ -77,7 +77,7 @@ differentiate these from our own for the logic flow.</p>
                     <div class="attr variable">
             <span class="name">Mode</span>        =
 <input id="Mode-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="Mode-view-value"></label><span class="default_value">typing.Union[typing.Literal[&#39;all&#39;, &#39;strict&#39;, &#39;exec&#39;, &#39;eval&#39;, &#39;single&#39;, &#39;stmts&#39;, &#39;stmt&#39;, &#39;ExceptHandler&#39;, &#39;_ExceptHandlers&#39;, &#39;match_case&#39;, &#39;_match_cases&#39;, &#39;expr&#39;, &#39;expr_all&#39;, &#39;expr_arglike&#39;, &#39;expr_slice&#39;, &#39;Tuple_elt&#39;, &#39;Tuple&#39;, &#39;_Assign_targets&#39;, &#39;_decorator_list&#39;, &#39;_arglike&#39;, &#39;_arglikes&#39;, &#39;boolop&#39;, &#39;operator&#39;, &#39;unaryop&#39;, &#39;cmpop&#39;, &#39;comprehension&#39;, &#39;_comprehensions&#39;, &#39;_comprehension_ifs&#39;, &#39;arguments&#39;, &#39;arguments_lambda&#39;, &#39;arg&#39;, &#39;keyword&#39;, &#39;alias&#39;, &#39;_aliases&#39;, &#39;Import_name&#39;, &#39;_Import_names&#39;, &#39;ImportFrom_name&#39;, &#39;_ImportFrom_names&#39;, &#39;withitem&#39;, &#39;_withitems&#39;, &#39;pattern&#39;, &#39;type_param&#39;, &#39;_type_params&#39;], str, type[ast.AST]]</span>
+            <label class="view-value-button pdoc-button" for="Mode-view-value"></label><span class="default_value">typing.Union[typing.Literal[&#39;all&#39;, &#39;strict&#39;, &#39;exec&#39;, &#39;eval&#39;, &#39;single&#39;, &#39;stmts&#39;, &#39;stmt&#39;, &#39;ExceptHandler&#39;, &#39;_ExceptHandlers&#39;, &#39;match_case&#39;, &#39;_match_cases&#39;, &#39;expr&#39;, &#39;expr_all&#39;, &#39;expr_arglike&#39;, &#39;expr_slice&#39;, &#39;Tuple_elt&#39;, &#39;Tuple&#39;, &#39;_Assign_targets&#39;, &#39;_decorator_list&#39;, &#39;_arglike&#39;, &#39;_arglikes&#39;, &#39;boolop&#39;, &#39;operator&#39;, &#39;unaryop&#39;, &#39;cmpop&#39;, &#39;comprehension&#39;, &#39;_comprehensions&#39;, &#39;_comprehension_ifs&#39;, &#39;arguments&#39;, &#39;arguments_lambda&#39;, &#39;arg&#39;, &#39;keyword&#39;, &#39;alias&#39;, &#39;_aliases&#39;, &#39;Import_name&#39;, &#39;_Import_names&#39;, &#39;ImportFrom_name&#39;, &#39;_ImportFrom_names&#39;, &#39;withitem&#39;, &#39;_withitems&#39;, &#39;pattern&#39;, &#39;_pattern_attrlikes&#39;, &#39;type_param&#39;, &#39;_type_params&#39;], str, type[ast.AST]]</span>
 
         
     </div>
@@ -158,6 +158,8 @@ syntax error. Does not need trailing comma for a single element. This is the <co
 <li><code>'withitem'</code>: Parse as a single <code>withitem</code> returned as itself. Same as passing <code>withitem</code> type.</li>
 <li><code>'_withitems'</code>: Parse zero or more <code>withitem</code>s returned in a <code>_withitems</code> SPECIAL SLICE.</li>
 <li><code>'pattern'</code>: Parse as a a single <code>pattern</code> returned as itself. Same as passing <code>pattern</code> type.</li>
+<li><code>'_pattern_attrlikes'</code>: Parse zero or more <code>MatchClass</code> patterns and keyword patterns as a <code>_pattern_attrlikes</code>
+SPECIAL SLICE.</li>
 <li><code>'type_param'</code>: Parse as a single <code>type_param</code> returned as itself, either <code>TypeVar</code>, <code>ParamSpec</code> or
 <code>TypeVarTuple</code>. Same as passing <code>type_param</code> type.</li>
 <li><code>'_type_params'</code>: Parse zero or more <code>type_param</code>s returned in a <code>_type_params</code> SPECIAL SLICE. Does not need trailing
